@@ -4,9 +4,9 @@ class AuthRepository {
   // Querie para logar usuário (login)
   async findUserByUsername(username) {
     const query = `
-      SELECT user_id, username, name, email, password, avatar_url, auth_with_google, created_at
+      SELECT user_id, username, name, email, password, avatar_url, auth_with_google, created_at, updated_at
       FROM users
-      WHERE (username = $1 OR email = $1)
+      WHERE (username = $1 OR email = $1) AND deleted = false
       LIMIT 1
     `;
     const results = await executeQuery(query, [username]);
@@ -17,7 +17,7 @@ class AuthRepository {
     const query = `
       UPDATE users
       SET name = $1, email = $2, username = $3
-      WHERE user_id = $4
+      WHERE user_id = $4 AND deleted = false
       RETURNING user_id, username, name, email, avatar_url, created_at
     `;
     const results = await executeQuery(query, [name, email, username, userId]);
@@ -28,7 +28,7 @@ class AuthRepository {
     const query = `
       UPDATE users
       SET password = $1
-      WHERE user_id = $2
+      WHERE user_id = $2 AND deleted = false
     `;
     return await executeQuery(query, [hashedPassword, userId]);
   }

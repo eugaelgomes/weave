@@ -1,7 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
-const axios = require("axios");
 const AuthRepository = require("@/repositories/auth-repo");
 
 const secretKey = process.env.SECRET_KEY;
@@ -222,6 +221,7 @@ class AuthController {
         username: user.username,
         avatar_url: user.avatar_url || null,
         createdAt: user.created_at,
+        updatedAt: user.updated_at,
       });
     } catch (error) {
       console.error("Erro ao buscar perfil:", error);
