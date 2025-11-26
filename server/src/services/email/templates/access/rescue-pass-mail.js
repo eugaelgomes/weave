@@ -10,7 +10,7 @@ async function mail_rescue_pass(email, token) {
   }
   try {
     let mailOptions = {
-      from: "CodaWeb Notes <support@codaweb.com.br>",
+      from: "CW Notes <hello@gaelgomes.dev>",
       to: email,
       subject: "Recuperar minha senha - CodaWeb Notes",
       text: `Seu token de recuperação é: ${token}. Acesse ${resetLink} para redefinir sua senha.`,

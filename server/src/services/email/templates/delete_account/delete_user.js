@@ -3,7 +3,7 @@ const { MailService } = require("@/services/email/config/mail-service");
 async function delete_account_notification(nome, email, username) {
   try {
     let mailOptions = {
-      from: "CodaWeb Notes <support@codaweb.com.br>",
+      from: "CW Notes <hello@gaelgomes.dev>",
       to: email,
       subject: "Conta excluída com sucesso - CodaWeb Notes",
       html: `<!DOCTYPE html>

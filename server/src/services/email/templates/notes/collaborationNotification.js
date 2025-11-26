@@ -24,7 +24,7 @@ async function sendCollaborationNotification(collaboratorEmail, collaboratorName
     });
 
     const mailOptions = {
-      from: "CodaWeb Notes <support@codaweb.com.br>",
+      from: "CW Notes <hello@gaelgomes.dev>",
       to: collaboratorEmail,
       subject: emailTemplate.subject,
       text: emailTemplate.text,

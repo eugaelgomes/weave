@@ -29,7 +29,7 @@ async function sendBackupEmail(userEmail, userName, backupData, options = {}) {
     });
 
     const mailOptions = {
-      from: "CodaWeb Notes <support@codaweb.com.br>",
+      from: "CW Notes <hello@gaelgomes.dev>",
       to: userEmail,
       subject: emailTemplate.subject,
       text: emailTemplate.text,
