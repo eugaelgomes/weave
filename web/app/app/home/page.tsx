@@ -27,6 +27,20 @@ export default function HomePage() {
     return null;
   }
 
+  const userCurrentDateTime = new Date().toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const inspirationQuotes = [
+    "Mantenha-se em foco!",
+    "Acredito no seu potencial!",
+    "Rotina e disciplina são a chave!",
+  ];
+
   const stats = getNotesStats();
   const recentNotes = getRecentNotes();
   const userName = String(user?.name || user?.username || "usuário");
@@ -59,12 +73,13 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col bg-neutral-950">
       <div className="flex-1 space-y-4 overflow-y-auto">
         {/* Header */}
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-          <h3 className="mb-1 text-lg font-semibold tracking-tight text-neutral-100">
-            Olá, {userName}! 👋
+        <div className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-2">
+          <h3 className="text-md mb-1 tracking-tight text-neutral-100">
+            Olá, {userName} {"ツ"}
           </h3>
+          <span className="text-sm text-neutral-400">{userCurrentDateTime}</span>
           <p className="text-xs leading-relaxed text-neutral-400">
-            Aqui está um resumo das suas notas e atividades recentes.
+            {inspirationQuotes[Math.floor(Math.random() * inspirationQuotes.length)]}
           </p>
         </div>
 

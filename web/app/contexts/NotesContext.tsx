@@ -52,9 +52,12 @@ export interface NotesContextType {
   notesOverview: NoteOverview[];
   loading: boolean;
   error: string | null;
+  lastFetch: Date | null;
+  refreshInterval: number;
 
   // Funções de notas
   fetchNotes: () => Promise<void>;
+  refreshNotes: () => Promise<void>;
   getNoteById: (noteId: string) => Promise<Note | null>;
   createNote: (noteData: CreateNoteData) => Promise<Note | null>;
   createCompleteNote: (noteData: CreateNoteData) => Promise<Note | null>;
@@ -106,6 +109,8 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
   const [notesOverview, setNotesOverview] = useState<NoteOverview[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetch, setLastFetch] = useState<Date | null>(null);
+  const [refreshInterval] = useState<number>(10 * 60 * 1000); // 10 minutos
   const [notesStats, setNotesStats] = useState<NotesStats>({
     totalNotes: 0,
     totalTags: 0,
@@ -147,6 +152,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       }));
 
       setNotesOverview(overview);
+      setLastFetch(new Date());
       // Buscar estatísticas no backend e popular o estado
       try {
         const statsData = await fetchNotesStatsService();
@@ -176,6 +182,12 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   }, [user?.id]);
+
+  // 1.0.1. REFRESH MANUAL DE NOTAS
+  const refreshNotes = useCallback(async () => {
+    console.log("🔄 Atualizando notas manualmente...");
+    await fetchNotes();
+  }, [fetchNotes]);
 
   // 1.1. BUSCAR NOTA POR ID
   const getNoteById = useCallback(
@@ -470,19 +482,39 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     [user?.id, fetchNotes]
   );
 
-  // Efeito para buscar dados quando o usuário mudar
+  // Efeito para buscar dados inicialmente e configurar polling
   useEffect(() => {
-    if (user?.id) {
+    if (!user?.id) return;
+
+    // Busca inicial apenas se não houver dados em cache
+    if (notes.length === 0) {
+      console.log("📥 Buscando notas inicialmente...");
       fetchNotes();
     }
-  }, [user?.id, fetchNotes]);
+
+    // Configurar polling automático
+    console.log(`⏰ Configurando atualização automática a cada ${refreshInterval / 60000} minutos`);
+    const intervalId = setInterval(() => {
+      console.log("🔄 Atualizando notas automaticamente...");
+      fetchNotes();
+    }, refreshInterval);
+
+    // Cleanup
+    return () => {
+      console.log("🛑 Limpando intervalo de atualização");
+      clearInterval(intervalId);
+    };
+  }, [user?.id, refreshInterval]); // Removido fetchNotes e notes das dependências
 
   const value: NotesContextType = {
     notes,
     notesOverview,
     loading,
     error,
+    lastFetch,
+    refreshInterval,
     fetchNotes,
+    refreshNotes,
     getNoteById,
     createNote,
     createCompleteNote,

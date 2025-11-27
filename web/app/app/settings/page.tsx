@@ -234,21 +234,30 @@ const SettingsPage = () => {
     <div className="flex h-full flex-col overflow-hidden rounded-md border border-neutral-800 bg-neutral-950 shadow-md">
       <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
         {/* Header */}
-        <div className="mb-4 bg-neutral-800 px-6 py-4">
+        <div className="mb-4 bg-neutral-950 px-4 py-4">
           <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-white">Configurações</h1>
-              <p className="text-sm text-gray-400">Gerencie suas informações e preferências</p>
+              <p className="text-md font-semibold text-white">
+                Gerencie suas informações e preferências
+              </p>
             </div>
-            <div className="rounded-md bg-neutral-950 px-3 py-1.5 text-sm text-gray-400">
-              <span className="text-gray-500">Última atualização: </span>
-              {userData?.updatedAt ? new Date(userData.updatedAt as string).toLocaleString() : "—"}
+            <div className="rounded-md bg-neutral-800 px-3 py-1.5 text-sm text-gray-200">
+              <span>Última atualização: </span>
+              {userData?.updatedAt
+                ? new Date(userData.updatedAt as string).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "—"}
             </div>
           </div>
         </div>
 
         {/* Main content */}
-        <div className="mx-auto max-w-5xl space-y-6 px-2 sm:px-4 lg:px-6">
+        <div className="mx-auto max-w-5xl space-y-6 px-4">
           {/* Profile Section */}
           <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 shadow-lg">
             <div className="border-b border-neutral-800 px-4 py-4 sm:px-6">

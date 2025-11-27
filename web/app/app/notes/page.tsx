@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Filter, Plus, X, Clock, Calendar, SortAsc } from "lucide-react";
+import { Search, Filter, Plus, X, Clock, Calendar, SortAsc, RefreshCw } from "lucide-react";
 import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/utils/collaborators";
 
 // =================== TYPES ===================
@@ -15,7 +15,7 @@ type SortBy = "updated_at" | "title" | "created_at";
 type SortOrder = "asc" | "desc";
 
 // =================== IMPORTS DOS NOSSOS NOVOS HOOKS ===================
-import { useNotes } from "../../hooks/useNotes";
+import { useNotes } from "../../contexts/NotesContext";
 import { useRouter } from "next/navigation";
 // import { useDebounce } from "../../hooks/UseDebounce"
 import Pagination from "../../components/ui/pagination";
@@ -50,7 +50,7 @@ const NotesWithPagination = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   // =================== HOOK DE DADOS ===================
-  const { notes: allNotes, loading: isLoading, error, createNote } = useNotes();
+  const { notes: allNotes, loading: isLoading, error, createNote, refreshNotes, lastFetch, refreshInterval } = useNotes();
 
   // =================== LÓGICA DE PAGINAÇÃO E FILTROS ===================
   const debouncedSearch = searchTerm; // Temporário - usar useDebounce quando disponível
@@ -206,6 +206,21 @@ const NotesWithPagination = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    await refreshNotes();
+  };
+
+  // Formatar timestamp da última atualização
+  const formatLastFetch = () => {
+    if (!lastFetch) return "Nunca";
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - lastFetch.getTime()) / 1000);
+    
+    if (diff < 60) return "Agora mesmo";
+    if (diff < 3600) return `Há ${Math.floor(diff / 60)} min`;
+    return lastFetch.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  };
+
   // =================== COMPUTAÇÕES DERIVADAS ===================
   const availableTags: string[] = [...new Set(allNotes.flatMap((note) => note.tags || []))].sort();
 
@@ -272,15 +287,22 @@ const NotesWithPagination = () => {
                     <span>Atualizando...</span>
                   </span>
                 ) : (
-                  <p className="text-neutral-400">
-                    <span className="font-medium text-neutral-300">
-                      Página {pagination.currentPage}
-                    </span>{" "}
-                    de {pagination.totalPages}
-                    <span className="mx-2 text-neutral-600">•</span>
-                    <span className="font-medium text-neutral-300">{pagination.total}</span> notas
-                    no total
-                  </p>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-neutral-400">
+                      <span className="font-medium text-neutral-300">
+                        Página {pagination.currentPage}
+                      </span>{" "}
+                      de {pagination.totalPages}
+                      <span className="mx-2 text-neutral-600">•</span>
+                      <span className="font-medium text-neutral-300">{pagination.total}</span> notas
+                      no total
+                    </p>
+                    <p className="text-xs text-neutral-500">
+                      Última atualização: {formatLastFetch()}
+                      <span className="mx-2 text-neutral-700">•</span>
+                      Próxima em {Math.floor(refreshInterval / 60000)} min
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -306,6 +328,16 @@ const NotesWithPagination = () => {
               </div>
 
               <div className="flex gap-3">
+                <button
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                  className="flex items-center justify-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2.5 text-sm font-medium text-neutral-300 transition-all hover:bg-neutral-700 disabled:opacity-50 sm:px-4"
+                  title="Atualizar notas"
+                >
+                  <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
+                  <span className="hidden sm:inline">Atualizar</span>
+                </button>
+                
                 <button
                   onClick={() => setShowFilters(!showFilters)}
                   className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:flex-initial ${
