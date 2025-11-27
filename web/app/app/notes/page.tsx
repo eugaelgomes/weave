@@ -156,7 +156,6 @@ const NotesWithPagination = () => {
 
   // =================== HANDLERS DE EVENTOS ===================
   const handlePageChange = (newPage: number) => {
-    console.log(`📄 Mudando para página ${newPage}`);
     setCurrentPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };

@@ -156,7 +156,6 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       // Buscar estatísticas no backend e popular o estado
       try {
         const statsData = await fetchNotesStatsService();
-        console.log("Stats recebidas do backend:", statsData);
 
         // Normalize backend response to ensure arrays/objects exist
         setNotesStats({
@@ -185,7 +184,6 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
 
   // 1.0.1. REFRESH MANUAL DE NOTAS
   const refreshNotes = useCallback(async () => {
-    console.log("🔄 Atualizando notas manualmente...");
     await fetchNotes();
   }, [fetchNotes]);
 
@@ -488,20 +486,16 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
 
     // Busca inicial apenas se não houver dados em cache
     if (notes.length === 0) {
-      console.log("📥 Buscando notas inicialmente...");
       fetchNotes();
     }
 
     // Configurar polling automático
-    console.log(`⏰ Configurando atualização automática a cada ${refreshInterval / 60000} minutos`);
     const intervalId = setInterval(() => {
-      console.log("🔄 Atualizando notas automaticamente...");
       fetchNotes();
     }, refreshInterval);
 
     // Cleanup
     return () => {
-      console.log("🛑 Limpando intervalo de atualização");
       clearInterval(intervalId);
     };
   }, [user?.id, refreshInterval]); // Removido fetchNotes e notes das dependências
