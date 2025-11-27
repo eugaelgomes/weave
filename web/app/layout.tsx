@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "CodaWeb Notes - Organize suas ideias",
-    template: "%s | CodaWeb Notes",
+    default: "Weave Notes - Organize suas ideias",
+    template: "%s | Weave Notes",
   },
   description:
     "Organize suas ideias e notas de forma simples e eficiente. Crie, edite e compartilhe suas anotações com segurança e praticidade.",
@@ -40,14 +40,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "pt_BR",
     url: "/",
-    title: "CodaWeb Notes - Organize suas ideias",
+    title: "Weave Notes - Organize suas ideias",
     description:
       "Organize suas ideias e notas de forma simples e eficiente. Crie, edite e compartilhe suas anotações com segurança e praticidade.",
-    siteName: "CodaWeb Notes",
+    siteName: "Weave Notes",
   },
   twitter: {
     card: "summary_large_image",
-    title: "CodaWeb Notes - Organize suas ideias",
+    title: "Weave Notes - Organize suas ideias",
     description:
       "Organize suas ideias e notas de forma simples e eficiente. Crie, edite e compartilhe suas anotações com segurança e praticidade.",
   },

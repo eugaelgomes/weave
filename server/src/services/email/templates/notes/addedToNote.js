@@ -13,7 +13,7 @@ module.exports = ({ noteName, ownerName, noteUrl }) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
-  <title>Nova Colaboração - CodaWeb Notes</title>
+  <title>Nova Colaboração - Weave Notes</title>
   <style>
     /* Estilos base (modo claro) */
     html, body {
@@ -258,7 +258,7 @@ module.exports = ({ noteName, ownerName, noteUrl }) => {
           <h1>
             <!-- 📒 Ícone de caderno -->
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="26" height="26" fill="white" viewBox="0 0 24 24"><path d="M5 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12V2H5zm0 2h10v14H5V4z"/><path d="M17 2v20h2a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-2z"/></svg>
-            CodaWeb Notes
+            Weave Notes
           </h1>
           <small>Colaboração em tempo real</small>
         </td>
@@ -317,7 +317,7 @@ module.exports = ({ noteName, ownerName, noteUrl }) => {
       <p>
         <!-- 📝 Ícone de nota -->
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M3 4a1 1 0 0 1 1-1h10l5 5v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zm11 0v4h4l-4-4z"/></svg>
-        CodaWeb Notes &copy; 2025
+        Weave Notes &copy; 2025
       </p>
       <p>Dúvidas? Entre em contato: <a href="mailto:contact@gaelgomes.dev">contact@gaelgomes.dev</a></p>
     </div>
@@ -326,7 +326,7 @@ module.exports = ({ noteName, ownerName, noteUrl }) => {
 </html>
         `,
         text: `
-Nova Colaboração - CodaWeb Notes
+Nova Colaboração - Weave Notes
 
 Olá!
 
@@ -346,7 +346,7 @@ A nota já está disponível em sua conta. Faça login para começar a colaborar
 Se você não esperava este convite ou não conhece ${ownerName}, pode ignorar este email com segurança.
 
 ---
-CodaWeb Notes © 2025
+Weave Notes © 2025
 Dúvidas? Entre em contato: contact@gaelgomes.dev
         `.trim()
     };

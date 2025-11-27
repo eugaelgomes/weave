@@ -201,7 +201,7 @@ export default function SignUp() {
           <div className="text-center">
             <div className="flex items-center justify-center">
               <h1 className="relative w-full rounded-md bg-gradient-to-br from-yellow-500 via-yellow-500 to-yellow-500 px-8 py-3 text-3xl font-black tracking-tight text-white">
-                CodaWeb Notes
+                Weave Notes
               </h1>
             </div>
           </div>

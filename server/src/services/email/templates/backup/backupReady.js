@@ -30,10 +30,10 @@ IMPORTANTE:
 - Dados sensíveis como emails foram removidos por segurança
 - O arquivo está em formato JSON para fácil importação
 
-Obrigado por usar o CodaWeb Notes!
+Obrigado por usar o Weave Notes!
 
 ---
-Equipe CodaWeb Notes
+Equipe Weave Notes
 support@gaelgomes.dev
   `.trim();
 
@@ -103,12 +103,12 @@ support@gaelgomes.dev
       </ul>
     </div>
 
-    <p>Agradecemos por usar o <strong>CodaWeb Notes</strong>! Se você tiver alguma dúvida, não hesite em nos contatar.</p>
+    <p>Agradecemos por usar o <strong>Weave Notes</strong>! Se você tiver alguma dúvida, não hesite em nos contatar.</p>
   </div>
 
   <div class="footer">
     <p>
-      <strong>CodaWeb Notes</strong><br>
+      <strong>Weave Notes</strong><br>
       📧 support@gaelgomes.dev<br>
       🌐 <a href="https://notes.gaelgomes.dev">notes.gaelgomes.dev</a>
     </p>

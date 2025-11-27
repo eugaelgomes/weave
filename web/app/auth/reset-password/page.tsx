@@ -178,7 +178,7 @@ export default function ResetPassword() {
 
                 {/* Logo principal */}
                 <h1 className="relative rounded-2xl bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 px-8 py-3 text-3xl font-black tracking-tight text-white shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-yellow-500/50">
-                  CodaWeb Notes
+                  Weave Notes
                 </h1>
               </div>
             </div>

@@ -5,7 +5,7 @@ async function delete_account_notification(nome, email, username) {
     let mailOptions = {
       from: "CW Notes <hello@gaelgomes.dev>",
       to: email,
-      subject: "Conta excluída com sucesso - CodaWeb Notes",
+      subject: "Conta excluída com sucesso - Weave Notes",
       html: `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -13,7 +13,7 @@ async function delete_account_notification(nome, email, username) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
-  <title>Conta Excluída - CodaWeb Notes</title>
+  <title>Conta Excluída - Weave Notes</title>
   <style>
     /* Estilos base */
     html, body {
@@ -177,7 +177,7 @@ async function delete_account_notification(nome, email, username) {
           <h1>
             <!-- 🗑️ Ícone de lixeira -->
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="26" height="26" fill="white" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-            CodaWeb Notes
+            Weave Notes
           </h1>
           <small>Conta excluída com sucesso</small>
         </td>
@@ -191,7 +191,7 @@ async function delete_account_notification(nome, email, username) {
             Conta excluída com sucesso
           </h2>
           <p>Olá <strong>${nome}</strong>,</p>
-          <p>Sua conta no <strong>CodaWeb Notes</strong> foi excluída permanentemente conforme solicitado.</p>
+          <p>Sua conta no <strong>Weave Notes</strong> foi excluída permanentemente conforme solicitado.</p>
           <p>Nome de usuário excluído: <strong>${username}</strong></p>
 
           <div class="info-box">
@@ -208,7 +208,7 @@ async function delete_account_notification(nome, email, username) {
       </tr>
     </table>
     <div class="footer">
-      <p>CodaWeb Notes &copy; 2025</p>
+      <p>Weave Notes &copy; 2025</p>
       <p>Você recebeu este e-mail como confirmação da exclusão da sua conta.</p>
       <p>Dúvidas? Entre em contato: <a href="mailto:contact@gaelgomes.dev">contact@gaelgomes.dev</a></p>
     </div>

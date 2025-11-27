@@ -1,4 +1,4 @@
-# 📝 Codaweb Notes API
+# 📝 Weave Notes API
 
 > Uma API RESTful para gerenciamento de de fluxo de requisiçõwa de Web App de Notas com autenticação segura e integração (opcional) com Google OAuth.
 
@@ -9,7 +9,7 @@
 
 ## 🚀 Visão Geral
 
-A **Codaweb Notes API** é uma solução completa para criação e gerenciamento de notas estruturadas, oferecendo:
+A **Weave Notes API** é uma solução completa para criação e gerenciamento de notas estruturadas, oferecendo:
 
 - ✅ **Autenticação** com JWT e Google OAuth 2.0
 - ✅ **Gerenciamento de notas** com sistema de blocos - inspirado no [(https://notion.so)](Notion).

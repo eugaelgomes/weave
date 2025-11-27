@@ -32,7 +32,7 @@ export default function HomePage() {
       {/* Features Grid */}
       <section className="mx-auto max-w-6xl px-4 py-16">
         <h2 className="mb-12 text-center text-3xl font-bold text-neutral-100">
-          Por que usar o CodaWeb Notes?
+          Por que usar o Weave Notes?
         </h2>
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl border border-neutral-800/50 bg-neutral-900/50 p-6 backdrop-blur-sm">
@@ -83,11 +83,11 @@ export default function HomePage() {
       <section className="mx-auto max-w-4xl px-4 py-16">
         <div className="rounded-xl border border-neutral-800/50 bg-neutral-900/50 p-8 backdrop-blur-sm md:p-12">
           <h2 className="mb-6 text-center text-3xl font-bold text-neutral-100">
-            O Propósito do CodaWeb Notes
+            O Propósito do Weave Notes
           </h2>
           <div className="space-y-4 text-neutral-300">
             <p>
-              O <strong className="text-yellow-500">CodaWeb Notes</strong> nasceu da necessidade de
+              O <strong className="text-yellow-500">Weave Notes</strong> nasceu da necessidade de
               ter uma ferramenta de anotações que fosse ao mesmo tempo <strong>simples</strong>,{" "}
               <strong>rápida</strong> e <strong>eficiente</strong>. Em um mundo cada vez mais
               digital, é fundamental ter um espaço confiável para capturar ideias, organizar
@@ -99,7 +99,7 @@ export default function HomePage() {
               ferramentas de produtividade devem facilitar a vida, não complicá-la.
             </p>
             <p>
-              Seja para uso pessoal, profissional ou acadêmico, o CodaWeb Notes foi desenvolvido
+              Seja para uso pessoal, profissional ou acadêmico, o Weave Notes foi desenvolvido
               para ser seu <strong className="text-yellow-500">companheiro digital</strong> na
               jornada de organização e produtividade.
             </p>
@@ -127,7 +127,7 @@ export default function HomePage() {
       <footer className="border-t border-neutral-800/50 py-8">
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col items-center justify-between gap-4 text-sm text-neutral-500 md:flex-row">
-            <p>&copy; {new Date().getFullYear()} CodaWeb Notes. Todos os direitos reservados.</p>
+            <p>&copy; {new Date().getFullYear()} Weave Notes. Todos os direitos reservados.</p>
             <div className="flex gap-6">
               <Link href="/about" className="transition-colors hover:text-neutral-300">
                 Sobre

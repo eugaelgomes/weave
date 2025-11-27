@@ -5,7 +5,7 @@ async function welcome_message(nome, email, username) {
     let mailOptions = {
       from: "CW Notes <hello@gaelgomes.dev>",
       to: email,
-      subject: "Bem vindo ao CodaWeb Notes!",
+      subject: "Bem vindo ao Weave Notes!",
       html: `<!DOCTYPE html>
   <html lang="pt-BR">
   <head>
@@ -13,7 +13,7 @@ async function welcome_message(nome, email, username) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
-  <title>Bem-vindo(a) ao CodaWeb Notes</title>
+  <title>Bem-vindo(a) ao Weave Notes</title>
   <style>
     /* Estilos base */
     html, body {
@@ -171,7 +171,7 @@ async function welcome_message(nome, email, username) {
           <h1>
             <!-- 📒 Ícone de caderno -->
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="26" height="26" fill="white" viewBox="0 0 24 24"><path d="M5 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12V2H5zm0 2h10v14H5V4z"/><path d="M17 2v20h2a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-2z"/></svg>
-            CodaWeb Notes
+            Weave Notes
           </h1>
           <small>Organize suas ideias com facilidade</small>
         </td>
@@ -182,10 +182,10 @@ async function welcome_message(nome, email, username) {
           <h2>
             <!-- 🎉 Ícone de celebração -->
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20" fill="#00be67" viewBox="0 0 24 24"><path d="M2 22l14-5-9-9-5 14zm6.9-7.1l2.2-2.2 3 3-2.2 2.2-3-3zm9.6-9.6a5 5 0 1 1-7.07 7.07l-1.42-1.42 7.07-7.07 1.42 1.42z"/></svg>
-            Bem-vindo(a) ao CodaWeb Notes!
+            Bem-vindo(a) ao Weave Notes!
           </h2>
           <p>Olá <strong>${nome}</strong>,</p>
-          <p>Seu cadastro foi realizado com sucesso! 🎉 Estamos muito felizes em ter você na comunidade <strong>CodaWeb Notes</strong>, o seu novo espaço para anotações, organização e produtividade.</p>
+          <p>Seu cadastro foi realizado com sucesso! 🎉 Estamos muito felizes em ter você na comunidade <strong>Weave Notes</strong>, o seu novo espaço para anotações, organização e produtividade.</p>
           <p>Seu nome de usuário é: <strong>${username}</strong></p>
 
           <div style="text-align: center;">
@@ -197,7 +197,7 @@ async function welcome_message(nome, email, username) {
       </tr>
     </table>
     <div class="footer">
-      <p>CodaWeb Notes &copy; 2025</p>
+      <p>Weave Notes &copy; 2025</p>
       <p>Você recebeu este e-mail porque se cadastrou em nossa plataforma.</p>
       <p>Dúvidas? Entre em contato: <a href="mailto:contact@gaelgomes.dev">contact@gaelgomes.dev</a></p>
     </div>

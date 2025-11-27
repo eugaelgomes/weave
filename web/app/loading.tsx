@@ -16,7 +16,7 @@ export default function Loading() {
         {/* Logo */}
         <div className="mb-4">
           <div className="inline-block rounded-md bg-yellow-500 px-4 py-2 text-lg font-bold text-white">
-            CodaWeb Notes
+            Weave Notes
           </div>
         </div>
 

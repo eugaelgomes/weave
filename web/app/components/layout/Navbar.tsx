@@ -102,7 +102,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               href={authenticated ? "/app/home" : "/"}
               className="text-lg font-bold text-yellow-500 transition-colors hover:text-yellow-400 sm:text-xl"
             >
-              <span className="hidden sm:inline">Codaweb Notes</span>
+              <span className="hidden sm:inline">Weave Notes</span>
               <span className="sm:hidden">CW Notes</span>
             </Link>
           </div>
