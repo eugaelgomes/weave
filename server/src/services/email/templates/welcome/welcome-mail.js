@@ -189,7 +189,7 @@ async function welcome_message(nome, email, username) {
           <p>Seu nome de usuário é: <strong>${username}</strong></p>
 
           <div style="text-align: center;">
-            <a href="https://notes.codaweb.com.br" class="button">Acessar minha conta</a>
+            <a href="https://notes.gaelgomes.dev" class="button">Acessar minha conta</a>
           </div>
 
           <p>Se precisar de ajuda, é só responder este e-mail. 😉</p>
@@ -199,7 +199,7 @@ async function welcome_message(nome, email, username) {
     <div class="footer">
       <p>CodaWeb Notes &copy; 2025</p>
       <p>Você recebeu este e-mail porque se cadastrou em nossa plataforma.</p>
-      <p>Dúvidas? Entre em contato: <a href="mailto:contact@codaweb.com.br">contact@codaweb.com.br</a></p>
+      <p>Dúvidas? Entre em contato: <a href="mailto:contact@gaelgomes.dev">contact@gaelgomes.dev</a></p>
     </div>
   </center>
 </body>

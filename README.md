@@ -2,9 +2,9 @@
 
 <div align="center">
 
-[![Deploy Status](https://img.shields.io/badge/deploy-ativo-brightgreen)](https://notes.codaweb.com.br/) [![Docker](https://img.shields.io/badge/Docker-100%25-blue?logo=docker)](https://docker.com/) [![Node.js](https://img.shields.io/badge/Node.js-v20+-green?logo=node.js)](https://nodejs.org/) [![React](https://img.shields.io/badge/NextJS-15?logo=react)](https://reactjs.org/)
+[![Deploy Status](https://img.shields.io/badge/deploy-ativo-brightgreen)](https://notes.gaelgomes.dev/) [![Docker](https://img.shields.io/badge/Docker-100%25-blue?logo=docker)](https://docker.com/) [![Node.js](https://img.shields.io/badge/Node.js-v20+-green?logo=node.js)](https://nodejs.org/) [![React](https://img.shields.io/badge/NextJS-15?logo=react)](https://reactjs.org/)
 
-Acesse em: **[https://notes.codaweb.com.br](https://notes.codaweb.com.br/)**
+Acesse em: **[https://notes.gaelgomes.dev](https://notes.gaelgomes.dev/)**
 
 Aplicação **full-stack** para gerenciamento de anotações - criação, compartilhamento e mapeamento de tags e palavras-chaves. Projeto *dockerizado* desenvolvido com foco em **aprendizado** de containerização, orquestração e integração front-end/back-end.
 
@@ -195,6 +195,6 @@ O intuito do projeto no geral foi muito voltado para o viés autodidata, claro q
 
 **Feito em algumas madrugadas por [Gael Gomes](https://github.com/eugaelgomes)**
 
-[notes.codaweb.com.br](https://notes.codaweb.com.br/) • [hello@gaelgomes.dev](mailto:hello@gaelgomes.dev) • [in/gael-rene-gomes](https://linkedin.com/in/gael-rene-gomes)
+[notes.gaelgomes.dev](https://notes.gaelgomes.dev/) • [hello@gaelgomes.dev](mailto:hello@gaelgomes.dev) • [in/gael-rene-gomes](https://linkedin.com/in/gael-rene-gomes)
 
 </div>

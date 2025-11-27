@@ -210,7 +210,7 @@ async function delete_account_notification(nome, email, username) {
     <div class="footer">
       <p>CodaWeb Notes &copy; 2025</p>
       <p>Você recebeu este e-mail como confirmação da exclusão da sua conta.</p>
-      <p>Dúvidas? Entre em contato: <a href="mailto:contact@codaweb.com.br">contact@codaweb.com.br</a></p>
+      <p>Dúvidas? Entre em contato: <a href="mailto:contact@gaelgomes.dev">contact@gaelgomes.dev</a></p>
     </div>
   </center>
 </body>

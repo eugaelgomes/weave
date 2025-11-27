@@ -319,7 +319,7 @@ module.exports = ({ noteName, ownerName, noteUrl }) => {
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M3 4a1 1 0 0 1 1-1h10l5 5v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zm11 0v4h4l-4-4z"/></svg>
         CodaWeb Notes &copy; 2025
       </p>
-      <p>Dúvidas? Entre em contato: <a href="mailto:contact@codaweb.com.br">contact@codaweb.com.br</a></p>
+      <p>Dúvidas? Entre em contato: <a href="mailto:contact@gaelgomes.dev">contact@gaelgomes.dev</a></p>
     </div>
   </center>
 </body>
@@ -347,7 +347,7 @@ Se você não esperava este convite ou não conhece ${ownerName}, pode ignorar e
 
 ---
 CodaWeb Notes © 2025
-Dúvidas? Entre em contato: contact@codaweb.com.br
+Dúvidas? Entre em contato: contact@gaelgomes.dev
         `.trim()
     };
 };

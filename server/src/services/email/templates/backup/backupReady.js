@@ -34,7 +34,7 @@ Obrigado por usar o CodaWeb Notes!
 
 ---
 Equipe CodaWeb Notes
-support@codaweb.com.br
+support@gaelgomes.dev
   `.trim();
 
   const html = `
@@ -109,8 +109,8 @@ support@codaweb.com.br
   <div class="footer">
     <p>
       <strong>CodaWeb Notes</strong><br>
-      📧 support@codaweb.com.br<br>
-      🌐 <a href="https://notes.codaweb.com.br">notes.codaweb.com.br</a>
+      📧 support@gaelgomes.dev<br>
+      🌐 <a href="https://notes.gaelgomes.dev">notes.gaelgomes.dev</a>
     </p>
     <p style="font-size: 12px; color: #999;">
       Este email foi enviado automaticamente. Por favor, não responda.
