@@ -466,13 +466,37 @@ class notesRepository {
    * @returns {Object} - Dados do colaborador adicionado
    */
   async addCollaborator(noteId, userId) {
-    const query = `
+    // Primeiro, verificar se o colaborador já existe (removido ou não)
+    const checkQuery = `
+      SELECT removed FROM note_collaborators
+      WHERE note_id = $1 AND user_id = $2
+      LIMIT 1;
+    `;
+    const existing = await executeQuery(checkQuery, [noteId, userId]);
+
+    if (existing.length > 0) {
+      // Se existir e foi removido, reativar
+      if (existing[0].removed) {
+        const reactivateQuery = `
+          UPDATE note_collaborators
+          SET removed = false, removed_at = NULL, removed_by = NULL, added_at = NOW()
+          WHERE note_id = $1 AND user_id = $2
+          RETURNING *;
+        `;
+        const results = await executeQuery(reactivateQuery, [noteId, userId]);
+        return results[0];
+      }
+      // Se já existe e está ativo, retorna null (já é colaborador)
+      return null;
+    }
+
+    // Se não existir, criar novo
+    const insertQuery = `
       INSERT INTO note_collaborators (note_id, user_id)
       VALUES ($1, $2)
-      ON CONFLICT (note_id, user_id) DO NOTHING
       RETURNING *;
     `;
-    const results = await executeQuery(query, [noteId, userId]);
+    const results = await executeQuery(insertQuery, [noteId, userId]);
     return results[0];
   }
 
@@ -480,13 +504,16 @@ class notesRepository {
    * Remove um colaborador da nota
    * @param {string} noteId - ID da nota
    * @param {string} userId - ID do usuário colaborador
+   * @returns {Object} - Resultado da operação
    */
   async removeCollaborator(noteId, userId) {
     const query = `
-      UPDATE note_collaborators SET removed_at = NOW(), removed = true, removed_by = 'owner'
-      WHERE note_id = $1 AND user_id = $2;
+      UPDATE note_collaborators 
+      SET removed_at = NOW(), removed = true, removed_by = 'owner'
+      WHERE note_id = $1 AND user_id = $2 AND removed = false;
     `;
-    await executeQuery(query, [noteId, userId]);
+    const count = await rowCount(query, [noteId, userId]);
+    return { rowCount: count };
   }
 
   /**

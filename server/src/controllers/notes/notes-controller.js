@@ -285,8 +285,9 @@ class NotesController {
         access: {
           isOwner,
           isCollaborator,
-          canEdit: isOwner, // Por enquanto, só o dono pode editar
-          canShare: isOwner, // Por enquanto, só o dono pode compartilhar
+          canEdit: isOwner || isCollaborator, // Dono e colaboradores podem editar
+          canDelete: isOwner, // Apenas o dono pode excluir
+          canShare: isOwner, // Apenas o dono pode compartilhar
         },
       };
 
@@ -450,8 +451,13 @@ class NotesController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Validação de propriedade da nota
-      await this._validateNoteOwnership(id, userId);
+      // Validação de acesso à nota (proprietário ou colaborador pode editar)
+      const { note, isOwner } = await this._validateNoteAccess(id, userId);
+      
+      // Apenas o proprietário pode marcar como deletado
+      if (deleted !== undefined && !isOwner) {
+        throw new Error("Apenas o proprietário pode excluir a nota");
+      }
 
       // Prepara os dados para atualização (apenas campos fornecidos)
       const updateData = {};
@@ -531,8 +537,8 @@ class NotesController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar se a nota existe e pertence ao usuário
-      await this._validateNoteOwnership(noteId, userId);
+      // Verificar se a nota existe e o usuário tem acesso (proprietário ou colaborador)
+      await this._validateNoteAccess(noteId, userId);
 
       // Validação de dados obrigatórios
       if (!type) {
@@ -587,8 +593,8 @@ class NotesController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar se a nota existe e pertence ao usuário
-      await this._validateNoteOwnership(noteId, userId);
+      // Verificar se a nota existe e o usuário tem acesso (proprietário ou colaborador)
+      await this._validateNoteAccess(noteId, userId);
 
       // Verificar se o bloco existe e pertence à nota
       const existingBlock = await this.blocksRepository.getBlockById(blockId);
@@ -620,7 +626,7 @@ class NotesController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar se a nota existe e pertence ao usuário
+      // Verificar se a nota existe e pertence ao usuário (apenas proprietário pode deletar)
       await this._validateNoteOwnership(noteId, userId);
 
       // Verificar se o bloco existe e pertence à nota
@@ -653,8 +659,8 @@ class NotesController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar se a nota existe e pertence ao usuário
-      await this._validateNoteOwnership(noteId, userId);
+      // Verificar se a nota existe e o usuário tem acesso (proprietário ou colaborador)
+      await this._validateNoteAccess(noteId, userId);
 
       // Validação dos dados
       if (!Array.isArray(blockPositions) || blockPositions.length === 0) {
@@ -691,8 +697,8 @@ class NotesController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar se a nota existe e pertence ao usuário
-      await this._validateNoteOwnership(noteId, userId);
+      // Verificar se a nota existe e o usuário tem acesso (proprietário ou colaborador)
+      await this._validateNoteAccess(noteId, userId);
 
       // Buscar blocos da nota
       const blocks = await this.blocksRepository.getBlocksByNoteId(noteId);
@@ -736,7 +742,7 @@ class NotesController {
         throw new Error("Você não pode adicionar a si mesmo como colaborador");
       }
 
-      // Verificar se o colaborador já existe
+      // Verificar se o colaborador já está ativo
       const isAlreadyCollaborator = await this.notesRepository.isCollaborator(
         noteId,
         collaboratorId
@@ -746,8 +752,12 @@ class NotesController {
         throw new Error("Usuário já é colaborador desta nota");
       }
 
-      // Adicionar colaborador
-      await this.notesRepository.addCollaborator(noteId, collaboratorId);
+      // Adicionar ou reativar colaborador
+      const result = await this.notesRepository.addCollaborator(noteId, collaboratorId);
+      
+      if (!result) {
+        throw new Error("Usuário já é colaborador desta nota");
+      }
 
       // Buscar dados do colaborador adicionado e da nota
       const collaborators =
@@ -816,7 +826,11 @@ class NotesController {
       }
 
       // Remover colaborador
-      await this.notesRepository.removeCollaborator(noteId, collaboratorId);
+      const result = await this.notesRepository.removeCollaborator(noteId, collaboratorId);
+
+      if (result.rowCount === 0) {
+        throw new Error("Falha ao remover colaborador");
+      }
 
       res.status(200).json({
         message: "Colaborador removido com sucesso",
@@ -872,8 +886,8 @@ class NotesController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar se a nota existe e pertence ao usuário
-      await this._validateNoteOwnership(noteId, userId);
+      // Verificar se a nota existe e o usuário tem acesso (proprietário ou colaborador pode ver)
+      await this._validateNoteAccess(noteId, userId);
 
       // Buscar colaboradores pelo /:id da nota
       const collaborators =
