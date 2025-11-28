@@ -1,5 +1,5 @@
 const { MailService } = require("@/services/email/config/mail-service");
-const addedToNoteTemplate = require("./addedToNote");
+const addedToNoteTemplate = require("./added-to-note");
 
 /**
  * Envia email de notificação quando um colaborador é adicionado à nota
@@ -14,7 +14,7 @@ async function sendCollaborationNotification(collaboratorEmail, collaboratorName
   try {
     const env = process.env.NODE_ENV || "development";
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    const noteUrl = noteId ? `${frontendUrl}/notes/${noteId}` : `${frontendUrl}/notes`;
+    const noteUrl = noteId ? `${frontendUrl}/app/notes/view/${noteId}` : `${frontendUrl}/notes`;
 
     // Gerar o template do email
     const emailTemplate = addedToNoteTemplate({

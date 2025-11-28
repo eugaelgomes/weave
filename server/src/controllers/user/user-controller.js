@@ -1,8 +1,8 @@
 const bcrypt = require("bcrypt");
 const { validationResult } = require("express-validator");
 const UserRepository = require("@/repositories/user-manager");
-const welcomeMailModule = require("@/services/email/templates/welcome/welcome-mail");
-const deleteAccountModule = require("@/services/email/templates/delete_account/delete_user");
+const welcomeMailModule = require("@/services/email/templates/welcome-mails/welcome-mail");
+const deleteAccountModule = require("@/services/email/templates/delete-account/delete-account-message");
 const imageUtils = require("@/middlewares/data/image-utils");
 const { welcome_message } = welcomeMailModule;
 const { delete_account_notification } = deleteAccountModule;
