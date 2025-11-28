@@ -1,5 +1,5 @@
 {
-  "name": "codaweb-notes-api",
+  "name": "weave-notes-api",
   "version": "1.0.0",
   "description": "",
   "main": "src/index.js",
@@ -18,10 +18,10 @@
     "express",
     "router",
     "api",
-    "codaweb-notes",
+    "weave-notes",
     "backend",
     "typescript",
-    "codaweb-notes-api"
+    "weave-notes-api"
   ],
   "author": "Gael Renê Gomes",
   "repository": {

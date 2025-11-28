@@ -31,7 +31,7 @@ class JobManager {
       id: jobId,
       type,
       userId,
-      status: "pending", // pending, processing, completed, failed
+      status: "pending",
       createdAt: new Date().toISOString(),
       startedAt: null,
       completedAt: null,

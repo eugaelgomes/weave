@@ -139,7 +139,7 @@ POST   /password/reset-password     # Confirmar reset com token
 ```bash
 # Clone o repositório
 git clone <repository-url>
-cd codaweb-notes/server
+cd weave-notes/server
 
 # Instale as dependências
 npm install
@@ -185,7 +185,7 @@ cp .env.example .env
 
 #### 🗄️ Banco de Dados
 ```env
-DATABASE_NAME=codaweb_notes
+DATABASE_NAME=weave_notes
 DATABASE_HOST_URL=localhost
 DATABASE_SERVICE_PORT=5432
 DATABASE_USERNAME=seu_usuario
@@ -405,13 +405,13 @@ brew services list                # macOS
 pg_ctl status                     # Windows
 
 # 2. Testar conexão manual
-psql -h localhost -U seu_usuario -d codaweb_notes -c "SELECT 1;"
+psql -h localhost -U seu_usuario -d weave_notes -c "SELECT 1;"
 
 # 3. Verificar variáveis .env
 grep DATABASE .env
 
 # 4. Criar tabela de sessões (se não existir)
-psql -U seu_usuario -d codaweb_notes -f sql/create_sessions_table.sql
+psql -U seu_usuario -d weave_notes -f sql/create_sessions_table.sql
 ```
 
 **Erro comum:** `ECONNREFUSED` → PostgreSQL não está rodando ou host/porta incorretos
