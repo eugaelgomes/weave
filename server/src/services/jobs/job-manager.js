@@ -1,22 +1,8 @@
-const fs = require("fs").promises;
-const path = require("path");
+const { executeQuery } = require("../db/db-connection");
 
 class JobManager {
   constructor() {
-    this.jobs = new Map(); // Armazena jobs ativos em memória
-    this.jobsDir = path.join(process.cwd(), "temp", "jobs");
-    this.ensureJobsDirectory();
-  }
-
-  /**
-   * Garante que o diretório de jobs temporários existe
-   */
-  async ensureJobsDirectory() {
-    try {
-      await fs.mkdir(this.jobsDir, { recursive: true });
-    } catch (error) {
-      console.error("Erro ao criar diretório de jobs:", error);
-    }
+    this.jobs = new Map(); // Cache em memória para performance
   }
 
   /**
@@ -27,27 +13,25 @@ class JobManager {
    * @param {Object} metadata - Metadados adicionais
    */
   async createJob(jobId, type, userId, metadata = {}) {
-    const job = {
-      id: jobId,
+    const query = `
+      INSERT INTO jobs (id, type, user_id, status, progress, metadata)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *
+    `;
+    
+    const [job] = await executeQuery(query, [
+      jobId,
       type,
       userId,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-      startedAt: null,
-      completedAt: null,
-      progress: 0,
-      error: null,
-      result: null,
-      metadata
-    };
+      "pending",
+      0,
+      JSON.stringify(metadata)
+    ]);
 
-    // Armazenar em memória
-    this.jobs.set(jobId, job);
+    // Cache em memória
+    this.jobs.set(jobId, this.formatJob(job));
 
-    // Salvar em arquivo para persistência
-    await this.saveJobToFile(job);
-
-    return job;
+    return this.formatJob(job);
   }
 
   /**
@@ -56,29 +40,56 @@ class JobManager {
    * @param {Object} updates - Atualizações
    */
   async updateJob(jobId, updates) {
-    const job = this.jobs.get(jobId);
+    const setParts = [];
+    const values = [];
+    let paramIndex = 1;
+
+    // Construir query dinamicamente
+    if (updates.status !== undefined) {
+      setParts.push(`status = $${paramIndex++}`);
+      values.push(updates.status);
+      
+      // Marcar timestamps automaticamente
+      if (updates.status === "processing") {
+        setParts.push("started_at = NOW()");
+      }
+      if (["completed", "failed"].includes(updates.status)) {
+        setParts.push("completed_at = NOW()");
+      }
+    }
+    if (updates.progress !== undefined) {
+      setParts.push(`progress = $${paramIndex++}`);
+      values.push(updates.progress);
+    }
+    if (updates.error !== undefined) {
+      setParts.push(`error = $${paramIndex++}`);
+      values.push(updates.error);
+    }
+    if (updates.result !== undefined) {
+      setParts.push(`result = $${paramIndex++}`);
+      values.push(JSON.stringify(updates.result));
+    }
+
+    values.push(jobId);
+
+    const query = `
+      UPDATE jobs 
+      SET ${setParts.join(", ")}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+
+    const [job] = await executeQuery(query, values);
+    
     if (!job) {
       throw new Error("Job não encontrado");
     }
 
-    // Aplicar atualizações
-    Object.assign(job, updates);
+    // Atualizar cache
+    const formattedJob = this.formatJob(job);
+    this.jobs.set(jobId, formattedJob);
 
-    // Marcar timestamps
-    if (updates.status === "processing" && !job.startedAt) {
-      job.startedAt = new Date().toISOString();
-    }
-    if (["completed", "failed"].includes(updates.status) && !job.completedAt) {
-      job.completedAt = new Date().toISOString();
-    }
-
-    // Atualizar em memória
-    this.jobs.set(jobId, job);
-
-    // Salvar em arquivo
-    await this.saveJobToFile(job);
-
-    return job;
+    return formattedJob;
   }
 
   /**
@@ -86,8 +97,23 @@ class JobManager {
    * @param {string} jobId - ID do job
    * @returns {Object|null} Job encontrado
    */
-  getJob(jobId) {
-    return this.jobs.get(jobId) || null;
+  async getJob(jobId) {
+    // Verificar cache primeiro
+    if (this.jobs.has(jobId)) {
+      return this.jobs.get(jobId);
+    }
+
+    // Buscar no banco
+    const query = "SELECT * FROM jobs WHERE id = $1";
+    const [job] = await executeQuery(query, [jobId]);
+    
+    if (job) {
+      const formattedJob = this.formatJob(job);
+      this.jobs.set(jobId, formattedJob);
+      return formattedJob;
+    }
+    
+    return null;
   }
 
   /**
@@ -95,67 +121,49 @@ class JobManager {
    * @param {string} userId - ID do usuário
    * @returns {Array} Lista de jobs
    */
-  getUserJobs(userId) {
-    return Array.from(this.jobs.values())
-      .filter(job => job.userId === userId)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  async getUserJobs(userId) {
+    const query = `
+      SELECT * FROM jobs 
+      WHERE user_id = $1 
+      ORDER BY created_at DESC
+    `;
+    
+    const jobs = await executeQuery(query, [userId]);
+    return jobs.map(job => this.formatJob(job));
   }
 
   /**
-   * Remove job da memória e arquivo (cleanup)
+   * Remove job do banco e cache
    * @param {string} jobId - ID do job
    */
   async deleteJob(jobId) {
-    // Remover da memória
+    // Remover do banco
+    const query = "DELETE FROM jobs WHERE id = $1";
+    await executeQuery(query, [jobId]);
+
+    // Remover do cache
     this.jobs.delete(jobId);
-
-    // Remover arquivo
-    try {
-      const filePath = path.join(this.jobsDir, `${jobId}.json`);
-      await fs.unlink(filePath);
-    } catch (error) {
-      // Arquivo pode não existir, ignorar erro
-    }
   }
 
   /**
-   * Salva job em arquivo para persistência
-   * @param {Object} job - Dados do job
+   * Formata job do banco para o formato esperado
+   * @param {Object} dbJob - Job do banco de dados
+   * @returns {Object} Job formatado
    */
-  async saveJobToFile(job) {
-    try {
-      const filePath = path.join(this.jobsDir, `${job.id}.json`);
-      await fs.writeFile(filePath, JSON.stringify(job, null, 2));
-    } catch (error) {
-      console.error(`Erro ao salvar job ${job.id}:`, error);
-    }
-  }
-
-  /**
-   * Carrega jobs salvos ao inicializar (recuperação após restart)
-   */
-  async loadJobsFromFiles() {
-    try {
-      const files = await fs.readdir(this.jobsDir);
-      const jsonFiles = files.filter(file => file.endsWith(".json"));
-
-      for (const file of jsonFiles) {
-        try {
-          const filePath = path.join(this.jobsDir, file);
-          const data = await fs.readFile(filePath, "utf8");
-          const job = JSON.parse(data);
-          
-          // Só carregar jobs não finalizados
-          if (!["completed", "failed"].includes(job.status)) {
-            this.jobs.set(job.id, job);
-          }
-        } catch (error) {
-          console.error(`Erro ao carregar job do arquivo ${file}:`, error);
-        }
-      }
-    } catch (error) {
-      console.error("Erro ao carregar jobs salvos:", error);
-    }
+  formatJob(dbJob) {
+    return {
+      id: dbJob.id,
+      type: dbJob.type,
+      userId: dbJob.user_id,
+      status: dbJob.status,
+      createdAt: dbJob.created_at,
+      startedAt: dbJob.started_at,
+      completedAt: dbJob.completed_at,
+      progress: dbJob.progress,
+      error: dbJob.error,
+      result: dbJob.result,
+      metadata: dbJob.metadata
+    };
   }
 
   /**
@@ -163,26 +171,18 @@ class JobManager {
    * Remove jobs finalizados há mais de 24 horas
    */
   async cleanupOldJobs() {
-    const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-    const jobsToDelete = [];
-
-    for (const [jobId, job] of this.jobs.entries()) {
-      if (["completed", "failed"].includes(job.status) && job.completedAt) {
-        const completedAt = new Date(job.completedAt);
-        if (completedAt < oneDayAgo) {
-          jobsToDelete.push(jobId);
-        }
-      }
-    }
-
-    // Deletar jobs antigos
-    for (const jobId of jobsToDelete) {
-      await this.deleteJob(jobId);
-    }
-
-    console.log(`Cleanup executado: ${jobsToDelete.length} jobs antigos removidos`);
+    const query = `
+      DELETE FROM jobs 
+      WHERE status IN ('completed', 'failed') 
+      AND completed_at < NOW() - INTERVAL '24 hours'
+    `;
+    
+    const result = await executeQuery(query);
+    
+    // Limpar cache também
+    this.jobs.clear();
+    
+    console.log("Cleanup executado: jobs antigos removidos");
   }
 
   /**
@@ -199,9 +199,6 @@ class JobManager {
 
 // Singleton
 const jobManager = new JobManager();
-
-// Carregar jobs salvos na inicialização
-jobManager.loadJobsFromFiles();
 
 // Cleanup automático a cada 6 horas
 setInterval(() => {

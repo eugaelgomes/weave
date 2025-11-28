@@ -1,7 +1,7 @@
 const getAllDataRepository = require("@/repositories/backups");
 const userRepository = require("@/repositories/user-manager");
 const jobManager = require("@/services/jobs/job-manager");
-const { sendBackupEmail } = require("@/services/email/templates/backup/backupNotification");
+const { sendBackupEmail } = require("@/services/email/templates/backup/backup-notification");
 
 class BackupController {
   constructor() {
@@ -81,8 +81,8 @@ class BackupController {
         throw new Error(`Muitos dados para backup: ${totalNotes} notas, ${totalBlocks} blocos. Contate o suporte.`);
       }
 
-      // Formatação e limpeza dos dados
-      const backupData = this._formatBackupData(rawData);
+      // Formatação em CSV
+      const backupData = this._formatBackupDataCSV(rawData);
 
       await jobManager.updateJob(jobId, { progress: 80 });
 
@@ -150,6 +150,111 @@ class BackupController {
 
     // Outros erros passam para o middleware de erro global
     next(error);
+  }
+
+  /**
+   * Converte dados para formato CSV
+   * @param {Array} rawData - Dados brutos do banco
+   * @returns {string} - String CSV
+   */
+  _formatBackupDataCSV(rawData) {
+    const lines = [];
+    
+    // Cabeçalho
+    lines.push([
+      "note_id",
+      "title",
+      "description",
+      "tags",
+      "created_at",
+      "updated_at",
+      "owner_id",
+      "owner_name",
+      "owner_username",
+      "collaborators",
+      "block_id",
+      "block_type",
+      "block_text",
+      "block_position",
+      "block_done",
+      "block_created_at"
+    ].join(","));
+
+    // Processar cada nota e seus blocos
+    rawData.forEach(note => {
+      const activeBlocks = note.blocks?.filter(block => !block.deleted) || [];
+      const collaborators = note.collaborators
+        ?.filter(c => !c.removed)
+        .map(c => c.username || c.name)
+        .join(";") || "";
+
+      if (activeBlocks.length === 0) {
+        // Nota sem blocos
+        lines.push([
+          this._escapeCsv(note.note_id),
+          this._escapeCsv(note.title || ""),
+          this._escapeCsv(note.description || ""),
+          this._escapeCsv(note.tags?.join(";") || ""),
+          this._escapeCsv(note.created_at),
+          this._escapeCsv(note.updated_at),
+          this._escapeCsv(note.owner_id),
+          this._escapeCsv(note.owner?.name || ""),
+          this._escapeCsv(note.owner?.username || ""),
+          this._escapeCsv(collaborators),
+          "", // block_id
+          "", // block_type
+          "", // block_text
+          "", // block_position
+          "", // block_done
+          ""  // block_created_at
+        ].join(","));
+      } else {
+        // Nota com blocos (uma linha por bloco)
+        activeBlocks.forEach(block => {
+          lines.push([
+            this._escapeCsv(note.note_id),
+            this._escapeCsv(note.title || ""),
+            this._escapeCsv(note.description || ""),
+            this._escapeCsv(note.tags?.join(";") || ""),
+            this._escapeCsv(note.created_at),
+            this._escapeCsv(note.updated_at),
+            this._escapeCsv(note.owner_id),
+            this._escapeCsv(note.owner?.name || ""),
+            this._escapeCsv(note.owner?.username || ""),
+            this._escapeCsv(collaborators),
+            this._escapeCsv(block.block_id),
+            this._escapeCsv(block.type || ""),
+            this._escapeCsv(block.text || ""),
+            this._escapeCsv(block.position?.toString() || ""),
+            this._escapeCsv(block.done?.toString() || ""),
+            this._escapeCsv(block.created_at || "")
+          ].join(","));
+        });
+      }
+    });
+
+    return lines.join("\n");
+  }
+
+  /**
+   * Escapa valores para CSV (RFC 4180)
+   * @param {any} value - Valor a ser escapado
+   * @returns {string} - Valor escapado
+   */
+  _escapeCsv(value) {
+    if (value === null || value === undefined) {
+      return "";
+    }
+    
+    const str = String(value);
+    
+    // Se contém vírgula, aspas ou quebra de linha, envolver em aspas
+    if (str.includes(",") || str.includes("\"") || str.includes("\n") || str.includes("\r")) {
+      // Duplicar aspas internas
+      return "\"" + str.replace(/"/g, "\"\"") + "\"";
+    }
+    
+    return str;
   }
 
   /**
@@ -256,7 +361,7 @@ class BackupController {
       }
 
       // Verificar se já existe backup em andamento para este usuário
-      const existingJobs = jobManager.getUserJobs(userId);
+      const existingJobs = await jobManager.getUserJobs(userId);
       const activeJob = existingJobs.find(job => 
         job.type === "backup_export" && 
         ["pending", "processing"].includes(job.status)
@@ -318,7 +423,7 @@ class BackupController {
       if (!userId) return;
 
       // Buscar job
-      const job = jobManager.getJob(jobId);
+      const job = await jobManager.getJob(jobId);
       if (!job) {
         return res.status(404).json({ error: "Job não encontrado" });
       }
@@ -363,7 +468,7 @@ class BackupController {
       if (!userId) return;
 
       // Buscar jobs do usuário
-      const jobs = jobManager.getUserJobs(userId)
+      const jobs = (await jobManager.getUserJobs(userId))
         .filter(job => job.type === "backup_export")
         .slice(0, 10); // Limitar a 10 mais recentes
 
