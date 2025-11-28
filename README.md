@@ -1,24 +1,30 @@
-# Weave Notes: App Web Full-Stack Dockerizado
+# Weave Notes: Web App Full-Stack
 
 <div align="center">
 
-[![Deploy Status](https://img.shields.io/badge/deploy-ativo-brightgreen)](https://notes.gaelgomes.dev/) [![Docker](https://img.shields.io/badge/Docker-100%25-blue?logo=docker)](https://docker.com/) [![Node.js](https://img.shields.io/badge/Node.js-v20+-green?logo=node.js)](https://nodejs.org/) [![React](https://img.shields.io/badge/NextJS-15?logo=react)](https://reactjs.org/)
+[![Deploy Status](https://img.shields.io/badge/deploy-ativo-brightgreen)](https://notes.gaelgomes.dev/)
+[![Docker](https://img.shields.io/badge/Docker-100%25-blue?logo=docker)](https://docker.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-v22+-green?logo=nodedotjs)](https://nodejs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Express.js](https://img.shields.io/badge/Express.js-15+-000000?logo=express&logoColor=white)](https://expressjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-316192?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 
-Acesse em: **[https://notes.gaelgomes.dev](https://notes.gaelgomes.dev/)**
+Live deploy **[https://notes.gaelgomes.dev](https://notes.gaelgomes.dev/)**
 
-Aplicação **full-stack** para gerenciamento de anotações - criação, compartilhamento e mapeamento de tags e palavras-chaves. Projeto *dockerizado* desenvolvido com foco em **aprendizado** de containerização, orquestração e integração front-end/back-end.
-
+Web app full stack para gerenciamento de notas e anotações de usuários, com criação e edição de conteúdos em diferentes formatos, incluindo texto, código, parágrafos e listas. Além disso o app conta com função de compartilhamento de notas com outros usuários e mapeamento de tags/palavras chaves. 
 </div>
 
 ---
 
-# 💡 The idea
-
-Criar um app de anotações/notas com função de criar, editar, gerenciar e compartilhar notas de forma simples e intuitiva.
-
-Implementar dockerização de projeto, ampliar conhecimento em Postgres, ciber segurança e
-
 # Funcionalidades
+
+### 📝 **Gerenciamento de Notas**
+
+- CRUD do fluxos de notas
+- Sistema de blocos e categorização ( texto, código, parágrafo, ...)
+- Interface drag-and-drop
+- Pesquisa e filtros de notas e páginas
+- Backup e exclusão total por parte do usuário
 
 ### 🔐 **Autenticação & Segurança**
 
@@ -28,14 +34,6 @@ Implementar dockerização de projeto, ampliar conhecimento em Postgres, ciber s
 - Cookies HttpOnly
 - Middleware de autenticação e validação de dados
 - Rate limiting e proteção CORS
-
-### 📝 **Gerenciamento de Notas**
-
-- CRUD do fluxos de notas
-- Sistema de blocos e categorização ( texto, código, parágrafo, ...)
-- Interface drag-and-drop
-- Pesquisa e filtros de notas e páginas
-- Backup e exclusão total por parte do usuário
 
 ### 🔧 **DevOps & Infraestrutura**
 
@@ -51,7 +49,7 @@ Implementar dockerização de projeto, ampliar conhecimento em Postgres, ciber s
 ### **Frontend**
 
 ```javascript
-Next JS 15        // Framework de frontend
+Next.JS 15        // Framework de frontend
 TailwindCSS       // Framework CSS
 Axios             // HTTP client
 Next Router      // Roteamento
@@ -120,24 +118,53 @@ docker compose -f docker-compose.yml up -d
 
 ```
 notes-web-app/
-├── 🖥️  web/                    # Frontend React
-│   ├── src/
+├── 🖥️  web/                    # Frontend Next.js
+│   ├── app/
 │   │   ├── components/        # Componentes reutilizáveis
-│   │   ├── pages/            # Páginas da aplicação
+│   │   │   ├── layout/       # Componentes de layout
+│   │   │   └── ui/           # Componentes de UI
+│   │   ├── contexts/         # Context API (Auth, Notes)
 │   │   ├── services/         # Serviços e API clients
-│   │   ├── context/          # Context API (Auth, Notes)
-│   │   └── hooks/            # Custom hooks
+│   │   │   ├── auth-service/
+│   │   │   ├── backup-service/
+│   │   │   └── notes-service/
+│   │   ├── utils/            # Utilitários
+│   │   ├── auth/             # Páginas de autenticação
+│   │   ├── app/              # Páginas da aplicação
+│   │   │   ├── home/
+│   │   │   ├── notes/
+│   │   │   ├── community/
+│   │   │   └── settings/
+│   │   └── about/            # Página sobre
+│   ├── config/
+│   │   └── nginx.conf        # Configuração Nginx
+│   ├── public/               # Arquivos estáticos
+│   ├── types/                # Definições TypeScript
 │   ├── Dockerfile            # Container frontend
 │   └── package.json
 │
 ├── ⚙️  server/                 # Backend Node.js
 │   ├── src/
 │   │   ├── controllers/      # Controladores das rotas
+│   │   │   ├── auth/
+│   │   │   ├── backup/
+│   │   │   ├── notes/
+│   │   │   ├── password/
+│   │   │   └── user/
 │   │   ├── middlewares/      # Middlewares personalizados
+│   │   │   ├── auth/
+│   │   │   ├── data/
+│   │   │   └── security/
 │   │   ├── repositories/     # Camada de dados
 │   │   ├── routes/           # Definição das rotas
-│   │   └── services/         # Serviços (DB, Email, Storage)
+│   │   ├── services/         # Serviços (DB, Email, Storage)
+│   │   │   ├── db/
+│   │   │   ├── email/
+│   │   │   ├── jobs/
+│   │   │   └── storage/
+│   │   └── config/           # Configurações
 │   ├── docs/                 # Documentação da API
+│   ├── temp/                 # Arquivos temporários
 │   ├── Dockerfile            # Container backend
 │   └── package.json
 │
@@ -161,40 +188,12 @@ develop:
     - action: rebuild       # Rebuild em mudanças críticas
       path: ./package.json
 ```
-
----
-
-## 🔐 Deploy
-
-### Variáveis de Ambiente
-
-Consulte `docker-compose.override.example.yml` para configurações completas.
-
-### Deploy em Produção
-
-Veja instruções detalhadas em [PRODUCTION_SETUP.md
-](./PRODUCTION_SETUP.md)
-
----
-
-# 💻 The journey
-
-O intuito do projeto no geral foi muito voltado para o viés autodidata, claro que com apoio de IA e acompanhamento de discurssões sobre segurança no desenvolvimento. Cada funcionalidade foi criada com através de muitos "porquês" e "e se" feitos ao Claude Code, com o conhecimento acumulado nas aulas teóricas da faculdade e estudo prático em cursos de programação em js/ts.
-
-### ⛰️ Trilha
-
-1. **Docker Compose**: Volumes, networks, depends_on, services
-2. **Develop.watch**: Sincronização de arquivos em tempo real
-3. **Multi-stage builds**: Otimização para produção
-4. **Nginx & Proxy**: Roteamento e balanceamento
-5. **Postgres:** Tables structure, relações, cascade, índices.
-
 ---
 
 <div align="center">
 
 **Feito em algumas madrugadas por [Gael Gomes](https://github.com/eugaelgomes)**
 
-[notes.gaelgomes.dev](https://notes.gaelgomes.dev/) • [hello@gaelgomes.dev](mailto:hello@gaelgomes.dev) • [in/gael-rene-gomes](https://linkedin.com/in/gael-rene-gomes)
+[https://notes.gaelgomes.dev](https://notes.gaelgomes.dev/) • [hello@gaelgomes.dev](mailto:hello@gaelgomes.dev) • [in/gael-rene-gomes](https://linkedin.com/in/gael-rene-gomes)
 
 </div>
