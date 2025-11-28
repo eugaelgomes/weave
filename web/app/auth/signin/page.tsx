@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useAuth } from "../../contexts/AuthContext";
+import { useSearchParams } from "next/navigation";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import ForgotPasswordModal from "../modals/forgot-password";
 import Link from "next/link";
@@ -17,10 +18,18 @@ export default function SignIn() {
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
 
   const { login, authenticated } = useAuth();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect") || "/app/home";
 
-  // If already authenticated, redirect to home
-  if (authenticated && typeof window !== "undefined") {
-    window.location.href = "/app/home";
+  // If already authenticated, redirect to the target page or home
+  useEffect(() => {
+    if (authenticated && typeof window !== "undefined") {
+      window.location.href = redirectUrl;
+    }
+  }, [authenticated, redirectUrl]);
+
+  // Don't render the form if already authenticated
+  if (authenticated) {
     return null;
   }
 
@@ -43,7 +52,7 @@ export default function SignIn() {
         setStatus(result.message || "Login realizado com sucesso!");
         setTimeout(() => {
           setStatus("");
-          window.location.href = "/app/home";
+          window.location.href = redirectUrl;
         }, 200);
       } else {
         let message = result.message || "Falha no login";

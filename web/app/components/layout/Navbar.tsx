@@ -103,7 +103,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               className="text-lg font-bold text-yellow-500 transition-colors hover:text-yellow-400 sm:text-xl"
             >
               <span className="hidden sm:inline">Weave Notes</span>
-              <span className="sm:hidden">CW Notes</span>
+              <span className="sm:hidden">Weave Notes</span>
             </Link>
           </div>
 

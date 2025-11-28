@@ -3,7 +3,7 @@ const { MailService } = require("@/services/email/config/mail-service");
 async function welcome_message(nome, email, username) {
   try {
     let mailOptions = {
-      from: "CW Notes <hello@gaelgomes.dev>",
+      from: "Weave Notes <hello@gaelgomes.dev>",
       to: email,
       subject: "Bem-vindo ao Weave Notes",
       html: `<!DOCTYPE html>

@@ -3,7 +3,7 @@ const { MailService } = require("@/services/email/config/mail-service");
 async function delete_account_notification(nome, email, username) {
   try {
     let mailOptions = {
-      from: "CW Notes <hello@gaelgomes.dev>",
+      from: "Weave Notes <hello@gaelgomes.dev>",
       to: email,
       subject: "Conta excluída com sucesso - Weave Notes",
       html: `<!DOCTYPE html>

@@ -14,7 +14,10 @@ async function sendCollaborationNotification(collaboratorEmail, collaboratorName
   try {
     const env = process.env.NODE_ENV || "development";
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    const noteUrl = noteId ? `${frontendUrl}/app/notes/view/${noteId}` : `${frontendUrl}/notes`;
+    // Redirecionar para login com parâmetro de redirect para a nota
+    const noteUrl = noteId 
+      ? `${frontendUrl}/auth/signin?redirect=/app/notes/view/${noteId}` 
+      : `${frontendUrl}/auth/signin?redirect=/app/notes`;
 
     // Gerar o template do email
     const emailTemplate = addedToNoteTemplate({
@@ -24,7 +27,7 @@ async function sendCollaborationNotification(collaboratorEmail, collaboratorName
     });
 
     const mailOptions = {
-      from: "CW Notes <hello@gaelgomes.dev>",
+      from: "Weave Notes <hello@gaelgomes.dev>",
       to: collaboratorEmail,
       subject: emailTemplate.subject,
       text: emailTemplate.text,

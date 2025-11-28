@@ -31,7 +31,7 @@ async function sendBackupEmail(userEmail, userName, backupData, options = {}) {
     });
 
     const mailOptions = {
-      from: "CW Notes <hello@gaelgomes.dev>",
+      from: "Weave Notes <hello@gaelgomes.dev>",
       to: userEmail,
       subject: emailTemplate.subject,
       text: emailTemplate.text,

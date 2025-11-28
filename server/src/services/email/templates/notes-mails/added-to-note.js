@@ -227,7 +227,7 @@ module.exports = ({ noteName, ownerName, noteUrl }) => {
         </div>
 
         <p style="font-size: 14px; color: #737373; text-align: center;">
-          A nota já está disponível em sua conta.
+          Faça login para acessar a nota compartilhada.
         </p>
 
         <p style="font-size: 14px; color: #737373;">
@@ -261,7 +261,7 @@ Permissões do colaborador:
 
 Link de acesso: ${viewNoteLink}
 
-A nota já está disponível em sua conta.
+Você será redirecionado para fazer login antes de acessar a nota.
 
 Caso não conheça ${ownerName} ou não esperava este convite, você pode ignorar este email com segurança.
 

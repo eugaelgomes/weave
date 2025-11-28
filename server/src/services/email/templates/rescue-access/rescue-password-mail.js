@@ -10,7 +10,7 @@ async function mail_rescue_pass(email, token) {
   }
   try {
     let mailOptions = {
-      from: "CW Notes <hello@gaelgomes.dev>",
+      from: "Weave Notes <hello@gaelgomes.dev>",
       to: email,
       subject: "Redefinição de senha - Weave Notes",
       text: `Prezado(a),\n\nRecebemos uma solicitação para redefinir a senha da sua conta.\n\nToken de recuperação: ${token}\n\nLink para redefinição: ${resetLink}\n\nEste link expira em 1 hora.\n\nCaso não tenha feito esta solicitação, ignore este email.\n\nAtenciosamente,\nEquipe Weave Notes`,
