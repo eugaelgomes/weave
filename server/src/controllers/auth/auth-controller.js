@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
-const AuthRepository = require("@/repositories/auth-repo");
+const AuthRepository = require("@/repositories/authentication");
 
 const secretKey = process.env.SECRET_KEY;
 
@@ -42,6 +42,7 @@ class AuthController {
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Permite cross-origin em produção
         maxAge: 12 * 60 * 60 * 1000,
         path: "/",
+        domain: process.env.NODE_ENV === "production" && process.env.COOKIE_DOMAIN ? process.env.COOKIE_DOMAIN : undefined,
       });
 
       const login_time = new Date();
@@ -188,6 +189,7 @@ class AuthController {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
+        domain: process.env.NODE_ENV === "production" && process.env.COOKIE_DOMAIN ? process.env.COOKIE_DOMAIN : undefined,
       });
 
       // destruir sessão
@@ -247,7 +249,7 @@ class AuthController {
       let avatarUrl = updatedUser.avatar_url || null;
       if (req.file && req.file.buffer) {
         const imageUtils = require("@/middlewares/data/image-utils");
-        const UserRepository = require("@/repositories/user-repo");
+        const UserRepository = require("@/repositories/user-manager");
         const uploadResult = await imageUtils.saveProfileImage(
           req.file.buffer,
           req.file.mimetype,

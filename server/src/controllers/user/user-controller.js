@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const { validationResult } = require("express-validator");
-const UserRepository = require("@/repositories/user-repo");
+const UserRepository = require("@/repositories/user-manager");
 const welcomeMailModule = require("@/services/email/templates/welcome/welcome-mail");
 const deleteAccountModule = require("@/services/email/templates/delete_account/delete_user");
 const imageUtils = require("@/middlewares/data/image-utils");

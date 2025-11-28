@@ -137,8 +137,8 @@ class notesRepository {
 
     // CONSTRUÇÃO DINÂMICA DA QUERY
     let whereConditions = [
-      "(n.user_id = $1 OR EXISTS (SELECT 1 FROM note_collaborators nc2 WHERE nc2.note_id = n.id AND nc2.user_id = $1))",
-      "n.deleted = false",
+      `(n.user_id = $1 OR EXISTS (SELECT 1 FROM note_collaborators nc2 WHERE nc2.note_id = n.id AND nc2.user_id = $1))",
+      "n.deleted = false`,
     ];
     let queryParams = [userId];
     let paramIndex = 2; // Próximo índice de parâmetro
@@ -451,7 +451,7 @@ class notesRepository {
   }
 
   async deleteNoteById(noteId) {
-    const query = "UPDATE notes SET deleted = true WHERE id = $1";
+    const query = `UPDATE notes SET deleted = true WHERE id = $1`;
     await executeQuery(query, [noteId]);
   }
 

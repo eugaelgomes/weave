@@ -1,5 +1,5 @@
-const getAllDataRepository = require("@/repositories/get-all-data");
-const userRepository = require("@/repositories/user-repo");
+const getAllDataRepository = require("@/repositories/backups");
+const userRepository = require("@/repositories/user-manager");
 const jobManager = require("@/services/jobs/job-manager");
 const { sendBackupEmail } = require("@/services/email/templates/backup/backupNotification");
 
