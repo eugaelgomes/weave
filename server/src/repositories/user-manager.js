@@ -59,12 +59,12 @@ class UserRepository {
 
   // Querie para encontrar usuário por username ou email
   async findByUsernameOrEmail(username, email) {
-    const query = `SELECT * FROM users WHERE email = $1 OR username = $2`;
+    const query = `SELECT * FROM users WHERE (email = $1 OR username = $2) AND deleted = false`;
     return await executeQuery(query, [email, username]);
   }
 
   async getUserById(userId) {
-    const query = `SELECT user_id, username, name, email, avatar_url, created_at FROM users WHERE user_id = $1 LIMIT 1`;
+    const query = `SELECT user_id, username, name, email, avatar_url, created_at FROM users WHERE user_id = $1 AND deleted = false LIMIT 1`;
     const results = await executeQuery(query, [userId]);
     return results[0];
   }
@@ -74,8 +74,9 @@ class UserRepository {
     const query = `
       SELECT user_id, username, name, email, avatar_url 
       FROM users 
-      WHERE LOWER(username) LIKE LOWER($1) 
-         OR LOWER(email) LIKE LOWER($1)
+      WHERE (LOWER(username) LIKE LOWER($1) 
+         OR LOWER(email) LIKE LOWER($1))
+         AND deleted = false
       ORDER BY username
       LIMIT 10
     `;
@@ -84,7 +85,7 @@ class UserRepository {
 
   // Querie para encontrar usuário por ID
   async findById(userId) {
-    const query = `SELECT user_id, username, name, email, avatar_url FROM users WHERE user_id = $1 LIMIT 1`;
+    const query = `SELECT user_id, username, name, email, avatar_url FROM users WHERE user_id = $1 AND deleted = false LIMIT 1`;
     const results = await executeQuery(query, [userId]);
     return results[0];
   }

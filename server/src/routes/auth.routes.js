@@ -7,8 +7,8 @@ const { loginLimiter } = require("@/middlewares/security/limiters");
 const validateImage = require("@/middlewares/data/image-validator");
 const toString = require("@/middlewares/data/stringfy");
 
-const AuthController = require("@/controllers/auth/auth-controller");
-const authController = require("@/controllers/auth/auth-controller");
+const AuthController = require("@/controllers/authentication/auth-controller");
+const authController = require("@/controllers/authentication/auth-controller");
 
 const router = express.Router();
 

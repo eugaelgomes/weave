@@ -8,32 +8,25 @@ class BackupController {
     this.getAllDataRepository = getAllDataRepository;
     this.userRepository = userRepository;
   }
-
-  // ========================================
-  // MÉTODOS UTILITÁRIOS E VALIDAÇÃO
-  // ========================================
-
   /**
-   * Valida se o usuário está autenticado
+   * Valida autenticação
    * @param {Object} req - Request object
    * @param {Object} res - Response object
-   * @returns {Object|null} - Retorna o userId se válido, ou envia erro HTTP
+   * @returns {Object|null} - Retornar ID Usário ou Erro se nulo
    */
   _validateAuthentication(req, res) {
     const userId = req.user?.userId;
-
     if (!userId) {
       res.status(401).json({ error: "Usuário não autenticado" });
       return null;
     }
-
     return userId;
   }
 
   /**
-   * Valida ID de usuário para prevenir injection
-   * @param {string} userId - ID do usuário
-   * @returns {boolean} - Se é válido
+   * Validação de ID do usuário
+   * @param {string} userId
+   * @returns {boolean} - true se válido, false se contrário
    */
   _validateUserId(userId) {
     // Verificar se é um número ou UUID válido
@@ -42,14 +35,14 @@ class BackupController {
     return isNumeric || isUUID;
   }
 
+  // BakcUp Job - Assíncrono
   /**
-   * Executa backup assíncrono em background
    * @param {string} jobId - ID do job
    * @param {string} userId - ID do usuário
    */
   async _executeBackupJob(jobId, userId) {
     try {
-      // Atualizar status para processando
+      // Atualizar status para processando no banco/tabela de jobs
       await jobManager.updateJob(jobId, { 
         status: "processing", 
         progress: 10 
@@ -77,7 +70,7 @@ class BackupController {
       const totalNotes = rawData.length;
       const totalBlocks = rawData.reduce((sum, note) => sum + (note.blocks?.length || 0), 0);
       
-      if (totalNotes > 10000 || totalBlocks > 100000) {
+      if (totalNotes > 1000 || totalBlocks > 5000) {
         throw new Error(`Muitos dados para backup: ${totalNotes} notas, ${totalBlocks} blocos. Contate o suporte.`);
       }
 
@@ -328,27 +321,7 @@ class BackupController {
 
     return backupData;
   }
-
-  // ========================================
-  // ENDPOINTS DA API
-  // ========================================
-
-  /**
-   * POST /api/backup/request - Solicitar backup assíncrono
-   * Inicia um job em background para gerar e enviar backup por email
-   * 
-   * RESPOSTA:
-   * - job_id: ID do job para acompanhar progresso
-   * - status: Status inicial (pending)
-   * - estimated_time: Tempo estimado em minutos
-   * - message: Mensagem informativa
-   * 
-   * SEGURANÇA:
-   * - Apenas dados que o usuário tem acesso (notas próprias + colaborações)
-   * - Limite máximo de dados para prevenir sobrecarga
-   * - Timeout de 5 minutos por job
-   * - Rate limiting automático (1 backup por usuário de cada vez)
-   */
+  
   async requestBackup(req, res, next) {
     try {
       // Validação de autenticação
@@ -506,14 +479,14 @@ class BackupController {
    */
   async getBackupSummary(req, res, next) {
     try {
-      // Validação de autenticação
+      // Validação de Autenticação do Usuário
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       // Buscar todos os dados do usuário
       const rawData = await this.getAllDataRepository.getAllData(userId);
 
-      // Calcular estatísticas
+      // Calcular estatísticas dos dados
       const summary = {
         total_notes: rawData.length,
         owned_notes: rawData.filter(note => note.owner_id === userId).length,

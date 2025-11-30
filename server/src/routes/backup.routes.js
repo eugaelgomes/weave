@@ -1,6 +1,6 @@
 const express = require("express");
 
-const backupController = require("@/controllers/backup/backup-controller");
+const backupController = require("@/controllers/backup-actions/backup-controller");
 
 const { verifyToken } = require("@/middlewares/auth/auth-middleware");
 

@@ -1,6 +1,6 @@
 const express = require("express");
 
-const notesController = require("@/controllers/notes/notes-controller");
+const notesController = require("@/controllers/notes-manager/notes-controller");
 
 const { verifyToken } = require("@/middlewares/auth/auth-middleware");
 
