@@ -32,5 +32,8 @@ export {
 // Backup Services
 export * from "./backup-service/BackupService";
 
+// Health Services
+export * from "./health-service/HealthService";
+
 // API Client
 export * from "./api-methods";

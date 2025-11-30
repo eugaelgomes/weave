@@ -37,7 +37,7 @@ const Layout = ({ children }: LayoutProps) => {
 
         {/* Sidebar como aside em desktop */}
         <aside
-          className={`fixed z-50 transition-all duration-300 ease-in-out lg:static lg:z-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} top-0 left-0 flex h-full w-64 flex-col bg-neutral-900 pt-16 lg:top-auto lg:left-auto lg:block lg:translate-x-0 lg:bg-transparent lg:pt-0 lg:shadow-none`}
+          className={`fixed z-50 transition-all duration-300 ease-in-out lg:static lg:z-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} top-0 left-0 flex h-full w-64 flex-col bg-neutral-900 pt-14 sm:pt-16 lg:top-auto lg:left-auto lg:block lg:translate-x-0 lg:bg-transparent lg:pt-0 lg:shadow-none`}
         >
           <div className="h-full p-2 lg:p-4">
             <Sidebar onLinkClick={closeSidebar} />

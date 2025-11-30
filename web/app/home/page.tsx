@@ -99,9 +99,9 @@ export default function HomePage() {
               ferramentas de produtividade devem facilitar a vida, não complicá-la.
             </p>
             <p>
-              Seja para uso pessoal, profissional ou acadêmico, o Weave Notes foi desenvolvido
-              para ser seu <strong className="text-yellow-500">companheiro digital</strong> na
-              jornada de organização e produtividade.
+              Seja para uso pessoal, profissional ou acadêmico, o Weave Notes foi desenvolvido para
+              ser seu <strong className="text-yellow-500">companheiro digital</strong> na jornada de
+              organização e produtividade.
             </p>
           </div>
         </div>

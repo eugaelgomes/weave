@@ -81,29 +81,28 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
   };
 
   return (
-    <nav className="sticky top-0 z-30 border-b border-neutral-800/60 bg-neutral-950/95 shadow-lg backdrop-blur-md">
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+    <nav className="sticky top-0 z-50 w-full border-b border-neutral-800/60 bg-neutral-950 shadow-lg">
+      <div className="px-2 sm:px-4 lg:px-8">
+        <div className="flex h-14 items-center justify-between sm:h-16">
           {/* Mobile Menu Button + Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Hamburger Menu (Mobile) */}
             {authenticated && (
               <button
                 onClick={onToggleSidebar}
-                className="rounded-lg p-2 text-neutral-400 transition-all hover:bg-neutral-800/50 hover:text-neutral-100 lg:hidden"
+                className="rounded-lg p-1.5 text-neutral-400 transition-all hover:bg-neutral-800/50 hover:text-neutral-100 sm:p-2 lg:hidden"
                 aria-label="Abrir menu"
               >
-                <FaBars size={20} />
+                <FaBars className="h-5 w-5" />
               </button>
             )}
 
             {/* Logo */}
             <Link
               href={authenticated ? "/app/home" : "/"}
-              className="text-lg font-bold text-yellow-500 transition-colors hover:text-yellow-400 sm:text-xl"
+              className="text-base font-bold text-yellow-500 transition-colors hover:text-yellow-400 sm:text-lg md:text-xl"
             >
-              <span className="hidden sm:inline">Weave Notes</span>
-              <span className="sm:hidden">Weave Notes</span>
+              Weave Notes
             </Link>
           </div>
 
@@ -114,7 +113,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={toggleUserMenu}
-                  className="group flex items-center gap-3 rounded-lg p-2 transition-all hover:bg-neutral-800/50"
+                  className="group flex items-center gap-2 rounded-lg p-1 transition-all hover:bg-neutral-800/50 sm:gap-3 sm:p-2"
                   aria-label="Menu do usuário"
                 >
                   {/* User Name (Hidden on small screens) */}
@@ -124,7 +123,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
                   {/* Avatar */}
                   {user?.avatar_url && typeof user.avatar_url === "string" ? (
-                    <div className="h-9 w-9 overflow-hidden rounded-full border-2 border-neutral-800 transition-all group-hover:border-yellow-500/50">
+                    <div className="h-8 w-8 overflow-hidden rounded-full border-2 border-neutral-800 transition-all group-hover:border-yellow-500/50 sm:h-9 sm:w-9">
                       <Image
                         src={user.avatar_url}
                         alt={`Avatar de ${userName}`}
@@ -134,7 +133,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                       />
                     </div>
                   ) : (
-                    <IoPersonCircleSharp className="h-9 w-9 text-neutral-500 transition-colors group-hover:text-yellow-500" />
+                    <IoPersonCircleSharp className="h-8 w-8 text-neutral-500 transition-colors group-hover:text-yellow-500 sm:h-9 sm:w-9" />
                   )}
                 </button>
 
@@ -233,10 +232,10 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center">
                 <Link
                   href="/auth/signin"
-                  className="rounded-lg bg-yellow-500/90 px-4 py-2 text-sm font-semibold text-neutral-950 transition-all hover:bg-yellow-500"
+                  className="rounded-lg bg-yellow-500/90 px-3 py-1.5 text-xs font-semibold text-neutral-950 transition-all hover:bg-yellow-500 sm:px-4 sm:py-2 sm:text-sm"
                 >
                   Entrar
                 </Link>

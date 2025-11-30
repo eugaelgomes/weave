@@ -41,4 +41,7 @@ export const API_ENDPOINTS = {
   BACKUP_CREATE: "/backup/create",
   BACKUP_RESTORE: "/backup/restore",
   BACKUP_DOWNLOAD: "/backup/download",
+
+  // Health
+  HEALTH: "/health",
 };

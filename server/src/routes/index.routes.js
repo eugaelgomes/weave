@@ -9,6 +9,16 @@ const backupRoutes = require("@/routes/backup.routes");
 
 const router = express.Router();
 
+// Health check endpoint
+router.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "online",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    service: "weave-notes-api",
+  });
+});
+
 // Endpoints das subrotas
 const routeMap = [
   { path: "/auth", handler: authRoutes },

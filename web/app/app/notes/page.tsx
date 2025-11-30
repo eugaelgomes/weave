@@ -50,7 +50,15 @@ const NotesWithPagination = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   // =================== HOOK DE DADOS ===================
-  const { notes: allNotes, loading: isLoading, error, createNote, refreshNotes, lastFetch, refreshInterval } = useNotes();
+  const {
+    notes: allNotes,
+    loading: isLoading,
+    error,
+    createNote,
+    refreshNotes,
+    lastFetch,
+    refreshInterval,
+  } = useNotes();
 
   // =================== LÓGICA DE PAGINAÇÃO E FILTROS ===================
   const debouncedSearch = searchTerm; // Temporário - usar useDebounce quando disponível
@@ -214,7 +222,7 @@ const NotesWithPagination = () => {
     if (!lastFetch) return "Nunca";
     const now = new Date();
     const diff = Math.floor((now.getTime() - lastFetch.getTime()) / 1000);
-    
+
     if (diff < 60) return "Agora mesmo";
     if (diff < 3600) return `Há ${Math.floor(diff / 60)} min`;
     return lastFetch.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
@@ -336,7 +344,7 @@ const NotesWithPagination = () => {
                   <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
                   <span className="hidden sm:inline">Atualizar</span>
                 </button>
-                
+
                 <button
                   onClick={() => setShowFilters(!showFilters)}
                   className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:flex-initial ${
