@@ -16,13 +16,13 @@ export default function HomePage() {
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
             href="/auth/signup"
-            className="w-full rounded-lg bg-yellow-500/90 px-8 py-3 font-semibold text-neutral-950 transition-all hover:bg-yellow-500 sm:w-auto"
+            className="w-full rounded-lg bg-yellow-500 px-8 py-3 font-semibold text-neutral-950 transition-all hover:bg-yellow-600 sm:w-auto">
           >
             Começar Agora
           </Link>
           <Link
             href="/about"
-            className="w-full rounded-lg border border-neutral-700 px-8 py-3 font-medium text-neutral-300 transition-all hover:border-neutral-600 hover:bg-neutral-900/50 sm:w-auto"
+            className="w-full rounded-lg border border-neutral-700 px-8 py-3 font-medium text-neutral-300 transition-all hover:border-neutral-600 hover:bg-neutral-900 sm:w-auto">
           >
             Saiba Mais
           </Link>
@@ -117,7 +117,7 @@ export default function HomePage() {
         </p>
         <Link
           href="/auth/signup"
-          className="inline-block rounded-lg bg-yellow-500/90 px-8 py-3 font-semibold text-neutral-950 transition-all hover:bg-yellow-500"
+          className="inline-block rounded-lg bg-yellow-500 px-8 py-3 font-semibold text-neutral-950 transition-all hover:bg-yellow-600">
         >
           Criar Conta Grátis
         </Link>

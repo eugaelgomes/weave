@@ -94,7 +94,7 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col bg-neutral-950">
       <div className="flex-1 space-y-3 overflow-y-auto sm:space-y-4">
         {/* Header */}
-        <div className="flex items-start justify-between gap-2 rounded-lg border border-neutral-800 bg-neutral-900 p-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4 sm:py-2">
+        <div className="flex items-start justify-between gap-2 rounded-md border border-neutral-800 bg-neutral-900 p-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4 sm:py-2">
           <span className="sm:text-md text-base font-medium tracking-tight text-neutral-100">
             Olá, {userName} {"ツ"}
           </span>
@@ -127,7 +127,7 @@ export default function HomePage() {
         {/* Estatísticas e Mapa Mental */}
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-[280px_1fr]">
           {/* Coluna Esquerda - Estatísticas Compactas (HUD Style) */}
-          <div className="flex flex-col rounded-sm border border-neutral-800 bg-neutral-900/30 backdrop-blur-sm">
+          <div className="flex flex-col rounded-sm border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
             {/* Cabeçalho do Painel */}
             <div className="border-b border-neutral-800 bg-neutral-900/50 px-4 py-2.5">
               <h3 className="font-mono text-[10px] font-bold tracking-widest text-neutral-500 uppercase">
@@ -137,7 +137,7 @@ export default function HomePage() {
 
             {/* Lista de Métricas */}
             <div className="flex flex-col">
-              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-900/80">
+              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-800">
                 <div className="flex items-center gap-3">
                   <div className="flex h-6 w-6 items-center justify-center rounded-sm border border-yellow-400/20 bg-yellow-400/10 text-yellow-400">
                     <FileText className="h-3.5 w-3.5" />
@@ -152,7 +152,7 @@ export default function HomePage() {
                 </span>
               </div>
 
-              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-900/80">
+              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-800">
                 <div className="flex items-center gap-3">
                   <div className="flex h-6 w-6 items-center justify-center rounded-sm border border-blue-400/20 bg-blue-400/10 text-blue-400">
                     <Tag className="h-3.5 w-3.5" />
@@ -176,7 +176,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Open */}
-                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-900/80">
+                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-800">
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-blue-400"></div>
                     <span className="text-[11px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
@@ -190,7 +190,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Done */}
-                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-900/80">
+                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-800">
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-green-400"></div>
                     <span className="text-[11px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
@@ -204,7 +204,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Closed */}
-                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-900/80">
+                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-800">
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-red-400"></div>
                     <span className="text-[11px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
@@ -218,7 +218,7 @@ export default function HomePage() {
                 </div>
 
                 {/* No Status */}
-                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-900/80">
+                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-800">
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-neutral-500"></div>
                     <span className="text-[11px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
@@ -236,7 +236,7 @@ export default function HomePage() {
 
           {/* Coluna Direita - Mapa Mental Quadrado/Circuito */}
           {stats?.mostUsedTags && stats.mostUsedTags.length > 0 ? (
-            <div className="relative flex flex-col rounded-sm border border-neutral-800 bg-neutral-900/30 p-5 backdrop-blur-sm">
+            <div className="relative flex flex-col rounded-sm border border-neutral-800 bg-neutral-900/50 p-5 backdrop-blur-sm">
               {/* Nó Principal (Raiz) */}
               <div className="relative z-10 mb-8 flex w-fit items-center gap-3 border-l-2 border-yellow-500 bg-neutral-900 py-1 pr-4 pl-4">
                 <div className="flex h-8 w-8 items-center justify-center text-yellow-400">
@@ -287,14 +287,14 @@ export default function HomePage() {
             </div>
           ) : (
             // Fallback
-            <div className="flex items-center justify-center rounded-sm border border-neutral-800 bg-neutral-900/30 p-5">
+            <div className="flex items-center justify-center rounded-sm border border-neutral-800 bg-neutral-900/50 p-5">
               <p className="font-mono text-sm text-neutral-500">NO_DATA_FOUND</p>
             </div>
           )}
         </div>
 
         {/* Notas Recentes - Carrossel */}
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-3 sm:p-4">
+        <div className="rounded-md border border-neutral-800 bg-neutral-900 p-3 sm:p-4">
           <div className="mb-3 flex items-center justify-between sm:mb-4">
             <h3 className="text-sm font-semibold text-neutral-100 sm:text-base">Notas Recentes</h3>
             {recentNotes.length > 1 && (
@@ -302,7 +302,7 @@ export default function HomePage() {
                 <button
                   onClick={prevSlide}
                   disabled={currentSlide === 0}
-                  className="rounded-lg bg-neutral-800 p-1.5 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-30 sm:p-2"
+                  className="rounded-md bg-neutral-800 p-1.5 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-30 sm:p-2"
                   aria-label="Anterior"
                 >
                   <ChevronLeft className="h-4 w-4 sm:h-4 sm:w-4" />
@@ -310,7 +310,7 @@ export default function HomePage() {
                 <button
                   onClick={nextSlide}
                   disabled={currentSlide === recentNotes.length - 1}
-                  className="rounded-lg bg-neutral-800 p-1.5 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-30 sm:p-2"
+                  className="rounded-md bg-neutral-800 p-1.5 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-30 sm:p-2"
                   aria-label="Próxima"
                 >
                   <ChevronRight className="h-4 w-4 sm:h-4 sm:w-4" />
@@ -346,7 +346,7 @@ export default function HomePage() {
                     href={`/app/notes/view/${note.id}`}
                     className="block w-[calc(100vw-3rem)] max-w-[280px] flex-shrink-0 snap-start sm:w-[300px] sm:max-w-[320px]"
                   >
-                    <div className="group flex h-[240px] flex-col rounded-xl border border-neutral-800 bg-neutral-950 p-3 transition-all duration-200 hover:border-neutral-700 hover:bg-neutral-900 sm:h-[260px] sm:p-4">
+                    <div className="group flex h-[240px] flex-col rounded-md border border-neutral-800 bg-neutral-950 p-3 transition-all duration-200 hover:border-neutral-700 hover:bg-neutral-900 sm:h-[260px] sm:p-4">
                       {/* Cabeçalho: data + tags */}
                       <div className="mb-2 flex flex-shrink-0 flex-col gap-1.5 sm:mb-3 sm:gap-2">
                         {/* Data */}
