@@ -14,41 +14,426 @@ import {
   FaTimes,
   FaUserPlus,
   FaSearch,
+  FaCode,
+  FaQuoteLeft,
+  FaListUl,
+  FaCheckSquare,
+  FaHeading,
+  FaParagraph,
+  FaGripVertical,
 } from "react-icons/fa";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+// CSS transform utility handled manually
 import { useNotes } from "@/app/contexts/NotesContext";
-import { Note, User as SearchUser } from "@/app/services/notes-service/NotesService";
+import { Note, Block, User as SearchUser } from "@/app/services/notes-service/NotesService";
 import {
   getCollaboratorDisplayName,
   getCollaboratorAvatarUrl,
   getCollaboratorId,
 } from "@/app/utils/collaborators";
 
+// =================== COMPONENTE DE BLOCO SORTABLE ===================
+interface BlockComponentProps {
+  block: Block & { children?: Block[] };
+  noteId: string;
+  onUpdate: (blockId: string, data: Partial<Block>) => Promise<void>;
+  onDelete: (blockId: string) => Promise<void>;
+  onAddBlock: (parentId?: string) => void;
+  isEditing: boolean;
+  isDragging?: boolean;
+  onStartEditing?: () => void;
+}
+
+const SortableBlockComponent: React.FC<BlockComponentProps> = ({
+  block,
+  noteId,
+  onUpdate,
+  onDelete,
+  onAddBlock,
+  isEditing,
+  onStartEditing,
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: block.id,
+  });
+
+  const transformStyle = transform
+    ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+    : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`transition-transform ${isDragging ? "opacity-50" : "opacity-100"}`}
+      // Inline styles são necessários para o dnd-kit funcionar
+      style={{
+        transform: transformStyle,
+        transition,
+      }}
+    >
+      <BlockComponent
+        block={block}
+        noteId={noteId}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+        onAddBlock={onAddBlock}
+        isEditing={isEditing}
+        isDragging={isDragging}
+        dragHandleProps={{ ...attributes, ...listeners }}
+        onStartEditing={onStartEditing}
+      />
+    </div>
+  );
+};
+
+// =================== COMPONENTE DE BLOCO ===================
+interface BlockInnerProps {
+  block: Block & { children?: Block[] };
+  noteId: string;
+  onUpdate: (blockId: string, data: Partial<Block>) => Promise<void>;
+  onDelete: (blockId: string) => Promise<void>;
+  onAddBlock: (parentId?: string) => void;
+  isEditing: boolean;
+  isDragging?: boolean;
+  dragHandleProps?: Record<string, unknown>;
+  onStartEditing?: () => void;
+}
+
+const BlockComponent: React.FC<BlockInnerProps> = ({
+  block,
+  noteId,
+  onUpdate,
+  onDelete,
+  onAddBlock,
+  isEditing,
+  isDragging,
+  dragHandleProps,
+  onStartEditing,
+}) => {
+  const [localText, setLocalText] = useState(block.text || "");
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    if (!isEditing && block.text !== localText) {
+      setLocalText(block.text || "");
+    }
+  }, [block.text, isEditing, localText]);
+
+  const handleBlur = () => {
+    if (localText !== block.text) {
+      onUpdate(block.id, { text: localText });
+    }
+  };
+
+  // Auto-save com debounce
+  useEffect(() => {
+    if (!isEditing || localText === block.text) return;
+
+    const timeoutId = setTimeout(() => {
+      onUpdate(block.id, { text: localText });
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [localText, block.id, block.text, isEditing, onUpdate]);
+
+  const handleToggleDone = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (block.type === "todo") {
+      await onUpdate(block.id, { done: !block.done });
+    }
+  };
+
+  const renderBlockContent = () => {
+    switch (block.type) {
+      case "heading":
+        return isEditing ? (
+          <input
+            type="text"
+            value={localText}
+            onChange={(e) => setLocalText(e.target.value)}
+            onBlur={handleBlur}
+            className="w-full bg-transparent text-xl font-bold text-neutral-100 placeholder-neutral-500 outline-none"
+            placeholder="Título..."
+          />
+        ) : (
+          <h2 className="text-xl font-bold text-neutral-100">{block.text || "Título vazio"}</h2>
+        );
+
+      case "todo":
+        return (
+          <div className="flex items-start gap-3">
+            <button
+              onClick={handleToggleDone}
+              className={`mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-colors ${
+                block.done
+                  ? "border-yellow-500 bg-yellow-500 text-neutral-950"
+                  : "border-neutral-600 hover:border-yellow-500"
+              }`}
+            >
+              {block.done && <FaCheckSquare size={10} />}
+            </button>
+            {isEditing ? (
+              <input
+                type="text"
+                value={localText}
+                onChange={(e) => setLocalText(e.target.value)}
+                onBlur={handleBlur}
+                className={`w-full bg-transparent text-neutral-200 placeholder-neutral-500 outline-none ${
+                  block.done ? "text-neutral-500 line-through" : ""
+                }`}
+                placeholder="Tarefa..."
+              />
+            ) : (
+              <span
+                className={`${block.done ? "text-neutral-500 line-through" : "text-neutral-200"}`}
+              >
+                {block.text || "Tarefa vazia"}
+              </span>
+            )}
+          </div>
+        );
+
+      case "list":
+        return (
+          <div className="flex items-start gap-3">
+            <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-yellow-500" />
+            {isEditing ? (
+              <input
+                type="text"
+                value={localText}
+                onChange={(e) => setLocalText(e.target.value)}
+                onBlur={handleBlur}
+                className="w-full bg-transparent text-neutral-200 placeholder-neutral-500 outline-none"
+                placeholder="Item da lista..."
+              />
+            ) : (
+              <span className="text-neutral-200">{block.text || "Item vazio"}</span>
+            )}
+          </div>
+        );
+
+      case "quote":
+        return (
+          <div className="border-l-4 border-yellow-500 pl-4">
+            {isEditing ? (
+              <textarea
+                value={localText}
+                onChange={(e) => setLocalText(e.target.value)}
+                onBlur={handleBlur}
+                className="w-full resize-none bg-transparent text-neutral-300 italic placeholder-neutral-500 outline-none"
+                placeholder="Citação..."
+                rows={2}
+              />
+            ) : (
+              <p className="text-neutral-300 italic">{block.text || "Citação vazia"}</p>
+            )}
+          </div>
+        );
+
+      case "code":
+        return (
+          <div className="overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900">
+            <div className="flex items-center justify-between border-b border-neutral-700 bg-neutral-800 px-3 py-2">
+              <span className="text-xs text-neutral-400">
+                {(block.properties as { language?: string })?.language || "código"}
+              </span>
+              <FaCode size={12} className="text-neutral-500" />
+            </div>
+            {isEditing ? (
+              <textarea
+                value={localText}
+                onChange={(e) => setLocalText(e.target.value)}
+                onBlur={handleBlur}
+                className="w-full resize-none bg-neutral-900 p-3 font-mono text-sm text-green-400 placeholder-neutral-600 outline-none"
+                placeholder="// Seu código aqui..."
+                rows={5}
+              />
+            ) : (
+              <pre className="overflow-x-auto p-3">
+                <code className="font-mono text-sm text-green-400">
+                  {block.text || "// Código vazio"}
+                </code>
+              </pre>
+            )}
+          </div>
+        );
+
+      case "paragraph":
+      case "text":
+      default:
+        return isEditing ? (
+          <textarea
+            value={localText}
+            onChange={(e) => setLocalText(e.target.value)}
+            onBlur={handleBlur}
+            className="w-full resize-none bg-transparent leading-relaxed text-neutral-200 placeholder-neutral-500 outline-none"
+            placeholder="Digite seu texto..."
+            rows={Math.max(2, localText.split("\n").length)}
+          />
+        ) : (
+          <p className="leading-relaxed whitespace-pre-wrap text-neutral-200">
+            {block.text || "Texto vazio"}
+          </p>
+        );
+    }
+  };
+
+  return (
+    <div
+      className={`group relative ${isDragging ? "z-50" : ""}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Handle de arrastar */}
+      {isEditing && (
+        <div
+          className={`absolute top-1 -left-8 flex flex-col gap-1 transition-opacity ${
+            isHovered ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <button
+            {...dragHandleProps}
+            className="cursor-grab rounded p-1 text-neutral-500 hover:bg-neutral-800 hover:text-yellow-500 active:cursor-grabbing"
+            title="Arrastar para reordenar"
+          >
+            <FaGripVertical size={12} />
+          </button>
+        </div>
+      )}
+
+      {/* Conteúdo do bloco */}
+      <div
+        onClick={(e) => {
+          if (!isEditing && onStartEditing) {
+            e.stopPropagation();
+            onStartEditing();
+          }
+        }}
+        className={`rounded-md px-2 py-1 transition-colors hover:bg-neutral-900/50 ${
+          isDragging ? "bg-neutral-800 shadow-lg ring-2 ring-yellow-500/50" : ""
+        }`}
+      >
+        {renderBlockContent()}
+      </div>
+
+      {/* Botão de deletar */}
+      {isEditing && isHovered && (
+        <button
+          onClick={() => onDelete(block.id)}
+          className="absolute top-1 -right-2 rounded p-1 text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-400"
+          title="Remover bloco"
+        >
+          <FaTimes size={12} />
+        </button>
+      )}
+
+      {/* Blocos filhos (recursivo) */}
+      {block.children && block.children.length > 0 && (
+        <div className="mt-2 ml-6 border-l-2 border-neutral-800 pl-4">
+          {block.children.map((child) => (
+            <BlockComponent
+              key={child.id}
+              block={child}
+              noteId={noteId}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+              onAddBlock={onAddBlock}
+              isEditing={isEditing}
+              onStartEditing={onStartEditing}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // =================== SKELETON SIMPLES ===================
 const NoteDetailSkeleton = () => (
-  <div className="min-h-screen bg-neutral-50">
-    <div className="sticky top-0 z-10 border-b border-neutral-200 bg-white px-4 py-3">
+  <div className="min-h-screen bg-neutral-950">
+    <div className="sticky top-0 z-10 border-b border-neutral-800 bg-neutral-900 px-4 py-3">
       <div className="mx-auto flex max-w-4xl items-center justify-between">
-        <div className="h-6 w-6 animate-pulse rounded bg-neutral-300" />
+        <div className="h-6 w-6 animate-pulse rounded bg-neutral-700" />
         <div className="flex items-center gap-3">
-          <div className="h-4 w-24 animate-pulse rounded bg-neutral-300" />
-          <div className="h-6 w-6 animate-pulse rounded bg-neutral-300" />
+          <div className="h-4 w-24 animate-pulse rounded bg-neutral-700" />
+          <div className="h-6 w-6 animate-pulse rounded bg-neutral-700" />
         </div>
       </div>
     </div>
 
     <div className="mx-auto max-w-4xl px-4 py-6">
       <div className="mb-6">
-        <div className="mb-3 h-8 w-1/2 animate-pulse rounded bg-neutral-300" />
+        <div className="mb-3 h-8 w-1/2 animate-pulse rounded bg-neutral-700" />
       </div>
-      <div className="space-y-4">
-        <div className="h-5 w-4/5 animate-pulse rounded bg-neutral-300" />
-        <div className="h-4 w-full animate-pulse rounded bg-neutral-300" />
-        <div className="h-4 w-3/4 animate-pulse rounded bg-neutral-300" />
-        <div className="h-20 w-full animate-pulse rounded-md bg-neutral-200" />
+      <div className="space-y-3">
+        <div className="h-5 w-4/5 animate-pulse rounded bg-neutral-700" />
+        <div className="h-4 w-full animate-pulse rounded bg-neutral-700" />
+        <div className="h-4 w-3/4 animate-pulse rounded bg-neutral-700" />
+        <div className="h-12 w-full animate-pulse rounded-md bg-neutral-800" />
+        <div className="h-4 w-2/3 animate-pulse rounded bg-neutral-700" />
+        <div className="h-24 w-full animate-pulse rounded-md bg-neutral-800" />
       </div>
     </div>
   </div>
 );
+
+// =================== SELETOR DE TIPO DE BLOCO ===================
+interface BlockTypeSelectorProps {
+  onSelect: (type: string) => void;
+  onClose: () => void;
+}
+
+const BlockTypeSelector: React.FC<BlockTypeSelectorProps> = ({ onSelect, onClose }) => {
+  const blockOptions = [
+    { type: "paragraph", label: "Parágrafo", icon: FaParagraph, description: "Texto simples" },
+    { type: "heading", label: "Título", icon: FaHeading, description: "Título de seção" },
+    { type: "todo", label: "Tarefa", icon: FaCheckSquare, description: "Item de checklist" },
+    { type: "list", label: "Lista", icon: FaListUl, description: "Item de lista" },
+    { type: "quote", label: "Citação", icon: FaQuoteLeft, description: "Bloco de citação" },
+    { type: "code", label: "Código", icon: FaCode, description: "Bloco de código" },
+  ];
+
+  return (
+    <div className="absolute left-0 z-20 mt-2 w-64 rounded-lg border border-neutral-700 bg-neutral-900 p-2 shadow-xl">
+      <div className="mb-2 border-b border-neutral-700 px-2 pb-2 text-xs font-semibold text-neutral-400">
+        Tipo de bloco
+      </div>
+      {blockOptions.map((option) => (
+        <button
+          key={option.type}
+          onClick={() => {
+            onSelect(option.type);
+            onClose();
+          }}
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-neutral-800"
+        >
+          <option.icon className="text-yellow-500" size={14} />
+          <div>
+            <div className="text-sm font-medium text-neutral-200">{option.label}</div>
+            <div className="text-xs text-neutral-500">{option.description}</div>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+};
 
 const NoteDetail = () => {
   const params = useParams();
@@ -65,21 +450,39 @@ const NoteDetail = () => {
     shareNote,
     searchUsers,
     removeCollaborator,
+    createBlock,
+    updateBlock: updateBlockService,
+    deleteBlock: deleteBlockService,
+    reorderBlocks: reorderBlocksService,
   } = useNotes();
 
   const [note, setNote] = useState<Note | null>(null);
+  const [blocks, setBlocks] = useState<(Block & { children?: Block[] })[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editingTitle, setEditingTitle] = useState("");
-  const [editingDescription, setEditingDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   // Estados para modais e funcionalidades
   const [showShareModal, setShowShareModal] = useState(false);
   const [showTagModal, setShowTagModal] = useState(false);
+  const [showBlockTypeSelector, setShowBlockTypeSelector] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [newTag, setNewTag] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+
+  // Configuração dos sensores para drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Precisa arrastar 8px para ativar
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Carregar nota específica
   useEffect(() => {
@@ -89,45 +492,179 @@ const NoteDetail = () => {
         if (loadedNote) {
           setNote(loadedNote);
           setEditingTitle(loadedNote.title);
-          setEditingDescription(loadedNote.description || "");
+          // Carregar blocos da nota
+          if (loadedNote.blocks) {
+            setBlocks(loadedNote.blocks as (Block & { children?: Block[] })[]);
+          }
         }
       };
       loadNote();
     }
   }, [id, getNoteById]);
 
-  // Auto-salvar quando houver mudanças
+  // Auto-salvar título quando houver mudanças
   useEffect(() => {
     if (!note || !isEditing) return;
 
-    // Verificar se há mudanças
-    const hasChanges =
-      editingTitle !== note.title || editingDescription !== (note.description || "");
-
+    const hasChanges = editingTitle !== note.title;
     if (!hasChanges) return;
 
-    // Debounce de 3 segundos
     const timeoutId = setTimeout(async () => {
       setIsSaving(true);
       try {
         const updatedNote = await updateNote(note.id, {
           title: editingTitle,
-          description: editingDescription,
         });
 
-        // Atualizar apenas o estado local sem recarregar
         if (updatedNote) {
-          setNote(updatedNote);
+          setNote((prev) => (prev ? { ...prev, title: editingTitle } : null));
         }
       } catch (error) {
         console.error("Erro ao salvar:", error);
       } finally {
         setIsSaving(false);
       }
-    }, 3000);
+    }, 2000);
 
     return () => clearTimeout(timeoutId);
-  }, [editingTitle, editingDescription, note, isEditing, updateNote]);
+  }, [editingTitle, note, isEditing, updateNote]);
+
+  // =================== FUNÇÕES PARA DRAG AND DROP ===================
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over || active.id === over.id || !note) return;
+
+    const oldIndex = blocks.findIndex((block) => block.id === active.id);
+    const newIndex = blocks.findIndex((block) => block.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Atualizar estado local imediatamente para feedback visual
+    const newBlocks = arrayMove(blocks, oldIndex, newIndex);
+    setBlocks(newBlocks);
+
+    // Preparar as novas posições para o backend
+    const blockPositions = newBlocks.map((block, index) => ({
+      id: block.id,
+      position: index,
+    }));
+
+    // Salvar no backend
+    try {
+      setIsSaving(true);
+      await reorderBlocksService(note.id, blockPositions);
+    } catch (error) {
+      console.error("Erro ao reordenar blocos:", error);
+      // Reverter em caso de erro
+      const revertedBlocks = arrayMove(newBlocks, newIndex, oldIndex);
+      setBlocks(revertedBlocks);
+      alert("Erro ao reordenar blocos. Tente novamente.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Encontrar bloco ativo para o DragOverlay
+  const activeBlock = activeId ? blocks.find((block) => block.id === activeId) : null;
+
+  // =================== FUNÇÕES PARA BLOCOS ===================
+  const handleUpdateBlock = async (blockId: string, data: Partial<Block>) => {
+    if (!note) return;
+
+    try {
+      setIsSaving(true);
+      await updateBlockService(note.id, blockId, data);
+
+      // Atualizar estado local
+      setBlocks((prevBlocks) => {
+        const updateBlockRecursive = (
+          blockList: (Block & { children?: Block[] })[]
+        ): (Block & { children?: Block[] })[] => {
+          return blockList.map((block) => {
+            if (block.id === blockId) {
+              return { ...block, ...data };
+            }
+            if (block.children && block.children.length > 0) {
+              return {
+                ...block,
+                children: updateBlockRecursive(
+                  block.children as (Block & { children?: Block[] })[]
+                ),
+              };
+            }
+            return block;
+          });
+        };
+        return updateBlockRecursive(prevBlocks);
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar bloco:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteBlock = async (blockId: string) => {
+    if (!note) return;
+
+    if (!window.confirm("Tem certeza que deseja remover este bloco?")) return;
+
+    try {
+      await deleteBlockService(note.id, blockId);
+
+      // Remover do estado local
+      setBlocks((prevBlocks) => {
+        const removeBlockRecursive = (
+          blockList: (Block & { children?: Block[] })[]
+        ): (Block & { children?: Block[] })[] => {
+          return blockList
+            .filter((block) => block.id !== blockId)
+            .map((block) => {
+              if (block.children && block.children.length > 0) {
+                return {
+                  ...block,
+                  children: removeBlockRecursive(
+                    block.children as (Block & { children?: Block[] })[]
+                  ),
+                };
+              }
+              return block;
+            });
+        };
+        return removeBlockRecursive(prevBlocks);
+      });
+    } catch (error) {
+      console.error("Erro ao deletar bloco:", error);
+      alert("Erro ao remover bloco. Tente novamente.");
+    }
+  };
+
+  const handleAddBlock = async (type: string, parentId?: string) => {
+    if (!note) return;
+
+    try {
+      const newBlock = await createBlock(note.id, {
+        type,
+        text: "",
+        parentId,
+        position: blocks.length,
+      });
+
+      if (newBlock) {
+        setBlocks((prev) => [...prev, { ...newBlock, children: [] }]);
+        setShowBlockTypeSelector(false);
+      }
+    } catch (error) {
+      console.error("Erro ao criar bloco:", error);
+      alert("Erro ao criar bloco. Tente novamente.");
+    }
+  };
 
   const handleDelete = async () => {
     if (!note) return;
@@ -164,24 +701,21 @@ const NoteDetail = () => {
   };
 
   const startEditing = () => {
-    setIsEditing(true);
+    if (note?.access?.canEdit) {
+      setIsEditing(true);
+    }
   };
 
   const stopEditing = async () => {
     setIsEditing(false);
 
-    // Salvar ao sair se houver mudanças não salvas
-    if (note && (editingTitle !== note.title || editingDescription !== (note.description || ""))) {
+    // Salvar título ao sair se houver mudanças não salvas
+    if (note && editingTitle !== note.title) {
       setIsSaving(true);
       try {
-        const updatedNote = await updateNote(note.id, {
+        await updateNote(note.id, {
           title: editingTitle,
-          description: editingDescription,
         });
-
-        if (updatedNote) {
-          setNote(updatedNote);
-        }
       } catch (error) {
         console.error("Erro ao salvar ao sair:", error);
       } finally {
@@ -190,16 +724,16 @@ const NoteDetail = () => {
     }
   };
 
-  // =================== FUNCÇÕES PARA COLABORAÇÃO ===================
-  const handleSearchUsers = async (searchTerm: string) => {
-    if (!searchTerm.trim()) {
+  // =================== FUNÇÕES PARA COLABORAÇÃO ===================
+  const handleSearchUsers = async (term: string) => {
+    if (!term.trim()) {
       setSearchResults([]);
       return;
     }
 
     setIsSearching(true);
     try {
-      const users = await searchUsers(searchTerm);
+      const users = await searchUsers(term);
       setSearchResults(users);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
@@ -216,7 +750,6 @@ const NoteDetail = () => {
         userId: userId,
       });
 
-      // Recarregar a nota para mostrar o novo colaborador
       const updatedNote = await getNoteById(note.id);
       if (updatedNote) {
         setNote(updatedNote);
@@ -247,7 +780,6 @@ const NoteDetail = () => {
         const success = await removeCollaborator(note.id, collaboratorId);
 
         if (success) {
-          // Recarregar a nota para mostrar a mudança
           const updatedNote = await getNoteById(note.id);
           if (updatedNote) {
             setNote(updatedNote);
@@ -277,7 +809,7 @@ const NoteDetail = () => {
       });
 
       if (updatedNote) {
-        setNote(updatedNote);
+        setNote((prev) => (prev ? { ...prev, tags: updatedTags } : null));
         setNewTag("");
         setShowTagModal(false);
       }
@@ -297,7 +829,7 @@ const NoteDetail = () => {
       });
 
       if (updatedNote) {
-        setNote(updatedNote);
+        setNote((prev) => (prev ? { ...prev, tags: updatedTags } : null));
       }
     } catch (error) {
       console.error("Erro ao remover tag:", error);
@@ -315,14 +847,9 @@ const NoteDetail = () => {
             if (isEditing && note) {
               setIsSaving(true);
               try {
-                const updatedNote = await updateNote(note.id, {
+                await updateNote(note.id, {
                   title: editingTitle,
-                  description: editingDescription,
                 });
-
-                if (updatedNote) {
-                  setNote(updatedNote);
-                }
               } catch (error) {
                 console.error("Erro ao salvar:", error);
               } finally {
@@ -348,7 +875,7 @@ const NoteDetail = () => {
     document.addEventListener("keydown", handleDocumentKeyDown);
     return () => document.removeEventListener("keydown", handleDocumentKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing, note, editingTitle, editingDescription]);
+  }, [isEditing, note, editingTitle]);
 
   if (isLoading || !note) {
     return <NoteDetailSkeleton />;
@@ -356,12 +883,12 @@ const NoteDetail = () => {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
-        <div className="max-w-md rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
-          <div className="mb-4 text-lg text-gray-600">⚠️ {error}</div>
+      <div className="flex min-h-screen items-center justify-center bg-neutral-950 p-6">
+        <div className="max-w-md rounded-lg border border-neutral-700 bg-neutral-900 p-6 text-center shadow-sm">
+          <div className="mb-4 text-lg text-neutral-300">⚠️ {error}</div>
           <button
             onClick={handleBack}
-            className="mx-auto flex items-center gap-2 rounded-md bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
+            className="mx-auto flex items-center gap-2 rounded-md bg-neutral-700 px-4 py-2 text-white transition-colors hover:bg-neutral-600"
           >
             <FaArrowLeft size={14} />
             Voltar para Notas
@@ -387,29 +914,35 @@ const NoteDetail = () => {
           <div className="flex items-center gap-3 text-sm text-neutral-400">
             {note.updated_at && <span>Atualizada {formatDate(note.updated_at)}</span>}
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => setShowTagModal(true)}
-                className="rounded-md p-2 text-neutral-400 transition-all hover:bg-neutral-800 hover:text-yellow-500"
-                title="Gerenciar tags"
-              >
-                <FaTag size={14} />
-              </button>
+              {note.access?.canEdit && (
+                <button
+                  onClick={() => setShowTagModal(true)}
+                  className="rounded-md p-2 text-neutral-400 transition-all hover:bg-neutral-800 hover:text-yellow-500"
+                  title="Gerenciar tags"
+                >
+                  <FaTag size={14} />
+                </button>
+              )}
 
-              <button
-                onClick={() => setShowShareModal(true)}
-                className="rounded-md p-2 text-neutral-400 transition-all hover:bg-neutral-800 hover:text-yellow-500"
-                title="Compartilhar nota"
-              >
-                <FaShare size={14} />
-              </button>
+              {note.access?.canShare && (
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  className="rounded-md p-2 text-neutral-400 transition-all hover:bg-neutral-800 hover:text-yellow-500"
+                  title="Compartilhar nota"
+                >
+                  <FaShare size={14} />
+                </button>
+              )}
 
-              <button
-                onClick={handleDelete}
-                className="rounded-md p-2 text-red-400 transition-all hover:bg-neutral-800 hover:text-red-300"
-                title="Deletar nota"
-              >
-                <FaTrash size={14} />
-              </button>
+              {note.access?.canDelete && (
+                <button
+                  onClick={handleDelete}
+                  className="rounded-md p-2 text-red-400 transition-all hover:bg-neutral-800 hover:text-red-300"
+                  title="Deletar nota"
+                >
+                  <FaTrash size={14} />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -424,6 +957,19 @@ const NoteDetail = () => {
               type="text"
               value={editingTitle}
               onChange={(e) => setEditingTitle(e.target.value)}
+              onBlur={async () => {
+                if (note && editingTitle !== note.title) {
+                  setIsSaving(true);
+                  try {
+                    const updated = await updateNote(note.id, { title: editingTitle });
+                    if (updated) setNote(updated);
+                  } catch (error) {
+                    console.error("Erro ao salvar título:", error);
+                  } finally {
+                    setIsSaving(false);
+                  }
+                }
+              }}
               placeholder="Título da nota..."
               className="w-full border-b-2 border-transparent bg-transparent pb-1 text-2xl font-bold text-neutral-100 placeholder-neutral-500 outline-none focus:border-yellow-500"
               autoFocus={!editingTitle}
@@ -431,7 +977,9 @@ const NoteDetail = () => {
           ) : (
             <h1
               onClick={startEditing}
-              className="flex min-h-[2rem] cursor-text items-center text-2xl font-bold text-neutral-100 transition-colors hover:text-yellow-500"
+              className={`flex min-h-[2rem] items-center text-2xl font-bold text-neutral-100 transition-colors ${
+                note.access?.canEdit ? "cursor-text hover:text-yellow-500" : ""
+              }`}
             >
               {note.title || "Clique para adicionar título..."}
             </h1>
@@ -451,13 +999,15 @@ const NoteDetail = () => {
                     className="group flex items-center gap-1 rounded-md bg-neutral-800 px-2 py-1 text-xs text-yellow-500 transition-colors hover:bg-neutral-700"
                   >
                     {tag}
-                    <button
-                      onClick={() => handleRemoveTag(tag)}
-                      className="ml-1 text-neutral-400 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400"
-                      title="Remover tag"
-                    >
-                      <FaTimes size={10} />
-                    </button>
+                    {note.access?.canEdit && (
+                      <button
+                        onClick={() => handleRemoveTag(tag)}
+                        className="ml-1 text-neutral-400 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400"
+                        title="Remover tag"
+                      >
+                        <FaTimes size={10} />
+                      </button>
+                    )}
                   </span>
                 ))}
               </div>
@@ -495,13 +1045,15 @@ const NoteDetail = () => {
 
                       <span className="text-xs font-medium text-neutral-300">{displayName}</span>
 
-                      <button
-                        onClick={() => handleRemoveCollaborator(collab)}
-                        className="ml-1 text-neutral-500 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400"
-                        title="Remover colaborador"
-                      >
-                        <FaTimes size={10} />
-                      </button>
+                      {note.access?.canShare && (
+                        <button
+                          onClick={() => handleRemoveCollaborator(collab)}
+                          className="ml-1 text-neutral-500 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400"
+                          title="Remover colaborador"
+                        >
+                          <FaTimes size={10} />
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -510,36 +1062,84 @@ const NoteDetail = () => {
           )}
         </div>
 
-        {/* Conteúdo */}
-        <div className="space-y-4">
-          {isEditing ? (
-            <textarea
-              value={editingDescription}
-              onChange={(e) => setEditingDescription(e.target.value)}
-              placeholder="Comece a escrever sua nota..."
-              className="min-h-[300px] w-full resize-none bg-transparent leading-relaxed text-neutral-100 placeholder-neutral-500 outline-none"
-              rows={15}
-            />
+        {/* Conteúdo - Blocos */}
+        <div className="space-y-2">
+          {blocks.length > 0 ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={blocks.map((b) => b.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {blocks.map((block) => (
+                  <SortableBlockComponent
+                    key={block.id}
+                    block={block}
+                    noteId={note.id}
+                    onUpdate={handleUpdateBlock}
+                    onDelete={handleDeleteBlock}
+                    onAddBlock={() => setShowBlockTypeSelector(true)}
+                    isEditing={isEditing}
+                    onStartEditing={startEditing}
+                  />
+                ))}
+              </SortableContext>
+
+              {/* Overlay para mostrar o item sendo arrastado */}
+              <DragOverlay>
+                {activeBlock ? (
+                  <div className="rounded-md border border-yellow-500/50 bg-neutral-900 px-2 py-1 shadow-xl">
+                    <BlockComponent
+                      block={activeBlock}
+                      noteId={note.id}
+                      onUpdate={handleUpdateBlock}
+                      onDelete={handleDeleteBlock}
+                      onAddBlock={() => {}}
+                      isEditing={false}
+                      isDragging={true}
+                    />
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
           ) : (
             <div
               onClick={startEditing}
-              className="min-h-[300px] cursor-text break-words whitespace-pre-wrap"
+              className="min-h-[200px] cursor-text rounded-lg border-2 border-dashed border-neutral-700 py-8 text-center text-neutral-500 transition-colors hover:border-yellow-500"
             >
-              {note.description ? (
-                <p className="leading-relaxed text-neutral-200">{note.description}</p>
-              ) : (
-                <div className="rounded-lg border-2 border-dashed border-neutral-700 py-8 text-center text-neutral-500 transition-colors hover:border-yellow-500">
-                  <div className="mb-2">📝</div>
-                  <p>Clique aqui para começar a escrever...</p>
-                  <p className="mt-1 text-sm">Ou pressione Ctrl+E para editar</p>
-                </div>
+              <div className="mb-2">📝</div>
+              <p>Esta nota ainda não tem conteúdo.</p>
+              <p className="mt-1 text-sm">Clique em &quot;Adicionar bloco&quot; para começar</p>
+            </div>
+          )}
+
+          {/* Botão para adicionar novo bloco */}
+          {note.access?.canEdit && (
+            <div className="relative pt-4">
+              <button
+                onClick={() => setShowBlockTypeSelector(!showBlockTypeSelector)}
+                className="flex items-center gap-2 rounded-md border border-dashed border-neutral-700 px-4 py-2 text-sm text-neutral-500 transition-all hover:border-yellow-500 hover:text-yellow-500"
+              >
+                <FaPlus size={12} />
+                Adicionar bloco
+              </button>
+
+              {showBlockTypeSelector && (
+                <BlockTypeSelector
+                  onSelect={(type) => handleAddBlock(type)}
+                  onClose={() => setShowBlockTypeSelector(false)}
+                />
               )}
             </div>
           )}
         </div>
 
         {/* Atalhos de teclado - mostrar quando não está editando */}
-        {!isEditing && (
+        {!isEditing && note.access?.canEdit && (
           <div className="mt-8 border-t border-neutral-800 pt-4">
             <div className="text-xs text-neutral-500">
               <span className="font-semibold">Atalhos:</span>

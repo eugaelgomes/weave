@@ -22,6 +22,13 @@ export interface Note {
   avatar_url?: string;
   name?: string;
   blocks?: Block[];
+  access?: {
+    isOwner: boolean;
+    isCollaborator: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+    canShare: boolean;
+  };
 }
 
 export interface Block {
@@ -31,8 +38,13 @@ export interface Block {
   properties?: Record<string, unknown>;
   done?: boolean;
   parentId?: string;
+  parent_id?: string;
   position: number;
   note_id: string;
+  level?: number;
+  created_at?: string;
+  updated_at?: string;
+  children?: Block[];
 }
 
 export interface FetchNotesParams {

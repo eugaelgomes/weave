@@ -59,6 +59,11 @@ router.post("/:id/blocks", (req, res, next) => {
   notesController.createBlock(req, res, next);
 });
 
+// PUT /api/notes/:noteId/blocks/reorder - Reorder note blocks
+router.put("/:noteId/blocks/reorder", (req, res, next) => {
+  notesController.reorderBlocks(req, res, next);
+});
+
 // PUT /api/notes/:noteId/blocks/:blockId - Update a specific block
 router.put("/:noteId/blocks/:blockId", (req, res, next) => {
   notesController.updateBlock(req, res, next);
@@ -67,11 +72,6 @@ router.put("/:noteId/blocks/:blockId", (req, res, next) => {
 // DELETE /api/notes/:noteId/blocks/:blockId - Delete a specific block
 router.delete("/:noteId/blocks/:blockId", (req, res, next) => {
   notesController.deleteBlock(req, res, next);
-});
-
-// PUT /api/notes/:noteId/blocks/reorder - Reorder note blocks
-router.put("/:noteId/blocks/reorder", (req, res, next) => {
-  notesController.reorderBlocks(req, res, next);
 });
 
 // --- ROUTES FOR COLLABORATOR MANAGEMENT ---

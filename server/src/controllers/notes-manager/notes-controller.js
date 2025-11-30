@@ -626,8 +626,8 @@ class NotesController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar se a nota existe e pertence ao usuário (apenas proprietário pode deletar)
-      await this._validateNoteOwnership(noteId, userId);
+      // Verificar se a nota existe e o usuário tem acesso (proprietário ou colaborador)
+      await this._validateNoteAccess(noteId, userId);
 
       // Verificar se o bloco existe e pertence à nota
       const existingBlock = await this.blocksRepository.getBlockById(blockId);
