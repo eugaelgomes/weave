@@ -166,7 +166,8 @@ async function delete_account_notification(nome, email, username) {
     console.error("Delete account email failed:", error);
     return {
       success: false,
-      error: error.message || "Failed to send delete account notification email.",
+      error:
+        error.message || "Failed to send delete account notification email.",
     };
   }
 }

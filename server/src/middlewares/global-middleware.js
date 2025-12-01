@@ -146,7 +146,7 @@ function configureGlobalMiddlewares(app) {
     helmet({
       // HTTP Strict Transport Security
       hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-      
+
       // Content Security Policy
       contentSecurityPolicy: {
         directives: {
@@ -156,13 +156,13 @@ function configureGlobalMiddlewares(app) {
           upgradeInsecureRequests: [], // Automatically upgrade HTTP to HTTPS
         },
       },
-      
+
       // Prevent clickjacking attacks
       frameguard: { action: "deny" },
-      
+
       // Prevent MIME type sniffing
       noSniff: true,
-      
+
       // Control referrer information
       referrerPolicy: { policy: "strict-origin-when-cross-origin" },
     })

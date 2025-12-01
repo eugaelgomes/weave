@@ -27,7 +27,7 @@ async function sendBackupEmail(userEmail, userName, backupData, options = {}) {
       userName: userName,
       totalNotes: totalLines,
       fileSize: fileSize,
-      downloadUrl: options.downloadUrl || null
+      downloadUrl: options.downloadUrl || null,
     });
 
     const mailOptions = {
@@ -45,25 +45,24 @@ async function sendBackupEmail(userEmail, userName, backupData, options = {}) {
         {
           filename: filename,
           content: backupData,
-          contentType: "text/csv"
-        }
+          contentType: "text/csv",
+        },
       ];
     }
 
     await MailService().sendMail(mailOptions);
-    
+
     console.log(`📧 Email de backup enviado para ${userEmail} (${fileSize})`);
-    return { 
-      success: true, 
+    return {
+      success: true,
       fileSize: fileSizeBytes,
-      sentAsAttachment: sendAsAttachment 
+      sentAsAttachment: sendAsAttachment,
     };
-    
   } catch (error) {
     console.error("❌ Erro ao enviar email de backup:", error);
-    return { 
-      success: false, 
-      error: error.message || "Falha ao enviar email de backup." 
+    return {
+      success: false,
+      error: error.message || "Falha ao enviar email de backup.",
     };
   }
 }
@@ -75,15 +74,15 @@ async function sendBackupEmail(userEmail, userName, backupData, options = {}) {
  */
 function formatFileSize(bytes) {
   if (bytes === 0) return "0 Bytes";
-  
+
   const k = 1024;
   const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
 module.exports = {
   sendBackupEmail,
-  formatFileSize
+  formatFileSize,
 };

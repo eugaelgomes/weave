@@ -21,7 +21,7 @@ const getConnection = async () => {
     console.error("Pool connection failed:", error.message);
     throw error;
   }
-}
+};
 
 const executeQuery = async (sql, params = []) => {
   const client = await getConnection();
@@ -33,7 +33,7 @@ const executeQuery = async (sql, params = []) => {
   } finally {
     client.release();
   }
-}
+};
 
 const rowCount = async (sql, params = []) => {
   const client = await getConnection();
@@ -45,6 +45,6 @@ const rowCount = async (sql, params = []) => {
   } finally {
     client.release();
   }
-}
+};
 
 module.exports = { pool, getConnection, executeQuery, rowCount };

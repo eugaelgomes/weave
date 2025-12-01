@@ -1,11 +1,11 @@
 module.exports = ({ noteName, ownerName, noteUrl }) => {
-    const env = process.env.NODE_ENV || "development";
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    const viewNoteLink = noteUrl || `${frontendUrl}/notes`;
+  const env = process.env.NODE_ENV || "development";
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+  const viewNoteLink = noteUrl || `${frontendUrl}/notes`;
 
-    return {
-        subject: `Nova colaboração: ${noteName}`,
-        html: `
+  return {
+    subject: `Nova colaboração: ${noteName}`,
+    html: `
             <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -245,7 +245,7 @@ module.exports = ({ noteName, ownerName, noteUrl }) => {
 </body>
 </html>
         `,
-        text: `
+    text: `
 Nova Colaboração - Weave Notes
 
 Prezado(a),
@@ -268,6 +268,6 @@ Caso não conheça ${ownerName} ou não esperava este convite, você pode ignora
 Atenciosamente,
 Equipe Weave Notes
 contact@gaelgomes.dev
-        `.trim()
-    };
+        `.trim(),
+  };
 };

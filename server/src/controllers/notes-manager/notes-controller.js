@@ -1,7 +1,9 @@
 const notesRepository = require("@/repositories/notes-manager");
 const blocksRepository = require("@/repositories/blocks-manager");
 const userRepository = require("@/repositories/user-manager");
-const { sendCollaborationNotification } = require("@/services/email/templates/notes-mails/collab-notification");
+const {
+  sendCollaborationNotification,
+} = require("@/services/email/templates/notes-mails/collab-notification");
 
 class NotesController {
   constructor() {
@@ -102,6 +104,7 @@ class NotesController {
       title: note.title,
       description: note.description,
       tags: note.tags || [],
+      status: note.status,
       created_at: note.created_at,
       updated_at: note.updated_at,
       blocks: blocks, // Nova estrutura de blocos hierárquicos
@@ -214,6 +217,7 @@ class NotesController {
             title: note.title,
             description: note.description,
             tags: note.tags || [],
+            status: note.status,
             created_at: note.created_at,
             updated_at: note.updated_at,
             deleted: note.deleted,
@@ -257,7 +261,10 @@ class NotesController {
       if (!userId) return;
 
       // Validação de acesso à nota (proprietário ou colaborador)
-      const { note, isOwner, isCollaborator } = await this._validateNoteAccess(id, userId);
+      const { note, isOwner, isCollaborator } = await this._validateNoteAccess(
+        id,
+        userId
+      );
 
       // Buscar blocos da nota
       const blocks = await this.blocksRepository.getBlocksByNoteId(id);
@@ -270,6 +277,7 @@ class NotesController {
         title: note.title,
         description: note.description,
         tags: note.tags || [],
+        status: note.status || "sem_status",
         created_at: note.created_at,
         updated_at: note.updated_at,
         user: {
@@ -306,27 +314,26 @@ class NotesController {
       // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
-      
+
       // Buscar estatísticas
       const stats = await this.notesRepository.getAllNotesStats(userId);
-      
+
       // Formatar dados para o frontend
       const formattedStats = {
         totalNotes: parseInt(stats.total_notes) || 0,
         totalTags: parseInt(stats.unique_tags_count) || 0,
         statusDistribution: stats.status_distribution || {},
-        mostUsedTags: (stats.top_tags || []).map(tag => ({
+        mostUsedTags: (stats.top_tags || []).map((tag) => ({
           tag: tag.tag_name,
-          count: parseInt(tag.count) || 0
-        }))
+          count: parseInt(tag.count) || 0,
+        })),
       };
-      
+
       res.status(200).json(formattedStats);
     } catch (error) {
       this._handleError(error, res, next);
     }
   }
-  
 
   /**
    * POST /api/notes - Criar uma nova nota
@@ -399,6 +406,7 @@ class NotesController {
         title: result.title,
         description: result.description,
         tags: result.tags || [],
+        status: result.status,
         created_at: result.note_created_at,
         updated_at: result.note_updated_at,
         user: {
@@ -445,7 +453,7 @@ class NotesController {
   async updateNote(req, res, next) {
     try {
       const { id } = req.params;
-      const { title, description, tags, deleted } = req.body;
+      const { title, description, tags, status, deleted } = req.body;
 
       // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
@@ -453,7 +461,7 @@ class NotesController {
 
       // Validação de acesso à nota (proprietário ou colaborador pode editar)
       const { note, isOwner } = await this._validateNoteAccess(id, userId);
-      
+
       // Apenas o proprietário pode marcar como deletado
       if (deleted !== undefined && !isOwner) {
         throw new Error("Apenas o proprietário pode excluir a nota");
@@ -464,6 +472,7 @@ class NotesController {
       if (title !== undefined) updateData.title = title;
       if (description !== undefined) updateData.description = description;
       if (tags !== undefined) updateData.tags = tags;
+      if (status !== undefined) updateData.status = status;
       if (deleted !== undefined) updateData.deleted = deleted;
 
       // Verifica se há algo para atualizar
@@ -753,8 +762,11 @@ class NotesController {
       }
 
       // Adicionar ou reativar colaborador
-      const result = await this.notesRepository.addCollaborator(noteId, collaboratorId);
-      
+      const result = await this.notesRepository.addCollaborator(
+        noteId,
+        collaboratorId
+      );
+
       if (!result) {
         throw new Error("Usuário já é colaborador desta nota");
       }
@@ -826,7 +838,10 @@ class NotesController {
       }
 
       // Remover colaborador
-      const result = await this.notesRepository.removeCollaborator(noteId, collaboratorId);
+      const result = await this.notesRepository.removeCollaborator(
+        noteId,
+        collaboratorId
+      );
 
       if (result.rowCount === 0) {
         throw new Error("Falha ao remover colaborador");

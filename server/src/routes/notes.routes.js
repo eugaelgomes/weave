@@ -46,7 +46,6 @@ router.delete("/:id", (req, res, next) => {
   notesController.deleteNote(req, res, next);
 });
 
-
 // --- ROUTES FOR BLOCK MANAGEMENT ---
 
 // GET /api/notes/:noteId/blocks - Get all blocks from a note

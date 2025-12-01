@@ -30,11 +30,7 @@ router.post(
 //  AuthController.googleCallback.bind(AuthController)
 //);
 
-router.get(
-  "/me",
-  verifyToken,
-  AuthController.getProfile.bind(AuthController)
-);
+router.get("/me", verifyToken, AuthController.getProfile.bind(AuthController));
 
 router.put(
   "/me/update-profile",
@@ -44,11 +40,7 @@ router.put(
   authController.updateProfile.bind(authController)
 );
 
-router.post(
-  "/logout",
-  verifyToken,
-  AuthController.logout.bind(AuthController)
-);
+router.post("/logout", verifyToken, AuthController.logout.bind(AuthController));
 
 //router.post(
 //  "/refresh",
