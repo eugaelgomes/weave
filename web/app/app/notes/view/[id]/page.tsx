@@ -56,9 +56,7 @@ interface BlockComponentProps {
   onUpdate: (blockId: string, data: Partial<Block>) => Promise<void>;
   onDelete: (blockId: string) => Promise<void>;
   onAddBlock: (parentId?: string) => void;
-  isEditing: boolean;
   isDragging?: boolean;
-  onStartEditing?: () => void;
 }
 
 const SortableBlockComponent: React.FC<BlockComponentProps> = ({
@@ -67,8 +65,6 @@ const SortableBlockComponent: React.FC<BlockComponentProps> = ({
   onUpdate,
   onDelete,
   onAddBlock,
-  isEditing,
-  onStartEditing,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
@@ -94,10 +90,8 @@ const SortableBlockComponent: React.FC<BlockComponentProps> = ({
         onUpdate={onUpdate}
         onDelete={onDelete}
         onAddBlock={onAddBlock}
-        isEditing={isEditing}
         isDragging={isDragging}
         dragHandleProps={{ ...attributes, ...listeners }}
-        onStartEditing={onStartEditing}
       />
     </div>
   );
@@ -110,10 +104,8 @@ interface BlockInnerProps {
   onUpdate: (blockId: string, data: Partial<Block>) => Promise<void>;
   onDelete: (blockId: string) => Promise<void>;
   onAddBlock: (parentId?: string) => void;
-  isEditing: boolean;
   isDragging?: boolean;
   dragHandleProps?: Record<string, unknown>;
-  onStartEditing?: () => void;
 }
 
 const BlockComponent: React.FC<BlockInnerProps> = ({
@@ -122,19 +114,17 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
   onUpdate,
   onDelete,
   onAddBlock,
-  isEditing,
   isDragging,
   dragHandleProps,
-  onStartEditing,
 }) => {
   const [localText, setLocalText] = useState(block.text || "");
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    if (!isEditing && block.text !== localText) {
+    if (block.text !== localText) {
       setLocalText(block.text || "");
     }
-  }, [block.text, isEditing, localText]);
+  }, [block.text, localText]);
 
   const handleBlur = () => {
     if (localText !== block.text) {
@@ -144,14 +134,14 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
 
   // Auto-save com debounce
   useEffect(() => {
-    if (!isEditing || localText === block.text) return;
+    if (localText === block.text) return;
 
     const timeoutId = setTimeout(() => {
       onUpdate(block.id, { text: localText });
     }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [localText, block.id, block.text, isEditing, onUpdate]);
+  }, [localText, block.id, block.text, onUpdate]);
 
   const handleToggleDone = async (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -163,7 +153,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
   const renderBlockContent = () => {
     switch (block.type) {
       case "heading":
-        return isEditing ? (
+        return (
           <input
             type="text"
             value={localText}
@@ -172,8 +162,6 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
             className="w-full bg-transparent text-xl font-bold text-neutral-100 placeholder-neutral-500 outline-none"
             placeholder="Título..."
           />
-        ) : (
-          <h2 className="text-xl font-bold text-neutral-100">{block.text || "Título vazio"}</h2>
         );
 
       case "todo":
@@ -189,24 +177,16 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
             >
               {block.done && <FaCheckSquare size={10} />}
             </button>
-            {isEditing ? (
-              <input
-                type="text"
-                value={localText}
-                onChange={(e) => setLocalText(e.target.value)}
-                onBlur={handleBlur}
-                className={`w-full bg-transparent text-neutral-200 placeholder-neutral-500 outline-none ${
-                  block.done ? "text-neutral-500 line-through" : ""
-                }`}
-                placeholder="Tarefa..."
-              />
-            ) : (
-              <span
-                className={`${block.done ? "text-neutral-500 line-through" : "text-neutral-200"}`}
-              >
-                {block.text || "Tarefa vazia"}
-              </span>
-            )}
+            <input
+              type="text"
+              value={localText}
+              onChange={(e) => setLocalText(e.target.value)}
+              onBlur={handleBlur}
+              className={`w-full bg-transparent text-neutral-200 placeholder-neutral-500 outline-none ${
+                block.done ? "text-neutral-500 line-through" : ""
+              }`}
+              placeholder="Tarefa..."
+            />
           </div>
         );
 
@@ -214,36 +194,28 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
         return (
           <div className="flex items-start gap-3">
             <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-yellow-500" />
-            {isEditing ? (
-              <input
-                type="text"
-                value={localText}
-                onChange={(e) => setLocalText(e.target.value)}
-                onBlur={handleBlur}
-                className="w-full bg-transparent text-neutral-200 placeholder-neutral-500 outline-none"
-                placeholder="Item da lista..."
-              />
-            ) : (
-              <span className="text-neutral-200">{block.text || "Item vazio"}</span>
-            )}
+            <input
+              type="text"
+              value={localText}
+              onChange={(e) => setLocalText(e.target.value)}
+              onBlur={handleBlur}
+              className="w-full bg-transparent text-neutral-200 placeholder-neutral-500 outline-none"
+              placeholder="Item da lista..."
+            />
           </div>
         );
 
       case "quote":
         return (
           <div className="border-l-4 border-yellow-500 pl-4">
-            {isEditing ? (
-              <textarea
-                value={localText}
-                onChange={(e) => setLocalText(e.target.value)}
-                onBlur={handleBlur}
-                className="w-full resize-none bg-transparent text-neutral-300 italic placeholder-neutral-500 outline-none"
-                placeholder="Citação..."
-                rows={2}
-              />
-            ) : (
-              <p className="text-neutral-300 italic">{block.text || "Citação vazia"}</p>
-            )}
+            <textarea
+              value={localText}
+              onChange={(e) => setLocalText(e.target.value)}
+              onBlur={handleBlur}
+              className="w-full resize-none bg-transparent text-neutral-300 italic placeholder-neutral-500 outline-none"
+              placeholder="Citação..."
+              rows={2}
+            />
           </div>
         );
 
@@ -256,29 +228,21 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
               </span>
               <FaCode size={12} className="text-neutral-500" />
             </div>
-            {isEditing ? (
-              <textarea
-                value={localText}
-                onChange={(e) => setLocalText(e.target.value)}
-                onBlur={handleBlur}
-                className="w-full resize-none bg-neutral-900 p-3 font-mono text-sm text-green-400 placeholder-neutral-600 outline-none"
-                placeholder="// Seu código aqui..."
-                rows={5}
-              />
-            ) : (
-              <pre className="overflow-x-auto p-3">
-                <code className="font-mono text-sm text-green-400">
-                  {block.text || "// Código vazio"}
-                </code>
-              </pre>
-            )}
+            <textarea
+              value={localText}
+              onChange={(e) => setLocalText(e.target.value)}
+              onBlur={handleBlur}
+              className="w-full resize-none bg-neutral-900 p-3 font-mono text-sm text-green-400 placeholder-neutral-600 outline-none"
+              placeholder="// Seu código aqui..."
+              rows={5}
+            />
           </div>
         );
 
       case "paragraph":
       case "text":
       default:
-        return isEditing ? (
+        return (
           <textarea
             value={localText}
             onChange={(e) => setLocalText(e.target.value)}
@@ -287,10 +251,6 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
             placeholder="Digite seu texto..."
             rows={Math.max(2, localText.split("\n").length)}
           />
-        ) : (
-          <p className="leading-relaxed whitespace-pre-wrap text-neutral-200">
-            {block.text || "Texto vazio"}
-          </p>
         );
     }
   };
@@ -302,30 +262,22 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Handle de arrastar */}
-      {isEditing && (
-        <div
-          className={`absolute top-1 -left-8 flex flex-col gap-1 transition-opacity ${
-            isHovered ? "opacity-100" : "opacity-0"
-          }`}
+      <div
+        className={`absolute top-1 -left-8 flex flex-col gap-1 transition-opacity ${
+          isHovered ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <button
+          {...dragHandleProps}
+          className="cursor-grab rounded p-1 text-neutral-500 hover:bg-neutral-800 hover:text-yellow-500 active:cursor-grabbing"
+          title="Arrastar para reordenar"
         >
-          <button
-            {...dragHandleProps}
-            className="cursor-grab rounded p-1 text-neutral-500 hover:bg-neutral-800 hover:text-yellow-500 active:cursor-grabbing"
-            title="Arrastar para reordenar"
-          >
-            <FaGripVertical size={12} />
-          </button>
-        </div>
-      )}
+          <FaGripVertical size={12} />
+        </button>
+      </div>
 
       {/* Conteúdo do bloco */}
       <div
-        onClick={(e) => {
-          if (!isEditing && onStartEditing) {
-            e.stopPropagation();
-            onStartEditing();
-          }
-        }}
         className={`rounded-md px-2 py-1 transition-colors hover:bg-neutral-900/50 ${
           isDragging ? "bg-neutral-800 shadow-lg ring-2 ring-yellow-500/50" : ""
         }`}
@@ -334,7 +286,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
       </div>
 
       {/* Botão de deletar */}
-      {isEditing && isHovered && (
+      {isHovered && (
         <button
           onClick={() => onDelete(block.id)}
           className="absolute top-1 -right-2 rounded p-1 text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-400"
@@ -355,8 +307,6 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
               onUpdate={onUpdate}
               onDelete={onDelete}
               onAddBlock={onAddBlock}
-              isEditing={isEditing}
-              onStartEditing={onStartEditing}
             />
           ))}
         </div>
@@ -458,7 +408,6 @@ const NoteDetail = () => {
 
   const [note, setNote] = useState<Note | null>(null);
   const [blocks, setBlocks] = useState<(Block & { children?: Block[] })[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
   const [editingTitle, setEditingTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -504,7 +453,7 @@ const NoteDetail = () => {
 
   // Auto-salvar título quando houver mudanças
   useEffect(() => {
-    if (!note || !isEditing) return;
+    if (!note) return;
 
     const hasChanges = editingTitle !== note.title;
     if (!hasChanges) return;
@@ -524,10 +473,10 @@ const NoteDetail = () => {
       } finally {
         setIsSaving(false);
       }
-    }, 2000);
+    }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [editingTitle, note, isEditing, updateNote]);
+  }, [editingTitle, note, updateNote]);
 
   // =================== FUNÇÕES PARA DRAG AND DROP ===================
   const handleDragStart = (event: DragStartEvent) => {
@@ -700,30 +649,6 @@ const NoteDetail = () => {
     }
   };
 
-  const startEditing = () => {
-    if (note?.access?.canEdit) {
-      setIsEditing(true);
-    }
-  };
-
-  const stopEditing = async () => {
-    setIsEditing(false);
-
-    // Salvar título ao sair se houver mudanças não salvas
-    if (note && editingTitle !== note.title) {
-      setIsSaving(true);
-      try {
-        await updateNote(note.id, {
-          title: editingTitle,
-        });
-      } catch (error) {
-        console.error("Erro ao salvar ao sair:", error);
-      } finally {
-        setIsSaving(false);
-      }
-    }
-  };
-
   // =================== FUNÇÕES PARA COLABORAÇÃO ===================
   const handleSearchUsers = async (term: string) => {
     if (!term.trim()) {
@@ -840,42 +765,27 @@ const NoteDetail = () => {
   // Adicionar listener para teclas de atalho
   useEffect(() => {
     const handleDocumentKeyDown = async (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        switch (e.key) {
-          case "s":
-            e.preventDefault();
-            if (isEditing && note) {
-              setIsSaving(true);
-              try {
-                await updateNote(note.id, {
-                  title: editingTitle,
-                });
-              } catch (error) {
-                console.error("Erro ao salvar:", error);
-              } finally {
-                setIsSaving(false);
-              }
-            }
-            break;
-          case "e":
-            e.preventDefault();
-            if (!isEditing) {
-              startEditing();
-            }
-            break;
-        }
-      }
-
-      if (e.key === "Escape" && isEditing) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
-        stopEditing();
+        if (note) {
+          setIsSaving(true);
+          try {
+            await updateNote(note.id, {
+              title: editingTitle,
+            });
+          } catch (error) {
+            console.error("Erro ao salvar:", error);
+          } finally {
+            setIsSaving(false);
+          }
+        }
       }
     };
 
     document.addEventListener("keydown", handleDocumentKeyDown);
     return () => document.removeEventListener("keydown", handleDocumentKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing, note, editingTitle]);
+  }, [note, editingTitle]);
 
   if (isLoading || !note) {
     return <NoteDetailSkeleton />;
@@ -952,38 +862,26 @@ const NoteDetail = () => {
       <div className="mx-auto max-w-4xl px-4 py-6">
         {/* Título */}
         <div className="mb-6">
-          {isEditing ? (
-            <input
-              type="text"
-              value={editingTitle}
-              onChange={(e) => setEditingTitle(e.target.value)}
-              onBlur={async () => {
-                if (note && editingTitle !== note.title) {
-                  setIsSaving(true);
-                  try {
-                    const updated = await updateNote(note.id, { title: editingTitle });
-                    if (updated) setNote(updated);
-                  } catch (error) {
-                    console.error("Erro ao salvar título:", error);
-                  } finally {
-                    setIsSaving(false);
-                  }
+          <input
+            type="text"
+            value={editingTitle}
+            onChange={(e) => setEditingTitle(e.target.value)}
+            onBlur={async () => {
+              if (note && editingTitle !== note.title) {
+                setIsSaving(true);
+                try {
+                  const updated = await updateNote(note.id, { title: editingTitle });
+                  if (updated) setNote(updated);
+                } catch (error) {
+                  console.error("Erro ao salvar título:", error);
+                } finally {
+                  setIsSaving(false);
                 }
-              }}
-              placeholder="Título da nota..."
-              className="w-full border-b-2 border-transparent bg-transparent pb-1 text-2xl font-bold text-neutral-100 placeholder-neutral-500 outline-none focus:border-yellow-500"
-              autoFocus={!editingTitle}
-            />
-          ) : (
-            <h1
-              onClick={startEditing}
-              className={`flex min-h-[2rem] items-center text-2xl font-bold text-neutral-100 transition-colors ${
-                note.access?.canEdit ? "cursor-text hover:text-yellow-500" : ""
-              }`}
-            >
-              {note.title || "Clique para adicionar título..."}
-            </h1>
-          )}
+              }
+            }}
+            placeholder="Título da nota..."
+            className="w-full border-b-2 border-transparent bg-transparent pb-1 text-2xl font-bold text-neutral-100 placeholder-neutral-500 outline-none focus:border-yellow-500"
+          />
         </div>
 
         {/* Meta informações */}
@@ -1083,8 +981,6 @@ const NoteDetail = () => {
                     onUpdate={handleUpdateBlock}
                     onDelete={handleDeleteBlock}
                     onAddBlock={() => setShowBlockTypeSelector(true)}
-                    isEditing={isEditing}
-                    onStartEditing={startEditing}
                   />
                 ))}
               </SortableContext>
@@ -1099,7 +995,6 @@ const NoteDetail = () => {
                       onUpdate={handleUpdateBlock}
                       onDelete={handleDeleteBlock}
                       onAddBlock={() => {}}
-                      isEditing={false}
                       isDragging={true}
                     />
                   </div>
@@ -1107,10 +1002,7 @@ const NoteDetail = () => {
               </DragOverlay>
             </DndContext>
           ) : (
-            <div
-              onClick={startEditing}
-              className="min-h-[200px] cursor-text rounded-lg border-2 border-dashed border-neutral-700 py-8 text-center text-neutral-500 transition-colors hover:border-yellow-500"
-            >
+            <div className="min-h-[200px] rounded-lg border-2 border-dashed border-neutral-700 py-8 text-center text-neutral-500">
               <div className="mb-2">📝</div>
               <p>Esta nota ainda não tem conteúdo.</p>
               <p className="mt-1 text-sm">Clique em &quot;Adicionar bloco&quot; para começar</p>
@@ -1138,14 +1030,12 @@ const NoteDetail = () => {
           )}
         </div>
 
-        {/* Atalhos de teclado - mostrar quando não está editando */}
-        {!isEditing && note.access?.canEdit && (
+        {/* Atalhos de teclado */}
+        {note.access?.canEdit && (
           <div className="mt-8 border-t border-neutral-800 pt-4">
             <div className="text-xs text-neutral-500">
-              <span className="font-semibold">Atalhos:</span>
-              <span className="ml-2">Ctrl+E para editar</span>
-              <span className="ml-3">Ctrl+S para salvar</span>
-              <span className="ml-3">Esc para sair da edição</span>
+              <span className="font-semibold">Atalho:</span>
+              <span className="ml-2">Ctrl+S para forçar salvamento</span>
             </div>
           </div>
         )}
