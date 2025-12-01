@@ -18,14 +18,14 @@ class JobManager {
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
     `;
-    
+
     const [job] = await executeQuery(query, [
       jobId,
       type,
       userId,
       "pending",
       0,
-      JSON.stringify(metadata)
+      JSON.stringify(metadata),
     ]);
 
     // Cache em memória
@@ -48,7 +48,7 @@ class JobManager {
     if (updates.status !== undefined) {
       setParts.push(`status = $${paramIndex++}`);
       values.push(updates.status);
-      
+
       // Marcar timestamps automaticamente
       if (updates.status === "processing") {
         setParts.push("started_at = NOW()");
@@ -80,7 +80,7 @@ class JobManager {
     `;
 
     const [job] = await executeQuery(query, values);
-    
+
     if (!job) {
       throw new Error("Job não encontrado");
     }
@@ -106,13 +106,13 @@ class JobManager {
     // Buscar no banco
     const query = "SELECT * FROM jobs WHERE id = $1";
     const [job] = await executeQuery(query, [jobId]);
-    
+
     if (job) {
       const formattedJob = this.formatJob(job);
       this.jobs.set(jobId, formattedJob);
       return formattedJob;
     }
-    
+
     return null;
   }
 
@@ -127,9 +127,9 @@ class JobManager {
       WHERE user_id = $1 
       ORDER BY created_at DESC
     `;
-    
+
     const jobs = await executeQuery(query, [userId]);
-    return jobs.map(job => this.formatJob(job));
+    return jobs.map((job) => this.formatJob(job));
   }
 
   /**
@@ -162,7 +162,7 @@ class JobManager {
       progress: dbJob.progress,
       error: dbJob.error,
       result: dbJob.result,
-      metadata: dbJob.metadata
+      metadata: dbJob.metadata,
     };
   }
 
@@ -176,12 +176,12 @@ class JobManager {
       WHERE status IN ('completed', 'failed') 
       AND completed_at < NOW() - INTERVAL '24 hours'
     `;
-    
+
     const result = await executeQuery(query);
-    
+
     // Limpar cache também
     this.jobs.clear();
-    
+
     console.log("Cleanup executado: jobs antigos removidos");
   }
 
@@ -201,8 +201,11 @@ class JobManager {
 const jobManager = new JobManager();
 
 // Cleanup automático a cada 6 horas
-setInterval(() => {
-  jobManager.cleanupOldJobs();
-}, 6 * 60 * 60 * 1000);
+setInterval(
+  () => {
+    jobManager.cleanupOldJobs();
+  },
+  6 * 60 * 60 * 1000
+);
 
 module.exports = jobManager;

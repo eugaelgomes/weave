@@ -7,7 +7,12 @@
  * @param {string} options.downloadUrl - URL para download (opcional)
  * @returns {Object} Template do email
  */
-function backupReadyTemplate({ userName, totalNotes, fileSize, downloadUrl = null }) {
+function backupReadyTemplate({
+  userName,
+  totalNotes,
+  fileSize,
+  downloadUrl = null,
+}) {
   const subject = "Backup de dados disponível";
 
   const text = `
@@ -20,9 +25,10 @@ Total de registros: ${totalNotes}
 Tamanho do arquivo: ${fileSize}
 Data de geração: ${new Date().toLocaleString("pt-BR")}
 
-${downloadUrl 
-  ? `Link para download: ${downloadUrl}` 
-  : "O arquivo está anexado a este email."
+${
+  downloadUrl
+    ? `Link para download: ${downloadUrl}`
+    : "O arquivo está anexado a este email."
 }
 
 INFORMAÇÕES IMPORTANTES:
@@ -101,11 +107,12 @@ support@gaelgomes.dev
         </div>
       </div>
 
-      ${downloadUrl 
-        ? `<div class="download-section">
+      ${
+        downloadUrl
+          ? `<div class="download-section">
              <a href="${downloadUrl}" class="download-btn">Baixar Backup</a>
            </div>`
-        : `<div class="info-box">
+          : `<div class="info-box">
              <h4>Arquivo Anexado</h4>
              <p style="margin: 0; color: #525252;">O arquivo de backup está anexado a este email.</p>
            </div>`
@@ -143,7 +150,7 @@ support@gaelgomes.dev
   return {
     subject,
     text,
-    html
+    html,
   };
 }
 

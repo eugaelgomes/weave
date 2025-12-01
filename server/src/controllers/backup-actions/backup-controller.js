@@ -1,7 +1,9 @@
 const getAllDataRepository = require("@/repositories/backups");
 const userRepository = require("@/repositories/user-manager");
 const jobManager = require("@/services/jobs/job-manager");
-const { sendBackupEmail } = require("@/services/email/templates/backup-mails/backup-notification");
+const {
+  sendBackupEmail,
+} = require("@/services/email/templates/backup-mails/backup-notification");
 
 class BackupController {
   constructor() {
@@ -31,7 +33,10 @@ class BackupController {
   _validateUserId(userId) {
     // Verificar se é um número ou UUID válido
     const isNumeric = /^\d+$/.test(userId);
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
+    const isUUID =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        userId
+      );
     return isNumeric || isUUID;
   }
 
@@ -43,9 +48,9 @@ class BackupController {
   async _executeBackupJob(jobId, userId) {
     try {
       // Atualizar status para processando no banco/tabela de jobs
-      await jobManager.updateJob(jobId, { 
-        status: "processing", 
-        progress: 10 
+      await jobManager.updateJob(jobId, {
+        status: "processing",
+        progress: 10,
       });
 
       // Buscar dados do usuário para email
@@ -58,7 +63,10 @@ class BackupController {
 
       // Buscar todos os dados com timeout
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Timeout: Backup demorou mais que 5 minutos")), 5 * 60 * 1000);
+        setTimeout(
+          () => reject(new Error("Timeout: Backup demorou mais que 5 minutos")),
+          5 * 60 * 1000
+        );
       });
 
       const dataPromise = this.getAllDataRepository.getAllData(userId);
@@ -68,10 +76,15 @@ class BackupController {
 
       // Verificar se usuário tem muitos dados (proteção)
       const totalNotes = rawData.length;
-      const totalBlocks = rawData.reduce((sum, note) => sum + (note.blocks?.length || 0), 0);
-      
+      const totalBlocks = rawData.reduce(
+        (sum, note) => sum + (note.blocks?.length || 0),
+        0
+      );
+
       if (totalNotes > 1000 || totalBlocks > 5000) {
-        throw new Error(`Muitos dados para backup: ${totalNotes} notas, ${totalBlocks} blocos. Contate o suporte.`);
+        throw new Error(
+          `Muitos dados para backup: ${totalNotes} notas, ${totalBlocks} blocos. Contate o suporte.`
+        );
       }
 
       // Formatação em CSV
@@ -90,26 +103,25 @@ class BackupController {
         throw new Error(`Falha ao enviar email: ${emailResult.error}`);
       }
 
-      await jobManager.updateJob(jobId, { 
-        status: "completed", 
+      await jobManager.updateJob(jobId, {
+        status: "completed",
         progress: 100,
         result: {
           totalNotes: totalNotes,
           fileSize: emailResult.fileSize,
           sentAsAttachment: emailResult.sentAsAttachment,
-          completedAt: new Date().toISOString()
-        }
+          completedAt: new Date().toISOString(),
+        },
       });
 
       console.log(`Backup job ${jobId} concluído para usuário ${userId}`);
-
     } catch (error) {
       console.error(`Erro no backup job ${jobId}:`, error);
-      
-      await jobManager.updateJob(jobId, { 
-        status: "failed", 
+
+      await jobManager.updateJob(jobId, {
+        status: "failed",
         error: error.message,
-        progress: 0
+        progress: 0,
       });
     }
   }
@@ -124,7 +136,10 @@ class BackupController {
     const errorMessage = error.message;
 
     // Erros de validação (400 Bad Request)
-    if (errorMessage.includes("obrigatório") || errorMessage.includes("inválido")) {
+    if (
+      errorMessage.includes("obrigatório") ||
+      errorMessage.includes("inválido")
+    ) {
       return res.status(400).json({ error: errorMessage });
     }
 
@@ -152,59 +167,42 @@ class BackupController {
    */
   _formatBackupDataCSV(rawData) {
     const lines = [];
-    
+
     // Cabeçalho
-    lines.push([
-      "note_id",
-      "title",
-      "description",
-      "tags",
-      "created_at",
-      "updated_at",
-      "owner_id",
-      "owner_name",
-      "owner_username",
-      "collaborators",
-      "block_id",
-      "block_type",
-      "block_text",
-      "block_position",
-      "block_done",
-      "block_created_at"
-    ].join(","));
+    lines.push(
+      [
+        "note_id",
+        "title",
+        "description",
+        "tags",
+        "created_at",
+        "updated_at",
+        "owner_id",
+        "owner_name",
+        "owner_username",
+        "collaborators",
+        "block_id",
+        "block_type",
+        "block_text",
+        "block_position",
+        "block_done",
+        "block_created_at",
+      ].join(",")
+    );
 
     // Processar cada nota e seus blocos
-    rawData.forEach(note => {
-      const activeBlocks = note.blocks?.filter(block => !block.deleted) || [];
-      const collaborators = note.collaborators
-        ?.filter(c => !c.removed)
-        .map(c => c.username || c.name)
-        .join(";") || "";
+    rawData.forEach((note) => {
+      const activeBlocks = note.blocks?.filter((block) => !block.deleted) || [];
+      const collaborators =
+        note.collaborators
+          ?.filter((c) => !c.removed)
+          .map((c) => c.username || c.name)
+          .join(";") || "";
 
       if (activeBlocks.length === 0) {
         // Nota sem blocos
-        lines.push([
-          this._escapeCsv(note.note_id),
-          this._escapeCsv(note.title || ""),
-          this._escapeCsv(note.description || ""),
-          this._escapeCsv(note.tags?.join(";") || ""),
-          this._escapeCsv(note.created_at),
-          this._escapeCsv(note.updated_at),
-          this._escapeCsv(note.owner_id),
-          this._escapeCsv(note.owner?.name || ""),
-          this._escapeCsv(note.owner?.username || ""),
-          this._escapeCsv(collaborators),
-          "", // block_id
-          "", // block_type
-          "", // block_text
-          "", // block_position
-          "", // block_done
-          ""  // block_created_at
-        ].join(","));
-      } else {
-        // Nota com blocos (uma linha por bloco)
-        activeBlocks.forEach(block => {
-          lines.push([
+        lines.push(
+          [
             this._escapeCsv(note.note_id),
             this._escapeCsv(note.title || ""),
             this._escapeCsv(note.description || ""),
@@ -215,13 +213,37 @@ class BackupController {
             this._escapeCsv(note.owner?.name || ""),
             this._escapeCsv(note.owner?.username || ""),
             this._escapeCsv(collaborators),
-            this._escapeCsv(block.block_id),
-            this._escapeCsv(block.type || ""),
-            this._escapeCsv(block.text || ""),
-            this._escapeCsv(block.position?.toString() || ""),
-            this._escapeCsv(block.done?.toString() || ""),
-            this._escapeCsv(block.created_at || "")
-          ].join(","));
+            "", // block_id
+            "", // block_type
+            "", // block_text
+            "", // block_position
+            "", // block_done
+            "", // block_created_at
+          ].join(",")
+        );
+      } else {
+        // Nota com blocos (uma linha por bloco)
+        activeBlocks.forEach((block) => {
+          lines.push(
+            [
+              this._escapeCsv(note.note_id),
+              this._escapeCsv(note.title || ""),
+              this._escapeCsv(note.description || ""),
+              this._escapeCsv(note.tags?.join(";") || ""),
+              this._escapeCsv(note.created_at),
+              this._escapeCsv(note.updated_at),
+              this._escapeCsv(note.owner_id),
+              this._escapeCsv(note.owner?.name || ""),
+              this._escapeCsv(note.owner?.username || ""),
+              this._escapeCsv(collaborators),
+              this._escapeCsv(block.block_id),
+              this._escapeCsv(block.type || ""),
+              this._escapeCsv(block.text || ""),
+              this._escapeCsv(block.position?.toString() || ""),
+              this._escapeCsv(block.done?.toString() || ""),
+              this._escapeCsv(block.created_at || ""),
+            ].join(",")
+          );
         });
       }
     });
@@ -238,15 +260,20 @@ class BackupController {
     if (value === null || value === undefined) {
       return "";
     }
-    
+
     const str = String(value);
-    
+
     // Se contém vírgula, aspas ou quebra de linha, envolver em aspas
-    if (str.includes(",") || str.includes("\"") || str.includes("\n") || str.includes("\r")) {
+    if (
+      str.includes(",") ||
+      str.includes('"') ||
+      str.includes("\n") ||
+      str.includes("\r")
+    ) {
       // Duplicar aspas internas
-      return "\"" + str.replace(/"/g, "\"\"") + "\"";
+      return '"' + str.replace(/"/g, '""') + '"';
     }
-    
+
     return str;
   }
 
@@ -260,39 +287,41 @@ class BackupController {
       backup_info: {
         generated_at: new Date().toISOString(),
         total_notes: rawData.length,
-        data_version: "1.0"
+        data_version: "1.0",
       },
       user_info: {
         user_id: rawData[0]?.owner_id || null,
         name: rawData[0]?.owner?.name || null,
         username: rawData[0]?.owner?.username || null,
-        avatar_url: rawData[0]?.owner?.avatar_url || null
+        avatar_url: rawData[0]?.owner?.avatar_url || null,
         // email removido por segurança
       },
-      notes: rawData.map(note => {
+      notes: rawData.map((note) => {
         // Remove informações sensíveis dos colaboradores (emails)
-        const collaborators = note.collaborators?.map(collab => ({
-          id: collab.collaborator_id,
-          name: collab.name,
-          username: collab.username,
-          avatar_url: collab.avatar_url,
-          added_at: collab.added_at,
-          removed: collab.removed,
-          removed_at: collab.removed_at
-          // email removido por segurança
-        })) || [];
+        const collaborators =
+          note.collaborators?.map((collab) => ({
+            id: collab.collaborator_id,
+            name: collab.name,
+            username: collab.username,
+            avatar_url: collab.avatar_url,
+            added_at: collab.added_at,
+            removed: collab.removed,
+            removed_at: collab.removed_at,
+            // email removido por segurança
+          })) || [];
 
         // Remove informações sensíveis do proprietário (email)
         const owner = {
           id: note.owner_id,
           name: note.owner?.name,
           username: note.owner?.username,
-          avatar_url: note.owner?.avatar_url
+          avatar_url: note.owner?.avatar_url,
           // email removido por segurança
         };
 
         // Filtrar blocos não deletados
-        const activeBlocks = note.blocks?.filter(block => !block.deleted) || [];
+        const activeBlocks =
+          note.blocks?.filter((block) => !block.deleted) || [];
 
         return {
           id: note.note_id,
@@ -303,7 +332,7 @@ class BackupController {
           updated_at: note.updated_at,
           owner: owner,
           collaborators: collaborators,
-          blocks: activeBlocks.map(block => ({
+          blocks: activeBlocks.map((block) => ({
             id: block.block_id,
             user_id: block.user_id,
             parent_id: block.parent_id,
@@ -313,15 +342,15 @@ class BackupController {
             done: block.done,
             position: block.position,
             created_at: block.created_at,
-            updated_at: block.updated_at
-          }))
+            updated_at: block.updated_at,
+          })),
         };
-      })
+      }),
     };
 
     return backupData;
   }
-  
+
   async requestBackup(req, res, next) {
     try {
       // Validação de autenticação
@@ -335,17 +364,18 @@ class BackupController {
 
       // Verificar se já existe backup em andamento para este usuário
       const existingJobs = await jobManager.getUserJobs(userId);
-      const activeJob = existingJobs.find(job => 
-        job.type === "backup_export" && 
-        ["pending", "processing"].includes(job.status)
+      const activeJob = existingJobs.find(
+        (job) =>
+          job.type === "backup_export" &&
+          ["pending", "processing"].includes(job.status)
       );
 
       if (activeJob) {
-        return res.status(409).json({ 
+        return res.status(409).json({
           error: "Backup já em andamento",
           job_id: activeJob.id,
           status: activeJob.status,
-          progress: activeJob.progress
+          progress: activeJob.progress,
         });
       }
 
@@ -360,7 +390,7 @@ class BackupController {
       const job = await jobManager.createJob(jobId, "backup_export", userId, {
         userEmail: user.email,
         userName: user.name || user.username,
-        requestedAt: new Date().toISOString()
+        requestedAt: new Date().toISOString(),
       });
 
       // Iniciar processamento em background (não bloquear resposta)
@@ -370,14 +400,14 @@ class BackupController {
 
       // Resposta imediata
       res.status(202).json({
-        message: "Backup solicitado com sucesso! Você receberá um email quando estiver pronto.",
+        message:
+          "Backup solicitado com sucesso! Você receberá um email quando estiver pronto.",
         job_id: jobId,
         status: "pending",
         estimated_time: "2-5 minutos",
         user_email: user.email,
-        created_at: job.createdAt
+        created_at: job.createdAt,
       });
-
     } catch (error) {
       this._handleError(error, res, next);
     }
@@ -420,11 +450,10 @@ class BackupController {
         completed_at: job.completedAt,
         elapsed_time: `${elapsedMinutes} minuto${elapsedMinutes !== 1 ? "s" : ""}`,
         error: job.error,
-        result: job.result
+        result: job.result,
       };
 
       res.status(200).json(response);
-
     } catch (error) {
       this._handleError(error, res, next);
     }
@@ -442,27 +471,28 @@ class BackupController {
 
       // Buscar jobs do usuário
       const jobs = (await jobManager.getUserJobs(userId))
-        .filter(job => job.type === "backup_export")
+        .filter((job) => job.type === "backup_export")
         .slice(0, 10); // Limitar a 10 mais recentes
 
       const response = {
         total: jobs.length,
-        jobs: jobs.map(job => ({
+        jobs: jobs.map((job) => ({
           job_id: job.id,
           status: job.status,
           progress: job.progress,
           created_at: job.createdAt,
           completed_at: job.completedAt,
           error: job.error ? job.error.substring(0, 100) : null, // Truncar erro
-          result: job.result ? {
-            totalNotes: job.result.totalNotes,
-            fileSize: job.result.fileSize
-          } : null
-        }))
+          result: job.result
+            ? {
+                totalNotes: job.result.totalNotes,
+                fileSize: job.result.fileSize,
+              }
+            : null,
+        })),
       };
 
       res.status(200).json(response);
-
     } catch (error) {
       this._handleError(error, res, next);
     }
@@ -471,7 +501,7 @@ class BackupController {
   /**
    * GET /api/backup/summary - Resumo dos dados para backup
    * Retorna informações estatísticas sobre os dados do usuário
-   * 
+   *
    * RESPOSTA:
    * - summary: estatísticas gerais (total de notas, blocos, colaborações)
    * - notes_by_month: distribuição de notas por mês
@@ -489,17 +519,34 @@ class BackupController {
       // Calcular estatísticas dos dados
       const summary = {
         total_notes: rawData.length,
-        owned_notes: rawData.filter(note => note.owner_id === userId).length,
-        collaborated_notes: rawData.filter(note => note.owner_id !== userId).length,
-        total_blocks: rawData.reduce((sum, note) => sum + (note.blocks?.filter(b => !b.deleted).length || 0), 0),
+        owned_notes: rawData.filter((note) => note.owner_id === userId).length,
+        collaborated_notes: rawData.filter((note) => note.owner_id !== userId)
+          .length,
+        total_blocks: rawData.reduce(
+          (sum, note) =>
+            sum + (note.blocks?.filter((b) => !b.deleted).length || 0),
+          0
+        ),
         total_collaborators: new Set(
-          rawData.flatMap(note => 
-            note.collaborators?.filter(c => !c.removed).map(c => c.collaborator_id) || []
+          rawData.flatMap(
+            (note) =>
+              note.collaborators
+                ?.filter((c) => !c.removed)
+                .map((c) => c.collaborator_id) || []
           )
         ).size,
-        oldest_note: rawData.length > 0 ? Math.min(...rawData.map(n => new Date(n.created_at))) : null,
-        newest_note: rawData.length > 0 ? Math.max(...rawData.map(n => new Date(n.created_at))) : null,
-        last_updated: rawData.length > 0 ? Math.max(...rawData.map(n => new Date(n.updated_at))) : null
+        oldest_note:
+          rawData.length > 0
+            ? Math.min(...rawData.map((n) => new Date(n.created_at)))
+            : null,
+        newest_note:
+          rawData.length > 0
+            ? Math.max(...rawData.map((n) => new Date(n.created_at)))
+            : null,
+        last_updated:
+          rawData.length > 0
+            ? Math.max(...rawData.map((n) => new Date(n.updated_at)))
+            : null,
       };
 
       // Distribuição por mês (últimos 12 meses)
@@ -511,7 +558,7 @@ class BackupController {
         notesByMonth[key] = 0;
       }
 
-      rawData.forEach(note => {
+      rawData.forEach((note) => {
         const createdDate = new Date(note.created_at);
         const key = `${createdDate.getFullYear()}-${String(createdDate.getMonth() + 1).padStart(2, "0")}`;
         if (notesByMonth.hasOwnProperty(key)) {
@@ -522,17 +569,21 @@ class BackupController {
       // Atividade recente (últimos 30 dias)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
+
       const recentActivity = {
-        notes_created: rawData.filter(note => new Date(note.created_at) > thirtyDaysAgo).length,
-        notes_updated: rawData.filter(note => new Date(note.updated_at) > thirtyDaysAgo).length
+        notes_created: rawData.filter(
+          (note) => new Date(note.created_at) > thirtyDaysAgo
+        ).length,
+        notes_updated: rawData.filter(
+          (note) => new Date(note.updated_at) > thirtyDaysAgo
+        ).length,
       };
 
       const response = {
         generated_at: new Date().toISOString(),
         summary,
         notes_by_month: notesByMonth,
-        recent_activity: recentActivity
+        recent_activity: recentActivity,
       };
 
       res.status(200).json(response);

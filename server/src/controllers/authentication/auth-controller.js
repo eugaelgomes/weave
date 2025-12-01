@@ -6,7 +6,6 @@ const AuthRepository = require("@/repositories/authentication");
 const secretKey = process.env.SECRET_KEY;
 
 class AuthController {
-
   async login(req, res) {
     const { username, password } = req.body;
     // Validação de entrada, se não ddos vazios
@@ -42,7 +41,10 @@ class AuthController {
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Permite cross-origin em produção
         maxAge: 12 * 60 * 60 * 1000,
         path: "/",
-        domain: process.env.NODE_ENV === "production" && process.env.COOKIE_DOMAIN ? process.env.COOKIE_DOMAIN : undefined,
+        domain:
+          process.env.NODE_ENV === "production" && process.env.COOKIE_DOMAIN
+            ? process.env.COOKIE_DOMAIN
+            : undefined,
       });
 
       const login_time = new Date();
@@ -67,119 +69,119 @@ class AuthController {
     }
   }
 
-//  async googleAuth(req, res) {
-//    // Redireciona para o endpoint do Google OAuth2
-//    const googleOAuthURL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.GOOGLE_REDIRECT_URI)}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`;
-//    res.redirect(googleOAuthURL);
-//  }
-//
-//  async googleCallback(req, res) {
-//    try {
-//      const { code, error } = req.query;
-//
-//      // Verificar se houve erro na autorização
-//      if (error) {
-//        console.error("Erro na autorização Google:", error);
-//        const frontendURL = process.env.FRONTEND_URL || "http://localhost:80";
-//        return res.redirect(`${frontendURL}/?error=authorization_denied`);
-//      }
-//
-//      if (!code) {
-//        console.error("Código de autorização não encontrado");
-//        const frontendURL = process.env.FRONTEND_URL || "http://localhost:80";
-//        return res.redirect(`${frontendURL}/?error=missing_auth_code`);
-//      }
-//
-//      // Trocar o código por tokens de acesso
-//      const tokenResponse = await axios.post(
-//        "https://oauth2.googleapis.com/token",
-//        {
-//          client_id: process.env.GOOGLE_CLIENT_ID,
-//          client_secret: process.env.GOOGLE_CLIENT_SECRET,
-//          code,
-//          grant_type: "authorization_code",
-//          redirect_uri: process.env.GOOGLE_REDIRECT_URI,
-//        }
-//      );
-//
-//      const { access_token } = tokenResponse.data;
-//
-//      if (!access_token) {
-//        throw new Error("Token de acesso não recebido do Google");
-//      }
-//
-//      // Obter informações do usuário do Google
-//      const userResponse = await axios.get(
-//        `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${access_token}`
-//      );
-//      const googleUser = userResponse.data;
-//
-//      if (!googleUser.id || !googleUser.email) {
-//        throw new Error("Dados incompletos do usuário Google");
-//      }
-//
-//      let user = null;
-//
-//      // Primeiro, tentar encontrar por Google ID
-//      user = await AuthRepository.findUserByGoogleId(googleUser.id);
-//
-//      if (!user) {
-//        // Se não encontrou por Google ID, tentar por email
-//        user = await AuthRepository.findUserByEmail(googleUser.email);
-//
-//        if (user) {
-//          // Usuário existe mas ainda não tem Google ID associado
-//          user = await AuthRepository.updateUserWithGoogle(
-//            user.user_id,
-//            googleUser.id,
-//            googleUser.picture
-//          );
-//        } else {
-//          // Usuário não existe, criar novo
-//          user = await AuthRepository.createUserWithGoogle(
-//            googleUser.id,
-//            googleUser.name,
-//            googleUser.email,
-//            googleUser.picture
-//          );
-//        }
-//      }
-//
-//      if (!user) {
-//        throw new Error("Falha ao criar/encontrar usuário");
-//      }
-//
-//      // Gerar JWT token
-//      const payload = {
-//        userId: user.user_id,
-//        username: user.username,
-//        email: user.email,
-//        name: user.name,
-//      };
-//
-//      const token = jwt.sign(payload, secretKey, {
-//        algorithm: "HS256",
-//        expiresIn: "24h",
-//      });
-//
-//      // Definir cookie com token
-//      res.cookie("token", token, {
-//        httpOnly: true,
-//        secure: process.env.NODE_ENV === "production",
-//        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-//        maxAge: 24 * 60 * 60 * 1000,
-//        path: "/",
-//      });
-//
-//      // Redirecionar para o frontend
-//      const frontendURL = process.env.FRONTEND_URL || "http://localhost:80";
-//      res.redirect(`${frontendURL}/home?auth=success`);
-//    } catch (error) {
-//      console.error("Erro detalhado no callback Google:", error.message);
-//      const frontendURL = process.env.FRONTEND_URL || "http://localhost:80";
-//      res.redirect(`${frontendURL}/?error=auth_failed`);
-//    }
-//  }
+  //  async googleAuth(req, res) {
+  //    // Redireciona para o endpoint do Google OAuth2
+  //    const googleOAuthURL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.GOOGLE_REDIRECT_URI)}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`;
+  //    res.redirect(googleOAuthURL);
+  //  }
+  //
+  //  async googleCallback(req, res) {
+  //    try {
+  //      const { code, error } = req.query;
+  //
+  //      // Verificar se houve erro na autorização
+  //      if (error) {
+  //        console.error("Erro na autorização Google:", error);
+  //        const frontendURL = process.env.FRONTEND_URL || "http://localhost:80";
+  //        return res.redirect(`${frontendURL}/?error=authorization_denied`);
+  //      }
+  //
+  //      if (!code) {
+  //        console.error("Código de autorização não encontrado");
+  //        const frontendURL = process.env.FRONTEND_URL || "http://localhost:80";
+  //        return res.redirect(`${frontendURL}/?error=missing_auth_code`);
+  //      }
+  //
+  //      // Trocar o código por tokens de acesso
+  //      const tokenResponse = await axios.post(
+  //        "https://oauth2.googleapis.com/token",
+  //        {
+  //          client_id: process.env.GOOGLE_CLIENT_ID,
+  //          client_secret: process.env.GOOGLE_CLIENT_SECRET,
+  //          code,
+  //          grant_type: "authorization_code",
+  //          redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+  //        }
+  //      );
+  //
+  //      const { access_token } = tokenResponse.data;
+  //
+  //      if (!access_token) {
+  //        throw new Error("Token de acesso não recebido do Google");
+  //      }
+  //
+  //      // Obter informações do usuário do Google
+  //      const userResponse = await axios.get(
+  //        `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${access_token}`
+  //      );
+  //      const googleUser = userResponse.data;
+  //
+  //      if (!googleUser.id || !googleUser.email) {
+  //        throw new Error("Dados incompletos do usuário Google");
+  //      }
+  //
+  //      let user = null;
+  //
+  //      // Primeiro, tentar encontrar por Google ID
+  //      user = await AuthRepository.findUserByGoogleId(googleUser.id);
+  //
+  //      if (!user) {
+  //        // Se não encontrou por Google ID, tentar por email
+  //        user = await AuthRepository.findUserByEmail(googleUser.email);
+  //
+  //        if (user) {
+  //          // Usuário existe mas ainda não tem Google ID associado
+  //          user = await AuthRepository.updateUserWithGoogle(
+  //            user.user_id,
+  //            googleUser.id,
+  //            googleUser.picture
+  //          );
+  //        } else {
+  //          // Usuário não existe, criar novo
+  //          user = await AuthRepository.createUserWithGoogle(
+  //            googleUser.id,
+  //            googleUser.name,
+  //            googleUser.email,
+  //            googleUser.picture
+  //          );
+  //        }
+  //      }
+  //
+  //      if (!user) {
+  //        throw new Error("Falha ao criar/encontrar usuário");
+  //      }
+  //
+  //      // Gerar JWT token
+  //      const payload = {
+  //        userId: user.user_id,
+  //        username: user.username,
+  //        email: user.email,
+  //        name: user.name,
+  //      };
+  //
+  //      const token = jwt.sign(payload, secretKey, {
+  //        algorithm: "HS256",
+  //        expiresIn: "24h",
+  //      });
+  //
+  //      // Definir cookie com token
+  //      res.cookie("token", token, {
+  //        httpOnly: true,
+  //        secure: process.env.NODE_ENV === "production",
+  //        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  //        maxAge: 24 * 60 * 60 * 1000,
+  //        path: "/",
+  //      });
+  //
+  //      // Redirecionar para o frontend
+  //      const frontendURL = process.env.FRONTEND_URL || "http://localhost:80";
+  //      res.redirect(`${frontendURL}/home?auth=success`);
+  //    } catch (error) {
+  //      console.error("Erro detalhado no callback Google:", error.message);
+  //      const frontendURL = process.env.FRONTEND_URL || "http://localhost:80";
+  //      res.redirect(`${frontendURL}/?error=auth_failed`);
+  //    }
+  //  }
 
   async logout(req, res) {
     try {
@@ -189,7 +191,10 @@ class AuthController {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
-        domain: process.env.NODE_ENV === "production" && process.env.COOKIE_DOMAIN ? process.env.COOKIE_DOMAIN : undefined,
+        domain:
+          process.env.NODE_ENV === "production" && process.env.COOKIE_DOMAIN
+            ? process.env.COOKIE_DOMAIN
+            : undefined,
       });
 
       // destruir sessão
@@ -273,18 +278,25 @@ class AuthController {
 
       // 3) Se veio senha, valida e atualiza
       if (currentPassword && newPassword) {
-        const user = await AuthRepository.findUserByUsername(updatedUser.username);
+        const user = await AuthRepository.findUserByUsername(
+          updatedUser.username
+        );
         if (!user) {
           return res.status(404).json({ message: "User not found" });
         }
 
         const match = await bcrypt.compare(currentPassword, user.password);
         if (!match) {
-          return res.status(401).json({ message: "Current password is incorrect" });
+          return res
+            .status(401)
+            .json({ message: "Current password is incorrect" });
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        await AuthRepository.updateUserPassword(req.user.userId, hashedPassword);
+        await AuthRepository.updateUserPassword(
+          req.user.userId,
+          hashedPassword
+        );
       }
 
       return res.json({
@@ -302,61 +314,61 @@ class AuthController {
     }
   }
 
-//  async refreshToken(req, res) {
-//    try {
-//      const currentToken = req.cookies?.token;
-//      if (!currentToken) {
-//        return res.status(401).json({ message: "Token não encontrado" });
-//      }
-//
-//      // Verifica se o token atual ainda é válido
-//      const decoded = jwt.verify(currentToken, secretKey);
-//
-//      // Busca dados atualizados do usuário
-//      const user = await AuthRepository.findUserByUsername(decoded.username);
-//      if (!user) {
-//        return res.status(404).json({ message: "Usuário não encontrado" });
-//      }
-//
-//      // Gera novo token com dados atualizados
-//      const payload = {
-//        userId: user.user_id,
-//        username: user.username,
-//        email: user.email,
-//        name: user.name,
-//        //role_name: user.role_name,
-//      };
-//
-//      const newToken = jwt.sign(payload, secretKey, {
-//        algorithm: "HS256",
-//        expiresIn: "24h",
-//      });
-//
-//      // Define novo cookie
-//      res.cookie("token", newToken, {
-//        httpOnly: true,
-//        secure: process.env.NODE_ENV === "production",
-//        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-//        maxAge: 24 * 60 * 60 * 1000,
-//        path: "/",
-//        // Sem domain explícito para compatibilidade com múltiplos hosts
-//      });
-//
-//      return res.status(200).json({
-//        user: {
-//          id: user.user_id,
-//          username: user.username,
-//          email: user.email,
-//          name: user.name,
-//          avatar_url: user.avatar_url,
-//          //role_name: user.role_name,
-//        },
-//      });
-//    } catch (error) {
-//      console.error("Erro ao renovar token:", error);
-//      return res.status(401).json({ message: "Token inválido ou expirado" });
-//    }
-//  }
+  //  async refreshToken(req, res) {
+  //    try {
+  //      const currentToken = req.cookies?.token;
+  //      if (!currentToken) {
+  //        return res.status(401).json({ message: "Token não encontrado" });
+  //      }
+  //
+  //      // Verifica se o token atual ainda é válido
+  //      const decoded = jwt.verify(currentToken, secretKey);
+  //
+  //      // Busca dados atualizados do usuário
+  //      const user = await AuthRepository.findUserByUsername(decoded.username);
+  //      if (!user) {
+  //        return res.status(404).json({ message: "Usuário não encontrado" });
+  //      }
+  //
+  //      // Gera novo token com dados atualizados
+  //      const payload = {
+  //        userId: user.user_id,
+  //        username: user.username,
+  //        email: user.email,
+  //        name: user.name,
+  //        //role_name: user.role_name,
+  //      };
+  //
+  //      const newToken = jwt.sign(payload, secretKey, {
+  //        algorithm: "HS256",
+  //        expiresIn: "24h",
+  //      });
+  //
+  //      // Define novo cookie
+  //      res.cookie("token", newToken, {
+  //        httpOnly: true,
+  //        secure: process.env.NODE_ENV === "production",
+  //        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  //        maxAge: 24 * 60 * 60 * 1000,
+  //        path: "/",
+  //        // Sem domain explícito para compatibilidade com múltiplos hosts
+  //      });
+  //
+  //      return res.status(200).json({
+  //        user: {
+  //          id: user.user_id,
+  //          username: user.username,
+  //          email: user.email,
+  //          name: user.name,
+  //          avatar_url: user.avatar_url,
+  //          //role_name: user.role_name,
+  //        },
+  //      });
+  //    } catch (error) {
+  //      console.error("Erro ao renovar token:", error);
+  //      return res.status(401).json({ message: "Token inválido ou expirado" });
+  //    }
+  //  }
 }
 
 module.exports = new AuthController();

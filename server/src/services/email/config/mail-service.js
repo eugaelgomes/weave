@@ -10,9 +10,7 @@ function MailService() {
 
   const missing = requiredEnv.filter((key) => !process.env[key]);
   if (missing.length > 0) {
-    throw new Error(
-      `Configuração de email faltando: ${missing.join(", ")}`
-    );
+    throw new Error(`Configuração de email faltando: ${missing.join(", ")}`);
   }
 
   const port = Number(process.env.EMAIL_PORT);

@@ -234,63 +234,73 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Coluna Direita - Mapa Mental Quadrado/Circuito */}
-          {stats?.mostUsedTags && stats.mostUsedTags.length > 0 ? (
-            <div className="relative flex flex-col rounded-sm border border-neutral-800 bg-neutral-900/50 p-5 backdrop-blur-sm">
-              {/* Nó Principal (Raiz) */}
-              <div className="relative z-10 mb-8 flex w-fit items-center gap-3 border-l-2 border-yellow-500 bg-neutral-900 py-1 pr-4 pl-4">
-                <div className="flex h-8 w-8 items-center justify-center text-yellow-400">
-                  <GitBranch className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-neutral-200">Mapa de Tags</h3>
-                  <p className="font-mono text-[10px] text-neutral-500">
-                    {user?.username || "root"}
-                  </p>
-                </div>
+          <div className="flex flex-col rounded-sm border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
+            {/* 1. O Cabeçalho agora é parte integrante do Card */}
+            <div className="border-b border-neutral-800 bg-neutral-900/30 px-4 py-2.5">
+              <h3 className="font-mono text-[10px] font-bold tracking-widest text-neutral-500 uppercase">
+                Tags mais usadas
+              </h3>
+            </div>
 
-                {/* Linha vertical saindo do pai */}
-                <div className="absolute -bottom-8 left-[24px] h-8 w-px bg-neutral-700"></div>
-              </div>
-
-              {/* Grid de Tags Filhas */}
-              <div className="relative grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {/* Linha Horizontal Mestra (Bus) */}
-                <div className="absolute top-[-16px] left-[24px] hidden h-px w-[calc(100%-48px)] bg-neutral-700 opacity-50 sm:block"></div>
-
-                {stats.mostUsedTags.slice(0, 6).map((tagInfo, i) => (
-                  <div
-                    key={i}
-                    className="group relative flex flex-col gap-2 rounded-sm border border-neutral-800 bg-neutral-900/50 p-3 transition-colors hover:border-neutral-600 hover:bg-neutral-900"
-                  >
-                    {/* Conector Vertical (Entrando no card) */}
-                    <div className="absolute -top-4 left-[20px] h-4 w-px bg-neutral-700 opacity-50 transition-colors group-hover:bg-yellow-500/50"></div>
-
-                    {/* Ponto de solda */}
-                    <div className="absolute -top-[1px] left-[18px] h-1.5 w-1.5 bg-neutral-600 transition-colors group-hover:bg-yellow-500"></div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-neutral-300">
-                        <Hash className="h-3.5 w-3.5 text-neutral-500 transition-colors group-hover:text-yellow-400" />
-                        <span className="text-xs font-semibold tracking-wider uppercase">
-                          {tagInfo.tag}
-                        </span>
-                      </div>
-                      {/* Badge de contagem com design mais técnico */}
-                      <div className="rounded-sm border border-neutral-800 bg-neutral-900 px-2 py-0.5 font-mono text-[10px] text-neutral-400">
-                        {tagInfo.count}
-                      </div>
+            {/* 2. Área de Conteúdo (onde a lógica acontece) */}
+            <div className="relative p-5">
+              {stats?.mostUsedTags && stats.mostUsedTags.length > 0 ? (
+                <div className="flex flex-col">
+                  {/* Nó Principal (Raiz) */}
+                  <div className="relative z-10 mb-8 flex w-fit items-center gap-3 border-l-2 border-yellow-500 bg-neutral-900 py-1 pr-4 pl-4">
+                    <div className="flex h-8 w-8 items-center justify-center text-yellow-400">
+                      <Tag className="h-4 w-4" />
                     </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-neutral-200">Tag Maps</h3>
+                      <p className="font-mono text-[10px] text-neutral-500">
+                        {user?.username || "root"}
+                      </p>
+                    </div>
+
+                    {/* Linha vertical saindo do pai */}
+                    <div className="absolute -bottom-8 left-[24px] h-8 w-px bg-neutral-700"></div>
                   </div>
-                ))}
-              </div>
+
+                  {/* Grid de Tags Filhas */}
+                  <div className="relative grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {/* Linha Horizontal Mestra (Bus) - Ajustei o top para alinhar com o fluxo novo */}
+                    <div className="absolute top-[-16px] left-[24px] hidden h-px w-[calc(100%-48px)] bg-neutral-700 opacity-50 sm:block"></div>
+
+                    {stats.mostUsedTags.slice(0, 6).map((tagInfo, i) => (
+                      <div
+                        key={i}
+                        className="group relative flex flex-col gap-2 rounded-sm border border-neutral-800 bg-neutral-900/50 p-3 transition-colors hover:border-neutral-600 hover:bg-neutral-900"
+                      >
+                        {/* Conector Vertical */}
+                        <div className="absolute -top-4 left-[20px] h-4 w-px bg-neutral-700 opacity-50 transition-colors group-hover:bg-yellow-500/50"></div>
+
+                        {/* Ponto de solda */}
+                        <div className="absolute -top-[1px] left-[18px] h-1.5 w-1.5 bg-neutral-600 transition-colors group-hover:bg-yellow-500"></div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-neutral-300">
+                            <Hash className="h-3.5 w-3.5 text-neutral-500 transition-colors group-hover:text-yellow-400" />
+                            <span className="text-xs font-semibold tracking-wider">
+                              {tagInfo.tag}
+                            </span>
+                          </div>
+                          <div className="rounded-sm border border-neutral-800 bg-neutral-900 px-2 py-0.5 font-mono text-[10px] text-neutral-400">
+                            {tagInfo.count}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                // Fallback simplificado (sem borda dupla)
+                <div className="flex h-32 items-center justify-center">
+                  <p className="font-mono text-sm text-neutral-600">NO_DATA_FOUND</p>
+                </div>
+              )}
             </div>
-          ) : (
-            // Fallback
-            <div className="flex items-center justify-center rounded-sm border border-neutral-800 bg-neutral-900/50 p-5">
-              <p className="font-mono text-sm text-neutral-500">NO_DATA_FOUND</p>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Notas Recentes - Carrossel */}
@@ -349,6 +359,11 @@ export default function HomePage() {
                     <div className="group flex h-[240px] flex-col rounded-md border border-neutral-800 bg-neutral-950 p-3 transition-all duration-200 hover:border-neutral-700 hover:bg-neutral-900 sm:h-[260px] sm:p-4">
                       {/* Cabeçalho: data + tags */}
                       <div className="mb-2 flex flex-shrink-0 flex-col gap-1.5 sm:mb-3 sm:gap-2">
+                        {/* Título */}
+                        <h3 className="mb-1 flex-shrink-0 truncate text-sm leading-tight font-semibold whitespace-nowrap text-white transition-colors group-hover:text-yellow-400 sm:text-base lg:text-lg">
+                          {note.title || "Nota sem título"}
+                        </h3>
+
                         {/* Data */}
                         {note.lastModified && (
                           <span className="text-xs font-medium text-neutral-500">
@@ -382,11 +397,6 @@ export default function HomePage() {
                         )}
                       </div>
 
-                      {/* Título */}
-                      <h3 className="mb-2 line-clamp-2 flex-shrink-0 text-sm leading-tight font-semibold text-white transition-colors group-hover:text-yellow-400 sm:mb-3 sm:text-base lg:text-lg">
-                        {note.title || "Nota sem título"}
-                      </h3>
-
                       {/* Descrição - ocupa espaço flexível */}
                       <div className="mb-2 flex-1 sm:mb-4">
                         {note.preview && (
@@ -395,6 +405,41 @@ export default function HomePage() {
                               ? note.preview.substring(0, 120) + "..."
                               : note.preview}
                           </p>
+                        )}
+                      </div>
+
+                      {/* Rodapé: status e colaboradores */}
+                      <div className="mt-auto flex items-center justify-between gap-2">
+                        <div>
+                          {note.status ? (
+                            <span
+                              className={`inline-block rounded-sm px-2 py-1 text-[10px] font-bold uppercase sm:text-xs ${
+                                note.status === "open"
+                                  ? "bg-blue-500/20 text-blue-400"
+                                  : note.status === "done"
+                                    ? "bg-green-500/20 text-green-400"
+                                    : note.status === "closed"
+                                      ? "bg-red-500/20 text-red-400"
+                                      : "bg-neutral-800 text-neutral-400"
+                              }`}
+                            >
+                              {note.status}
+                            </span>
+                          ) : (
+                            <span className="inline-block rounded-sm bg-neutral-800 px-2 py-1 text-[10px] font-bold text-neutral-500 uppercase sm:text-xs">
+                              sem status
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Collaborators */}
+                        {note.collaboratorsCount > 0 && (
+                          <div className="flex items-center gap-1.5">
+                            <GitBranch className="h-3.5 w-3.5 text-neutral-500" />
+                            <span className="text-[10px] font-medium text-neutral-400 sm:text-xs">
+                              {note.collaboratorsCount}
+                            </span>
+                          </div>
                         )}
                       </div>
                     </div>

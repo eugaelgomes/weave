@@ -37,6 +37,7 @@ export interface NoteOverview {
   lastModified: string;
   preview: string;
   status: string;
+  collaboratorsCount: number;
 }
 
 export interface NotesStats {
@@ -141,14 +142,15 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
 
       setNotes(notes);
 
-      // Cria a versão resumida das notas
+      // Versão resumida para overview/carrossel
       const overview: NoteOverview[] = notes.map((note: Note) => ({
         id: note.id,
         title: note.title || "Nota sem título",
         tags: note.tags || [],
         lastModified: note.updated_at || note.created_at,
         preview: extractPreview(note.description),
-        status: "draft", // Default status, adjust based on your Note type
+        status: note.status || "sem_status",
+        collaboratorsCount: Array.isArray(note.collaborators) ? note.collaborators.length : 0,
       }));
 
       setNotesOverview(overview);

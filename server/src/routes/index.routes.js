@@ -9,14 +9,25 @@ const backupRoutes = require("@/routes/backup.routes");
 
 const router = express.Router();
 
-// Health check endpoint
+// Health Check
 router.get("/health", (req, res) => {
-  res.status(200).json({
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+
+  const healthcheck = {
     status: "online",
-    timestamp: new Date().toISOString(),
     uptime: process.uptime(),
+    message: "All systems operational",
+    timestamp: new Date().toISOString(),
     service: "weave-notes-api",
-  });
+  };
+
+  try {
+    res.send(healthcheck);
+  } catch (error) {
+    healthcheck.message = error;
+    res.status(503).send();
+  }
 });
 
 // Endpoints das subrotas
