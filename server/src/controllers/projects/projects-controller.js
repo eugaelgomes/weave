@@ -10,6 +10,93 @@ class ProjectsController {
   // ========================================
 
   /**
+   * Valida e sanitiza properties do projeto
+   * @param {Object} properties - Properties a serem validadas
+   * @returns {Object} - Properties validadas
+   * @throws {Error} - Se houver valores inválidos
+   */
+  _validateProperties(properties) {
+    if (!properties || typeof properties !== "object") {
+      return {};
+    }
+
+    const allowedProps = ["priority", "tags", "estimated_time", "complexity", "color", "icon"];
+    const validPriorities = ["alta", "media", "baixa"];
+    const validComplexities = ["alta", "media", "baixa"];
+
+    const validated = {};
+
+    // Validar cada propriedade
+    for (const [key, value] of Object.entries(properties)) {
+      // Ignorar progress - será calculado automaticamente
+      if (key === "progress") {
+        continue;
+      }
+
+      // Aceitar apenas propriedades permitidas
+      if (!allowedProps.includes(key)) {
+        throw new Error(`Propriedade '${key}' não é permitida`);
+      }
+
+      // Validar priority
+      if (key === "priority") {
+        if (value !== null && !validPriorities.includes(value)) {
+          throw new Error("Priority deve ser: 'alta', 'media' ou 'baixa'");
+        }
+        validated[key] = value;
+      }
+
+      // Validar complexity
+      else if (key === "complexity") {
+        if (value !== null && !validComplexities.includes(value)) {
+          throw new Error("Complexity deve ser: 'alta', 'media' ou 'baixa'");
+        }
+        validated[key] = value;
+      }
+
+      // Validar tags (deve ser array)
+      else if (key === "tags") {
+        if (value !== null && !Array.isArray(value)) {
+          throw new Error("Tags deve ser um array");
+        }
+        validated[key] = value || [];
+      }
+
+      // Validar estimated_time (deve ser ISO string ou null)
+      else if (key === "estimated_time") {
+        if (value !== null) {
+          const date = new Date(value);
+          if (isNaN(date.getTime())) {
+            throw new Error("estimated_time deve ser uma data válida (ISO 8601)");
+          }
+        }
+        validated[key] = value;
+      }
+
+      // Validar color (deve ser hex válido)
+      else if (key === "color") {
+        if (value !== null) {
+          const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+          if (!hexRegex.test(value)) {
+            throw new Error("Color deve ser uma cor hexadecimal válida (ex: #ff0000)");
+          }
+        }
+        validated[key] = value;
+      }
+
+      // Validar icon (deve ser string de emoji ou null)
+      else if (key === "icon") {
+        if (value !== null && typeof value !== "string") {
+          throw new Error("Icon deve ser uma string (emoji)");
+        }
+        validated[key] = value;
+      }
+    }
+
+    return validated;
+  }
+
+  /**
    * Valida se o usuário está autenticado
    * @param {Object} req - Request object
    * @param {Object} res - Response object
@@ -220,13 +307,16 @@ class ProjectsController {
         throw new Error("Título é obrigatório");
       }
 
+      // Validar properties se fornecidas
+      const validatedProps = properties ? this._validateProperties(properties) : {};
+
       // Criação do projeto
       const result = await this.projectsRepository.createProject(
         userId,
         title,
         description,
         status,
-        properties
+        validatedProps
       );
 
       if (!result || result.length === 0) {
@@ -244,13 +334,14 @@ class ProjectsController {
   }
 
   /**
-   * PUT /api/projects/:id - Atualizar um projeto
-   * Atualiza os campos fornecidos de um projeto (atualização parcial)
+   * PUT /api/projects/:id - Atualizar um projeto (consolidado)
+   * Atualiza campos do projeto incluindo: title, description, status, properties
+   * Apenas os campos enviados são atualizados, os demais permanecem intactos
    */
   async updateProject(req, res, next) {
     try {
       const { id } = req.params;
-      const updates = req.body;
+      const { title, description, status, properties, ...rest } = req.body;
 
       // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
@@ -259,10 +350,22 @@ class ProjectsController {
       // Validação de propriedade do projeto
       await this._validateProjectOwnership(id, userId);
 
+      // Construir objeto de atualização apenas com campos enviados
+      const updates = {};
+      if (title !== undefined) updates.title = title;
+      if (description !== undefined) updates.description = description;
+      if (status !== undefined) updates.status = status;
+      
+      // Se properties foi enviado, validar e fazer merge com existente
+      if (properties !== undefined) {
+        const validatedProps = this._validateProperties(properties);
+        updates.properties = validatedProps;
+      }
+
       // Verifica se há algo para atualizar
       if (Object.keys(updates).length === 0) {
         return res.status(400).json({
-          error: "Nenhum campo fornecido para atualização",
+          error: "Nenhum campo válido fornecido para atualização",
         });
       }
 
@@ -283,53 +386,10 @@ class ProjectsController {
 
       // Formatar e retornar o projeto atualizado
       const formattedProject = this._formatProjectResponse(updatedProject);
-      res.status(200).json(formattedProject);
-    } catch (error) {
-      this._handleError(error, res, next);
-    }
-  }
-
-  /**
-   * PATCH /api/projects/:id/properties - Atualizar propriedades parciais do projeto
-   * Mescla propriedades existentes com as novas fornecidas
-   */
-  async updateProjectProperties(req, res, next) {
-    try {
-      const { id } = req.params;
-      const partialProps = req.body;
-
-      // Validação de autenticação
-      const userId = this._validateAuthentication(req, res);
-      if (!userId) return;
-
-      // Validação de propriedade do projeto
-      await this._validateProjectOwnership(id, userId);
-
-      // Verifica se há propriedades para atualizar
-      if (Object.keys(partialProps).length === 0) {
-        return res.status(400).json({
-          error: "Nenhuma propriedade fornecida para atualização",
-        });
-      }
-
-      // Atualização parcial das propriedades
-      const result = await this.projectsRepository.updateProjectProperties(
-        id,
-        userId,
-        partialProps
-      );
-
-      if (!result || result.length === 0) {
-        return res.status(400).json({
-          error: "Nenhuma atualização foi realizada",
-        });
-      }
-
-      const updatedProject = result[0];
-
-      // Formatar e retornar o projeto atualizado
-      const formattedProject = this._formatProjectResponse(updatedProject);
-      res.status(200).json(formattedProject);
+      res.status(200).json({
+        message: "Projeto atualizado com sucesso",
+        project: formattedProject,
+      });
     } catch (error) {
       this._handleError(error, res, next);
     }
@@ -370,8 +430,128 @@ class ProjectsController {
   // ========================================
 
   /**
+   * PUT /api/projects/:projectId/collaborators - Gerenciar colaboradores (consolidado)
+   * Adiciona, atualiza permissão ou remove colaboradores
+   * Body: { action: 'add' | 'update' | 'remove', userId, permission? }
+   */
+  async manageCollaborators(req, res, next) {
+    try {
+      const { projectId } = req.params;
+      const { action, userId: collaboratorId, permission = "viewer" } = req.body;
+
+      // Validação de autenticação
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      // Verificar se o projeto existe e pertence ao usuário
+      await this._validateProjectOwnership(projectId, userId);
+
+      // Validação de dados obrigatórios
+      if (!action || !["add", "update", "remove"].includes(action)) {
+        throw new Error("Ação inválida. Use 'add', 'update' ou 'remove'");
+      }
+
+      if (!collaboratorId) {
+        throw new Error("ID do colaborador é obrigatório");
+      }
+
+      let result;
+      let message;
+
+      switch (action) {
+        case "add":
+          // Validar permissão
+          const validPermissions = ["admin", "viewer"];
+          if (!validPermissions.includes(permission)) {
+            throw new Error("Permissão inválida. Use 'admin' ou 'viewer'");
+          }
+
+          // Verificar se o usuário não está tentando adicionar a si mesmo
+          if (collaboratorId === userId) {
+            throw new Error("Você não pode adicionar a si mesmo como colaborador");
+          }
+
+          // Verificar se o colaborador já está ativo
+          const isAlready = await this.projectsRepository.isCollaborator(
+            projectId,
+            collaboratorId
+          );
+
+          if (isAlready) {
+            throw new Error("Usuário já é colaborador deste projeto");
+          }
+
+          result = await this.projectsRepository.addCollaborator(
+            projectId,
+            userId,
+            collaboratorId,
+            permission
+          );
+          message = "Colaborador adicionado com sucesso";
+          break;
+
+        case "update":
+          // Validar permissão
+          if (!permission || !["admin", "viewer"].includes(permission)) {
+            throw new Error("Permissão inválida. Use 'admin' ou 'viewer'");
+          }
+
+          // Verificar se o colaborador existe
+          const isCollab = await this.projectsRepository.isCollaborator(
+            projectId,
+            collaboratorId
+          );
+
+          if (!isCollab) {
+            throw new Error("Usuário não é colaborador deste projeto");
+          }
+
+          result = await this.projectsRepository.updateCollaboratorPermission(
+            projectId,
+            userId,
+            collaboratorId,
+            permission
+          );
+          message = "Permissão atualizada com sucesso";
+          break;
+
+        case "remove":
+          // Verificar se o colaborador existe
+          const exists = await this.projectsRepository.isCollaborator(
+            projectId,
+            collaboratorId
+          );
+
+          if (!exists) {
+            throw new Error("Usuário não é colaborador deste projeto");
+          }
+
+          result = await this.projectsRepository.removeCollaborator(
+            projectId,
+            userId,
+            collaboratorId
+          );
+          message = "Colaborador removido com sucesso";
+          break;
+      }
+
+      if (!result || result.length === 0) {
+        throw new Error("Falha ao gerenciar colaborador");
+      }
+
+      res.status(200).json({
+        message,
+        collaborators: action === "remove" ? undefined : result[0].collaborators?.filter(c => !c.removed),
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  /**
    * POST /api/projects/:projectId/collaborators - Adicionar colaborador
    * Adiciona um usuário como colaborador do projeto
+   * @deprecated Use manageCollaborators com action: 'add'
    */
   async addCollaborator(req, res, next) {
     try {
@@ -573,8 +753,79 @@ class ProjectsController {
   // ========================================
 
   /**
+   * PUT /api/projects/:projectId/notes - Gerenciar notas associadas (consolidado)
+   * Adiciona, sincroniza ou remove notas do projeto
+   * Body: { action: 'add' | 'sync' | 'remove', noteId }
+   */
+  async manageNotes(req, res, next) {
+    try {
+      const { projectId } = req.params;
+      const { action, noteId } = req.body;
+
+      // Validação de autenticação
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      // Validação de dados obrigatórios
+      if (!action || !["add", "sync", "remove"].includes(action)) {
+        throw new Error("Ação inválida. Use 'add', 'sync' ou 'remove'");
+      }
+
+      if (!noteId) {
+        throw new Error("ID da nota é obrigatório");
+      }
+
+      let result;
+      let message;
+
+      switch (action) {
+        case "add":
+          result = await this.projectsRepository.addNoteToProject(
+            projectId,
+            noteId,
+            userId
+          );
+          message = "Nota adicionada ao projeto com sucesso";
+          break;
+
+        case "sync":
+          result = await this.projectsRepository.updateNoteInProject(
+            projectId,
+            noteId,
+            userId
+          );
+          message = "Nota sincronizada com sucesso";
+          break;
+
+        case "remove":
+          result = await this.projectsRepository.removeNoteFromProject(
+            projectId,
+            noteId,
+            userId
+          );
+          message = "Nota removida do projeto com sucesso";
+          break;
+      }
+
+      if (!result || result.length === 0) {
+        throw new Error(
+          "Falha ao gerenciar nota. Verifique se você tem permissão"
+        );
+      }
+
+      res.status(200).json({
+        message,
+        notes: action === "remove" ? undefined : result[0].associated_notes,
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  /**
    * POST /api/projects/:projectId/notes - Adicionar nota ao projeto
    * Associa uma nota existente ao projeto
+   * @deprecated Use manageNotes com action: 'add'
    */
   async addNoteToProject(req, res, next) {
     try {
