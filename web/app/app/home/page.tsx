@@ -127,7 +127,7 @@ export default function HomePage() {
         {/* Estatísticas e Mapa Mental */}
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-[280px_1fr]">
           {/* Coluna Esquerda - Estatísticas Compactas (HUD Style) */}
-          <div className="flex flex-col rounded-sm border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
+          <div className="flex flex-col rounded-md border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
             {/* Cabeçalho do Painel */}
             <div className="border-b border-neutral-800 bg-neutral-900/50 px-4 py-2.5">
               <h3 className="font-mono text-[10px] font-bold tracking-widest text-neutral-500 uppercase">
@@ -139,7 +139,7 @@ export default function HomePage() {
             <div className="flex flex-col">
               <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-800">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-sm border border-yellow-400/20 bg-yellow-400/10 text-yellow-400">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-md border border-yellow-400/20 bg-yellow-400/10 text-yellow-400">
                     <FileText className="h-3.5 w-3.5" />
                   </div>
                   <span className="text-xs font-medium text-neutral-400 transition-colors group-hover:text-neutral-200">
@@ -154,7 +154,7 @@ export default function HomePage() {
 
               <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-800">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-sm border border-blue-400/20 bg-blue-400/10 text-blue-400">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-md border border-blue-400/20 bg-blue-400/10 text-blue-400">
                     <Tag className="h-3.5 w-3.5" />
                   </div>
                   <span className="text-xs font-medium text-neutral-400 transition-colors group-hover:text-neutral-200">
@@ -234,7 +234,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="flex flex-col rounded-sm border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
+          <div className="flex flex-col rounded-md border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
             {/* 1. O Cabeçalho agora é parte integrante do Card */}
             <div className="border-b border-neutral-800 bg-neutral-900/30 px-4 py-2.5">
               <h3 className="font-mono text-[10px] font-bold tracking-widest text-neutral-500 uppercase">
@@ -270,7 +270,7 @@ export default function HomePage() {
                     {stats.mostUsedTags.slice(0, 6).map((tagInfo, i) => (
                       <div
                         key={i}
-                        className="group relative flex flex-col gap-2 rounded-sm border border-neutral-800 bg-neutral-900/50 p-3 transition-colors hover:border-neutral-600 hover:bg-neutral-900"
+                        className="group relative flex flex-col gap-2 rounded-md border border-neutral-800 bg-neutral-900/50 p-3 transition-colors hover:border-neutral-600 hover:bg-neutral-900"
                       >
                         {/* Conector Vertical */}
                         <div className="absolute -top-4 left-[20px] h-4 w-px bg-neutral-700 opacity-50 transition-colors group-hover:bg-yellow-500/50"></div>
@@ -285,7 +285,7 @@ export default function HomePage() {
                               {tagInfo.tag}
                             </span>
                           </div>
-                          <div className="rounded-sm border border-neutral-800 bg-neutral-900 px-2 py-0.5 font-mono text-[10px] text-neutral-400">
+                          <div className="rounded-md border border-neutral-800 bg-neutral-900 px-2 py-0.5 font-mono text-[10px] text-neutral-400">
                             {tagInfo.count}
                           </div>
                         </div>
@@ -413,7 +413,7 @@ export default function HomePage() {
                         <div>
                           {note.status ? (
                             <span
-                              className={`inline-block rounded-sm px-2 py-1 text-[10px] font-bold uppercase sm:text-xs ${
+                              className={`inline-block rounded-md px-2 py-1 text-[10px] font-bold uppercase sm:text-xs ${
                                 note.status === "open"
                                   ? "bg-blue-500/20 text-blue-400"
                                   : note.status === "done"
@@ -426,7 +426,7 @@ export default function HomePage() {
                               {note.status}
                             </span>
                           ) : (
-                            <span className="inline-block rounded-sm bg-neutral-800 px-2 py-1 text-[10px] font-bold text-neutral-500 uppercase sm:text-xs">
+                            <span className="inline-block rounded-md bg-neutral-800 px-2 py-1 text-[10px] font-bold text-neutral-500 uppercase sm:text-xs">
                               sem status
                             </span>
                           )}

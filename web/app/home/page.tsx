@@ -16,13 +16,13 @@ export default function HomePage() {
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
             href="/auth/signup"
-            className="w-full rounded-lg bg-yellow-500 px-8 py-3 font-semibold text-neutral-950 transition-all hover:bg-yellow-600 sm:w-auto"
+            className="w-full rounded-md bg-yellow-500 px-8 py-3 font-semibold text-neutral-950 transition-all hover:bg-yellow-600 sm:w-auto"
           >
             Começar Agora
           </Link>
           <Link
             href="/about"
-            className="w-full rounded-lg border border-neutral-700 px-8 py-3 font-medium text-neutral-300 transition-all hover:border-neutral-600 hover:bg-neutral-900 sm:w-auto"
+            className="w-full rounded-md border border-neutral-700 px-8 py-3 font-medium text-neutral-300 transition-all hover:border-neutral-600 hover:bg-neutral-900 sm:w-auto"
           >
             Saiba Mais
           </Link>
@@ -35,8 +35,8 @@ export default function HomePage() {
           Por que usar o Weave Notes?
         </h2>
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-neutral-800/50 bg-neutral-900/50 p-6 backdrop-blur-sm">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-500/10">
+          <div className="rounded-md border border-neutral-800/50 bg-neutral-900/50 p-6 backdrop-blur-sm">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-yellow-500/10">
               <FaBook className="h-6 w-6 text-yellow-500" />
             </div>
             <h3 className="mb-2 text-lg font-semibold text-neutral-100">Simples e Prático</h3>
@@ -46,8 +46,8 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-neutral-800/50 bg-neutral-900/50 p-6 backdrop-blur-sm">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-500/10">
+          <div className="rounded-md border border-neutral-800/50 bg-neutral-900/50 p-6 backdrop-blur-sm">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-yellow-500/10">
               <FaRocket className="h-6 w-6 text-yellow-500" />
             </div>
             <h3 className="mb-2 text-lg font-semibold text-neutral-100">Rápido e Eficiente</h3>
@@ -57,8 +57,8 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-neutral-800/50 bg-neutral-900/50 p-6 backdrop-blur-sm">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-500/10">
+          <div className="rounded-md border border-neutral-800/50 bg-neutral-900/50 p-6 backdrop-blur-sm">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-yellow-500/10">
               <FaUsers className="h-6 w-6 text-yellow-500" />
             </div>
             <h3 className="mb-2 text-lg font-semibold text-neutral-100">Colaboração</h3>
@@ -67,8 +67,8 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-neutral-800/50 bg-neutral-900/50 p-6 backdrop-blur-sm">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-500/10">
+          <div className="rounded-md border border-neutral-800/50 bg-neutral-900/50 p-6 backdrop-blur-sm">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-yellow-500/10">
               <FaShieldAlt className="h-6 w-6 text-yellow-500" />
             </div>
             <h3 className="mb-2 text-lg font-semibold text-neutral-100">Seguro</h3>
@@ -81,7 +81,7 @@ export default function HomePage() {
 
       {/* Purpose Section */}
       <section className="mx-auto max-w-4xl px-4 py-16">
-        <div className="rounded-xl border border-neutral-800/50 bg-neutral-900/50 p-8 backdrop-blur-sm md:p-12">
+        <div className="rounded-md border border-neutral-800/50 bg-neutral-900/50 p-8 backdrop-blur-sm md:p-12">
           <h2 className="mb-6 text-center text-3xl font-bold text-neutral-100">
             O Propósito do Weave Notes
           </h2>
@@ -117,7 +117,7 @@ export default function HomePage() {
         </p>
         <Link
           href="/auth/signup"
-          className="inline-block rounded-lg bg-yellow-500 px-8 py-3 font-semibold text-neutral-950 transition-all hover:bg-yellow-600"
+          className="inline-block rounded-md bg-yellow-500 px-8 py-3 font-semibold text-neutral-950 transition-all hover:bg-yellow-600"
         >
           Criar Conta Grátis
         </Link>

@@ -2,10 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { usePathname } from "next/navigation";
-import { FaBook, FaHome, FaTimes } from "react-icons/fa";
+import { FaBook, FaHome, FaProjectDiagram, FaTimes } from "react-icons/fa";
 import { MdPersonAdd } from "react-icons/md";
 import { IoMdSettings } from "react-icons/io";
 
@@ -31,6 +30,7 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
   const navigationItems = [
     { path: "/app/home", icon: FaHome, label: "Início" },
     { path: "/app/notes", icon: FaBook, label: "Notas" },
+    { path: "/app/projects", icon: FaProjectDiagram, label: "Projetos" },
     { path: "/app/community", icon: MdPersonAdd, label: "Comunidade" },
     { path: "/app/settings", icon: IoMdSettings, label: "Configurações" },
   ];
@@ -38,13 +38,13 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
   if (!authenticated) return null;
 
   return (
-    <aside className="h-full rounded-xl border border-neutral-800/60 bg-neutral-950/80 shadow-lg backdrop-blur-sm">
+    <aside className="h-full rounded-md border border-neutral-800/60 bg-neutral-950/80 shadow-lg backdrop-blur-sm">
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between border-b border-neutral-800/50 p-4 lg:hidden">
           <h2 className="text-sm font-semibold text-neutral-200">Menu</h2>
           <button
             onClick={handleLinkClick}
-            className="rounded-lg p-1.5 text-neutral-400 transition-all hover:bg-neutral-800/50 hover:text-neutral-200"
+            className="rounded-md p-1.5 text-neutral-400 transition-all hover:bg-neutral-800/50 hover:text-neutral-200"
             aria-label="Fechar menu"
           >
             <FaTimes size={18} />
@@ -62,7 +62,7 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
                   <Link
                     href={item.path}
                     onClick={handleLinkClick}
-                    className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 ${
+                    className={`group relative flex items-center gap-3 rounded-md px-3 py-2.5 transition-all duration-200 ${
                       active
                         ? "bg-yellow-500/90 text-neutral-950 shadow-sm"
                         : "text-neutral-400 hover:bg-neutral-900/60 hover:text-neutral-100"
@@ -101,13 +101,13 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
         <div className="flex justify-evenly border-t border-neutral-800/30 p-4">
           <Link
             href="https://github.com/eugaelgomes/notes-web-app"
-            className="block rounded-lg px-3 py-2 text-center text-xs text-neutral-500 transition-colors hover:bg-neutral-900/60 hover:text-neutral-300"
+            className="block rounded-md px-3 py-2 text-center text-xs text-neutral-500 transition-colors hover:bg-neutral-900/60 hover:text-neutral-300"
           >
             Github
           </Link>
           <Link
             href="/about"
-            className="block rounded-lg px-3 py-2 text-center text-xs text-neutral-500 transition-colors hover:bg-neutral-900/60 hover:text-neutral-300"
+            className="block rounded-md px-3 py-2 text-center text-xs text-neutral-500 transition-colors hover:bg-neutral-900/60 hover:text-neutral-300"
           >
             Sobre
           </Link>

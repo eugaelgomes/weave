@@ -221,7 +221,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
 
       case "code":
         return (
-          <div className="overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900">
+          <div className="overflow-hidden rounded-md border border-neutral-700 bg-neutral-900">
             <div className="flex items-center justify-between border-b border-neutral-700 bg-neutral-800 px-3 py-2">
               <span className="text-xs text-neutral-400">
                 {(block.properties as { language?: string })?.language || "código"}
@@ -361,7 +361,7 @@ const BlockTypeSelector: React.FC<BlockTypeSelectorProps> = ({ onSelect, onClose
   ];
 
   return (
-    <div className="absolute left-0 z-20 mt-2 w-64 rounded-lg border border-neutral-700 bg-neutral-900 p-2 shadow-xl">
+    <div className="absolute left-0 z-20 mt-2 w-64 rounded-md border border-neutral-700 bg-neutral-900 p-2 shadow-xl">
       <div className="mb-2 border-b border-neutral-700 px-2 pb-2 text-xs font-semibold text-neutral-400">
         Tipo de bloco
       </div>
@@ -794,7 +794,7 @@ const NoteDetail = () => {
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-950 p-6">
-        <div className="max-w-md rounded-lg border border-neutral-700 bg-neutral-900 p-6 text-center shadow-sm">
+        <div className="max-w-md rounded-md border border-neutral-700 bg-neutral-900 p-6 text-center shadow-sm">
           <div className="mb-4 text-lg text-neutral-300">⚠️ {error}</div>
           <button
             onClick={handleBack}
@@ -923,7 +923,7 @@ const NoteDetail = () => {
                   return (
                     <div
                       key={index}
-                      className="group flex items-center gap-2 rounded-lg bg-neutral-800 px-2 py-1 transition-colors hover:bg-neutral-700"
+                      className="group flex items-center gap-2 rounded-md bg-neutral-800 px-2 py-1 transition-colors hover:bg-neutral-700"
                     >
                       <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-neutral-700 bg-yellow-500">
                         {avatarUrl ? (
@@ -1002,7 +1002,7 @@ const NoteDetail = () => {
               </DragOverlay>
             </DndContext>
           ) : (
-            <div className="min-h-[200px] rounded-lg border-2 border-dashed border-neutral-700 py-8 text-center text-neutral-500">
+            <div className="min-h-[200px] rounded-md border-2 border-dashed border-neutral-700 py-8 text-center text-neutral-500">
               <div className="mb-2">📝</div>
               <p>Esta nota ainda não tem conteúdo.</p>
               <p className="mt-1 text-sm">Clique em &quot;Adicionar bloco&quot; para começar</p>
@@ -1052,7 +1052,7 @@ const NoteDetail = () => {
       {/* Modal de Compartilhamento */}
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-lg border border-neutral-700 bg-neutral-900 p-6">
+          <div className="w-full max-w-md rounded-md border border-neutral-700 bg-neutral-900 p-6">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-lg font-semibold text-neutral-100">
                 <FaUserPlus className="text-yellow-500" size={16} />
@@ -1085,7 +1085,7 @@ const NoteDetail = () => {
                       handleSearchUsers(e.target.value);
                     }}
                     placeholder="Digite o email do usuário..."
-                    className="w-full rounded-lg border border-neutral-700 bg-neutral-800 py-2 pr-4 pl-10 text-neutral-100 placeholder-neutral-500 focus:border-transparent focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+                    className="w-full rounded-md border border-neutral-700 bg-neutral-800 py-2 pr-4 pl-10 text-neutral-100 placeholder-neutral-500 focus:border-transparent focus:ring-2 focus:ring-yellow-500 focus:outline-none"
                   />
                   {isSearching && (
                     <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
@@ -1100,7 +1100,7 @@ const NoteDetail = () => {
                   {searchResults.map((user) => (
                     <div
                       key={user.id}
-                      className="flex items-center justify-between rounded-lg bg-neutral-800 p-2 transition-colors hover:bg-neutral-700"
+                      className="flex items-center justify-between rounded-md bg-neutral-800 p-2 transition-colors hover:bg-neutral-700"
                     >
                       <div className="flex items-center gap-2">
                         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500">
@@ -1142,7 +1142,7 @@ const NoteDetail = () => {
       {/* Modal de Tags */}
       {showTagModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-lg border border-neutral-700 bg-neutral-900 p-6">
+          <div className="w-full max-w-md rounded-md border border-neutral-700 bg-neutral-900 p-6">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-lg font-semibold text-neutral-100">
                 <FaTag className="text-yellow-500" size={16} />
@@ -1166,7 +1166,7 @@ const NoteDetail = () => {
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
                     placeholder="Digite o nome da tag..."
-                    className="flex-1 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-100 placeholder-neutral-500 focus:border-transparent focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+                    className="flex-1 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-100 placeholder-neutral-500 focus:border-transparent focus:ring-2 focus:ring-yellow-500 focus:outline-none"
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -1177,7 +1177,7 @@ const NoteDetail = () => {
                   <button
                     onClick={handleAddTag}
                     disabled={!newTag.trim()}
-                    className="flex items-center gap-1 rounded-lg bg-yellow-500 px-3 py-2 text-neutral-950 transition-colors hover:bg-yellow-400 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex items-center gap-1 rounded-md bg-yellow-500 px-3 py-2 text-neutral-950 transition-colors hover:bg-yellow-400 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <FaPlus size={12} />
                     Adicionar
@@ -1194,7 +1194,7 @@ const NoteDetail = () => {
                     {note.tags.map((tag, index) => (
                       <span
                         key={index}
-                        className="group flex items-center gap-2 rounded-lg bg-neutral-800 px-3 py-1 text-sm text-yellow-500 transition-colors hover:bg-neutral-700"
+                        className="group flex items-center gap-2 rounded-md bg-neutral-800 px-3 py-1 text-sm text-yellow-500 transition-colors hover:bg-neutral-700"
                       >
                         {tag}
                         <button

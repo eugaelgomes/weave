@@ -37,6 +37,12 @@ export const API_ENDPOINTS = {
   NOTES_SEARCH: "/notes/search",
   NOTES_EXPORT: "/notes/export",
 
+  // Projects
+  PROJECTS: "/projects",
+  PROJECTS_BY_ID: (id: string) => `/projects/${id}`,
+  PROJECTS_COLLABORATORS: (projectId: string) => `/projects/${projectId}/collaborators`,
+  PROJECTS_NOTES: (projectId: string) => `/projects/${projectId}/notes`,
+
   // Backup
   BACKUP_CREATE: "/backup/create",
   BACKUP_RESTORE: "/backup/restore",

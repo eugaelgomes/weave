@@ -112,7 +112,7 @@ export default function ResetPassword() {
       {msg.text && (
         <div className="fixed top-4 left-1/2 z-50 w-full max-w-md -translate-x-1/2 transform px-4">
           <div
-            className={`flex items-center gap-3 rounded-xl border p-4 text-sm shadow-xl backdrop-blur-sm ${
+            className={`flex items-center gap-3 rounded-md border p-4 text-sm shadow-xl backdrop-blur-sm ${
               msg.type === "error"
                 ? "border-red-200 bg-red-50 text-red-800"
                 : "border-green-200 bg-green-50 text-green-800"

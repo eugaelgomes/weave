@@ -90,7 +90,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
             {authenticated && (
               <button
                 onClick={onToggleSidebar}
-                className="rounded-lg p-1.5 text-neutral-400 transition-all hover:bg-neutral-800/50 hover:text-neutral-100 sm:p-2 lg:hidden"
+                className="rounded-md p-1.5 text-neutral-400 transition-all hover:bg-neutral-800/50 hover:text-neutral-100 sm:p-2 lg:hidden"
                 aria-label="Abrir menu"
               >
                 <FaBars className="h-5 w-5" />
@@ -113,7 +113,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={toggleUserMenu}
-                  className="group flex items-center gap-2 rounded-lg p-1 transition-all hover:bg-neutral-800/50 sm:gap-3 sm:p-2"
+                  className="group flex items-center gap-2 rounded-md p-1 transition-all hover:bg-neutral-800/50 sm:gap-3 sm:p-2"
                   aria-label="Menu do usuário"
                 >
                   {/* User Name (Hidden on small screens) */}
@@ -147,7 +147,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                     />
 
                     {/* Desktop Dropdown */}
-                    <div className="absolute right-0 z-50 mt-2 hidden w-72 overflow-hidden rounded-xl border border-neutral-800/60 bg-neutral-900/95 shadow-2xl backdrop-blur-md sm:block">
+                    <div className="absolute right-0 z-50 mt-2 hidden w-72 overflow-hidden rounded-md border border-neutral-800/60 bg-neutral-900/95 shadow-2xl backdrop-blur-md sm:block">
                       {/* User Info Header */}
                       <div className="border-b border-neutral-800/50 bg-neutral-950/50 px-4 py-4">
                         <div className="flex items-center gap-3">
@@ -235,7 +235,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               <div className="flex items-center">
                 <Link
                   href="/auth/signin"
-                  className="rounded-lg bg-yellow-500/90 px-3 py-1.5 text-xs font-semibold text-neutral-950 transition-all hover:bg-yellow-500 sm:px-4 sm:py-2 sm:text-sm"
+                  className="rounded-md bg-yellow-500/90 px-3 py-1.5 text-xs font-semibold text-neutral-950 transition-all hover:bg-yellow-500 sm:px-4 sm:py-2 sm:text-sm"
                 >
                   Entrar
                 </Link>

@@ -259,7 +259,7 @@ const SettingsPage = () => {
         {/* Main content */}
         <div className="mx-auto max-w-5xl space-y-6 px-4">
           {/* Profile Section */}
-          <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 shadow-lg">
+          <div className="overflow-hidden rounded-md border border-neutral-800 bg-neutral-900 shadow-lg">
             <div className="border-b border-neutral-800 px-4 py-4 sm:px-6">
               <h2 className="text-xl font-semibold text-neutral-100">Meu Perfil</h2>
               <p className="mt-1 text-sm text-neutral-400">Informações sobre sua conta</p>
@@ -267,19 +267,19 @@ const SettingsPage = () => {
 
             <div className="p-4 sm:p-6">
               {error && (
-                <div className="mb-6 rounded-lg border border-red-800 bg-red-950 p-4">
+                <div className="mb-6 rounded-md border border-red-800 bg-red-950 p-4">
                   <p className="text-red-300">{error}</p>
                 </div>
               )}
 
               {passwordError && (
-                <div className="mb-6 rounded-lg border border-red-800 bg-red-950 p-4">
+                <div className="mb-6 rounded-md border border-red-800 bg-red-950 p-4">
                   <p className="text-red-300">{passwordError}</p>
                 </div>
               )}
 
               {passwordSuccess && (
-                <div className="mb-6 rounded-lg border border-green-800 bg-green-950 p-4">
+                <div className="mb-6 rounded-md border border-green-800 bg-green-950 p-4">
                   <p className="text-green-300">{passwordSuccess}</p>
                 </div>
               )}
@@ -345,11 +345,11 @@ const SettingsPage = () => {
                             name="name"
                             value={formData.name}
                             onChange={handleInputChange}
-                            className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
+                            className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
                             placeholder="Seu nome"
                           />
                         ) : (
-                          <div className="w-full rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-3">
+                          <div className="w-full rounded-md border border-neutral-700 bg-neutral-800/50 px-4 py-3">
                             <p className="text-neutral-100">{userData.name}</p>
                           </div>
                         )}
@@ -363,11 +363,11 @@ const SettingsPage = () => {
                             name="email"
                             value={formData.email}
                             onChange={handleInputChange}
-                            className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
+                            className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
                             placeholder="seu@exemplo.com"
                           />
                         ) : (
-                          <div className="w-full rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-3">
+                          <div className="w-full rounded-md border border-neutral-700 bg-neutral-800/50 px-4 py-3">
                             <p className="break-all text-neutral-100">{userData.email}</p>
                           </div>
                         )}
@@ -383,11 +383,11 @@ const SettingsPage = () => {
                             name="username"
                             value={formData.username}
                             onChange={handleInputChange}
-                            className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
+                            className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
                             placeholder="seu_usuario"
                           />
                         ) : (
-                          <div className="w-full rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-3">
+                          <div className="w-full rounded-md border border-neutral-700 bg-neutral-800/50 px-4 py-3">
                             <p className="text-neutral-100">{userData.username}</p>
                           </div>
                         )}
@@ -396,7 +396,7 @@ const SettingsPage = () => {
 
                     {/* Password Fields - Only in Edit Mode */}
                     {editMode && (
-                      <div className="space-y-6 rounded-lg border border-neutral-700 bg-neutral-800/30 p-4 sm:p-6">
+                      <div className="space-y-6 rounded-md border border-neutral-700 bg-neutral-800/30 p-4 sm:p-6">
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/10">
                             <svg
@@ -434,7 +434,7 @@ const SettingsPage = () => {
                               name="currentPassword"
                               value={formData.currentPassword}
                               onChange={handlePasswordChange}
-                              className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
+                              className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
                               placeholder="Digite sua senha atual"
                             />
                           </div>
@@ -449,7 +449,7 @@ const SettingsPage = () => {
                                 name="newPassword"
                                 value={formData.newPassword}
                                 onChange={handlePasswordChange}
-                                className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
+                                className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
                                 placeholder="Digite sua nova senha"
                                 minLength={6}
                               />
@@ -465,7 +465,7 @@ const SettingsPage = () => {
                                 name="confirmPassword"
                                 value={formData.confirmPassword}
                                 onChange={handlePasswordChange}
-                                className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
+                                className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
                                 placeholder="Confirme sua nova senha"
                                 minLength={6}
                               />
@@ -481,13 +481,13 @@ const SettingsPage = () => {
                         <>
                           <button
                             onClick={handleCancelEdit}
-                            className="rounded-lg border-2 border-neutral-600 px-6 py-3 font-semibold text-neutral-300 transition-all duration-200 hover:border-neutral-500 hover:bg-neutral-800 hover:text-neutral-100"
+                            className="rounded-md border-2 border-neutral-600 px-6 py-3 font-semibold text-neutral-300 transition-all duration-200 hover:border-neutral-500 hover:bg-neutral-800 hover:text-neutral-100"
                           >
                             Cancelar
                           </button>
                           <button
                             onClick={handleSaveChanges}
-                            className="rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-3 font-semibold text-neutral-950 shadow-lg transition-all duration-200 hover:from-yellow-600 hover:to-yellow-700 hover:shadow-xl"
+                            className="rounded-md bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-3 font-semibold text-neutral-950 shadow-lg transition-all duration-200 hover:from-yellow-600 hover:to-yellow-700 hover:shadow-xl"
                           >
                             Salvar Alterações
                           </button>
@@ -495,7 +495,7 @@ const SettingsPage = () => {
                       ) : (
                         <button
                           onClick={() => setEditMode(true)}
-                          className="rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-3 font-semibold text-neutral-950 shadow-lg transition-all duration-200 hover:from-yellow-600 hover:to-yellow-700 hover:shadow-xl"
+                          className="rounded-md bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-3 font-semibold text-neutral-950 shadow-lg transition-all duration-200 hover:from-yellow-600 hover:to-yellow-700 hover:shadow-xl"
                         >
                           Editar Perfil
                         </button>
@@ -521,25 +521,25 @@ const SettingsPage = () => {
                         {/* Nome Field */}
                         <div className="space-y-2">
                           <div className="h-4 w-12 rounded bg-neutral-700"></div>
-                          <div className="h-10 w-full rounded-lg bg-neutral-700 sm:h-12"></div>
+                          <div className="h-10 w-full rounded-md bg-neutral-700 sm:h-12"></div>
                         </div>
 
                         {/* Email Field */}
                         <div className="space-y-2">
                           <div className="h-4 w-10 rounded bg-neutral-700"></div>
-                          <div className="h-10 w-full rounded-lg bg-neutral-700 sm:h-12"></div>
+                          <div className="h-10 w-full rounded-md bg-neutral-700 sm:h-12"></div>
                         </div>
 
                         {/* Username Field */}
                         <div className="space-y-2 md:col-span-2">
                           <div className="h-4 w-24 rounded bg-neutral-700"></div>
-                          <div className="h-10 w-full rounded-lg bg-neutral-700 sm:h-12"></div>
+                          <div className="h-10 w-full rounded-md bg-neutral-700 sm:h-12"></div>
                         </div>
                       </div>
 
                       {/* Action Button Skeleton */}
                       <div className="flex justify-end border-t border-neutral-700 pt-4 sm:pt-6">
-                        <div className="h-8 w-24 rounded-lg bg-neutral-700 sm:h-10 sm:w-32"></div>
+                        <div className="h-8 w-24 rounded-md bg-neutral-700 sm:h-10 sm:w-32"></div>
                       </div>
                     </div>
                   </div>
@@ -549,7 +549,7 @@ const SettingsPage = () => {
           </div>
 
           {/* Danger Zone */}
-          <div className="overflow-hidden rounded-xl border border-red-800 bg-neutral-900 shadow-lg">
+          <div className="overflow-hidden rounded-md border border-red-800 bg-neutral-900 shadow-lg">
             <div className="border-b border-red-800 bg-red-950/50 px-4 py-4 sm:px-6">
               <h2 className="text-xl font-semibold text-red-300">Zona de Perigo</h2>
               <p className="mt-1 text-sm text-red-400">Ações irreversíveis para sua conta</p>
@@ -557,7 +557,7 @@ const SettingsPage = () => {
 
             <div className="p-4 sm:p-6">
               <div className="space-y-4 text-neutral-400">
-                <div className="rounded-lg border border-red-800 bg-red-950/30 p-4">
+                <div className="rounded-md border border-red-800 bg-red-950/30 p-4">
                   <h3 className="mb-2 text-lg font-semibold text-red-300">Deletar minha conta</h3>
                   <p className="mb-4 text-sm text-red-400">
                     Ao deletar sua conta, todos os seus dados pessoais serão removidos
@@ -575,13 +575,13 @@ const SettingsPage = () => {
                   </p>
                   <button
                     onClick={handleCreateBackup}
-                    className="mr-2 rounded-lg bg-yellow-500 px-4 py-2.5 font-semibold text-neutral-950 shadow-lg transition-colors hover:bg-yellow-600 sm:px-6 sm:py-3"
+                    className="mr-2 rounded-md bg-yellow-500 px-4 py-2.5 font-semibold text-neutral-950 shadow-lg transition-colors hover:bg-yellow-600 sm:px-6 sm:py-3"
                   >
                     Criar Backup
                   </button>
                   <button
                     onClick={handleDeleteAccount}
-                    className="rounded-lg bg-red-600 px-4 py-2.5 font-semibold text-white shadow-lg transition-colors hover:bg-red-700 sm:px-6 sm:py-3"
+                    className="rounded-md bg-red-600 px-4 py-2.5 font-semibold text-white shadow-lg transition-colors hover:bg-red-700 sm:px-6 sm:py-3"
                   >
                     Deletar Minha Conta Permanentemente
                   </button>

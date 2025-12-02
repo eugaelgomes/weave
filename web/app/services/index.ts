@@ -29,6 +29,29 @@ export {
   type User as NotesUser,
 } from "./notes-service/NotesService";
 
+// Projects Services
+export {
+  fetchProjects,
+  fetchProjectById,
+  createProject,
+  updateProject,
+  deleteProject,
+  fetchProjectCollaborators,
+  manageCollaborator,
+  fetchProjectNotes,
+  manageProjectNote,
+  type Project,
+  type ProjectProperties,
+  type ProjectOwner,
+  type ProjectCollaborator,
+  type ProjectNote,
+  type ProjectsResponse,
+  type CreateProjectData,
+  type UpdateProjectData,
+  type ManageCollaboratorData,
+  type ManageNoteData,
+} from "./projects-service/ProjectsService";
+
 // Backup Services
 export * from "./backup-service/BackupService";
 

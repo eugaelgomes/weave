@@ -235,10 +235,10 @@ const NotesWithPagination = () => {
   if (error) {
     return (
       <div className="flex flex-1 flex-col space-y-6 p-6">
-        <div className="rounded-lg border border-neutral-700 bg-neutral-800 p-4 shadow-lg">
+        <div className="rounded-md border border-neutral-700 bg-neutral-800 p-4 shadow-lg">
           <h2 className="text-2xl font-bold text-white">Notas</h2>
         </div>
-        <div className="rounded-lg border border-red-800 bg-red-950/30 p-8 text-center">
+        <div className="rounded-md border border-red-800 bg-red-950/30 p-8 text-center">
           <div className="mb-3 text-xl font-semibold text-red-400">Erro ao carregar notas</div>
           <p className="text-sm text-red-300/80">Erro desconhecido</p>
         </div>
@@ -248,8 +248,8 @@ const NotesWithPagination = () => {
 
   if (showFullSkeleton) {
     return (
-      <div className="flex h-full flex-col rounded-lg bg-neutral-950">
-        <div className="flex-shrink-0 rounded-lg border-b border-neutral-800 p-4 shadow-lg lg:p-6">
+      <div className="flex h-full flex-col rounded-md bg-neutral-950">
+        <div className="flex-shrink-0 rounded-md border-b border-neutral-800 p-4 shadow-lg lg:p-6">
           <div className="animate-pulse">
             <div className="mb-2 h-8 w-1/3 rounded bg-neutral-800"></div>
             <div className="h-4 w-1/2 rounded bg-neutral-800"></div>
@@ -271,17 +271,17 @@ const NotesWithPagination = () => {
   }
 
   return (
-    <div className="flex h-full flex-col rounded-lg border border-neutral-800 bg-neutral-950">
+    <div className="flex h-full flex-col rounded-md border border-neutral-800 bg-neutral-950">
       {/* =================== HEADER COM LOADING =================== */}
       {showListSkeleton ? (
-        <div className="flex-shrink-0 rounded-lg border-b border-neutral-800 p-4 shadow-lg lg:p-6">
+        <div className="flex-shrink-0 rounded-md border-b border-neutral-800 p-4 shadow-lg lg:p-6">
           <div className="animate-pulse">
             <div className="mb-2 h-8 w-1/3 rounded bg-neutral-800"></div>
             <div className="h-4 w-1/2 rounded bg-neutral-800"></div>
           </div>
         </div>
       ) : (
-        <div className="flex-shrink-0 rounded-lg border-b border-neutral-800 p-4 shadow-lg lg:p-4">
+        <div className="flex-shrink-0 rounded-md border-b border-neutral-800 p-4 shadow-lg lg:p-4">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 flex-1">
               <h2 className="mb-2 text-2xl font-bold tracking-tight text-white lg:text-2xl">
@@ -325,7 +325,7 @@ const NotesWithPagination = () => {
                   placeholder="Buscar notas..."
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  className="w-full rounded-lg border border-neutral-700 bg-neutral-800 py-2.5 pr-4 pl-11 text-sm text-white placeholder-neutral-500 transition-all focus:border-transparent focus:ring-2 focus:ring-yellow-500 focus:outline-none lg:w-72"
+                  className="w-full rounded-md border border-neutral-700 bg-neutral-800 py-2.5 pr-4 pl-11 text-sm text-white placeholder-neutral-500 transition-all focus:border-transparent focus:ring-2 focus:ring-yellow-500 focus:outline-none lg:w-72"
                 />
                 {searchTerm !== debouncedSearch && (
                   <div className="absolute top-1/2 right-3.5 -translate-y-1/2 transform">
@@ -338,7 +338,7 @@ const NotesWithPagination = () => {
                 <button
                   onClick={handleRefresh}
                   disabled={isLoading}
-                  className="flex items-center justify-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2.5 text-sm font-medium text-neutral-300 transition-all hover:bg-neutral-700 disabled:opacity-50 sm:px-4"
+                  className="flex items-center justify-center gap-2 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2.5 text-sm font-medium text-neutral-300 transition-all hover:bg-neutral-700 disabled:opacity-50 sm:px-4"
                   title="Atualizar notas"
                 >
                   <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
@@ -347,7 +347,7 @@ const NotesWithPagination = () => {
 
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:flex-initial ${
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all sm:flex-initial ${
                     showFilters || selectedTags.length > 0
                       ? "bg-yellow-500 text-neutral-950 shadow-lg shadow-yellow-500/20"
                       : "border border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
@@ -364,7 +364,7 @@ const NotesWithPagination = () => {
 
                 <button
                   onClick={handleCreateNote}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-yellow-500 px-4 py-2.5 text-sm font-medium text-neutral-950 shadow-lg shadow-yellow-500/20 transition-all hover:bg-yellow-400 sm:flex-initial"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-md bg-yellow-500 px-4 py-2.5 text-sm font-medium text-neutral-950 shadow-lg shadow-yellow-500/20 transition-all hover:bg-yellow-400 sm:flex-initial"
                 >
                   <Plus size={16} />
                   <span className="hidden sm:inline">Nova Nota</span>
@@ -417,7 +417,7 @@ const NotesWithPagination = () => {
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => handleSortChange("updated_at", "desc")}
-                    className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 rounded-md px-3.5 py-1.5 text-sm font-medium transition-all ${
                       sortBy === "updated_at" && sortOrder === "desc"
                         ? "bg-yellow-500 text-neutral-950 shadow-md shadow-yellow-500/20"
                         : "border border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
@@ -429,7 +429,7 @@ const NotesWithPagination = () => {
 
                   <button
                     onClick={() => handleSortChange("title", "asc")}
-                    className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 rounded-md px-3.5 py-1.5 text-sm font-medium transition-all ${
                       sortBy === "title" && sortOrder === "asc"
                         ? "bg-yellow-500 text-neutral-950 shadow-md shadow-yellow-500/20"
                         : "border border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
@@ -441,7 +441,7 @@ const NotesWithPagination = () => {
 
                   <button
                     onClick={() => handleSortChange("created_at", "asc")}
-                    className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 rounded-md px-3.5 py-1.5 text-sm font-medium transition-all ${
                       sortBy === "created_at" && sortOrder === "asc"
                         ? "bg-yellow-500 text-neutral-950 shadow-md shadow-yellow-500/20"
                         : "border border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
@@ -457,7 +457,7 @@ const NotesWithPagination = () => {
                 <div className="flex justify-end pt-2">
                   <button
                     onClick={clearFilters}
-                    className="flex items-center gap-2 rounded-lg bg-red-600/90 px-4 py-2 text-sm font-medium text-white shadow-md shadow-red-600/20 transition-all hover:bg-red-600"
+                    className="flex items-center gap-2 rounded-md bg-red-600/90 px-4 py-2 text-sm font-medium text-white shadow-md shadow-red-600/20 transition-all hover:bg-red-600"
                   >
                     <X size={14} />
                     Limpar todos os filtros
@@ -470,7 +470,7 @@ const NotesWithPagination = () => {
       )}
 
       {/* =================== LISTA DE NOTAS COM SKELETON LOADING =================== */}
-      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto rounded-lg p-2 shadow-lg lg:p-4">
+      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto rounded-md p-2 shadow-lg lg:p-4">
         {!showListSkeleton && notes.length > 0 && (
           <div
             className={`relative ${
@@ -479,7 +479,7 @@ const NotesWithPagination = () => {
           >
             {showOverlayLoading && (
               <div className="absolute top-0 right-0 z-10">
-                <div className="flex items-center gap-2 rounded-lg bg-yellow-500 px-4 py-2 text-sm font-medium text-neutral-950 shadow-xl shadow-yellow-500/30">
+                <div className="flex items-center gap-2 rounded-md bg-yellow-500 px-4 py-2 text-sm font-medium text-neutral-950 shadow-xl shadow-yellow-500/30">
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-950 border-t-transparent"></div>
                   Atualizando
                 </div>
@@ -490,7 +490,7 @@ const NotesWithPagination = () => {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {notes.map((note) => (
                 <Link key={note.id} href={`/app/notes/view/${note.id}`} className="block">
-                  <div className="group flex h-[260px] flex-col rounded-xl border border-neutral-800 bg-neutral-950 p-4 transition-all duration-200 hover:border-neutral-700 hover:bg-neutral-900 sm:h-[260px] sm:p-5">
+                  <div className="group flex h-[260px] flex-col rounded-md border border-neutral-800 bg-neutral-950 p-4 transition-all duration-200 hover:border-neutral-700 hover:bg-neutral-900 sm:h-[260px] sm:p-5">
                     {/* Cabeçalho: data + tags */}
                     <div className="mb-3 flex flex-shrink-0 flex-col gap-2">
                       {/* Data */}

@@ -22,7 +22,7 @@ export default function NotFound() {
         <div className="space-y-3">
           <button
             onClick={() => router.back()}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-700 px-6 py-3 text-neutral-300 transition-all hover:border-neutral-600 hover:bg-neutral-900/50"
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-neutral-700 px-6 py-3 text-neutral-300 transition-all hover:border-neutral-600 hover:bg-neutral-900/50"
           >
             <FaArrowLeft className="h-4 w-4" />
             Voltar
@@ -30,7 +30,7 @@ export default function NotFound() {
 
           <Link
             href="/"
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-yellow-500/90 px-6 py-3 font-semibold text-neutral-950 transition-all hover:bg-yellow-500"
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-yellow-500/90 px-6 py-3 font-semibold text-neutral-950 transition-all hover:bg-yellow-500"
           >
             <FaHome className="h-4 w-4" />
             Ir para o Início

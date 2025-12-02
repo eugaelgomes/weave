@@ -4,7 +4,7 @@ import React from "react";
 
 export default function Loading() {
   return (
-    <div className="flex h-full min-h-[60vh] items-center justify-center rounded-lg bg-gradient-to-br from-neutral-50 to-neutral-100">
+    <div className="flex h-full min-h-[60vh] items-center justify-center rounded-md bg-gradient-to-br from-neutral-50 to-neutral-100">
       <div className="text-center">
         {/* Spinner principal */}
         <div className="mb-6">

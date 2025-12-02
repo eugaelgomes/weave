@@ -26,7 +26,7 @@ export default function Error({ error, reset }: ErrorProps) {
         </div>
 
         {process.env.NODE_ENV === "development" && (
-          <div className="mb-6 rounded-lg border border-neutral-800/50 bg-neutral-900/50 p-4 text-left">
+          <div className="mb-6 rounded-md border border-neutral-800/50 bg-neutral-900/50 p-4 text-left">
             <p className="mb-2 text-xs text-neutral-500">Detalhes do erro (desenvolvimento):</p>
             <code className="text-xs break-all text-yellow-500">{error.message}</code>
             {error.digest && <p className="mt-2 text-xs text-neutral-500">ID: {error.digest}</p>}
@@ -36,7 +36,7 @@ export default function Error({ error, reset }: ErrorProps) {
         <div className="space-y-3">
           <button
             onClick={reset}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-yellow-500/90 px-6 py-3 font-semibold text-neutral-950 transition-all hover:bg-yellow-500"
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-yellow-500/90 px-6 py-3 font-semibold text-neutral-950 transition-all hover:bg-yellow-500"
           >
             <FaRedo className="h-4 w-4" />
             Tentar Novamente
@@ -44,7 +44,7 @@ export default function Error({ error, reset }: ErrorProps) {
 
           <Link
             href="/"
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-700 px-6 py-3 text-neutral-300 transition-all hover:border-neutral-600 hover:bg-neutral-900/50"
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-neutral-700 px-6 py-3 text-neutral-300 transition-all hover:border-neutral-600 hover:bg-neutral-900/50"
           >
             <FaHome className="h-4 w-4" />
             Ir para o Início
