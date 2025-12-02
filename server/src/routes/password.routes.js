@@ -5,14 +5,12 @@ const PasswordController = require("@/controllers/password-manager/password-cont
 
 const router = express.Router();
 
-// Start password recovery process
 router.post(
   "/forgot-password",
   [body("email").isEmail()],
   PasswordController.forgotPassword.bind(PasswordController)
 );
 
-// Reset password using the token sent by email
 router.post(
   "/reset-password",
   PasswordController.resetPassword.bind(PasswordController)

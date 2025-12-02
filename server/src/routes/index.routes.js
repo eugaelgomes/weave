@@ -6,6 +6,7 @@ const userRoutes = require("@/routes/users.routes");
 const passwordRoutes = require("@/routes/password.routes");
 const notesRoutes = require("@/routes/notes.routes");
 const backupRoutes = require("@/routes/backup.routes");
+const projectsRoutes = require("@/routes/projects.routes");
 
 const router = express.Router();
 
@@ -37,6 +38,7 @@ const routeMap = [
   { path: "/password", handler: passwordRoutes },
   { path: "/notes", handler: notesRoutes },
   { path: "/backup", handler: backupRoutes },
+  { path: "/projects", handler: projectsRoutes },
 ];
 
 // Router mapping

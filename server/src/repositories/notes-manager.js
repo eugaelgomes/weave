@@ -1,7 +1,6 @@
 const { executeQuery, rowCount } = require("@/services/db/db-connection");
 
 class notesRepository {
-  // criar notas
   async createNotesQuerie(userId, title, content, tags = []) {
     const query = `
       INSERT INTO notes (user_id, title, description, tags)
@@ -63,7 +62,6 @@ class notesRepository {
     return await executeQuery(query, [userId]);
   }
 
-  // =================== MÉTODO ORIGINAL (mantido para compatibilidade) ===================
   async getAllNotesFormatted(userId) {
     const query = `
       SELECT 
@@ -111,7 +109,6 @@ class notesRepository {
     return await executeQuery(query, [userId]);
   }
 
-  // =================== MÉTODO COM PAGINAÇÃO E FILTROS ===================
   /**
    * Busca notas com suporte a paginação, busca e filtros
    * @param {string} userId - ID do usuário
@@ -134,18 +131,15 @@ class notesRepository {
       sortOrder = "desc",
     } = options;
 
-    // CÁLCULO DO OFFSET para paginação
     const offset = (page - 1) * limit;
 
-    // CONSTRUÇÃO DINÂMICA DA QUERY
     let whereConditions = [
       `(n.user_id = $1 OR EXISTS (SELECT 1 FROM note_collaborators nc2 WHERE nc2.note_id = n.id AND nc2.user_id = $1))",
       "n.deleted = false`,
     ];
     let queryParams = [userId];
-    let paramIndex = 2; // Próximo índice de parâmetro
+    let paramIndex = 2;
 
-    // FILTRO DE BUSCA: procura no título e descrição
     if (search && search.trim()) {
       whereConditions.push(`(
         LOWER(n.title) LIKE LOWER($${paramIndex}) OR 
@@ -155,21 +149,18 @@ class notesRepository {
       paramIndex++;
     }
 
-    // FILTRO POR TAGS: procura se nota tem alguma das tags especificadas
     if (tags && tags.length > 0) {
-      whereConditions.push(`n.tags && $${paramIndex}`); // Operador PostgreSQL para arrays
+      whereConditions.push(`n.tags && $${paramIndex}`);
       queryParams.push(tags);
       paramIndex++;
     }
 
-    // VALIDAÇÃO DE CAMPO DE ORDENAÇÃO (previne SQL injection)
     const validSortFields = ["updated_at", "created_at", "title"];
     const validSortField = validSortFields.includes(sortBy)
       ? sortBy
       : "updated_at";
     const validSortOrder = sortOrder.toLowerCase() === "asc" ? "ASC" : "DESC";
 
-    // QUERY PRINCIPAL para buscar notas
     const notesQuery = `
       SELECT 
         n.id::text,
@@ -210,14 +201,12 @@ class notesRepository {
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1};
     `;
 
-    // QUERY PARA CONTAR TOTAL (mesmas condições, sem LIMIT/OFFSET)
     const countQuery = `
       SELECT COUNT(*) as total
       FROM notes n
       WHERE ${whereConditions.join(" AND ")};
     `;
 
-    // EXECUÇÃO DAS QUERIES
     const notes = await executeQuery(notesQuery, [
       ...queryParams,
       limit,
@@ -226,11 +215,10 @@ class notesRepository {
     const [countResult] = await executeQuery(countQuery, queryParams);
     const total = parseInt(countResult.total);
 
-    // CÁLCULOS DE PAGINAÇÃO
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
-    // RETORNO PADRONIZADO
+
     return {
       notes,
       pagination: {
@@ -374,15 +362,12 @@ class notesRepository {
    * @returns {Object|null} - Nota atualizada ou null se nenhum campo foi fornecido
    */
   async updateNoteById(noteId, updateData) {
-    // Lista de campos permitidos para atualização
     const allowedFields = ["title", "description", "tags", "status", "deleted"];
 
-    // Constrói a query dinamicamente baseada nos campos fornecidos
     const updates = [];
     const values = [];
     let paramIndex = 1;
 
-    // Itera sobre os campos permitidos e adiciona os que estão presentes
     allowedFields.forEach((field) => {
       if (updateData[field] !== undefined) {
         updates.push(`${field} = $${paramIndex}`);
@@ -391,15 +376,12 @@ class notesRepository {
       }
     });
 
-    // Se não houver campos para atualizar, retorna null
     if (updates.length === 0) {
       return null;
     }
 
-    // Sempre atualiza o updated_at
     updates.push("updated_at = NOW()");
 
-    // Adiciona o noteId como último parâmetro
     values.push(noteId);
 
     const query = `
@@ -487,7 +469,6 @@ class notesRepository {
    * @returns {Object} - Dados do colaborador adicionado
    */
   async addCollaborator(noteId, userId) {
-    // Primeiro, verificar se o colaborador já existe (removido ou não)
     const checkQuery = `
       SELECT removed FROM note_collaborators
       WHERE note_id = $1 AND user_id = $2
@@ -496,7 +477,6 @@ class notesRepository {
     const existing = await executeQuery(checkQuery, [noteId, userId]);
 
     if (existing.length > 0) {
-      // Se existir e foi removido, reativar
       if (existing[0].removed) {
         const reactivateQuery = `
           UPDATE note_collaborators
@@ -507,11 +487,9 @@ class notesRepository {
         const results = await executeQuery(reactivateQuery, [noteId, userId]);
         return results[0];
       }
-      // Se já existe e está ativo, retorna null (já é colaborador)
       return null;
     }
 
-    // Se não existir, criar novo
     const insertQuery = `
       INSERT INTO note_collaborators (note_id, user_id)
       VALUES ($1, $2)

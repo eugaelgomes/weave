@@ -2,9 +2,6 @@
 const { executeQuery } = require("@/services/db/db-connection");
 
 class UserRepository {
-  // -- funções de criação ---
-
-  // Querie para criar usuário
   async createUser(
     name,
     username,
@@ -28,7 +25,6 @@ class UserRepository {
     ]);
   }
 
-  // Querie para criar id github
   async createGithubUser(username, name, githubId) {
     const query = `
       INSERT INTO users (username, name, github_id) 
@@ -38,9 +34,6 @@ class UserRepository {
     return await executeQuery(query, [username, name, githubId]);
   }
 
-  // --- funções de leitura ---
-
-  // Querie para listar todos os usuários (sem senhas)
   async findAll() {
     const query = `
     SELECT name, email, username, 
@@ -50,14 +43,12 @@ class UserRepository {
     return await executeQuery(query);
   }
 
-  // Querie para pegar imagem de perfil
   async getProfileImage(userId) {
     const query = `SELECT avatar_url, name FROM users WHERE user_id = $1 LIMIT 1`;
     const results = await executeQuery(query, [userId]);
     return results[0];
   }
 
-  // Querie para encontrar usuário por username ou email
   async findByUsernameOrEmail(username, email) {
     const query = `SELECT * FROM users WHERE (email = $1 OR username = $2) AND deleted = false`;
     return await executeQuery(query, [email, username]);
@@ -69,7 +60,6 @@ class UserRepository {
     return results[0];
   }
 
-  // Querie para buscar usuários por padrão (para colaboração)
   async searchUsers(searchTerm) {
     const query = `
       SELECT user_id, username, name, email, avatar_url 
@@ -83,23 +73,18 @@ class UserRepository {
     return await executeQuery(query, [`%${searchTerm}%`]);
   }
 
-  // Querie para encontrar usuário por ID
   async findById(userId) {
     const query = `SELECT user_id, username, name, email, avatar_url FROM users WHERE user_id = $1 AND deleted = false LIMIT 1`;
     const results = await executeQuery(query, [userId]);
     return results[0];
   }
 
-  // Querie para encontrar usuário por ID do GitHub **desabilitado**
   async findByGithubId(githubId) {
     const query = `SELECT user_id, username, name FROM users WHERE github_id = $1 LIMIT 1`;
     const results = await executeQuery(query, [githubId]);
     return results[0];
   }
 
-  // --- funções de atualização ---
-
-  // Querie para atualizar imagem de perfil
   async updateProfileImage(userId, url) {
     const query = `
       UPDATE users
@@ -110,9 +95,6 @@ class UserRepository {
     return await executeQuery(query, [url, userId]);
   }
 
-  // --- funções de deleção ---
-
-  // Querie para deletar usuário
   async deleteUser(userId) {
     const query = `
       DELETE FROM users

@@ -1,7 +1,6 @@
 const { executeQuery } = require("@/services/db/db-connection");
 
 class AuthRepository {
-  // Querie para logar usuário (login)
   async findUserByUsername(username) {
     const query = `
       SELECT user_id, username, name, email, password, avatar_url, auth_with_google, created_at, updated_at
@@ -33,7 +32,6 @@ class AuthRepository {
     return await executeQuery(query, [hashedPassword, userId]);
   }
 
-  // Save location logs for user
   async logUserLocation(userId, ip, timestamp, location, userAgent) {
     const query = `
       INSERT INTO user_location_logs (user_id, ip_address, created_at, location, user_agent) 
@@ -48,7 +46,6 @@ class AuthRepository {
     ]);
   }
 
-  // Buscar usuário por email (para autenticação Google)
   async findUserByEmail(email) {
     const query = `
       SELECT user_id, username, name, email, password, avatar_url, auth_with_google, created_at
@@ -60,7 +57,6 @@ class AuthRepository {
     return results[0];
   }
 
-  // Buscar usuário por Google ID
   async findUserByGoogleId(googleId) {
     const query = `
       SELECT user_id, username, name, email, password, avatar_url, auth_with_google, created_at
@@ -72,10 +68,8 @@ class AuthRepository {
     return results[0];
   }
 
-  // Criar novo usuário via autenticação Google
   async createUserWithGoogle(googleId, name, email, avatarUrl = null) {
     try {
-      // Primeiro verificar se as colunas existem - comentar este log depois
       console.log("Tentando criar usuário com Google:", {
         googleId,
         name,
@@ -83,7 +77,6 @@ class AuthRepository {
         avatarUrl,
       });
 
-      // Gerar username único
       const username = email.split("@")[0] + "_" + Date.now();
 
       const query = `

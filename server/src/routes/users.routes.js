@@ -8,8 +8,6 @@ const { verifyToken } = require("@/middlewares/auth/auth-middleware");
 
 const router = express.Router();
 
-// --- Public routes ---
-// POST /api/users/create-account - Create a new user account
 router.post(
   "/create-account",
   upload.single("profileImage"),
@@ -18,29 +16,22 @@ router.post(
   UserController.createUser.bind(UserController)
 );
 
-// --- Secure routes ---
-// --- Routes that use only the logged-in user's token  ---
-
-// GET /api/users/search - Search users for collaboration/social feats
 router.get("/search", verifyToken, (req, res, next) => {
   NotesController.searchUsers(req, res, next);
 });
 
-// PUT /api/users/update-my-profile - get profile image of logged-in user
 router.get(
   "/my-profile-image",
   verifyToken,
   UserController.getProfileImage.bind(UserController)
 );
 
-// PUT /api/users/update-my-profile - get profile image info of logged-in user
 router.get(
   "/my-profile-image-info",
   verifyToken,
   UserController.getProfileImageInfo.bind(UserController)
 );
 
-// PUT /api/users/update-my-profile - delete user (logged-in user)
 router.delete(
   "/delete-my-account",
   verifyToken,
