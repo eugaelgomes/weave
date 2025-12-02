@@ -1,225 +1,322 @@
-# API de Projetos - Documentação
+# API de Projetos
+
+Documentação completa da API REST para gerenciamento de projetos, colaboradores e notas associadas.
 
 ## Visão Geral
 
-API RESTful consolidada para gerenciamento de projetos, colaboradores e notas associadas.
+Esta API permite criar e gerenciar projetos, associar notas, adicionar colaboradores e controlar permissões de acesso. Todos os endpoints requerem autenticação via token JWT.
+
+**Base URL:** `/api/projects`
+
+**Autenticação:** Bearer Token (Header: `Authorization: Bearer <token>`)
 
 ---
 
-## Rotas de Projetos
+## Índice
 
-### 1. Listar Todos os Projetos
+- [Projetos](#projetos)
+  - [Listar Projetos](#1-listar-projetos)
+  - [Criar Projeto](#2-criar-projeto)
+  - [Buscar Projeto](#3-buscar-projeto)
+  - [Atualizar Projeto](#4-atualizar-projeto)
+  - [Deletar Projeto](#5-deletar-projeto)
+- [Colaboradores](#colaboradores)
+  - [Listar Colaboradores](#6-listar-colaboradores)
+  - [Gerenciar Colaboradores](#7-gerenciar-colaboradores)
+- [Notas](#notas)
+  - [Listar Notas](#8-listar-notas)
+  - [Gerenciar Notas](#9-gerenciar-notas)
+- [Schema de Dados](#schema-de-dados)
+- [Códigos de Status](#códigos-de-status)
 
-**GET** `/api/projects`
+---
 
-Retorna todos os projetos do usuário autenticado com dados completos.
+## Projetos
 
-**Response:**
+### 1. Listar Projetos
+
+Lista todos os projetos pertencentes ao usuário autenticado, incluindo informações completas sobre proprietário, colaboradores e notas associadas.
+
+**Endpoint:** `GET /api/projects`
+
+**Autenticação:** Obrigatória
+
+**Parâmetros:** Nenhum
+
+**Resposta de Sucesso:** `200 OK`
 
 ```json
 {
   "projects": [
     {
-      "id": "uuid",
-      "user_id": "uuid",
-      "title": "string",
-      "description": "string",
-      "properties": {},
-      "status": "ativo|arquivado|concluído",
-      "created_at": "timestamp",
-      "updated_at": "timestamp",
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "user_id": "550e8400-e29b-41d4-a716-446655440001",
+      "title": "Projeto de Implementação",
+      "description": "Projeto para implementar novos recursos",
+      "properties": {
+        "priority": "alta",
+        "tags": ["backend", "api"],
+        "estimated_time": "2024-12-31T23:59:59Z",
+        "progress": 65,
+        "complexity": "alta",
+        "color": "#ff5722",
+        "icon": "🚀"
+      },
+      "status": "ativo",
+      "created_at": "2024-11-01T10:00:00Z",
+      "updated_at": "2024-11-15T14:30:00Z",
       "deleted": false,
       "owner": {
-        "id": "uuid",
-        "username": "string",
-        "email": "string",
-        "name": "string",
-        "avatar_url": "string"
+        "id": "550e8400-e29b-41d4-a716-446655440001",
+        "username": "joao.silva",
+        "email": "joao.silva@example.com",
+        "name": "João Silva",
+        "avatar_url": "https://example.com/avatars/joao.jpg"
       },
-      "collaborators": [...],
-      "notes": [...]
+      "collaborators": [
+        {
+          "user_id": "550e8400-e29b-41d4-a716-446655440002",
+          "name": "Maria Santos",
+          "username": "maria.santos",
+          "email": "maria.santos@example.com",
+          "avatar_url": "https://example.com/avatars/maria.jpg",
+          "permission": "admin",
+          "added_at": "2024-11-05T09:00:00Z",
+          "removed": false
+        }
+      ],
+      "notes": [
+        {
+          "id": "650e8400-e29b-41d4-a716-446655440003",
+          "title": "Implementar autenticação",
+          "description": "Adicionar sistema de login",
+          "tags": ["auth", "security"],
+          "status": "done",
+          "created_by": {
+            "user_id": "550e8400-e29b-41d4-a716-446655440001",
+            "username": "joao.silva"
+          },
+          "created_at": "2024-11-02T11:00:00Z",
+          "updated_at": "2024-11-10T16:00:00Z"
+        }
+      ]
     }
   ]
 }
 ```
 
+**Observações:**
+- O campo `progress` em `properties` é calculado automaticamente com base no status das notas (somente leitura)
+- Apenas colaboradores não removidos são retornados
+- Projetos marcados como deletados não são incluídos
+
 ---
 
-### 2. Criar Novo Projeto
-
-**POST** `/api/projects`
+### 2. Criar Projeto
 
 Cria um novo projeto para o usuário autenticado.
 
-**Body:**
+**Endpoint:** `POST /api/projects`
+
+**Autenticação:** Obrigatória
+
+**Corpo da Requisição:**
 
 ```json
 {
-  "title": "string (obrigatório)",
-  "description": "string (opcional)",
-  "status": "ativo|arquivado|concluído (opcional, default: ativo)",
-  "properties": {} // opcional
-}
-```
-
-**Response:** `201 Created`
-
-```json
-{
-  "id": "uuid",
-  "user_id": "uuid",
-  "title": "string",
-  "description": "string",
-  "properties": {},
-  "status": "string",
-  "created_at": "timestamp",
-  "updated_at": "timestamp",
-  "deleted": false
-}
-```
-
----
-
-### 3. Buscar Projeto Específico
-
-**GET** `/api/projects/:id`
-
-Retorna detalhes de um projeto específico.
-
-**Response:** `200 OK`
-
-```json
-{
-  "id": "uuid",
-  "user_id": "uuid",
-  "title": "string",
-  "description": "string",
-  "properties": {},
-  "status": "string",
-  "created_at": "timestamp",
-  "updated_at": "timestamp",
-  "deleted": false
-}
-```
-
----
-
-### 4. Atualizar Projeto (CONSOLIDADO)
-
-**PUT** `/api/projects/:id`
-
-Atualiza campos do projeto. **Apenas os campos enviados são modificados**, os demais permanecem intactos.
-
-**Body (todos opcionais):**
-
-```json
-{
-  "title": "string",
-  "description": "string",
-  "status": "ativo|arquivado|concluído",
-  "properties": {
-    "cor": "#ff0000",
-    "icone": "📁",
-    // Novas propriedades serão mescladas com as existentes
-  }
-}
-```
-
-**Exemplos de uso:**
-
-1. **Atualizar apenas título:**
-
-```json
-{ "title": "Novo Título" }
-```
-
-2. **Atualizar status e properties:**
-
-```json
-{
-  "status": "concluído",
-  "properties": { "cor": "#00ff00" }
-}
-```
-
-3. **Adicionar novas propriedades (merge):**
-
-```json
-{
+  "title": "Projeto Alpha",
+  "description": "Desenvolvimento de nova funcionalidade",
+  "status": "ativo",
   "properties": {
     "priority": "alta",
-    "estimated_time": "2024-12-31T23:59:59Z"
+    "tags": ["backend", "api"],
+    "estimated_time": "2024-12-31T23:59:59Z",
+    "complexity": "media",
+    "color": "#3f51b5",
+    "icon": "⚡"
   }
 }
 ```
 
-**Response:** `200 OK`
+**Parâmetros:**
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `title` | string | Sim | Título do projeto (máx. 255 caracteres) |
+| `description` | string | Não | Descrição detalhada do projeto |
+| `status` | string | Não | Status inicial: `ativo`, `arquivado`, `concluído` (padrão: `ativo`) |
+| `properties` | object | Não | Propriedades adicionais (ver [Schema de Properties](#schema-de-properties)) |
+
+**Resposta de Sucesso:** `201 Created`
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": "550e8400-e29b-41d4-a716-446655440001",
+  "title": "Projeto Alpha",
+  "description": "Desenvolvimento de nova funcionalidade",
+  "properties": {
+    "priority": "alta",
+    "tags": ["backend", "api"],
+    "estimated_time": "2024-12-31T23:59:59Z",
+    "complexity": "media",
+    "color": "#3f51b5",
+    "icon": "⚡",
+    "progress": 0
+  },
+  "status": "ativo",
+  "created_at": "2024-11-20T10:00:00Z",
+  "updated_at": "2024-11-20T10:00:00Z",
+  "deleted": false
+}
+```
+
+**Erros Possíveis:**
+- `400 Bad Request`: Título não fornecido ou propriedades inválidas
+- `401 Unauthorized`: Token de autenticação ausente ou inválido
+
+---
+
+### 3. Buscar Projeto
+
+Retorna os detalhes de um projeto específico. O usuário deve ser o proprietário do projeto.
+
+**Endpoint:** `GET /api/projects/:id`
+
+**Autenticação:** Obrigatória
+
+**Parâmetros de URL:**
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | UUID | ID do projeto |
+
+**Exemplo:** `GET /api/projects/550e8400-e29b-41d4-a716-446655440000`
+
+**Resposta de Sucesso:** `200 OK`
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": "550e8400-e29b-41d4-a716-446655440001",
+  "title": "Projeto Alpha",
+  "description": "Desenvolvimento de nova funcionalidade",
+  "properties": {
+    "priority": "alta",
+    "tags": ["backend", "api"],
+    "estimated_time": "2024-12-31T23:59:59Z",
+    "progress": 45,
+    "complexity": "media",
+    "color": "#3f51b5",
+    "icon": "⚡"
+  },
+  "status": "ativo",
+  "created_at": "2024-11-20T10:00:00Z",
+  "updated_at": "2024-11-25T14:30:00Z",
+  "deleted": false
+}
+```
+
+**Erros Possíveis:**
+- `401 Unauthorized`: Token de autenticação ausente ou inválido
+- `404 Not Found`: Projeto não encontrado ou usuário não tem acesso
+
+---
+
+### 4. Atualizar Projeto
+
+Atualiza campos de um projeto existente. Suporta atualização parcial, onde apenas os campos enviados são modificados.
+
+**Endpoint:** `PUT /api/projects/:id`
+
+**Autenticação:** Obrigatória
+
+**Parâmetros de URL:**
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | UUID | ID do projeto |
+
+**Corpo da Requisição (todos os campos opcionais):**
+
+```json
+{
+  "title": "Projeto Alpha - Atualizado",
+  "description": "Nova descrição do projeto",
+  "status": "concluído",
+  "properties": {
+    "priority": "media",
+    "color": "#4caf50",
+    "icon": "✅"
+  }
+}
+```
+
+**Parâmetros:**
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `title` | string | Novo título do projeto |
+| `description` | string | Nova descrição |
+| `status` | string | Novo status: `ativo`, `arquivado`, `concluído` |
+| `properties` | object | Propriedades a serem mescladas (merge) com as existentes |
+
+**Resposta de Sucesso:** `200 OK`
 
 ```json
 {
   "message": "Projeto atualizado com sucesso",
-  "project": { ... }
+  "project": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": "550e8400-e29b-41d4-a716-446655440001",
+    "title": "Projeto Alpha - Atualizado",
+    "description": "Nova descrição do projeto",
+    "properties": {
+      "priority": "media",
+      "tags": ["backend", "api"],
+      "estimated_time": "2024-12-31T23:59:59Z",
+      "progress": 100,
+      "complexity": "media",
+      "color": "#4caf50",
+      "icon": "✅"
+    },
+    "status": "concluído",
+    "created_at": "2024-11-20T10:00:00Z",
+    "updated_at": "2024-11-30T16:45:00Z",
+    "deleted": false
+  }
 }
 ```
 
----
+**Observações:**
+- `properties` são mescladas (merge) com as existentes, não sobrescritas completamente
+- O campo `progress` é recalculado automaticamente ao atualizar propriedades
+- Enviar um corpo vazio ou sem campos válidos retorna erro `400`
 
-## Properties - Campos Permitidos
-
-As `properties` de um projeto seguem um schema específico:
-
-```typescript
-{
-  "priority": "alta" | "media" | "baixa",     // Prioridade do projeto
-  "tags": ["tag1", "tag2"],                    // Array de tags
-  "estimated_time": "2024-12-31T23:59:59Z",   // Data/hora estimada (ISO 8601)
-  "progress": 0-100,                           // Calculado automaticamente (READ-ONLY)
-  "complexity": "alta" | "media" | "baixa",   // Complexidade do projeto
-  "color": "#ff0000",                          // Cor em hexadecimal
-  "icon": "📁"                                 // Emoji escolhido
-}
-```
-
-### Regras de Validação
-
-1. **priority**: Apenas valores `"alta"`, `"media"` ou `"baixa"` são permitidos
-2. **tags**: Deve ser um array (pode estar vazio: `[]`)
-3. **estimated_time**: Deve ser uma data válida no formato ISO 8601
-4. **progress**: **CALCULADO AUTOMATICAMENTE** com base nas notas com status "done" (não pode ser alterado manualmente)
-5. **complexity**: Apenas valores `"alta"`, `"media"` ou `"baixa"` são permitidos
-6. **color**: Deve ser uma cor hexadecimal válida (ex: `#ff0000`, `#fff`)
-7. **icon**: Deve ser uma string (emoji recomendado)
-
-### Cálculo Automático de Progress
-
-O campo `progress` é calculado automaticamente usando a fórmula:
-
-```
-progress = (notas com status "done" / total de notas) × 100
-```
-
-Ele é atualizado automaticamente quando:
-
-- Uma nota é adicionada ao projeto
-- Uma nota é removida do projeto
-- O status de uma nota associada é atualizado
-- Properties são atualizadas
-
-**Exemplos:**
-
-- Projeto com 10 notas, 5 com status "done" → `progress = 50`
-- Projeto sem notas → `progress = 0`
-- Projeto com todas notas "done" → `progress = 100`
+**Erros Possíveis:**
+- `400 Bad Request`: Nenhum campo válido fornecido ou valores inválidos
+- `401 Unauthorized`: Token de autenticação ausente ou inválido
+- `404 Not Found`: Projeto não encontrado ou usuário não é proprietário
 
 ---
 
 ### 5. Deletar Projeto
 
-**DELETE** `/api/projects/:id`
+Remove um projeto do sistema (soft delete). O projeto é marcado como deletado, mas permanece no banco de dados.
 
-Remove um projeto (soft delete).
+**Endpoint:** `DELETE /api/projects/:id`
 
-**Response:** `200 OK`
+**Autenticação:** Obrigatória
+
+**Parâmetros de URL:**
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | UUID | ID do projeto a ser deletado |
+
+**Exemplo:** `DELETE /api/projects/550e8400-e29b-41d4-a716-446655440000`
+
+**Resposta de Sucesso:** `200 OK`
 
 ```json
 {
@@ -227,29 +324,175 @@ Remove um projeto (soft delete).
 }
 ```
 
+**Observações:**
+- Apenas o proprietário do projeto pode deletá-lo
+- Soft delete: o projeto é marcado como `deleted = true`, mas não é removido fisicamente
+- Colaboradores e notas associadas não são afetados
+
+**Erros Possíveis:**
+- `401 Unauthorized`: Token de autenticação ausente ou inválido
+- `404 Not Found`: Projeto não encontrado ou usuário não é proprietário
+
 ---
 
-## Rotas de Colaboradores
+## Colaboradores
 
 ### 6. Listar Colaboradores
 
-**GET** `/api/projects/:projectId/collaborators`
+Lista todos os colaboradores ativos de um projeto. Acessível pelo proprietário e colaboradores do projeto.
 
-Lista todos os colaboradores ativos de um projeto.
+**Endpoint:** `GET /api/projects/:projectId/collaborators`
 
-**Response:** `200 OK`
+**Autenticação:** Obrigatória
+
+**Parâmetros de URL:**
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `projectId` | UUID | ID do projeto |
+
+**Exemplo:** `GET /api/projects/550e8400-e29b-41d4-a716-446655440000/collaborators`
+
+**Resposta de Sucesso:** `200 OK`
 
 ```json
 {
   "collaborators": [
     {
-      "user_id": "uuid",
-      "name": "string",
-      "username": "string",
-      "email": "string",
-      "avatar_url": "string",
-      "permission": "admin|viewer",
-      "added_at": "timestamp",
+      "user_id": "550e8400-e29b-41d4-a716-446655440002",
+      "name": "Maria Santos",
+      "username": "maria.santos",
+      "email": "maria.santos@example.com",
+      "avatar_url": "https://example.com/avatars/maria.jpg",
+      "permission": "admin",
+      "added_at": "2024-11-05T09:00:00Z",
+      "removed": false
+    },
+    {
+      "user_id": "550e8400-e29b-41d4-a716-446655440003",
+      "name": "Pedro Oliveira",
+      "username": "pedro.oliveira",
+      "email": "pedro.oliveira@example.com",
+      "avatar_url": "https://example.com/avatars/pedro.jpg",
+      "permission": "viewer",
+      "added_at": "2024-11-10T14:20:00Z",
+      "removed": false
+    }
+  ]
+}
+```
+
+**Observações:**
+- Apenas colaboradores não removidos (`removed = false`) são retornados
+- Proprietário e colaboradores podem visualizar a lista
+
+**Erros Possíveis:**
+- `401 Unauthorized`: Token de autenticação ausente ou inválido
+- `404 Not Found`: Projeto não encontrado ou usuário não tem acesso
+
+---
+
+### 7. Gerenciar Colaboradores
+
+Endpoint consolidado para adicionar, atualizar permissões ou remover colaboradores de um projeto. Apenas o proprietário pode gerenciar colaboradores.
+
+**Endpoint:** `PUT /api/projects/:projectId/collaborators`
+
+**Autenticação:** Obrigatória (somente proprietário)
+
+**Parâmetros de URL:**
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `projectId` | UUID | ID do projeto |
+
+---
+
+#### 7.1. Adicionar Colaborador
+
+Adiciona um novo colaborador ao projeto.
+
+**Corpo da Requisição:**
+
+```json
+{
+  "action": "add",
+  "userId": "550e8400-e29b-41d4-a716-446655440002",
+  "permission": "viewer"
+}
+```
+
+**Parâmetros:**
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `action` | string | Sim | Deve ser `"add"` |
+| `userId` | UUID | Sim | ID do usuário a ser adicionado |
+| `permission` | string | Não | Permissão: `admin` ou `viewer` (padrão: `viewer`) |
+
+**Resposta de Sucesso:** `200 OK`
+
+```json
+{
+  "message": "Colaborador adicionado com sucesso",
+  "collaborators": [
+    {
+      "user_id": "550e8400-e29b-41d4-a716-446655440002",
+      "name": "Maria Santos",
+      "username": "maria.santos",
+      "email": "maria.santos@example.com",
+      "avatar_url": "https://example.com/avatars/maria.jpg",
+      "permission": "viewer",
+      "added_at": "2024-11-30T10:00:00Z",
+      "removed": false
+    }
+  ]
+}
+```
+
+**Observações:**
+- Não é possível adicionar o proprietário como colaborador
+- Usuário não pode estar já adicionado como colaborador ativo
+- Informações do usuário são buscadas automaticamente
+
+---
+
+#### 7.2. Atualizar Permissão
+
+Atualiza a permissão de um colaborador existente.
+
+**Corpo da Requisição:**
+
+```json
+{
+  "action": "update",
+  "userId": "550e8400-e29b-41d4-a716-446655440002",
+  "permission": "admin"
+}
+```
+
+**Parâmetros:**
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `action` | string | Sim | Deve ser `"update"` |
+| `userId` | UUID | Sim | ID do colaborador |
+| `permission` | string | Sim | Nova permissão: `admin` ou `viewer` |
+
+**Resposta de Sucesso:** `200 OK`
+
+```json
+{
+  "message": "Permissão do colaborador atualizada com sucesso",
+  "collaborators": [
+    {
+      "user_id": "550e8400-e29b-41d4-a716-446655440002",
+      "name": "Maria Santos",
+      "username": "maria.santos",
+      "email": "maria.santos@example.com",
+      "avatar_url": "https://example.com/avatars/maria.jpg",
+      "permission": "admin",
+      "added_at": "2024-11-30T10:00:00Z",
       "removed": false
     }
   ]
@@ -258,64 +501,27 @@ Lista todos os colaboradores ativos de um projeto.
 
 ---
 
-### 7. Gerenciar Colaboradores (CONSOLIDADO)
+#### 7.3. Remover Colaborador
 
-**PUT** `/api/projects/:projectId/collaborators`
+Remove um colaborador do projeto (soft delete).
 
-Endpoint único para adicionar, atualizar permissão ou remover colaboradores.
-
-#### **Ação: Adicionar Colaborador**
-
-```json
-{
-  "action": "add",
-  "userId": "uuid",
-  "permission": "admin|viewer" // opcional, default: "viewer"
-}
-```
-
-**Response:** `200 OK`
-
-```json
-{
-  "message": "Colaborador adicionado com sucesso",
-  "collaborators": [...]
-}
-```
-
----
-
-#### **Ação: Atualizar Permissão**
-
-```json
-{
-  "action": "update",
-  "userId": "uuid",
-  "permission": "admin|viewer"
-}
-```
-
-**Response:** `200 OK`
-
-```json
-{
-  "message": "Permissão atualizada com sucesso",
-  "collaborators": [...]
-}
-```
-
----
-
-#### **Ação: Remover Colaborador**
+**Corpo da Requisição:**
 
 ```json
 {
   "action": "remove",
-  "userId": "uuid"
+  "userId": "550e8400-e29b-41d4-a716-446655440002"
 }
 ```
 
-**Response:** `200 OK`
+**Parâmetros:**
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `action` | string | Sim | Deve ser `"remove"` |
+| `userId` | UUID | Sim | ID do colaborador a ser removido |
+
+**Resposta de Sucesso:** `200 OK`
 
 ```json
 {
@@ -323,103 +529,227 @@ Endpoint único para adicionar, atualizar permissão ou remover colaboradores.
 }
 ```
 
+**Observações:**
+- Remoção é soft delete: colaborador é marcado como `removed = true`
+- Colaborador removido não aparece mais nas listagens
+
+**Erros Possíveis (para todas as ações):**
+- `400 Bad Request`: Ação inválida, userId não fornecido, ou permissão inválida
+- `401 Unauthorized`: Token de autenticação ausente ou inválido
+- `404 Not Found`: Projeto não encontrado ou usuário não é proprietário
+
 ---
 
-## Rotas de Notas Associadas
+---
 
-### 8. Listar Notas do Projeto
+## Notas
 
-**GET** `/api/projects/:projectId/notes`
+### 8. Listar Notas
 
-Lista todas as notas associadas ao projeto.
+Lista todas as notas associadas ao projeto. Acessível pelo proprietário e colaboradores.
 
-**Response:** `200 OK`
+**Endpoint:** `GET /api/projects/:projectId/notes`
+
+**Autenticação:** Obrigatória
+
+**Parâmetros de URL:**
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `projectId` | UUID | ID do projeto |
+
+**Exemplo:** `GET /api/projects/550e8400-e29b-41d4-a716-446655440000/notes`
+
+**Resposta de Sucesso:** `200 OK`
 
 ```json
 {
   "notes": [
     {
-      "id": "uuid",
-      "title": "string",
-      "description": "string",
-      "tags": [],
-      "status": "string",
+      "id": "650e8400-e29b-41d4-a716-446655440003",
+      "title": "Implementar autenticação",
+      "description": "Adicionar sistema de login com JWT",
+      "tags": ["auth", "security", "backend"],
+      "status": "done",
       "created_by": {
-        "user_id": "uuid",
-        "username": "string"
+        "user_id": "550e8400-e29b-41d4-a716-446655440001",
+        "username": "joao.silva"
       },
-      "collaborators": [...],
-      "created_at": "timestamp",
-      "updated_at": "timestamp"
+      "collaborators": [
+        {
+          "user_id": "550e8400-e29b-41d4-a716-446655440002",
+          "username": "maria.santos",
+          "permission": "admin"
+        }
+      ],
+      "created_at": "2024-11-02T11:00:00Z",
+      "updated_at": "2024-11-10T16:00:00Z"
+    },
+    {
+      "id": "650e8400-e29b-41d4-a716-446655440004",
+      "title": "Criar documentação da API",
+      "description": "Documentar todos os endpoints",
+      "tags": ["docs", "api"],
+      "status": "doing",
+      "created_by": {
+        "user_id": "550e8400-e29b-41d4-a716-446655440001",
+        "username": "joao.silva"
+      },
+      "collaborators": [],
+      "created_at": "2024-11-15T09:30:00Z",
+      "updated_at": "2024-11-28T14:20:00Z"
     }
   ]
 }
 ```
 
+**Observações:**
+- Retorna todas as notas associadas ao projeto via `associated_notes`
+- Propriedade `progress` do projeto é calculada com base no status das notas
+
+**Erros Possíveis:**
+- `401 Unauthorized`: Token de autenticação ausente ou inválido
+- `404 Not Found`: Projeto não encontrado ou usuário não tem acesso
+
 ---
 
-### 9. Gerenciar Notas (CONSOLIDADO)
+### 9. Gerenciar Notas
 
-**PUT** `/api/projects/:projectId/notes`
+Endpoint consolidado para adicionar, sincronizar ou remover notas de um projeto. Apenas o proprietário e colaboradores com permissão `admin` podem gerenciar notas.
 
-Endpoint único para adicionar, sincronizar ou remover notas do projeto.
+**Endpoint:** `PUT /api/projects/:projectId/notes`
 
-#### **Ação: Adicionar Nota**
+**Autenticação:** Obrigatória (proprietário ou admin)
 
-Associa uma nota existente ao projeto.
+**Parâmetros de URL:**
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `projectId` | UUID | ID do projeto |
+
+---
+
+#### 9.1. Adicionar Nota
+
+Associa uma nota existente ao projeto. A nota deve pertencer ao usuário ou ter o usuário como colaborador.
+
+**Corpo da Requisição:**
 
 ```json
 {
   "action": "add",
-  "noteId": "uuid"
+  "noteId": "650e8400-e29b-41d4-a716-446655440005"
 }
 ```
 
-**Response:** `200 OK`
+**Parâmetros:**
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `action` | string | Sim | Deve ser `"add"` |
+| `noteId` | UUID | Sim | ID da nota a ser associada |
+
+**Resposta de Sucesso:** `200 OK`
 
 ```json
 {
   "message": "Nota adicionada ao projeto com sucesso",
-  "notes": [...]
+  "notes": [
+    {
+      "id": "650e8400-e29b-41d4-a716-446655440005",
+      "title": "Implementar testes unitários",
+      "description": "Adicionar cobertura de testes",
+      "tags": ["tests", "quality"],
+      "status": "todo",
+      "created_by": {
+        "user_id": "550e8400-e29b-41d4-a716-446655440001",
+        "username": "joao.silva"
+      },
+      "created_at": "2024-11-25T10:00:00Z",
+      "updated_at": "2024-11-25T10:00:00Z"
+    }
+  ]
 }
 ```
 
+**Observações:**
+- A nota é adicionada ao array `associated_notes` do projeto
+- O campo `project_id` da nota é atualizado para referenciar o projeto
+- O `progress` do projeto é recalculado automaticamente
+- Nota não pode estar já associada ao projeto
+
 ---
 
-#### **Ação: Sincronizar Nota**
+#### 9.2. Sincronizar Nota
 
-Atualiza os dados da nota associada com base na tabela `notes`.
+Atualiza os dados de uma nota associada, sincronizando com as informações mais recentes da tabela `notes`.
+
+**Corpo da Requisição:**
 
 ```json
 {
   "action": "sync",
-  "noteId": "uuid"
+  "noteId": "650e8400-e29b-41d4-a716-446655440005"
 }
 ```
 
-**Response:** `200 OK`
+**Parâmetros:**
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `action` | string | Sim | Deve ser `"sync"` |
+| `noteId` | UUID | Sim | ID da nota a ser sincronizada |
+
+**Resposta de Sucesso:** `200 OK`
 
 ```json
 {
   "message": "Nota sincronizada com sucesso",
-  "notes": [...]
+  "notes": [
+    {
+      "id": "650e8400-e29b-41d4-a716-446655440005",
+      "title": "Implementar testes unitários - Atualizado",
+      "description": "Adicionar cobertura completa de testes",
+      "tags": ["tests", "quality", "ci/cd"],
+      "status": "doing",
+      "created_by": {
+        "user_id": "550e8400-e29b-41d4-a716-446655440001",
+        "username": "joao.silva"
+      },
+      "created_at": "2024-11-25T10:00:00Z",
+      "updated_at": "2024-11-30T15:30:00Z"
+    }
+  ]
 }
 ```
 
+**Observações:**
+- Útil quando a nota foi editada fora do contexto do projeto
+- O `progress` do projeto é recalculado após sincronização
+
 ---
 
-#### **Ação: Remover Nota**
+#### 9.3. Remover Nota
 
-Remove a associação da nota com o projeto (não deleta a nota).
+Remove a associação entre nota e projeto. A nota permanece na tabela `notes`, mas não é mais vinculada ao projeto.
+
+**Corpo da Requisição:**
 
 ```json
 {
   "action": "remove",
-  "noteId": "uuid"
+  "noteId": "650e8400-e29b-41d4-a716-446655440005"
 }
 ```
 
-**Response:** `200 OK`
+**Parâmetros:**
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `action` | string | Sim | Deve ser `"remove"` |
+| `noteId` | UUID | Sim | ID da nota a ser removida |
+
+**Resposta de Sucesso:** `200 OK`
 
 ```json
 {
@@ -427,153 +757,141 @@ Remove a associação da nota com o projeto (não deleta a nota).
 }
 ```
 
----
+**Observações:**
+- A nota é removida do array `associated_notes`
+- O campo `project_id` da nota é definido como `NULL`
+- O `progress` do projeto é recalculado automaticamente
+- A nota não é deletada, apenas desassociada
 
-## Códigos de Status HTTP
-
-| Código | Significado                          |
-| ------- | ------------------------------------ |
-| 200     | OK - Operação bem-sucedida         |
-| 201     | Created - Recurso criado             |
-| 400     | Bad Request - Dados inválidos       |
-| 401     | Unauthorized - Não autenticado      |
-| 404     | Not Found - Recurso não encontrado  |
-| 500     | Internal Server Error - Erro interno |
+**Erros Possíveis (para todas as ações):**
+- `400 Bad Request`: Ação inválida ou noteId não fornecido
+- `401 Unauthorized`: Token de autenticação ausente ou inválido
+- `404 Not Found`: Projeto ou nota não encontrados, ou usuário sem permissão
 
 ---
 
-## Observações
+## Schema de Dados
 
-1. **Todas as rotas exigem autenticação** via token JWT
-2. **Updates parciais**: Apenas campos enviados são atualizados
-3. **Properties merge**: Propriedades são mescladas, não substituídas
-4. **Soft delete**: Projetos deletados permanecem no banco com flag `deleted=true`
-5. **Colaboradores**: Apenas o dono do projeto pode gerenciar colaboradores
-6. **Notas**: Colaboradores com permissão podem gerenciar notas associadas
+### Schema de Properties
+
+O campo `properties` em projetos aceita os seguintes atributos personalizáveis:
+
+```typescript
+{
+  "priority": "alta" | "media" | "baixa",      // Prioridade do projeto
+  "tags": string[],                            // Tags de categorização (ex: ["backend", "api"])
+  "estimated_time": string,                    // Data estimada de conclusão (ISO 8601)
+  "progress": number,                          // Progresso 0-100 (Calculado automaticamente, Read-Only)
+  "complexity": "alta" | "media" | "baixa",    // Complexidade técnica
+  "color": string,                             // Cor em hexadecimal (ex: "#ff5722")
+  "icon": string                               // Emoji ou ícone (ex: "🚀")
+}
+```
+
+**Exemplo Completo:**
+
+```json
+{
+  "priority": "alta",
+  "tags": ["backend", "api", "authentication"],
+  "estimated_time": "2024-12-31T23:59:59Z",
+  "progress": 75,
+  "complexity": "alta",
+  "color": "#ff5722",
+  "icon": "🔐"
+}
+```
+
+### Regras de Validação
+
+| Campo | Validação |
+|-------|-----------|
+| `priority` | Deve ser `"alta"`, `"media"` ou `"baixa"` |
+| `tags` | Deve ser um array de strings |
+| `estimated_time` | Deve ser uma data válida no formato ISO 8601 (ex: `2024-12-31T23:59:59Z`) |
+| `progress` | **Somente leitura**. Calculado automaticamente com base no status das notas (`done` / total) |
+| `complexity` | Deve ser `"alta"`, `"media"` ou `"baixa"` |
+| `color` | Deve ser um código hexadecimal válido (ex: `#ff0000`, `#3f51b5`) |
+| `icon` | Aceita qualquer string (emojis, texto, etc.) |
+
+**Observações Importantes:**
+
+1. **`progress` é Read-Only**: Este campo é calculado automaticamente e não pode ser definido manualmente. Qualquer tentativa de setá-lo será ignorada.
+
+2. **Merge de Properties**: Ao atualizar um projeto, as `properties` são mescladas (merge) com as existentes, não sobrescritas. Apenas os campos enviados são atualizados.
+
+3. **Cálculo de Progress**: 
+   ```
+   progress = (notas com status "done" / total de notas) × 100
+   ```
+   Arredondado para o inteiro mais próximo.
 
 ---
 
-## Exemplos de Fluxo
+## Códigos de Status
 
-### Criar e Configurar um Projeto Completo
+### Respostas HTTP
 
-```javascript
-// 1. Criar projeto
-POST /api/projects
+| Código | Status | Descrição |
+|--------|--------|-----------|
+| `200` | OK | Requisição bem-sucedida |
+| `201` | Created | Recurso criado com sucesso |
+| `400` | Bad Request | Dados inválidos, campos obrigatórios ausentes ou validação falhou |
+| `401` | Unauthorized | Token de autenticação ausente, inválido ou expirado |
+| `404` | Not Found | Recurso não encontrado ou usuário sem permissão de acesso |
+| `500` | Internal Server Error | Erro interno do servidor |
+
+### Exemplos de Respostas de Erro
+
+**400 Bad Request:**
+```json
 {
-  "title": "Meu Projeto",
-  "description": "Descrição detalhada",
-  "properties": { "cor": "#ff0000" }
+  "error": "Título é obrigatório"
 }
+```
 
-// 2. Adicionar colaborador
-PUT /api/projects/{projectId}/collaborators
+**401 Unauthorized:**
+```json
 {
-  "action": "add",
-  "userId": "uuid-colaborador",
-  "permission": "admin"
+  "error": "Usuário não autenticado"
 }
+```
 
-// 3. Adicionar nota ao projeto
-PUT /api/projects/{projectId}/notes
+**404 Not Found:**
+```json
 {
-  "action": "add",
-  "noteId": "uuid-nota"
+  "error": "Projeto não encontrado"
 }
-
-// 4. Atualizar apenas properties
-PUT /api/projects/{projectId}
-{
-  "properties": {
-    "priority": "alta",
-    "complexity": "media",
-    "color": "#ff5500",
-    "icon": "🚀",
-    "tags": ["urgente", "importante"],
-    "estimated_time": "2025-01-15T18:00:00Z"
-  }
-}
-
-// 5. Ver progress calculado automaticamente
-GET /api/projects/{projectId}
-// Response incluirá: "properties": { "progress": 75, ... }
 ```
 
 ---
 
-## Migração de Rotas Antigas
+## Notas Adicionais
 
-### Rotas Removidas (Substituídas)
+### Permissões de Colaboradores
 
-| Antiga                                     | Nova                                | Ação                                   |
-| ------------------------------------------ | ----------------------------------- | ---------------------------------------- |
-| `PATCH /projects/:id/properties`         | `PUT /projects/:id`               | Use body:`{ "properties": {...} }`     |
-| `POST /projects/:id/collaborators`       | `PUT /projects/:id/collaborators` | Use body:`{ "action": "add", ... }`    |
-| `PATCH /projects/:id/collaborators/:id`  | `PUT /projects/:id/collaborators` | Use body:`{ "action": "update", ... }` |
-| `DELETE /projects/:id/collaborators/:id` | `PUT /projects/:id/collaborators` | Use body:`{ "action": "remove", ... }` |
-| `POST /projects/:id/notes`               | `PUT /projects/:id/notes`         | Use body:`{ "action": "add", ... }`    |
-| `PUT /projects/:id/notes/:noteId`        | `PUT /projects/:id/notes`         | Use body:`{ "action": "sync", ... }`   |
-| `DELETE /projects/:id/notes/:noteId`     | `PUT /projects/:id/notes`         | Use body:`{ "action": "remove", ... }` |
+| Permissão | Descrição | Ações Permitidas |
+|-----------|-----------|------------------|
+| `admin` | Administrador | Gerenciar notas, visualizar projeto, editar configurações |
+| `viewer` | Visualizador | Apenas visualizar projeto e notas |
+
+**Observação:** Apenas o proprietário pode adicionar/remover colaboradores e deletar o projeto.
+
+### Soft Delete
+
+Projetos e colaboradores removidos não são excluídos fisicamente do banco de dados:
+- **Projetos**: marcados com `deleted = true`
+- **Colaboradores**: marcados com `removed = true` e `removed_at` preenchido
+
+Isso permite auditoria e eventual recuperação de dados.
+
+### Performance
+
+- Queries otimizadas com JOINs para reduzir consultas ao banco
+- Arrays JSONB (`collaborators`, `associated_notes`) para denormalização controlada
+- Cálculos de `progress` executados no banco de dados via SQL
 
 ---
 
-## Exemplos de Erros de Validação
-
-### 1. Priority inválida
-```json
-// Request:
-{ "properties": { "priority": "super-alta" } }
-
-// Response: 400 Bad Request
-{ "error": "Priority deve ser: 'alta', 'media' ou 'baixa'" }
-```
-
-### 2. Cor hexadecimal inválida
-```json
-// Request:
-{ "properties": { "color": "vermelho" } }
-
-// Response: 400 Bad Request
-{ "error": "Color deve ser uma cor hexadecimal válida (ex: #ff0000)" }
-```
-
-### 3. Tags não é array
-```json
-// Request:
-{ "properties": { "tags": "urgente, importante" } }
-
-// Response: 400 Bad Request
-{ "error": "Tags deve ser um array" }
-```
-
-### 4. Tentativa de alterar progress manualmente
-```json
-// Request:
-{ "properties": { "progress": 100 } }
-
-// Response: 200 OK (progress é ignorado e recalculado)
-{
-  "message": "Projeto atualizado com sucesso",
-  "project": {
-    "properties": { "progress": 45 }  // Valor real calculado
-  }
-}
-```
-
-### 5. Propriedade não permitida
-```json
-// Request:
-{ "properties": { "custom_field": "valor" } }
-
-// Response: 400 Bad Request
-{ "error": "Propriedade 'custom_field' não é permitida" }
-```
-
-### 6. Data inválida
-```json
-// Request:
-{ "properties": { "estimated_time": "31/12/2024" } }
-
-// Response: 400 Bad Request
-{ "error": "estimated_time deve ser uma data válida (ISO 8601)" }
-```
+**Versão da Documentação:** 2.0  
+**Última Atualização:** Dezembro de 2024
