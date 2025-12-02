@@ -21,8 +21,15 @@ class ProjectsRepository {
         u.avatar_url AS owner_avatar_url
       FROM projects p
       JOIN users u ON u.user_id = p.user_id
-      WHERE p.user_id = $1::uuid
-        AND p.deleted = false
+      WHERE p.deleted = false
+        AND (
+          p.user_id = $1::uuid
+          OR EXISTS (
+            SELECT 1 FROM jsonb_array_elements(COALESCE(p.collaborators, '[]'::jsonb)) AS collab
+            WHERE collab->>'user_id' = $1::text
+              AND (collab->>'removed')::boolean = false
+          )
+        )
       ORDER BY p.created_at DESC;
     `;
     return executeQuery(query, [userId]);
@@ -44,6 +51,41 @@ class ProjectsRepository {
       WHERE id = $1
         AND user_id = $2
         AND deleted = false
+      LIMIT 1;
+    `;
+    return executeQuery(query, [projectId, userId]);
+  }
+
+  async getProjectByIdWithAccess(projectId, userId) {
+    const query = `
+      SELECT 
+        p.id::text,
+        p.user_id::text,
+        p.title,
+        p.description,
+        p.properties,
+        p.status,
+        p.created_at,
+        p.updated_at,
+        p.deleted,
+        p.collaborators,
+        p.associated_notes,
+        u.username AS owner_username,
+        u.email AS owner_email,
+        u.name AS owner_name,
+        u.avatar_url AS owner_avatar_url
+      FROM projects p
+      JOIN users u ON u.user_id = p.user_id
+      WHERE p.id = $1::uuid
+        AND p.deleted = false
+        AND (
+          p.user_id = $2::uuid
+          OR EXISTS (
+            SELECT 1 FROM jsonb_array_elements(COALESCE(p.collaborators, '[]'::jsonb)) AS collab
+            WHERE collab->>'user_id' = $2::text
+              AND (collab->>'removed')::boolean = false
+          )
+        )
       LIMIT 1;
     `;
     return executeQuery(query, [projectId, userId]);

@@ -138,6 +138,30 @@ class ProjectsController {
   }
 
   /**
+   * Valida se o usuário tem acesso ao projeto (como dono ou colaborador)
+   * @param {string} projectId - ID do projeto
+   * @param {string} userId - ID do usuário
+   * @returns {Object} - Projeto encontrado com dados completos
+   * @throws {Error} - Se projeto não existir ou usuário não tiver acesso
+   */
+  async _validateProjectAccess(projectId, userId) {
+    if (!projectId) {
+      throw new Error("ID do projeto é obrigatório");
+    }
+
+    const result = await this.projectsRepository.getProjectByIdWithAccess(
+      projectId,
+      userId
+    );
+
+    if (!result || result.length === 0) {
+      throw new Error("Projeto não encontrado ou você não tem acesso");
+    }
+
+    return result[0];
+  }
+
+  /**
    * Formata a resposta padrão de um projeto
    * @param {Object} project - Dados do projeto do banco
    * @returns {Object} - Projeto formatado
@@ -229,7 +253,7 @@ class ProjectsController {
 
   /**
    * GET /api/projects/:id - Buscar um projeto específico
-   * Retorna os detalhes de um projeto específico se pertencer ao usuário
+   * Retorna os detalhes de um projeto específico se o usuário tiver acesso (dono ou colaborador)
    */
   async getProjectById(req, res, next) {
     try {
@@ -239,11 +263,31 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Validação de propriedade do projeto
-      const project = await this._validateProjectOwnership(id, userId);
+      // Validação de acesso ao projeto (dono ou colaborador)
+      const project = await this._validateProjectAccess(id, userId);
 
-      // Formatar e retornar o projeto
-      const formattedProject = this._formatProjectResponse(project);
+      // Formatar e retornar o projeto com dados completos
+      const formattedProject = {
+        id: project.id,
+        user_id: project.user_id,
+        title: project.title,
+        description: project.description,
+        properties: project.properties || {},
+        status: project.status,
+        created_at: project.created_at,
+        updated_at: project.updated_at,
+        deleted: project.deleted,
+        owner: {
+          id: project.user_id,
+          username: project.owner_username,
+          email: project.owner_email,
+          name: project.owner_name,
+          avatar_url: project.owner_avatar_url,
+        },
+        collaborators: (project.collaborators || []).filter(c => !c.removed),
+        notes: project.associated_notes || [],
+      };
+
       res.status(200).json(formattedProject);
     } catch (error) {
       this._handleError(error, res, next);
@@ -658,7 +702,7 @@ class ProjectsController {
 
   /**
    * GET /api/projects/:projectId/collaborators - Listar colaboradores
-   * Lista todos os colaboradores de um projeto
+   * Lista todos os colaboradores de um projeto (acesso para donos e colaboradores)
    */
   async getCollaborators(req, res, next) {
     try {
@@ -668,19 +712,10 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Buscar colaboradores
-      const result = await this.projectsRepository.getCollaborators(
-        projectId,
-        userId
-      );
+      // Verificar acesso ao projeto (dono ou colaborador)
+      const project = await this._validateProjectAccess(projectId, userId);
 
-      if (!result || result.length === 0) {
-        return res.status(404).json({
-          error: "Projeto não encontrado ou você não tem acesso",
-        });
-      }
-
-      const collaborators = result[0].collaborators || [];
+      const collaborators = project.collaborators || [];
 
       // Filtrar apenas colaboradores ativos
       const activeCollaborators = collaborators.filter(
@@ -898,7 +933,7 @@ class ProjectsController {
 
   /**
    * GET /api/projects/:projectId/notes - Listar notas do projeto
-   * Lista todas as notas associadas ao projeto
+   * Lista todas as notas associadas ao projeto (acesso para donos e colaboradores)
    */
   async getAssociatedNotes(req, res, next) {
     try {
@@ -908,19 +943,10 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Buscar notas associadas
-      const result = await this.projectsRepository.getAssociatedNotes(
-        projectId,
-        userId
-      );
+      // Verificar acesso ao projeto (dono ou colaborador)
+      const project = await this._validateProjectAccess(projectId, userId);
 
-      if (!result || result.length === 0) {
-        return res.status(404).json({
-          error: "Projeto não encontrado ou você não tem acesso",
-        });
-      }
-
-      const notes = result[0].associated_notes || [];
+      const notes = project.associated_notes || [];
 
       res.status(200).json({
         notes: notes,
