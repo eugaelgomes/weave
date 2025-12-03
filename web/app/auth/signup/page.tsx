@@ -141,6 +141,20 @@ export default function SignUp() {
 
   return (
     <div className="relative flex h-screen">
+      {/* Imagem de fundo para mobile, escondida em telas grandes */}
+      <div className="absolute inset-0 lg:hidden">
+        <Image
+          src="https://cwn.sfo3.cdn.digitaloceanspaces.com/medias/bg-studying_guy.webp"
+          alt="Registro visual"
+          fill
+          className="object-cover"
+          unoptimized
+          priority
+        />
+        {/* Overlay escuro para melhorar legibilidade do formulário */}
+        <div className="absolute inset-0 bg-neutral-950/80 backdrop-blur-sm"></div>
+      </div>
+
       {/* Botão sobre */}
       <div className="absolute top-10 right-10 z-50">
         <Link
@@ -155,16 +169,14 @@ export default function SignUp() {
       {msg.text && (
         <div className="fixed top-4 left-1/2 z-50 w-full max-w-md -translate-x-1/2 transform px-4">
           <div
-            className={`animate-in slide-in-from-top-4 flex items-center gap-3 rounded-md border p-4 text-sm shadow-xl backdrop-blur-sm duration-300 ${
-              msg.type === "error"
-                ? "border-red-200 bg-red-50 text-red-800"
-                : "border-green-200 bg-green-50 text-green-800"
-            }`}
+            className={`animate-in slide-in-from-top-4 flex items-center gap-3 rounded-md border p-4 text-sm shadow-xl backdrop-blur-sm duration-300 ${msg.type === "error"
+              ? "border-red-200 bg-red-50 text-red-800"
+              : "border-green-200 bg-green-50 text-green-800"
+              }`}
           >
             <div
-              className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md ${
-                msg.type === "error" ? "bg-red-100" : "bg-green-100"
-              }`}
+              className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md ${msg.type === "error" ? "bg-red-100" : "bg-green-100"
+                }`}
             >
               <svg
                 className={`h-5 w-5 ${msg.type === "error" ? "text-red-600" : "text-green-600"}`}
@@ -195,8 +207,8 @@ export default function SignUp() {
       )}
 
       {/* Coluna esquerda - formulário */}
-      <div className="flex flex-1 items-center justify-center bg-neutral-950 px-4 py-6 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-6">
+      <div className="relative z-10 flex flex-1 items-center justify-center lg:bg-neutral-950 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="w-full max-w-xs space-y-6">
           {/* Logo */}
           <div className="text-center">
             <div className="flex items-center justify-center">
@@ -261,11 +273,10 @@ export default function SignUp() {
                 </label>
                 {/* O flex-1 aqui garante que a caixa estique para igualar a altura da coluna da esquerda */}
                 <div
-                  className={`flex w-full flex-1 cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed transition-colors ${
-                    dragActive
-                      ? "border-yellow-500 bg-neutral-800"
-                      : "border-neutral-600 bg-neutral-900 hover:border-gray-500 hover:bg-neutral-800/50"
-                  } min-h-[120px]`} // min-h garante altura mínima em mobile
+                  className={`flex w-full flex-1 cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed transition-colors ${dragActive
+                    ? "border-yellow-500 bg-neutral-800"
+                    : "border-neutral-600 bg-neutral-900 hover:border-gray-500 hover:bg-neutral-800/50"
+                    } min-h-[120px]`} // min-h garante altura mínima em mobile
                   onClick={() => fileInputRef.current?.click()}
                   onDragEnter={handleDrag}
                   onDragLeave={handleDrag}
@@ -371,7 +382,7 @@ export default function SignUp() {
         </div>
       </div>
 
-      {/* Coluna direita - imagem */}
+      {/* Imagem lateral para desktop - escondida em mobile */}
       <div className="relative hidden flex-1 lg:block">
         <Image
           src="https://cwn.sfo3.cdn.digitaloceanspaces.com/medias/bg-studying_guy.webp"
