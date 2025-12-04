@@ -13,6 +13,7 @@ const pool = new Pool({
   },
 });
 
+// Abir um pool de conexão
 const getConnection = async () => {
   try {
     const client = await pool.connect();

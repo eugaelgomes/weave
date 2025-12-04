@@ -20,15 +20,17 @@ router.post(
   AuthController.login.bind(AuthController)
 );
 
-//router.get(
-//  "/signin/sso/google",
-//  AuthController.googleAuth.bind(AuthController)
-//);
-//
-//router.get(
-//  "/signin/sso/google/callback",
-//  AuthController.googleCallback.bind(AuthController)
-//);
+
+router.get(
+  "/signin/sso/google",
+  AuthController.googleAuth.bind(AuthController)
+);
+
+router.get(
+  "/signin/sso/google/callback",
+  AuthController.googleCallback.bind(AuthController)
+);
+
 
 router.get("/me", verifyToken, AuthController.getProfile.bind(AuthController));
 
