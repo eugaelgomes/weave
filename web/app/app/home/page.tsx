@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotes } from "../../contexts/NotesContext";
@@ -10,6 +10,8 @@ import { FileText, Tag, ChevronLeft, ChevronRight, GitBranch, Hash } from "lucid
 export default function HomePage() {
   const { authenticated, loading, user } = useAuth();
   const { getNotesStats, getRecentNotes } = useNotes();
+  const [showMetrics, setShowMetrics] = useState(false);
+  const [showTags, setShowTags] = useState(false);
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [healthStatus, setHealthStatus] = React.useState<HealthStatus | null>(null);
   const carouselRef = React.useRef<HTMLDivElement>(null);
@@ -94,236 +96,283 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col bg-neutral-950">
       <div className="flex-1 space-y-3 overflow-y-auto sm:space-y-4">
         {/* Header */}
-        <div className="flex items-start justify-between gap-2 rounded-md border border-neutral-800 bg-neutral-900 p-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4 sm:py-2">
-          <span className="sm:text-md text-base font-medium tracking-tight text-neutral-100">
-            Olá, {userName} {"ツ"}
-          </span>
-          <span className="text-sm text-neutral-400 lg:block">{userCurrentDateTime}</span>
-
-          {/* Health Status */}
-          <div className="hidden items-center gap-2 md:flex">
-            {healthStatus ? (
-              <>
+        <div className="flex flex-col gap-3 rounded-md border border-neutral-800 bg-neutral-900 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-base font-medium tracking-tight text-neutral-100 sm:text-lg">
+              Olá, {userName} {"ツ"}
+            </span>
+            {/* Health Status - Mobile */}
+            <div className="flex items-center gap-2 md:hidden">
+              {healthStatus ? (
                 <div className="flex items-center gap-1.5">
                   <div
                     className={`h-2 w-2 rounded-full ${healthStatus.status === "online" ? "animate-pulse bg-green-500" : "bg-red-500"}`}
                   ></div>
-                  <span className="font-mono text-[10px] text-neutral-500 uppercase">
+                  <span className="font-mono text-[9px] text-neutral-500 uppercase">
                     {healthStatus.status}
                   </span>
                 </div>
-                {healthStatus.status === "online" && (
-                  <span className="font-mono text-xs text-neutral-600">
-                    ↑ {formatUptime(healthStatus.uptime)}
-                  </span>
-                )}
-              </>
-            ) : (
-              <span className="font-mono text-[10px] text-neutral-600">CHECKING...</span>
-            )}
-          </div>
-        </div>
-
-        {/* Estatísticas e Mapa Mental */}
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[280px_1fr]">
-          {/* Coluna Esquerda - Estatísticas Compactas (HUD Style) */}
-          <div className="flex flex-col rounded-md border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
-            {/* Cabeçalho do Painel */}
-            <div className="border-b border-neutral-800 bg-neutral-900/50 px-4 py-2.5">
-              <h3 className="font-mono text-[10px] font-bold tracking-widest text-neutral-500 uppercase">
-                Métricas
-              </h3>
-            </div>
-
-            {/* Lista de Métricas */}
-            <div className="flex flex-col">
-              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-800">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md border border-yellow-400/20 bg-yellow-400/10 text-yellow-400">
-                    <FileText className="h-3.5 w-3.5" />
-                  </div>
-                  <span className="text-xs font-medium text-neutral-400 transition-colors group-hover:text-neutral-200">
-                    Total de Notas
-                  </span>
-                </div>
-                <div className="mx-3 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-30 sm:block"></div>
-                <span className="font-mono text-sm font-bold text-yellow-400">
-                  {String(stats?.totalNotes ?? 0).padStart(2, "0")}
-                </span>
-              </div>
-
-              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-800">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md border border-blue-400/20 bg-blue-400/10 text-blue-400">
-                    <Tag className="h-3.5 w-3.5" />
-                  </div>
-                  <span className="text-xs font-medium text-neutral-400 transition-colors group-hover:text-neutral-200">
-                    Tags únicas
-                  </span>
-                </div>
-                <div className="mx-3 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-30 sm:block"></div>
-                <span className="font-mono text-sm font-bold text-blue-400">
-                  {String(stats?.totalTags ?? 0).padStart(2, "0")}
-                </span>
-              </div>
-
-              {/* Status Distribution - Seção Fixa */}
-              <div className="border-t border-neutral-800/50">
-                <div className="bg-neutral-900/50 px-4 py-2">
-                  <span className="font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase">
-                    Status
-                  </span>
-                </div>
-
-                {/* Open */}
-                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-800">
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-blue-400"></div>
-                    <span className="text-[11px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
-                      Aberto
-                    </span>
-                  </div>
-                  <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-20 sm:block"></div>
-                  <span className="font-mono text-xs font-bold text-blue-400">
-                    {String(stats?.statusDistribution?.open ?? 0).padStart(2, "0")}
-                  </span>
-                </div>
-
-                {/* Done */}
-                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-800">
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-green-400"></div>
-                    <span className="text-[11px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
-                      Feito
-                    </span>
-                  </div>
-                  <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-20 sm:block"></div>
-                  <span className="font-mono text-xs font-bold text-green-400">
-                    {String(stats?.statusDistribution?.done ?? 0).padStart(2, "0")}
-                  </span>
-                </div>
-
-                {/* Closed */}
-                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-800">
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-red-400"></div>
-                    <span className="text-[11px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
-                      Fechado
-                    </span>
-                  </div>
-                  <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-20 sm:block"></div>
-                  <span className="font-mono text-xs font-bold text-red-400">
-                    {String(stats?.statusDistribution?.closed ?? 0).padStart(2, "0")}
-                  </span>
-                </div>
-
-                {/* No Status */}
-                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-800">
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-neutral-500"></div>
-                    <span className="text-[11px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
-                      Sem Status
-                    </span>
-                  </div>
-                  <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-20 sm:block"></div>
-                  <span className="font-mono text-xs font-bold text-neutral-500">
-                    {String(stats?.statusDistribution?.sem_status ?? 0).padStart(2, "0")}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col rounded-md border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
-            {/* 1. O Cabeçalho agora é parte integrante do Card */}
-            <div className="border-b border-neutral-800 bg-neutral-900/30 px-4 py-2.5">
-              <h3 className="font-mono text-[10px] font-bold tracking-widest text-neutral-500 uppercase">
-                Tags mais usadas
-              </h3>
-            </div>
-
-            {/* 2. Área de Conteúdo (onde a lógica acontece) */}
-            <div className="relative p-5">
-              {stats?.mostUsedTags && stats.mostUsedTags.length > 0 ? (
-                <div className="flex flex-col">
-                  {/* Nó Principal (Raiz) */}
-                  <div className="relative z-10 mb-8 flex w-fit items-center gap-3 border-l-2 border-yellow-500 bg-neutral-900 py-1 pr-4 pl-4">
-                    <div className="flex h-8 w-8 items-center justify-center text-yellow-400">
-                      <Tag className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-neutral-200">Tag Maps</h3>
-                      <p className="font-mono text-[10px] text-neutral-500">
-                        {user?.username || "root"}
-                      </p>
-                    </div>
-
-                    {/* Linha vertical saindo do pai */}
-                    <div className="absolute -bottom-8 left-[24px] h-8 w-px bg-neutral-700"></div>
-                  </div>
-
-                  {/* Grid de Tags Filhas */}
-                  <div className="relative grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {/* Linha Horizontal Mestra (Bus) - Ajustei o top para alinhar com o fluxo novo */}
-                    <div className="absolute top-[-16px] left-[24px] hidden h-px w-[calc(100%-48px)] bg-neutral-700 opacity-50 sm:block"></div>
-
-                    {stats.mostUsedTags.slice(0, 6).map((tagInfo, i) => (
-                      <div
-                        key={i}
-                        className="group relative flex flex-col gap-2 rounded-md border border-neutral-800 bg-neutral-900/50 p-3 transition-colors hover:border-neutral-600 hover:bg-neutral-900"
-                      >
-                        {/* Conector Vertical */}
-                        <div className="absolute -top-4 left-[20px] h-4 w-px bg-neutral-700 opacity-50 transition-colors group-hover:bg-yellow-500/50"></div>
-
-                        {/* Ponto de solda */}
-                        <div className="absolute -top-[1px] left-[18px] h-1.5 w-1.5 bg-neutral-600 transition-colors group-hover:bg-yellow-500"></div>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-neutral-300">
-                            <Hash className="h-3.5 w-3.5 text-neutral-500 transition-colors group-hover:text-yellow-400" />
-                            <span className="text-xs font-semibold tracking-wider">
-                              {tagInfo.tag}
-                            </span>
-                          </div>
-                          <div className="rounded-md border border-neutral-800 bg-neutral-900 px-2 py-0.5 font-mono text-[10px] text-neutral-400">
-                            {tagInfo.count}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               ) : (
-                // Fallback simplificado (sem borda dupla)
-                <div className="flex h-32 items-center justify-center">
-                  <p className="font-mono text-sm text-neutral-600">NO_DATA_FOUND</p>
-                </div>
+                <span className="font-mono text-[9px] text-neutral-600">...</span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 text-xs text-neutral-400 sm:gap-4 sm:text-sm">
+            <span className="truncate">{userCurrentDateTime}</span>
+
+            {/* Health Status - Desktop */}
+            <div className="hidden items-center gap-2 md:flex">
+              {healthStatus ? (
+                <>
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className={`h-2 w-2 rounded-full ${healthStatus.status === "online" ? "animate-pulse bg-green-500" : "bg-red-500"}`}
+                    ></div>
+                    <span className="font-mono text-[10px] text-neutral-500 uppercase">
+                      {healthStatus.status}
+                    </span>
+                  </div>
+                  {healthStatus.status === "online" && (
+                    <span className="font-mono text-xs text-neutral-600">
+                      ↑ {formatUptime(healthStatus.uptime)}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="font-mono text-[10px] text-neutral-600">CHECKING...</span>
               )}
             </div>
           </div>
         </div>
 
+{/* Estatísticas e Mapa Mental */}
+<div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-[260px_1fr]">
+
+  {/* === CARD 1 — MÉTRICAS === */}
+  <div className="flex flex-col rounded-md border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
+
+    {/* Cabeçalho + Toggle */}
+    <button
+      onClick={() => setShowMetrics(!showMetrics)}
+      className="flex w-full items-center justify-between border-b border-neutral-800 bg-neutral-900/50 px-3 py-2 sm:px-4"
+    >
+      <h3 className="font-mono text-[9px] font-bold tracking-widest text-neutral-500 uppercase sm:text-[10px]">
+        Métricas
+      </h3>
+
+      {/* Toggle só no mobile */}
+      <span className="text-neutral-500 sm:hidden">
+        {showMetrics ? "−" : "+"}
+      </span>
+    </button>
+
+    {/* Conteúdo — mobile: toggle / desktop: sempre aberto */}
+    <div className={`${showMetrics ? "block" : "hidden"} sm:block`}>
+
+      {/* Lista de Métricas */}
+      <div className="flex flex-col">
+
+        <div className="group flex items-center justify-between gap-2 px-3 py-2.5 transition-colors hover:bg-neutral-800 sm:gap-3 sm:py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-yellow-400/20 bg-yellow-400/10 text-yellow-400">
+              <FileText className="h-3.5 w-3.5" />
+            </div>
+            <span className="text-[11px] font-medium text-neutral-400 transition-colors group-hover:text-neutral-200">
+              Total de Notas
+            </span>
+          </div>
+          <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-30 lg:block"></div>
+          <span className="font-mono text-sm font-bold text-yellow-400">
+            {String(stats?.totalNotes ?? 0).padStart(2, "0")}
+          </span>
+        </div>
+
+        <div className="group flex items-center justify-between gap-2 px-3 py-2.5 transition-colors hover:bg-neutral-800 sm:gap-3 sm:py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-blue-400/20 bg-blue-400/10 text-blue-400">
+              <Tag className="h-3.5 w-3.5" />
+            </div>
+            <span className="text-[11px] font-medium text-neutral-400 transition-colors group-hover:text-neutral-200">
+              Tags únicas
+            </span>
+          </div>
+          <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-30 lg:block"></div>
+          <span className="font-mono text-sm font-bold text-blue-400">
+            {String(stats?.totalTags ?? 0).padStart(2, "0")}
+          </span>
+        </div>
+
+        {/* Status Distribution */}
+        <div className="border-t border-neutral-800/50">
+          <div className="bg-neutral-900/50 px-3 py-1.5 sm:px-4">
+            <span className="font-mono text-[8px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[9px]">
+              Status
+            </span>
+          </div>
+
+          {/* Open */}
+          <div className="group flex items-center justify-between gap-2 px-3 py-1.5 transition-colors hover:bg-neutral-800">
+            <div className="flex items-center gap-1.5">
+              <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-400"></div>
+              <span className="text-[10px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
+                Aberto
+              </span>
+            </div>
+            <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-20 lg:block"></div>
+            <span className="font-mono text-[11px] font-bold text-blue-400">
+              {String(stats?.statusDistribution?.open ?? 0).padStart(2, "0")}
+            </span>
+          </div>
+
+          {/* Done */}
+          <div className="group flex items-center justify-between gap-2 px-3 py-1.5 transition-colors hover:bg-neutral-800">
+            <div className="flex items-center gap-1.5">
+              <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-green-400"></div>
+              <span className="text-[10px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
+                Feito
+              </span>
+            </div>
+            <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-20 lg:block"></div>
+            <span className="font-mono text-[11px] font-bold text-green-400">
+              {String(stats?.statusDistribution?.done ?? 0).padStart(2, "0")}
+            </span>
+          </div>
+
+          {/* Closed */}
+          <div className="group flex items-center justify-between gap-2 px-3 py-1.5 transition-colors hover:bg-neutral-800">
+            <div className="flex items-center gap-1.5">
+              <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-400"></div>
+              <span className="text-[10px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
+                Fechado
+              </span>
+            </div>
+            <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-20 lg:block"></div>
+            <span className="font-mono text-[11px] font-bold text-red-400">
+              {String(stats?.statusDistribution?.closed ?? 0).padStart(2, "0")}
+            </span>
+          </div>
+
+          {/* No Status */}
+          <div className="group flex items-center justify-between gap-2 px-3 py-1.5 transition-colors hover:bg-neutral-800">
+            <div className="flex items-center gap-1.5">
+              <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-neutral-500"></div>
+              <span className="text-[10px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
+                Sem Status
+              </span>
+            </div>
+            <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-20 lg:block"></div>
+            <span className="font-mono text-[11px] font-bold text-neutral-500">
+              {String(stats?.statusDistribution?.sem_status ?? 0).padStart(2, "0")}
+            </span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* === CARD 2 — TAGS MAIS USADAS === */}
+  <div className="flex flex-col rounded-md border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
+
+    {/* Cabeçalho + Toggle */}
+    <button
+      onClick={() => setShowTags(!showTags)}
+      className="flex w-full items-center justify-between border-b border-neutral-800 bg-neutral-900/30 px-3 py-2 sm:px-4"
+    >
+      <h3 className="font-mono text-[9px] font-bold tracking-widest text-neutral-500 uppercase sm:text-[10px]">
+        Tags mais usadas
+      </h3>
+
+      <span className="text-neutral-500 sm:hidden">
+        {showTags ? "−" : "+"}
+      </span>
+    </button>
+
+    {/* Conteúdo — toggle no mobile, sempre aberto no desktop */}
+    <div className={`${showTags ? "block" : "hidden"} sm:block`}>
+      <div className="relative p-3">
+
+        {stats?.mostUsedTags && stats.mostUsedTags.length > 0 ? (
+          <div className="flex flex-col">
+
+            {/* Nó Principal */}
+            <div className="relative z-10 mb-5 flex w-fit items-center gap-2 border-l-2 border-yellow-500 bg-neutral-900 py-1.5 pr-3 pl-2.5 sm:mb-6">
+              <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center text-yellow-400">
+                <Tag className="h-3.5 w-3.5" />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-neutral-200 sm:text-sm">Tag Maps</h3>
+                <p className="font-mono text-[9px] text-neutral-500">
+                  {user?.username || "root"}
+                </p>
+              </div>
+
+              <div className="absolute -bottom-5 left-[18px] h-5 w-px bg-neutral-700 sm:-bottom-6 sm:h-6"></div>
+            </div>
+
+            {/* Grid */}
+            <div className="relative grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
+
+              <div className="absolute top-[-10px] left-[18px] hidden h-px w-[calc(100%-36px)] bg-neutral-700 opacity-50 sm:top-[-12px] sm:block"></div>
+
+              {stats.mostUsedTags.slice(0, 6).map((tagInfo, i) => (
+                <div
+                  key={i}
+                  className="group relative flex flex-col gap-1.5 rounded-md border border-neutral-800 bg-neutral-900/50 p-2 transition-colors hover:border-neutral-600 hover:bg-neutral-900"
+                >
+                  <div className="absolute -top-2.5 left-[14px] h-2.5 w-px bg-neutral-700 opacity-50 transition-colors group-hover:bg-yellow-500/50 sm:-top-3 sm:h-3"></div>
+                  <div className="absolute -top-[1px] left-[12.5px] h-1.5 w-1.5 bg-neutral-600 transition-colors group-hover:bg-yellow-500"></div>
+
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5 text-neutral-300">
+                      <Hash className="h-3 w-3 flex-shrink-0 text-neutral-500 transition-colors group-hover:text-yellow-400" />
+                      <span className="truncate text-[11px] font-semibold tracking-wider">
+                        {tagInfo.tag}
+                      </span>
+                    </div>
+                    <div className="flex-shrink-0 rounded-md border border-neutral-800 bg-neutral-900 px-1.5 py-0.5 font-mono text-[9px] text-neutral-400">
+                      {tagInfo.count}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+            </div>
+          </div>
+        ) : (
+          <div className="flex h-32 items-center justify-center">
+            <p className="font-mono text-sm text-neutral-600">NO_DATA_FOUND</p>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
         {/* Notas Recentes - Carrossel */}
         <div className="rounded-md border border-neutral-800 bg-neutral-900 p-3 sm:p-4">
-          <div className="mb-3 flex items-center justify-between sm:mb-4">
-            <h3 className="text-sm font-semibold text-neutral-100 sm:text-base">Notas Recentes</h3>
+          <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
+            <h3 className="text-base font-semibold text-neutral-100 sm:text-lg">Notas Recentes</h3>
             {recentNotes.length > 1 && (
-              <div className="flex gap-1 sm:gap-2">
+              <div className="flex gap-1.5 sm:gap-2">
                 <button
                   onClick={prevSlide}
                   disabled={currentSlide === 0}
-                  className="rounded-md bg-neutral-800 p-1.5 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-30 sm:p-2"
+                  className="rounded-md bg-neutral-800 p-2 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-30"
                   aria-label="Anterior"
                 >
-                  <ChevronLeft className="h-4 w-4 sm:h-4 sm:w-4" />
+                  <ChevronLeft className="h-4 w-4" />
                 </button>
                 <button
                   onClick={nextSlide}
                   disabled={currentSlide === recentNotes.length - 1}
-                  className="rounded-md bg-neutral-800 p-1.5 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-30 sm:p-2"
+                  className="rounded-md bg-neutral-800 p-2 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-30"
                   aria-label="Próxima"
                 >
-                  <ChevronRight className="h-4 w-4 sm:h-4 sm:w-4" />
+                  <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
             )}
@@ -354,19 +403,19 @@ export default function HomePage() {
                   <Link
                     key={note.id}
                     href={`/app/notes/view/${note.id}`}
-                    className="block w-[calc(100vw-3rem)] max-w-[280px] flex-shrink-0 snap-start sm:w-[300px] sm:max-w-[320px]"
+                    className="block w-[calc(100vw-2.5rem)] max-w-[300px] flex-shrink-0 snap-start sm:w-[280px] sm:max-w-[300px] md:w-[320px]"
                   >
-                    <div className="group flex h-[240px] flex-col rounded-md border border-neutral-800 bg-neutral-950 p-3 transition-all duration-200 hover:border-neutral-700 hover:bg-neutral-900 sm:h-[260px] sm:p-4">
+                    <div className="group flex h-[260px] flex-col rounded-md border border-neutral-800 bg-neutral-950 p-3 transition-all duration-200 hover:border-neutral-700 hover:bg-neutral-900 sm:h-[280px] sm:p-4">
                       {/* Cabeçalho: data + tags */}
-                      <div className="mb-2 flex flex-shrink-0 flex-col gap-1.5 sm:mb-3 sm:gap-2">
+                      <div className="mb-2 flex flex-shrink-0 flex-col gap-2 sm:mb-3">
                         {/* Título */}
-                        <h3 className="mb-1 flex-shrink-0 truncate text-sm leading-tight font-semibold whitespace-nowrap text-white transition-colors group-hover:text-yellow-400 sm:text-base lg:text-lg">
+                        <h3 className="line-clamp-2 flex-shrink-0 text-base font-semibold leading-tight text-white transition-colors group-hover:text-yellow-400 sm:text-lg">
                           {note.title || "Nota sem título"}
                         </h3>
 
                         {/* Data */}
                         {note.lastModified && (
-                          <span className="text-xs font-medium text-neutral-500">
+                          <span className="text-[11px] font-medium text-neutral-500 sm:text-xs">
                             {new Date(note.lastModified).toLocaleDateString("pt-BR", {
                               day: "2-digit",
                               month: "short",
@@ -380,17 +429,17 @@ export default function HomePage() {
                         {/* Tags */}
                         {note.tags && note.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1.5">
-                            {note.tags.slice(0, 2).map((tag, index) => (
+                            {note.tags.slice(0, 3).map((tag, index) => (
                               <span
                                 key={index}
-                                className="rounded-full border border-yellow-500/30 bg-yellow-500/20 px-2.5 py-1 text-[10px] font-medium text-yellow-400 sm:text-xs"
+                                className="truncate rounded-full border border-yellow-500/30 bg-yellow-500/20 px-2.5 py-0.5 text-[10px] font-medium text-yellow-400 sm:py-1"
                               >
                                 {tag}
                               </span>
                             ))}
-                            {note.tags.length > 2 && (
-                              <span className="rounded-full bg-neutral-800 px-2 py-1 text-[10px] text-neutral-500 sm:text-xs">
-                                +{note.tags.length - 2}
+                            {note.tags.length > 3 && (
+                              <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-[10px] text-neutral-500 sm:py-1">
+                                +{note.tags.length - 3}
                               </span>
                             )}
                           </div>
@@ -398,22 +447,22 @@ export default function HomePage() {
                       </div>
 
                       {/* Descrição - ocupa espaço flexível */}
-                      <div className="mb-2 flex-1 sm:mb-4">
+                      <div className="mb-3 flex-1 overflow-hidden">
                         {note.preview && (
-                          <p className="line-clamp-4 text-xs leading-relaxed text-neutral-400 sm:text-sm">
-                            {note.preview.length > 120
-                              ? note.preview.substring(0, 120) + "..."
+                          <p className="line-clamp-3 text-sm leading-relaxed text-neutral-400 sm:line-clamp-4">
+                            {note.preview.length > 150
+                              ? note.preview.substring(0, 150) + "..."
                               : note.preview}
                           </p>
                         )}
                       </div>
 
                       {/* Rodapé: status e colaboradores */}
-                      <div className="mt-auto flex items-center justify-between gap-2">
-                        <div>
+                      <div className="mt-auto flex flex-shrink-0 items-center justify-between gap-2 border-t border-neutral-800/50 pt-3">
+                        <div className="flex-shrink-0">
                           {note.status ? (
                             <span
-                              className={`inline-block rounded-md px-2 py-1 text-[10px] font-bold uppercase sm:text-xs ${
+                              className={`inline-block rounded-md px-2.5 py-1 text-[10px] font-bold uppercase ${
                                 note.status === "open"
                                   ? "bg-blue-500/20 text-blue-400"
                                   : note.status === "done"
@@ -426,7 +475,7 @@ export default function HomePage() {
                               {note.status}
                             </span>
                           ) : (
-                            <span className="inline-block rounded-md bg-neutral-800 px-2 py-1 text-[10px] font-bold text-neutral-500 uppercase sm:text-xs">
+                            <span className="inline-block rounded-md bg-neutral-800 px-2.5 py-1 text-[10px] font-bold uppercase text-neutral-500">
                               sem status
                             </span>
                           )}
@@ -434,9 +483,9 @@ export default function HomePage() {
 
                         {/* Collaborators */}
                         {note.collaboratorsCount > 0 && (
-                          <div className="flex items-center gap-1.5">
-                            <GitBranch className="h-3.5 w-3.5 text-neutral-500" />
-                            <span className="text-[10px] font-medium text-neutral-400 sm:text-xs">
+                          <div className="flex flex-shrink-0 items-center gap-1.5">
+                            <GitBranch className="h-4 w-4 text-neutral-500" />
+                            <span className="text-xs font-medium text-neutral-400">
                               {note.collaboratorsCount}
                             </span>
                           </div>
@@ -449,7 +498,7 @@ export default function HomePage() {
 
               {/* Indicadores de slides */}
               {recentNotes.length > 1 && (
-                <div className="mt-3 flex justify-center gap-1.5 sm:mt-4 sm:gap-2">
+                <div className="mt-4 flex justify-center gap-2">
                   {recentNotes.map((_, index) => (
                     <button
                       key={index}
