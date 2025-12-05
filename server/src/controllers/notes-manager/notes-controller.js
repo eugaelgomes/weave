@@ -4,6 +4,7 @@ const userRepository = require("@/repositories/user-manager");
 const {
   sendCollaborationNotification,
 } = require("@/services/email/templates/notes-mails/collab-notification");
+const { ALLOWED_NOTE_STATUSES } = require("../product-patterns");
 
 class NotesController {
   constructor() {
@@ -341,7 +342,7 @@ class NotesController {
    */
   async createNote(req, res, next) {
     try {
-      const { title, description, tags = [] } = req.body;
+      const { title, description, tags = [], status } = req.body;
 
       // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
@@ -352,12 +353,23 @@ class NotesController {
         throw new Error("Título é obrigatório");
       }
 
+      // Definir status padrão se não fornecido
+      const noteStatus = status === undefined || status === null ? "open" : status;
+      
+      // Validar status
+      if (!ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
+        return res.status(400).json({
+          error: `Status inválido. Permitidos: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
+        });
+      }
+
       // Criação da nota
       const newNote = await this.notesRepository.createNotesQuerie(
         userId,
         title,
         description,
-        tags
+        tags,
+        noteStatus
       );
 
       // Formata e retorna a nota criada
@@ -379,6 +391,7 @@ class NotesController {
         description,
         tags = [],
         initialBlockContent = "",
+        status,
       } = req.body;
 
       // Validação de autenticação
@@ -390,13 +403,24 @@ class NotesController {
         throw new Error("Título é obrigatório");
       }
 
+      // Definir status padrão se não fornecido
+      const noteStatus = status === undefined || status === null ? "open" : status;
+      
+      // Validar status
+      if (!ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
+        return res.status(400).json({
+          error: `Status inválido. Permitidos: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
+        });
+      }
+
       // Criação da nota completa (nota + bloco inicial) em uma única transação
       const result = await this.notesRepository.createCompleteNote(
         userId,
         title,
         description,
         tags,
-        initialBlockContent
+        initialBlockContent,
+        noteStatus
       );
 
       // Montar estrutura completa da nota com todos os dados das tabelas relacionadas
@@ -465,6 +489,13 @@ class NotesController {
       // Apenas o proprietário pode marcar como deletado
       if (deleted !== undefined && !isOwner) {
         throw new Error("Apenas o proprietário pode excluir a nota");
+      }
+
+      // Validar status se fornecido
+      if (status !== undefined && !ALLOWED_NOTE_STATUSES.includes(status)) {
+        return res.status(400).json({
+          error: `Status inválido. Permitidos: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
+        });
       }
 
       // Prepara os dados para atualização (apenas campos fornecidos)

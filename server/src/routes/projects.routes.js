@@ -1,25 +1,47 @@
 const express = require("express");
-
 const projectsController = require("@/controllers/projects/projects-controller");
-
 const { verifyToken } = require("@/middlewares/auth/auth-middleware");
 
 const router = express.Router();
 
 router.use(verifyToken);
 
-router.get("/", projectsController.getAllProjects.bind(projectsController));
-router.post("/", projectsController.createProject.bind(projectsController));
-router.get("/:id", projectsController.getProjectById.bind(projectsController));
-router.put("/:id", projectsController.updateProject.bind(projectsController));
-router.delete("/:id", projectsController.deleteProject.bind(projectsController));
+// Consultar toodos os projetos
+router.get("/", 
+  projectsController.getAllProjects.bind(projectsController)
+);
 
-router.route("/:projectId/collaborators")
+// Criar um novo projeto
+router.post("/", 
+  projectsController.createProject.bind(projectsController)
+);
+
+// Consultar um projeto específico pelo ID
+router.get("/:id", 
+  projectsController.getProjectById.bind(projectsController)
+);
+
+// Atualizar um projeto existente pelo ID
+router.put("/:id", 
+  projectsController.updateProject.bind(projectsController)
+);
+
+// Deletar um projeto pelo ID
+router.delete(
+  "/:id",
+  projectsController.deleteProject.bind(projectsController)
+);
+
+// Gerenciar colaboradores e notas associadas a um projeto
+router
+  .route("/:projectId/collaborators")
   .get(projectsController.getCollaborators.bind(projectsController))
-  .put(projectsController.manageCollaborators.bind(projectsController));
-
-router.route("/:projectId/notes")
+  .put(projectsController.manageCollaborators.bind(projectsController)
+);
+router
+  .route("/:projectId/notes")
   .get(projectsController.getAssociatedNotes.bind(projectsController))
-  .put(projectsController.manageNotes.bind(projectsController));
+  .put(projectsController.manageNotes.bind(projectsController)
+);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const projectsRepository = require("@/repositories/projetcs");
+const { ALLOWED_PROJECT_STATUSES } = require("../product-patterns");
 
 class ProjectsController {
   constructor() {
@@ -351,6 +352,16 @@ class ProjectsController {
         throw new Error("Título é obrigatório");
       }
 
+      // Definir status padrão se não fornecido
+      const projectStatus = status === undefined || status === null ? "open" : status;
+      
+      // Validar status
+      if (!ALLOWED_PROJECT_STATUSES.includes(projectStatus)) {
+        return res.status(400).json({
+          error: `Status inválido. Permitidos: ${ALLOWED_PROJECT_STATUSES.join(", ")}`,
+        });
+      }
+
       // Validar properties se fornecidas
       const validatedProps = properties ? this._validateProperties(properties) : {};
 
@@ -359,7 +370,7 @@ class ProjectsController {
         userId,
         title,
         description,
-        status,
+        projectStatus,
         validatedProps
       );
 
@@ -393,6 +404,13 @@ class ProjectsController {
 
       // Validação de propriedade do projeto
       await this._validateProjectOwnership(id, userId);
+
+      // Validar status se fornecido
+      if (status !== undefined && !ALLOWED_PROJECT_STATUSES.includes(status)) {
+        return res.status(400).json({
+          error: `Status inválido. Permitidos: ${ALLOWED_PROJECT_STATUSES.join(", ")}`,
+        });
+      }
 
       // Construir objeto de atualização apenas com campos enviados
       const updates = {};

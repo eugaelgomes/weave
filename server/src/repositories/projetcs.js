@@ -132,17 +132,20 @@ class ProjectsRepository {
     const setQuery = keys
       .map((key, index) => {
         if (key === "properties") {
-          return `${key} = (properties || $${index + 3}::jsonb) || jsonb_build_object(
-            'progress', 
-            COALESCE(
-              (
-                SELECT ROUND(
-                  (COUNT(*) FILTER (WHERE (note->>'status') = 'done')::numeric / 
-                  NULLIF(COUNT(*), 0)) * 100
-                )::integer
-                FROM jsonb_array_elements(COALESCE(associated_notes, '[]'::jsonb)) AS note
-              ),
-              0
+          // Remove as chaves enviadas e recalcula com progress
+          return `${key} = jsonb_strip_nulls(
+            COALESCE(properties, '{}'::jsonb) || $${index + 3}::jsonb || jsonb_build_object(
+              'progress', 
+              COALESCE(
+                (
+                  SELECT ROUND(
+                    (COUNT(*) FILTER (WHERE (note->>'status') = 'done')::numeric / 
+                    NULLIF(COUNT(*), 0)) * 100
+                  )::integer
+                  FROM jsonb_array_elements(COALESCE(associated_notes, '[]'::jsonb)) AS note
+                ),
+                0
+              )
             )
           )`;
         }
@@ -189,7 +192,7 @@ class ProjectsRepository {
   async createProject(userId, title, description, status, properties) {
     const query = `
       INSERT INTO projects (user_id, title, description, status, properties)
-      VALUES ($1, $2, $3, $4, $5)
+      VALUES ($1, $2, $3, $4, $5::jsonb || jsonb_build_object('progress', 0))
       RETURNING 
         id::text,
         user_id::text,
