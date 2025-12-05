@@ -35,6 +35,7 @@ export interface ProjectOverview {
   priority?: string;
   complexity?: string;
   estimatedTime?: string;
+  tags?: string[];
   lastModified: string;
 }
 
@@ -44,8 +45,14 @@ export interface ProjectsStats {
   completedProjects: number;
   archivedProjects: number;
   totalNotes: number;
+  totalCollaborators: number;
   averageProgress: number;
   statusDistribution: Record<string, number>;
+  priorityDistribution: Record<string, number>;
+  complexityDistribution: Record<string, number>;
+  projectsWithDeadline: number;
+  mostCollaborativeProject?: { title: string; count: number };
+  mostActiveProject?: { title: string; count: number };
 }
 
 export interface ProjectsContextType {
@@ -140,6 +147,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         priority: project.properties?.priority,
         complexity: project.properties?.complexity,
         estimatedTime: project.properties?.estimated_time,
+        tags: project.properties?.tags,
         lastModified: project.updated_at || project.created_at,
       }));
 
@@ -261,20 +269,56 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
 
   const getProjectsStats = useCallback((): ProjectsStats => {
     const totalProjects = projectsOverview.length;
-    const activeProjects = projectsOverview.filter((p) => p.status === "ativo").length;
-    const completedProjects = projectsOverview.filter((p) => p.status === "concluído").length;
-    const archivedProjects = projectsOverview.filter((p) => p.status === "arquivado").length;
+    const openProjects = projectsOverview.filter((p) => p.status === "open").length;
+    const runningProjects = projectsOverview.filter((p) => p.status === "running").length;
+    const completedProjects = projectsOverview.filter((p) => p.status === "completed").length;
+    const onHoldProjects = projectsOverview.filter((p) => p.status === "on-hold").length;
+    const archivedProjects = projectsOverview.filter((p) => p.status === "archived").length;
+    const activeProjects = openProjects + runningProjects; // Soma de open + running
     const totalNotes = projectsOverview.reduce((acc, p) => acc + p.notesCount, 0);
+    const totalCollaborators = projectsOverview.reduce((acc, p) => acc + p.collaboratorsCount, 0);
     const averageProgress =
       totalProjects > 0
         ? Math.round(projectsOverview.reduce((acc, p) => acc + p.progress, 0) / totalProjects)
         : 0;
 
+    // Distribuição por status
     const statusDistribution: Record<string, number> = {
-      ativo: activeProjects,
-      concluído: completedProjects,
-      arquivado: archivedProjects,
+      open: openProjects,
+      running: runningProjects,
+      completed: completedProjects,
+      "on-hold": onHoldProjects,
+      archived: archivedProjects,
     };
+
+    // Distribuição por prioridade
+    const priorityDistribution: Record<string, number> = {
+      alta: projectsOverview.filter((p) => p.priority === "alta").length,
+      media: projectsOverview.filter((p) => p.priority === "media").length,
+      baixa: projectsOverview.filter((p) => p.priority === "baixa").length,
+    };
+
+    // Distribuição por complexidade
+    const complexityDistribution: Record<string, number> = {
+      alta: projectsOverview.filter((p) => p.complexity === "alta").length,
+      media: projectsOverview.filter((p) => p.complexity === "media").length,
+      baixa: projectsOverview.filter((p) => p.complexity === "baixa").length,
+    };
+
+    // Projetos com deadline
+    const projectsWithDeadline = projectsOverview.filter((p) => p.estimatedTime).length;
+
+    // Projeto mais colaborativo
+    const mostCollaborative = projectsOverview.reduce(
+      (max, p) => (p.collaboratorsCount > (max?.count || 0) ? { title: p.title, count: p.collaboratorsCount } : max),
+      undefined as { title: string; count: number } | undefined
+    );
+
+    // Projeto mais ativo (mais notas)
+    const mostActive = projectsOverview.reduce(
+      (max, p) => (p.notesCount > (max?.count || 0) ? { title: p.title, count: p.notesCount } : max),
+      undefined as { title: string; count: number } | undefined
+    );
 
     return {
       totalProjects,
@@ -282,8 +326,14 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
       completedProjects,
       archivedProjects,
       totalNotes,
+      totalCollaborators,
       averageProgress,
       statusDistribution,
+      priorityDistribution,
+      complexityDistribution,
+      projectsWithDeadline,
+      mostCollaborativeProject: mostCollaborative?.count ? mostCollaborative : undefined,
+      mostActiveProject: mostActive?.count ? mostActive : undefined,
     };
   }, [projectsOverview]);
 

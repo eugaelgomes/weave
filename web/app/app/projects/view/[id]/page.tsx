@@ -22,6 +22,16 @@ import {
   Zap,
   AlertCircle,
   ChevronDown,
+  Flag,
+  Activity,
+  Palette,
+  Tag,
+  Hash,
+  AlignLeft,
+  Sparkles,
+  Shield,
+  Mail,
+  Plus,
 } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useProjects } from "@/app/contexts/ProjectsContext";
@@ -63,7 +73,7 @@ export default function ProjectViewPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
-  const [editedStatus, setEditedStatus] = useState<"ativo" | "arquivado" | "concluído">("ativo");
+  const [editedStatus, setEditedStatus] = useState<"open" | "running" | "completed" | "on-hold" | "archived">("open");
   const [editedPriority, setEditedPriority] = useState<"alta" | "media" | "baixa">("media");
   const [editedComplexity, setEditedComplexity] = useState<"alta" | "media" | "baixa">("media");
   const [editedColor, setEditedColor] = useState("#3f51b5");
@@ -98,7 +108,7 @@ export default function ProjectViewPage() {
           setProject(projectData);
           setEditedTitle(projectData.title);
           setEditedDescription(projectData.description || "");
-          setEditedStatus(projectData.status);
+          setEditedStatus(projectData.status as "open" | "running" | "completed" | "on-hold" | "archived");
           setEditedPriority(projectData.properties?.priority || "media");
           setEditedComplexity(projectData.properties?.complexity || "media");
           setEditedColor(projectData.properties?.color || "#3f51b5");
@@ -304,40 +314,50 @@ export default function ProjectViewPage() {
     <div className="min-h-screen bg-neutral-950">
       <div className="mx-auto max-w-6xl space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between rounded-md border border-neutral-800 bg-neutral-900 p-4">
+        <div className="flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-900 p-4">
           <button
             onClick={() => router.push("/app/projects")}
-            className="flex items-center gap-2 text-sm text-neutral-400 transition-colors hover:text-neutral-200"
+            className="flex items-center gap-2 rounded-lg bg-neutral-800 px-3 py-2 text-sm font-medium text-neutral-400 transition-all hover:bg-neutral-750 hover:text-neutral-200"
           >
             <FaArrowLeft />
             <span>Voltar</span>
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {canEdit && (
               <>
                 {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="rounded-md bg-yellow-500 px-4 py-2 text-sm font-medium text-neutral-950 transition-colors hover:bg-yellow-600"
+                    className="flex items-center gap-2 rounded-lg bg-yellow-500 px-4 py-2 text-sm font-semibold text-neutral-950 transition-all hover:bg-yellow-600"
                   >
+                    <Sparkles className="h-4 w-4" />
                     Editar Projeto
                   </button>
                 ) : (
                   <>
                     <button
                       onClick={() => setIsEditing(false)}
-                      className="rounded-md bg-neutral-800 px-4 py-2 text-sm text-neutral-200 transition-colors hover:bg-neutral-700"
+                      className="rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-300 transition-all hover:bg-neutral-750 hover:border-neutral-600"
                     >
                       Cancelar
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={saving}
-                      className="flex items-center gap-2 rounded-md bg-yellow-500 px-4 py-2 text-sm font-medium text-neutral-950 transition-colors hover:bg-yellow-600 disabled:opacity-50"
+                      className="flex items-center gap-2 rounded-lg bg-yellow-500 px-4 py-2 text-sm font-semibold text-neutral-950 transition-all hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {saving ? <FaSpinner className="animate-spin" /> : <FaSave />}
-                      Salvar
+                      {saving ? (
+                        <>
+                          <FaSpinner className="h-4 w-4 animate-spin" />
+                          Salvando...
+                        </>
+                      ) : (
+                        <>
+                          <FaSave className="h-4 w-4" />
+                          Salvar Alterações
+                        </>
+                      )}
                     </button>
                   </>
                 )}
@@ -347,9 +367,10 @@ export default function ProjectViewPage() {
             {isOwner && (
               <button
                 onClick={handleDelete}
-                className="rounded-md bg-red-500/20 p-2 text-red-400 transition-colors hover:bg-red-500/30"
+                className="rounded-lg bg-red-500/10 p-2.5 text-red-400 transition-all hover:bg-red-500/20"
+                title="Deletar projeto"
               >
-                <FaTrash />
+                <FaTrash className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -359,42 +380,92 @@ export default function ProjectViewPage() {
           {/* Coluna Principal */}
           <div className="space-y-4">
             {/* Informações do Projeto */}
-            <div className="rounded-md border border-neutral-800 bg-neutral-900 p-6">
+            <div 
+              className="rounded-md border border-neutral-800 bg-neutral-900 p-6 transition-all"
+              style={{
+                backgroundColor: project.properties?.color ? `${project.properties.color}10` : undefined,
+                borderColor: project.properties?.color ? `${project.properties.color}40` : undefined,
+              }}
+            >
               {!isEditing ? (
                 <>
-                  <div className="mb-4 flex items-start gap-3">
+                  {/* Cabeçalho do Projeto */}
+                  <div className="mb-6 flex items-start gap-4">
                     {project.properties?.icon && (
-                      <span className="text-4xl">{project.properties.icon}</span>
+                      <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg border border-neutral-800 bg-neutral-950 text-4xl">
+                        {project.properties.icon}
+                      </div>
                     )}
-                    <div className="flex-1">
-                      <h1 className="mb-2 text-2xl font-bold text-neutral-100">{project.title}</h1>
-                      <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h1 className="mb-3 text-3xl font-bold text-neutral-100">{project.title}</h1>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* Status Badge */}
                         <span
-                          className={`rounded-md px-2 py-1 text-xs font-bold uppercase ${
-                            project.status === "ativo"
-                              ? "bg-blue-500/20 text-blue-400"
-                              : project.status === "concluído"
-                                ? "bg-green-500/20 text-green-400"
-                                : "bg-neutral-800 text-neutral-400"
+                          className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold uppercase ${
+                            project.status === "open"
+                              ? "bg-cyan-500/20 text-cyan-400"
+                              : project.status === "running"
+                                ? "bg-blue-500/20 text-blue-400"
+                                : project.status === "completed"
+                                  ? "bg-green-500/20 text-green-400"
+                                  : project.status === "on-hold"
+                                    ? "bg-yellow-500/20 text-yellow-400"
+                                    : "bg-neutral-700/20 text-neutral-400"
                           }`}
                         >
-                          {project.status}
+                          {project.status === "open"
+                            ? "Aberto"
+                            : project.status === "running"
+                              ? "Em Andamento"
+                              : project.status === "completed"
+                                ? "Concluído"
+                                : project.status === "on-hold"
+                                  ? "Pausado"
+                                  : "Arquivado"}
                         </span>
 
+                        {/* Prioridade */}
                         {project.properties?.priority && (
-                          <div className="flex items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-800/50 px-2 py-1">
-                            <AlertCircle className="h-3 w-3 text-neutral-400" />
-                            <span className="text-xs text-neutral-400">
-                              Prioridade: {project.properties.priority}
+                          <div className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${
+                            project.properties.priority === "alta"
+                              ? "bg-red-500/20 text-red-400"
+                              : project.properties.priority === "media"
+                                ? "bg-yellow-500/20 text-yellow-400"
+                                : "bg-blue-500/20 text-blue-400"
+                          }`}>
+                            <AlertCircle className="h-3.5 w-3.5" />
+                            <span className="text-xs font-semibold capitalize">
+                              {project.properties.priority}
                             </span>
                           </div>
                         )}
 
+                        {/* Complexidade */}
                         {project.properties?.complexity && (
-                          <div className="flex items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-800/50 px-2 py-1">
-                            <Zap className="h-3 w-3 text-neutral-400" />
-                            <span className="text-xs text-neutral-400">
-                              Complexidade: {project.properties.complexity}
+                          <div className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${
+                            project.properties.complexity === "alta"
+                              ? "bg-red-500/20 text-red-400"
+                              : project.properties.complexity === "media"
+                                ? "bg-yellow-500/20 text-yellow-400"
+                                : "bg-green-500/20 text-green-400"
+                          }`}>
+                            <Zap className="h-3.5 w-3.5" />
+                            <span className="text-xs font-semibold capitalize">
+                              {project.properties.complexity}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Tempo Estimado */}
+                        {project.properties?.estimated_time && (
+                          <div className="flex items-center gap-1.5 rounded-md bg-neutral-800 px-3 py-1.5">
+                            <Clock className="h-3.5 w-3.5 text-neutral-400" />
+                            <span className="text-xs font-medium text-neutral-300">
+                              {new Date(project.properties.estimated_time).toLocaleDateString("pt-BR", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}
                             </span>
                           </div>
                         )}
@@ -404,51 +475,89 @@ export default function ProjectViewPage() {
 
                   {/* Tags */}
                   {project.properties?.tags && project.properties.tags.length > 0 && (
-                    <div className="mb-4 flex flex-wrap gap-2">
-                      {project.properties.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="rounded-full bg-yellow-500/20 px-3 py-1 text-xs font-medium text-yellow-400"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                    <div className="mb-6">
+                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                        Tags
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {project.properties.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center gap-1 rounded-md bg-neutral-800 px-3 py-1.5 text-xs font-medium text-neutral-300"
+                            style={{
+                              backgroundColor: project.properties?.color ? `${project.properties.color}20` : undefined,
+                              color: project.properties?.color || undefined,
+                            }}
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
 
+                  {/* Descrição */}
                   {project.description && (
-                    <p className="mb-4 text-sm leading-relaxed text-neutral-400">
-                      {project.description}
-                    </p>
+                    <div className="mb-6">
+                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                        Descrição
+                      </h3>
+                      <p className="text-sm leading-relaxed text-neutral-300">
+                        {project.description}
+                      </p>
+                    </div>
                   )}
 
                   {/* Progresso */}
-                  <div className="mb-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="text-xs font-medium text-neutral-500">
+                  <div className="mb-6 rounded-lg border border-neutral-800 bg-neutral-950 p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
                         Progresso do Projeto
-                      </span>
-                      <span className="text-sm font-bold text-neutral-300">
+                      </h3>
+                      <span className="font-mono text-lg font-bold" style={{ color: project.properties?.color || "#eab308" }}>
                         {project.properties?.progress || 0}%
                       </span>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-800">
+                    <div className="h-3 w-full overflow-hidden rounded-full bg-neutral-800">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-yellow-500 to-yellow-400 transition-all"
-                        style={{ width: `${project.properties?.progress || 0}%` }}
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${project.properties?.progress || 0}%`,
+                          background: project.properties?.color
+                            ? `linear-gradient(to right, ${project.properties.color}, ${project.properties.color}dd)`
+                            : "linear-gradient(to right, #eab308, #facc15)",
+                        }}
                       ></div>
                     </div>
                   </div>
 
                   {/* Metadata */}
-                  <div className="grid grid-cols-2 gap-4 border-t border-neutral-800 pt-4 text-xs text-neutral-500">
-                    <div>
-                      <span className="font-medium">Criado em:</span>{" "}
-                      {new Date(project.created_at).toLocaleDateString("pt-BR")}
+                  <div className="grid grid-cols-1 gap-3 rounded-lg border border-neutral-800 bg-neutral-950 p-4 text-xs sm:grid-cols-2">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-neutral-500" />
+                      <div>
+                        <span className="font-semibold text-neutral-500">Criado em:</span>
+                        <p className="text-neutral-300">
+                          {new Date(project.created_at).toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <span className="font-medium">Atualizado em:</span>{" "}
-                      {new Date(project.updated_at).toLocaleDateString("pt-BR")}
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-neutral-500" />
+                      <div>
+                        <span className="font-semibold text-neutral-500">Atualizado em:</span>
+                        <p className="text-neutral-300">
+                          {new Date(project.updated_at).toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </>
@@ -456,27 +565,31 @@ export default function ProjectViewPage() {
                 <div className="space-y-4">
                   {/* Título */}
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-neutral-400">
-                      Título
+                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                      <FileText className="h-3.5 w-3.5" />
+                      Título do Projeto
                     </label>
                     <input
                       type="text"
                       value={editedTitle}
                       onChange={(e) => setEditedTitle(e.target.value)}
-                      className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 focus:border-yellow-500 focus:outline-none"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
+                      placeholder="Nome do projeto"
                     />
                   </div>
 
                   {/* Descrição */}
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-neutral-400">
+                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                      <AlignLeft className="h-3.5 w-3.5" />
                       Descrição
                     </label>
                     <textarea
                       value={editedDescription}
                       onChange={(e) => setEditedDescription(e.target.value)}
                       rows={4}
-                      className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 focus:border-yellow-500 focus:outline-none"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
+                      placeholder="Descreva os objetivos e detalhes do projeto..."
                     />
                   </div>
 
@@ -484,25 +597,29 @@ export default function ProjectViewPage() {
                   <div className="grid grid-cols-2 gap-4">
                     {/* Status */}
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-neutral-400">
+                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                        <Activity className="h-3.5 w-3.5" />
                         Status
                       </label>
                       <select
                         value={editedStatus}
                         onChange={(e) =>
-                          setEditedStatus(e.target.value as "ativo" | "arquivado" | "concluído")
+                          setEditedStatus(e.target.value as "open" | "running" | "completed" | "on-hold" | "archived")
                         }
-                        className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 focus:border-yellow-500 focus:outline-none"
+                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
                       >
-                        <option value="ativo">Ativo</option>
-                        <option value="concluído">Concluído</option>
-                        <option value="arquivado">Arquivado</option>
+                        <option value="open">🟢 Aberto</option>
+                        <option value="running">🔵 Em Andamento</option>
+                        <option value="completed">🟢 Concluído</option>
+                        <option value="on-hold">🟡 Pausado</option>
+                        <option value="archived">⚪ Arquivado</option>
                       </select>
                     </div>
 
                     {/* Prioridade */}
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-neutral-400">
+                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                        <Flag className="h-3.5 w-3.5" />
                         Prioridade
                       </label>
                       <select
@@ -510,17 +627,18 @@ export default function ProjectViewPage() {
                         onChange={(e) =>
                           setEditedPriority(e.target.value as "alta" | "media" | "baixa")
                         }
-                        className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 focus:border-yellow-500 focus:outline-none"
+                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
                       >
-                        <option value="baixa">Baixa</option>
-                        <option value="media">Média</option>
-                        <option value="alta">Alta</option>
+                        <option value="baixa">🟢 Baixa</option>
+                        <option value="media">🟡 Média</option>
+                        <option value="alta">🔴 Alta</option>
                       </select>
                     </div>
 
                     {/* Complexidade */}
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-neutral-400">
+                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                        <Zap className="h-3.5 w-3.5" />
                         Complexidade
                       </label>
                       <select
@@ -528,84 +646,99 @@ export default function ProjectViewPage() {
                         onChange={(e) =>
                           setEditedComplexity(e.target.value as "alta" | "media" | "baixa")
                         }
-                        className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 focus:border-yellow-500 focus:outline-none"
+                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
                       >
-                        <option value="baixa">Baixa</option>
-                        <option value="media">Média</option>
-                        <option value="alta">Alta</option>
+                        <option value="baixa">🟢 Baixa</option>
+                        <option value="media">🟡 Média</option>
+                        <option value="alta">🔴 Alta</option>
                       </select>
                     </div>
 
                     {/* Ícone */}
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-neutral-400">
+                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                        <Sparkles className="h-3.5 w-3.5" />
                         Ícone (Emoji)
                       </label>
                       <input
                         type="text"
                         value={editedIcon}
                         onChange={(e) => setEditedIcon(e.target.value)}
-                        className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 focus:border-yellow-500 focus:outline-none"
+                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-center text-2xl transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
                         placeholder="📁"
+                        maxLength={2}
                       />
                     </div>
                   </div>
 
                   {/* Cor */}
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-neutral-400">
+                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                      <Palette className="h-3.5 w-3.5" />
                       Cor do Projeto
                     </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={editedColor}
-                        onChange={(e) => setEditedColor(e.target.value)}
-                        className="h-10 w-20 cursor-pointer rounded-md border border-neutral-700 bg-neutral-800"
-                      />
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <input
+                          type="color"
+                          value={editedColor}
+                          onChange={(e) => setEditedColor(e.target.value)}
+                          className="h-12 w-16 cursor-pointer rounded-lg border-2 border-neutral-700 bg-neutral-800 transition-colors hover:border-yellow-500"
+                          title="Selecione uma cor"
+                        />
+                        <div
+                          className="absolute inset-0 rounded-lg border-2 border-transparent"
+                          style={{ backgroundColor: editedColor, opacity: 0.3, pointerEvents: 'none' }}
+                        />
+                      </div>
                       <input
                         type="text"
                         value={editedColor}
                         onChange={(e) => setEditedColor(e.target.value)}
-                        className="flex-1 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 focus:border-yellow-500 focus:outline-none"
+                        className="flex-1 rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 font-mono text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
+                        placeholder="#000000"
+                        pattern="^#[0-9A-Fa-f]{6}$"
                       />
                     </div>
                   </div>
 
                   {/* Data estimada */}
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-neutral-400">
+                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                      <Clock className="h-3.5 w-3.5" />
                       Data Estimada de Conclusão
                     </label>
                     <input
                       type="datetime-local"
                       value={editedEstimatedTime}
                       onChange={(e) => setEditedEstimatedTime(e.target.value)}
-                      className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 focus:border-yellow-500 focus:outline-none"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
                     />
                   </div>
 
                   {/* Tags */}
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-neutral-400">
-                      Tags
+                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                      <Tag className="h-3.5 w-3.5" />
+                      Tags do Projeto
                     </label>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {/* Tags existentes */}
                       {editedTags.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                           {editedTags.map((tag, index) => (
                             <span
                               key={index}
-                              className="group flex items-center gap-1 rounded-full bg-yellow-500/20 px-3 py-1 text-xs font-medium text-yellow-400"
+                              className="group flex items-center gap-1.5 rounded-full bg-yellow-500/20 px-3 py-1.5 text-xs font-medium text-yellow-400 transition-all hover:bg-yellow-500/30"
                             >
-                              {tag}
+                              #{tag}
                               <button
                                 type="button"
                                 onClick={() => setEditedTags(editedTags.filter((_, i) => i !== index))}
-                                className="ml-1 text-yellow-400 opacity-50 transition-opacity hover:opacity-100"
+                                className="rounded-full bg-yellow-500/20 p-0.5 text-yellow-400 opacity-70 transition-all hover:bg-red-500/30 hover:text-red-400 hover:opacity-100"
+                                title="Remover tag"
                               >
-                                ×
+                                <FaTimes className="h-2.5 w-2.5" />
                               </button>
                             </span>
                           ))}
@@ -613,22 +746,25 @@ export default function ProjectViewPage() {
                       )}
                       {/* Adicionar nova tag */}
                       <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={newTag}
-                          onChange={(e) => setNewTag(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && newTag.trim()) {
-                              e.preventDefault();
-                              if (!editedTags.includes(newTag.trim())) {
-                                setEditedTags([...editedTags, newTag.trim()]);
+                        <div className="relative flex-1">
+                          <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                          <input
+                            type="text"
+                            value={newTag}
+                            onChange={(e) => setNewTag(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && newTag.trim()) {
+                                e.preventDefault();
+                                if (!editedTags.includes(newTag.trim())) {
+                                  setEditedTags([...editedTags, newTag.trim()]);
+                                }
+                                setNewTag("");
                               }
-                              setNewTag("");
-                            }
-                          }}
-                          placeholder="Digite uma tag e pressione Enter"
-                          className="flex-1 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 focus:border-yellow-500 focus:outline-none"
-                        />
+                            }}
+                            placeholder="Digite uma tag e pressione Enter"
+                            className="w-full rounded-lg border border-neutral-700 bg-neutral-800 py-2.5 pr-3 pl-10 text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
+                          />
+                        </div>
                         <button
                           type="button"
                           onClick={() => {
@@ -637,7 +773,9 @@ export default function ProjectViewPage() {
                               setNewTag("");
                             }
                           }}
-                          className="rounded-md bg-yellow-500 px-4 py-2 text-sm font-medium text-neutral-950 transition-colors hover:bg-yellow-600"
+                          className="rounded-lg bg-yellow-500 px-4 py-2.5 text-sm font-semibold text-neutral-950 transition-all hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={!newTag.trim() || editedTags.includes(newTag.trim())}
+                          title="Adicionar tag"
                         >
                           Adicionar
                         </button>
@@ -652,67 +790,94 @@ export default function ProjectViewPage() {
             <div className="rounded-md border border-neutral-800 bg-neutral-900 p-6">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="flex items-center gap-2 text-lg font-semibold text-neutral-100">
-                  <FileText className="h-5 w-5" />
-                  Notas ({projectNotes.length})
+                  <FileText className="h-5 w-5 text-blue-400" />
+                  Notas Associadas
+                  <span className="ml-2 rounded-full bg-blue-500/20 px-2 py-0.5 text-xs font-bold text-blue-400">
+                    {projectNotes.length}
+                  </span>
                 </h2>
                 {canEdit && (
                   <button
                     onClick={() => setShowAddNote(true)}
-                    className="flex items-center gap-2 rounded-md bg-neutral-800 px-3 py-1.5 text-xs text-neutral-200 transition-colors hover:bg-neutral-700"
+                    className="flex items-center gap-2 rounded-md bg-blue-500/20 px-3 py-2 text-xs font-medium text-blue-400 transition-all hover:bg-blue-500/30"
                   >
                     <FaPlus />
-                    Adicionar Nota
+                    Adicionar
                   </button>
                 )}
               </div>
 
               {projectNotes.length === 0 ? (
-                <p className="text-center text-sm text-neutral-500">
-                  Nenhuma nota associada a este projeto
-                </p>
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-800 bg-neutral-950 py-12">
+                  <FileText className="mb-3 h-12 w-12 text-neutral-700" />
+                  <p className="mb-1 text-sm font-medium text-neutral-400">
+                    Nenhuma nota associada
+                  </p>
+                  <p className="text-xs text-neutral-600">
+                    Adicione notas para organizar o projeto
+                  </p>
+                </div>
               ) : (
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 gap-3">
                   {projectNotes.map((note) => (
                     <div
                       key={note.id}
-                      className="group flex items-center justify-between rounded-md border border-neutral-800 bg-neutral-950 p-3 transition-colors hover:border-neutral-700"
+                      className="group relative overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950 transition-all hover:border-neutral-700 hover:shadow-lg hover:shadow-neutral-900/50"
                     >
-                      <div className="flex-1">
-                        <h3 className="mb-1 text-sm font-medium text-neutral-200">{note.title}</h3>
+                      <div className="p-4">
+                        <div className="mb-2 flex items-start justify-between gap-3">
+                          <h3 className="flex-1 text-sm font-semibold text-neutral-200 group-hover:text-white">
+                            {note.title}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            {note.status && (
+                              <span
+                                className={`rounded-md px-2 py-1 text-[10px] font-bold uppercase ${
+                                  note.status === "done"
+                                    ? "bg-green-500/20 text-green-400"
+                                    : note.status === "open"
+                                      ? "bg-cyan-500/20 text-cyan-400"
+                                      : note.status === "in-progress"
+                                        ? "bg-blue-500/20 text-blue-400"
+                                        : "bg-neutral-800 text-neutral-400"
+                                }`}
+                              >
+                                {note.status === "done"
+                                  ? "Concluída"
+                                  : note.status === "open"
+                                    ? "Aberta"
+                                    : note.status === "in-progress"
+                                      ? "Em progresso"
+                                      : note.status}
+                              </span>
+                            )}
+                            {canEdit && (
+                              <button
+                                onClick={() => handleRemoveNote(note.id)}
+                                className="rounded-md bg-red-500/10 p-1.5 text-red-400 opacity-0 transition-all hover:bg-red-500/20 group-hover:opacity-100"
+                                title="Remover nota"
+                              >
+                                <FaTimes className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
                         {note.tags && note.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {note.tags.slice(0, 3).map((tag, i) => (
+                          <div className="flex flex-wrap gap-1.5">
+                            {note.tags.slice(0, 5).map((tag, i) => (
                               <span
                                 key={i}
-                                className="rounded-full bg-neutral-800 px-2 py-0.5 text-[10px] text-neutral-400"
+                                className="inline-flex items-center rounded-md bg-neutral-800/70 px-2 py-0.5 text-[10px] font-medium text-neutral-400"
                               >
-                                {tag}
+                                #{tag}
                               </span>
                             ))}
+                            {note.tags.length > 5 && (
+                              <span className="inline-flex items-center rounded-md bg-neutral-800/70 px-2 py-0.5 text-[10px] font-medium text-neutral-500">
+                                +{note.tags.length - 5}
+                              </span>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {note.status && (
-                          <span
-                            className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase ${
-                              note.status === "done"
-                                ? "bg-green-500/20 text-green-400"
-                                : note.status === "open"
-                                  ? "bg-blue-500/20 text-blue-400"
-                                  : "bg-neutral-800 text-neutral-400"
-                            }`}
-                          >
-                            {note.status}
-                          </span>
-                        )}
-                        {canEdit && (
-                          <button
-                            onClick={() => handleRemoveNote(note.id)}
-                            className="opacity-0 transition-opacity group-hover:opacity-100"
-                          >
-                            <FaTimes className="text-red-400 hover:text-red-300" />
-                          </button>
                         )}
                       </div>
                     </div>
@@ -728,34 +893,46 @@ export default function ProjectViewPage() {
             <div className="rounded-md border border-neutral-800 bg-neutral-900 p-4">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="flex items-center gap-2 text-sm font-semibold text-neutral-100">
-                  <Users className="h-4 w-4" />
-                  Colaboradores
+                  <Users className="h-4 w-4 text-purple-400" />
+                  Equipe
                 </h2>
                 {isOwner && (
                   <button
                     onClick={() => setShowAddCollaborator(true)}
-                    className="rounded-md bg-neutral-800 p-1.5 text-neutral-400 transition-colors hover:bg-neutral-700"
+                    className="rounded-md bg-purple-500/20 p-2 text-purple-400 transition-all hover:bg-purple-500/30"
+                    title="Adicionar colaborador"
                   >
-                    <FaUserPlus className="h-3 w-3" />
+                    <FaUserPlus className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>
 
               {/* Owner */}
               {project.owner && (
-                <div className="mb-3 rounded-md border border-neutral-800 bg-neutral-950 p-3">
-                  <div className="mb-1 flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-500 text-sm font-bold text-neutral-950">
-                      {project.owner.name?.charAt(0) || project.owner.username.charAt(0)}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-medium text-neutral-200">
+                <div className="mb-3 overflow-hidden rounded-lg border border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-neutral-950 p-3">
+                  <div className="mb-2 flex items-center gap-3">
+                    {project.owner.avatar_url ? (
+                      <Image
+                        src={project.owner.avatar_url}
+                        alt={project.owner.name || project.owner.username}
+                        className="h-10 w-10 rounded-full border-2 border-yellow-500/50 object-cover"
+                        height={40}
+                        width={40}
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-yellow-500/50 bg-yellow-500 text-sm font-bold text-neutral-950">
+                        {project.owner.name?.charAt(0).toUpperCase() || project.owner.username.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-sm font-semibold text-neutral-100">
                         {project.owner.name || project.owner.username}
                       </p>
-                      <p className="text-[10px] text-neutral-500">{project.owner.email}</p>
+                      <p className="truncate text-[10px] text-neutral-500">{project.owner.email}</p>
                     </div>
                   </div>
-                  <span className="inline-block rounded-md bg-yellow-500/20 px-2 py-0.5 text-[10px] font-bold text-yellow-400">
+                  <span className="inline-flex items-center gap-1 rounded-md bg-yellow-500/20 px-2 py-1 text-[10px] font-bold text-yellow-400">
+                    <Folder className="h-3 w-3" />
                     PROPRIETÁRIO
                   </span>
                 </div>
@@ -763,15 +940,18 @@ export default function ProjectViewPage() {
 
               {/* Colaboradores */}
               {collaborators.length === 0 ? (
-                <p className="text-center text-xs text-neutral-500">Nenhum colaborador</p>
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-800 bg-neutral-950 py-8">
+                  <Users className="mb-2 h-8 w-8 text-neutral-700" />
+                  <p className="text-xs text-neutral-500">Nenhum colaborador</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {collaborators.map((collab) => (
                     <div
                       key={collab.user_id}
-                      className="group rounded-md border border-neutral-800 bg-neutral-950 p-3"
+                      className="group rounded-lg border border-neutral-800 bg-neutral-950 p-3 transition-all hover:border-neutral-700 hover:bg-neutral-900"
                     >
-                      <div className="mb-2 flex items-center gap-2">
+                      <div className="mb-2 flex items-center gap-3">
                         {collab.avatar_url ? (
                           <Image
                             src={collab.avatar_url}
@@ -782,21 +962,22 @@ export default function ProjectViewPage() {
                           />
                         ) : (
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-700 text-xs font-bold text-neutral-200">
-                            {collab.name?.charAt(0) || collab.username.charAt(0)}
+                            {collab.name?.charAt(0).toUpperCase() || collab.username.charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <div className="flex-1">
-                          <p className="text-xs font-medium text-neutral-200">
+                        <div className="flex-1 min-w-0">
+                          <p className="truncate text-xs font-medium text-neutral-200">
                             {collab.name || collab.username}
                           </p>
-                          <p className="text-[10px] text-neutral-500">{collab.email}</p>
+                          <p className="truncate text-[10px] text-neutral-500">{collab.email}</p>
                         </div>
                         {isOwner && (
                           <button
                             onClick={() => handleRemoveCollaborator(collab.user_id)}
-                            className="opacity-0 transition-opacity group-hover:opacity-100"
+                            className="rounded-md bg-red-500/10 p-1.5 text-red-400 opacity-0 transition-all hover:bg-red-500/20 group-hover:opacity-100"
+                            title="Remover colaborador"
                           >
-                            <FaTimes className="text-xs text-red-400 hover:text-red-300" />
+                            <FaTimes className="h-3 w-3" />
                           </button>
                         )}
                       </div>
@@ -809,20 +990,20 @@ export default function ProjectViewPage() {
                               e.target.value as "admin" | "viewer"
                             )
                           }
-                          className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-2 py-1 text-[10px] text-neutral-300"
+                          className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-[10px] font-medium text-neutral-300 transition-colors focus:border-purple-500 focus:outline-none"
                         >
-                          <option value="viewer">Visualizador</option>
-                          <option value="admin">Administrador</option>
+                          <option value="viewer">👁️ Visualizador</option>
+                          <option value="admin">🔑 Administrador</option>
                         </select>
                       ) : (
                         <span
-                          className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                          className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold ${
                             collab.permission === "admin"
                               ? "bg-blue-500/20 text-blue-400"
                               : "bg-neutral-800 text-neutral-400"
                           }`}
                         >
-                          {collab.permission === "admin" ? "ADMIN" : "VIEWER"}
+                          {collab.permission === "admin" ? "🔑 ADMIN" : "👁️ VIEWER"}
                         </span>
                       )}
                     </div>
@@ -834,26 +1015,35 @@ export default function ProjectViewPage() {
             {/* Estatísticas */}
             <div className="rounded-md border border-neutral-800 bg-neutral-900 p-4">
               <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-neutral-100">
-                <TrendingUp className="h-4 w-4" />
+                <TrendingUp className="h-4 w-4 text-green-400" />
                 Estatísticas
               </h2>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-neutral-400">Total de Notas</span>
-                  <span className="font-mono text-sm font-bold text-neutral-200">
-                    {projectNotes.length}
+                <div className="group flex items-center justify-between rounded-md bg-neutral-950 p-3 transition-colors hover:bg-neutral-900">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-blue-400" />
+                    <span className="text-xs font-medium text-neutral-400">Notas</span>
+                  </div>
+                  <span className="font-mono text-base font-bold text-blue-400">
+                    {String(projectNotes.length).padStart(2, "0")}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-neutral-400">Colaboradores</span>
-                  <span className="font-mono text-sm font-bold text-neutral-200">
-                    {collaborators.length}
+                <div className="group flex items-center justify-between rounded-md bg-neutral-950 p-3 transition-colors hover:bg-neutral-900">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-purple-400" />
+                    <span className="text-xs font-medium text-neutral-400">Colaboradores</span>
+                  </div>
+                  <span className="font-mono text-base font-bold text-purple-400">
+                    {String(collaborators.length).padStart(2, "0")}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-neutral-400">Progresso</span>
-                  <span className="font-mono text-sm font-bold text-yellow-400">
+                <div className="group flex items-center justify-between rounded-md bg-neutral-950 p-3 transition-colors hover:bg-neutral-900">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-green-400" />
+                    <span className="text-xs font-medium text-neutral-400">Progresso</span>
+                  </div>
+                  <span className="font-mono text-base font-bold text-green-400">
                     {project.properties?.progress || 0}%
                   </span>
                 </div>
@@ -865,19 +1055,22 @@ export default function ProjectViewPage() {
 
       {/* Modal: Adicionar Colaborador */}
       {showAddCollaborator && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-md border border-neutral-800 bg-neutral-900 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-neutral-100">Adicionar Colaborador</h3>
+              <h3 className="flex items-center gap-2 text-lg font-bold text-neutral-100">
+                <FaUserPlus className="text-purple-400" />
+                Adicionar Colaborador
+              </h3>
               <button
                 onClick={() => {
                   setShowAddCollaborator(false);
                   setCollaboratorSearch("");
                   setSearchResults([]);
                 }}
-                className="text-neutral-400 hover:text-neutral-200"
+                className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-neutral-300"
               >
-                <FaTimes />
+                <FaTimes className="h-4 w-4" />
               </button>
             </div>
 
@@ -888,46 +1081,60 @@ export default function ProjectViewPage() {
                 value={collaboratorSearch}
                 onChange={(e) => setCollaboratorSearch(e.target.value)}
                 placeholder="Buscar por nome ou email..."
-                className="w-full rounded-md border border-neutral-700 bg-neutral-800 py-2 pr-3 pl-10 text-sm text-neutral-100 focus:border-yellow-500 focus:outline-none"
+                className="w-full rounded-lg border border-neutral-700 bg-neutral-800 py-2.5 pr-3 pl-10 text-sm text-neutral-100 placeholder:text-neutral-600 transition-colors focus:border-purple-500 focus:outline-none"
+                autoFocus
               />
             </div>
 
             {searchingUsers && (
-              <div className="flex justify-center py-4">
-                <FaSpinner className="h-5 w-5 animate-spin text-neutral-500" />
+              <div className="flex flex-col items-center justify-center py-8">
+                <FaSpinner className="mb-2 h-6 w-6 animate-spin text-purple-400" />
+                <p className="text-xs text-neutral-500">Buscando usuários...</p>
               </div>
             )}
 
             {searchResults.length > 0 && (
-              <div className="max-h-60 space-y-2 overflow-y-auto">
+              <div className="max-h-80 space-y-2 overflow-y-auto rounded-lg">
                 {searchResults.map((user) => (
                   <div
                     key={user.id}
-                    className="flex items-center justify-between rounded-md border border-neutral-800 bg-neutral-950 p-3"
+                    className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 p-3 transition-all hover:border-neutral-700 hover:bg-neutral-900"
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-700 text-xs font-bold text-neutral-200">
-                        {user.name?.charAt(0) || user.username.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-neutral-200">
+                    <div className="flex items-center gap-3">
+                      {user.avatar_url ? (
+                        <Image
+                          src={user.avatar_url}
+                          alt={user.name || user.username}
+                          className="h-10 w-10 rounded-full object-cover"
+                          height={40}
+                          width={40}
+                        />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/20 text-sm font-bold text-purple-400">
+                          {user.name?.charAt(0).toUpperCase() || user.username.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-neutral-200">
                           {user.name || user.username}
                         </p>
-                        <p className="text-[10px] text-neutral-500">{user.email}</p>
+                        <p className="truncate text-[10px] text-neutral-500">{user.email}</p>
                       </div>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-2">
                       <button
                         onClick={() => handleAddCollaborator(user.id, "viewer")}
-                        className="rounded-md bg-neutral-800 px-2 py-1 text-[10px] text-neutral-300 transition-colors hover:bg-neutral-700"
+                        className="rounded-md bg-neutral-800 px-3 py-1.5 text-[10px] font-medium text-neutral-300 transition-all hover:bg-neutral-700"
+                        title="Adicionar como visualizador"
                       >
-                        Viewer
+                        👁️ Viewer
                       </button>
                       <button
                         onClick={() => handleAddCollaborator(user.id, "admin")}
-                        className="rounded-md bg-blue-500/20 px-2 py-1 text-[10px] text-blue-400 transition-colors hover:bg-blue-500/30"
+                        className="rounded-md bg-blue-500/20 px-3 py-1.5 text-[10px] font-medium text-blue-400 transition-all hover:bg-blue-500/30"
+                        title="Adicionar como administrador"
                       >
-                        Admin
+                        🔑 Admin
                       </button>
                     </div>
                   </div>
@@ -936,7 +1143,19 @@ export default function ProjectViewPage() {
             )}
 
             {collaboratorSearch.length >= 2 && !searchingUsers && searchResults.length === 0 && (
-              <p className="py-4 text-center text-sm text-neutral-500">Nenhum usuário encontrado</p>
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-800 py-8">
+                <Users className="mb-2 h-8 w-8 text-neutral-700" />
+                <p className="text-sm text-neutral-500">Nenhum usuário encontrado</p>
+                <p className="text-xs text-neutral-600">Tente buscar por outro nome ou email</p>
+              </div>
+            )}
+
+            {collaboratorSearch.length < 2 && searchResults.length === 0 && !searchingUsers && (
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-800 py-8">
+                <FaSearch className="mb-2 h-8 w-8 text-neutral-700" />
+                <p className="text-sm text-neutral-500">Digite pelo menos 2 caracteres</p>
+                <p className="text-xs text-neutral-600">para buscar usuários</p>
+              </div>
             )}
           </div>
         </div>
@@ -944,46 +1163,98 @@ export default function ProjectViewPage() {
 
       {/* Modal: Adicionar Nota */}
       {showAddNote && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-md border border-neutral-800 bg-neutral-900 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-neutral-100">Adicionar Nota</h3>
+              <h3 className="flex items-center gap-2 text-lg font-bold text-neutral-100">
+                <FileText className="h-5 w-5 text-yellow-400" />
+                Adicionar Nota ao Projeto
+              </h3>
               <button
                 onClick={() => setShowAddNote(false)}
-                className="text-neutral-400 hover:text-neutral-200"
+                className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-neutral-300"
               >
-                <FaTimes />
+                <FaTimes className="h-4 w-4" />
               </button>
             </div>
 
             {availableNotes.length === 0 ? (
-              <p className="py-4 text-center text-sm text-neutral-500">
-                Nenhuma nota disponível para adicionar
-              </p>
-            ) : (
-              <div className="max-h-96 space-y-2 overflow-y-auto">
-                {availableNotes.map((note) => (
-                  <button
-                    key={note.id}
-                    onClick={() => handleAddNote(note.id)}
-                    className="w-full rounded-md border border-neutral-800 bg-neutral-950 p-3 text-left transition-colors hover:border-neutral-700 hover:bg-neutral-900"
-                  >
-                    <p className="mb-1 text-sm font-medium text-neutral-200">{note.title}</p>
-                    {note.tags && note.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {note.tags.slice(0, 3).map((tag, i) => (
-                          <span
-                            key={i}
-                            className="rounded-full bg-neutral-800 px-2 py-0.5 text-[10px] text-neutral-400"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </button>
-                ))}
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-800 py-12">
+                <FileText className="mb-3 h-12 w-12 text-neutral-700" />
+                <p className="mb-1 text-sm font-medium text-neutral-400">
+                  Nenhuma nota disponível
+                </p>
+                <p className="text-xs text-neutral-600">
+                  Todas as suas notas já estão neste projeto
+                </p>
               </div>
+            ) : (
+              <>
+                <p className="mb-3 text-xs text-neutral-500">
+                  Selecione uma nota para adicionar ao projeto
+                </p>
+                <div className="max-h-96 space-y-2 overflow-y-auto rounded-lg">
+                  {availableNotes.map((note) => (
+                    <button
+                      key={note.id}
+                      onClick={() => handleAddNote(note.id)}
+                      className="group w-full rounded-lg border border-neutral-800 bg-neutral-950 p-3 text-left transition-all hover:border-yellow-500/30 hover:bg-neutral-900"
+                    >
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <p className="flex-1 text-sm font-medium text-neutral-200 group-hover:text-yellow-400">
+                          {note.title}
+                        </p>
+                        <Plus className="h-4 w-4 text-neutral-600 transition-colors group-hover:text-yellow-400" />
+                      </div>
+                      
+                      {note.content && (
+                        <p className="mb-2 line-clamp-2 text-xs text-neutral-500">
+                          {note.content.substring(0, 100)}...
+                        </p>
+                      )}
+                      
+                      {note.tags && note.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {note.tags.slice(0, 4).map((tag, i) => (
+                            <span
+                              key={i}
+                              className="rounded-full bg-neutral-800 px-2 py-0.5 text-[10px] text-neutral-400"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                          {note.tags.length > 4 && (
+                            <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-[10px] text-neutral-500">
+                              +{note.tags.length - 4}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {note.status && (
+                        <div className="mt-2 flex items-center gap-1.5">
+                          <div
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              note.status === "published"
+                                ? "bg-green-400"
+                                : note.status === "draft"
+                                ? "bg-yellow-400"
+                                : "bg-neutral-500"
+                            }`}
+                          />
+                          <span className="text-[10px] capitalize text-neutral-500">
+                            {note.status === "published"
+                              ? "Publicada"
+                              : note.status === "draft"
+                              ? "Rascunho"
+                              : "Arquivada"}
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>
