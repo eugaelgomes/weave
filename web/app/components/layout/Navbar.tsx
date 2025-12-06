@@ -6,240 +6,205 @@ import Image from "next/image";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { IoPersonCircleSharp } from "react-icons/io5";
+import { RxMix } from "react-icons/rx";
+
+// --- Helpers & Sub-components ---
+
+const getDisplayName = (user: any) => {
+  const name = user?.name || "Usuário";
+  const parts = name.trim().split(" ");
+  return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : parts[0];
+};
+
+const UserAvatar = ({ user, size = "sm" }: { user: any; size?: "sm" | "md" | "lg" }) => {
+  const sizeClasses = {
+    sm: "h-8 w-8 sm:h-9 sm:w-9",
+    md: "h-12 w-12",
+    lg: "h-16 w-16",
+  };
+
+  const wrapperClass = `${sizeClasses[size]} overflow-hidden rounded-md border-2 border-neutral-800 flex-shrink-0`;
+
+  if (user?.avatar_url && typeof user.avatar_url === "string") {
+    return (
+      <div className={wrapperClass}>
+        <Image
+          src={user.avatar_url}
+          alt="Avatar"
+          width={64}
+          height={64}
+          className="h-full w-full object-cover"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <IoPersonCircleSharp
+      className={`${sizeClasses[size]} text-neutral-500 transition-colors group-hover:text-yellow-500`}
+    />
+  );
+};
+
+const MenuContent = ({
+  user,
+  logout,
+  onClose,
+}: {
+  user: any;
+  logout: () => void;
+  onClose: () => void;
+}) => (
+  <>
+    {/* Header */}
+    <div className="flex items-center gap-4 border-b border-neutral-800/50 bg-neutral-950/30 px-6 py-4">
+      <UserAvatar user={user} size="md" />
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-semibold text-neutral-100">{user?.name || "Usuário"}</p>
+        <p className="truncate text-sm text-neutral-500">{user?.email}</p>
+      </div>
+    </div>
+
+    {/* Ações/Botões */}
+    <div className="p-2">
+      <Link
+        href="/app/settings"
+        onClick={onClose}
+        className="block rounded-md px-4 py-2.5 text-sm font-medium text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
+      >
+        Configurações
+      </Link>
+      <Link
+        href="/about"
+        onClick={onClose}
+        className="block rounded-md px-4 py-2.5 text-sm font-medium text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
+      >
+        Sobre o app
+      </Link>
+      <button
+        onClick={() => {
+          logout();
+          onClose();
+        }}
+        className="block w-full rounded-md px-4 py-2.5 text-left text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
+      >
+        Sair
+      </button>
+    </div>
+  </>
+);
+
+// --- Main Component ---
 
 interface NavbarProps {
   onToggleSidebar?: () => void;
 }
 
-// Função para extrair o primeiro e último nome do usuário
-const nameExtractor = (user: { [key: string]: unknown } | null | undefined) => {
-  const name = user?.name;
-  if (!name || typeof name !== "string" || !name.trim()) {
-    return "Usuário";
-  }
-  const nomes = name.trim().split(" ");
-  if (nomes.length === 1) {
-    return nomes[0];
-  }
-  return `${nomes[0]} ${nomes[nomes.length - 1]}`;
-};
-
-// Menu de itens/rotas do usuário
-const UserMenuItems = ({
-  logout,
-  onLinkClick,
-}: {
-  logout: () => void;
-  onLinkClick?: () => void;
-}) => (
-  <>
-    <Link
-      href="/app/settings"
-      onClick={onLinkClick}
-      className="block px-4 py-2.5 text-sm font-medium text-neutral-300 transition-all hover:bg-neutral-800/50 hover:text-neutral-100"
-    >
-      Configurações
-    </Link>
-    <button
-      onClick={() => {
-        logout();
-        onLinkClick?.();
-      }}
-      className="block w-full px-4 py-2.5 text-left text-sm font-medium text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
-    >
-      Sair
-    </button>
-  </>
-);
-
 const Navbar = ({ onToggleSidebar }: NavbarProps) => {
   const { user, logout, authenticated } = useAuth();
-  const [isUserMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
+  const [isMenuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const userName = nameExtractor(user);
-
-  // Fechar menu ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setUserMenuOpen(false);
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const toggleUserMenu = () => {
-    setUserMenuOpen(!isUserMenuOpen);
-  };
-
-  const closeUserMenu = () => {
-    setUserMenuOpen(false);
-  };
-
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-neutral-800/60 bg-neutral-950 shadow-lg">
-      <div className="px-2 sm:px-4 lg:px-8">
-        <div className="flex h-14 items-center justify-between sm:h-16">
-          {/* Mobile Menu Button + Logo */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Hamburger Menu (Mobile) */}
+    <nav className="sticky top-0 z-50 w-full border-b border-neutral-800 bg-neutral-950/80 backdrop-blur-md">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-10 items-center justify-between sm:h-14">
+          {/* Left: Hamburger + Logo */}
+          <div className="flex items-center gap-3">
             {authenticated && (
               <button
+                title="toggle_icon"
                 onClick={onToggleSidebar}
-                className="rounded-md p-1.5 text-neutral-400 transition-all hover:bg-neutral-800/50 hover:text-neutral-100 sm:p-2 lg:hidden"
-                aria-label="Abrir menu"
+                className="rounded-md p-2 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100 lg:hidden"
               >
                 <FaBars className="h-5 w-5" />
               </button>
             )}
 
-            {/* Logo */}
             <Link
               href={authenticated ? "/app/home" : "/"}
-              className="text-base font-bold text-yellow-500 transition-colors hover:text-yellow-400 sm:text-lg md:text-xl"
+              className="group flex items-center gap-3"
             >
-              Weave Notes
+              {/* Logo Mark Sutil */}
+              <div className="text-yellow-500 transition-transform duration-500 group-hover:rotate-180">
+                <RxMix className="h-5 w-5" />
+              </div>
+
+              {/* Divisor vertical */}
+              <div className="h-4 w-px bg-neutral-800"></div>
+
+              <span className="text-base font-semibold tracking-tight text-neutral-200">
+                Weave Notes
+              </span>
             </Link>
           </div>
 
-          {/* Right side - User menu or Login */}
-          <div className="flex items-center">
+          {/* Right: User Actions */}
+          <div className="flex items-center gap-4">
             {authenticated && user ? (
-              /* User Menu */
-              <div className="relative" ref={userMenuRef}>
+              <div className="relative" ref={menuRef}>
+                {/* Trigger Button */}
                 <button
-                  onClick={toggleUserMenu}
-                  className="group flex items-center gap-2 rounded-md p-1 transition-all hover:bg-neutral-800/50 sm:gap-3 sm:p-2"
-                  aria-label="Menu do usuário"
+                  onClick={() => setMenuOpen(!isMenuOpen)}
+                  className="group flex items-center gap-3 rounded-md border border-transparent p-1 transition-all hover:bg-neutral-900 focus:ring-2 focus:ring-neutral-800 focus:ring-offset-2 focus:ring-offset-neutral-950 focus:outline-none"
                 >
-                  {/* User Name (Hidden on small screens) */}
-                  <span className="hidden text-sm font-semibold text-neutral-300 transition-colors group-hover:text-neutral-100 md:block">
-                    {userName}
+                  <span className="hidden text-sm font-medium text-neutral-300 group-hover:text-neutral-100 md:block">
+                    {getDisplayName(user)}
                   </span>
-
-                  {/* Avatar */}
-                  {user?.avatar_url && typeof user.avatar_url === "string" ? (
-                    <div className="h-8 w-8 overflow-hidden rounded-full border-2 border-neutral-800 transition-all group-hover:border-yellow-500/50 sm:h-9 sm:w-9">
-                      <Image
-                        src={user.avatar_url}
-                        alt={`Avatar de ${userName}`}
-                        width={36}
-                        height={36}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <IoPersonCircleSharp className="h-8 w-8 text-neutral-500 transition-colors group-hover:text-yellow-500 sm:h-9 sm:w-9" />
-                  )}
+                  <UserAvatar user={user} size="sm" />
                 </button>
 
-                {/* User Dropdown Menu */}
-                {isUserMenuOpen && (
+                {/* Dropdowns / Modals */}
+                {isMenuOpen && (
                   <>
-                    {/* Mobile Overlay */}
-                    <div
-                      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm sm:hidden"
-                      onClick={closeUserMenu}
-                    />
-
                     {/* Desktop Dropdown */}
-                    <div className="absolute right-0 z-50 mt-2 hidden w-72 overflow-hidden rounded-md border border-neutral-800/60 bg-neutral-900/95 shadow-2xl backdrop-blur-md sm:block">
-                      {/* User Info Header */}
-                      <div className="border-b border-neutral-800/50 bg-neutral-950/50 px-4 py-4">
-                        <div className="flex items-center gap-3">
-                          {user?.avatar_url && typeof user.avatar_url === "string" ? (
-                            <div className="h-12 w-12 overflow-hidden rounded-full border-2 border-neutral-800">
-                              <Image
-                                src={user.avatar_url}
-                                alt={`Avatar de ${userName}`}
-                                width={48}
-                                height={48}
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <IoPersonCircleSharp className="h-12 w-12 text-neutral-500" />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate font-semibold text-neutral-100">
-                              {String(user?.name || "Usuário")}
-                            </p>
-                            <p className="truncate text-sm text-neutral-500">
-                              {String(user?.email || "")}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Menu Items */}
-                      <div className="py-2">
-                        <UserMenuItems logout={logout} onLinkClick={closeUserMenu} />
-                      </div>
+                    <div className="ring-opacity-5 absolute right-0 mt-2 hidden w-72 origin-top-right overflow-hidden rounded-md border border-neutral-800 bg-neutral-900 shadow-2xl ring-1 ring-black sm:block">
+                      <MenuContent user={user} logout={logout} onClose={() => setMenuOpen(false)} />
                     </div>
 
+                    {/* Mobile Bottom Sheet Backdrop */}
+                    <div
+                      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm sm:hidden"
+                      onClick={() => setMenuOpen(false)}
+                    />
+
                     {/* Mobile Bottom Sheet */}
-                    <div className="fixed right-0 bottom-0 left-0 z-50 rounded-t-2xl border-t border-neutral-800/60 bg-neutral-900/95 shadow-2xl backdrop-blur-md sm:hidden">
-                      {/* Handle */}
+                    <div className="fixed right-0 bottom-0 left-0 z-50 rounded-md border-t border-neutral-800 bg-neutral-900 shadow-2xl sm:hidden">
                       <div className="flex justify-center py-3">
-                        <div className="h-1 w-10 rounded-full bg-neutral-700"></div>
+                        <div className="h-1 w-12 rounded-md bg-neutral-800" />
                       </div>
 
-                      {/* User Info */}
-                      <div className="px-6 pb-4">
-                        <div className="mb-4 flex items-center gap-4">
-                          {user?.avatar_url && typeof user.avatar_url === "string" ? (
-                            <Image
-                              src={user.avatar_url}
-                              alt="Avatar"
-                              width={64}
-                              height={64}
-                              className="h-16 w-16 rounded-full border-2 border-neutral-800 object-cover"
-                            />
-                          ) : (
-                            <IoPersonCircleSharp className="h-16 w-16 text-neutral-500" />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="text-lg font-semibold text-neutral-100">
-                              {String(user?.name || "Usuário")}
-                            </p>
-                            <p className="text-neutral-400">{String(user?.email || "")}</p>
-                          </div>
-                        </div>
-                      </div>
+                      <MenuContent user={user} logout={logout} onClose={() => setMenuOpen(false)} />
 
-                      {/* Menu Items */}
-                      <div className="border-t border-neutral-800/50">
-                        <UserMenuItems logout={logout} onLinkClick={closeUserMenu} />
-
-                        {/* Close Button */}
+                      <div className="px-4 pt-2 pb-6">
                         <button
-                          onClick={closeUserMenu}
-                          className="flex w-full items-center justify-center gap-2 px-4 py-3 text-center text-neutral-400 transition-all hover:bg-neutral-800/50 hover:text-neutral-100"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-800 py-3 text-sm font-medium text-neutral-300 hover:bg-neutral-700 hover:text-white"
                         >
-                          <FaTimes size={16} />
-                          Fechar
+                          <FaTimes /> Fechar
                         </button>
                       </div>
-
-                      {/* Safe Area */}
-                      <div className="pb-safe-area-inset-bottom"></div>
                     </div>
                   </>
                 )}
               </div>
             ) : (
-              <div className="flex items-center">
-                <Link
-                  href="/auth/signin"
-                  className="rounded-md bg-yellow-500/90 px-3 py-1.5 text-xs font-semibold text-neutral-950 transition-all hover:bg-yellow-500 sm:px-4 sm:py-2 sm:text-sm"
-                >
-                  Entrar
-                </Link>
-              </div>
+              <Link
+                href="/auth/signin"
+                className="rounded-md bg-yellow-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-yellow-500"
+              >
+                Entrar
+              </Link>
             )}
           </div>
         </div>

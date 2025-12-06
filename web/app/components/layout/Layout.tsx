@@ -30,24 +30,27 @@ const Layout = ({ children }: LayoutProps) => {
       <Navbar onToggleSidebar={toggleSidebar} />
 
       <div className="relative flex flex-1 overflow-hidden">
-        {/* Overlay para mobile quando sidebar está aberta */}
+        {/* Overlay mobile */}
         {sidebarOpen && (
-          <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={closeSidebar} />
+          <div
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300 lg:hidden"
+            onClick={closeSidebar}
+          />
         )}
 
-        {/* Sidebar como aside em desktop */}
+        {/* Sidebar */}
         <aside
-          className={`fixed z-50 transition-all duration-300 ease-in-out lg:static lg:z-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} top-0 left-0 flex h-full w-64 flex-col bg-neutral-900 pt-14 sm:pt-16 lg:top-auto lg:left-auto lg:block lg:translate-x-0 lg:bg-transparent lg:pt-0 lg:shadow-none`}
+          className={`fixed top-0 left-0 z-50 h-full w-72 flex-col bg-neutral-900 transition-transform duration-300 ease-in-out sm:w-80 lg:static lg:z-auto lg:w-[240px] lg:translate-x-0 lg:bg-transparent lg:shadow-none ${sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} pt-14 sm:pt-16 lg:pt-0`}
         >
-          <div className="h-full p-2 lg:p-4">
+          <div className="h-full p-2 sm:p-3 lg:h-full lg:p-0">
             <Sidebar onLinkClick={closeSidebar} />
           </div>
         </aside>
 
         {/* Main Content */}
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden lg:ml-0">
-          <div className="no-scrollbar flex-1 overflow-y-auto p-4">
-            <div className="mx-auto h-full max-w-full">{children}</div>
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-neutral-950">
+          <div className="no-scrollbar flex-1 overflow-y-auto px-3 py-2 sm:px-6 lg:px-8">
+            <div className="mx-auto h-full w-full max-w-7xl">{children}</div>
           </div>
         </main>
       </div>
