@@ -118,7 +118,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-neutral-800 bg-neutral-950/80 backdrop-blur-md">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-10 items-center justify-between sm:h-14">
+        <div className="flex h-14 items-center justify-between sm:h-14">
           {/* Left: Hamburger + Logo */}
           <div className="flex items-center gap-3">
             {authenticated && (
