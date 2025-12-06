@@ -8,7 +8,18 @@ import {
   createBackup as createBackupService,
   downloadBackupFile,
 } from "@/app/services/backup-service/BackupService";
-
+import {
+  Camera,
+  Save,
+  Trash2,
+  Download,
+  User as UserIcon,
+  Lock,
+  Mail,
+  AlertTriangle,
+  Loader2,
+  Shield,
+} from "lucide-react";
 interface FormData {
   name: string;
   email: string;
@@ -23,9 +34,15 @@ interface FormData {
 const SettingsPage = () => {
   const { user, updateUser, deleteUserPermanently } = useAuth();
   const [userData, setUserData] = useState<User | null>(null);
-  const [error, setError] = useState("");
 
+  // Estados de UI
+  const [isLoading, setIsLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
+
+  // Feedback
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
@@ -37,10 +54,7 @@ const SettingsPage = () => {
     confirmPassword: "",
   });
 
-  // Password change state
-  const [passwordError, setPasswordError] = useState("");
-  const [passwordSuccess, setPasswordSuccess] = useState("");
-
+  // ================== EFFECTS ==================
   useEffect(() => {
     if (user) {
       setUserData(user);
@@ -65,93 +79,12 @@ const SettingsPage = () => {
     };
   }, [formData.avatar_url]);
 
-  const handleSaveChanges = async () => {
-    try {
-      setError("");
-      setPasswordError("");
-      setPasswordSuccess("");
-
-      // Validate password fields if any are filled
-      if (formData.currentPassword || formData.newPassword || formData.confirmPassword) {
-        if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
-          setPasswordError("Todos os campos de senha são obrigatórios.");
-          return;
-        }
-
-        if (formData.newPassword !== formData.confirmPassword) {
-          setPasswordError("A nova senha e a confirmação não coincidem.");
-          return;
-        }
-
-        if (formData.newPassword.length < 6) {
-          setPasswordError("A nova senha deve ter pelo menos 6 caracteres.");
-          return;
-        }
-
-        if (formData.currentPassword === formData.newPassword) {
-          setPasswordError("A nova senha deve ser diferente da senha atual.");
-          return;
-        }
-      }
-
-      // Prepare data for update
-      const dataToUpdate: Partial<User> & {
-        profilePicture?: File;
-        currentPassword?: string;
-        newPassword?: string;
-      } = {
-        name: formData.name,
-        email: formData.email,
-        username: formData.username,
-      };
-
-      // If there's a profile picture file, add it to the data
-      if (formData.profilePicture && formData.profilePicture instanceof File) {
-        dataToUpdate.profilePicture = formData.profilePicture;
-      }
-
-      // If there's password data, add it
-      if (formData.currentPassword && formData.newPassword) {
-        dataToUpdate.currentPassword = formData.currentPassword;
-        dataToUpdate.newPassword = formData.newPassword;
-      }
-
-      const result = await updateUser(dataToUpdate);
-
-      if (result.success) {
-        setUserData((prev) =>
-          prev
-            ? {
-                ...prev,
-                name: formData.name,
-                email: formData.email,
-                username: formData.username,
-                avatar_url: formData.avatar_url,
-              }
-            : null
-        );
-        setFormData((prev) => ({
-          ...prev,
-          profilePicture: null,
-          currentPassword: "",
-          newPassword: "",
-          confirmPassword: "",
-        }));
-        setEditMode(false);
-        if (formData.currentPassword && formData.newPassword) {
-          setPasswordSuccess("Perfil e senha atualizados com sucesso!");
-        }
-      } else {
-        setError(result.message || "Erro ao atualizar os dados. Tente novamente.");
-      }
-    } catch (err) {
-      setError("Erro ao atualizar os dados. Tente novamente.");
-      console.error("Erro na atualização:", err);
-    }
-  };
-
+  // ================== HANDLERS (Mantidos) ==================
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, files } = e.target;
+    setError("");
+    setSuccessMessage("");
+
     if (type === "file" && files && files[0]) {
       const file = files[0];
       if (formData.avatar_url && formData.avatar_url.startsWith("blob:")) {
@@ -163,6 +96,7 @@ const SettingsPage = () => {
         avatar_url: previewUrl,
         profilePicture: file,
       }));
+      setEditMode(true);
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -185,408 +119,343 @@ const SettingsPage = () => {
       });
     }
     setEditMode(false);
-    setPasswordError("");
-    setPasswordSuccess("");
+    setError("");
+    setSuccessMessage("");
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear errors when user starts typing
-    if (passwordError) setPasswordError("");
-    if (passwordSuccess) setPasswordSuccess("");
+  const handleSaveChanges = async () => {
+    setIsLoading(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      if (formData.currentPassword || formData.newPassword || formData.confirmPassword) {
+        if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
+          throw new Error("Para alterar a senha, preencha todos os campos de senha.");
+        }
+        if (formData.newPassword !== formData.confirmPassword) {
+          throw new Error("A nova senha e a confirmação não coincidem.");
+        }
+        if (formData.newPassword.length < 6) {
+          throw new Error("A nova senha deve ter pelo menos 6 caracteres.");
+        }
+      }
+
+      const dataToUpdate: Partial<User> & {
+        profilePicture?: File;
+        currentPassword?: string;
+        newPassword?: string;
+      } = {
+        name: formData.name,
+        email: formData.email,
+        username: formData.username,
+      };
+
+      if (formData.profilePicture instanceof File) {
+        dataToUpdate.profilePicture = formData.profilePicture;
+      }
+
+      if (formData.currentPassword && formData.newPassword) {
+        dataToUpdate.currentPassword = formData.currentPassword;
+        dataToUpdate.newPassword = formData.newPassword;
+      }
+
+      const result = await updateUser(dataToUpdate);
+
+      if (result.success) {
+        setUserData((prev) =>
+          prev ? { ...prev, ...dataToUpdate, avatar_url: formData.avatar_url } : null
+        );
+
+        setFormData((prev) => ({
+          ...prev,
+          profilePicture: null,
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        }));
+
+        setEditMode(false);
+        setSuccessMessage("Perfil atualizado com sucesso.");
+      } else {
+        throw new Error(result.message || "Falha ao atualizar.");
+      }
+    } catch (err: any) {
+      setError(err.message || "Erro desconhecido ao atualizar.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Função para criar backup
   const handleCreateBackup = async () => {
     try {
       const backupData = await createBackupService();
       downloadBackupFile(backupData);
-      alert("Backup criado e baixado com sucesso!");
+      setSuccessMessage("Backup baixado com sucesso.");
     } catch (err) {
-      setError("Erro ao criar backup. Tente novamente.");
-      console.error("Erro na criação do backup:", err);
+      setError("Falha ao gerar backup.");
     }
   };
 
   const handleDeleteAccount = async () => {
-    const confirmation = window.confirm(
-      "Tem certeza que deseja deletar sua conta? Esta ação é irreversível."
-    );
-    if (!confirmation) return;
+    if (!window.confirm("ATENÇÃO: Esta ação é irreversível. Deseja realmente excluir sua conta?"))
+      return;
 
     try {
-      setError("");
       const result = await deleteUserPermanently();
       if (result.success) {
-        alert("Sua conta foi deletada com sucesso.");
         window.location.href = "/";
       } else {
-        setError(result.message || "Erro ao deletar a conta. Tente novamente.");
+        setError(result.message || "Erro ao deletar conta.");
       }
     } catch (err) {
-      setError("Erro ao deletar a conta. Tente novamente.");
-      console.error("Erro na deleção da conta:", err);
+      setError("Erro crítico ao tentar deletar conta.");
     }
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-md border border-neutral-800 bg-neutral-950 shadow-md">
-      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
-        {/* Header */}
-        <div className="mb-4 bg-neutral-950 px-4 py-4">
-          <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex h-full flex-col bg-neutral-950 text-neutral-200">
+      {/* Scrollable Container */}
+      <div className="no-scrollbar flex-1 overflow-y-auto bg-neutral-950">
+        <div className="mx-auto max-w-6xl px-4 py-2 sm:px-6 lg:px-8">
+          {/* Header - Agora com largura total */}
+          <div className="mb-2 flex flex-col gap-4 border-b border-neutral-800 pb-6 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-md font-semibold text-white">
-                Gerencie suas informações e preferências
+              <h1 className="text-lg font-semibold tracking-tight text-neutral-100">
+                Configurações da Conta
+              </h1>
+              <p className="mt-1 text-sm text-neutral-500">
+                Gerencie seus dados pessoais e segurança.
               </p>
             </div>
-            <div className="rounded-md bg-neutral-800 px-3 py-1.5 text-sm text-gray-200">
-              <span>Última atualização: </span>
-              {userData?.updatedAt
-                ? new Date(userData.updatedAt as string).toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : "—"}
-            </div>
+            {!editMode && (
+              <button
+                onClick={() => setEditMode(true)}
+                className="flex items-center gap-2 self-start rounded border border-neutral-800 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-300 transition-colors hover:border-neutral-700 hover:text-neutral-100 md:self-auto"
+              >
+                Editar Informações
+              </button>
+            )}
           </div>
-        </div>
 
-        {/* Main content */}
-        <div className="mx-auto max-w-5xl space-y-6 px-4">
-          {/* Profile Section */}
-          <div className="overflow-hidden rounded-md border border-neutral-800 bg-neutral-900 shadow-lg">
-            <div className="border-b border-neutral-800 px-4 py-4 sm:px-6">
-              <h2 className="text-xl font-semibold text-neutral-100">Meu Perfil</h2>
-              <p className="mt-1 text-sm text-neutral-400">Informações sobre sua conta</p>
+          {/* Feedback Messages - Largura total */}
+          {(error || successMessage) && (
+            <div
+              className={`mb-8 rounded border px-4 py-2 text-sm ${
+                error
+                  ? "border-red-900/50 bg-red-900/10 text-red-400"
+                  : "border-green-900/50 bg-green-900/10 text-emerald-400"
+              }`}
+            >
+              {error || successMessage}
+            </div>
+          )}
+
+          {/* ================== MAIN LAYOUT ================== */}
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+            {/* Coluna Esquerda: Avatar (3/12 em telas grandes) */}
+            <div className="lg:col-span-3">
+              <div className="flex flex-col items-start">
+                <span className="mb-4 text-xs font-medium tracking-wider text-neutral-500 uppercase">
+                  Foto de Perfil
+                </span>
+                <div className="group relative h-32 w-32 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 lg:h-40 lg:w-40 lg:rounded-2xl">
+                  <Image
+                    src={formData.avatar_url || "/default-avatar.png"}
+                    alt="Profile"
+                    fill
+                    className="object-cover transition-opacity group-hover:opacity-75"
+                  />
+                  {editMode && (
+                    <label className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Camera size={24} className="text-white" />
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleInputChange}
+                        disabled={isLoading}
+                      />
+                    </label>
+                  )}
+                </div>
+                <p className="mt-3 text-xs text-neutral-600">
+                  Recomendado: 400x400px. <br /> Max 2MB.
+                </p>
+              </div>
             </div>
 
-            <div className="p-4 sm:p-6">
-              {error && (
-                <div className="mb-6 rounded-md border border-red-800 bg-red-950 p-4">
-                  <p className="text-red-300">{error}</p>
-                </div>
-              )}
-
-              {passwordError && (
-                <div className="mb-6 rounded-md border border-red-800 bg-red-950 p-4">
-                  <p className="text-red-300">{passwordError}</p>
-                </div>
-              )}
-
-              {passwordSuccess && (
-                <div className="mb-6 rounded-md border border-green-800 bg-green-950 p-4">
-                  <p className="text-green-300">{passwordSuccess}</p>
-                </div>
-              )}
-
-              {userData ? (
-                <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-                  {/* Avatar Section */}
-                  <div className="flex flex-shrink-0 flex-col items-center">
-                    <div className="group relative">
-                      <Image
-                        src={formData.avatar_url || userData.avatar_url || "/default-avatar.png"}
-                        alt="Foto de Perfil"
-                        width={160}
-                        height={160}
-                        className="h-24 w-24 rounded-full border-4 border-neutral-700 object-cover shadow-lg sm:h-32 sm:w-32 lg:h-40 lg:w-40"
+            {/* Coluna Direita: Formulários (ocupa 9/12 em telas grandes) */}
+            <div className="space-y-10 lg:col-span-9">
+              {/* Seção: Informações Públicas */}
+              <section>
+                <h3 className="text-md mb-6 flex items-center gap-2 font-medium text-neutral-100">
+                  <UserIcon size={18} /> Informações Pessoais
+                </h3>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-neutral-400">Nome Completo</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="name"
+                        disabled={!editMode || isLoading}
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-200 placeholder-neutral-600 focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600 focus:outline-none disabled:opacity-50"
                       />
-
-                      {editMode && (
-                        <label className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/60 opacity-0 transition-all duration-200 group-hover:opacity-100">
-                          <input
-                            type="file"
-                            name="profilePicture"
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handleInputChange}
-                            aria-label="Alterar foto de perfil"
-                          />
-                          <div className="rounded-full bg-neutral-800 p-3 text-neutral-100 shadow-lg transition-colors hover:bg-neutral-700">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                            </svg>
-                          </div>
-                        </label>
-                      )}
                     </div>
+                  </div>
 
-                    <div className="mt-4 text-center">
-                      <h3 className="text-lg font-bold text-neutral-100 sm:text-xl">
-                        {userData.name}
-                      </h3>
-                      <p className="mt-1 text-xs text-neutral-400 sm:text-sm">
-                        Membro desde{" "}
-                        {userData && userData.createdAt
-                          ? new Date(userData.createdAt as string).toLocaleDateString()
-                          : "—"}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-neutral-400">Username</label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-3 text-neutral-600">@</span>
+                      <input
+                        type="text"
+                        name="username"
+                        disabled={!editMode || isLoading}
+                        value={formData.username}
+                        onChange={handleInputChange}
+                        className="w-full rounded-md border border-neutral-800 bg-neutral-900 py-2 pr-3 pl-7 text-sm text-neutral-200 placeholder-neutral-600 focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600 focus:outline-none disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-xs font-medium text-neutral-400">Email Principal</label>
+                    <div className="relative">
+                      <input
+                        type="email"
+                        name="email"
+                        disabled={!editMode || isLoading}
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className="w-full rounded-md border border-neutral-800 bg-neutral-900 py-2 pr-3 pl-10 text-sm text-neutral-200 placeholder-neutral-600 focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600 focus:outline-none disabled:opacity-50"
+                      />
+                      <Mail size={16} className="absolute top-3 left-3 text-neutral-600" />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Seção: Segurança (Expandível) */}
+              {editMode && (
+                <section className="animate-in slide-in-from-top-2 border-t border-neutral-800 pt-8">
+                  <h3 className="text-md mb-6 flex items-center gap-2 font-medium text-neutral-100">
+                    <Shield size={18} /> Segurança da Conta
+                  </h3>
+
+                  <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-6">
+                    <h4 className="mb-4 flex items-center gap-2 text-sm font-medium text-neutral-300">
+                      <Lock size={14} /> Alterar Senha
+                    </h4>
+                    <div className="grid max-w-2xl gap-4 md:grid-cols-2">
+                      <div className="space-y-2 md:col-span-2">
+                        <input
+                          type="password"
+                          name="currentPassword"
+                          value={formData.currentPassword}
+                          onChange={handleInputChange}
+                          className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-200 focus:border-neutral-600 focus:outline-none"
+                          placeholder="Senha atual"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <input
+                          type="password"
+                          name="newPassword"
+                          value={formData.newPassword}
+                          onChange={handleInputChange}
+                          className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-200 focus:border-neutral-600 focus:outline-none"
+                          placeholder="Nova senha (min. 6 chars)"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <input
+                          type="password"
+                          name="confirmPassword"
+                          value={formData.confirmPassword}
+                          onChange={handleInputChange}
+                          className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-200 focus:border-neutral-600 focus:outline-none"
+                          placeholder="Confirme a nova senha"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* Actions Bar (Fixo no modo edição) */}
+              {editMode && (
+                <div className="sticky bottom-0 z-10 flex items-center justify-end gap-3 border-t border-neutral-800 bg-neutral-950/90 py-4 pt-6 backdrop-blur-sm">
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 rounded border border-transparent px-4 py-2 text-sm font-medium text-neutral-400 transition-colors hover:bg-neutral-900 hover:text-neutral-200"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSaveChanges}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 rounded bg-neutral-100 px-6 py-2 text-sm font-semibold text-neutral-950 transition-colors hover:bg-neutral-200 disabled:opacity-70"
+                  >
+                    {isLoading ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Save size={16} />
+                    )}
+                    Salvar Alterações
+                  </button>
+                </div>
+              )}
+
+              {/* ================== DANGER ZONE ================== */}
+              <section className="mt-16 border-t border-neutral-800 pt-10">
+                <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-red-500">
+                  <AlertTriangle size={16} /> Zona de Perigo
+                </h3>
+                <p className="mb-6 text-xs text-neutral-500">
+                  Ações irreversíveis que afetam permanentemente sua conta e dados.
+                </p>
+
+                <div className="space-y-4">
+                  {/* Item 1: Backup */}
+                  <div className="flex flex-col items-start justify-between gap-4 rounded-lg border border-neutral-800 p-4 sm:flex-row sm:items-center">
+                    <div>
+                      <h4 className="text-sm font-medium text-neutral-200">Exportar Dados</h4>
+                      <p className="mt-1 text-xs text-neutral-500">
+                        Baixe uma cópia de todas as suas notas e informações pessoais.
                       </p>
                     </div>
+                    <button
+                      onClick={handleCreateBackup}
+                      className="flex shrink-0 items-center gap-2 rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-xs font-medium text-neutral-300 transition-colors hover:border-neutral-700 hover:text-neutral-100"
+                    >
+                      <Download size={14} /> Fazer Backup
+                    </button>
                   </div>
 
-                  {/* Form Fields */}
-                  <div className="flex-1 space-y-6">
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-neutral-300">Nome</label>
-                        {editMode ? (
-                          <input
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
-                            placeholder="Seu nome"
-                          />
-                        ) : (
-                          <div className="w-full rounded-md border border-neutral-700 bg-neutral-800/50 px-4 py-3">
-                            <p className="text-neutral-100">{userData.name}</p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-neutral-300">Email</label>
-                        {editMode ? (
-                          <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
-                            placeholder="seu@exemplo.com"
-                          />
-                        ) : (
-                          <div className="w-full rounded-md border border-neutral-700 bg-neutral-800/50 px-4 py-3">
-                            <p className="break-all text-neutral-100">{userData.email}</p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-2 lg:col-span-2">
-                        <label className="block text-sm font-medium text-neutral-300">
-                          Nome de usuário
-                        </label>
-                        {editMode ? (
-                          <input
-                            type="text"
-                            name="username"
-                            value={formData.username}
-                            onChange={handleInputChange}
-                            className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
-                            placeholder="seu_usuario"
-                          />
-                        ) : (
-                          <div className="w-full rounded-md border border-neutral-700 bg-neutral-800/50 px-4 py-3">
-                            <p className="text-neutral-100">{userData.username}</p>
-                          </div>
-                        )}
-                      </div>
+                  {/* Item 2: Delete */}
+                  <div className="flex flex-col items-start justify-between gap-4 rounded-lg border border-red-900/30 bg-red-950/5 p-4 sm:flex-row sm:items-center">
+                    <div>
+                      <h4 className="text-sm font-medium text-neutral-200">Excluir Conta</h4>
+                      <p className="mt-1 text-xs text-neutral-500">
+                        Isso removerá permanentemente sua conta. Não há volta.
+                      </p>
                     </div>
-
-                    {/* Password Fields - Only in Edit Mode */}
-                    {editMode && (
-                      <div className="space-y-6 rounded-md border border-neutral-700 bg-neutral-800/30 p-4 sm:p-6">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/10">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 text-yellow-500"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                              />
-                            </svg>
-                          </div>
-                          <div>
-                            <h3 className="text-base font-semibold text-neutral-100">
-                              Alterar Senha
-                            </h3>
-                            <p className="text-sm text-neutral-400">
-                              Preencha apenas se quiser alterar sua senha
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4 sm:gap-6">
-                          <div className="space-y-2">
-                            <label className="block text-sm font-medium text-neutral-300">
-                              Senha Atual
-                            </label>
-                            <input
-                              type="password"
-                              name="currentPassword"
-                              value={formData.currentPassword}
-                              onChange={handlePasswordChange}
-                              className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
-                              placeholder="Digite sua senha atual"
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-neutral-300">
-                                Nova Senha
-                              </label>
-                              <input
-                                type="password"
-                                name="newPassword"
-                                value={formData.newPassword}
-                                onChange={handlePasswordChange}
-                                className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
-                                placeholder="Digite sua nova senha"
-                                minLength={6}
-                              />
-                              <p className="text-xs text-neutral-500">Mínimo 6 caracteres</p>
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-neutral-300">
-                                Confirmar Nova Senha
-                              </label>
-                              <input
-                                type="password"
-                                name="confirmPassword"
-                                value={formData.confirmPassword}
-                                onChange={handlePasswordChange}
-                                className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-4 py-3 text-neutral-100 placeholder-neutral-500 transition-all duration-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none"
-                                placeholder="Confirme sua nova senha"
-                                minLength={6}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-col-reverse gap-3 border-t border-neutral-700 pt-6 sm:flex-row sm:justify-end">
-                      {editMode ? (
-                        <>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="rounded-md border-2 border-neutral-600 px-6 py-3 font-semibold text-neutral-300 transition-all duration-200 hover:border-neutral-500 hover:bg-neutral-800 hover:text-neutral-100"
-                          >
-                            Cancelar
-                          </button>
-                          <button
-                            onClick={handleSaveChanges}
-                            className="rounded-md bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-3 font-semibold text-neutral-950 shadow-lg transition-all duration-200 hover:from-yellow-600 hover:to-yellow-700 hover:shadow-xl"
-                          >
-                            Salvar Alterações
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={() => setEditMode(true)}
-                          className="rounded-md bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-3 font-semibold text-neutral-950 shadow-lg transition-all duration-200 hover:from-yellow-600 hover:to-yellow-700 hover:shadow-xl"
-                        >
-                          Editar Perfil
-                        </button>
-                      )}
-                    </div>
+                    <button
+                      onClick={handleDeleteAccount}
+                      className="flex shrink-0 items-center gap-2 rounded border border-red-900/50 bg-red-600/10 px-3 py-2 text-xs font-medium text-red-500 transition-colors hover:border-transparent hover:bg-red-600 hover:text-white"
+                    >
+                      <Trash2 size={14} /> Excluir Conta
+                    </button>
                   </div>
                 </div>
-              ) : (
-                <div className="animate-pulse">
-                  <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-                    {/* Avatar Skeleton */}
-                    <div className="flex flex-shrink-0 flex-col items-center">
-                      <div className="h-24 w-24 rounded-full bg-neutral-700 sm:h-32 sm:w-32 lg:h-40 lg:w-40"></div>
-                      <div className="mt-4 space-y-2 text-center">
-                        <div className="h-5 w-24 rounded bg-neutral-700 sm:h-6 sm:w-32"></div>
-                        <div className="h-3 w-16 rounded bg-neutral-700 sm:h-4 sm:w-24"></div>
-                      </div>
-                    </div>
-
-                    {/* Form Fields Skeleton */}
-                    <div className="flex-1 space-y-4 sm:space-y-6">
-                      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
-                        {/* Nome Field */}
-                        <div className="space-y-2">
-                          <div className="h-4 w-12 rounded bg-neutral-700"></div>
-                          <div className="h-10 w-full rounded-md bg-neutral-700 sm:h-12"></div>
-                        </div>
-
-                        {/* Email Field */}
-                        <div className="space-y-2">
-                          <div className="h-4 w-10 rounded bg-neutral-700"></div>
-                          <div className="h-10 w-full rounded-md bg-neutral-700 sm:h-12"></div>
-                        </div>
-
-                        {/* Username Field */}
-                        <div className="space-y-2 md:col-span-2">
-                          <div className="h-4 w-24 rounded bg-neutral-700"></div>
-                          <div className="h-10 w-full rounded-md bg-neutral-700 sm:h-12"></div>
-                        </div>
-                      </div>
-
-                      {/* Action Button Skeleton */}
-                      <div className="flex justify-end border-t border-neutral-700 pt-4 sm:pt-6">
-                        <div className="h-8 w-24 rounded-md bg-neutral-700 sm:h-10 sm:w-32"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Danger Zone */}
-          <div className="overflow-hidden rounded-md border border-red-800 bg-neutral-900 shadow-lg">
-            <div className="border-b border-red-800 bg-red-950/50 px-4 py-4 sm:px-6">
-              <h2 className="text-xl font-semibold text-red-300">Zona de Perigo</h2>
-              <p className="mt-1 text-sm text-red-400">Ações irreversíveis para sua conta</p>
-            </div>
-
-            <div className="p-4 sm:p-6">
-              <div className="space-y-4 text-neutral-400">
-                <div className="rounded-md border border-red-800 bg-red-950/30 p-4">
-                  <h3 className="mb-2 text-lg font-semibold text-red-300">Deletar minha conta</h3>
-                  <p className="mb-4 text-sm text-red-400">
-                    Ao deletar sua conta, todos os seus dados pessoais serão removidos
-                    permanentemente dos nossos sistemas. Esta ação é{" "}
-                    <strong className="text-red-300">irreversível</strong>.
-                  </p>
-                  <ul className="mb-4 list-inside list-disc space-y-1 text-sm text-red-400">
-                    <li>Todos os seus dados pessoais serão excluídos</li>
-                    <li>Suas notas e conteúdos serão removidos</li>
-                    <li>Não será possível recuperar sua conta</li>
-                  </ul>
-                  <p className="mb-4 text-sm text-red-400">
-                    Certifique-se de fazer backup de qualquer informação que deseja manter antes de
-                    prosseguir.
-                  </p>
-                  <button
-                    onClick={handleCreateBackup}
-                    className="mr-2 rounded-md bg-yellow-500 px-4 py-2.5 font-semibold text-neutral-950 shadow-lg transition-colors hover:bg-yellow-600 sm:px-6 sm:py-3"
-                  >
-                    Criar Backup
-                  </button>
-                  <button
-                    onClick={handleDeleteAccount}
-                    className="rounded-md bg-red-600 px-4 py-2.5 font-semibold text-white shadow-lg transition-colors hover:bg-red-700 sm:px-6 sm:py-3"
-                  >
-                    Deletar Minha Conta Permanentemente
-                  </button>
-                </div>
-              </div>
+              </section>
             </div>
           </div>
         </div>
