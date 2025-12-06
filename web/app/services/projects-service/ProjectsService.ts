@@ -60,7 +60,7 @@ export interface Project {
   title: string;
   description?: string;
   properties?: ProjectProperties;
-  status: "ativo" | "arquivado" | "concluído";
+  status: "open" | "running" | "completed" | "on-hold" | "archived";
   created_at: string;
   updated_at: string;
   deleted: boolean;
@@ -76,14 +76,14 @@ export interface ProjectsResponse {
 export interface CreateProjectData {
   title: string;
   description?: string;
-  status?: "ativo" | "arquivado" | "concluído";
+  status?: "open" | "running" | "completed" | "on-hold" | "archived";
   properties?: Omit<ProjectProperties, "progress">;
 }
 
 export interface UpdateProjectData {
   title?: string;
   description?: string;
-  status?: "ativo" | "arquivado" | "concluído";
+  status?: "open" | "running" | "completed" | "on-hold" | "archived";
   properties?: Omit<ProjectProperties, "progress">;
 }
 

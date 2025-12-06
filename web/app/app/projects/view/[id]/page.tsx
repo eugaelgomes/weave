@@ -95,7 +95,7 @@ export default function ProjectViewPage() {
   const [projectNotes, setProjectNotes] = useState<ProjectNote[]>([]);
   const [showAddNote, setShowAddNote] = useState(false);
   const [availableNotes, setAvailableNotes] = useState<
-    Array<{ id: string; title: string; tags?: string[] }>
+    Array<{ id: string; title: string; content?: string; status?: string; tags?: string[] }>
   >([]);
 
   // Carregar projeto
@@ -110,9 +110,7 @@ export default function ProjectViewPage() {
           setProject(projectData);
           setEditedTitle(projectData.title);
           setEditedDescription(projectData.description || "");
-          setEditedStatus(
-            projectData.status as "open" | "running" | "completed" | "on-hold" | "archived"
-          );
+          setEditedStatus(projectData.status);
           setEditedPriority(projectData.properties?.priority || "media");
           setEditedComplexity(projectData.properties?.complexity || "media");
           setEditedColor(projectData.properties?.color || "#3f51b5");

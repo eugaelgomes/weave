@@ -500,7 +500,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     return () => {
       clearInterval(intervalId);
     };
-  }, [user?.id, refreshInterval]); // Removido fetchNotes e notes das dependências
+  }, [user?.id, refreshInterval, fetchNotes, notes.length]);
 
   const value: NotesContextType = {
     notes,

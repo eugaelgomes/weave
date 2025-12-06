@@ -519,7 +519,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     return () => {
       clearInterval(intervalId);
     };
-  }, [user?.id, refreshInterval]); // Removido fetchProjects e projects das dependências
+  }, [user?.id, refreshInterval, fetchProjects, projects.length]);
 
   const value: ProjectsContextType = {
     projects,

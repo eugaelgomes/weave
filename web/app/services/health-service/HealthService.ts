@@ -20,7 +20,7 @@ export async function checkHealth(): Promise<HealthStatus> {
   try {
     const response = await apiClient.get(API_ENDPOINTS.HEALTH);
     return await handleResponse<HealthStatus>(response);
-  } catch (error) {
+  } catch {
     // Se falhar, retorna status offline
     return {
       status: "offline",

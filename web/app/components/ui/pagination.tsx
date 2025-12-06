@@ -33,7 +33,7 @@ const Pagination = ({
 
     const halfVisible = Math.floor(effectiveMaxVisible / 2);
     let startPage = Math.max(1, currentPage - halfVisible);
-    let endPage = Math.min(totalPages, startPage + effectiveMaxVisible - 1);
+    const endPage = Math.min(totalPages, startPage + effectiveMaxVisible - 1);
 
     if (endPage - startPage < effectiveMaxVisible - 1) {
       startPage = Math.max(1, endPage - effectiveMaxVisible + 1);
