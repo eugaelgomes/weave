@@ -141,7 +141,7 @@ export default function SignIn() {
         </div>
       )}
 
-      <div className="relative z-10 flex flex-1 items-center justify-center lg:bg-neutral-950 px-4 py-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-4 sm:px-6 lg:bg-neutral-950 lg:px-8">
         <div className="w-full max-w-xs space-y-6">
           <div className="text-center">
             <div className="flex items-center justify-center">
@@ -196,7 +196,7 @@ export default function SignIn() {
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={submitting}
                 autoComplete="username"
-                className="block w-full rounded-md border border-neutral-600 bg-neutral-900 px-2 py-2 text-gray-300 text-sm shadow-sm transition-all duration-200 placeholder:text-gray-500 hover:border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
+                className="block w-full rounded-md border border-neutral-600 bg-neutral-900 px-2 py-2 text-sm text-gray-300 shadow-sm transition-all duration-200 placeholder:text-gray-500 hover:border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
               />
             </div>
 
@@ -217,7 +217,7 @@ export default function SignIn() {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={submitting}
                   autoComplete="current-password"
-                  className="block w-full rounded-md border border-neutral-600 bg-neutral-900 px-2 py-2 text-gray-300 text-sm shadow-sm transition-all duration-200 placeholder:text-gray-500 hover:border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
+                  className="block w-full rounded-md border border-neutral-600 bg-neutral-900 px-2 py-2 text-sm text-gray-300 shadow-sm transition-all duration-200 placeholder:text-gray-500 hover:border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
                 />
                 <button
                   type="button"

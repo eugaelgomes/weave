@@ -669,7 +669,7 @@ export default function ProjectsPage() {
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3 text-neutral-500" />
                               <span className="text-[10px] font-medium text-neutral-500">
-                                Para: 
+                                Para:
                                 {new Date(project.estimatedTime).toLocaleDateString("pt-BR", {
                                   day: "2-digit",
                                   month: "numeric",

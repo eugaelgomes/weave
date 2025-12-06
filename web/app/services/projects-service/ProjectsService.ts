@@ -109,7 +109,7 @@ export async function fetchProjects(): Promise<Project[]> {
   try {
     const response = await apiClient.get(API_ENDPOINTS.PROJECTS);
     const data = await handleResponse<ProjectsResponse>(response);
-    
+
     // Parse properties if it comes as JSON string from backend
     const projects = data.projects.map((project) => {
       if (typeof project.properties === "string") {
@@ -121,7 +121,7 @@ export async function fetchProjects(): Promise<Project[]> {
       }
       return project;
     });
-    
+
     return projects;
   } catch (error) {
     console.error("Error fetching projects:", error);
@@ -136,7 +136,7 @@ export async function fetchProjectById(projectId: string): Promise<Project> {
   try {
     const response = await apiClient.get(API_ENDPOINTS.PROJECTS_BY_ID(projectId));
     const project = await handleResponse<Project>(response);
-    
+
     // Parse properties if it comes as JSON string from backend
     if (typeof project.properties === "string") {
       try {
@@ -145,7 +145,7 @@ export async function fetchProjectById(projectId: string): Promise<Project> {
         console.warn("Failed to parse project properties:", e);
       }
     }
-    
+
     return project;
   } catch (error) {
     console.error(`Error fetching project ${projectId}:`, error);
@@ -199,9 +199,7 @@ export async function deleteProject(projectId: string): Promise<void> {
 /**
  * Fetch collaborators for a project
  */
-export async function fetchProjectCollaborators(
-  projectId: string
-): Promise<ProjectCollaborator[]> {
+export async function fetchProjectCollaborators(projectId: string): Promise<ProjectCollaborator[]> {
   try {
     const response = await apiClient.get(API_ENDPOINTS.PROJECTS_COLLABORATORS(projectId));
     const data = await handleResponse<{ collaborators: ProjectCollaborator[] }>(response);

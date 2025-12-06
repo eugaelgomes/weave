@@ -73,7 +73,9 @@ export default function ProjectViewPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
-  const [editedStatus, setEditedStatus] = useState<"open" | "running" | "completed" | "on-hold" | "archived">("open");
+  const [editedStatus, setEditedStatus] = useState<
+    "open" | "running" | "completed" | "on-hold" | "archived"
+  >("open");
   const [editedPriority, setEditedPriority] = useState<"alta" | "media" | "baixa">("media");
   const [editedComplexity, setEditedComplexity] = useState<"alta" | "media" | "baixa">("media");
   const [editedColor, setEditedColor] = useState("#3f51b5");
@@ -108,7 +110,9 @@ export default function ProjectViewPage() {
           setProject(projectData);
           setEditedTitle(projectData.title);
           setEditedDescription(projectData.description || "");
-          setEditedStatus(projectData.status as "open" | "running" | "completed" | "on-hold" | "archived");
+          setEditedStatus(
+            projectData.status as "open" | "running" | "completed" | "on-hold" | "archived"
+          );
           setEditedPriority(projectData.properties?.priority || "media");
           setEditedComplexity(projectData.properties?.complexity || "media");
           setEditedColor(projectData.properties?.color || "#3f51b5");
@@ -317,7 +321,7 @@ export default function ProjectViewPage() {
         <div className="flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-900 p-4">
           <button
             onClick={() => router.push("/app/projects")}
-            className="flex items-center gap-2 rounded-lg bg-neutral-800 px-3 py-2 text-sm font-medium text-neutral-400 transition-all hover:bg-neutral-750 hover:text-neutral-200"
+            className="hover:bg-neutral-750 flex items-center gap-2 rounded-lg bg-neutral-800 px-3 py-2 text-sm font-medium text-neutral-400 transition-all hover:text-neutral-200"
           >
             <FaArrowLeft />
             <span>Voltar</span>
@@ -338,7 +342,7 @@ export default function ProjectViewPage() {
                   <>
                     <button
                       onClick={() => setIsEditing(false)}
-                      className="rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-300 transition-all hover:bg-neutral-750 hover:border-neutral-600"
+                      className="hover:bg-neutral-750 rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-300 transition-all hover:border-neutral-600"
                     >
                       Cancelar
                     </button>
@@ -380,11 +384,15 @@ export default function ProjectViewPage() {
           {/* Coluna Principal */}
           <div className="space-y-4">
             {/* Informações do Projeto */}
-            <div 
+            <div
               className="rounded-md border border-neutral-800 bg-neutral-900 p-6 transition-all"
               style={{
-                backgroundColor: project.properties?.color ? `${project.properties.color}10` : undefined,
-                borderColor: project.properties?.color ? `${project.properties.color}40` : undefined,
+                backgroundColor: project.properties?.color
+                  ? `${project.properties.color}10`
+                  : undefined,
+                borderColor: project.properties?.color
+                  ? `${project.properties.color}40`
+                  : undefined,
               }}
             >
               {!isEditing ? (
@@ -396,7 +404,7 @@ export default function ProjectViewPage() {
                         {project.properties.icon}
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h1 className="mb-3 text-3xl font-bold text-neutral-100">{project.title}</h1>
                       <div className="flex flex-wrap items-center gap-2">
                         {/* Status Badge */}
@@ -426,13 +434,15 @@ export default function ProjectViewPage() {
 
                         {/* Prioridade */}
                         {project.properties?.priority && (
-                          <div className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${
-                            project.properties.priority === "alta"
-                              ? "bg-red-500/20 text-red-400"
-                              : project.properties.priority === "media"
-                                ? "bg-yellow-500/20 text-yellow-400"
-                                : "bg-blue-500/20 text-blue-400"
-                          }`}>
+                          <div
+                            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${
+                              project.properties.priority === "alta"
+                                ? "bg-red-500/20 text-red-400"
+                                : project.properties.priority === "media"
+                                  ? "bg-yellow-500/20 text-yellow-400"
+                                  : "bg-blue-500/20 text-blue-400"
+                            }`}
+                          >
                             <AlertCircle className="h-3.5 w-3.5" />
                             <span className="text-xs font-semibold capitalize">
                               {project.properties.priority}
@@ -442,13 +452,15 @@ export default function ProjectViewPage() {
 
                         {/* Complexidade */}
                         {project.properties?.complexity && (
-                          <div className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${
-                            project.properties.complexity === "alta"
-                              ? "bg-red-500/20 text-red-400"
-                              : project.properties.complexity === "media"
-                                ? "bg-yellow-500/20 text-yellow-400"
-                                : "bg-green-500/20 text-green-400"
-                          }`}>
+                          <div
+                            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${
+                              project.properties.complexity === "alta"
+                                ? "bg-red-500/20 text-red-400"
+                                : project.properties.complexity === "media"
+                                  ? "bg-yellow-500/20 text-yellow-400"
+                                  : "bg-green-500/20 text-green-400"
+                            }`}
+                          >
                             <Zap className="h-3.5 w-3.5" />
                             <span className="text-xs font-semibold capitalize">
                               {project.properties.complexity}
@@ -461,11 +473,14 @@ export default function ProjectViewPage() {
                           <div className="flex items-center gap-1.5 rounded-md bg-neutral-800 px-3 py-1.5">
                             <Clock className="h-3.5 w-3.5 text-neutral-400" />
                             <span className="text-xs font-medium text-neutral-300">
-                              {new Date(project.properties.estimated_time).toLocaleDateString("pt-BR", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })}
+                              {new Date(project.properties.estimated_time).toLocaleDateString(
+                                "pt-BR",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                }
+                              )}
                             </span>
                           </div>
                         )}
@@ -476,7 +491,7 @@ export default function ProjectViewPage() {
                   {/* Tags */}
                   {project.properties?.tags && project.properties.tags.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                      <h3 className="mb-2 text-xs font-semibold tracking-wider text-neutral-500 uppercase">
                         Tags
                       </h3>
                       <div className="flex flex-wrap gap-2">
@@ -485,7 +500,9 @@ export default function ProjectViewPage() {
                             key={index}
                             className="inline-flex items-center gap-1 rounded-md bg-neutral-800 px-3 py-1.5 text-xs font-medium text-neutral-300"
                             style={{
-                              backgroundColor: project.properties?.color ? `${project.properties.color}20` : undefined,
+                              backgroundColor: project.properties?.color
+                                ? `${project.properties.color}20`
+                                : undefined,
                               color: project.properties?.color || undefined,
                             }}
                           >
@@ -499,7 +516,7 @@ export default function ProjectViewPage() {
                   {/* Descrição */}
                   {project.description && (
                     <div className="mb-6">
-                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                      <h3 className="mb-2 text-xs font-semibold tracking-wider text-neutral-500 uppercase">
                         Descrição
                       </h3>
                       <p className="text-sm leading-relaxed text-neutral-300">
@@ -511,10 +528,13 @@ export default function ProjectViewPage() {
                   {/* Progresso */}
                   <div className="mb-6 rounded-lg border border-neutral-800 bg-neutral-950 p-4">
                     <div className="mb-3 flex items-center justify-between">
-                      <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                      <h3 className="text-xs font-semibold tracking-wider text-neutral-500 uppercase">
                         Progresso do Projeto
                       </h3>
-                      <span className="font-mono text-lg font-bold" style={{ color: project.properties?.color || "#eab308" }}>
+                      <span
+                        className="font-mono text-lg font-bold"
+                        style={{ color: project.properties?.color || "#eab308" }}
+                      >
                         {project.properties?.progress || 0}%
                       </span>
                     </div>
@@ -565,7 +585,7 @@ export default function ProjectViewPage() {
                 <div className="space-y-4">
                   {/* Título */}
                   <div>
-                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
                       <FileText className="h-3.5 w-3.5" />
                       Título do Projeto
                     </label>
@@ -573,14 +593,14 @@ export default function ProjectViewPage() {
                       type="text"
                       value={editedTitle}
                       onChange={(e) => setEditedTitle(e.target.value)}
-                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
                       placeholder="Nome do projeto"
                     />
                   </div>
 
                   {/* Descrição */}
                   <div>
-                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
                       <AlignLeft className="h-3.5 w-3.5" />
                       Descrição
                     </label>
@@ -588,7 +608,7 @@ export default function ProjectViewPage() {
                       value={editedDescription}
                       onChange={(e) => setEditedDescription(e.target.value)}
                       rows={4}
-                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
                       placeholder="Descreva os objetivos e detalhes do projeto..."
                     />
                   </div>
@@ -597,16 +617,23 @@ export default function ProjectViewPage() {
                   <div className="grid grid-cols-2 gap-4">
                     {/* Status */}
                     <div>
-                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
                         <Activity className="h-3.5 w-3.5" />
                         Status
                       </label>
                       <select
                         value={editedStatus}
                         onChange={(e) =>
-                          setEditedStatus(e.target.value as "open" | "running" | "completed" | "on-hold" | "archived")
+                          setEditedStatus(
+                            e.target.value as
+                              | "open"
+                              | "running"
+                              | "completed"
+                              | "on-hold"
+                              | "archived"
+                          )
                         }
-                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
+                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-100 transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
                       >
                         <option value="open">🟢 Aberto</option>
                         <option value="running">🔵 Em Andamento</option>
@@ -618,7 +645,7 @@ export default function ProjectViewPage() {
 
                     {/* Prioridade */}
                     <div>
-                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
                         <Flag className="h-3.5 w-3.5" />
                         Prioridade
                       </label>
@@ -627,7 +654,7 @@ export default function ProjectViewPage() {
                         onChange={(e) =>
                           setEditedPriority(e.target.value as "alta" | "media" | "baixa")
                         }
-                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
+                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-100 transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
                       >
                         <option value="baixa">🟢 Baixa</option>
                         <option value="media">🟡 Média</option>
@@ -637,7 +664,7 @@ export default function ProjectViewPage() {
 
                     {/* Complexidade */}
                     <div>
-                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
                         <Zap className="h-3.5 w-3.5" />
                         Complexidade
                       </label>
@@ -646,7 +673,7 @@ export default function ProjectViewPage() {
                         onChange={(e) =>
                           setEditedComplexity(e.target.value as "alta" | "media" | "baixa")
                         }
-                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
+                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-100 transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
                       >
                         <option value="baixa">🟢 Baixa</option>
                         <option value="media">🟡 Média</option>
@@ -656,7 +683,7 @@ export default function ProjectViewPage() {
 
                     {/* Ícone */}
                     <div>
-                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
                         <Sparkles className="h-3.5 w-3.5" />
                         Ícone (Emoji)
                       </label>
@@ -664,7 +691,7 @@ export default function ProjectViewPage() {
                         type="text"
                         value={editedIcon}
                         onChange={(e) => setEditedIcon(e.target.value)}
-                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-center text-2xl transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
+                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-center text-2xl transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
                         placeholder="📁"
                         maxLength={2}
                       />
@@ -673,7 +700,7 @@ export default function ProjectViewPage() {
 
                   {/* Cor */}
                   <div>
-                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
                       <Palette className="h-3.5 w-3.5" />
                       Cor do Projeto
                     </label>
@@ -688,14 +715,18 @@ export default function ProjectViewPage() {
                         />
                         <div
                           className="absolute inset-0 rounded-lg border-2 border-transparent"
-                          style={{ backgroundColor: editedColor, opacity: 0.3, pointerEvents: 'none' }}
+                          style={{
+                            backgroundColor: editedColor,
+                            opacity: 0.3,
+                            pointerEvents: "none",
+                          }}
                         />
                       </div>
                       <input
                         type="text"
                         value={editedColor}
                         onChange={(e) => setEditedColor(e.target.value)}
-                        className="flex-1 rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 font-mono text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
+                        className="flex-1 rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 font-mono text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
                         placeholder="#000000"
                         pattern="^#[0-9A-Fa-f]{6}$"
                       />
@@ -704,7 +735,7 @@ export default function ProjectViewPage() {
 
                   {/* Data estimada */}
                   <div>
-                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
                       <Clock className="h-3.5 w-3.5" />
                       Data Estimada de Conclusão
                     </label>
@@ -712,13 +743,13 @@ export default function ProjectViewPage() {
                       type="datetime-local"
                       value={editedEstimatedTime}
                       onChange={(e) => setEditedEstimatedTime(e.target.value)}
-                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
                     />
                   </div>
 
                   {/* Tags */}
                   <div>
-                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                    <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
                       <Tag className="h-3.5 w-3.5" />
                       Tags do Projeto
                     </label>
@@ -734,7 +765,9 @@ export default function ProjectViewPage() {
                               #{tag}
                               <button
                                 type="button"
-                                onClick={() => setEditedTags(editedTags.filter((_, i) => i !== index))}
+                                onClick={() =>
+                                  setEditedTags(editedTags.filter((_, i) => i !== index))
+                                }
                                 className="rounded-full bg-yellow-500/20 p-0.5 text-yellow-400 opacity-70 transition-all hover:bg-red-500/30 hover:text-red-400 hover:opacity-100"
                                 title="Remover tag"
                               >
@@ -747,7 +780,7 @@ export default function ProjectViewPage() {
                       {/* Adicionar nova tag */}
                       <div className="flex gap-2">
                         <div className="relative flex-1">
-                          <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                          <Hash className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                           <input
                             type="text"
                             value={newTag}
@@ -762,7 +795,7 @@ export default function ProjectViewPage() {
                               }
                             }}
                             placeholder="Digite uma tag e pressione Enter"
-                            className="w-full rounded-lg border border-neutral-700 bg-neutral-800 py-2.5 pr-3 pl-10 text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20"
+                            className="w-full rounded-lg border border-neutral-700 bg-neutral-800 py-2.5 pr-3 pl-10 text-sm text-neutral-100 transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
                           />
                         </div>
                         <button
@@ -773,7 +806,7 @@ export default function ProjectViewPage() {
                               setNewTag("");
                             }
                           }}
-                          className="rounded-lg bg-yellow-500 px-4 py-2.5 text-sm font-semibold text-neutral-950 transition-all hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="rounded-lg bg-yellow-500 px-4 py-2.5 text-sm font-semibold text-neutral-950 transition-all hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-50"
                           disabled={!newTag.trim() || editedTags.includes(newTag.trim())}
                           title="Adicionar tag"
                         >
@@ -854,7 +887,7 @@ export default function ProjectViewPage() {
                             {canEdit && (
                               <button
                                 onClick={() => handleRemoveNote(note.id)}
-                                className="rounded-md bg-red-500/10 p-1.5 text-red-400 opacity-0 transition-all hover:bg-red-500/20 group-hover:opacity-100"
+                                className="rounded-md bg-red-500/10 p-1.5 text-red-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/20"
                                 title="Remover nota"
                               >
                                 <FaTimes className="h-3 w-3" />
@@ -921,10 +954,11 @@ export default function ProjectViewPage() {
                       />
                     ) : (
                       <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-yellow-500/50 bg-yellow-500 text-sm font-bold text-neutral-950">
-                        {project.owner.name?.charAt(0).toUpperCase() || project.owner.username.charAt(0).toUpperCase()}
+                        {project.owner.name?.charAt(0).toUpperCase() ||
+                          project.owner.username.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-neutral-100">
                         {project.owner.name || project.owner.username}
                       </p>
@@ -962,10 +996,11 @@ export default function ProjectViewPage() {
                           />
                         ) : (
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-700 text-xs font-bold text-neutral-200">
-                            {collab.name?.charAt(0).toUpperCase() || collab.username.charAt(0).toUpperCase()}
+                            {collab.name?.charAt(0).toUpperCase() ||
+                              collab.username.charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <div className="flex-1 min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="truncate text-xs font-medium text-neutral-200">
                             {collab.name || collab.username}
                           </p>
@@ -974,7 +1009,7 @@ export default function ProjectViewPage() {
                         {isOwner && (
                           <button
                             onClick={() => handleRemoveCollaborator(collab.user_id)}
-                            className="rounded-md bg-red-500/10 p-1.5 text-red-400 opacity-0 transition-all hover:bg-red-500/20 group-hover:opacity-100"
+                            className="rounded-md bg-red-500/10 p-1.5 text-red-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/20"
                             title="Remover colaborador"
                           >
                             <FaTimes className="h-3 w-3" />
@@ -1055,7 +1090,7 @@ export default function ProjectViewPage() {
 
       {/* Modal: Adicionar Colaborador */}
       {showAddCollaborator && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-lg font-bold text-neutral-100">
@@ -1081,7 +1116,7 @@ export default function ProjectViewPage() {
                 value={collaboratorSearch}
                 onChange={(e) => setCollaboratorSearch(e.target.value)}
                 placeholder="Buscar por nome ou email..."
-                className="w-full rounded-lg border border-neutral-700 bg-neutral-800 py-2.5 pr-3 pl-10 text-sm text-neutral-100 placeholder:text-neutral-600 transition-colors focus:border-purple-500 focus:outline-none"
+                className="w-full rounded-lg border border-neutral-700 bg-neutral-800 py-2.5 pr-3 pl-10 text-sm text-neutral-100 transition-colors placeholder:text-neutral-600 focus:border-purple-500 focus:outline-none"
                 autoFocus
               />
             </div>
@@ -1111,7 +1146,8 @@ export default function ProjectViewPage() {
                         />
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/20 text-sm font-bold text-purple-400">
-                          {user.name?.charAt(0).toUpperCase() || user.username.charAt(0).toUpperCase()}
+                          {user.name?.charAt(0).toUpperCase() ||
+                            user.username.charAt(0).toUpperCase()}
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
@@ -1163,7 +1199,7 @@ export default function ProjectViewPage() {
 
       {/* Modal: Adicionar Nota */}
       {showAddNote && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-lg font-bold text-neutral-100">
@@ -1181,9 +1217,7 @@ export default function ProjectViewPage() {
             {availableNotes.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-800 py-12">
                 <FileText className="mb-3 h-12 w-12 text-neutral-700" />
-                <p className="mb-1 text-sm font-medium text-neutral-400">
-                  Nenhuma nota disponível
-                </p>
+                <p className="mb-1 text-sm font-medium text-neutral-400">Nenhuma nota disponível</p>
                 <p className="text-xs text-neutral-600">
                   Todas as suas notas já estão neste projeto
                 </p>
@@ -1206,13 +1240,13 @@ export default function ProjectViewPage() {
                         </p>
                         <Plus className="h-4 w-4 text-neutral-600 transition-colors group-hover:text-yellow-400" />
                       </div>
-                      
+
                       {note.content && (
                         <p className="mb-2 line-clamp-2 text-xs text-neutral-500">
                           {note.content.substring(0, 100)}...
                         </p>
                       )}
-                      
+
                       {note.tags && note.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {note.tags.slice(0, 4).map((tag, i) => (
@@ -1238,16 +1272,16 @@ export default function ProjectViewPage() {
                               note.status === "published"
                                 ? "bg-green-400"
                                 : note.status === "draft"
-                                ? "bg-yellow-400"
-                                : "bg-neutral-500"
+                                  ? "bg-yellow-400"
+                                  : "bg-neutral-500"
                             }`}
                           />
-                          <span className="text-[10px] capitalize text-neutral-500">
+                          <span className="text-[10px] text-neutral-500 capitalize">
                             {note.status === "published"
                               ? "Publicada"
                               : note.status === "draft"
-                              ? "Rascunho"
-                              : "Arquivada"}
+                                ? "Rascunho"
+                                : "Arquivada"}
                           </span>
                         </div>
                       )}

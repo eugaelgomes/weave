@@ -310,13 +310,17 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
 
     // Projeto mais colaborativo
     const mostCollaborative = projectsOverview.reduce(
-      (max, p) => (p.collaboratorsCount > (max?.count || 0) ? { title: p.title, count: p.collaboratorsCount } : max),
+      (max, p) =>
+        p.collaboratorsCount > (max?.count || 0)
+          ? { title: p.title, count: p.collaboratorsCount }
+          : max,
       undefined as { title: string; count: number } | undefined
     );
 
     // Projeto mais ativo (mais notas)
     const mostActive = projectsOverview.reduce(
-      (max, p) => (p.notesCount > (max?.count || 0) ? { title: p.title, count: p.notesCount } : max),
+      (max, p) =>
+        p.notesCount > (max?.count || 0) ? { title: p.title, count: p.notesCount } : max,
       undefined as { title: string; count: number } | undefined
     );
 
@@ -380,11 +384,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateCollaboratorPermission = useCallback(
-    async (
-      projectId: string,
-      userId: string,
-      permission: "admin" | "viewer"
-    ): Promise<boolean> => {
+    async (projectId: string, userId: string, permission: "admin" | "viewer"): Promise<boolean> => {
       if (!user?.id) return false;
 
       try {
