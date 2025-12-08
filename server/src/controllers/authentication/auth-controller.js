@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const axios = require("axios");
 const { validationResult } = require("express-validator");
 const AuthRepository = require("@/repositories/authentication");
 
@@ -69,119 +70,141 @@ class AuthController {
     }
   }
 
-  //  async googleAuth(req, res) {
-  //    // Redireciona para o endpoint do Google OAuth2
-  //    const googleOAuthURL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.GOOGLE_REDIRECT_URI)}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`;
-  //    res.redirect(googleOAuthURL);
-  //  }
-  //
-  //  async googleCallback(req, res) {
-  //    try {
-  //      const { code, error } = req.query;
-  //
-  //      // Verificar se houve erro na autorização
-  //      if (error) {
-  //        console.error("Erro na autorização Google:", error);
-  //        const frontendURL = process.env.FRONTEND_URL || "http://localhost:80";
-  //        return res.redirect(`${frontendURL}/?error=authorization_denied`);
-  //      }
-  //
-  //      if (!code) {
-  //        console.error("Código de autorização não encontrado");
-  //        const frontendURL = process.env.FRONTEND_URL || "http://localhost:80";
-  //        return res.redirect(`${frontendURL}/?error=missing_auth_code`);
-  //      }
-  //
-  //      // Trocar o código por tokens de acesso
-  //      const tokenResponse = await axios.post(
-  //        "https://oauth2.googleapis.com/token",
-  //        {
-  //          client_id: process.env.GOOGLE_CLIENT_ID,
-  //          client_secret: process.env.GOOGLE_CLIENT_SECRET,
-  //          code,
-  //          grant_type: "authorization_code",
-  //          redirect_uri: process.env.GOOGLE_REDIRECT_URI,
-  //        }
-  //      );
-  //
-  //      const { access_token } = tokenResponse.data;
-  //
-  //      if (!access_token) {
-  //        throw new Error("Token de acesso não recebido do Google");
-  //      }
-  //
-  //      // Obter informações do usuário do Google
-  //      const userResponse = await axios.get(
-  //        `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${access_token}`
-  //      );
-  //      const googleUser = userResponse.data;
-  //
-  //      if (!googleUser.id || !googleUser.email) {
-  //        throw new Error("Dados incompletos do usuário Google");
-  //      }
-  //
-  //      let user = null;
-  //
-  //      // Primeiro, tentar encontrar por Google ID
-  //      user = await AuthRepository.findUserByGoogleId(googleUser.id);
-  //
-  //      if (!user) {
-  //        // Se não encontrou por Google ID, tentar por email
-  //        user = await AuthRepository.findUserByEmail(googleUser.email);
-  //
-  //        if (user) {
-  //          // Usuário existe mas ainda não tem Google ID associado
-  //          user = await AuthRepository.updateUserWithGoogle(
-  //            user.user_id,
-  //            googleUser.id,
-  //            googleUser.picture
-  //          );
-  //        } else {
-  //          // Usuário não existe, criar novo
-  //          user = await AuthRepository.createUserWithGoogle(
-  //            googleUser.id,
-  //            googleUser.name,
-  //            googleUser.email,
-  //            googleUser.picture
-  //          );
-  //        }
-  //      }
-  //
-  //      if (!user) {
-  //        throw new Error("Falha ao criar/encontrar usuário");
-  //      }
-  //
-  //      // Gerar JWT token
-  //      const payload = {
-  //        userId: user.user_id,
-  //        username: user.username,
-  //        email: user.email,
-  //        name: user.name,
-  //      };
-  //
-  //      const token = jwt.sign(payload, secretKey, {
-  //        algorithm: "HS256",
-  //        expiresIn: "24h",
-  //      });
-  //
-  //      // Definir cookie com token
-  //      res.cookie("token", token, {
-  //        httpOnly: true,
-  //        secure: process.env.NODE_ENV === "production",
-  //        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-  //        maxAge: 24 * 60 * 60 * 1000,
-  //        path: "/",
-  //      });
-  //
-  //      // Redirecionar para o frontend
-  //      const frontendURL = process.env.FRONTEND_URL || "http://localhost:80";
-  //      res.redirect(`${frontendURL}/home?auth=success`);
-  //    } catch (error) {
-  //      console.error("Erro detalhado no callback Google:", error.message);
-  //      const frontendURL = process.env.FRONTEND_URL || "http://localhost:80";
-  //      res.redirect(`${frontendURL}/?error=auth_failed`);
-  //    }
-  //  }
+
+  async googleAuth(req, res) {
+    // Redireciona para o endpoint do Google OAuth2
+    const googleOAuthURL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.GOOGLE_REDIRECT_URI)}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`;
+    res.redirect(googleOAuthURL);
+  }
+
+  async googleCallback(req, res) {
+    try {
+      const { code, error } = req.query;
+
+      // Verificar se houve erro na autorização
+      if (error) {
+        console.error("Erro na autorização Google:", error);
+        const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
+        return res.redirect(`${frontendURL}/?error=authorization_denied`);
+      }
+
+      if (!code) {
+        console.error("Código de autorização não encontrado");
+        const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
+        return res.redirect(`${frontendURL}/?error=missing_auth_code`);
+      }
+
+      // Log das configurações para debug
+      console.log("=== DEBUG Google OAuth ===");
+      console.log("CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
+      console.log("REDIRECT_URI:", process.env.GOOGLE_REDIRECT_URI);
+      console.log("CLIENT_SECRET presente:", !!process.env.GOOGLE_CLIENT_SECRET);
+      console.log("Code recebido:", code.substring(0, 20) + "...");
+
+      // Trocar o código por tokens de acesso
+      // Google recomenda enviar os parâmetros no corpo como x-www-form-urlencoded
+      const params = new URLSearchParams();
+      params.append("client_id", process.env.GOOGLE_CLIENT_ID);
+      params.append("client_secret", process.env.GOOGLE_CLIENT_SECRET);
+      params.append("code", code);
+      params.append("grant_type", "authorization_code");
+      params.append("redirect_uri", process.env.GOOGLE_REDIRECT_URI);
+
+      const tokenResponse = await axios.post(
+        "https://oauth2.googleapis.com/token",
+        params,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
+
+      const { access_token } = tokenResponse.data;
+
+      if (!access_token) {
+        throw new Error("Token de acesso não recebido do Google");
+      }
+
+      // Obter informações do usuário do Google
+      const userResponse = await axios.get(
+        `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${access_token}`
+      );
+      const googleUser = userResponse.data;
+
+      if (!googleUser.id || !googleUser.email) {
+        throw new Error("Dados incompletos do usuário Google");
+      }
+
+      let user = null;
+
+      // Primeiro, tentar encontrar por Google ID
+      user = await AuthRepository.findUserByGoogleId(googleUser.id);
+
+      if (!user) {
+        // Se não encontrou por Google ID, tentar por email
+        user = await AuthRepository.findUserByEmail(googleUser.email);
+
+        if (user) {
+          // Usuário existe mas ainda não tem Google ID associado
+          user = await AuthRepository.updateUserWithGoogle(
+            user.user_id,
+            googleUser.id,
+            googleUser.picture
+          );
+        } else {
+          // Usuário não existe, criar novo
+          user = await AuthRepository.createUserWithGoogle(
+            googleUser.id,
+            googleUser.name,
+            googleUser.email,
+            googleUser.picture
+          );
+        }
+      }
+
+      if (!user) {
+        throw new Error("Falha ao criar/encontrar usuário");
+      }
+
+      // Gerar JWT token
+      const payload = {
+        userId: user.user_id,
+        username: user.username,
+        email: user.email,
+        name: user.name,
+      };
+
+      const token = jwt.sign(payload, secretKey, {
+        algorithm: "HS256",
+        expiresIn: "24h",
+      });
+
+      // Definir cookie com token
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 24 * 60 * 60 * 1000,
+        path: "/",
+      });
+
+      // Redirecionar para o frontend
+      const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
+      res.redirect(`${frontendURL}/app/home?auth=success`);
+    } catch (error) {
+      console.error("=== ERRO no callback Google ===");
+      console.error("Mensagem:", error.message);
+      if (error.response) {
+        console.error("Status:", error.response.status);
+        console.error("Dados do erro:", JSON.stringify(error.response.data, null, 2));
+      }
+      console.error("Stack:", error.stack);
+      const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
+      res.redirect(`${frontendURL}/?error=auth_failed`);
+    }
+  }
+
 
   async logout(req, res) {
     try {

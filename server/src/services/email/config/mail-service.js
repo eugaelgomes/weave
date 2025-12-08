@@ -23,7 +23,7 @@ function MailService() {
     transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port,
-      secure: port === 465, // 465 = SMTPS; otherwise, try STARTTLS
+      secure: port === 465,
       auth: {
         user: process.env.EMAIL_USERNAME,
         pass: process.env.EMAIL_PASSWORD,

@@ -7,7 +7,7 @@ try {
     process.exit(1);
   }
   app.listen(port, "0.0.0.0", () => {});
-  console.log(`Server is running on port ${port}`);
+  console.log(`Weave Notes API alive running at port ${port} :)`);
 } catch (error) {
   console.error("Error starting the application:", error);
   process.exit(1);
