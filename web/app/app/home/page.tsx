@@ -250,7 +250,7 @@ export default function HomePage() {
             </button>
 
             <div className={`${showTags ? "block" : "hidden"} flex-1 sm:block`}>
-              <div className="flex flex-col h-full min-h-[200px] items-center justify-center p-6 sm:p-8">
+              <div className="flex h-full min-h-[200px] flex-col items-center justify-center p-6 sm:p-8">
                 <span className="mb-2 flex items-center gap-2 text-neutral-400">
                   Essas são suas tags mais usadas
                 </span>

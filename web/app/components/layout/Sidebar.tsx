@@ -62,7 +62,7 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
   ];
 
   return (
-    <aside className="flex h-full flex-col border-r border-neutral-800 bg-neutral-950  text-neutral-400">
+    <aside className="flex h-full flex-col border-r border-neutral-800 bg-neutral-950 text-neutral-400">
       {/* Botão de Menu em telas pequenas */}
       <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-800 p-3 lg:hidden">
         <div className="flex items-center gap-2">
