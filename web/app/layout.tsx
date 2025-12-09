@@ -4,7 +4,7 @@ import "./globals.css";
 import AuthProviderClient from "./contexts/AuthProviderClient";
 import { NotesProvider } from "./contexts/NotesContext";
 import { ProjectsProvider } from "./contexts/ProjectsContext";
-import Layout from "./components/layout/layout";
+import Layout from "./components/layout/Layout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
