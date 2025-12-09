@@ -2,15 +2,11 @@
 import { apiClient, handleResponse } from "../api-methods";
 import { API_ENDPOINTS } from "../api-routes";
 
-//
-// --- Types ---
-//
-
 export interface ProjectProperties {
   priority?: "alta" | "media" | "baixa";
   tags?: string[];
   estimated_time?: string;
-  progress?: number; // Read-only, calculated by backend
+  progress?: number;
   complexity?: "alta" | "media" | "baixa";
   color?: string;
   icon?: string;
@@ -98,168 +94,84 @@ export interface ManageNoteData {
   noteId: string;
 }
 
-//
-// --- API Functions ---
-//
-
-/**
- * Fetch all projects for the authenticated user
- */
-export async function fetchProjects(): Promise<Project[]> {
-  try {
-    const response = await apiClient.get(API_ENDPOINTS.PROJECTS);
-    const data = await handleResponse<ProjectsResponse>(response);
-
-    // Parse properties if it comes as JSON string from backend
-    const projects = data.projects.map((project) => {
-      if (typeof project.properties === "string") {
-        try {
-          project.properties = JSON.parse(project.properties);
-        } catch (e) {
-          console.warn("Failed to parse project properties:", e);
-        }
-      }
-      return project;
-    });
-
-    return projects;
-  } catch (error) {
-    console.error("Error fetching projects:", error);
-    throw error;
-  }
-}
-
-/**
- * Fetch a specific project by ID
- */
-export async function fetchProjectById(projectId: string): Promise<Project> {
-  try {
-    const response = await apiClient.get(API_ENDPOINTS.PROJECTS_BY_ID(projectId));
-    const project = await handleResponse<Project>(response);
-
-    // Parse properties if it comes as JSON string from backend
-    if (typeof project.properties === "string") {
-      try {
-        project.properties = JSON.parse(project.properties);
-      } catch (e) {
-        console.warn("Failed to parse project properties:", e);
-      }
+// Helper para tratar propriedades que podem vir como string JSON do banco
+const parseProjectProperties = (project: Project): Project => {
+  if (typeof project.properties === "string") {
+    try {
+      project.properties = JSON.parse(project.properties);
+    } catch {
+      // Falha silenciosa ou log opcional se necessário
+      console.warn(`Failed to parse properties for project ${project.id}`);
     }
-
-    return project;
-  } catch (error) {
-    console.error(`Error fetching project ${projectId}:`, error);
-    throw error;
   }
-}
+  return project;
+};
 
-/**
- * Create a new project
- */
-export async function createProject(projectData: CreateProjectData): Promise<Project> {
-  try {
-    const response = await apiClient.post(API_ENDPOINTS.PROJECTS, projectData);
-    return await handleResponse<Project>(response);
-  } catch (error) {
-    console.error("Error creating project:", error);
-    throw error;
-  }
-}
+export const fetchProjects = async (): Promise<Project[]> => {
+  const response = await apiClient.get(API_ENDPOINTS.PROJECTS);
+  const data = await handleResponse<ProjectsResponse>(response);
+  return data.projects.map(parseProjectProperties);
+};
 
-/**
- * Update an existing project
- */
-export async function updateProject(
+export const fetchProjectById = async (projectId: string): Promise<Project> => {
+  const response = await apiClient.get(API_ENDPOINTS.PROJECTS_BY_ID(projectId));
+  const project = await handleResponse<Project>(response);
+  return parseProjectProperties(project);
+};
+
+export const createProject = async (projectData: CreateProjectData): Promise<Project> => {
+  const response = await apiClient.post(API_ENDPOINTS.PROJECTS, projectData);
+  return await handleResponse<Project>(response);
+};
+
+export const updateProject = async (
   projectId: string,
   projectData: UpdateProjectData
-): Promise<Project> {
-  try {
-    const response = await apiClient.put(API_ENDPOINTS.PROJECTS_BY_ID(projectId), projectData);
-    const data = await handleResponse<{ message: string; project: Project }>(response);
-    return data.project;
-  } catch (error) {
-    console.error(`Error updating project ${projectId}:`, error);
-    throw error;
-  }
-}
+): Promise<Project> => {
+  const response = await apiClient.put(API_ENDPOINTS.PROJECTS_BY_ID(projectId), projectData);
+  const data = await handleResponse<{ message: string; project: Project }>(response);
+  return data.project;
+};
 
-/**
- * Delete a project (soft delete)
- */
-export async function deleteProject(projectId: string): Promise<void> {
-  try {
-    const response = await apiClient.delete(API_ENDPOINTS.PROJECTS_BY_ID(projectId));
-    await handleResponse<{ message: string }>(response);
-  } catch (error) {
-    console.error(`Error deleting project ${projectId}:`, error);
-    throw error;
-  }
-}
+export const deleteProject = async (projectId: string): Promise<void> => {
+  const response = await apiClient.delete(API_ENDPOINTS.PROJECTS_BY_ID(projectId));
+  await handleResponse<{ message: string }>(response);
+};
 
-/**
- * Fetch collaborators for a project
- */
-export async function fetchProjectCollaborators(projectId: string): Promise<ProjectCollaborator[]> {
-  try {
-    const response = await apiClient.get(API_ENDPOINTS.PROJECTS_COLLABORATORS(projectId));
-    const data = await handleResponse<{ collaborators: ProjectCollaborator[] }>(response);
-    return data.collaborators;
-  } catch (error) {
-    console.error(`Error fetching collaborators for project ${projectId}:`, error);
-    throw error;
-  }
-}
+export const fetchProjectCollaborators = async (
+  projectId: string
+): Promise<ProjectCollaborator[]> => {
+  const response = await apiClient.get(API_ENDPOINTS.PROJECTS_COLLABORATORS(projectId));
+  const data = await handleResponse<{ collaborators: ProjectCollaborator[] }>(response);
+  return data.collaborators;
+};
 
-/**
- * Manage collaborators (add, update, remove)
- */
-export async function manageCollaborator(
+export const manageCollaborator = async (
   projectId: string,
   collaboratorData: ManageCollaboratorData
-): Promise<ProjectCollaborator[]> {
-  try {
-    const response = await apiClient.put(
-      API_ENDPOINTS.PROJECTS_COLLABORATORS(projectId),
-      collaboratorData
-    );
-    const data = await handleResponse<{
-      message: string;
-      collaborators?: ProjectCollaborator[];
-    }>(response);
-    return data.collaborators || [];
-  } catch (error) {
-    console.error(`Error managing collaborator for project ${projectId}:`, error);
-    throw error;
-  }
-}
+): Promise<ProjectCollaborator[]> => {
+  const response = await apiClient.put(
+    API_ENDPOINTS.PROJECTS_COLLABORATORS(projectId),
+    collaboratorData
+  );
+  const data = await handleResponse<{
+    message: string;
+    collaborators?: ProjectCollaborator[];
+  }>(response);
+  return data.collaborators || [];
+};
 
-/**
- * Fetch notes for a project
- */
-export async function fetchProjectNotes(projectId: string): Promise<ProjectNote[]> {
-  try {
-    const response = await apiClient.get(API_ENDPOINTS.PROJECTS_NOTES(projectId));
-    const data = await handleResponse<{ notes: ProjectNote[] }>(response);
-    return data.notes;
-  } catch (error) {
-    console.error(`Error fetching notes for project ${projectId}:`, error);
-    throw error;
-  }
-}
+export const fetchProjectNotes = async (projectId: string): Promise<ProjectNote[]> => {
+  const response = await apiClient.get(API_ENDPOINTS.PROJECTS_NOTES(projectId));
+  const data = await handleResponse<{ notes: ProjectNote[] }>(response);
+  return data.notes;
+};
 
-/**
- * Manage notes (add, sync, remove)
- */
-export async function manageProjectNote(
+export const manageProjectNote = async (
   projectId: string,
   noteData: ManageNoteData
-): Promise<ProjectNote[]> {
-  try {
-    const response = await apiClient.put(API_ENDPOINTS.PROJECTS_NOTES(projectId), noteData);
-    const data = await handleResponse<{ message: string; notes?: ProjectNote[] }>(response);
-    return data.notes || [];
-  } catch (error) {
-    console.error(`Error managing note for project ${projectId}:`, error);
-    throw error;
-  }
-}
+): Promise<ProjectNote[]> => {
+  const response = await apiClient.put(API_ENDPOINTS.PROJECTS_NOTES(projectId), noteData);
+  const data = await handleResponse<{ message: string; notes?: ProjectNote[] }>(response);
+  return data.notes || [];
+};

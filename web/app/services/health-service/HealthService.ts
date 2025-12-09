@@ -1,20 +1,11 @@
-// services/health-service/HealthService.ts
 import { apiClient, handleResponse } from "../api-methods";
 import { API_ENDPOINTS } from "../api-routes";
-
-//
-// --- Types ---
-//
 export interface HealthStatus {
   status: "online" | "offline";
   timestamp: string;
   uptime: number;
   service: string;
 }
-
-//
-// --- Health API ---
-//
 
 export async function checkHealth(): Promise<HealthStatus> {
   try {
