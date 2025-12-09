@@ -8,12 +8,16 @@ import { FaBars, FaTimes } from "react-icons/fa";
 import { IoPersonCircleSharp } from "react-icons/io5";
 import { RxMix } from "react-icons/rx";
 
-// --- Helpers & Sub-components ---
-
 const getDisplayName = (user: any) => {
   const name = user?.name || "Usuário";
   const parts = name.trim().split(" ");
   return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : parts[0];
+};
+
+const getUserUsername = (user: any) => {
+  if (user?.username) return user.username;
+  if (user?.email) return user.email.split("@")[0];
+  return "usuario";
 };
 
 const UserAvatar = ({ user, size = "sm" }: { user: any; size?: "sm" | "md" | "lg" }) => {
@@ -93,9 +97,6 @@ const MenuContent = ({
     </div>
   </>
 );
-
-// --- Main Component ---
-
 interface NavbarProps {
   onToggleSidebar?: () => void;
 }
@@ -117,9 +118,9 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-neutral-800 bg-neutral-950/80 backdrop-blur-md">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto px-4 sm:px-6 lg:pr-8">
         <div className="flex h-14 items-center justify-between sm:h-14">
-          {/* Left: Hamburger + Logo */}
+          {/* Logo ou Menu */}
           <div className="flex items-center gap-3">
             {authenticated && (
               <button
@@ -135,9 +136,9 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               href={authenticated ? "/app/home" : "/"}
               className="group flex items-center gap-3"
             >
-              {/* Logo Mark Sutil */}
+              {/* Logo */}
               <div className="text-yellow-500 transition-transform duration-500 group-hover:rotate-180">
-                <RxMix className="h-5 w-5" />
+                <RxMix className="h-8 w-8" />
               </div>
 
               {/* Divisor vertical */}
@@ -149,18 +150,22 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
             </Link>
           </div>
 
-          {/* Right: User Actions */}
+          {/* Exibição dos dados e botões*/}
           <div className="flex items-center gap-4">
             {authenticated && user ? (
               <div className="relative" ref={menuRef}>
                 {/* Trigger Button */}
                 <button
                   onClick={() => setMenuOpen(!isMenuOpen)}
-                  className="group flex items-center gap-3 rounded-md border border-transparent p-1 transition-all hover:bg-neutral-900 focus:ring-2 focus:ring-neutral-800 focus:ring-offset-2 focus:ring-offset-neutral-950 focus:outline-none"
+                  className="group flex items-center justify-end gap-3 rounded-md border border-transparent pl-4 transition-all hover:bg-neutral-900 focus:ring-2 focus:ring-neutral-800 focus:ring-offset-2 focus:ring-offset-neutral-950 focus:outline-none"
                 >
-                  <span className="hidden text-sm font-medium text-neutral-300 group-hover:text-neutral-100 md:block">
-                    {getDisplayName(user)}
-                  </span>
+                  <div className="hidden flex-col items-end md:flex">
+                    <span className="text-sm font-medium text-neutral-300 transition-colors group-hover:text-white">
+                      {getDisplayName(user)}
+                    </span>
+                    <span className="text-[10px] text-neutral-500">@{getUserUsername(user)}</span>
+                  </div>
+
                   <UserAvatar user={user} size="sm" />
                 </button>
 
@@ -172,13 +177,13 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                       <MenuContent user={user} logout={logout} onClose={() => setMenuOpen(false)} />
                     </div>
 
-                    {/* Mobile Bottom Sheet Backdrop */}
+                    {/* Fundo backdrop */}
                     <div
                       className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm sm:hidden"
                       onClick={() => setMenuOpen(false)}
                     />
 
-                    {/* Mobile Bottom Sheet */}
+                    {/* Botão mobile */}
                     <div className="fixed right-0 bottom-0 left-0 z-50 rounded-md border-t border-neutral-800 bg-neutral-900 shadow-2xl sm:hidden">
                       <div className="flex justify-center py-3">
                         <div className="h-1 w-12 rounded-md bg-neutral-800" />

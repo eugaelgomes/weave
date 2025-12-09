@@ -74,7 +74,6 @@ export default function HomePage() {
   const recentProjects = getRecentProjects();
   const userName = String(user?.name || user?.username || "usuário");
 
-
   // Controle do carrossel
   const scrollToSlide = (index: number) => {
     if (carouselRef.current) {
@@ -124,7 +123,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-neutral-950">
+    <div className="flex min-h-screen flex-col bg-neutral-950 py-2">
       <div className="flex-1 space-y-3 overflow-y-auto sm:space-y-4">
         {/* Header */}
         <div className="flex flex-col gap-3 rounded-md border border-neutral-800 bg-neutral-900 p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2">

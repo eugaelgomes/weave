@@ -4,7 +4,7 @@ import "./globals.css";
 import AuthProviderClient from "./contexts/AuthProviderClient";
 import { NotesProvider } from "./contexts/NotesContext";
 import { ProjectsProvider } from "./contexts/ProjectsContext";
-import Layout from "./components/layout/Layout";
+import Layout from "./components/layout/layout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
     "editor de texto",
     "colaboração",
   ],
-  authors: [{ name: "weave" }],
-  creator: "weave",
-  publisher: "weave",
+  authors: [{ name: "Weave" }],
+  creator: "Weave",
+  publisher: "Weave",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   openGraph: {
     type: "website",
