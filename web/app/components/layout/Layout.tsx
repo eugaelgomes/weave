@@ -42,7 +42,7 @@ const Layout = ({ children }: LayoutProps) => {
         <aside
           className={`fixed top-0 left-0 z-50 h-full w-72 flex-col bg-neutral-900 transition-transform duration-300 ease-in-out sm:w-80 lg:static lg:z-auto lg:w-[240px] lg:translate-x-0 lg:bg-transparent lg:shadow-none ${sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} pt-14 sm:pt-16 lg:pt-0`}
         >
-          <div className="h-full p-2 sm:p-3 lg:h-full lg:p-0">
+          <div className="h-full py-2 sm:p-3 lg:h-full lg:p-0">
             <Sidebar onLinkClick={closeSidebar} />
           </div>
         </aside>

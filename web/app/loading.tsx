@@ -1,36 +1,31 @@
 "use client";
 
 import React from "react";
+import { FaBook } from "react-icons/fa";
 
 export default function Loading() {
   return (
-    <div className="flex h-full min-h-[60vh] items-center justify-center rounded-md bg-gradient-to-br from-neutral-50 to-neutral-100">
-      <div className="text-center">
-        {/* Spinner principal */}
-        <div className="mb-6">
-          <div className="mx-auto h-16 w-16">
-            <div className="h-full w-full animate-spin rounded-full border-4 border-neutral-200 border-t-yellow-500"></div>
-          </div>
-        </div>
+    <div className="flex h-full min-h-screen w-full flex-col items-center justify-center bg-neutral-950 text-neutral-200">
+      <div className="relative mb-8 flex items-center justify-center">
+        <div className="absolute h-24 w-24 rounded-full border border-neutral-800 opacity-50"></div>
 
-        {/* Logo */}
-        <div className="mb-4">
-          <div className="inline-block rounded-md bg-yellow-500 px-4 py-2 text-lg font-bold text-white">
-            Weave Notes
-          </div>
-        </div>
+        <div className="absolute h-24 w-24 animate-spin rounded-full border-2 border-transparent border-t-yellow-500 border-r-yellow-500/30"></div>
 
-        {/* Texto de carregamento */}
-        <div className="space-y-2">
-          <p className="font-medium text-neutral-950">Carregando...</p>
-          <p className="text-sm text-neutral-800">Preparando tudo para você</p>
+        <div className="relative z-10 flex h-16 w-16 animate-pulse items-center justify-center rounded-full bg-neutral-900 shadow-xl shadow-yellow-900/10">
+          <FaBook className="h-6 w-6 text-yellow-500" />
         </div>
+      </div>
 
-        {/* Indicador de pontos animados */}
-        <div className="mt-4 flex justify-center space-x-1">
-          <div className="h-2 w-2 animate-bounce rounded-full bg-yellow-500"></div>
-          <div className="h-2 w-2 animate-bounce rounded-full bg-yellow-500 [animation-delay:0.1s]"></div>
-          <div className="h-2 w-2 animate-bounce rounded-full bg-yellow-500 [animation-delay:0.2s]"></div>
+      <div className="flex flex-col items-center gap-2 text-center">
+        <h1 className="text-xl font-bold tracking-tight text-neutral-100">
+          Weave <span className="text-yellow-500">Notes</span>
+        </h1>
+
+        <div className="flex items-center gap-1 text-xs font-medium tracking-widest text-neutral-500 uppercase">
+          <span>Carregando</span>
+          <span className="animate-bounce delay-75">.</span>
+          <span className="animate-bounce delay-150">.</span>
+          <span className="animate-bounce delay-300">.</span>
         </div>
       </div>
     </div>

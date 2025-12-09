@@ -1,4 +1,3 @@
-// services/ApiClient.ts
 import { API_CONFIG } from "./api-routes";
 
 export class ApiError extends Error {
@@ -27,17 +26,15 @@ class ApiClient {
 
     const config: RequestInit = {
       ...options,
-      credentials: "include", // Para enviar cookies HttpOnly
+      credentials: "include", // HttpOnly
     };
 
-    // Só adiciona headers padrão se não for FormData
     if (!(options.body instanceof FormData)) {
       config.headers = {
         ...this.defaultHeaders,
         ...options.headers,
       };
     } else {
-      // Para FormData, apenas adiciona headers customizados (se houver)
       config.headers = options.headers;
     }
 
@@ -91,7 +88,6 @@ class ApiClient {
   }
 }
 
-// Função utilitária para tratar respostas
 export async function handleResponse<T = unknown>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type");
 
@@ -108,14 +104,10 @@ export async function handleResponse<T = unknown>(response: Response): Promise<T
       } else {
         errorMessage = (await response.text()) || errorMessage;
       }
-    } catch {
-      // Se não conseguir ler o corpo da resposta, usar mensagem padrão
-    }
-
+    } catch {}
     throw new ApiError(errorMessage, response.status, errorData);
   }
 
-  // Se a resposta não tem conteúdo, retornar objeto vazio
   if (response.status === 204 || response.headers.get("content-length") === "0") {
     return {} as T;
   }

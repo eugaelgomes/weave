@@ -33,9 +33,9 @@ export const metadata: Metadata = {
     "editor de texto",
     "colaboração",
   ],
-  authors: [{ name: "weave" }],
-  creator: "weave",
-  publisher: "weave",
+  authors: [{ name: "Weave" }],
+  creator: "Weave",
+  publisher: "Weave",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   openGraph: {
     type: "website",

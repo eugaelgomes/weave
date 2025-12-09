@@ -1,11 +1,8 @@
-// services/auth-service/AuthService.ts
 import { jwtDecode } from "jwt-decode";
 import { API_ENDPOINTS } from "../api-routes";
 import { apiClient, handleResponse } from "../api-methods";
 
-//
-// --- Types ---
-//
+// Tipos
 export interface User {
   id?: string;
   username?: string;
@@ -34,22 +31,20 @@ export interface CreateUserData {
   name?: string;
 }
 
-//
-// --- Utils ---
-//
-export function decodeToken(token: string) {
+// Utils
+export const decodeToken = (token: string) => {
   try {
     return jwtDecode(token);
   } catch {
     return null;
   }
-}
+};
 
-//
-// --- Autenticação ---
-//
-export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
+// Autenticação
+export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   const response = await apiClient.post(API_ENDPOINTS.SIGNIN, credentials);
+
+  // Tipagem da resposta
   const data = await handleResponse<{
     success?: boolean;
     data?: LoginResponse;
@@ -57,47 +52,62 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
     token?: string;
   }>(response);
 
-  // A resposta do backend vem estruturada como { success: true, message: "...", data: { user: {...}, token: "..." } }
-  // Mas para manter compatibilidade, retornamos apenas o conteúdo de data
   if (data.success && data.data) {
     return data.data;
   }
 
-  // Fallback para estruturas de resposta mais simples
   return data as LoginResponse;
-}
+};
 
-export async function createUserService(
+export const createUserService = async (
   userData: CreateUserData | FormData
-): Promise<{ message: string }> {
+): Promise<{ message: string }> => {
   const response = await apiClient.post(API_ENDPOINTS.CREATE_ACCOUNT, userData);
-  const text = await response.text();
 
   if (!response.ok) {
+    const text = await response.text();
+    let errorMessage = "Falha ao criar usuário";
+
     try {
       const errorJson = JSON.parse(text);
       if (errorJson.errors && Array.isArray(errorJson.errors)) {
-        const firstError = errorJson.errors[0];
-        throw new Error(firstError.msg || firstError.message || "Falha na validação");
+        errorMessage = errorJson.errors[0].msg || errorJson.errors[0].message || errorMessage;
+      } else {
+        errorMessage = errorJson.message || errorMessage;
       }
-      throw new Error(errorJson.message || "Falha ao criar usuário");
     } catch {
-      throw new Error(text || "Falha ao criar usuário");
+      errorMessage = text || errorMessage;
     }
+
+    throw new Error(errorMessage);
   }
 
+  const text = await response.text();
   return { message: text };
-}
+};
 
-//
-// --- Usuário atual ---
-//
-export async function getUserData(): Promise<User> {
+export const logout = async (): Promise<void> => {
+  const response = await apiClient.post(API_ENDPOINTS.LOGOUT);
+  return await handleResponse<void>(response);
+};
+
+export const refreshToken = async (): Promise<LoginResponse> => {
+  const response = await apiClient.post(API_ENDPOINTS.REFRESH);
+  return await handleResponse<LoginResponse>(response);
+};
+
+export const initiateGoogleLogin = (): void => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+  window.location.href = `${baseUrl}${API_ENDPOINTS.GOOGLE_AUTH}`;
+};
+
+// Gerenciamento de Usuário
+export const getUserData = async (): Promise<User> => {
   const response = await apiClient.get(API_ENDPOINTS.ME);
   return await handleResponse<User>(response);
-}
+};
 
-export async function updateUserData(userData: Partial<User>): Promise<User> {
+export const updateUserData = async (userData: Partial<User>): Promise<User> => {
   const response = await apiClient.put(API_ENDPOINTS.UPDATE_PROFILE, userData);
   const data = await handleResponse<User>(response);
 
@@ -108,61 +118,43 @@ export async function updateUserData(userData: Partial<User>): Promise<User> {
     avatar_url: data.avatar_url,
     role: data.role_name,
   };
-}
+};
 
-export async function updatePassword(currentPassword: string, newPassword: string): Promise<void> {
+export const updatePassword = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<void> => {
   const response = await apiClient.put(API_ENDPOINTS.UPDATE_PASSWORD, {
     currentPassword,
     newPassword,
   });
   return await handleResponse<void>(response);
-}
+};
 
-//
-// --- Administração ---
-//
-export async function getUsers(): Promise<User[]> {
+export const deleteUser = async (): Promise<void> => {
+  const response = await apiClient.delete(API_ENDPOINTS.DELETE_ACCOUNT);
+  return await handleResponse<void>(response);
+};
+
+// Endpoints para dados usuários
+export const getUsers = async (): Promise<User[]> => {
   const response = await apiClient.get(API_ENDPOINTS.USERS);
   return await handleResponse<User[]>(response);
-}
+};
 
-export async function logout(): Promise<void> {
-  const response = await apiClient.post(API_ENDPOINTS.LOGOUT);
-  return await handleResponse<void>(response);
-}
-
-export async function refreshToken(): Promise<LoginResponse> {
-  const response = await apiClient.post(API_ENDPOINTS.REFRESH);
-  return await handleResponse<LoginResponse>(response);
-}
-
-//
-// --- Google OAuth ---
-//
-export function initiateGoogleLogin(): void {
-  // Redireciona diretamente para o endpoint de autenticação Google
-  window.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api"}${API_ENDPOINTS.GOOGLE_AUTH}`;
-}
-
-//
-// --- Senha ---
-//
-export async function requestPasswordRecovery(email: string): Promise<{ message: string }> {
+// Recuperação de Senha
+export const requestPasswordRecovery = async (email: string): Promise<{ message: string }> => {
   const response = await apiClient.post(API_ENDPOINTS.FORGOT_PASSWORD, { email });
   return await handleResponse<{ message: string }>(response);
-}
+};
 
-export async function resetPassword(token: string, password: string): Promise<{ message: string }> {
+export const resetPassword = async (
+  token: string,
+  password: string
+): Promise<{ message: string }> => {
   const response = await apiClient.post(API_ENDPOINTS.RESET_PASSWORD, {
     token,
     password,
   });
   return await handleResponse<{ message: string }>(response);
-}
-
-// --- Deletar conta ---
-//
-export async function deleteUser(): Promise<void> {
-  const response = await apiClient.delete(API_ENDPOINTS.DELETE_ACCOUNT);
-  return await handleResponse<void>(response);
-}
+};

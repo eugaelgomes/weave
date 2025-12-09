@@ -1,5 +1,4 @@
-// services/auth-service/UseAuthProvider.ts
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   createUserService,
@@ -35,7 +34,10 @@ export interface AuthActions {
     newPassword: string
   ) => Promise<{ success: boolean; message?: string }>;
   recoverPassword: (email: string) => Promise<{ success: boolean; message?: string }>;
-  resetSenha: (token: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  resetPassword: (
+    token: string,
+    password: string
+  ) => Promise<{ success: boolean; message?: string }>;
   refreshAuthToken: () => Promise<{ success: boolean; user?: User; message?: string }>;
   getUserData: () => Promise<{ success: boolean; data?: User; message?: string }>;
   loginWithGoogle: () => void;
@@ -47,223 +49,172 @@ export function useAuthProvider(): AuthState & AuthActions {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+
   const router = useRouter();
 
-  // Função para debug de cookies
-  function debugCookies() {
-    if (typeof window !== "undefined") {
-      console.log("🍪 Cookies disponíveis:", document.cookie);
-      console.log(
-        "🔍 Cookies do navegador:",
-        document.cookie.split(";").map((c) => c.trim())
-      );
-    }
-  }
+  // --- Helpers ---
 
-  // --- Checa autenticação inicial ---
+  const clearAuthState = useCallback(() => {
+    setUser(null);
+    setAuthenticated(false);
+    setUsers([]);
+  }, []);
+
+  const handleAuthError = (error: unknown): string => {
+    return error instanceof Error ? error.message : "Unknown error occurred";
+  };
+
+  // --- Efeitos ---
+
   useEffect(() => {
-    async function fetchUser() {
+    async function initializeAuth() {
       try {
-        // Verificar se voltou do Google OAuth com sucesso
+        // Verifica retorno do Google OAuth via URL
         if (typeof window !== "undefined") {
           const urlParams = new URLSearchParams(window.location.search);
-          if (urlParams.get("auth") === "success") {
-            // Limpar parâmetros da URL
+          const authStatus = urlParams.get("auth");
+          const authError = urlParams.get("error");
+
+          if (authStatus === "success" || authError) {
             window.history.replaceState({}, document.title, window.location.pathname);
+          }
+
+          if (authError === "auth_failed") {
+            console.error("OAuth authentication failed");
           }
         }
 
-        const data = await getUserDataService(); // token enviado via HttpOnly cookie
-        if (data) {
-          setUser(data);
+        const userData = await getUserDataService();
+
+        if (userData) {
+          setUser(userData);
           setAuthenticated(true);
-          console.log("✅ Usuário autenticado com sucesso:", data.username || data.email);
         } else {
-          throw new Error("Dados do usuário não encontrados");
+          throw new Error("User data not found");
         }
-
-        // Se for admin, carregar lista de usuários
-        // if (data.role_name === "admin") {
-        //   try {
-        //     const usersData = await getUsersService();
-        //     setUsers(usersData);
-        //   } catch (err) {
-        //     console.warn("Falha ao carregar usuários:", err);
-        //   }
-        // }
       } catch (error) {
-        console.warn(
-          "⚠️ Falha ao verificar autenticação:",
-          error instanceof Error ? error.message : "Unknown error"
-        );
-        setUser(null);
-        setAuthenticated(false);
-
-        // Verificar se houve erro no Google OAuth
-        if (typeof window !== "undefined") {
-          const urlParams = new URLSearchParams(window.location.search);
-          if (urlParams.get("error") === "auth_failed") {
-            // Limpar parâmetros da URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-            console.error("❌ Falha na autenticação OAuth");
-            // Aqui você pode mostrar uma mensagem de erro se quiser
-          }
-        }
+        clearAuthState();
       } finally {
         setLoading(false);
       }
     }
 
-    console.log("🔍 Verificando autenticação inicial...");
-    fetchUser();
-  }, []);
+    initializeAuth();
+  }, [clearAuthState]);
 
-  // --- Autenticação ---
-  async function login(credentials: LoginCredentials) {
+  // --- Ações de Autenticação ---
+
+  const login = async (credentials: LoginCredentials) => {
     try {
-      console.log("🔐 Tentando fazer login...");
-      debugCookies();
-
       const response = await loginService(credentials);
 
-      // Debug após login
-      setTimeout(() => {
-        debugCookies();
-      }, 100);
-
       if (response && response.user) {
-        // token já enviado como HttpOnly cookie pelo backend
         setUser(response.user);
         setAuthenticated(true);
-        console.log(
-          "✅ Login realizado com sucesso:",
-          response.user.username || response.user.email
-        );
-
-        // Se for admin, carregar lista de usuários
-        // if (response.user.role_name === "admin") {
-        //   try {
-        //     const usersData = await getUsersService();
-        //     setUsers(usersData);
-        //   } catch (err) {
-        //     console.warn("Falha ao carregar usuários:", err);
-        //   }
-        // }
-
         return { success: true };
-      } else {
-        throw new Error("Resposta de login inválida");
       }
-    } catch (error) {
-      console.error("❌ Erro no login:", error);
-      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
-    }
-  }
 
-  async function logout() {
+      throw new Error("Invalid login response");
+    } catch (error) {
+      console.error("Login failed:", error);
+      return { success: false, message: handleAuthError(error) };
+    }
+  };
+
+  const logout = async () => {
     try {
-      await logoutService(); // Chama API de logout
-      setUser(null);
-      setAuthenticated(false);
-      setUsers([]);
+      await logoutService();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      clearAuthState();
       router.push("/auth/signin");
       return { success: true };
-    } catch (error) {
-      console.error("Erro no logout:", error);
-      // Mesmo com erro na API, limpa estado local
-      setUser(null);
-      setAuthenticated(false);
-      setUsers([]);
-      router.push("/auth/signin");
-      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
     }
-  }
+  };
 
-  async function getCurrentUser() {
-    try {
-      const data = await getUserDataService();
-      return { success: true, data };
-    } catch (error) {
-      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
-    }
-  }
-
-  async function updateUser(userData: Partial<User>) {
-    try {
-      const updatedData = await updateUserData(userData);
-      setUser((prev) => ({ ...prev, ...updatedData }));
-      return { success: true };
-    } catch (error) {
-      console.error("Erro ao atualizar usuário:", error);
-      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
-    }
-  }
-
-  async function updateUserPassword(currentPassword: string, newPassword: string) {
-    try {
-      await updatePassword(currentPassword, newPassword);
-      return { success: true };
-    } catch (error) {
-      console.error("Erro ao atualizar senha:", error);
-      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
-    }
-  }
-
-  async function recoverPassword(email: string) {
-    try {
-      const data = await requestPasswordRecovery(email);
-      return { success: true, message: data.message };
-    } catch (error) {
-      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
-    }
-  }
-
-  async function resetSenha(token: string, password: string) {
-    try {
-      const data = await resetPassword(token, password);
-      return { success: true, message: data.message };
-    } catch (error) {
-      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
-    }
-  }
-
-  async function createUser(userData: CreateUserData) {
+  const createUser = async (userData: CreateUserData) => {
     try {
       const { message } = await createUserService(userData);
       return { success: true, message };
     } catch (error) {
-      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+      return { success: false, message: handleAuthError(error) };
     }
-  }
+  };
 
-  async function deleteUserPermanently() {
+  const updateUserProfile = async (userData: Partial<User>) => {
     try {
-      await deleteUser();
+      const updatedData = await updateUserData(userData);
+      setUser((prev) => (prev ? { ...prev, ...updatedData } : null));
       return { success: true };
     } catch (error) {
-      console.error("Erro ao deletar usuário:", error);
-      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+      console.error("Update user failed:", error);
+      return { success: false, message: handleAuthError(error) };
     }
-  }
+  };
 
-  async function refreshAuthToken() {
+  const updateUserPassword = async (currentPassword: string, newPassword: string) => {
+    try {
+      await updatePassword(currentPassword, newPassword);
+      return { success: true };
+    } catch (error) {
+      console.error("Update password failed:", error);
+      return { success: false, message: handleAuthError(error) };
+    }
+  };
+
+  const recoverPassword = async (email: string) => {
+    try {
+      const data = await requestPasswordRecovery(email);
+      return { success: true, message: data.message };
+    } catch (error) {
+      return { success: false, message: handleAuthError(error) };
+    }
+  };
+
+  const handleResetPassword = async (token: string, password: string) => {
+    try {
+      const data = await resetPassword(token, password);
+      return { success: true, message: data.message };
+    } catch (error) {
+      return { success: false, message: handleAuthError(error) };
+    }
+  };
+
+  const refreshAuthToken = async () => {
     try {
       const response = await refreshTokenService();
       setUser(response.user);
       return { success: true, user: response.user };
     } catch (error) {
-      console.error("Erro ao renovar token:", error);
-      // Se falhar ao renovar, fazer logout
-      setUser(null);
-      setAuthenticated(false);
-      setUsers([]);
-      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+      console.error("Token refresh failed:", error);
+      clearAuthState();
+      return { success: false, message: handleAuthError(error) };
     }
-  }
+  };
 
-  function loginWithGoogle() {
+  const getCurrentUser = async () => {
+    try {
+      const data = await getUserDataService();
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, message: handleAuthError(error) };
+    }
+  };
+
+  const loginWithGoogle = () => {
     initiateGoogleLogin();
-  }
+  };
+
+  const deleteUserPermanently = async () => {
+    try {
+      await deleteUser();
+      return { success: true };
+    } catch (error) {
+      console.error("Delete user failed:", error);
+      return { success: false, message: handleAuthError(error) };
+    }
+  };
 
   return {
     authenticated,
@@ -273,10 +224,10 @@ export function useAuthProvider(): AuthState & AuthActions {
     login,
     logout,
     createUser,
-    updateUser,
+    updateUser: updateUserProfile,
     updateUserPassword,
     recoverPassword,
-    resetSenha,
+    resetPassword: handleResetPassword,
     refreshAuthToken,
     getUserData: getCurrentUser,
     loginWithGoogle,
