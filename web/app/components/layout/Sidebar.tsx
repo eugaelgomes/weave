@@ -24,6 +24,7 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
     if (path === "/app/home" && pathname === "/app/home") return true;
     if (path === "/app/notes" && pathname.startsWith("/app/notes")) return true;
     if (path === "/app/projects" && pathname.startsWith("/app/projects")) return true;
+    if (path === "/app/weave-ai" && pathname.startsWith("/app/weave-ai")) return true;
     if (path === "/app/community" && pathname.startsWith("/app/community")) return true;
     if (path === "/app/settings" && pathname.startsWith("/app/settings")) return true;
     return pathname === path;
@@ -37,6 +38,7 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
     { path: "/app/home", icon: FaHome, label: "Início" },
     { path: "/app/notes", icon: FaBook, label: "Notas" },
     { path: "/app/projects", icon: FaProjectDiagram, label: "Projetos" },
+    { path: "/app/weave-ai", icon: FaProjectDiagram, label: "Weave AI" },
     { path: "/app/community", icon: MdPersonAdd, label: "Comunidade" },
     { path: "/app/settings", icon: IoMdSettings, label: "Configurações" },
   ];
