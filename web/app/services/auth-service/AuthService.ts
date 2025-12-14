@@ -101,9 +101,13 @@ export const initiateGoogleLogin = (): void => {
   window.location.href = `${baseUrl}${API_ENDPOINTS.GOOGLE_AUTH}`;
 };
 
-// Gerenciamento de Usuário
 export const getUserData = async (): Promise<User> => {
   const response = await apiClient.get(API_ENDPOINTS.ME);
+
+  if (!response.ok && response.status === 401) {
+    throw new Error("Unauthorized");
+  }
+
   return await handleResponse<User>(response);
 };
 

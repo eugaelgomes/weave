@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthProviderClient from "./contexts/AuthProviderClient";
-import { NotesProvider } from "./contexts/NotesContext";
-import { ProjectsProvider } from "./contexts/ProjectsContext";
+import { ConditionalProviders } from "./contexts/ConditionalProviders";
 import Layout from "./components/layout/Layout";
 
 const geistSans = Geist({
@@ -79,11 +78,9 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProviderClient>
-          <NotesProvider>
-            <ProjectsProvider>
-              <Layout>{children}</Layout>
-            </ProjectsProvider>
-          </NotesProvider>
+          <ConditionalProviders>
+            <Layout>{children}</Layout>
+          </ConditionalProviders>
         </AuthProviderClient>
       </body>
     </html>

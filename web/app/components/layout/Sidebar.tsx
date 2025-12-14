@@ -3,8 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/app/contexts/AuthContext";
-import { useNotes } from "@/app/contexts/NotesContext";
-import { useProjects } from "@/app/contexts/ProjectsContext";
+import { useSafeAuthenticatedData } from "@/app/hooks/useAuthenticatedData";
 import { usePathname } from "next/navigation";
 import { FaBook, FaHome, FaProjectDiagram, FaTimes, FaGithub, FaRegSadTear } from "react-icons/fa";
 import { MdPersonAdd, MdInfo } from "react-icons/md";
@@ -16,8 +15,7 @@ interface SidebarProps {
 
 const Sidebar = ({ onLinkClick }: SidebarProps) => {
   const { authenticated } = useAuth();
-  const { getRecentNotes } = useNotes();
-  const { getRecentProjects } = useProjects();
+  const authData = useSafeAuthenticatedData();
   const pathname = usePathname();
 
   const isActive = (path: string) => {
@@ -41,10 +39,10 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
     { path: "/app/settings", icon: IoMdSettings, label: "Configurações" },
   ];
 
-  if (!authenticated) return null;
+  if (!authenticated || !authData) return null;
 
-  const recentNotes = getRecentNotes().slice(0, 5);
-  const recentProjects = getRecentProjects().slice(0, 5);
+  const recentNotes = authData.notes.getRecentNotes().slice(0, 5);
+  const recentProjects = authData.projects.getRecentProjects().slice(0, 5);
 
   const recentItems = [
     ...recentNotes.map((note) => ({

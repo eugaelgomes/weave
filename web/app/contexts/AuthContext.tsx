@@ -78,7 +78,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const authenticated = !!token;
 
   useEffect(() => {
-    // restore user from local cookie and check auth status with backend
     const checkAuth = async () => {
       try {
         const u = getCookie(AUTH_USER_KEY);
@@ -88,12 +87,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } catch {}
         }
 
-        // Try to get profile from backend (validates HttpOnly cookie)
-        const profileData = await getUserDataService();
-        setUser(profileData);
-        setToken("authenticated"); // dummy token to indicate auth state
+        try {
+          const profileData = await getUserDataService();
+          setUser(profileData);
+          setToken("authenticated");
+        } catch (error) {
+          if (u) {
+            deleteCookie(AUTH_USER_KEY);
+          }
+          setUser(null);
+          setToken(null);
+        }
       } catch {
-        // SSR safety or auth failure: do nothing
       } finally {
         setLoading(false);
       }
