@@ -161,29 +161,31 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-neutral-950 py-2">
+    <div className="flex min-h-screen flex-col bg-neutral-50 py-2 dark:bg-neutral-950">
       <div className="flex-1 space-y-3 overflow-y-auto sm:space-y-4">
         {/* Header */}
-        <div className="flex flex-col gap-3 rounded-md border border-neutral-800 bg-neutral-900 p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2">
+        <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
           <div className="flex items-center justify-between gap-2">
-            <span className="sm:text-md text-base font-medium tracking-tight text-neutral-100">
+            <span className="sm:text-md text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
               <span className="text-yellow-500">Olá,</span> {userName}!
             </span>
           </div>
-          <div className="flex items-center justify-between gap-3 text-xs text-neutral-400 sm:gap-4 sm:text-sm">
+          <div className="flex items-center justify-between gap-3 text-xs text-neutral-600 sm:gap-4 sm:text-sm dark:text-neutral-400">
             <span className="truncate text-xs">{userCurrentDateTime}</span>
-            <div className="flex items-center gap-2 rounded border border-neutral-800/50 bg-neutral-950/50 px-2 py-1">
+            <div className="flex items-center gap-2 rounded border border-neutral-300 bg-neutral-100 px-2 py-1 dark:border-neutral-800/50 dark:bg-neutral-950/50">
               {healthStatus ? (
                 <>
                   <div
                     className={`h-1.5 w-1.5 rounded-full ${healthStatus.status === "online" ? "bg-emerald-500" : "bg-red-500"}`}
                   />
-                  <span className="font-mono text-[10px] font-medium tracking-wider text-neutral-400">
+                  <span className="font-mono text-[10px] font-medium tracking-wider text-neutral-700 dark:text-neutral-400">
                     {healthStatus.status === "online" ? "System OK" : "Offline"}
                   </span>
                 </>
               ) : (
-                <span className="font-mono text-[10px] text-neutral-600">Verificando...</span>
+                <span className="font-mono text-[10px] text-neutral-500 dark:text-neutral-600">
+                  Verificando...
+                </span>
               )}
             </div>
           </div>
@@ -192,12 +194,12 @@ export default function HomePage() {
         {/* Estatísticas e Mapa Mental */}
         <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-[260px_1fr]">
           {/* === CARD 1 — MÉTRICAS === */}
-          <div className="flex flex-col rounded-md border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
+          <div className="flex flex-col rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
             <button
               onClick={() => setShowMetrics(!showMetrics)}
-              className="flex w-full items-center justify-between border-b border-neutral-800 bg-neutral-900/50 px-3 py-2 sm:px-4"
+              className="flex w-full items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900/50"
             >
-              <h3 className="font-mono text-[9px] font-bold tracking-widest text-neutral-500 uppercase sm:text-[10px]">
+              <h3 className="font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
                 Métricas
               </h3>
               <span className="text-neutral-500 sm:hidden">{showMetrics ? "−" : "+"}</span>
@@ -206,12 +208,12 @@ export default function HomePage() {
             <div className={`${showMetrics ? "block" : "hidden"} sm:block`}>
               <div className="flex flex-col">
                 {/* Total Notas */}
-                <div className="group flex items-center justify-between gap-2 px-3 py-2.5 transition-colors hover:bg-neutral-800 sm:gap-3 sm:py-3">
+                <div className="group flex items-center justify-between gap-2 px-3 py-2.5 transition-colors hover:bg-neutral-100 sm:gap-3 sm:py-3 dark:hover:bg-neutral-800">
                   <div className="flex items-center gap-2">
                     <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-yellow-400/20 bg-yellow-400/10 text-yellow-400">
                       <FileText className="h-3.5 w-3.5" />
                     </div>
-                    <span className="text-[11px] font-medium text-neutral-400 transition-colors group-hover:text-neutral-200">
+                    <span className="text-[11px] font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
                       Total de Notas
                     </span>
                   </div>
@@ -220,12 +222,12 @@ export default function HomePage() {
                   </span>
                 </div>
                 {/* Tags Únicas */}
-                <div className="group flex items-center justify-between gap-2 px-3 py-2.5 transition-colors hover:bg-neutral-800 sm:gap-3 sm:py-3">
+                <div className="group flex items-center justify-between gap-2 px-3 py-2.5 transition-colors hover:bg-neutral-100 sm:gap-3 sm:py-3 dark:hover:bg-neutral-800">
                   <div className="flex items-center gap-2">
                     <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-blue-400/20 bg-blue-400/10 text-blue-400">
                       <Tag className="h-3.5 w-3.5" />
                     </div>
-                    <span className="text-[11px] font-medium text-neutral-400 transition-colors group-hover:text-neutral-200">
+                    <span className="text-[11px] font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
                       Tags únicas
                     </span>
                   </div>
@@ -238,15 +240,17 @@ export default function HomePage() {
           </div>
 
           {/* === CARD 2 — NUVEM DE PALAVRAS === */}
-          <div className="flex flex-col rounded-md border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
+          <div className="flex flex-col rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
             <button
               onClick={() => setShowTags(!showTags)}
-              className="flex w-full items-center justify-between border-b border-neutral-800 bg-neutral-900/30 px-3 py-2 sm:px-4"
+              className="flex w-full items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900/30"
             >
-              <h3 className="font-mono text-[9px] font-bold tracking-widest text-neutral-500 uppercase sm:text-[10px]">
+              <h3 className="font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
                 Nuvem de Tags
               </h3>
-              <span className="text-neutral-500 sm:hidden">{showTags ? "−" : "+"}</span>
+              <span className="text-neutral-600 sm:hidden dark:text-neutral-500">
+                {showTags ? "−" : "+"}
+              </span>
             </button>
 
             <div className={`${showTags ? "block" : "hidden"} flex-1 sm:block`}>

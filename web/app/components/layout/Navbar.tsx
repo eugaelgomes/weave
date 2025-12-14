@@ -7,6 +7,7 @@ import { useAuth } from "@/app/contexts/AuthContext";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { IoPersonCircleSharp } from "react-icons/io5";
 import { RxMix } from "react-icons/rx";
+import { ThemeToggle } from "@/app/components/ui/theme-toggle";
 
 const getDisplayName = (user: any) => {
   const name = user?.name || "Usuário";
@@ -61,11 +62,13 @@ const MenuContent = ({
 }) => (
   <>
     {/* Header */}
-    <div className="flex items-center gap-4 border-b border-neutral-800/50 bg-neutral-950/30 px-6 py-4">
+    <div className="flex items-center gap-4 border-b border-neutral-200/50 bg-neutral-100/30 px-6 py-4 dark:border-neutral-800/50 dark:bg-neutral-950/30">
       <UserAvatar user={user} size="md" />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-semibold text-neutral-100">{user?.name || "Usuário"}</p>
-        <p className="truncate text-sm text-neutral-500">{user?.email}</p>
+        <p className="truncate font-semibold text-neutral-800 dark:text-neutral-100">
+          {user?.name || "Usuário"}
+        </p>
+        <p className="truncate text-sm text-neutral-600 dark:text-neutral-500">{user?.email}</p>
       </div>
     </div>
 
@@ -74,14 +77,14 @@ const MenuContent = ({
       <Link
         href="/app/settings"
         onClick={onClose}
-        className="block rounded-md px-4 py-2.5 text-sm font-medium text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
+        className="block rounded-md px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
       >
         Configurações
       </Link>
       <Link
         href="/about"
         onClick={onClose}
-        className="block rounded-md px-4 py-2.5 text-sm font-medium text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
+        className="block rounded-md px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
       >
         Sobre o app
       </Link>
@@ -117,7 +120,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
   }, []);
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-neutral-800 bg-neutral-950/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white/80 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/80">
       <div className="mx-auto px-4 sm:px-6 lg:pr-8">
         <div className="flex h-14 items-center justify-between sm:h-14">
           {/* Logo ou Menu */}
@@ -126,7 +129,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               <button
                 title="toggle_icon"
                 onClick={onToggleSidebar}
-                className="rounded-md p-2 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100 lg:hidden"
+                className="rounded-md p-2 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 lg:hidden dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
               >
                 <FaBars className="h-5 w-5" />
               </button>
@@ -144,65 +147,78 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               {/* Divisor vertical */}
               <div className="h-4 w-px bg-neutral-800"></div>
 
-              <span className="text-base font-semibold tracking-tight text-neutral-200">
+              <span className="text-base font-semibold tracking-tight text-neutral-800 dark:text-neutral-200">
                 Weave Notes
               </span>
             </Link>
           </div>
 
           {/* Exibição dos dados e botões*/}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {authenticated && user ? (
-              <div className="relative" ref={menuRef}>
-                {/* Trigger Button */}
-                <button
-                  onClick={() => setMenuOpen(!isMenuOpen)}
-                  className="group flex items-center justify-end gap-3 rounded-md border border-transparent pl-4 transition-all hover:bg-neutral-900 focus:ring-2 focus:ring-neutral-800 focus:ring-offset-2 focus:ring-offset-neutral-950 focus:outline-none"
-                >
-                  <div className="hidden flex-col items-end md:flex">
-                    <span className="text-sm font-medium text-neutral-300 transition-colors group-hover:text-white">
-                      {getDisplayName(user)}
-                    </span>
-                    <span className="text-[10px] text-neutral-500">@{getUserUsername(user)}</span>
-                  </div>
-
-                  <UserAvatar user={user} size="sm" />
-                </button>
-
-                {/* Dropdowns / Modals */}
-                {isMenuOpen && (
-                  <>
-                    {/* Desktop Dropdown */}
-                    <div className="ring-opacity-5 absolute right-0 mt-2 hidden w-72 origin-top-right overflow-hidden rounded-md border border-neutral-800 bg-neutral-900 shadow-2xl ring-1 ring-black sm:block">
-                      <MenuContent user={user} logout={logout} onClose={() => setMenuOpen(false)} />
+              <>
+                <ThemeToggle />
+                <div className="relative" ref={menuRef}>
+                  {/* Trigger Button */}
+                  <button
+                    onClick={() => setMenuOpen(!isMenuOpen)}
+                    className="group flex items-center justify-end gap-3 rounded-md border border-transparent pl-4 transition-all hover:bg-neutral-900 focus:ring-2 focus:ring-neutral-800 focus:ring-offset-2 focus:ring-offset-neutral-950 focus:outline-none"
+                  >
+                    <div className="hidden flex-col items-end md:flex">
+                      <span className="text-sm font-medium text-neutral-700 transition-colors group-hover:text-neutral-900 dark:text-neutral-300 dark:group-hover:text-white">
+                        {getDisplayName(user)}
+                      </span>
+                      <span className="text-[10px] text-neutral-600 dark:text-neutral-500">
+                        @{getUserUsername(user)}
+                      </span>
                     </div>
 
-                    {/* Fundo backdrop */}
-                    <div
-                      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm sm:hidden"
-                      onClick={() => setMenuOpen(false)}
-                    />
+                    <UserAvatar user={user} size="sm" />
+                  </button>
 
-                    {/* Botão mobile */}
-                    <div className="fixed right-0 bottom-0 left-0 z-50 rounded-md border-t border-neutral-800 bg-neutral-900 shadow-2xl sm:hidden">
-                      <div className="flex justify-center py-3">
-                        <div className="h-1 w-12 rounded-md bg-neutral-800" />
+                  {/* Dropdowns / Modals */}
+                  {isMenuOpen && (
+                    <>
+                      {/* Desktop Dropdown */}
+                      <div className="ring-opacity-5 absolute right-0 mt-2 hidden w-72 origin-top-right overflow-hidden rounded-md border border-neutral-800 bg-neutral-900 shadow-2xl ring-1 ring-black sm:block">
+                        <MenuContent
+                          user={user}
+                          logout={logout}
+                          onClose={() => setMenuOpen(false)}
+                        />
                       </div>
 
-                      <MenuContent user={user} logout={logout} onClose={() => setMenuOpen(false)} />
+                      {/* Fundo backdrop */}
+                      <div
+                        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm sm:hidden"
+                        onClick={() => setMenuOpen(false)}
+                      />
 
-                      <div className="px-4 pt-2 pb-6">
-                        <button
-                          onClick={() => setMenuOpen(false)}
-                          className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-800 py-3 text-sm font-medium text-neutral-300 hover:bg-neutral-700 hover:text-white"
-                        >
-                          <FaTimes /> Fechar
-                        </button>
+                      {/* Botão mobile */}
+                      <div className="fixed right-0 bottom-0 left-0 z-50 rounded-md border-t border-neutral-800 bg-neutral-900 shadow-2xl sm:hidden">
+                        <div className="flex justify-center py-3">
+                          <div className="h-1 w-12 rounded-md bg-neutral-800" />
+                        </div>
+
+                        <MenuContent
+                          user={user}
+                          logout={logout}
+                          onClose={() => setMenuOpen(false)}
+                        />
+
+                        <div className="px-4 pt-2 pb-6">
+                          <button
+                            onClick={() => setMenuOpen(false)}
+                            className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-200 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-300 hover:text-neutral-900 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-white"
+                          >
+                            <FaTimes /> Fechar
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </>
-                )}
-              </div>
+                    </>
+                  )}
+                </div>
+              </>
             ) : (
               <Link
                 href="/auth/signin"

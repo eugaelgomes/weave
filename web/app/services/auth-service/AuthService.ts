@@ -11,6 +11,7 @@ export interface User {
   avatar_url?: string;
   role?: string;
   role_name?: string;
+  theme_mode?: "light" | "dark";
   [key: string]: unknown;
 }
 

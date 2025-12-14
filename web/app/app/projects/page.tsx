@@ -77,127 +77,129 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-neutral-950">
+    <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
       <div className="flex-1 space-y-3 overflow-y-auto sm:space-y-4">
         {/* Header */}
-        <div className="flex items-start justify-between gap-2 rounded-md border border-neutral-800 bg-neutral-900 p-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4 sm:py-2">
-          <span className="sm:text-md text-base font-medium tracking-tight text-neutral-100">
+        <div className="flex items-start justify-between gap-2 rounded-md border border-neutral-200 bg-white p-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
+          <span className="sm:text-md text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
             Projetos de {userName}
           </span>
-          <span className="text-sm text-neutral-400 lg:block">{userCurrentDateTime}</span>
+          <span className="text-sm text-neutral-600 lg:block dark:text-neutral-400">
+            {userCurrentDateTime}
+          </span>
         </div>
 
         {/* Estatísticas e Progresso */}
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-[280px_1fr]">
           {/* Coluna Esquerda - Estatísticas */}
-          <div className="flex flex-col rounded-md border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
+          <div className="flex flex-col rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
             {/* Cabeçalho do Painel */}
-            <div className="border-b border-neutral-800 bg-neutral-900/50 px-4 py-2.5">
-              <h3 className="font-mono text-[10px] font-bold tracking-widest text-neutral-500 uppercase">
+            <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-2.5 dark:border-neutral-800 dark:bg-neutral-900/50">
+              <h3 className="font-mono text-[10px] font-bold tracking-widest text-neutral-600 uppercase dark:text-neutral-500">
                 Estatísticas
               </h3>
             </div>
 
             {/* Lista de Métricas */}
             <div className="flex flex-col">
-              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-800">
+              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
                 <div className="flex items-center gap-3">
                   <div className="flex h-6 w-6 items-center justify-center rounded-md border border-yellow-400/20 bg-yellow-400/10 text-yellow-400">
                     <Folder className="h-3.5 w-3.5" />
                   </div>
-                  <span className="text-xs font-medium text-neutral-400 transition-colors group-hover:text-neutral-200">
+                  <span className="text-xs font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
                     Projetos
                   </span>
                 </div>
-                <div className="mx-3 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-30 sm:block"></div>
+                <div className="mx-3 hidden h-px flex-1 border-b border-dashed border-neutral-300 opacity-30 sm:block dark:border-neutral-800"></div>
                 <span className="font-mono text-sm font-bold text-yellow-400">
                   {String(stats?.totalProjects ?? 0).padStart(2, "0")}
                 </span>
               </div>
 
-              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-800">
+              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
                 <div className="flex items-center gap-3">
                   <div className="flex h-6 w-6 items-center justify-center rounded-md border border-blue-400/20 bg-blue-400/10 text-blue-400">
                     <FileText className="h-3.5 w-3.5" />
                   </div>
-                  <span className="text-xs font-medium text-neutral-400 transition-colors group-hover:text-neutral-200">
+                  <span className="text-xs font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
                     Notas indexadas
                   </span>
                 </div>
-                <div className="mx-3 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-30 sm:block"></div>
+                <div className="mx-3 hidden h-px flex-1 border-b border-dashed border-neutral-300 opacity-30 sm:block dark:border-neutral-800"></div>
                 <span className="font-mono text-sm font-bold text-blue-400">
                   {String(stats?.totalNotes ?? 0).padStart(2, "0")}
                 </span>
               </div>
 
-              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-800">
+              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
                 <div className="flex items-center gap-3">
                   <div className="flex h-6 w-6 items-center justify-center rounded-md border border-green-400/20 bg-green-400/10 text-green-400">
                     <TrendingUp className="h-3.5 w-3.5" />
                   </div>
-                  <span className="text-xs font-medium text-neutral-400 transition-colors group-hover:text-neutral-200">
+                  <span className="text-xs font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
                     Média de progresso
                   </span>
                 </div>
-                <div className="mx-3 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-30 sm:block"></div>
+                <div className="mx-3 hidden h-px flex-1 border-b border-dashed border-neutral-300 opacity-30 sm:block dark:border-neutral-800"></div>
                 <span className="font-mono text-sm font-bold text-green-400">
                   {stats?.averageProgress ?? 0}%
                 </span>
               </div>
 
-              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-800">
+              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
                 <div className="flex items-center gap-3">
                   <div className="flex h-6 w-6 items-center justify-center rounded-md border border-purple-400/20 bg-purple-400/10 text-purple-400">
                     <Users className="h-3.5 w-3.5" />
                   </div>
-                  <span className="text-xs font-medium text-neutral-400 transition-colors group-hover:text-neutral-200">
+                  <span className="text-xs font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
                     Total de colaboradores
                   </span>
                 </div>
-                <div className="mx-3 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-30 sm:block"></div>
+                <div className="mx-3 hidden h-px flex-1 border-b border-dashed border-neutral-300 opacity-30 sm:block dark:border-neutral-800"></div>
                 <span className="font-mono text-sm font-bold text-purple-400">
                   {String(stats?.totalCollaborators ?? 0).padStart(2, "0")}
                 </span>
               </div>
 
               {/* Status Distribution - Seção Fixa */}
-              <div className="border-t border-neutral-800/50">
-                <div className="bg-neutral-900/50 px-4 py-2">
-                  <span className="font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase">
+              <div className="border-t border-neutral-200 dark:border-neutral-800/50">
+                <div className="bg-neutral-50 px-4 py-2 dark:bg-neutral-900/50">
+                  <span className="font-mono text-[9px] font-bold tracking-widest text-neutral-500 uppercase dark:text-neutral-600">
                     Status
                   </span>
                 </div>
 
                 {/* Aberto */}
-                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-800">
+                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-cyan-400"></div>
-                    <span className="text-[11px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
+                    <span className="text-[11px] font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-500 dark:group-hover:text-neutral-300">
                       Aberto
                     </span>
                   </div>
-                  <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-20 sm:block"></div>
+                  <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-300 opacity-20 sm:block dark:border-neutral-800"></div>
                   <span className="font-mono text-xs font-bold text-cyan-400">
                     {String(stats?.statusDistribution?.open ?? 0).padStart(2, "0")}
                   </span>
                 </div>
 
                 {/* Em Andamento */}
-                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-800">
+                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-blue-400"></div>
-                    <span className="text-[11px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">
+                    <span className="text-[11px] font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-500 dark:group-hover:text-neutral-300">
                       Em Andamento
                     </span>
                   </div>
-                  <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-800 opacity-20 sm:block"></div>
+                  <div className="mx-2 hidden h-px flex-1 border-b border-dashed border-neutral-300 opacity-20 sm:block dark:border-neutral-800"></div>
                   <span className="font-mono text-xs font-bold text-blue-400">
                     {String(stats?.statusDistribution?.running ?? 0).padStart(2, "0")}
                   </span>
                 </div>
 
                 {/* Concluído */}
-                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-800">
+                <div className="group flex items-center justify-between px-4 py-2 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-green-400"></div>
                     <span className="text-[11px] font-medium text-neutral-500 transition-colors group-hover:text-neutral-300">

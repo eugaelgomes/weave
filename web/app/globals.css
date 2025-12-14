@@ -1,15 +1,21 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
+  --background: #fafafa;
   --foreground: #171717;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --border: #e5e5e5;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #171717;
+  --border: #262626;
 }
 
 body {

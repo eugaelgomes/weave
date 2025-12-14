@@ -1,10 +1,10 @@
 const { executeQuery, rowCount } = require("@/services/db/db-connection");
 
 class notesRepository {
-  async createNotesQuerie(userId, title, content, tags = []) {
+  async createNotesQuerie(userId, title, content, tags = [], status = 'open', projectId = null) {
     const query = `
-      INSERT INTO notes (user_id, title, description, tags)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO notes (user_id, title, description, tags, status, project_id)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *; 
     `;
     const results = await executeQuery(query, [
@@ -12,6 +12,8 @@ class notesRepository {
       title,
       content,
       tags, // PostgreSQL aceita arrays diretamente
+      status,
+      projectId,
     ]);
     return results[0];
   }
@@ -21,6 +23,7 @@ class notesRepository {
     SELECT 
     n.id::text,
     n.user_id::text,
+    n.project_id::text,
     n.title,
     n.description,
     n.tags,
@@ -33,6 +36,9 @@ class notesRepository {
     u.username AS user_username,
     u.email AS user_email,
     u.avatar_url AS user_avatar_url,
+
+    -- projeto associado
+    p.title AS project_name,
 
     -- colaboradores em JSON
     COALESCE(
@@ -49,6 +55,7 @@ class notesRepository {
     ) AS collaborators
     FROM notes n
     INNER JOIN users u ON n.user_id = u.user_id
+    LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
     LEFT JOIN note_collaborators nc ON n.id = nc.note_id
     LEFT JOIN users c ON nc.user_id = c.user_id
     WHERE (n.user_id = $1 OR EXISTS (
@@ -56,7 +63,7 @@ class notesRepository {
         WHERE nc2.note_id = n.id AND nc2.user_id = $1
     ))
       AND n.deleted = false
-    GROUP BY n.id, u.user_id
+    GROUP BY n.id, u.user_id, p.title
     ORDER BY n.updated_at DESC;
     `;
     return await executeQuery(query, [userId]);
@@ -67,6 +74,7 @@ class notesRepository {
       SELECT 
         n.id::text,
         n.user_id::text,
+        n.project_id::text,
         n.title,
         n.description,
         n.tags,
@@ -80,6 +88,9 @@ class notesRepository {
         u.username as user_username,
         u.email as user_email,
         u.avatar_url as user_avatar_url,
+
+        -- projeto associado
+        p.title as project_name,
 
         -- colaboradores em JSON
         COALESCE(
@@ -96,6 +107,7 @@ class notesRepository {
         ) AS collaborators
       FROM notes n
       INNER JOIN users u ON n.user_id = u.user_id
+      LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
       LEFT JOIN note_collaborators nc ON n.id = nc.note_id
       LEFT JOIN users c ON nc.user_id = c.user_id
       WHERE (n.user_id = $1 OR EXISTS (
@@ -103,7 +115,7 @@ class notesRepository {
           WHERE nc2.note_id = n.id AND nc2.user_id = $1
       ))
         AND n.deleted = false
-      GROUP BY n.id, u.user_id
+      GROUP BY n.id, u.user_id, p.title
       ORDER BY n.updated_at DESC;
     `;
     return await executeQuery(query, [userId]);
@@ -165,6 +177,7 @@ class notesRepository {
       SELECT 
         n.id::text,
         n.user_id::text,
+        n.project_id::text,
         n.title,
         n.description,
         n.tags,
@@ -177,6 +190,9 @@ class notesRepository {
         u.username as user_username,
         u.email as user_email,
         u.avatar_url as user_avatar_url,
+
+        -- projeto associado
+        p.title as project_name,
 
         -- colaboradores em JSON
         COALESCE(
@@ -193,10 +209,11 @@ class notesRepository {
         ) AS collaborators
       FROM notes n
       INNER JOIN users u ON n.user_id = u.user_id
+      LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
       LEFT JOIN note_collaborators nc ON n.id = nc.note_id
       LEFT JOIN users c ON nc.user_id = c.user_id
       WHERE ${whereConditions.join(" AND ")}
-      GROUP BY n.id, u.user_id
+      GROUP BY n.id, u.user_id, p.title
       ORDER BY n.${validSortField} ${validSortOrder}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1};
     `;
@@ -238,6 +255,7 @@ class notesRepository {
       SELECT 
         n.id::text,
         n.user_id::text,
+        n.project_id::text,
         n.title,
         n.description,
         n.tags,
@@ -251,6 +269,9 @@ class notesRepository {
         u.email as user_email,
         u.avatar_url as user_avatar_url,
 
+        -- projeto associado
+        p.title as project_name,
+
         -- colaboradores em JSON
         COALESCE(
             json_agg(
@@ -263,10 +284,11 @@ class notesRepository {
         ) AS collaborators
       FROM notes n
       INNER JOIN users u ON n.user_id = u.user_id
+      LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
       LEFT JOIN note_collaborators nc ON n.id = nc.note_id
       LEFT JOIN users c ON nc.user_id = c.user_id
       WHERE n.id = $1 AND n.deleted = false
-      GROUP BY n.id, u.user_id
+      GROUP BY n.id, u.user_id, p.title
       LIMIT 1
     `;
     const results = await executeQuery(query, [noteId]);
@@ -362,7 +384,7 @@ class notesRepository {
    * @returns {Object|null} - Nota atualizada ou null se nenhum campo foi fornecido
    */
   async updateNoteById(noteId, updateData) {
-    const allowedFields = ["title", "description", "tags", "status", "deleted"];
+    const allowedFields = ["title", "description", "tags", "status", "deleted", "project_id"];
 
     const updates = [];
     const values = [];
@@ -400,23 +422,26 @@ class notesRepository {
     title,
     description,
     tags = [],
-    initialBlockContent = ""
+    initialBlockContent = "",
+    status = 'open',
+    projectId = null
   ) {
     const query = `
       WITH new_note AS (
-        INSERT INTO notes (user_id, title, description, tags)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO notes (user_id, title, description, tags, status, project_id)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *
       ),
       new_block AS (
         INSERT INTO blocks (note_id, user_id, text)
-        SELECT id, $1, $5
+        SELECT id, $1, $7
         FROM new_note
         RETURNING *
       )
       SELECT 
         -- Seleciona colunas da nota criada
         new_note.id AS note_id,
+        new_note.project_id,
         new_note.title,
         new_note.description,
         new_note.tags,
@@ -448,6 +473,8 @@ class notesRepository {
       title,
       description,
       tags,
+      status,
+      projectId,
       initialBlockContent,
     ]);
     return results[0];

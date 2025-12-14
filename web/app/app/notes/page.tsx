@@ -24,18 +24,20 @@ type SortOrder = "asc" | "desc";
 const NotesWithPagination = () => {
   const router = useRouter();
 
-  // =================== ESTADOS (MANTIDOS ORIGINAIS) ===================
+  // =================== ESTADOS ===================
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedCollaborators, setSelectedCollaborators] = useState<string[]>([]);
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState<boolean>(false);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage] = useState<number>(12); // Ajustado levemente para grids 3x4 ou 4x3
+  const [itemsPerPage] = useState<number>(10); // Lista geralmente comporta menos itens por view que grid
 
   const [sortBy, setSortBy] = useState<SortBy>("updated_at");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
-  // =================== HOOK DE DADOS (MANTIDO) ===================
+  // =================== HOOK DE DADOS ===================
   const {
     notes: allNotes,
     loading: isLoading,
@@ -45,9 +47,9 @@ const NotesWithPagination = () => {
     lastFetch,
   } = useNotes();
 
-  const debouncedSearch = searchTerm; // Simulação do debounce original
+  const debouncedSearch = searchTerm;
 
-  // =================== LÓGICA DE FILTRAGEM (MANTIDA IDÊNTICA) ===================
+  // =================== LÓGICA DE FILTRAGEM ===================
   const filteredNotes = React.useMemo(() => {
     let result = allNotes;
 
@@ -66,6 +68,24 @@ const NotesWithPagination = () => {
     if (selectedTags.length > 0) {
       result = result.filter((note) =>
         selectedTags.every((selectedTag) => note.tags?.includes(selectedTag))
+      );
+    }
+
+    // Colaboradores
+    if (selectedCollaborators.length > 0) {
+      result = result.filter((note) =>
+        selectedCollaborators.some((selectedCollab) =>
+          note.collaborators?.some((c) =>
+            getCollaboratorDisplayName(c).toLowerCase().includes(selectedCollab.toLowerCase())
+          )
+        )
+      );
+    }
+
+    // Projetos
+    if (selectedProjects.length > 0) {
+      result = result.filter(
+        (note) => note.project_id && selectedProjects.includes(note.project_id)
       );
     }
 
@@ -113,23 +133,21 @@ const NotesWithPagination = () => {
     total: totalNotes,
   };
 
-  // Estados de Loading (Lógica Original)
+  // Estados de Loading
   const isPreviousData = false;
   const showFullSkeleton = isLoading && !isPreviousData && notes.length === 0;
   const showOverlayLoading = isLoading && isPreviousData;
   const showListSkeleton = isLoading && !isPreviousData && debouncedSearch !== searchTerm;
 
-  // Reset de página ao filtrar
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
     }
   }, [currentPage, totalPages]);
 
-  // =================== HANDLERS (MANTIDOS) ===================
+  // =================== HANDLERS ===================
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
-    // window.scrollTo removido para SPA feel, ou manter se preferir
     const container = document.getElementById("notes-container");
     if (container) container.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -147,6 +165,26 @@ const NotesWithPagination = () => {
     });
   };
 
+  const handleCollaboratorToggle = (collaborator: string) => {
+    setSelectedCollaborators((prev) => {
+      const newCollabs = prev.includes(collaborator)
+        ? prev.filter((c) => c !== collaborator)
+        : [...prev, collaborator];
+      setCurrentPage(1);
+      return newCollabs;
+    });
+  };
+
+  const handleProjectToggle = (projectId: string) => {
+    setSelectedProjects((prev) => {
+      const newProjects = prev.includes(projectId)
+        ? prev.filter((p) => p !== projectId)
+        : [...prev, projectId];
+      setCurrentPage(1);
+      return newProjects;
+    });
+  };
+
   const handleSortChange = (newSortBy: SortBy, newSortOrder: SortOrder = sortOrder) => {
     setSortBy(newSortBy);
     setSortOrder(newSortOrder);
@@ -156,6 +194,8 @@ const NotesWithPagination = () => {
   const clearFilters = () => {
     setSearchTerm("");
     setSelectedTags([]);
+    setSelectedCollaborators([]);
+    setSelectedProjects([]);
     setCurrentPage(1);
     setShowFilters(false);
   };
@@ -187,18 +227,116 @@ const NotesWithPagination = () => {
     return lastFetch.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   };
 
-  const availableTags: string[] = [...new Set(allNotes.flatMap((note) => note.tags || []))].sort();
+  const availableTags: string[] = [...new Set(allNotes.flatMap((note) => note.tags || []))].sort(
+    (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
+  );
+
+  const availableCollaborators: string[] = [
+    ...new Set(
+      allNotes.flatMap(
+        (note) => note.collaborators?.map((c) => getCollaboratorDisplayName(c)) || []
+      )
+    ),
+  ].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+
+  const availableProjects = React.useMemo(() => {
+    const projects = new Map<string, { id: string; name: string }>();
+
+    allNotes.forEach((note) => {
+      if (note.project_id && note.project_name) {
+        projects.set(note.project_id, { id: note.project_id, name: note.project_name });
+      }
+    });
+
+    return Array.from(projects.values()).sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    );
+  }, [allNotes]);
+
+  // =================== CORES PASTÉIS PARA TAGS ===================
+  const getTagColor = (tag: string) => {
+    const pastelColors = [
+      {
+        bg: "bg-pink-100 dark:bg-pink-900/30",
+        text: "text-pink-700 dark:text-pink-300",
+        border: "border-pink-200 dark:border-pink-800",
+      },
+      {
+        bg: "bg-purple-100 dark:bg-purple-900/30",
+        text: "text-purple-700 dark:text-purple-300",
+        border: "border-purple-200 dark:border-purple-800",
+      },
+      {
+        bg: "bg-blue-100 dark:bg-blue-900/30",
+        text: "text-blue-700 dark:text-blue-300",
+        border: "border-blue-200 dark:border-blue-800",
+      },
+      {
+        bg: "bg-cyan-100 dark:bg-cyan-900/30",
+        text: "text-cyan-700 dark:text-cyan-300",
+        border: "border-cyan-200 dark:border-cyan-800",
+      },
+      {
+        bg: "bg-teal-100 dark:bg-teal-900/30",
+        text: "text-teal-700 dark:text-teal-300",
+        border: "border-teal-200 dark:border-teal-800",
+      },
+      {
+        bg: "bg-green-100 dark:bg-green-900/30",
+        text: "text-green-700 dark:text-green-300",
+        border: "border-green-200 dark:border-green-800",
+      },
+      {
+        bg: "bg-lime-100 dark:bg-lime-900/30",
+        text: "text-lime-700 dark:text-lime-300",
+        border: "border-lime-200 dark:border-lime-800",
+      },
+      {
+        bg: "bg-yellow-100 dark:bg-yellow-900/30",
+        text: "text-yellow-700 dark:text-yellow-300",
+        border: "border-yellow-200 dark:border-yellow-800",
+      },
+      {
+        bg: "bg-orange-100 dark:bg-orange-900/30",
+        text: "text-orange-700 dark:text-orange-300",
+        border: "border-orange-200 dark:border-orange-800",
+      },
+      {
+        bg: "bg-red-100 dark:bg-red-900/30",
+        text: "text-red-700 dark:text-red-300",
+        border: "border-red-200 dark:border-red-800",
+      },
+      {
+        bg: "bg-rose-100 dark:bg-rose-900/30",
+        text: "text-rose-700 dark:text-rose-300",
+        border: "border-rose-200 dark:border-rose-800",
+      },
+      {
+        bg: "bg-indigo-100 dark:bg-indigo-900/30",
+        text: "text-indigo-700 dark:text-indigo-300",
+        border: "border-indigo-200 dark:border-indigo-800",
+      },
+    ];
+
+    // Gera um índice baseado no nome da tag para manter consistência
+    let hash = 0;
+    for (let i = 0; i < tag.length; i++) {
+      hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % pastelColors.length;
+    return pastelColors[index];
+  };
 
   // =================== RENDER ===================
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center p-6">
+      <div className="flex h-full items-center justify-center bg-neutral-50 p-6 dark:bg-neutral-950">
         <div className="text-center">
-          <p className="font-medium text-red-400">Erro ao carregar notas</p>
+          <p className="font-medium text-red-500 dark:text-red-400">Erro ao carregar notas</p>
           <button
             onClick={handleRefresh}
-            className="mt-2 text-sm text-neutral-400 underline hover:text-white"
+            className="mt-2 text-sm text-neutral-400 underline hover:text-neutral-900 dark:hover:text-white"
           >
             Tentar novamente
           </button>
@@ -208,148 +346,217 @@ const NotesWithPagination = () => {
   }
 
   return (
-    <div className="flex h-full flex-col bg-neutral-950">
+    <div className="flex h-full flex-col bg-neutral-50 dark:bg-neutral-950">
       {/* =================== HEADER / TOOLBAR =================== */}
-      {/* Design aprimorado: Toolbar densa e técnica em vez de cabeçalho grande */}
-      <div className="flex flex-col border-b border-neutral-800 bg-neutral-950 px-4 py-2 sm:px-6">
-        {/* Linha 1: Título e Ações Principais */}
+      <div className="flex flex-col rounded-md border border-neutral-200 bg-white px-2 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-950">
+        {/* Linha 1: Título e Ações */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <h2 className="text-md font-semibold text-neutral-100">Notas</h2>
-            <div className="hidden h-2 w-px bg-neutral-800 sm:block"></div>
-            <div className="hidden items-center gap-2 text-xs text-neutral-500 sm:flex">
-              <span>{pagination.total} notas</span>
-              <span>•</span>
-              <span title={`Atualizado às ${lastFetch?.toLocaleTimeString()}`}>
-                Atualizado: {formatLastFetch()}
+            <h2 className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+              Notas
+            </h2>
+            <div className="hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800"></div>
+            <div className="hidden items-center gap-2 text-sm text-neutral-500 sm:flex">
+              <span className="font-medium text-neutral-900 dark:text-neutral-200">
+                {pagination.total}
               </span>
+              <span className="text-xs">registros</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Search Input Compacto */}
-            <div className="relative flex-1 sm:w-64 sm:flex-none">
+          <div className="flex items-center gap-3">
+            {/* Search Input - Aumentado para h-9 para melhor clique */}
+            <div className="relative flex-1 sm:w-72 sm:flex-none">
               <Search
-                className="absolute top-1/2 left-2.5 -translate-y-1/2 text-neutral-500"
-                size={14}
+                className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-400"
+                size={16}
               />
               <input
                 type="text"
                 placeholder="Buscar..."
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="h-6 w-full rounded border border-neutral-800 bg-neutral-900 pr-8 pl-8 text-xs text-neutral-200 placeholder-neutral-500 focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600 focus:outline-none"
+                className="h-9 w-full rounded-md border border-neutral-200 bg-neutral-50 pr-8 pl-9 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:bg-white focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
               />
               {(searchTerm !== debouncedSearch || isLoading) && (
-                <div className="absolute top-1/2 right-2.5 -translate-y-1/2">
-                  <Loader2 size={12} className="animate-spin text-neutral-500" />
+                <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                  <Loader2 size={14} className="animate-spin text-neutral-400" />
                 </div>
               )}
             </div>
 
-            <button
-              onClick={handleRefresh}
-              disabled={isLoading}
-              className="flex h-6 w-8 items-center justify-center rounded border border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200 disabled:opacity-50"
-              title="Atualizar"
-            >
-              <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
-            </button>
+            <div className="flex items-center gap-2 border-l border-neutral-200 pl-3 dark:border-neutral-800">
+              <button
+                onClick={handleRefresh}
+                disabled={isLoading}
+                className="flex h-9 w-9 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-900 disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200"
+                title="Atualizar"
+              >
+                <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
+              </button>
 
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex h-6 items-center gap-2 rounded border px-3 text-xs font-medium transition-colors ${
-                showFilters || selectedTags.length > 0
-                  ? "border-yellow-500/30 bg-yellow-500/10 text-yellow-500"
-                  : "border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200"
-              }`}
-            >
-              <Filter size={14} />
-              <span className="hidden sm:inline">Filtros</span>
-              {selectedTags.length > 0 && (
-                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-yellow-500 px-1 text-[9px] font-bold text-neutral-950">
-                  {selectedTags.length}
-                </span>
-              )}
-            </button>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors ${
+                  showFilters ||
+                  selectedTags.length > 0 ||
+                  selectedCollaborators.length > 0 ||
+                  selectedProjects.length > 0
+                    ? "border-yellow-500 bg-yellow-50 text-yellow-700 dark:border-yellow-500/30 dark:bg-yellow-500/10 dark:text-yellow-500"
+                    : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200"
+                }`}
+              >
+                <Filter size={16} />
+                <span className="hidden sm:inline">Filtrar</span>
+                {(selectedTags.length > 0 ||
+                  selectedCollaborators.length > 0 ||
+                  selectedProjects.length > 0) && (
+                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-yellow-500 px-1.5 text-[10px] font-bold text-white">
+                    {selectedTags.length + selectedCollaborators.length + selectedProjects.length}
+                  </span>
+                )}
+              </button>
 
-            <button
-              onClick={handleCreateNote}
-              className="flex h-6 items-center gap-2 rounded bg-yellow-500 px-3 text-xs font-semibold text-neutral-950 transition-all hover:bg-yellow-400 active:scale-95"
-            >
-              <Plus size={14} />
-              <span>Nova</span>
-            </button>
+              <button
+                onClick={handleCreateNote}
+                className="flex h-9 items-center gap-1 rounded-md bg-yellow-500 px-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-neutral-800 active:scale-95 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
+              >
+                <Plus size={16} />
+                <span>Criar</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Linha 2: Painel de Filtros (Expansível) */}
+        {/* Linha 2: Painel de Filtros */}
         {showFilters && (
-          <div className="animate-in slide-in-from-top-1 mt-3 border-t border-neutral-800 pt-3">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              {/* Tags */}
-              <div className="flex-1 space-y-2">
-                <span className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase">
-                  Tags
+          <div className="animate-in slide-in-from-top-1 mt-4 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+            <div className="flex flex-col gap-6">
+              {/* Tags Group */}
+              <div className="space-y-3">
+                <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
+                  Tags ({availableTags.length})
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {availableTags.length > 0 ? (
-                    availableTags.map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => handleTagToggle(tag)}
-                        className={`rounded border px-2 py-1 text-[10px] font-medium transition-colors ${
-                          selectedTags.includes(tag)
-                            ? "border-yellow-500/30 bg-yellow-500/10 text-yellow-500"
-                            : "border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200"
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))
+                    availableTags.map((tag) => {
+                      const colors = getTagColor(tag);
+                      return (
+                        <button
+                          key={tag}
+                          onClick={() => handleTagToggle(tag)}
+                          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                            selectedTags.includes(tag)
+                              ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-950"
+                              : `${colors.border} ${colors.bg} ${colors.text} hover:opacity-80`
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      );
+                    })
                   ) : (
-                    <span className="text-xs text-neutral-600">Nenhuma tag encontrada.</span>
+                    <span className="text-sm text-neutral-400 italic">Nenhuma tag disponível.</span>
                   )}
                 </div>
               </div>
 
-              {/* Ordenação */}
-              <div className="min-w-[200px] space-y-2">
-                <span className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase">
-                  Ordenar
+              {/* Colaboradores Group */}
+              <div className="space-y-3">
+                <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
+                  Colaboradores ({availableCollaborators.length})
                 </span>
-                <div className="flex gap-2">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => handleSortChange(e.target.value as SortBy)}
-                    className="h-7 flex-1 rounded border border-neutral-800 bg-neutral-900 px-2 text-xs text-neutral-300 focus:border-neutral-600 focus:outline-none"
-                  >
-                    <option value="updated_at">Atualização</option>
-                    <option value="created_at">Criação</option>
-                    <option value="title">Título</option>
-                  </select>
-                  <button
-                    onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
-                    className="flex h-7 w-7 items-center justify-center rounded border border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-neutral-200"
-                  >
-                    {sortOrder === "asc" ? (
-                      <SortAsc size={14} className="rotate-180" />
-                    ) : (
-                      <SortAsc size={14} />
-                    )}
-                  </button>
+                <div className="flex flex-wrap gap-2">
+                  {availableCollaborators.length > 0 ? (
+                    availableCollaborators.map((collaborator) => (
+                      <button
+                        key={collaborator}
+                        onClick={() => handleCollaboratorToggle(collaborator)}
+                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                          selectedCollaborators.includes(collaborator)
+                            ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-950"
+                            : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
+                        }`}
+                      >
+                        {collaborator}
+                      </button>
+                    ))
+                  ) : (
+                    <span className="text-sm text-neutral-400 italic">
+                      Nenhum colaborador disponível.
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Projetos Group - Só exibe se houver projetos */}
+              {availableProjects.length > 0 && (
+                <div className="space-y-3">
+                  <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
+                    Projetos ({availableProjects.length})
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {availableProjects.map((project) => (
+                      <button
+                        key={project.id}
+                        onClick={() => handleProjectToggle(project.id)}
+                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                          selectedProjects.includes(project.id)
+                            ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-950"
+                            : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
+                        }`}
+                      >
+                        {project.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Ordenação */}
+              <div className="space-y-3 border-t border-neutral-100 pt-6 dark:border-neutral-800">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-[240px] space-y-3">
+                    <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
+                      Ordenação
+                    </span>
+                    <div className="flex gap-2">
+                      <select
+                        value={sortBy}
+                        onChange={(e) => handleSortChange(e.target.value as SortBy)}
+                        className="h-9 flex-1 rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 focus:border-neutral-400 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300"
+                      >
+                        <option value="updated_at">Data de Atualização</option>
+                        <option value="created_at">Data de Criação</option>
+                        <option value="title">Título (A-Z)</option>
+                      </select>
+                      <button
+                        onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
+                        className="flex h-9 w-9 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                        title={sortOrder === "asc" ? "Crescente" : "Decrescente"}
+                      >
+                        {sortOrder === "asc" ? (
+                          <SortAsc size={16} className="rotate-180" />
+                        ) : (
+                          <SortAsc size={16} />
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Limpar Filtros */}
-            {(searchTerm || selectedTags.length > 0) && (
-              <div className="mt-3 flex justify-end border-t border-neutral-800/50 pt-2">
+            {(searchTerm ||
+              selectedTags.length > 0 ||
+              selectedCollaborators.length > 0 ||
+              selectedProjects.length > 0) && (
+              <div className="mt-4 flex justify-end border-t border-neutral-100 pt-3 dark:border-neutral-800">
                 <button
                   onClick={clearFilters}
-                  className="flex items-center gap-1.5 text-[10px] text-red-400 hover:text-red-300"
+                  className="flex items-center gap-1.5 text-xs font-medium text-red-500 transition-colors hover:text-red-600"
                 >
-                  <X size={10} /> Limpar Filtros
+                  <X size={12} /> Limpar Filtros
                 </button>
               </div>
             )}
@@ -357,108 +564,106 @@ const NotesWithPagination = () => {
         )}
       </div>
 
-      {/* =================== CONTEÚDO (GRID) =================== */}
-      {/* Container com scroll */}
-      <div id="notes-container" className="flex-1 overflow-y-auto bg-neutral-950 p-4 sm:p-6">
-        {/* Skeleton Loading Inicial */}
-        {showFullSkeleton || showListSkeleton ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: itemsPerPage }).map((_, i) => (
-              <div
-                key={i}
-                className="h-44 animate-pulse rounded border border-neutral-800 bg-neutral-900/30 p-4"
-              >
-                <div className="mb-4 h-4 w-3/4 rounded bg-neutral-800"></div>
-                <div className="space-y-2">
-                  <div className="h-3 w-full rounded bg-neutral-800"></div>
-                  <div className="h-3 w-5/6 rounded bg-neutral-800"></div>
-                </div>
-                <div className="mt-8 flex gap-2">
-                  <div className="h-5 w-12 rounded bg-neutral-800"></div>
-                  <div className="h-5 w-12 rounded bg-neutral-800"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : notes.length > 0 ? (
-          <div className="relative">
-            {/* Overlay Loading (Refresh sutil) */}
-            {showOverlayLoading && (
-              <div className="absolute inset-0 z-10 flex items-start justify-center bg-neutral-950/50 pt-10 backdrop-blur-[1px]">
-                <div className="flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900 px-4 py-2 text-xs font-medium text-neutral-300 shadow-xl">
-                  <Loader2 size={12} className="animate-spin text-yellow-500" />
-                  Atualizando...
-                </div>
-              </div>
-            )}
-
-            {/* GRID DE CARDS REFORMULADOS */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-              {notes.map((note) => (
-                <Link
-                  key={note.id}
-                  href={`/app/notes/view/${note.id}`}
-                  className="group block h-full"
+      {/* =================== CONTEÚDO (LISTA) =================== */}
+      <div
+        id="notes-container"
+        className="flex-1 overflow-y-auto bg-neutral-50 p-2 sm:p-4 dark:bg-neutral-950"
+      >
+        <div className="mx-auto max-w-6xl">
+          {" "}
+          {/* Container limitador para telas muito largas */}
+          {/* Headers da Lista (Opcional, mas ajuda no alinhamento visual) */}
+          {notes.length > 0 && !showFullSkeleton && (
+            <div className="mb-2 hidden grid-cols-12 gap-4 px-4 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase sm:grid">
+              <div className="col-span-6">Detalhes</div>
+              <div className="col-span-3">Tags</div>
+              <div className="col-span-1 text-center">Colab.</div>
+              <div className="col-span-2 text-right">Data</div>
+            </div>
+          )}
+          {showFullSkeleton || showListSkeleton ? (
+            <div className="space-y-3">
+              {Array.from({ length: itemsPerPage }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex h-20 animate-pulse items-center gap-4 rounded-lg border border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-900"
                 >
-                  <article className="flex h-48 flex-col justify-between rounded border border-neutral-800 bg-neutral-900/20 p-4 transition-all hover:border-neutral-600 hover:bg-neutral-900 hover:shadow-sm">
-                    {/* Topo do Card */}
-                    <div>
-                      <div className="mb-2 flex items-start justify-between gap-3">
-                        <h3 className="line-clamp-2 text-sm font-medium text-neutral-200 transition-colors group-hover:text-yellow-500">
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-1/3 rounded bg-neutral-100 dark:bg-neutral-800"></div>
+                    <div className="h-3 w-1/2 rounded bg-neutral-100 dark:bg-neutral-800"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : notes.length > 0 ? (
+            <div className="relative space-y-3">
+              {/* Overlay Loading */}
+              {showOverlayLoading && (
+                <div className="absolute inset-0 z-10 flex items-start justify-center bg-white/60 pt-10 backdrop-blur-[1px] dark:bg-neutral-950/60">
+                  <Loader2 size={24} className="animate-spin text-neutral-900 dark:text-white" />
+                </div>
+              )}
+
+              {notes.map((note) => (
+                <Link key={note.id} href={`/app/notes/view/${note.id}`} className="group block">
+                  <article className="grid grid-cols-1 items-center gap-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm transition-all hover:border-neutral-300 hover:shadow-md sm:grid-cols-12 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700 dark:hover:shadow-none">
+                    {/* Título e Descrição */}
+                    <div className="col-span-1 min-w-0 sm:col-span-6">
+                      <div className="flex items-center gap-2">
+                        <h3 className="truncate text-sm font-semibold text-neutral-900 group-hover:text-yellow-600 dark:text-neutral-100 dark:group-hover:text-yellow-400">
                           {note.title || "Sem título"}
                         </h3>
-                        {note.updated_at && (
-                          <span className="shrink-0 text-[10px] whitespace-nowrap text-neutral-600">
-                            {new Date(note.updated_at).toLocaleDateString("pt-BR", {
-                              day: "2-digit",
-                              month: "short",
-                            })}
-                          </span>
+                        {/* Opcional: Badge de Novo */}
+                        {new Date(note.created_at).getTime() > Date.now() - 86400000 && (
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-500"></span>
                         )}
                       </div>
-
-                      <p className="line-clamp-3 text-xs leading-relaxed text-neutral-500 transition-colors group-hover:text-neutral-400">
-                        {note.description || "Sem descrição..."}
+                      <p className="mt-1 line-clamp-1 text-xs text-neutral-500 group-hover:text-neutral-600 dark:text-neutral-400 dark:group-hover:text-neutral-300">
+                        {note.description || "Sem descrição adicional..."}
                       </p>
                     </div>
 
-                    {/* Rodapé do Card */}
-                    <div className="mt-auto flex items-end justify-between gap-2 border-t border-neutral-800/50 pt-4">
-                      {/* Tags (Estilo Pill discreto) */}
-                      <div className="flex h-5 flex-wrap gap-1.5 overflow-hidden">
-                        {note.tags?.slice(0, 2).map((tag, i) => (
-                          <span
-                            key={i}
-                            className="inline-flex items-center rounded border border-neutral-800 bg-neutral-900 px-1.5 py-0.5 text-[9px] font-medium text-neutral-400"
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                    {/* Tags */}
+                    <div className="col-span-1 hidden sm:col-span-3 sm:block">
+                      <div className="flex flex-wrap gap-1.5">
+                        {note.tags?.slice(0, 2).map((tag, i) => {
+                          const colors = getTagColor(tag);
+                          return (
+                            <span
+                              key={i}
+                              className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
+                            >
+                              {tag}
+                            </span>
+                          );
+                        })}
                         {(note.tags?.length || 0) > 2 && (
-                          <span className="text-[9px] text-neutral-600">
+                          <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
                             +{note.tags!.length - 2}
                           </span>
                         )}
                       </div>
+                    </div>
 
-                      {/* Colaboradores (Mini Avatar sobreposto) */}
-                      {note.collaborators && note.collaborators.length > 0 && (
-                        <div className="flex -space-x-1.5 pl-2">
+                    {/* Colaboradores */}
+                    <div className="col-span-1 hidden justify-center sm:col-span-1 sm:flex">
+                      {note.collaborators && note.collaborators.length > 0 ? (
+                        <div className="flex -space-x-2">
                           {note.collaborators.slice(0, 3).map((c, i) => {
                             const avatar = getCollaboratorAvatarUrl(c);
                             const name = getCollaboratorDisplayName(c);
                             return (
                               <div
                                 key={i}
-                                className="relative flex h-5 w-5 items-center justify-center overflow-hidden rounded-full border border-neutral-900 bg-neutral-800"
+                                className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-100 ring-1 ring-neutral-100 dark:border-neutral-900 dark:bg-neutral-800 dark:ring-neutral-900"
                                 title={name}
                               >
                                 {avatar ? (
                                   <Image
                                     src={avatar}
                                     alt={name}
-                                    width={20}
-                                    height={20}
+                                    width={24}
+                                    height={24}
                                     className="h-full w-full object-cover"
                                   />
                                 ) : (
@@ -470,40 +675,67 @@ const NotesWithPagination = () => {
                             );
                           })}
                         </div>
+                      ) : (
+                        <span className="text-neutral-300 dark:text-neutral-700">-</span>
                       )}
+                    </div>
+
+                    {/* Data */}
+                    <div className="col-span-1 flex flex-col items-end sm:col-span-2">
+                      <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                        {note.updated_at
+                          ? new Date(note.updated_at).toLocaleDateString("pt-BR", {
+                              day: "2-digit",
+                              month: "short",
+                            })
+                          : "--"}
+                      </span>
+                      <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
+                        {note.updated_at
+                          ? new Date(note.updated_at).toLocaleTimeString("pt-BR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "--"}
+                      </span>
                     </div>
                   </article>
                 </Link>
               ))}
             </div>
-          </div>
-        ) : (
-          // Empty State
-          <div className="flex h-full flex-col items-center justify-center text-center opacity-60">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-900 text-neutral-600">
-              <Search size={20} />
+          ) : (
+            // Empty State
+            <div className="flex h-64 flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-center dark:border-neutral-800 dark:bg-neutral-900/50">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm dark:bg-neutral-800">
+                <Search size={20} className="text-neutral-400" />
+              </div>
+              <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                Nenhuma nota encontrada
+              </h3>
+              <p className="mt-1 mb-4 max-w-xs text-xs text-neutral-500">
+                Tente ajustar os termos de busca ou remover os filtros.
+              </p>
+              <button
+                onClick={clearFilters}
+                className="text-xs font-medium text-yellow-600 hover:underline dark:text-yellow-500"
+              >
+                Limpar filtros
+              </button>
             </div>
-            <h3 className="text-sm font-medium text-neutral-300">Nenhuma nota encontrada</h3>
-            <p className="mt-1 mb-4 max-w-xs text-xs text-neutral-500">
-              Não encontramos notas com os filtros atuais.
-            </p>
-            <button onClick={clearFilters} className="text-xs text-yellow-500 hover:underline">
-              Limpar todos os filtros
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* =================== FOOTER / PAGINAÇÃO =================== */}
+      {/* =================== FOOTER =================== */}
       {totalPages > 1 && (
-        <div className="border-t border-neutral-800 bg-neutral-950">
+        <div className="border-t border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
           <Pagination
             currentPage={pagination.currentPage}
             totalPages={pagination.totalPages}
             totalItems={pagination.total}
             itemsPerPage={itemsPerPage}
             onPageChange={handlePageChange}
-            showInfo={false} // Minimalista
+            showInfo={false}
             className="justify-center"
           />
         </div>

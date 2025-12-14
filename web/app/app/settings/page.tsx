@@ -214,24 +214,24 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="flex h-full flex-col bg-neutral-950 text-neutral-200">
+    <div className="flex h-full flex-col bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-200">
       {/* Scrollable Container */}
-      <div className="no-scrollbar flex-1 overflow-y-auto bg-neutral-950">
+      <div className="no-scrollbar flex-1 overflow-y-auto bg-neutral-50 dark:bg-neutral-950">
         <div className="mx-auto max-w-6xl px-4 py-2 sm:px-6 lg:px-8">
           {/* Header - Agora com largura total */}
-          <div className="mb-2 flex flex-col gap-4 border-b border-neutral-800 pb-6 md:flex-row md:items-center md:justify-between">
+          <div className="mb-2 flex flex-col gap-4 border-b border-neutral-200 pb-6 md:flex-row md:items-center md:justify-between dark:border-neutral-800">
             <div>
-              <h1 className="text-lg font-semibold tracking-tight text-neutral-100">
+              <h1 className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
                 Configurações da Conta
               </h1>
-              <p className="mt-1 text-sm text-neutral-500">
+              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-500">
                 Gerencie seus dados pessoais e segurança.
               </p>
             </div>
             {!editMode && (
               <button
                 onClick={() => setEditMode(true)}
-                className="flex items-center gap-2 self-start rounded border border-neutral-800 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-300 transition-colors hover:border-neutral-700 hover:text-neutral-100 md:self-auto"
+                className="flex items-center gap-2 self-start rounded border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:border-neutral-400 hover:text-neutral-900 md:self-auto dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:border-neutral-700 dark:hover:text-neutral-100"
               >
                 Editar Informações
               </button>
@@ -256,10 +256,10 @@ const SettingsPage = () => {
             {/* Coluna Esquerda: Avatar (3/12 em telas grandes) */}
             <div className="lg:col-span-3">
               <div className="flex flex-col items-start">
-                <span className="mb-4 text-xs font-medium tracking-wider text-neutral-500 uppercase">
+                <span className="mb-4 text-xs font-medium tracking-wider text-neutral-600 uppercase dark:text-neutral-500">
                   Foto de Perfil
                 </span>
-                <div className="group relative h-32 w-32 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 lg:h-40 lg:w-40 lg:rounded-2xl">
+                <div className="group relative h-32 w-32 overflow-hidden rounded-xl border border-neutral-300 bg-neutral-100 lg:h-40 lg:w-40 lg:rounded-2xl dark:border-neutral-800 dark:bg-neutral-900">
                   <Image
                     src={formData.avatar_url || "/default-avatar.png"}
                     alt="Profile"
@@ -289,12 +289,14 @@ const SettingsPage = () => {
             <div className="space-y-10 lg:col-span-9">
               {/* Seção: Informações Públicas */}
               <section>
-                <h3 className="text-md mb-6 flex items-center gap-2 font-medium text-neutral-100">
+                <h3 className="text-md mb-6 flex items-center gap-2 font-medium text-neutral-900 dark:text-neutral-100">
                   <UserIcon size={18} /> Informações Pessoais
                 </h3>
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-neutral-400">Nome Completo</label>
+                    <label className="text-xs font-medium text-neutral-700 dark:text-neutral-400">
+                      Nome Completo
+                    </label>
                     <div className="relative">
                       <input
                         type="text"
@@ -302,28 +304,34 @@ const SettingsPage = () => {
                         disabled={!editMode || isLoading}
                         value={formData.name}
                         onChange={handleInputChange}
-                        className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-200 placeholder-neutral-600 focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600 focus:outline-none disabled:opacity-50"
+                        className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder-neutral-500 focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 focus:outline-none disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:placeholder-neutral-600 dark:focus:border-neutral-600 dark:focus:ring-neutral-600"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-neutral-400">Username</label>
+                    <label className="text-xs font-medium text-neutral-700 dark:text-neutral-400">
+                      Username
+                    </label>
                     <div className="relative flex items-center">
-                      <span className="absolute left-3 text-neutral-600">@</span>
+                      <span className="absolute left-3 text-neutral-500 dark:text-neutral-600">
+                        @
+                      </span>
                       <input
                         type="text"
                         name="username"
                         disabled={!editMode || isLoading}
                         value={formData.username}
                         onChange={handleInputChange}
-                        className="w-full rounded-md border border-neutral-800 bg-neutral-900 py-2 pr-3 pl-7 text-sm text-neutral-200 placeholder-neutral-600 focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600 focus:outline-none disabled:opacity-50"
+                        className="w-full rounded-md border border-neutral-300 bg-white py-2 pr-3 pl-7 text-sm text-neutral-900 placeholder-neutral-500 focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 focus:outline-none disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:placeholder-neutral-600 dark:focus:border-neutral-600 dark:focus:ring-neutral-600"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <label className="text-xs font-medium text-neutral-400">Email Principal</label>
+                    <label className="text-xs font-medium text-neutral-700 dark:text-neutral-400">
+                      Email Principal
+                    </label>
                     <div className="relative">
                       <input
                         type="email"
@@ -331,9 +339,12 @@ const SettingsPage = () => {
                         disabled={!editMode || isLoading}
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full rounded-md border border-neutral-800 bg-neutral-900 py-2 pr-3 pl-10 text-sm text-neutral-200 placeholder-neutral-600 focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600 focus:outline-none disabled:opacity-50"
+                        className="w-full rounded-md border border-neutral-300 bg-white py-2 pr-3 pl-10 text-sm text-neutral-900 placeholder-neutral-500 focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 focus:outline-none disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:placeholder-neutral-600 dark:focus:border-neutral-600 dark:focus:ring-neutral-600"
                       />
-                      <Mail size={16} className="absolute top-3 left-3 text-neutral-600" />
+                      <Mail
+                        size={16}
+                        className="absolute top-3 left-3 text-neutral-500 dark:text-neutral-600"
+                      />
                     </div>
                   </div>
                 </div>
@@ -341,13 +352,13 @@ const SettingsPage = () => {
 
               {/* Seção: Segurança (Expandível) */}
               {editMode && (
-                <section className="animate-in slide-in-from-top-2 border-t border-neutral-800 pt-8">
-                  <h3 className="text-md mb-6 flex items-center gap-2 font-medium text-neutral-100">
+                <section className="animate-in slide-in-from-top-2 border-t border-neutral-200 pt-8 dark:border-neutral-800">
+                  <h3 className="text-md mb-6 flex items-center gap-2 font-medium text-neutral-900 dark:text-neutral-100">
                     <Shield size={18} /> Segurança da Conta
                   </h3>
 
-                  <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-6">
-                    <h4 className="mb-4 flex items-center gap-2 text-sm font-medium text-neutral-300">
+                  <div className="rounded-lg border border-neutral-300 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-900/30">
+                    <h4 className="mb-4 flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
                       <Lock size={14} /> Alterar Senha
                     </h4>
                     <div className="grid max-w-2xl gap-4 md:grid-cols-2">
@@ -357,7 +368,7 @@ const SettingsPage = () => {
                           name="currentPassword"
                           value={formData.currentPassword}
                           onChange={handleInputChange}
-                          className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-200 focus:border-neutral-600 focus:outline-none"
+                          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:focus:border-neutral-600"
                           placeholder="Senha atual"
                         />
                       </div>
@@ -368,7 +379,7 @@ const SettingsPage = () => {
                           name="newPassword"
                           value={formData.newPassword}
                           onChange={handleInputChange}
-                          className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-200 focus:border-neutral-600 focus:outline-none"
+                          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:focus:border-neutral-600"
                           placeholder="Nova senha (min. 6 chars)"
                         />
                       </div>
@@ -379,7 +390,7 @@ const SettingsPage = () => {
                           name="confirmPassword"
                           value={formData.confirmPassword}
                           onChange={handleInputChange}
-                          className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-200 focus:border-neutral-600 focus:outline-none"
+                          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:focus:border-neutral-600"
                           placeholder="Confirme a nova senha"
                         />
                       </div>
@@ -390,11 +401,11 @@ const SettingsPage = () => {
 
               {/* Actions Bar (Fixo no modo edição) */}
               {editMode && (
-                <div className="sticky bottom-0 z-10 flex items-center justify-end gap-3 border-t border-neutral-800 bg-neutral-950/90 py-4 pt-6 backdrop-blur-sm">
+                <div className="sticky bottom-0 z-10 flex items-center justify-end gap-3 border-t border-neutral-200 bg-white/90 py-4 pt-6 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-950/90">
                   <button
                     onClick={handleCancelEdit}
                     disabled={isLoading}
-                    className="flex items-center gap-2 rounded border border-transparent px-4 py-2 text-sm font-medium text-neutral-400 transition-colors hover:bg-neutral-900 hover:text-neutral-200"
+                    className="flex items-center gap-2 rounded border border-transparent px-4 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
                   >
                     Cancelar
                   </button>

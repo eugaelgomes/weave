@@ -215,6 +215,8 @@ class NotesController {
 
           return {
             id: note.id,
+            project_id: note.project_id,
+            project_name: note.project_name,
             title: note.title,
             description: note.description,
             tags: note.tags || [],
@@ -275,6 +277,7 @@ class NotesController {
       const completeNote = {
         id: note.id,
         user_id: note.user_id,
+        project_id: note.project_id,
         title: note.title,
         description: note.description,
         tags: note.tags || [],
@@ -342,7 +345,7 @@ class NotesController {
    */
   async createNote(req, res, next) {
     try {
-      const { title, description, tags = [], status } = req.body;
+      const { title, description, tags = [], status, project_id } = req.body;
 
       // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
@@ -369,7 +372,8 @@ class NotesController {
         title,
         description,
         tags,
-        noteStatus
+        noteStatus,
+        project_id
       );
 
       // Formata e retorna a nota criada
@@ -392,6 +396,7 @@ class NotesController {
         tags = [],
         initialBlockContent = "",
         status,
+        project_id,
       } = req.body;
 
       // Validação de autenticação
@@ -420,13 +425,15 @@ class NotesController {
         description,
         tags,
         initialBlockContent,
-        noteStatus
+        noteStatus,
+        project_id
       );
 
       // Montar estrutura completa da nota com todos os dados das tabelas relacionadas
       const completeNote = {
         id: result.note_id,
         user_id: result.user_id,
+        project_id: result.project_id,
         title: result.title,
         description: result.description,
         tags: result.tags || [],
@@ -477,7 +484,7 @@ class NotesController {
   async updateNote(req, res, next) {
     try {
       const { id } = req.params;
-      const { title, description, tags, status, deleted } = req.body;
+      const { title, description, tags, status, deleted, project_id } = req.body;
 
       // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
@@ -505,6 +512,7 @@ class NotesController {
       if (tags !== undefined) updateData.tags = tags;
       if (status !== undefined) updateData.status = status;
       if (deleted !== undefined) updateData.deleted = deleted;
+      if (project_id !== undefined) updateData.project_id = project_id;
 
       // Verifica se há algo para atualizar
       if (Object.keys(updateData).length === 0) {

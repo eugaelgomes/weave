@@ -60,17 +60,19 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
   ];
 
   return (
-    <aside className="flex h-full flex-col border-r border-neutral-800 bg-neutral-950 text-neutral-400">
+    <aside className="flex h-full flex-col border-r border-neutral-200 bg-white text-neutral-600 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400">
       {/* Botão de Menu em telas pequenas */}
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-800 p-3 lg:hidden">
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 p-3 lg:hidden dark:border-neutral-800">
         <div className="flex items-center gap-2">
           <FaBook className="h-4 w-4 text-yellow-500" />
-          <h2 className="text-xs font-bold tracking-wider text-neutral-200 uppercase">Menu</h2>
+          <h2 className="text-xs font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-200">
+            Menu
+          </h2>
         </div>
         <button
           title="Menu"
           onClick={handleLinkClick}
-          className="text-neutral-400 transition-colors hover:text-neutral-100"
+          className="text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
         >
           <FaTimes size={16} />
         </button>
@@ -93,12 +95,14 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
                   className={`group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 transition-all duration-200 ${
                     active
                       ? "bg-yellow-500/10 font-medium text-yellow-500"
-                      : "text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200"
+                      : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
                   }`}
                 >
                   <Icon
                     className={`h-4 w-4 transition-colors ${
-                      active ? "text-yellow-500" : "text-neutral-500 group-hover:text-neutral-300"
+                      active
+                        ? "text-yellow-500"
+                        : "text-neutral-600 group-hover:text-neutral-900 dark:text-neutral-500 dark:group-hover:text-neutral-300"
                     }`}
                   />
                   <span className="text-sm">{item.label}</span>
@@ -109,7 +113,7 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
         </ul>
 
         {/* Divisor entre as partes de menu e recentes*/}
-        <div className="divisor my-4 h-0.5 w-full shrink-0 rounded-full bg-neutral-800 opacity-20" />
+        <div className="divisor my-4 h-0.5 w-full shrink-0 rounded-full bg-neutral-300 opacity-50 dark:bg-neutral-800 dark:opacity-20" />
 
         <div className="flex-1">
           <h2 className="mb-2 px-2 text-[10px] font-bold tracking-wider text-yellow-500 uppercase">
@@ -118,7 +122,7 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
 
           <ul className="space-y-0.5">
             {recentItems.length === 0 && (
-              <li className="flex flex-col items-center justify-center gap-2 px-2.5 py-8 text-center text-sm text-neutral-600">
+              <li className="flex flex-col items-center justify-center gap-2 px-2.5 py-8 text-center text-sm text-neutral-500 dark:text-neutral-600">
                 <FaRegSadTear className="h-5 w-5 opacity-50" />
                 <span className="text-xs">Nada recente por aqui</span>
               </li>
@@ -142,17 +146,19 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
                     className={`group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-all duration-200 ${
                       isItemActive
                         ? "bg-neutral-800 text-neutral-200 shadow-sm ring-1 ring-neutral-700"
-                        : "text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200"
+                        : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
                     }`}
                   >
                     <ItemIcon
                       className={`h-3.5 w-3.5 flex-shrink-0 ${
                         isItemActive
                           ? "text-yellow-500"
-                          : "text-neutral-600 group-hover:text-neutral-400"
+                          : "text-neutral-600 group-hover:text-neutral-900 dark:text-neutral-600 dark:group-hover:text-neutral-400"
                       }`}
                     />
-                    <span className="truncate text-neutral-600">{item.title}</span>
+                    <span className="truncate text-neutral-700 dark:text-neutral-600">
+                      {item.title}
+                    </span>
                   </Link>
                 </li>
               );
@@ -161,19 +167,19 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
         </div>
       </nav>
 
-      <div className="flex-shrink-0 border-t border-neutral-800 p-2">
+      <div className="flex-shrink-0 border-t border-neutral-200 p-2 dark:border-neutral-800">
         <div className="flex gap-1">
           <Link
             href="https://github.com/eugaelgomes/notes-web-app"
             target="_blank"
-            className="flex flex-1 items-center justify-center gap-1.5 rounded bg-neutral-900/50 py-1.5 text-[10px] font-medium text-neutral-500 transition-colors hover:bg-neutral-900 hover:text-neutral-300"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded bg-neutral-200/50 py-1.5 text-[10px] font-medium text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 dark:bg-neutral-900/50 dark:text-neutral-500 dark:hover:bg-neutral-900 dark:hover:text-neutral-300"
           >
             <FaGithub className="h-3 w-3" />
             <span>Github</span>
           </Link>
           <Link
             href="/about"
-            className="flex flex-1 items-center justify-center gap-1.5 rounded bg-neutral-900/50 py-1.5 text-[10px] font-medium text-neutral-500 transition-colors hover:bg-neutral-900 hover:text-neutral-300"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded bg-neutral-200/50 py-1.5 text-[10px] font-medium text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 dark:bg-neutral-900/50 dark:text-neutral-500 dark:hover:bg-neutral-900 dark:hover:text-neutral-300"
           >
             <MdInfo className="h-3 w-3" />
             <span>Sobre</span>

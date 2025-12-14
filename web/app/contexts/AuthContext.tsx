@@ -15,6 +15,7 @@ import {
   type User,
   type CreateUserData,
 } from "../services/auth-service/AuthService";
+import { useTheme } from "./ThemeContext";
 
 type AuthContextType = {
   user: User | null;
@@ -74,6 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { setTheme } = useTheme();
 
   const authenticated = !!token;
 
@@ -83,7 +85,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const u = getCookie(AUTH_USER_KEY);
         if (u) {
           try {
-            setUser(JSON.parse(decodeURIComponent(u)));
+            const userData = JSON.parse(decodeURIComponent(u));
+            setUser(userData);
+            setTheme(userData.theme_mode || "light");
           } catch {}
         }
 
@@ -91,6 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const profileData = await getUserDataService();
           setUser(profileData);
           setToken("authenticated");
+          setTheme(profileData.theme_mode || "light");
         } catch (error) {
           if (u) {
             deleteCookie(AUTH_USER_KEY);
@@ -105,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   type LoginPayload = { username: string; password: string; remember?: boolean };
@@ -134,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         const userData = response.user;
         setUser(userData);
+        setTheme(userData.theme_mode || "light");
         try {
           setCookie(
             AUTH_USER_KEY,
@@ -167,14 +174,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setUser(null);
     setToken(null);
+    setTheme("light");
     try {
-      // Call backend logout to clear HttpOnly cookie
       await logoutService();
       deleteCookie(AUTH_USER_KEY);
-    } catch {
-      // ignore
-    }
-    // Let Next.js handle the navigation naturally
+    } catch {}
     window.location.href = "/auth/signin";
   };
 
@@ -191,6 +195,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const updatedData = await updateUserData(userData);
       setUser((prev) => ({ ...prev, ...updatedData }));
+      if (updatedData.theme_mode) {
+        setTheme(updatedData.theme_mode);
+        setTheme(updatedData.theme_mode);
+      }
       return { success: true };
     } catch (error) {
       console.error("Erro ao atualizar usuário:", error);

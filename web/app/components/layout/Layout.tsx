@@ -22,11 +22,11 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   if (!authenticated) {
-    return <div className="min-h-screen bg-neutral-950">{children}</div>;
+    return <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">{children}</div>;
   }
 
   return (
-    <div className="flex h-screen flex-col bg-neutral-950">
+    <div className="flex h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
       <Navbar onToggleSidebar={toggleSidebar} />
 
       <div className="relative flex flex-1 overflow-hidden">
@@ -48,7 +48,7 @@ const Layout = ({ children }: LayoutProps) => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-neutral-950">
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-neutral-50 dark:bg-neutral-950">
           <div className="no-scrollbar flex-1 overflow-y-auto px-3 py-2 sm:px-6 lg:px-8">
             <div className="mx-auto h-full w-full max-w-7xl">{children}</div>
           </div>

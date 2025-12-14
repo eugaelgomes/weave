@@ -23,6 +23,8 @@ export interface Note {
   avatar_url?: string;
   name?: string;
   blocks?: Block[];
+  project_id?: string;
+  project_name?: string;
   access?: {
     isOwner: boolean;
     isCollaborator: boolean;
