@@ -38,14 +38,7 @@ const NotesWithPagination = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   // =================== HOOK DE DADOS ===================
-  const {
-    notes: allNotes,
-    loading: isLoading,
-    error,
-    createNote,
-    refreshNotes,
-    lastFetch,
-  } = useNotes();
+  const { notes: allNotes, loading: isLoading, error, createNote, refreshNotes } = useNotes();
 
   const debouncedSearch = searchTerm;
 
@@ -118,7 +111,15 @@ const NotesWithPagination = () => {
     });
 
     return result;
-  }, [allNotes, debouncedSearch, selectedTags, sortBy, sortOrder]);
+  }, [
+    allNotes,
+    debouncedSearch,
+    selectedTags,
+    selectedCollaborators,
+    selectedProjects,
+    sortBy,
+    sortOrder,
+  ]);
 
   // Paginação
   const totalNotes = filteredNotes.length;
@@ -216,15 +217,6 @@ const NotesWithPagination = () => {
 
   const handleRefresh = async () => {
     await refreshNotes();
-  };
-
-  const formatLastFetch = () => {
-    if (!lastFetch) return "Nunca";
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - lastFetch.getTime()) / 1000);
-    if (diff < 60) return "Agora";
-    if (diff < 3600) return `Há ${Math.floor(diff / 60)} min`;
-    return lastFetch.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   };
 
   const availableTags: string[] = [...new Set(allNotes.flatMap((note) => note.tags || []))].sort(
@@ -430,8 +422,8 @@ const NotesWithPagination = () => {
 
         {/* Linha 2: Painel de Filtros */}
         {showFilters && (
-          <div className="animate-in slide-in-from-top-1 mt-4 border-t border-neutral-100 pt-4 dark:border-neutral-800">
-            <div className="flex flex-col gap-6">
+          <div className="animate-in slide-in-from-top-1 mt-4 max-h-[60vh] overflow-y-auto border-t border-neutral-100 pt-4 dark:border-neutral-800">
+            <div className="flex flex-col gap-4 sm:gap-6">
               {/* Tags Group */}
               <div className="space-y-3">
                 <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
@@ -524,6 +516,7 @@ const NotesWithPagination = () => {
                       <select
                         value={sortBy}
                         onChange={(e) => handleSortChange(e.target.value as SortBy)}
+                        aria-label="Ordenar por"
                         className="h-9 flex-1 rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 focus:border-neutral-400 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300"
                       >
                         <option value="updated_at">Data de Atualização</option>
@@ -606,7 +599,7 @@ const NotesWithPagination = () => {
 
               {notes.map((note) => (
                 <Link key={note.id} href={`/app/notes/view/${note.id}`} className="group block">
-                  <article className="grid grid-cols-1 items-center gap-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm transition-all hover:border-neutral-300 hover:shadow-md sm:grid-cols-12 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700 dark:hover:shadow-none">
+                  <article className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm transition-all hover:border-neutral-300 hover:shadow-md sm:grid sm:grid-cols-12 sm:items-center sm:gap-4 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700 dark:hover:shadow-none">
                     {/* Título e Descrição */}
                     <div className="col-span-1 min-w-0 sm:col-span-6">
                       <div className="flex items-center gap-2">
@@ -624,7 +617,7 @@ const NotesWithPagination = () => {
                     </div>
 
                     {/* Tags */}
-                    <div className="col-span-1 hidden sm:col-span-3 sm:block">
+                    <div className="col-span-1 sm:col-span-3">
                       <div className="flex flex-wrap gap-1.5">
                         {note.tags?.slice(0, 2).map((tag, i) => {
                           const colors = getTagColor(tag);
@@ -645,59 +638,62 @@ const NotesWithPagination = () => {
                       </div>
                     </div>
 
-                    {/* Colaboradores */}
-                    <div className="col-span-1 hidden justify-center sm:col-span-1 sm:flex">
-                      {note.collaborators && note.collaborators.length > 0 ? (
-                        <div className="flex -space-x-2">
-                          {note.collaborators.slice(0, 3).map((c, i) => {
-                            const avatar = getCollaboratorAvatarUrl(c);
-                            const name = getCollaboratorDisplayName(c);
-                            return (
-                              <div
-                                key={i}
-                                className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-100 ring-1 ring-neutral-100 dark:border-neutral-900 dark:bg-neutral-800 dark:ring-neutral-900"
-                                title={name}
-                              >
-                                {avatar ? (
-                                  <Image
-                                    src={avatar}
-                                    alt={name}
-                                    width={24}
-                                    height={24}
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  <span className="text-[8px] font-bold text-neutral-500">
-                                    {name.charAt(0)}
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <span className="text-neutral-300 dark:text-neutral-700">-</span>
-                      )}
-                    </div>
+                    {/* Colaboradores e Data - Flex row em mobile */}
+                    <div className="flex items-center justify-between sm:contents">
+                      {/* Colaboradores */}
+                      <div className="col-span-1 flex justify-start sm:col-span-1 sm:justify-center">
+                        {note.collaborators && note.collaborators.length > 0 ? (
+                          <div className="flex -space-x-2">
+                            {note.collaborators.slice(0, 3).map((c, i) => {
+                              const avatar = getCollaboratorAvatarUrl(c);
+                              const name = getCollaboratorDisplayName(c);
+                              return (
+                                <div
+                                  key={i}
+                                  className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-100 ring-1 ring-neutral-100 dark:border-neutral-900 dark:bg-neutral-800 dark:ring-neutral-900"
+                                  title={name}
+                                >
+                                  {avatar ? (
+                                    <Image
+                                      src={avatar}
+                                      alt={name}
+                                      width={24}
+                                      height={24}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-[8px] font-bold text-neutral-500">
+                                      {name.charAt(0)}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <span className="text-neutral-300 dark:text-neutral-700">-</span>
+                        )}
+                      </div>
 
-                    {/* Data */}
-                    <div className="col-span-1 flex flex-col items-end sm:col-span-2">
-                      <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                        {note.updated_at
-                          ? new Date(note.updated_at).toLocaleDateString("pt-BR", {
-                              day: "2-digit",
-                              month: "short",
-                            })
-                          : "--"}
-                      </span>
-                      <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
-                        {note.updated_at
-                          ? new Date(note.updated_at).toLocaleTimeString("pt-BR", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "--"}
-                      </span>
+                      {/* Data */}
+                      <div className="col-span-1 flex flex-col items-end sm:col-span-2">
+                        <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                          {note.updated_at
+                            ? new Date(note.updated_at).toLocaleDateString("pt-BR", {
+                                day: "2-digit",
+                                month: "short",
+                              })
+                            : "--"}
+                        </span>
+                        <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
+                          {note.updated_at
+                            ? new Date(note.updated_at).toLocaleTimeString("pt-BR", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "--"}
+                        </span>
+                      </div>
                     </div>
                   </article>
                 </Link>
