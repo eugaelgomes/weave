@@ -1,16 +1,39 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useSafeAuthenticatedData } from "@/app/hooks/useAuthenticatedData";
 import { usePathname } from "next/navigation";
-import { FaBook, FaHome, FaProjectDiagram, FaTimes, FaGithub, FaRegSadTear } from "react-icons/fa";
+import {
+  FaBook,
+  FaHome,
+  FaProjectDiagram,
+  FaTimes,
+  FaGithub,
+  FaRegSadTear,
+  FaComments,
+  FaList,
+  FaChevronDown,
+  FaChevronRight,
+} from "react-icons/fa";
 import { MdPersonAdd, MdInfo } from "react-icons/md";
 import { IoMdSettings } from "react-icons/io";
+import { IconType } from "react-icons";
 
 interface SidebarProps {
   onLinkClick?: () => void;
+}
+
+interface NavigationItem {
+  path: string;
+  icon: IconType;
+  label: string;
+  subItems?: {
+    path: string;
+    icon: IconType;
+    label: string;
+  }[];
 }
 
 const Sidebar = ({ onLinkClick }: SidebarProps) => {
@@ -18,13 +41,38 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
   const authData = useSafeAuthenticatedData();
   const pathname = usePathname();
 
+  // Estado para controlar quais itens estão expandidos (chaveada pelo path)
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+
+  // Efeito para abrir automaticamente o menu se o usuário estiver em uma sub-rota ao carregar
+  useEffect(() => {
+    // Verifica se algum item pai deve estar expandido com base na URL atual
+    const newExpandedState: Record<string, boolean> = {};
+
+    // Lista de itens que possuem subitems (hardcoded ou derivado da lista navigationItems abaixo)
+    const itemsWithSubs = ["/app/weave-ai"];
+
+    itemsWithSubs.forEach((parentPath) => {
+      if (pathname.startsWith(parentPath)) {
+        newExpandedState[parentPath] = true;
+      }
+    });
+
+    setExpandedItems((prev) => ({ ...prev, ...newExpandedState }));
+  }, [pathname]);
+
   const isActive = (path: string) => {
     if (path === "/app/home" && pathname === "/app/home") return true;
     if (path === "/app/notes" && pathname.startsWith("/app/notes")) return true;
     if (path === "/app/projects" && pathname.startsWith("/app/projects")) return true;
-    if (path === "/app/weave-ai" && pathname.startsWith("/app/weave-ai")) return true;
+
+    // Para itens com submenus, o pai só fica "ativo" visualmente se for a rota exata
+    // ou se quisermos destacar o pai quando o filho está ativo (opcional)
+    if (path === "/app/weave-ai" && pathname === "/app/weave-ai") return true;
+
     if (path === "/app/community" && pathname.startsWith("/app/community")) return true;
     if (path === "/app/settings" && pathname.startsWith("/app/settings")) return true;
+
     return pathname === path;
   };
 
@@ -32,11 +80,30 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
     if (onLinkClick) onLinkClick();
   };
 
-  const navigationItems = [
+  // Função para alternar visibilidade dos subitens
+  const toggleExpand = (path: string, e: React.MouseEvent) => {
+    // Se quiser impedir a navegação ao clicar no pai (apenas abrir/fechar), descomente abaixo:
+    // e.preventDefault();
+
+    setExpandedItems((prev) => ({
+      ...prev,
+      [path]: !prev[path],
+    }));
+  };
+
+  const navigationItems: NavigationItem[] = [
     { path: "/app/home", icon: FaHome, label: "Início" },
     { path: "/app/notes", icon: FaBook, label: "Notas" },
     { path: "/app/projects", icon: FaProjectDiagram, label: "Projetos" },
-    { path: "/app/weave-ai", icon: FaProjectDiagram, label: "Weave AI" },
+    {
+      path: "/app/weave-ai/chat",
+      icon: FaProjectDiagram,
+      label: "Weave AI",
+      subItems: [
+        { path: "/app/weave-ai/chat", icon: FaComments, label: "Chat" },
+        { path: "/app/weave-ai/agent", icon: FaList, label: "Meu Agente" },
+      ],
+    },
     { path: "/app/community", icon: MdPersonAdd, label: "Comunidade" },
     { path: "/app/settings", icon: IoMdSettings, label: "Configurações" },
   ];
@@ -88,33 +155,84 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
+            const hasSubItems = item.subItems && item.subItems.length > 0;
+            const isExpanded = expandedItems[item.path];
 
             return (
               <li key={item.path}>
-                <Link
-                  href={item.path}
-                  onClick={handleLinkClick}
-                  className={`group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 transition-all duration-200 ${
-                    active
-                      ? "bg-yellow-500/10 font-medium text-yellow-500"
-                      : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
-                  }`}
-                >
-                  <Icon
-                    className={`h-4 w-4 transition-colors ${
+                <div className="flex items-center">
+                  <Link
+                    href={item.path}
+                    onClick={(e) => {
+                      // Se tiver subitems, alterna a expansão
+                      if (hasSubItems) {
+                        toggleExpand(item.path, e);
+                        // NÃO chamamos handleLinkClick aqui se quisermos manter o menu aberto no mobile
+                        // ao expandir uma categoria. Se for um link direto, chamamos.
+                      } else {
+                        handleLinkClick();
+                      }
+                    }}
+                    className={`group flex flex-1 items-center justify-between rounded-md px-2.5 py-1.5 transition-all duration-200 ${
                       active
-                        ? "text-yellow-500"
-                        : "text-neutral-600 group-hover:text-neutral-900 dark:text-neutral-500 dark:group-hover:text-neutral-300"
+                        ? "bg-yellow-500/10 font-medium text-yellow-500"
+                        : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
                     }`}
-                  />
-                  <span className="text-sm">{item.label}</span>
-                </Link>
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon
+                        className={`h-4 w-4 transition-colors ${
+                          active
+                            ? "text-yellow-500"
+                            : "text-neutral-600 group-hover:text-neutral-900 dark:text-neutral-500 dark:group-hover:text-neutral-300"
+                        }`}
+                      />
+                      <span className="text-sm">{item.label}</span>
+                    </div>
+
+                    {/* Ícone de Chevron para indicar expansão */}
+                    {hasSubItems && (
+                      <div className="text-neutral-400">
+                        {isExpanded ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}
+                      </div>
+                    )}
+                  </Link>
+                </div>
+
+                {/* Renderização Condicional dos Subitens */}
+                {hasSubItems && isExpanded && (
+                  <ul className="animate-in slide-in-from-top-1 mt-0.5 space-y-0.5 pl-4 duration-200">
+                    {item.subItems!.map((subItem) => {
+                      const SubIcon = subItem.icon;
+                      const isSubActive = pathname === subItem.path;
+
+                      return (
+                        <li key={subItem.path}>
+                          <Link
+                            href={subItem.path}
+                            onClick={handleLinkClick} // Fecha o menu mobile ao clicar no filho
+                            className={`group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 transition-all duration-200 ${
+                              isSubActive
+                                ? "bg-neutral-100 text-yellow-600 dark:bg-neutral-900 dark:text-yellow-500"
+                                : "text-neutral-500 hover:text-neutral-800 dark:text-neutral-500 dark:hover:text-neutral-300"
+                            }`}
+                          >
+                            <SubIcon
+                              className={`h-3 w-3 ${isSubActive ? "text-yellow-500" : "opacity-70"}`}
+                            />
+                            <span className="text-xs font-medium">{subItem.label}</span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </li>
             );
           })}
         </ul>
 
-        {/* Divisor entre as partes de menu e recentes*/}
+        {/* ... Resto do código (Divisor, Recentes, Footer) permanece igual ... */}
         <div className="divisor my-4 h-0.5 w-full shrink-0 rounded-full bg-neutral-300 opacity-50 dark:bg-neutral-800 dark:opacity-20" />
 
         <div className="flex-1">
@@ -169,6 +287,7 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
         </div>
       </nav>
 
+      {/* Footer */}
       <div className="flex-shrink-0 border-t border-neutral-200 p-2 dark:border-neutral-800">
         <div className="flex gap-1">
           <Link
