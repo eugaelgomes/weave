@@ -810,6 +810,230 @@ Inclua apenas os campos que devem ser atualizados.`
 
     return enriched;
   }
+
+  /**
+   * Enriquece o contexto especificamente para chat
+   * @private
+   */
+  async _enrichChatContext(userId, context) {
+    const enriched = { ...context };
+
+    try {
+      // Busca notas recentes do usuário (últimas 10)
+      const notes = await notesRepository.getAllNotesByUserId(userId);
+      enriched.userNotes = notes.slice(0, 10).map(note => ({
+        id: note.id,
+        title: note.title,
+        description: note.description?.substring(0, 200), // Resumo
+        tags: note.tags || [],
+        status: note.status,
+        updated_at: note.updated_at,
+      }));
+
+      // Busca projetos ativos do usuário
+      const projects = await projectsRepository.getProjectsByUserId(userId);
+      enriched.userProjects = projects
+        .filter(p => p.status === "ativo")
+        .slice(0, 10)
+        .map(project => ({
+          id: project.id,
+          title: project.title,
+          description: project.description?.substring(0, 200),
+          status: project.status,
+          properties: project.properties,
+        }));
+
+      // Estatísticas de uso
+      enriched.stats = {
+        totalNotes: notes.length,
+        totalProjects: projects.length,
+        activeProjects: projects.filter(p => p.status === "ativo").length,
+      };
+
+      // Tags mais usadas
+      const allTags = notes.flatMap(n => n.tags || []);
+      const tagCounts = {};
+      allTags.forEach(tag => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      });
+      enriched.popularTags = Object.entries(tagCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([tag]) => tag);
+
+    } catch (error) {
+      console.warn("Erro ao enriquecer contexto do chat:", error.message);
+    }
+
+    return enriched;
+  }
+
+  /**
+   * GET /api/ai/models
+   * Lista modelos de IA disponíveis
+   */
+  async getAvailableModels(req, res) {
+    try {
+      const { useCases } = require("@/services/ai-server/ai-config");
+      const geminiAvailable = !!process.env.GEMINI_API_KEY;
+      const perplexityAvailable = !!process.env.PERPLEXITY_API_KEY;
+
+      const models = [
+        {
+          id: "gemini",
+          name: "Gemini Flash 2.0",
+          provider: "gemini",
+          description: "Modelo rápido e eficiente para criação de conteúdo e análise",
+          capabilities: [
+            "Geração de texto",
+            "Análise de conteúdo",
+            "Sugestões criativas",
+            "Formatação estruturada"
+          ],
+          useCases: useCases[AI_PROVIDERS.GEMINI] || [],
+          isAvailable: geminiAvailable,
+        },
+        {
+          id: "perplexity",
+          name: "Perplexity Sonar Pro",
+          provider: "perplexity",
+          description: "Modelo focado em pesquisa e informações atualizadas",
+          capabilities: [
+            "Pesquisa em tempo real",
+            "Citação de fontes",
+            "Análise de tendências",
+            "Verificação de fatos"
+          ],
+          useCases: useCases[AI_PROVIDERS.PERPLEXITY] || [],
+          isAvailable: perplexityAvailable,
+        },
+      ];
+
+      res.json({
+        success: true,
+        models: models.filter(m => m.isAvailable),
+      });
+    } catch (error) {
+      console.error("Erro ao listar modelos:", error);
+      res.status(500).json({
+        success: false,
+        error: "Erro ao listar modelos de IA",
+      });
+    }
+  }
+
+  /**
+   * POST /api/ai/chat
+   * Envia mensagem no chat
+   */
+  async sendChatMessage(req, res) {
+    try {
+      const userId = req.user?.userId;
+      const { message, model, sessionId, context = {} } = req.body;
+
+      if (!message || !model) {
+        return res.status(400).json({
+          success: false,
+          error: "Mensagem e modelo são obrigatórios",
+        });
+      }
+
+      const chatRepository = require("@/repositories/chat-manager");
+
+      // Cria ou obtém sessão
+      let currentSessionId = sessionId;
+      if (!currentSessionId) {
+        const session = await chatRepository.createSession(userId);
+        currentSessionId = session.id;
+      }
+
+      // Enriquece contexto com notas e projetos do usuário
+      const enrichedContext = await this._enrichChatContext(userId, context);
+
+      // Salva mensagem do usuário
+      await chatRepository.saveMessage({
+        sessionId: currentSessionId,
+        userId,
+        role: "user",
+        content: message,
+        model,
+        metadata: context,
+      });
+
+      // Determina provider
+      const provider = model === "perplexity" ? AI_PROVIDERS.PERPLEXITY : AI_PROVIDERS.GEMINI;
+
+      // Constrói system message com contexto enriquecido
+      const systemMessage = buildSystemMessage("chat", enrichedContext);
+
+      // Chama IA
+      const aiResponse = await callAIProvider(provider, message, systemMessage);
+
+      // Salva resposta da IA
+      const assistantMessage = await chatRepository.saveMessage({
+        sessionId: currentSessionId,
+        userId,
+        role: "assistant",
+        content: typeof aiResponse === "string" ? aiResponse : aiResponse.content,
+        model,
+        metadata: aiResponse.citations ? { citations: aiResponse.citations } : {},
+      });
+
+      // Atualiza título da sessão se for a primeira mensagem
+      const messageCount = await chatRepository.getSessionMessageCount(currentSessionId);
+      if (messageCount === 2) {
+        const title = message.substring(0, 50) + (message.length > 50 ? "..." : "");
+        await chatRepository.updateSessionTitle(currentSessionId, title);
+      }
+
+      res.json({
+        success: true,
+        message: assistantMessage,
+        sessionId: currentSessionId,
+      });
+    } catch (error) {
+      console.error("Erro ao enviar mensagem:", error);
+      res.status(500).json({
+        success: false,
+        error: "Erro ao processar mensagem",
+      });
+    }
+  }
+
+  /**
+   * GET /api/ai/chat/history
+   * Busca histórico de chat
+   */
+  async getChatHistory(req, res) {
+    try {
+      const userId = req.user?.userId;
+      const { sessionId } = req.query;
+
+      const chatRepository = require("@/repositories/chat-manager");
+
+      if (sessionId) {
+        // Busca mensagens de uma sessão específica
+        const messages = await chatRepository.getSessionMessages(sessionId, userId);
+        return res.json({
+          success: true,
+          messages,
+        });
+      }
+
+      // Busca todas as sessões do usuário
+      const sessions = await chatRepository.getUserSessions(userId);
+      res.json({
+        success: true,
+        sessions,
+      });
+    } catch (error) {
+      console.error("Erro ao buscar histórico:", error);
+      res.status(500).json({
+        success: false,
+        error: "Erro ao buscar histórico de chat",
+      });
+    }
+  }
 }
 
 module.exports = new AIController();

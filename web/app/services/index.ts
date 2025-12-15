@@ -58,5 +58,21 @@ export * from "./backup-service/BackupService";
 // Health Services
 export * from "./health-service/HealthService";
 
+// AI Services
+export {
+  fetchAvailableModels,
+  sendChatMessage,
+  fetchChatHistory,
+  generateContent,
+  analyzeNote,
+  analyzeProject,
+  research,
+  type AIModel,
+  type ChatMessage,
+  type ChatSession,
+  type SendMessageData,
+  type GenerateContentData,
+} from "./ai-agent-service/agent-servevice";
+
 // API Client
 export * from "./api-methods";

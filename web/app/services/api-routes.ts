@@ -49,4 +49,14 @@ export const API_ENDPOINTS = {
 
   // Health
   HEALTH: "/health",
+
+  // AI
+  AI_MODELS: "/ai/models",
+  AI_CHAT: "/ai/chat",
+  AI_CHAT_HISTORY: "/ai/chat/history",
+  AI_GENERATE: "/ai/generate",
+  AI_ANALYZE_NOTE: "/ai/analyze-note",
+  AI_ANALYZE_PROJECT: "/ai/analyze-project",
+  AI_RESEARCH: "/ai/research",
+  AI_USE_CASES: "/ai/use-cases",
 };

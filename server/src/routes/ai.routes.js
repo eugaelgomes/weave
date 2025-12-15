@@ -75,4 +75,38 @@ router.get("/use-cases", (req, res, next) => {
   aiController.listUseCases(req, res);
 });
 
+/**
+ * @route   GET /api/ai/models
+ * @desc    Lista modelos de IA disponíveis
+ * @access  Private
+ */
+router.get("/models", (req, res, next) => {
+  aiController.getAvailableModels(req, res);
+});
+
+/**
+ * @route   POST /api/ai/chat
+ * @desc    Envia mensagem no chat
+ * @access  Private
+ * @body    {
+ *   message: string,
+ *   model: string,
+ *   sessionId?: string,
+ *   context?: object
+ * }
+ */
+router.post("/chat", (req, res, next) => {
+  aiController.sendChatMessage(req, res);
+});
+
+/**
+ * @route   GET /api/ai/chat/history
+ * @desc    Busca histórico de chat
+ * @access  Private
+ * @query   sessionId?: string
+ */
+router.get("/chat/history", (req, res, next) => {
+  aiController.getChatHistory(req, res);
+});
+
 module.exports = router;

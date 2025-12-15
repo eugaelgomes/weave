@@ -109,6 +109,7 @@ const perplexityConfig = {
 const useCases = {
   // Gemini - Melhor para criação de conteúdo e análise estruturada
   [AI_PROVIDERS.GEMINI]: [
+    "chat", // Chat conversacional geral
     "note_generation", // Gerar conteúdo para notas
     "note_summarization", // Resumir notas longas
     "task_breakdown", // Quebrar tarefas em subtarefas
@@ -120,6 +121,7 @@ const useCases = {
 
   // Perplexity - Melhor para pesquisa e contexto atualizado
   [AI_PROVIDERS.PERPLEXITY]: [
+    "chat", // Chat conversacional com pesquisa
     "research_assistant", // Pesquisar informações para projetos
     "link_summarization", // Resumir links/artigos
     "trend_analysis", // Analisar tendências de mercado

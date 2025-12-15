@@ -224,6 +224,36 @@ ${behaviorInstructions}
 - Forneça exemplos concretos quando possível
 - Sugira ações baseadas nas tendências
 - Mantenha foco no contexto específico do usuário`,
+
+  // Chat conversacional
+  chat: `${systemContext}
+
+${behaviorInstructions}
+
+**Tarefa específica**: Conversar de forma natural e prestativa sobre projetos, notas e produtividade.
+
+**Contexto do Usuário Disponível**:
+Você tem acesso ao contexto completo do usuário, incluindo:
+- Lista de notas recentes com títulos, descrições e tags
+- Projetos ativos com suas propriedades
+- Estatísticas de uso (total de notas, projetos, etc)
+- Tags mais populares utilizadas pelo usuário
+
+**Como usar o contexto**:
+- Referencie notas e projetos específicos quando relevante à conversa
+- Sugira organização baseada nas tags e status existentes
+- Ofereça insights sobre padrões de uso do usuário
+- Proponha conexões entre notas e projetos relacionados
+- Use as estatísticas para dar perspectiva sobre produtividade
+
+**Comportamento esperado**:
+- Responda de forma conversacional mas objetiva
+- SEMPRE consulte o contexto antes de fazer sugestões
+- Cite notas ou projetos específicos quando relevante (ex: "Vi que você tem uma nota sobre X...")
+- Ofereça sugestões práticas baseadas no que o usuário já possui
+- Faça perguntas de esclarecimento se necessário
+- Mantenha foco em produtividade e organização
+- Não invente informações - use apenas o que está no contexto fornecido`,
 };
 
 /**
@@ -241,17 +271,55 @@ function getSystemPrompt(useCase) {
 function buildSystemMessage(useCase, additionalContext = {}) {
   let systemMessage = getSystemPrompt(useCase);
 
-  // Adicionar contexto adicional se fornecido
-  if (additionalContext.projectInfo) {
-    systemMessage += `\n\n**Contexto do Projeto Atual**:\n${JSON.stringify(additionalContext.projectInfo, null, 2)}`;
-  }
+  // Para chat, formata o contexto do usuário de forma mais legível
+  if (useCase === "chat") {
+    if (additionalContext.stats) {
+      systemMessage += `\n\n📊 **Estatísticas do Usuário**:`;
+      systemMessage += `\n- Total de notas: ${additionalContext.stats.totalNotes}`;
+      systemMessage += `\n- Total de projetos: ${additionalContext.stats.totalProjects}`;
+      systemMessage += `\n- Projetos ativos: ${additionalContext.stats.activeProjects}`;
+    }
 
-  if (additionalContext.userPreferences) {
-    systemMessage += `\n\n**Preferências do Usuário**:\n${JSON.stringify(additionalContext.userPreferences, null, 2)}`;
-  }
+    if (additionalContext.userNotes && additionalContext.userNotes.length > 0) {
+      systemMessage += `\n\n📝 **Notas Recentes do Usuário** (${additionalContext.userNotes.length}):`;
+      additionalContext.userNotes.forEach((note, idx) => {
+        systemMessage += `\n${idx + 1}. "${note.title}"`;
+        if (note.description) systemMessage += ` - ${note.description}`;
+        if (note.tags && note.tags.length > 0) systemMessage += ` [Tags: ${note.tags.join(", ")}]`;
+        systemMessage += ` (Status: ${note.status || "N/A"})`;
+      });
+    }
 
-  if (additionalContext.recentNotes) {
-    systemMessage += `\n\n**Notas Recentes para Contexto**:\n${JSON.stringify(additionalContext.recentNotes, null, 2)}`;
+    if (additionalContext.userProjects && additionalContext.userProjects.length > 0) {
+      systemMessage += `\n\n📋 **Projetos Ativos do Usuário** (${additionalContext.userProjects.length}):`;
+      additionalContext.userProjects.forEach((project, idx) => {
+        systemMessage += `\n${idx + 1}. "${project.title}"`;
+        if (project.description) systemMessage += ` - ${project.description}`;
+        if (project.properties) {
+          const props = Object.entries(project.properties)
+            .map(([k, v]) => `${k}: ${v}`)
+            .join(", ");
+          if (props) systemMessage += ` [${props}]`;
+        }
+      });
+    }
+
+    if (additionalContext.popularTags && additionalContext.popularTags.length > 0) {
+      systemMessage += `\n\n🏷️ **Tags Mais Usadas**: ${additionalContext.popularTags.join(", ")}`;
+    }
+  } else {
+    // Para outros casos de uso, mantém formato JSON
+    if (additionalContext.projectInfo) {
+      systemMessage += `\n\n**Contexto do Projeto Atual**:\n${JSON.stringify(additionalContext.projectInfo, null, 2)}`;
+    }
+
+    if (additionalContext.userPreferences) {
+      systemMessage += `\n\n**Preferências do Usuário**:\n${JSON.stringify(additionalContext.userPreferences, null, 2)}`;
+    }
+
+    if (additionalContext.recentNotes) {
+      systemMessage += `\n\n**Notas Recentes para Contexto**:\n${JSON.stringify(additionalContext.recentNotes, null, 2)}`;
+    }
   }
 
   return systemMessage;
