@@ -122,7 +122,7 @@ async function getSessionMessageCount(sessionId) {
  */
 async function deleteSession(sessionId, userId) {
   const client = await pool.connect();
-  
+
   try {
     await client.query("BEGIN");
 

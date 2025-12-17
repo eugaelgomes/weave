@@ -33,6 +33,8 @@ export interface SendMessageData {
   message: string;
   model: string;
   sessionId?: string;
+  allowEdit?: boolean;
+  useCase?: string;
   context?: Record<string, any>;
 }
 

@@ -1,7 +1,14 @@
 const { executeQuery, rowCount } = require("@/services/db/db-connection");
 
 class notesRepository {
-  async createNotesQuerie(userId, title, content, tags = [], status = 'open', projectId = null) {
+  async createNotesQuerie(
+    userId,
+    title,
+    content,
+    tags = [],
+    status = "open",
+    projectId = null
+  ) {
     const query = `
       INSERT INTO notes (user_id, title, description, tags, status, project_id)
       VALUES ($1, $2, $3, $4, $5, $6)
@@ -384,7 +391,14 @@ class notesRepository {
    * @returns {Object|null} - Nota atualizada ou null se nenhum campo foi fornecido
    */
   async updateNoteById(noteId, updateData) {
-    const allowedFields = ["title", "description", "tags", "status", "deleted", "project_id"];
+    const allowedFields = [
+      "title",
+      "description",
+      "tags",
+      "status",
+      "deleted",
+      "project_id",
+    ];
 
     const updates = [];
     const values = [];
@@ -423,7 +437,7 @@ class notesRepository {
     description,
     tags = [],
     initialBlockContent = "",
-    status = 'open',
+    status = "open",
     projectId = null
   ) {
     const query = `

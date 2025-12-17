@@ -13,57 +13,31 @@ const router = express.Router();
 router.use(verifyToken);
 
 /**
- * @route   POST /api/ai/generate
- * @desc    Gera conteúdo usando IA baseado em caso de uso
+ * @route   POST /api/ai/chat
+ * @desc    Chat unificado com IA - pode executar funções ou apenas responder
  * @access  Private
  * @body    {
- *   useCase: string,      // Caso de uso (note_generation, task_breakdown, etc)
- *   prompt: string,       // Prompt para a IA
- *   context?: object,     // Contexto adicional
- *   provider?: string     // Provider específico (gemini ou perplexity)
+ *   message: string,          // Mensagem do usuário
+ *   allowEdit: boolean,       // Se true, permite executar funções (criar, editar, deletar)
+ *                             // Se false, apenas responde sem executar ações
+ *   useCase?: string,         // Caso de uso específico (opcional)
+ *   provider?: string,        // Provider específico: 'gemini' ou 'perplexity' (opcional)
+ *   sessionId?: string,       // ID da sessão de chat para manter histórico
+ *   context?: object          // Contexto adicional (noteId, projectId, etc)
  * }
  */
-router.post("/generate", (req, res, next) => {
-  aiController.generateContent(req, res);
+router.post("/chat", (req, res, next) => {
+  aiController.chat(req, res);
 });
 
 /**
- * @route   POST /api/ai/analyze-note
- * @desc    Analisa uma nota e fornece sugestões
+ * @route   GET /api/ai/chat/history
+ * @desc    Busca histórico de chat
  * @access  Private
- * @body    {
- *   noteId: string,           // ID da nota
- *   analysisType?: string     // Tipo: 'general', 'summarize', 'improve', 'tags'
- * }
+ * @query   sessionId?: string
  */
-router.post("/analyze-note", (req, res, next) => {
-  aiController.analyzeNote(req, res);
-});
-
-/**
- * @route   POST /api/ai/analyze-project
- * @desc    Analisa um projeto e fornece insights
- * @access  Private
- * @body    {
- *   projectId: string,        // ID do projeto
- *   analysisType?: string     // Tipo: 'general', 'progress', 'next_steps'
- * }
- */
-router.post("/analyze-project", (req, res, next) => {
-  aiController.analyzeProject(req, res);
-});
-
-/**
- * @route   POST /api/ai/research
- * @desc    Realiza pesquisa usando Perplexity
- * @access  Private
- * @body    {
- *   query: string,            // Query de pesquisa
- *   recencyFilter?: string    // Filtro: 'day', 'week', 'month', 'year'
- * }
- */
-router.post("/research", (req, res, next) => {
-  aiController.research(req, res);
+router.get("/chat/history", (req, res, next) => {
+  aiController.getChatHistory(req, res);
 });
 
 /**
@@ -85,28 +59,12 @@ router.get("/models", (req, res, next) => {
 });
 
 /**
- * @route   POST /api/ai/chat
- * @desc    Envia mensagem no chat
+ * @route   GET /api/ai/functions
+ * @desc    Lista todas as funções que a IA pode executar (quando allowEdit=true)
  * @access  Private
- * @body    {
- *   message: string,
- *   model: string,
- *   sessionId?: string,
- *   context?: object
- * }
  */
-router.post("/chat", (req, res, next) => {
-  aiController.sendChatMessage(req, res);
-});
-
-/**
- * @route   GET /api/ai/chat/history
- * @desc    Busca histórico de chat
- * @access  Private
- * @query   sessionId?: string
- */
-router.get("/chat/history", (req, res, next) => {
-  aiController.getChatHistory(req, res);
+router.get("/functions", (req, res, next) => {
+  aiController.listAvailableFunctions(req, res);
 });
 
 module.exports = router;

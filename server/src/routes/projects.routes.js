@@ -7,24 +7,16 @@ const router = express.Router();
 router.use(verifyToken);
 
 // Consultar toodos os projetos
-router.get("/", 
-  projectsController.getAllProjects.bind(projectsController)
-);
+router.get("/", projectsController.getAllProjects.bind(projectsController));
 
 // Criar um novo projeto
-router.post("/", 
-  projectsController.createProject.bind(projectsController)
-);
+router.post("/", projectsController.createProject.bind(projectsController));
 
 // Consultar um projeto específico pelo ID
-router.get("/:id", 
-  projectsController.getProjectById.bind(projectsController)
-);
+router.get("/:id", projectsController.getProjectById.bind(projectsController));
 
 // Atualizar um projeto existente pelo ID
-router.put("/:id", 
-  projectsController.updateProject.bind(projectsController)
-);
+router.put("/:id", projectsController.updateProject.bind(projectsController));
 
 // Deletar um projeto pelo ID
 router.delete(
@@ -36,12 +28,10 @@ router.delete(
 router
   .route("/:projectId/collaborators")
   .get(projectsController.getCollaborators.bind(projectsController))
-  .put(projectsController.manageCollaborators.bind(projectsController)
-);
+  .put(projectsController.manageCollaborators.bind(projectsController));
 router
   .route("/:projectId/notes")
   .get(projectsController.getAssociatedNotes.bind(projectsController))
-  .put(projectsController.manageNotes.bind(projectsController)
-);
+  .put(projectsController.manageNotes.bind(projectsController));
 
 module.exports = router;

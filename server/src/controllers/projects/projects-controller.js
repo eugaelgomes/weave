@@ -21,7 +21,14 @@ class ProjectsController {
       return {};
     }
 
-    const allowedProps = ["priority", "tags", "estimated_time", "complexity", "color", "icon"];
+    const allowedProps = [
+      "priority",
+      "tags",
+      "estimated_time",
+      "complexity",
+      "color",
+      "icon",
+    ];
     const validPriorities = ["alta", "media", "baixa"];
     const validComplexities = ["alta", "media", "baixa"];
 
@@ -68,7 +75,9 @@ class ProjectsController {
         if (value !== null) {
           const date = new Date(value);
           if (isNaN(date.getTime())) {
-            throw new Error("estimated_time deve ser uma data válida (ISO 8601)");
+            throw new Error(
+              "estimated_time deve ser uma data válida (ISO 8601)"
+            );
           }
         }
         validated[key] = value;
@@ -79,7 +88,9 @@ class ProjectsController {
         if (value !== null) {
           const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
           if (!hexRegex.test(value)) {
-            throw new Error("Color deve ser uma cor hexadecimal válida (ex: #ff0000)");
+            throw new Error(
+              "Color deve ser uma cor hexadecimal válida (ex: #ff0000)"
+            );
           }
         }
         validated[key] = value;
@@ -242,7 +253,7 @@ class ProjectsController {
           name: project.owner_name,
           avatar_url: project.owner_avatar_url,
         },
-        collaborators: (project.collaborators || []).filter(c => !c.removed),
+        collaborators: (project.collaborators || []).filter((c) => !c.removed),
         notes: project.associated_notes || [],
       }));
 
@@ -285,7 +296,7 @@ class ProjectsController {
           name: project.owner_name,
           avatar_url: project.owner_avatar_url,
         },
-        collaborators: (project.collaborators || []).filter(c => !c.removed),
+        collaborators: (project.collaborators || []).filter((c) => !c.removed),
         notes: project.associated_notes || [],
       };
 
@@ -308,7 +319,7 @@ class ProjectsController {
       // Buscar projetos com informações do usuário
       const projects =
         await this.projectsRepository.getProjectsWithUserInfo(userId);
-      
+
       if (!projects || projects.length === 0) {
         return res.status(200).json({ projects: [] });
       }
@@ -353,8 +364,9 @@ class ProjectsController {
       }
 
       // Definir status padrão se não fornecido
-      const projectStatus = status === undefined || status === null ? "open" : status;
-      
+      const projectStatus =
+        status === undefined || status === null ? "open" : status;
+
       // Validar status
       if (!ALLOWED_PROJECT_STATUSES.includes(projectStatus)) {
         return res.status(400).json({
@@ -363,7 +375,9 @@ class ProjectsController {
       }
 
       // Validar properties se fornecidas
-      const validatedProps = properties ? this._validateProperties(properties) : {};
+      const validatedProps = properties
+        ? this._validateProperties(properties)
+        : {};
 
       // Criação do projeto
       const result = await this.projectsRepository.createProject(
@@ -417,7 +431,7 @@ class ProjectsController {
       if (title !== undefined) updates.title = title;
       if (description !== undefined) updates.description = description;
       if (status !== undefined) updates.status = status;
-      
+
       // Se properties foi enviado, validar e fazer merge com existente
       if (properties !== undefined) {
         const validatedProps = this._validateProperties(properties);
@@ -499,7 +513,11 @@ class ProjectsController {
   async manageCollaborators(req, res, next) {
     try {
       const { projectId } = req.params;
-      const { action, userId: collaboratorId, permission = "viewer" } = req.body;
+      const {
+        action,
+        userId: collaboratorId,
+        permission = "viewer",
+      } = req.body;
 
       // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
@@ -530,7 +548,9 @@ class ProjectsController {
 
           // Verificar se o usuário não está tentando adicionar a si mesmo
           if (collaboratorId === userId) {
-            throw new Error("Você não pode adicionar a si mesmo como colaborador");
+            throw new Error(
+              "Você não pode adicionar a si mesmo como colaborador"
+            );
           }
 
           // Verificar se o colaborador já está ativo
@@ -603,7 +623,10 @@ class ProjectsController {
 
       res.status(200).json({
         message,
-        collaborators: action === "remove" ? undefined : result[0].collaborators?.filter(c => !c.removed),
+        collaborators:
+          action === "remove"
+            ? undefined
+            : result[0].collaborators?.filter((c) => !c.removed),
       });
     } catch (error) {
       this._handleError(error, res, next);
@@ -644,10 +667,8 @@ class ProjectsController {
       }
 
       // Verificar se o colaborador já está ativo
-      const isAlreadyCollaborator = await this.projectsRepository.isCollaborator(
-        projectId,
-        collaboratorId
-      );
+      const isAlreadyCollaborator =
+        await this.projectsRepository.isCollaborator(projectId, collaboratorId);
 
       if (isAlreadyCollaborator) {
         throw new Error("Usuário já é colaborador deste projeto");

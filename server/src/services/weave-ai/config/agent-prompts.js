@@ -273,6 +273,40 @@ function buildSystemMessage(useCase, additionalContext = {}) {
 
   // Para chat, formata o contexto do usuário de forma mais legível
   if (useCase === "chat") {
+    // Notas e projetos indexados pelo usuário (contexto principal)
+    if (
+      additionalContext.indexedNotes &&
+      additionalContext.indexedNotes.length > 0
+    ) {
+      systemMessage += `\n\n📌 **CONTEXTO PRINCIPAL - Notas Indexadas** (${additionalContext.indexedNotes.length}):`;
+      systemMessage += `\nO usuário selecionou especificamente estas notas para o contexto da conversa:`;
+      additionalContext.indexedNotes.forEach((note, idx) => {
+        systemMessage += `\n${idx + 1}. "${note.title}"`;
+        if (note.description) systemMessage += ` - ${note.description}`;
+        if (note.tags && note.tags.length > 0)
+          systemMessage += ` [Tags: ${note.tags.join(", ")}]`;
+        systemMessage += ` (Status: ${note.status || "N/A"})`;
+      });
+    }
+
+    if (
+      additionalContext.indexedProjects &&
+      additionalContext.indexedProjects.length > 0
+    ) {
+      systemMessage += `\n\n📌 **CONTEXTO PRINCIPAL - Projetos Indexados** (${additionalContext.indexedProjects.length}):`;
+      systemMessage += `\nO usuário selecionou especificamente estes projetos para o contexto da conversa:`;
+      additionalContext.indexedProjects.forEach((project, idx) => {
+        systemMessage += `\n${idx + 1}. "${project.title}"`;
+        if (project.description) systemMessage += ` - ${project.description}`;
+        if (project.properties) {
+          const props = Object.entries(project.properties)
+            .map(([k, v]) => `${k}: ${v}`)
+            .join(", ");
+          if (props) systemMessage += ` [${props}]`;
+        }
+      });
+    }
+
     if (additionalContext.stats) {
       systemMessage += `\n\n📊 **Estatísticas do Usuário**:`;
       systemMessage += `\n- Total de notas: ${additionalContext.stats.totalNotes}`;
@@ -285,12 +319,16 @@ function buildSystemMessage(useCase, additionalContext = {}) {
       additionalContext.userNotes.forEach((note, idx) => {
         systemMessage += `\n${idx + 1}. "${note.title}"`;
         if (note.description) systemMessage += ` - ${note.description}`;
-        if (note.tags && note.tags.length > 0) systemMessage += ` [Tags: ${note.tags.join(", ")}]`;
+        if (note.tags && note.tags.length > 0)
+          systemMessage += ` [Tags: ${note.tags.join(", ")}]`;
         systemMessage += ` (Status: ${note.status || "N/A"})`;
       });
     }
 
-    if (additionalContext.userProjects && additionalContext.userProjects.length > 0) {
+    if (
+      additionalContext.userProjects &&
+      additionalContext.userProjects.length > 0
+    ) {
       systemMessage += `\n\n📋 **Projetos Ativos do Usuário** (${additionalContext.userProjects.length}):`;
       additionalContext.userProjects.forEach((project, idx) => {
         systemMessage += `\n${idx + 1}. "${project.title}"`;
@@ -304,7 +342,10 @@ function buildSystemMessage(useCase, additionalContext = {}) {
       });
     }
 
-    if (additionalContext.popularTags && additionalContext.popularTags.length > 0) {
+    if (
+      additionalContext.popularTags &&
+      additionalContext.popularTags.length > 0
+    ) {
       systemMessage += `\n\n🏷️ **Tags Mais Usadas**: ${additionalContext.popularTags.join(", ")}`;
     }
   } else {

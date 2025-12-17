@@ -114,16 +114,9 @@ class ProjectsRepository {
   }
 
   async updateProject(projectId, userId, updates) {
-    const allowedFields = [
-      "title",
-      "description",
-      "status",
-      "properties",
-    ];
+    const allowedFields = ["title", "description", "status", "properties"];
 
-    const keys = Object.keys(updates).filter((k) =>
-      allowedFields.includes(k)
-    );
+    const keys = Object.keys(updates).filter((k) => allowedFields.includes(k));
 
     if (keys.length === 0) {
       throw new Error("Nenhum campo válido para atualizar.");
@@ -170,9 +163,11 @@ class ProjectsRepository {
     `;
 
     const values = [
-      projectId, 
-      userId, 
-      ...keys.map((k) => k === "properties" ? JSON.stringify(updates[k]) : updates[k])
+      projectId,
+      userId,
+      ...keys.map((k) =>
+        k === "properties" ? JSON.stringify(updates[k]) : updates[k]
+      ),
     ];
 
     return executeQuery(query, values);
@@ -216,7 +211,12 @@ class ProjectsRepository {
     return executeQuery(query, values);
   }
 
-  async addCollaborator(projectId, ownerId, collaboratorUserId, permission = "viewer") {
+  async addCollaborator(
+    projectId,
+    ownerId,
+    collaboratorUserId,
+    permission = "viewer"
+  ) {
     const query = `
       UPDATE projects
       SET 
@@ -249,7 +249,12 @@ class ProjectsRepository {
         collaborators;
     `;
 
-    return executeQuery(query, [projectId, ownerId, collaboratorUserId, permission]);
+    return executeQuery(query, [
+      projectId,
+      ownerId,
+      collaboratorUserId,
+      permission,
+    ]);
   }
 
   async removeCollaborator(projectId, ownerId, collaboratorUserId) {
@@ -298,7 +303,12 @@ class ProjectsRepository {
     return executeQuery(query, [projectId, userId]);
   }
 
-  async updateCollaboratorPermission(projectId, ownerId, collaboratorUserId, newPermission) {
+  async updateCollaboratorPermission(
+    projectId,
+    ownerId,
+    collaboratorUserId,
+    newPermission
+  ) {
     const query = `
       UPDATE projects
       SET 
@@ -321,7 +331,12 @@ class ProjectsRepository {
         collaborators;
     `;
 
-    return executeQuery(query, [projectId, ownerId, collaboratorUserId, newPermission]);
+    return executeQuery(query, [
+      projectId,
+      ownerId,
+      collaboratorUserId,
+      newPermission,
+    ]);
   }
 
   async isCollaborator(projectId, userId) {

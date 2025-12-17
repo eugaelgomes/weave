@@ -357,8 +357,9 @@ class NotesController {
       }
 
       // Definir status padrão se não fornecido
-      const noteStatus = status === undefined || status === null ? "open" : status;
-      
+      const noteStatus =
+        status === undefined || status === null ? "open" : status;
+
       // Validar status
       if (!ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
         return res.status(400).json({
@@ -409,8 +410,9 @@ class NotesController {
       }
 
       // Definir status padrão se não fornecido
-      const noteStatus = status === undefined || status === null ? "open" : status;
-      
+      const noteStatus =
+        status === undefined || status === null ? "open" : status;
+
       // Validar status
       if (!ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
         return res.status(400).json({
@@ -484,7 +486,8 @@ class NotesController {
   async updateNote(req, res, next) {
     try {
       const { id } = req.params;
-      const { title, description, tags, status, deleted, project_id } = req.body;
+      const { title, description, tags, status, deleted, project_id } =
+        req.body;
 
       // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
@@ -594,19 +597,10 @@ class NotesController {
       }
 
       // Validar tipos permitidos
-      const validTypes = [
-        "text",
-        "todo",
-        "list",
-        "page",
-        "heading",
-        "paragraph",
-        "quote",
-        "code",
-      ];
-      if (!validTypes.includes(type)) {
+      const { ALLOWED_BLOCK_TYPES } = require("@/controllers/product-patterns");
+      if (!ALLOWED_BLOCK_TYPES.includes(type)) {
         throw new Error(
-          `Tipo inválido. Tipos permitidos: ${validTypes.join(", ")}`
+          `Tipo inválido. Tipos permitidos: ${ALLOWED_BLOCK_TYPES.join(", ")}`
         );
       }
 

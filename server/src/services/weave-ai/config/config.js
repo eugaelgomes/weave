@@ -104,52 +104,91 @@ const perplexityConfig = {
 };
 
 /**
- * Casos de uso específicos por provider
+ * Todos os casos de uso disponíveis (unificados)
+ * Ambos os providers agora suportam todos os casos de uso
+ */
+const allUseCases = [
+  // Chat e interação
+  "chat", // Chat conversacional geral
+
+  // Gestão de notas
+  "note_generation", // Gerar conteúdo para notas
+  "note_summarization", // Resumir notas longas
+  "content_enhancement", // Melhorar escrita de notas
+  "tag_suggestion", // Sugerir tags para organização
+
+  // Gestão de projetos
+  "project_creation", // Criar novos projetos
+  "project_editing", // Editar projetos existentes
+  "task_breakdown", // Quebrar tarefas em subtarefas
+  "priority_analysis", // Analisar e sugerir prioridades
+  "template_generation", // Criar templates de projetos
+
+  // Gestão de blocos de conteúdo
+  "block_creation", // Criar blocos de conteúdo estruturado
+  "block_editing", // Editar blocos existentes
+
+  // Pesquisa e análise
+  "research_assistant", // Pesquisar informações para projetos
+  "link_summarization", // Resumir links/artigos
+  "trend_analysis", // Analisar tendências de mercado
+  "competitive_research", // Pesquisa competitiva
+  "fact_checking", // Verificar informações
+  "source_gathering", // Coletar fontes confiáveis
+];
+
+/**
+ * Casos de uso por provider (agora todos compartilham os mesmos)
  */
 const useCases = {
-  // Gemini - Melhor para criação de conteúdo e análise estruturada
-  [AI_PROVIDERS.GEMINI]: [
-    "chat", // Chat conversacional geral
-    "note_generation", // Gerar conteúdo para notas
-    "note_summarization", // Resumir notas longas
-    "task_breakdown", // Quebrar tarefas em subtarefas
-    "content_enhancement", // Melhorar escrita de notas
-    "template_generation", // Criar templates de projetos
-    "tag_suggestion", // Sugerir tags para organização
-    "priority_analysis", // Analisar e sugerir prioridades
-  ],
+  [AI_PROVIDERS.GEMINI]: allUseCases,
+  [AI_PROVIDERS.PERPLEXITY]: allUseCases,
+};
 
-  // Perplexity - Melhor para pesquisa e contexto atualizado
-  [AI_PROVIDERS.PERPLEXITY]: [
-    "chat", // Chat conversacional com pesquisa
-    "research_assistant", // Pesquisar informações para projetos
-    "link_summarization", // Resumir links/artigos
-    "trend_analysis", // Analisar tendências de mercado
-    "competitive_research", // Pesquisa competitiva
-    "fact_checking", // Verificar informações
-    "source_gathering", // Coletar fontes confiáveis
-  ],
+/**
+ * Provider preferencial por caso de uso (para otimização)
+ * Mesmo que ambos suportem, alguns providers são melhores para casos específicos
+ */
+const preferredProviders = {
+  // Gemini é melhor para criação e estruturação de conteúdo
+  note_generation: AI_PROVIDERS.GEMINI,
+  note_summarization: AI_PROVIDERS.GEMINI,
+  content_enhancement: AI_PROVIDERS.GEMINI,
+  tag_suggestion: AI_PROVIDERS.GEMINI,
+  chat: AI_PROVIDERS.GEMINI,
+
+  // Projetos
+  project_creation: AI_PROVIDERS.GEMINI,
+  project_editing: AI_PROVIDERS.GEMINI,
+  task_breakdown: AI_PROVIDERS.GEMINI,
+  priority_analysis: AI_PROVIDERS.GEMINI,
+  template_generation: AI_PROVIDERS.GEMINI,
+
+  // Blocos de conteúdo
+  block_creation: AI_PROVIDERS.GEMINI,
+  block_editing: AI_PROVIDERS.GEMINI,
+
+  // Perplexity é melhor para pesquisa e informações atualizadas
+  research_assistant: AI_PROVIDERS.PERPLEXITY,
+  link_summarization: AI_PROVIDERS.PERPLEXITY,
+  trend_analysis: AI_PROVIDERS.PERPLEXITY,
+  competitive_research: AI_PROVIDERS.PERPLEXITY,
+  fact_checking: AI_PROVIDERS.PERPLEXITY,
+  source_gathering: AI_PROVIDERS.PERPLEXITY,
 };
 
 /**
  * Configuração de fallback
  */
 const fallbackConfig = {
-  // Se Gemini falhar, tentar Perplexity para casos compatíveis
+  // Se um provider falhar, tentar o outro automaticamente
   enableFallback: true,
+
+  // Ordem de prioridade: tenta Gemini primeiro, depois Perplexity
   fallbackPriority: [AI_PROVIDERS.GEMINI, AI_PROVIDERS.PERPLEXITY],
 
-  // Mapear casos de uso entre providers quando possível
-  useCaseMapping: {
-    note_generation: {
-      primary: AI_PROVIDERS.GEMINI,
-      fallback: AI_PROVIDERS.PERPLEXITY,
-    },
-    research_assistant: {
-      primary: AI_PROVIDERS.PERPLEXITY,
-      fallback: AI_PROVIDERS.GEMINI,
-    },
-  },
+  // Com casos de uso unificados, qualquer provider pode ser fallback do outro
+  useCaseMapping: "unified", // Todos os casos são compatíveis entre providers
 };
 
 /**
@@ -185,16 +224,17 @@ function getProviderConfig(provider) {
  * Obter provider ideal para um caso de uso
  */
 function getProviderForUseCase(useCase) {
-  for (const [provider, cases] of Object.entries(useCases)) {
-    if (cases.includes(useCase)) {
-      return provider;
-    }
+  // Retorna o provider preferencial para este caso de uso
+  if (preferredProviders[useCase]) {
+    return preferredProviders[useCase];
   }
-  return AI_PROVIDERS.GEMINI; // Default
+
+  // Default para Gemini se não houver preferência definida
+  return AI_PROVIDERS.GEMINI;
 }
 
 /**
- * Validar configuração
+ * Validar configuração das APIs
  */
 function validateConfig() {
   const errors = [];
@@ -219,7 +259,9 @@ module.exports = {
   AI_MODELS,
   geminiConfig,
   perplexityConfig,
+  allUseCases,
   useCases,
+  preferredProviders,
   fallbackConfig,
   cacheConfig,
   getProviderConfig,

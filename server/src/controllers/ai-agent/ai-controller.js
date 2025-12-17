@@ -11,22 +11,33 @@ const {
   AI_PROVIDERS,
   fallbackConfig,
   cacheConfig,
-} = require("@/services/ai-server/ai-config");
+} = require("@/services/weave-ai/config/config");
 const {
   buildSystemMessage,
   getFewShotExamples,
-} = require("@/services/ai-server/ai-personality");
+} = require("@/services/weave-ai/config/agent-prompts");
+const {
+  getAllInOpenAIFormat,
+  getFunctionSchema,
+  isFunctionAvailable,
+} = require("@/services/weave-ai/functions/function-schemas");
+const {
+  validateParameter,
+  sanitizeParameter,
+  getConfirmationMessage,
+  isFunctionForbidden,
+} = require("@/services/weave-ai/policies/security-policies");
+const {
+  buildContext,
+  formatContextForPrompt,
+} = require("@/services/weave-ai/context-reasoning/context-provider");
 const notesRepository = require("@/repositories/notes-manager");
 const projectsRepository = require("@/repositories/projetcs");
+const { callAIProvider } = require("@/services/weave-ai/ai-service");
+const reasoningEngine = require("@/services/weave-ai/context-reasoning/reasoning-engine");
 
 // Cache simples em memória
 const responseCache = new Map();
-
-// Inicializa cliente Gemini
-let genAI = null;
-if (process.env.GEMINI_API_KEY) {
-  genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-}
 
 /**
  * Limpa cache antigo periodicamente
@@ -38,7 +49,7 @@ function cleanCache() {
       responseCache.delete(key);
     }
   }
-  
+
   // Limita tamanho do cache
   if (responseCache.size > cacheConfig.maxSize) {
     const firstKey = responseCache.keys().next().value;
@@ -48,99 +59,6 @@ function cleanCache() {
 
 // Limpar cache a cada 10 minutos
 setInterval(cleanCache, 10 * 60 * 1000);
-
-/**
- * Chamada para API do Gemini usando a biblioteca oficial
- */
-async function callGeminiAPI(prompt, systemMessage, config) {
-  if (!genAI) {
-    throw new Error("Gemini API não está configurada. Verifique GEMINI_API_KEY");
-  }
-
-  const model = genAI.getGenerativeModel({
-    model: config.model,
-    generationConfig: {
-      temperature: config.temperature,
-      topP: config.topP,
-      topK: config.topK,
-      maxOutputTokens: config.maxOutputTokens,
-    },
-    safetySettings: config.safetySettings,
-  });
-
-  // Combina system message com o prompt
-  const fullPrompt = `${systemMessage}\n\n---\n\n${prompt}`;
-
-  const result = await model.generateContent(fullPrompt);
-  const response = await result.response;
-  
-  return response.text();
-}
-
-/**
- * Chamada para API do Perplexity
- */
-async function callPerplexityAPI(prompt, systemMessage, config) {
-  const url = `${config.baseURL}/chat/completions`;
-  
-  const payload = {
-    model: config.model,
-    messages: [
-      {
-        role: "system",
-        content: systemMessage,
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    temperature: config.temperature,
-    top_p: config.topP,
-    max_tokens: config.maxTokens,
-    return_citations: config.returnCitations,
-    return_images: config.returnImages,
-    search_recency_filter: config.searchRecencyFilter,
-    search_domain_filter: config.searchDomainFilter,
-  };
-
-  const response = await axios.post(url, payload, {
-    timeout: config.timeout,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${config.apiKey}`,
-    },
-  });
-
-  return {
-    content: response.data.choices[0]?.message?.content || "",
-    citations: response.data.citations || [],
-  };
-}
-
-/**
- * Executa chamada para provider de IA com retry
- */
-async function callAIProvider(provider, prompt, systemMessage, retryCount = 0) {
-  const config = getProviderConfig(provider);
-
-  try {
-    if (provider === AI_PROVIDERS.GEMINI) {
-      return await callGeminiAPI(prompt, systemMessage, config);
-    } else if (provider === AI_PROVIDERS.PERPLEXITY) {
-      return await callPerplexityAPI(prompt, systemMessage, config);
-    }
-  } catch (error) {
-    // Retry logic
-    if (retryCount < config.retry.maxRetries) {
-      const delay = config.retry.initialDelay * Math.pow(config.retry.backoffFactor, retryCount);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-      return callAIProvider(provider, prompt, systemMessage, retryCount + 1);
-    }
-    
-    throw error;
-  }
-}
 
 /**
  * Controlador principal para processar requisições de IA
@@ -174,7 +92,7 @@ class AIController {
           prompt,
           context
         );
-        
+
         if (responseCache.has(cacheKey)) {
           const cached = responseCache.get(cacheKey);
           return res.json({
@@ -187,9 +105,13 @@ class AIController {
 
       // Determina o provider ideal
       let provider = requestedProvider || getProviderForUseCase(useCase);
-      
-      // Enriquece contexto se necessário
-      const enrichedContext = await this._enrichContext(userId, context);
+
+      // Enriquece contexto com Context Provider dinâmico
+      const enrichedContext = await this._enrichContext(
+        userId,
+        useCase,
+        context
+      );
 
       // Constrói mensagem do sistema
       const systemMessage = buildSystemMessage(useCase, enrichedContext);
@@ -264,8 +186,7 @@ class AIController {
         success: true,
         useCase,
         provider: usedProvider,
-        response:
-          typeof response === "string" ? response : response.content,
+        response: typeof response === "string" ? response : response.content,
         citations: response.citations || null,
         createdData: createdData || null,
         timestamp: new Date().toISOString(),
@@ -298,170 +219,8 @@ class AIController {
    * POST /api/ai/analyze-note
    * Analisa uma nota e fornece sugestões
    */
-  async analyzeNote(req, res) {
-    try {
-      const userId = req.user?.userId;
-      const { noteId, analysisType = "general" } = req.body;
-
-      if (!noteId) {
-        return res.status(400).json({ error: "noteId é obrigatório" });
-      }
-
-      // Busca a nota
-      const note = await notesRepository.getNoteById(noteId);
-      
-      if (!note) {
-        return res.status(404).json({ error: "Nota não encontrada" });
-      }
-
-      // Verifica permissão
-      if (note.user_id !== userId) {
-        const isCollab = await notesRepository.isCollaborator(noteId, userId);
-        if (!isCollab) {
-          return res.status(403).json({ error: "Sem permissão para acessar esta nota" });
-        }
-      }
-
-      // Determina o tipo de análise
-      let useCase;
-      let prompt;
-
-      switch (analysisType) {
-        case "summarize":
-          useCase = "note_summarization";
-          prompt = `Resuma a seguinte nota:\n\nTítulo: ${note.title}\n\nConteúdo: ${note.description}\n\nTags: ${note.tags?.join(", ") || "nenhuma"}`;
-          break;
-
-        case "improve":
-          useCase = "content_enhancement";
-          prompt = `Melhore a escrita e estrutura desta nota:\n\nTítulo: ${note.title}\n\nConteúdo: ${note.description}`;
-          break;
-
-        case "tags":
-          useCase = "tag_suggestion";
-          prompt = `Sugira tags relevantes para esta nota:\n\nTítulo: ${note.title}\n\nConteúdo: ${note.description}\n\nTags atuais: ${note.tags?.join(", ") || "nenhuma"}`;
-          break;
-
-        case "general":
-        default:
-          useCase = "note_generation";
-          prompt = `Analise esta nota e forneça sugestões de melhoria:\n\nTítulo: ${note.title}\n\nConteúdo: ${note.description}\n\nTags: ${note.tags?.join(", ") || "nenhuma"}\n\nStatus: ${note.status}`;
-          break;
-      }
-
-      // Chama o gerador de conteúdo
-      req.body = {
-        useCase,
-        prompt,
-        context: { noteInfo: note },
-      };
-
-      return this.generateContent(req, res);
-    } catch (error) {
-      console.error("Erro ao analisar nota:", error);
-      res.status(500).json({
-        error: "Erro ao analisar nota",
-        message: error.message,
-      });
-    }
-  }
-
-  /**
-   * POST /api/ai/analyze-project
-   * Analisa um projeto e fornece insights
-   */
-  async analyzeProject(req, res) {
-    try {
-      const userId = req.user?.userId;
-      const { projectId, analysisType = "general" } = req.body;
-
-      if (!projectId) {
-        return res.status(400).json({ error: "projectId é obrigatório" });
-      }
-
-      // Busca o projeto
-      const projectData = await projectsRepository.getProjectByIdWithAccess(
-        projectId,
-        userId
-      );
-
-      if (!projectData || projectData.length === 0) {
-        return res.status(404).json({ error: "Projeto não encontrado" });
-      }
-
-      const project = projectData[0];
-
-      // Busca notas associadas
-      const notes = await projectsRepository.getAssociatedNotes(
-        projectId,
-        userId
-      );
-
-      let useCase;
-      let prompt;
-
-      switch (analysisType) {
-        case "progress":
-          useCase = "priority_analysis";
-          prompt = `Analise o progresso deste projeto:\n\nTítulo: ${project.title}\n\nDescrição: ${project.description}\n\nStatus: ${project.status}\n\nNotas associadas: ${notes.length}\n\nPropriedades: ${JSON.stringify(project.properties)}`;
-          break;
-
-        case "next_steps":
-          useCase = "task_breakdown";
-          prompt = `Com base neste projeto, sugira os próximos passos:\n\nTítulo: ${project.title}\n\nDescrição: ${project.description}\n\nStatus: ${project.status}`;
-          break;
-
-        case "general":
-        default:
-          useCase = "priority_analysis";
-          prompt = `Analise este projeto e forneça insights:\n\nTítulo: ${project.title}\n\nDescrição: ${project.description}\n\nStatus: ${project.status}\n\nNotas: ${notes.length} associadas\n\nColaboradores: ${project.collaborators?.length || 0}`;
-          break;
-      }
-
-      req.body = {
-        useCase,
-        prompt,
-        context: { projectInfo: project, notesCount: notes.length },
-      };
-
-      return this.generateContent(req, res);
-    } catch (error) {
-      console.error("Erro ao analisar projeto:", error);
-      res.status(500).json({
-        error: "Erro ao analisar projeto",
-        message: error.message,
-      });
-    }
-  }
-
-  /**
-   * POST /api/ai/research
-   * Realiza pesquisa usando Perplexity
-   */
-  async research(req, res) {
-    try {
-      const { query, recencyFilter = "month" } = req.body;
-
-      if (!query) {
-        return res.status(400).json({ error: "query é obrigatória" });
-      }
-
-      req.body = {
-        useCase: "research_assistant",
-        prompt: query,
-        provider: AI_PROVIDERS.PERPLEXITY,
-        context: { searchRecencyFilter: recencyFilter },
-      };
-
-      return this.generateContent(req, res);
-    } catch (error) {
-      console.error("Erro na pesquisa:", error);
-      res.status(500).json({
-        error: "Erro ao realizar pesquisa",
-        message: error.message,
-      });
-    }
-  }
+  // Métodos removidos: analyzeNote, analyzeProject, research
+  // Tudo agora é feito via chat unificado com allowEdit
 
   /**
    * GET /api/ai/use-cases
@@ -469,20 +228,62 @@ class AIController {
    */
   async listUseCases(req, res) {
     try {
-      const { useCases } = require("@/services/ai-server/ai-config");
-      
+      const {
+        allUseCases,
+        preferredProviders,
+      } = require("@/services/weave-ai/config/config");
+
       res.json({
         success: true,
-        useCases: {
-          gemini: useCases[AI_PROVIDERS.GEMINI],
-          perplexity: useCases[AI_PROVIDERS.PERPLEXITY],
-        },
+        allUseCases,
+        preferredProviders,
+        note: "Todos os providers suportam todos os casos de uso. Os providers preferenciais indicam qual é otimizado para cada caso.",
       });
     } catch (error) {
       console.error("Erro ao listar casos de uso:", error);
       res.status(500).json({
         error: "Erro ao listar casos de uso",
         message: error.message,
+      });
+    }
+  }
+
+  /**
+   * GET /api/ai/functions
+   * Lista todas as funções disponíveis para a IA executar
+   */
+  async listAvailableFunctions(req, res) {
+    try {
+      const functions = getAllInOpenAIFormat();
+      const {
+        getFunctionsBySecurityLevel,
+        getFunctionsByCategory,
+      } = require("@/services/weave-ai/function-schemas");
+
+      res.json({
+        success: true,
+        totalFunctions: functions.length,
+        functions,
+        bySecurityLevel: {
+          safe: getFunctionsBySecurityLevel("safe").length,
+          moderate: getFunctionsBySecurityLevel("moderate").length,
+          restricted: getFunctionsBySecurityLevel("restricted").length,
+        },
+        byCategory: {
+          notes: getFunctionsByCategory("notes").length,
+          projects: getFunctionsByCategory("projects").length,
+          blocks: getFunctionsByCategory("blocks").length,
+          chat: getFunctionsByCategory("chat").length,
+          users: getFunctionsByCategory("users").length,
+          search: getFunctionsByCategory("search").length,
+          stats: getFunctionsByCategory("stats").length,
+        },
+      });
+    } catch (error) {
+      console.error("Erro ao listar funções:", error);
+      res.status(500).json({
+        success: false,
+        error: "Erro ao listar funções disponíveis",
       });
     }
   }
@@ -501,13 +302,13 @@ IMPORTANTE: Retorne APENAS um JSON válido, sem texto adicional, seguindo esta e
   "description": "Descrição detalhada em markdown",
   "tags": ["tag1", "tag2", "tag3"],
   "blocks": [
-    {"type": "heading", "text": "Título da seção"},
     {"type": "paragraph", "text": "Conteúdo do parágrafo"},
+    {"type": "heading", "text": "Título da seção"},
     {"type": "list", "text": "Item da lista"}
   ]
 }
 
-Tipos de blocos permitidos: heading, paragraph, list, code, quote
+Tipos de blocos permitidos: text, paragraph, heading, h1, h2, h3, todo, list, page, code, quote, image, divider
 ${context.includeBlocks === false ? "NÃO inclua a propriedade blocks." : ""}`,
 
       create_project: `${originalPrompt}
@@ -520,14 +321,18 @@ IMPORTANTE: Retorne APENAS um JSON válido, sem texto adicional, seguindo esta e
   "properties": {
     "priority": "alta",
     "category": "categoria"
-  }${context.includeNotes ? `,
+  }${
+    context.includeNotes
+      ? `,
   "notes": [
     {
       "title": "Título da nota",
       "description": "Descrição da nota",
       "tags": ["tag1", "tag2"]
     }
-  ]` : ''}
+  ]`
+      : ""
+  }
 }`,
 
       create_blocks: `${originalPrompt}
@@ -535,13 +340,13 @@ IMPORTANTE: Retorne APENAS um JSON válido, sem texto adicional, seguindo esta e
 IMPORTANTE: Retorne APENAS um JSON válido, sem texto adicional, seguindo esta estrutura exata:
 {
   "blocks": [
-    {"type": "heading", "text": "Título", "properties": {}},
     {"type": "paragraph", "text": "Conteúdo", "properties": {}},
+    {"type": "heading", "text": "Título", "properties": {}},
     {"type": "list", "text": "Item", "properties": {}}
   ]
 }
 
-Tipos permitidos: heading, paragraph, list, code, quote`,
+Tipos permitidos: text, paragraph, heading, h1, h2, h3, todo, list, page, code, quote, image, divider`,
 
       update_note: `${originalPrompt}
 
@@ -568,7 +373,7 @@ IMPORTANTE: Retorne APENAS um JSON válido com os campos a atualizar:
   }
 }
 
-Inclua apenas os campos que devem ser atualizados.`
+Inclua apenas os campos que devem ser atualizados.`,
     };
 
     return actionPrompts[action] || originalPrompt;
@@ -590,7 +395,7 @@ Inclua apenas os campos que devem ser atualizados.`
           .replace(/```json\n?/g, "")
           .replace(/```\n?/g, "")
           .trim();
-        
+
         try {
           parsedResponse = JSON.parse(cleanResponse);
         } catch (parseError) {
@@ -603,7 +408,7 @@ Inclua apenas os campos que devem ser atualizados.`
           .replace(/```json\n?/g, "")
           .replace(/```\n?/g, "")
           .trim();
-        
+
         try {
           parsedResponse = JSON.parse(cleanContent);
         } catch (parseError) {
@@ -705,14 +510,27 @@ Inclua apenas os campos que devem ser atualizados.`
             throw new Error("noteId é obrigatório para criar blocos");
           }
 
+          const {
+            ALLOWED_BLOCK_TYPES,
+          } = require("@/controllers/product-patterns");
           const blocks = [];
           if (parsedResponse.blocks && parsedResponse.blocks.length > 0) {
             for (let i = 0; i < parsedResponse.blocks.length; i++) {
               const blockData = parsedResponse.blocks[i];
+              const blockType = blockData.type || "paragraph";
+
+              // Validar tipo de bloco
+              if (!ALLOWED_BLOCK_TYPES.includes(blockType)) {
+                console.warn(
+                  `Tipo de bloco inválido: ${blockType}. Usando 'paragraph'.`
+                );
+                blockType = "paragraph";
+              }
+
               const block = await blocksRepository.createBlock({
                 noteId: context.noteId,
                 userId: userId,
-                type: blockData.type || "paragraph",
+                type: blockType,
                 text: blockData.text || "",
                 position: blockData.position || i,
                 properties: blockData.properties || {},
@@ -788,84 +606,270 @@ Inclua apenas os campos que devem ser atualizados.`
   }
 
   /**
-   * Enriquece o contexto com dados do usuário
+   * Enriquece o contexto com dados do usuário usando Context Provider
    * @private
    */
-  async _enrichContext(userId, context) {
-    const enriched = { ...context };
+  async _enrichContext(userId, useCase, context) {
+    try {
+      // Buscar dados completos de notas e projetos indexados
+      let indexedNotes = [];
+      let indexedProjects = [];
 
-    // Adiciona informações de notas recentes se necessário
-    if (!context.recentNotes && userId) {
-      try {
-        const notes = await notesRepository.getAllNotesByUserId(userId);
-        enriched.recentNotes = notes.slice(0, 5).map((n) => ({
-          id: n.id,
-          title: n.title,
-          tags: n.tags,
-        }));
-      } catch (error) {
-        console.warn("Não foi possível carregar notas recentes:", error.message);
+      if (context.noteIds && Array.isArray(context.noteIds)) {
+        for (const noteId of context.noteIds) {
+          try {
+            const note = await notesRepository.getNoteById(noteId, userId);
+            if (note) {
+              indexedNotes.push({
+                id: note.id,
+                title: note.title,
+                description: note.description,
+                tags: note.tags,
+                status: note.status,
+              });
+            }
+          } catch (err) {
+            console.warn(`Nota ${noteId} não encontrada ou sem acesso`);
+          }
+        }
       }
-    }
 
-    return enriched;
+      if (context.projectIds && Array.isArray(context.projectIds)) {
+        for (const projectId of context.projectIds) {
+          try {
+            const project = await projectsRepository.getProjectById(
+              projectId,
+              userId
+            );
+            if (project) {
+              indexedProjects.push({
+                id: project.id,
+                title: project.title,
+                description: project.description,
+                status: project.status,
+                properties: project.properties,
+              });
+            }
+          } catch (err) {
+            console.warn(`Projeto ${projectId} não encontrado ou sem acesso`);
+          }
+        }
+      }
+
+      // Usa o context provider dinâmico
+      const dynamicContext = await buildContext(userId, useCase, {
+        noteId: context.noteId,
+        projectId: context.projectId,
+        sessionId: context.sessionId,
+        notesLimit: context.notesLimit || 10,
+        projectsLimit: context.projectsLimit || 10,
+      });
+
+      // Mescla com contexto fornecido
+      return {
+        ...context,
+        ...dynamicContext,
+        // Adiciona notas e projetos indexados ao contexto
+        indexedNotes: indexedNotes.length > 0 ? indexedNotes : undefined,
+        indexedProjects:
+          indexedProjects.length > 0 ? indexedProjects : undefined,
+      };
+    } catch (error) {
+      console.warn("Erro ao enriquecer contexto:", error.message);
+      return context;
+    }
   }
 
   /**
-   * Enriquece o contexto especificamente para chat
+   * Executa uma função chamada pela IA
    * @private
    */
-  async _enrichChatContext(userId, context) {
-    const enriched = { ...context };
+  async _executeFunctionCall(userId, functionCall, context) {
+    const { name, arguments: args } = functionCall;
+    const blocksRepository = require("@/repositories/blocks-manager");
 
-    try {
-      // Busca notas recentes do usuário (últimas 10)
-      const notes = await notesRepository.getAllNotesByUserId(userId);
-      enriched.userNotes = notes.slice(0, 10).map(note => ({
-        id: note.id,
-        title: note.title,
-        description: note.description?.substring(0, 200), // Resumo
-        tags: note.tags || [],
-        status: note.status,
-        updated_at: note.updated_at,
-      }));
-
-      // Busca projetos ativos do usuário
-      const projects = await projectsRepository.getProjectsByUserId(userId);
-      enriched.userProjects = projects
-        .filter(p => p.status === "ativo")
-        .slice(0, 10)
-        .map(project => ({
-          id: project.id,
-          title: project.title,
-          description: project.description?.substring(0, 200),
-          status: project.status,
-          properties: project.properties,
-        }));
-
-      // Estatísticas de uso
-      enriched.stats = {
-        totalNotes: notes.length,
-        totalProjects: projects.length,
-        activeProjects: projects.filter(p => p.status === "ativo").length,
-      };
-
-      // Tags mais usadas
-      const allTags = notes.flatMap(n => n.tags || []);
-      const tagCounts = {};
-      allTags.forEach(tag => {
-        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-      });
-      enriched.popularTags = Object.entries(tagCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(([tag]) => tag);
-
-    } catch (error) {
-      console.warn("Erro ao enriquecer contexto do chat:", error.message);
+    // Valida se a função não é proibida
+    if (isFunctionForbidden(name)) {
+      throw new Error(`Função ${name} é proibida de ser executada`);
     }
 
-    return enriched;
+    // Valida parâmetros usando security policies
+    for (const [paramName, paramValue] of Object.entries(args)) {
+      const validation = validateParameter(name, paramName, paramValue);
+      if (!validation.valid) {
+        throw new Error(`Parâmetro ${paramName} inválido: ${validation.error}`);
+      }
+    }
+
+    // Executa a função apropriada
+    switch (name) {
+      // ========== NOTAS ==========
+      case "create_note":
+        const newNote = await notesRepository.createNotesQuerie(
+          userId,
+          args.title,
+          args.description || "",
+          args.tags || []
+        );
+
+        if (args.blocks && args.blocks.length > 0) {
+          for (let i = 0; i < args.blocks.length; i++) {
+            const blockData = args.blocks[i];
+            await blocksRepository.createBlock({
+              noteId: newNote.id,
+              userId: userId,
+              type: blockData.type || "paragraph",
+              text: blockData.text || "",
+              position: i,
+              properties: blockData.properties || {},
+            });
+          }
+        }
+        return newNote;
+
+      case "update_note":
+        const updatedNote = await notesRepository.updateNoteById(args.noteId, {
+          title: args.title,
+          description: args.description,
+          tags: args.tags,
+          status: args.status,
+        });
+
+        if (args.blocks && args.blocks.length > 0) {
+          // Remove blocos antigos para substituir pelo novo conteúdo estruturado
+          const oldBlocks = await blocksRepository.getBlocksByNoteId(
+            args.noteId
+          );
+          for (const block of oldBlocks) {
+            await blocksRepository.deleteBlock(block.id);
+          }
+
+          // Cria novos blocos
+          for (let i = 0; i < args.blocks.length; i++) {
+            const blockData = args.blocks[i];
+            await blocksRepository.createBlock({
+              noteId: args.noteId,
+              userId: userId,
+              type: blockData.type || "paragraph",
+              text: blockData.text || "",
+              position: i,
+              properties: blockData.properties || {},
+            });
+          }
+        }
+        return updatedNote;
+
+      case "delete_note":
+        return await notesRepository.deleteNoteById(args.noteId);
+
+      case "get_note":
+        const note = await notesRepository.getNoteById(args.noteId);
+        if (note) {
+          try {
+            const blocks = await blocksRepository.getBlocksByNoteId(
+              args.noteId
+            );
+            note.blocks = blocks;
+          } catch (err) {
+            console.warn(
+              `Erro ao buscar blocos para nota ${args.noteId}:`,
+              err
+            );
+          }
+        }
+        return note;
+
+      case "search_notes":
+        const allNotes = await notesRepository.getAllNotesByUserId(userId);
+        const query = args.query || args.title || "";
+        const limit = args.limit || 10;
+
+        const filteredNotes = allNotes.filter((note) => {
+          const searchLower = query.toLowerCase();
+          const matchText =
+            !query ||
+            note.title.toLowerCase().includes(searchLower) ||
+            (note.description &&
+              note.description.toLowerCase().includes(searchLower));
+
+          const matchTags =
+            !args.tags || args.tags.some((tag) => note.tags?.includes(tag));
+          const matchStatus = !args.status || note.status === args.status;
+
+          return matchText && matchTags && matchStatus;
+        });
+
+        return filteredNotes.slice(0, limit);
+
+      // ========== PROJETOS ==========
+      case "create_project":
+        return await projectsRepository.createProject(
+          userId,
+          args.title,
+          args.description || "",
+          args.status || "open",
+          args.properties || {}
+        );
+
+      case "update_project":
+        return await projectsRepository.updateProject(args.projectId, userId, {
+          title: args.title,
+          description: args.description,
+          status: args.status,
+          properties: args.properties,
+        });
+
+      case "delete_project":
+        return await projectsRepository.deleteProject(args.projectId, userId);
+
+      case "get_project":
+        return await projectsRepository.getProjectByIdWithAccess(
+          args.projectId,
+          userId
+        );
+
+      case "add_note_to_project":
+        return await projectsRepository.addNoteToProject(
+          args.projectId,
+          args.noteId,
+          userId
+        );
+
+      case "remove_note_from_project":
+        return await projectsRepository.removeNoteFromProject(
+          args.projectId,
+          args.noteId,
+          userId
+        );
+
+      // ========== BLOCOS ==========
+      case "create_block":
+        return await blocksRepository.createBlock({
+          noteId: args.noteId,
+          userId: userId,
+          type: args.blockType,
+          text: args.text,
+          position: args.position || 0,
+          properties: args.properties || {},
+        });
+
+      case "update_block":
+        return await blocksRepository.updateBlock(args.blockId, {
+          type: args.blockType,
+          text: args.text,
+          position: args.position,
+          properties: args.properties,
+        });
+
+      case "delete_block":
+        return await blocksRepository.deleteBlock(args.blockId);
+
+      case "get_blocks":
+        return await blocksRepository.getBlocksByNoteId(args.noteId);
+
+      default:
+        throw new Error(`Função ${name} não implementada`);
+    }
   }
 
   /**
@@ -874,7 +878,7 @@ Inclua apenas os campos que devem ser atualizados.`
    */
   async getAvailableModels(req, res) {
     try {
-      const { useCases } = require("@/services/ai-server/ai-config");
+      const { allUseCases } = require("@/services/weave-ai/config/config");
       const geminiAvailable = !!process.env.GEMINI_API_KEY;
       const perplexityAvailable = !!process.env.PERPLEXITY_API_KEY;
 
@@ -883,14 +887,15 @@ Inclua apenas os campos que devem ser atualizados.`
           id: "gemini",
           name: "Gemini Flash 2.0",
           provider: "gemini",
-          description: "Modelo rápido e eficiente para criação de conteúdo e análise",
+          description:
+            "Modelo rápido e eficiente para criação de conteúdo e análise",
           capabilities: [
             "Geração de texto",
             "Análise de conteúdo",
             "Sugestões criativas",
-            "Formatação estruturada"
+            "Formatação estruturada",
           ],
-          useCases: useCases[AI_PROVIDERS.GEMINI] || [],
+          useCases: allUseCases || [],
           isAvailable: geminiAvailable,
         },
         {
@@ -902,16 +907,16 @@ Inclua apenas os campos que devem ser atualizados.`
             "Pesquisa em tempo real",
             "Citação de fontes",
             "Análise de tendências",
-            "Verificação de fatos"
+            "Verificação de fatos",
           ],
-          useCases: useCases[AI_PROVIDERS.PERPLEXITY] || [],
+          useCases: allUseCases || [],
           isAvailable: perplexityAvailable,
         },
       ];
 
       res.json({
         success: true,
-        models: models.filter(m => m.isAvailable),
+        models: models.filter((m) => m.isAvailable),
       });
     } catch (error) {
       console.error("Erro ao listar modelos:", error);
@@ -926,15 +931,26 @@ Inclua apenas os campos que devem ser atualizados.`
    * POST /api/ai/chat
    * Envia mensagem no chat
    */
-  async sendChatMessage(req, res) {
+  /**
+   * POST /api/ai/chat
+   * Chat unificado - pode executar funções ou apenas responder
+   */
+  async chat(req, res) {
     try {
       const userId = req.user?.userId;
-      const { message, model, sessionId, context = {} } = req.body;
+      const {
+        message,
+        allowEdit = false,
+        useCase = "chat",
+        provider: requestedProvider,
+        sessionId,
+        context = {},
+      } = req.body;
 
-      if (!message || !model) {
+      if (!message) {
         return res.status(400).json({
           success: false,
-          error: "Mensagem e modelo são obrigatórios",
+          error: "Mensagem é obrigatória",
         });
       }
 
@@ -947,8 +963,69 @@ Inclua apenas os campos que devem ser atualizados.`
         currentSessionId = session.id;
       }
 
-      // Enriquece contexto com notas e projetos do usuário
-      const enrichedContext = await this._enrichChatContext(userId, context);
+      // Enriquece contexto com notas e projetos do usuário via Context Provider
+      const enrichedContext = await this._enrichContext(userId, useCase, {
+        ...context,
+        sessionId: currentSessionId,
+      });
+
+      // Determina provider (usa preferredProvider se não especificado)
+      const provider = requestedProvider || getProviderForUseCase(useCase);
+
+      // --- PASSO 1: GERAÇÃO DE CONTEÚDO (THINKING PHASE) ---
+      // Delegado para o Reasoning Engine
+      const generatedContent = await reasoningEngine.processThinkingPhase(
+        message,
+        useCase,
+        enrichedContext,
+        provider,
+        allowEdit
+      );
+
+      // --- PASSO 2: EXECUÇÃO (ACTION PHASE) ---
+      // Constrói system message com contexto enriquecido
+      let systemMessage = buildSystemMessage(useCase, enrichedContext);
+      let finalPrompt = message;
+
+      // Se geramos conteúdo, injetamos no prompt final para a IA usar
+      if (generatedContent) {
+        finalPrompt = `${message}\n\n### 🧠 CONTEÚDO GERADO PREVIAMENTE (USE ISTO):\n${generatedContent}\n\n### INSTRUÇÃO DE EXECUÇÃO:\nUse o conteúdo acima para realizar a ação solicitada (criar/editar nota). Preencha os campos de texto/blocos com as informações do conteúdo gerado. NÃO invente novo conteúdo, use o que foi fornecido acima.`;
+      }
+
+      // Se allowEdit=true, prepara funções para o modelo
+      let functions = null;
+      let forceToolUse = false;
+
+      if (allowEdit) {
+        functions = getAllInOpenAIFormat();
+
+        // Detecta se o usuário está pedindo explicitamente para criar/editar/deletar
+        const actionKeywords = {
+          create:
+            /\b(crie|criar|cria|adicione|adicionar|gere|gerar|nova nota|novo projeto)\b/i,
+          update:
+            /\b(edite|editar|atualize|atualizar|modifique|modificar|altere|alterar|mude|mudar)\b/i,
+          delete:
+            /\b(delete|deletar|remova|remover|exclua|excluir|apague|apagar)\b/i,
+        };
+
+        // Se detectar palavras de ação, FORÇA uso de função
+        forceToolUse = Object.values(actionKeywords).some((pattern) =>
+          pattern.test(message)
+        );
+
+        systemMessage +=
+          '\n\n## ⚡ MODO DE EXECUÇÃO ATIVADO\n\n**IMPORTANTE: Você TEM funções disponíveis e DEVE usá-las.**\n\nQuando o usuário pedir:\n- "Crie..." → use create_note ou create_project\n- "Edite..." → use update_note ou update_project\n- "Delete..." → use delete_note ou delete_project\n- "Adicione bloco..." → use create_block\n\n**NUNCA retorne JSON no texto. SEMPRE use as funções.**';
+
+        // Reforço de contexto específico para evitar buscas desnecessárias
+        if (context.noteId) {
+          systemMessage += `\n\n## 🎯 CONTEXTO DE NOTA ATIVO (PRIORIDADE MÁXIMA)\n\nO usuário está visualizando a nota ID: "${context.noteId}".\n\nSE o usuário pedir para editar/alterar/atualizar:\n1. IGNORE qualquer texto que pareça uma busca por título.\n2. USE a função \`update_note\` DIRETAMENTE com \`noteId: "${context.noteId}"\`.\n3. NÃO use \`search_notes\`.`;
+        }
+
+        if (context.projectId) {
+          systemMessage += `\n\n## 🎯 CONTEXTO DE PROJETO ATIVO (PRIORIDADE MÁXIMA)\n\nO usuário está visualizando o projeto ID: "${context.projectId}".\n\nSE o usuário pedir para editar/alterar/atualizar:\n1. USE a função \`update_project\` DIRETAMENTE com \`projectId: "${context.projectId}"\`.\n2. NÃO use buscas.`;
+        }
+      }
 
       // Salva mensagem do usuário
       await chatRepository.saveMessage({
@@ -956,33 +1033,82 @@ Inclua apenas os campos que devem ser atualizados.`
         userId,
         role: "user",
         content: message,
-        model,
-        metadata: context,
+        model: provider,
+        metadata: { ...context, useCase, allowEdit },
       });
 
-      // Determina provider
-      const provider = model === "perplexity" ? AI_PROVIDERS.PERPLEXITY : AI_PROVIDERS.GEMINI;
+      // Chama IA com suporte a function calling (agora com o prompt possivelmente enriquecido)
+      const aiResponse = await callAIProvider(
+        provider,
+        finalPrompt,
+        systemMessage,
+        {
+          allowEdit,
+          functions,
+          forceToolUse,
+        }
+      );
 
-      // Constrói system message com contexto enriquecido
-      const systemMessage = buildSystemMessage("chat", enrichedContext);
+      // Se allowEdit=true e resposta contém função, executar função
+      let executionResult = null;
+      let finalContent = null;
 
-      // Chama IA
-      const aiResponse = await callAIProvider(provider, message, systemMessage);
+      if (allowEdit && aiResponse.type === "function_call") {
+        try {
+          // Executa a função chamada pela IA
+          executionResult = await this._executeFunctionCall(
+            userId,
+            aiResponse.functionCall,
+            context
+          );
+
+          // --- SMART RESPONSE: Re-prompt para gerar resposta natural ---
+          // Delegado para o Reasoning Engine
+          finalContent = await reasoningEngine.generateSmartResponse(
+            message,
+            aiResponse.functionCall,
+            executionResult,
+            provider,
+            systemMessage
+          );
+        } catch (error) {
+          console.error("Erro ao executar função:", error);
+          finalContent = `❌ **Erro ao executar função:** ${error.message}`;
+          executionResult = { error: error.message };
+        }
+      } else if (allowEdit && forceToolUse) {
+        // Se forçamos tool use mas IA retornou texto, é erro
+        finalContent = `❌ **Erro:** A IA deveria ter executado uma função mas retornou apenas texto.\n\nResposta recebida: ${aiResponse.text || aiResponse.content || aiResponse}`;
+        console.warn("IA não usou função mesmo com forceToolUse=true");
+      } else {
+        // Resposta normal de texto
+        finalContent = aiResponse.text || aiResponse.content || aiResponse;
+      }
 
       // Salva resposta da IA
       const assistantMessage = await chatRepository.saveMessage({
         sessionId: currentSessionId,
         userId,
         role: "assistant",
-        content: typeof aiResponse === "string" ? aiResponse : aiResponse.content,
-        model,
-        metadata: aiResponse.citations ? { citations: aiResponse.citations } : {},
+        content: finalContent,
+        model: provider,
+        metadata: {
+          citations: aiResponse.citations || null,
+          executionResult,
+          allowEdit,
+          functionCall:
+            aiResponse.type === "function_call"
+              ? aiResponse.functionCall
+              : null,
+        },
       });
 
       // Atualiza título da sessão se for a primeira mensagem
-      const messageCount = await chatRepository.getSessionMessageCount(currentSessionId);
+      const messageCount =
+        await chatRepository.getSessionMessageCount(currentSessionId);
       if (messageCount === 2) {
-        const title = message.substring(0, 50) + (message.length > 50 ? "..." : "");
+        const title =
+          message.substring(0, 50) + (message.length > 50 ? "..." : "");
         await chatRepository.updateSessionTitle(currentSessionId, title);
       }
 
@@ -990,9 +1116,13 @@ Inclua apenas os campos que devem ser atualizados.`
         success: true,
         message: assistantMessage,
         sessionId: currentSessionId,
+        provider,
+        useCase,
+        allowEdit,
+        executionResult,
       });
     } catch (error) {
-      console.error("Erro ao enviar mensagem:", error);
+      console.error("Erro no chat:", error);
       res.status(500).json({
         success: false,
         error: "Erro ao processar mensagem",
@@ -1013,7 +1143,10 @@ Inclua apenas os campos que devem ser atualizados.`
 
       if (sessionId) {
         // Busca mensagens de uma sessão específica
-        const messages = await chatRepository.getSessionMessages(sessionId, userId);
+        const messages = await chatRepository.getSessionMessages(
+          sessionId,
+          userId
+        );
         return res.json({
           success: true,
           messages,

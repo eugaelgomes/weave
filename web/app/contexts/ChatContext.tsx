@@ -80,6 +80,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           content: data.message,
           timestamp: new Date(),
           model: data.model,
+          metadata: {
+            allowEdit: data.allowEdit,
+            useCase: data.useCase,
+          },
         };
 
         setMessages((prev) => [...prev, userMessage]);
