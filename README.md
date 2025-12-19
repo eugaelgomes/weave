@@ -133,7 +133,7 @@ notes-web-app/
 │   │   ├── app/              # Páginas da aplicação
 │   │   │   ├── home/
 │   │   │   ├── notes/
-│   │   │   ├── community/
+│   │   │   ├── organization/
 │   │   │   └── settings/
 │   │   └── about/            # Página sobre
 │   ├── config/

@@ -41,15 +41,14 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
   const authData = useSafeAuthenticatedData();
   const pathname = usePathname();
 
-  // Estado para controlar quais itens estão expandidos (chaveada pelo path)
+  // Estado de itens expandidos
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
-  // Efeito para abrir automaticamente o menu se o usuário estiver em uma sub-rota ao carregar
+  // Efeito de automático para expandir itens com base na rota atual
   useEffect(() => {
-    // Verifica se algum item pai deve estar expandido com base na URL atual
     const newExpandedState: Record<string, boolean> = {};
 
-    // Lista de itens que possuem subitems (hardcoded ou derivado da lista navigationItems abaixo)
+    // Lista subitens
     const itemsWithSubs = ["/app/weave-ai"];
 
     itemsWithSubs.forEach((parentPath) => {
@@ -66,11 +65,9 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
     if (path === "/app/notes" && pathname.startsWith("/app/notes")) return true;
     if (path === "/app/projects" && pathname.startsWith("/app/projects")) return true;
 
-    // Para itens com submenus, o pai só fica "ativo" visualmente se for a rota exata
-    // ou se quisermos destacar o pai quando o filho está ativo (opcional)
     if (path === "/app/weave-ai" && pathname === "/app/weave-ai") return true;
 
-    if (path === "/app/community" && pathname.startsWith("/app/community")) return true;
+    if (path === "/app/organization" && pathname.startsWith("/app/organization")) return true;
     if (path === "/app/settings" && pathname.startsWith("/app/settings")) return true;
 
     return pathname === path;
@@ -80,10 +77,8 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
     if (onLinkClick) onLinkClick();
   };
 
-  // Função para alternar visibilidade dos subitens
   const toggleExpand = (path: string, e: React.MouseEvent) => {
-    // Se quiser impedir a navegação ao clicar no pai (apenas abrir/fechar), descomente abaixo:
-    // e.preventDefault();
+    e.preventDefault();
 
     setExpandedItems((prev) => ({
       ...prev,
@@ -101,10 +96,10 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
       label: "Weave AI",
       subItems: [
         { path: "/app/weave-ai/chat", icon: FaComments, label: "Chat" },
-        { path: "/app/weave-ai/agent", icon: FaList, label: "Meu Agente" },
+        { path: "/app/weave-ai/agent", icon: FaList, label: "Agente" },
       ],
     },
-    { path: "/app/community", icon: MdPersonAdd, label: "Comunidade" },
+    { path: "/app/organization", icon: MdPersonAdd, label: "Orgnização" },
     { path: "/app/settings", icon: IoMdSettings, label: "Configurações" },
   ];
 
