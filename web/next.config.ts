@@ -2,18 +2,18 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: [
-      "avatars.dicebear.com",
-      "lh3.googleusercontent.com",
-      "avatars.githubusercontent.com",
-      "sfo3.digitaloceanspaces.com",
-      "cwn.sfo3.cdn.digitaloceanspaces.com",
-      "lh3.googleusercontent.com",
-      "cw-notes.sfo3.cdn.digitaloceanspaces.com",
+    unoptimized: true,
+    remotePatterns: [
+      { protocol: "https", hostname: "avatars.dicebear.com" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "avatars.githubusercontent.com" },
+      { protocol: "https", hostname: "sfo3.digitaloceanspaces.com" },
+      { protocol: "https", hostname: "cwn.sfo3.cdn.digitaloceanspaces.com" },
+      { protocol: "https", hostname: "cw-notes.sfo3.cdn.digitaloceanspaces.com" },
     ],
   },
   reactStrictMode: true,
-  /* config options here */
+  trailingSlash: true,
 };
 
 export default nextConfig;

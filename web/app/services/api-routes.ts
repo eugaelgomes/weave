@@ -43,9 +43,10 @@ export const API_ENDPOINTS = {
   PROJECTS_NOTES: (projectId: string) => `/projects/${projectId}/notes`,
 
   // Backup
-  BACKUP_CREATE: "/backup/create",
-  BACKUP_RESTORE: "/backup/restore",
-  BACKUP_DOWNLOAD: "/backup/download",
+  BACKUP_REQUEST: "/backup/request",
+  BACKUP_STATUS: (jobId: string) => `/backup/status/${jobId}`,
+  BACKUP_JOBS: "/backup/jobs",
+  BACKUP_SUMMARY: "/backup/summary",
 
   // Health
   HEALTH: "/health",

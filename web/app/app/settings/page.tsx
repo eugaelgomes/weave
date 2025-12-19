@@ -5,8 +5,9 @@ import Image from "next/image";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { User } from "@/app/services/auth-service/AuthService";
 import {
-  createBackup as createBackupService,
-  downloadBackupFile,
+  requestBackup,
+  getBackupStatus,
+  getBackupSummary,
 } from "@/app/services/backup-service/BackupService";
 import {
   Camera,
@@ -42,6 +43,11 @@ const SettingsPage = () => {
   // Feedback
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  
+  // Feedback de Backup (separado)
+  const [backupMessage, setBackupMessage] = useState("");
+  const [backupError, setBackupError] = useState("");
+  const [backupLoading, setBackupLoading] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -189,11 +195,64 @@ const SettingsPage = () => {
 
   const handleCreateBackup = async () => {
     try {
-      const backupData = await createBackupService();
-      downloadBackupFile(backupData);
-      setSuccessMessage("Backup baixado com sucesso.");
-    } catch (err) {
-      setError("Falha ao gerar backup.");
+      setBackupLoading(true);
+      setBackupError("");
+      setBackupMessage("Solicitando backup...");
+      
+      // Solicitar o backup
+      const response = await requestBackup();
+      const jobId = response.job_id || response.jobId;
+      
+      if (!jobId) {
+        throw new Error("Erro ao iniciar backup");
+      }
+      
+      // Mostrar mensagem do backend e tempo estimado
+      const estimatedTime = response.estimated_time ? ` Tempo estimado: ${response.estimated_time}.` : "";
+      setBackupMessage(
+        `${response.message || "Backup em processamento..."}${estimatedTime}`
+      );
+      
+      // Polling do status do job
+      let attempts = 0;
+      const maxAttempts = 60;
+      
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const job = await getBackupStatus(jobId);
+        
+        // Atualizar progresso se disponível
+        if (job.progress !== undefined) {
+          setBackupMessage(`Processando backup: ${job.progress}%`);
+        }
+        
+        if (job.status === "completed") {
+          const downloadUrl = job.downloadUrl || job.download_url;
+          if (downloadUrl) {
+            window.open(downloadUrl, "_blank");
+            setBackupMessage("Backup concluído. Download iniciado.");
+          } else {
+            setBackupMessage("Backup concluído. Verifique seu email.");
+          }
+          break;
+        } else if (job.status === "failed") {
+          throw new Error(job.error || "Falha ao gerar backup");
+        }
+        
+        attempts++;
+      }
+      
+      if (attempts >= maxAttempts) {
+        setBackupMessage(
+          "O backup está demorando mais que o esperado. Você receberá por email quando estiver pronto."
+        );
+      }
+    } catch (err: any) {
+      setBackupError(err?.message || "Falha ao gerar backup.");
+      console.error(err);
+    } finally {
+      setBackupLoading(false);
     }
   };
 
@@ -435,19 +494,40 @@ const SettingsPage = () => {
 
                 <div className="space-y-4">
                   {/* Item 1: Backup */}
-                  <div className="flex flex-col items-start justify-between gap-4 rounded-lg border border-neutral-800 p-4 sm:flex-row sm:items-center">
-                    <div>
-                      <h4 className="text-sm font-medium text-neutral-200">Exportar Dados</h4>
-                      <p className="mt-1 text-xs text-neutral-500">
-                        Baixe uma cópia de todas as suas notas e informações pessoais.
-                      </p>
+                  <div className="flex flex-col gap-3 rounded-lg border border-neutral-800 p-4">
+                    <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                      <div>
+                        <h4 className="text-sm font-medium text-neutral-200">Exportar Dados</h4>
+                        <p className="mt-1 text-xs text-neutral-500">
+                          Baixe uma cópia de todas as suas notas e informações pessoais.
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleCreateBackup}
+                        disabled={backupLoading}
+                        className="flex shrink-0 items-center gap-2 rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-xs font-medium text-neutral-300 transition-colors hover:border-neutral-700 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {backupLoading ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Download size={14} />
+                        )}
+                        {backupLoading ? "Processando..." : "Fazer Backup"}
+                      </button>
                     </div>
-                    <button
-                      onClick={handleCreateBackup}
-                      className="flex shrink-0 items-center gap-2 rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-xs font-medium text-neutral-300 transition-colors hover:border-neutral-700 hover:text-neutral-100"
-                    >
-                      <Download size={14} /> Fazer Backup
-                    </button>
+                    
+                    {/* Feedback de Backup */}
+                    {(backupMessage || backupError) && (
+                      <div
+                        className={`rounded border px-3 py-2 text-xs ${
+                          backupError
+                            ? "border-red-900/50 bg-red-900/10 text-red-400"
+                            : "border-blue-900/50 bg-blue-900/10 text-blue-400"
+                        }`}
+                      >
+                        {backupError || backupMessage}
+                      </div>
+                    )}
                   </div>
 
                   {/* Item 2: Delete */}
