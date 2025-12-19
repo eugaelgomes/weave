@@ -201,7 +201,7 @@ const SettingsPage = () => {
       
       // Solicitar o backup
       const response = await requestBackup();
-      const jobId = response.job_id || response.jobId;
+      const jobId = response.job_id;
       
       if (!jobId) {
         throw new Error("Erro ao iniciar backup");
