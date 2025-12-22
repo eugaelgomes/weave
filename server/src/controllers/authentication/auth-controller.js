@@ -2,8 +2,17 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const AuthRepository = require("@/repositories/authentication");
+const ALLOWED_ORIGINS = require("@/config/allowed-origins");
 
 const secretKey = process.env.SECRET_KEY;
+
+const ALLOWED_HOSTNAMES = ALLOWED_ORIGINS.map((url) => {
+  try {
+    return new URL(url).hostname;
+  } catch (e) {
+    return null;
+  }
+}).filter(Boolean);
 
 class AuthController {
   async login(req, res) {
@@ -41,7 +50,11 @@ class AuthController {
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Permite cross-origin em produção
         maxAge: 12 * 60 * 60 * 1000,
         path: "/",
-        domain: process.env.NODE_ENV === "production" ? req.hostname : undefined,
+        domain:
+          process.env.NODE_ENV === "production" &&
+          ALLOWED_HOSTNAMES.includes(req.hostname)
+            ? req.hostname
+            : undefined,
       });
 
       const login_time = new Date();
@@ -188,7 +201,11 @@ class AuthController {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
-        domain: process.env.NODE_ENV === "production" ? req.hostname : undefined,
+        domain:
+          process.env.NODE_ENV === "production" &&
+          ALLOWED_HOSTNAMES.includes(req.hostname)
+            ? req.hostname
+            : undefined,
       });
 
       // destruir sessão

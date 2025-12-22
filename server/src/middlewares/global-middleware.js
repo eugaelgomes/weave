@@ -4,16 +4,11 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const { getClientIp } = require("@/middlewares/security/ip-address");
 const { sessionMiddleware } = require("@/middlewares/security/session");
+const ALLOWED_ORIGINS = require("@/config/allowed-origins");
 
 // Domínios
-const WHITELIST = [
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "https://notes.codaweb.com.br",
-  "https://notes.gaelgomes.dev ",
-  "https://weavenotes.app",
-  "https://www.weavenotes.app",
-];
+const WHITELIST = ALLOWED_ORIGINS;
+
 
 /**
  * Escapa caracteres especiais em uma string para uso em expressões regulares.
@@ -54,8 +49,6 @@ function makeCorsOptions() {
 
   return {
     origin(origin, cb) {
-      // Permite requisições sem cabeçalho Origin apenas em desenvolvimento
-      // (ex: Postman, Insomnia ou chamadas server-to-server)
       if (!origin) {
         if (isDev) {
           return cb(null, true);
@@ -70,7 +63,6 @@ function makeCorsOptions() {
         return cb(null, true);
       }
 
-      // Log útil para debug quando der erro de CORS
       console.warn(`[CORS Blocked] Origem tentada: ${origin}`);
       return cb(new Error("Origem não permitida pela política CORS."));
     },
@@ -99,7 +91,6 @@ function configureGlobalMiddlewares(app) {
   app.set("trust proxy", 1);
   app.use(getClientIp);
 
-  // Removida a lógica de parseAllowedOrigins, usa direto a função ajustada
   app.use(cors(makeCorsOptions()));
 
   app.use(
