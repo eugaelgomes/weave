@@ -1,16 +1,7 @@
 import { API_CONFIG } from "./api-routes";
+import { ApiError } from "./api-error";
 
-export class ApiError extends Error {
-  status: number;
-  data?: unknown;
-
-  constructor(message: string, status: number, data?: unknown) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-    this.data = data;
-  }
-}
+export { ApiError };
 
 class ApiClient {
   private baseURL: string;

@@ -6,13 +6,11 @@ import Image from "next/image";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { IoPersonCircleSharp } from "react-icons/io5";
-import { RxMix } from "react-icons/rx";
 import { ThemeToggle } from "@/app/components/ui/theme-toggle";
 
 const getDisplayName = (user: any) => {
   const name = user?.name || "Usuário";
   const parts = name.trim().split(" ");
-  // Retorna primeiro e último nome
   return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : parts[0];
 };
 
@@ -29,7 +27,6 @@ const UserAvatar = ({ user, size = "sm" }: { user: any; size?: "sm" | "md" | "lg
     lg: "h-16 w-16",
   };
 
-  // Ajuste: Borda do avatar mais sutil, usando a cor de fundo do navbar no dark
   const wrapperClass = `${sizeClasses[size]} overflow-hidden rounded-md border-2 border-neutral-200 dark:border-neutral-700 flex-shrink-0`;
 
   if (user?.avatar_url && typeof user.avatar_url === "string") {
@@ -46,7 +43,6 @@ const UserAvatar = ({ user, size = "sm" }: { user: any; size?: "sm" | "md" | "lg
     );
   }
 
-  // Ajuste: Cor do ícone
   return (
     <IoPersonCircleSharp
       className={`${sizeClasses[size]} text-neutral-400 transition-colors group-hover:text-yellow-500 dark:text-neutral-500`}
@@ -65,7 +61,6 @@ const MenuContent = ({
 }) => (
   <>
     {/* Header */}
-    {/* Ajuste: Fundo e borda mais limpos no light, e bom contraste no dark */}
     <div className="flex items-center gap-4 border-b border-neutral-100/50 bg-neutral-50/50 px-6 py-4 dark:border-neutral-800/50 dark:bg-neutral-900/50">
       <UserAvatar user={user} size="md" />
       <div className="min-w-0 flex-1">
@@ -81,7 +76,6 @@ const MenuContent = ({
       <Link
         href="/app/settings"
         onClick={onClose}
-        // Ajuste: Cor e hover padronizados
         className="block rounded-md px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
       >
         Configurações
@@ -98,7 +92,6 @@ const MenuContent = ({
           logout();
           onClose();
         }}
-        // Ajuste: Sair com hover vermelho mais contido (500/10)
         className="block w-full rounded-md px-4 py-2.5 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-500/10 dark:text-red-400 dark:hover:text-red-300"
       >
         Sair
@@ -126,17 +119,15 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
   }, []);
 
   return (
-    // Ajuste: Cores de fundo Light/Dark mais consistentes
     <nav className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white/90 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/90">
-      <div className="mx-auto px-4 sm:px-6 lg:pr-8">
-        <div className="flex h-14 items-center justify-between sm:h-16">
+      <div className="mx-auto px-4 sm:px-6 lg:pr-8 lg:pl-4">
+        <div className="flex h-14 items-center justify-between sm:h-14">
           {/* Logo ou Menu */}
           <div className="flex items-center gap-4">
             {authenticated && (
               <button
                 title="toggle_icon"
                 onClick={onToggleSidebar}
-                // Ajuste: Cores para o botão de menu mobile
                 className="rounded-md p-2 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 lg:hidden dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
               >
                 <FaBars className="h-5 w-5" />
@@ -147,23 +138,17 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               href={authenticated ? "/app/home" : "/"}
               className="group flex items-center gap-3"
             >
-              {/* Logo */}
-              <div className="text-yellow-500 transition-transform duration-500 group-hover:rotate-180">
-                <RxMix className="h-8 w-8" />
-              </div>
-
-              {/* Divisor vertical */}
-              {/* Ajuste: Cor do divisor Light/Dark */}
+              <span className="rounded-md bg-yellow-500/20 px-2 text-lg font-semibold tracking-tight text-neutral-900 dark:bg-yellow-500/40 dark:text-neutral-100">
+                Weave
+              </span>
               <div className="h-5 w-px bg-neutral-300 dark:bg-neutral-700"></div>
-
-              {/* Ajuste: Cor do nome do app */}
-              <span className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-                Weave Notes
+              <span className="text-sm text-neutral-900 dark:text-neutral-100">
+                {"Pedrosa Calçados"}
               </span>
             </Link>
           </div>
 
-          {/* Exibição dos dados e botões*/}
+          {/* Dados e botões*/}
           <div className="flex items-center gap-3">
             {authenticated && user ? (
               <>
@@ -172,16 +157,14 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                   {/* Trigger Button */}
                   <button
                     onClick={() => setMenuOpen(!isMenuOpen)}
-                    // Ajuste: Remoção de hover/focus complexos no botão para focar no conteúdo e avatar
                     className="group flex items-center justify-end gap-3 rounded-md pl-2 transition-all"
                   >
                     <div className="hidden flex-col items-end md:flex">
-                      {/* Ajuste: Cores do nome e username */}
                       <span className="text-sm font-medium text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-200 dark:group-hover:text-yellow-500">
                         {getDisplayName(user)}
                       </span>
                       <span className="text-xs text-neutral-500 dark:text-neutral-500">
-                        @{getUserUsername(user)}
+                        {getUserUsername(user)}
                       </span>
                     </div>
 
@@ -235,7 +218,6 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
             ) : (
               <Link
                 href="/auth/signin"
-                // Ajuste: Botão de entrada com tema sólido de destaque
                 className="rounded-md bg-yellow-500 px-4 py-2 text-sm font-semibold text-neutral-950 transition-colors hover:bg-yellow-600 dark:bg-yellow-500 dark:text-neutral-950 dark:hover:bg-yellow-400"
               >
                 Entrar

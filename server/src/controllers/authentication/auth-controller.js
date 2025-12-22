@@ -227,6 +227,7 @@ class AuthController {
         email: user.email,
         username: user.username,
         avatar_url: user.avatar_url || null,
+        theme_mode: user.theme_mode || "light",
         createdAt: user.created_at,
         updatedAt: user.updated_at,
       });
@@ -237,14 +238,21 @@ class AuthController {
   }
 
   async updateProfile(req, res) {
-    const { name, username, email, currentPassword, newPassword } = req.body;
+    const { name, username, email, currentPassword, newPassword, theme_mode } = req.body;
     try {
+      // Buscar usuário atual para garantir que não sobrescrevemos com null/undefined
+      const currentUser = await AuthRepository.findUserByUsername(req.user.username);
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
       // 1) Atualiza dados básicos
       const updatedUser = await AuthRepository.updateUserProfile(
         req.user.userId,
-        name,
-        email,
-        username
+        name || currentUser.name,
+        email || currentUser.email,
+        username || currentUser.username,
+        theme_mode || currentUser.theme_mode || "light"
       );
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });

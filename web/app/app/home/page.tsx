@@ -9,7 +9,8 @@ import { checkHealth, type HealthStatus } from "../../services";
 import { getTagColor } from "@/app/utils/tag-colors";
 import NotesCarousel from "../../components/ui/notes-carousel";
 import ProjectsCarousel from "../../components/ui/project-carousel";
-import { FileText, Tag } from "lucide-react";
+import { FileText, Tag, Activity } from "lucide-react";
+import { FaProjectDiagram } from "react-icons/fa";
 
 // Tamanhos de fonte do menor para o maior
 const FONT_SIZES = [
@@ -25,7 +26,7 @@ const FONT_SIZES = [
 export default function HomePage() {
   const { authenticated, loading, user } = useAuth();
   const { getNotesStats, getRecentNotes } = useNotes();
-  const { getRecentProjects } = useProjects();
+  const { getRecentProjects, getProjectsStats } = useProjects();
   const [showMetrics, setShowMetrics] = useState(false);
   const [showTags, setShowTags] = useState(false);
   const [healthStatus, setHealthStatus] = React.useState<HealthStatus | null>(null);
@@ -66,6 +67,7 @@ export default function HomePage() {
   });
 
   const stats = getNotesStats();
+  const projectsStats = getProjectsStats();
   const recentNotes = getRecentNotes();
   const recentProjects = getRecentProjects();
   const userName = String(user?.name || user?.username || "usuário");
@@ -183,10 +185,41 @@ export default function HomePage() {
                     {String(stats?.totalTags ?? 0).padStart(2, "0")}
                   </span>
                 </div>
+                {/* Total Projetos */}
+                {projectsStats && projectsStats.totalProjects > 0 && (
+                  <div className="group flex items-center justify-between gap-2 px-3 py-2.5 transition-colors hover:bg-neutral-100 sm:gap-3 sm:py-3 dark:hover:bg-neutral-800">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-purple-400/20 bg-purple-400/10 text-purple-400">
+                        <FaProjectDiagram className="h-3.5 w-3.5" />
+                      </div>
+                      <span className="text-[11px] font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
+                        Total de Projetos
+                      </span>
+                    </div>
+                    <span className="font-mono text-sm font-bold text-purple-400">
+                      {String(projectsStats.totalProjects).padStart(2, "0")}
+                    </span>
+                  </div>
+                )}
+                {/* Projetos Ativos */}
+                {projectsStats && projectsStats.totalProjects > 0 && (
+                  <div className="group flex items-center justify-between gap-2 px-3 py-2.5 transition-colors hover:bg-neutral-100 sm:gap-3 sm:py-3 dark:hover:bg-neutral-800">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-emerald-400/20 bg-emerald-400/10 text-emerald-400">
+                        <Activity className="h-3.5 w-3.5" />
+                      </div>
+                      <span className="text-[11px] font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
+                        Projetos Ativos
+                      </span>
+                    </div>
+                    <span className="font-mono text-sm font-bold text-emerald-400">
+                      {String(projectsStats.activeProjects).padStart(2, "0")}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-
           {/* === CARD 2 — NUVEM DE PALAVRAS === */}
           <div className="flex flex-col rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
             <button
@@ -213,7 +246,8 @@ export default function HomePage() {
                         key={i}
                         href={`/app/notes?tag=${tagInfo.tag}`}
                         title={`${tagInfo.count} notas`}
-                        className={` ${tagInfo.sizeClass} ${tagInfo.colorClass} ${tagInfo.weightClass} group cursor-pointer font-sans transition-all duration-300 hover:scale-110 hover:brightness-125`}
+                        // ALTERAÇÃO AQUI: Adicionado dark:brightness-125 e dark:saturate-150
+                        className={` ${tagInfo.sizeClass} ${tagInfo.colorClass} ${tagInfo.weightClass} group cursor-pointer font-sans transition-all duration-300 hover:scale-110 hover:brightness-125 dark:brightness-125 dark:saturate-150`}
                       >
                         {tagInfo.tag}
                         {/* O count agora é relativo (em), alinhado ao topo e muda de cor no hover */}

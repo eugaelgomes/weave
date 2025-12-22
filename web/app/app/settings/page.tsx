@@ -43,7 +43,7 @@ const SettingsPage = () => {
   // Feedback
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  
+
   // Feedback de Backup (separado)
   const [backupMessage, setBackupMessage] = useState("");
   const [backupError, setBackupError] = useState("");
@@ -198,35 +198,35 @@ const SettingsPage = () => {
       setBackupLoading(true);
       setBackupError("");
       setBackupMessage("Solicitando backup...");
-      
+
       // Solicitar o backup
       const response = await requestBackup();
       const jobId = response.job_id;
-      
+
       if (!jobId) {
         throw new Error("Erro ao iniciar backup");
       }
-      
+
       // Mostrar mensagem do backend e tempo estimado
-      const estimatedTime = response.estimated_time ? ` Tempo estimado: ${response.estimated_time}.` : "";
-      setBackupMessage(
-        `${response.message || "Backup em processamento..."}${estimatedTime}`
-      );
-      
+      const estimatedTime = response.estimated_time
+        ? ` Tempo estimado: ${response.estimated_time}.`
+        : "";
+      setBackupMessage(`${response.message || "Backup em processamento..."}${estimatedTime}`);
+
       // Polling do status do job
       let attempts = 0;
       const maxAttempts = 60;
-      
+
       while (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
         const job = await getBackupStatus(jobId);
-        
+
         // Atualizar progresso se disponível
         if (job.progress !== undefined) {
           setBackupMessage(`Processando backup: ${job.progress}%`);
         }
-        
+
         if (job.status === "completed") {
           const downloadUrl = job.downloadUrl || job.download_url;
           if (downloadUrl) {
@@ -239,10 +239,10 @@ const SettingsPage = () => {
         } else if (job.status === "failed") {
           throw new Error(job.error || "Falha ao gerar backup");
         }
-        
+
         attempts++;
       }
-      
+
       if (attempts >= maxAttempts) {
         setBackupMessage(
           "O backup está demorando mais que o esperado. Você receberá por email quando estiver pronto."
@@ -515,7 +515,7 @@ const SettingsPage = () => {
                         {backupLoading ? "Processando..." : "Fazer Backup"}
                       </button>
                     </div>
-                    
+
                     {/* Feedback de Backup */}
                     {(backupMessage || backupError) && (
                       <div

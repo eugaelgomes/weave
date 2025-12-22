@@ -3,7 +3,7 @@ const { executeQuery } = require("@/services/db/db-connection");
 class AuthRepository {
   async findUserByUsername(username) {
     const query = `
-      SELECT user_id, username, name, email, password, avatar_url, auth_with_google, created_at, updated_at
+      SELECT user_id, username, name, email, password, avatar_url, auth_with_google, theme_mode, created_at, updated_at
       FROM users
       WHERE (username = $1 OR email = $1) AND deleted = false
       LIMIT 1
@@ -12,14 +12,14 @@ class AuthRepository {
     return results[0];
   }
 
-  async updateUserProfile(userId, name, email, username) {
+  async updateUserProfile(userId, name, email, username, theme_mode) {
     const query = `
       UPDATE users
-      SET name = $1, email = $2, username = $3
-      WHERE user_id = $4 AND deleted = false
-      RETURNING user_id, username, name, email, avatar_url, created_at
+      SET name = $1, email = $2, username = $3, theme_mode = $4
+      WHERE user_id = $5 AND deleted = false
+      RETURNING user_id, username, name, email, avatar_url, theme_mode, created_at
     `;
-    const results = await executeQuery(query, [name, email, username, userId]);
+    const results = await executeQuery(query, [name, email, username, theme_mode, userId]);
     return results[0];
   }
 
