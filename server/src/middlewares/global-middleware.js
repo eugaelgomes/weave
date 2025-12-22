@@ -12,6 +12,7 @@ const WHITELIST = [
   "https://notes.codaweb.com.br",
   "https://notes.gaelgomes.dev ",
   "https://weavenotes.app",
+  "https://www.weavenotes.app",
 ];
 
 /**
