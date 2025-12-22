@@ -70,6 +70,7 @@ class AuthController {
         maxAge: 12 * 60 * 60 * 1000,
         path: "/",
         domain: domain,
+        domain: domain,
       });
 
       const login_time = new Date();
@@ -222,6 +223,7 @@ class AuthController {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
+        domain: domain,
         domain: domain,
       });
 
