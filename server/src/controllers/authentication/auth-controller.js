@@ -43,6 +43,16 @@ class AuthController {
         expiresIn: "12h",
       });
 
+      const domain =
+        process.env.NODE_ENV === "production" &&
+        ALLOWED_HOSTNAMES.includes(req.hostname)
+          ? req.hostname
+          : undefined;
+
+      console.log(
+        `[Login] Setting cookie domain: ${domain} (Request hostname: ${req.hostname})`
+      );
+
       // Envia token como HttpOnly cookie
       res.cookie("token", token, {
         httpOnly: true, // não acessível via JS
@@ -50,11 +60,7 @@ class AuthController {
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Permite cross-origin em produção
         maxAge: 12 * 60 * 60 * 1000,
         path: "/",
-        domain:
-          process.env.NODE_ENV === "production" &&
-          ALLOWED_HOSTNAMES.includes(req.hostname)
-            ? req.hostname
-            : undefined,
+        domain: domain,
       });
 
       const login_time = new Date();
@@ -195,17 +201,23 @@ class AuthController {
 
   async logout(req, res) {
     try {
+      const domain =
+        process.env.NODE_ENV === "production" &&
+        ALLOWED_HOSTNAMES.includes(req.hostname)
+          ? req.hostname
+          : undefined;
+
+      console.log(
+        `[Logout] Clearing cookie domain: ${domain} (Request hostname: ${req.hostname})`
+      );
+
       // Remove cookie do token
       res.clearCookie("token", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
-        domain:
-          process.env.NODE_ENV === "production" &&
-          ALLOWED_HOSTNAMES.includes(req.hostname)
-            ? req.hostname
-            : undefined,
+        domain: domain,
       });
 
       // destruir sessão
