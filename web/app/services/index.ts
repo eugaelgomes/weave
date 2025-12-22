@@ -52,6 +52,25 @@ export {
   type ManageNoteData,
 } from "./projects-service/ProjectsService";
 
+// Organization Services
+export {
+  fetchOrganization,
+  createOrganization,
+  updateOrganization,
+  updateOrganizationProperties,
+  deleteOrganization,
+  restoreOrganization,
+  addMember,
+  removeMember,
+  type Organization,
+  type OrganizationProperties,
+  type OrganizationMembers,
+  type OrganizationProjects,
+  type CreateOrganizationData,
+  type UpdateOrganizationData,
+  type AddMemberData,
+} from "./organization-service/OrganizationService";
+
 // Backup Services
 export * from "./backup-service/BackupService";
 

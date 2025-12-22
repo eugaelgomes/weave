@@ -50,6 +50,13 @@ export const API_ENDPOINTS = {
   // Health
   HEALTH: "/health",
 
+  // Organizations
+  ORGANIZATIONS: "/organizations",
+  ORGANIZATIONS_PROPERTIES: "/organizations/properties",
+  ORGANIZATIONS_RESTORE: "/organizations/restore",
+  ORGANIZATIONS_MEMBERS: "/organizations/members",
+  ORGANIZATIONS_MEMBER: (memberId: string) => `/organizations/members/${memberId}`,
+
   // AI
   AI_MODELS: "/ai/models",
   AI_CHAT: "/ai/chat",
