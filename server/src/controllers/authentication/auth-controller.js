@@ -14,6 +14,19 @@ const ALLOWED_HOSTNAMES = ALLOWED_ORIGINS.map((url) => {
   }
 }).filter(Boolean);
 
+const getCookieDomain = (hostname) => {
+  if (process.env.NODE_ENV !== "production") return undefined;
+
+  if (ALLOWED_HOSTNAMES.includes(hostname)) {
+    if (hostname.endsWith("weavenotes.app")) return "weavenotes.app";
+    if (hostname.endsWith("codaweb.com.br")) return "codaweb.com.br";
+    if (hostname.endsWith("gaelgomes.dev")) return "gaelgomes.dev";
+    return hostname;
+  }
+
+  return undefined;
+};
+
 class AuthController {
   async login(req, res) {
     const { username, password } = req.body;
@@ -43,6 +56,12 @@ class AuthController {
         expiresIn: "12h",
       });
 
+      const domain = getCookieDomain(req.hostname);
+
+      console.log(
+        `[Login] Setting cookie domain: ${domain} (Request hostname: ${req.hostname})`
+      );
+
       // Envia token como HttpOnly cookie
       res.cookie("token", token, {
         httpOnly: true, // não acessível via JS
@@ -50,11 +69,7 @@ class AuthController {
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Permite cross-origin em produção
         maxAge: 12 * 60 * 60 * 1000,
         path: "/",
-        domain:
-          process.env.NODE_ENV === "production" &&
-          ALLOWED_HOSTNAMES.includes(req.hostname)
-            ? req.hostname
-            : undefined,
+        domain: domain,
       });
 
       const login_time = new Date();
@@ -195,17 +210,19 @@ class AuthController {
 
   async logout(req, res) {
     try {
+      const domain =
+        process.env.NODE_ENV === "production" &&
+        ALLOWED_HOSTNAMES.includes(req.hostname)
+          ? req.hostname
+          : undefine getCookieDomain(req.hostname)
+
       // Remove cookie do token
       res.clearCookie("token", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
-        domain:
-          process.env.NODE_ENV === "production" &&
-          ALLOWED_HOSTNAMES.includes(req.hostname)
-            ? req.hostname
-            : undefined,
+        domain: domain,
       });
 
       // destruir sessão
