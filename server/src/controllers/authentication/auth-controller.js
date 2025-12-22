@@ -41,10 +41,7 @@ class AuthController {
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Permite cross-origin em produção
         maxAge: 12 * 60 * 60 * 1000,
         path: "/",
-        domain:
-          process.env.NODE_ENV === "production" && process.env.COOKIE_DOMAIN
-            ? process.env.COOKIE_DOMAIN
-            : undefined,
+        domain: process.env.NODE_ENV === "production" ? req.hostname : undefined,
       });
 
       const login_time = new Date();
@@ -191,10 +188,7 @@ class AuthController {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
-        domain:
-          process.env.NODE_ENV === "production" && process.env.COOKIE_DOMAIN
-            ? process.env.COOKIE_DOMAIN
-            : undefined,
+        domain: process.env.NODE_ENV === "production" ? req.hostname : undefined,
       });
 
       // destruir sessão
