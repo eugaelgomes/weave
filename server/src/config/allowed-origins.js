@@ -5,6 +5,8 @@ const ALLOWED_ORIGINS = [
   "https://notes.gaelgomes.dev",
   "https://weavenotes.app",
   "https://www.weavenotes.app",
+  "weavenotes.app",
+  "www.weavenotes.app",
 ];
 
 module.exports = ALLOWED_ORIGINS;
