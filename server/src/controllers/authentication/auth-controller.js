@@ -2,8 +2,30 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const AuthRepository = require("@/repositories/authentication");
+const ALLOWED_ORIGINS = require("@/config/allowed-origins");
 
 const secretKey = process.env.SECRET_KEY;
+
+const ALLOWED_HOSTNAMES = ALLOWED_ORIGINS.map((url) => {
+  try {
+    return new URL(url).hostname;
+  } catch (e) {
+    return null;
+  }
+}).filter(Boolean);
+
+const getCookieDomain = (hostname) => {
+  if (process.env.NODE_ENV !== "production") return undefined;
+
+  if (ALLOWED_HOSTNAMES.includes(hostname)) {
+    if (hostname.endsWith("weavenotes.app")) return "weavenotes.app";
+    if (hostname.endsWith("codaweb.com.br")) return "codaweb.com.br";
+    if (hostname.endsWith("gaelgomes.dev")) return "gaelgomes.dev";
+    return hostname;
+  }
+
+  return undefined;
+};
 
 class AuthController {
   async login(req, res) {
@@ -15,11 +37,12 @@ class AuthController {
     }
 
     try {
+      // username pode ser o username ou o email
       const user = await AuthRepository.findUserByUsername(username);
 
       // Compara senha e usuário se existe/confere
       if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({ message: "Usuário ou senha inválidos" });
+        return res.status(401).json({ message: "Usuário/e-mail ou senha inválidos" });
       }
 
       const payload = {
@@ -27,12 +50,21 @@ class AuthController {
         username: user.username,
         email: user.email,
         name: user.name,
+        org_id: user.org_id,
+        org_unique_name: user.org_unique_name,
+        org_name: user.org_name,
       };
 
       const token = jwt.sign(payload, secretKey, {
         algorithm: "HS256",
         expiresIn: "12h",
       });
+
+      const domain = getCookieDomain(req.hostname);
+
+      console.log(
+        `[Login] Setting cookie domain: ${domain} (Request hostname: ${req.hostname})`
+      );
 
       // Envia token como HttpOnly cookie
       res.cookie("token", token, {
@@ -41,10 +73,7 @@ class AuthController {
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Permite cross-origin em produção
         maxAge: 12 * 60 * 60 * 1000,
         path: "/",
-        domain:
-          process.env.NODE_ENV === "production" && process.env.COOKIE_DOMAIN
-            ? process.env.COOKIE_DOMAIN
-            : undefined,
+        domain: domain,
       });
 
       const login_time = new Date();
@@ -59,6 +88,9 @@ class AuthController {
             email: user.email,
             name: user.name,
             avatar_url: user.avatar_url,
+            org_id: user.org_id,
+            org_unique_name: user.org_unique_name,
+            org_name: user.org_name,
           },
           token: token,
         },
@@ -185,16 +217,19 @@ class AuthController {
 
   async logout(req, res) {
     try {
+      const domain = getCookieDomain(req.hostname);
+
+      console.log(
+        `[Logout] Clearing cookie domain: ${domain} (Request hostname: ${req.hostname})`
+      );
+
       // Remove cookie do token
       res.clearCookie("token", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
-        domain:
-          process.env.NODE_ENV === "production" && process.env.COOKIE_DOMAIN
-            ? process.env.COOKIE_DOMAIN
-            : undefined,
+        domain: domain,
       });
 
       // destruir sessão
@@ -226,7 +261,11 @@ class AuthController {
         name: user.name,
         email: user.email,
         username: user.username,
+        org_id: user.org_id || null,
+        org_unique_name: user.org_unique_name || null,
+        org_name: user.org_name || null,
         avatar_url: user.avatar_url || null,
+        theme_mode: user.theme_mode || "light",
         createdAt: user.created_at,
         updatedAt: user.updated_at,
       });
@@ -237,14 +276,21 @@ class AuthController {
   }
 
   async updateProfile(req, res) {
-    const { name, username, email, currentPassword, newPassword } = req.body;
+    const { name, username, email, currentPassword, newPassword, theme_mode } = req.body;
     try {
+      // Buscar usuário atual para garantir que não sobrescrevemos com null/undefined
+      const currentUser = await AuthRepository.findUserByUsername(req.user.username);
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
       // 1) Atualiza dados básicos
       const updatedUser = await AuthRepository.updateUserProfile(
         req.user.userId,
-        name,
-        email,
-        username
+        name || currentUser.name,
+        email || currentUser.email,
+        username || currentUser.username,
+        theme_mode || currentUser.theme_mode || "light"
       );
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });

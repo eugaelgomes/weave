@@ -12,6 +12,8 @@ export interface User {
   role?: string;
   role_name?: string;
   theme_mode?: "light" | "dark";
+  org_id?: string;
+  org_unique_name?: string;
   [key: string]: unknown;
 }
 
@@ -122,6 +124,9 @@ export const updateUserData = async (userData: Partial<User>): Promise<User> => 
     username: data.username,
     avatar_url: data.avatar_url,
     role: data.role_name,
+    theme_mode: data.theme_mode,
+    org_id: data.org_id,
+    org_unique_name: data.org_unique_name,
   };
 };
 

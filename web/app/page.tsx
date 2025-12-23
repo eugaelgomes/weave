@@ -1,17 +1,21 @@
 "use client";
 import { useAuth } from "./contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import SignIn from "./auth/signin/page";
 
 export default function Home() {
   const { authenticated } = useAuth();
+  const router = useRouter();
 
-  // Show login if not authenticated, otherwise redirect to home
+  useEffect(() => {
+    if (authenticated) {
+      router.push("/app/home");
+    }
+  }, [authenticated, router]);
+
+  // Login se não autenticado
   if (!authenticated) return <SignIn />;
-
-  // If authenticated, redirect to home page
-  if (typeof window !== "undefined") {
-    window.location.href = "/app/home";
-  }
 
   return null;
 }

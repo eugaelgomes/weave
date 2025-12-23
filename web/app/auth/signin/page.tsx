@@ -57,7 +57,7 @@ export default function SignIn() {
       } else {
         let message = result.message || "Falha no login";
         if (message.includes("Usuário ou senha inválidos")) {
-          message = "Usuário ou senha incorretos. Verifique seus dados e tente novamente.";
+          message = "Usuário/e-mail ou senha incorretos. Verifique seus dados e tente novamente.";
         }
         setErro(message);
       }
@@ -185,17 +185,17 @@ export default function SignIn() {
                 htmlFor="username"
                 className="mb-1 block text-sm font-semibold text-yellow-500"
               >
-                Usuário
+                Usuário ou e-mail
               </label>
               <input
                 id="username"
                 name="username"
                 type="text"
-                placeholder="Seu usuário"
+                placeholder="Digite seu usuário ou e-mail"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={submitting}
-                autoComplete="username"
+                autoComplete="username email"
                 className="block w-full rounded-md border border-neutral-600 bg-neutral-900 px-2 py-2 text-sm text-gray-300 shadow-sm transition-all duration-200 placeholder:text-gray-500 hover:border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
               />
             </div>
