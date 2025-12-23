@@ -70,7 +70,6 @@ class AuthController {
         maxAge: 12 * 60 * 60 * 1000,
         path: "/",
         domain: domain,
-        domain: domain,
       });
 
       const login_time = new Date();
@@ -211,11 +210,11 @@ class AuthController {
 
   async logout(req, res) {
     try {
-      const domain =
-        process.env.NODE_ENV === "production" &&
-        ALLOWED_HOSTNAMES.includes(req.hostname)
-          ? req.hostname
-          : undefine getCookieDomain(req.hostname)
+      const domain = getCookieDomain(req.hostname);
+
+      console.log(
+        `[Logout] Clearing cookie domain: ${domain} (Request hostname: ${req.hostname})`
+      );
 
       // Remove cookie do token
       res.clearCookie("token", {
@@ -223,7 +222,6 @@ class AuthController {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
-        domain: domain,
         domain: domain,
       });
 
