@@ -4,10 +4,10 @@ import { apiClient, handleResponse } from "../api-methods";
 
 // Tipos
 export interface User {
-  id: string;
-  username: string;
-  name: string;
-  email: string;
+  id?: string;
+  username?: string;
+  name?: string;
+  email?: string;
   avatar_url?: string;
   role?: string;
   role_name?: string;
