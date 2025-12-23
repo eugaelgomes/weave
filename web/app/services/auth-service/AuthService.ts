@@ -125,6 +125,8 @@ export const updateUserData = async (userData: Partial<User>): Promise<User> => 
     avatar_url: data.avatar_url,
     role: data.role_name,
     theme_mode: data.theme_mode,
+    org_id: data.org_id,
+    org_unique_name: data.org_unique_name,
   };
 };
 
