@@ -37,11 +37,12 @@ class AuthController {
     }
 
     try {
+      // username pode ser o username ou o email
       const user = await AuthRepository.findUserByUsername(username);
 
       // Compara senha e usuário se existe/confere
       if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({ message: "Usuário ou senha inválidos" });
+        return res.status(401).json({ message: "Usuário/e-mail ou senha inválidos" });
       }
 
       const payload = {
@@ -49,6 +50,9 @@ class AuthController {
         username: user.username,
         email: user.email,
         name: user.name,
+        org_id: user.org_id,
+        org_unique_name: user.org_unique_name,
+        org_name: user.org_name,
       };
 
       const token = jwt.sign(payload, secretKey, {
@@ -84,6 +88,9 @@ class AuthController {
             email: user.email,
             name: user.name,
             avatar_url: user.avatar_url,
+            org_id: user.org_id,
+            org_unique_name: user.org_unique_name,
+            org_name: user.org_name,
           },
           token: token,
         },

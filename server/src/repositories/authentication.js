@@ -3,10 +3,28 @@ const { executeQuery } = require("@/services/db/db-connection");
 class AuthRepository {
   async findUserByUsername(username) {
     const query = `
-      SELECT user_id, username, name, email, password, avatar_url, auth_with_google, theme_mode, created_at, updated_at
-      FROM users
-      WHERE (username = $1 OR email = $1) AND deleted = false
-      LIMIT 1
+    SELECT
+      u.user_id,
+      u.username,
+      u.name,
+      u.email,
+      u.password,
+      u.avatar_url,
+      u.auth_with_google,
+      u.theme_mode,
+      u.created_at,
+      u.updated_at,
+      o.id AS org_id,
+      o.unique_name AS org_unique_name,
+      o.org_name AS org_name
+    FROM users u
+    LEFT JOIN organizations o ON o.id = u.org_id
+    WHERE (
+        (u.username IS NOT NULL AND u.username = $1)
+     OR (u.email IS NOT NULL AND u.email = $1)
+    )
+    AND u.deleted = false
+    LIMIT 1;
     `;
     const results = await executeQuery(query, [username]);
     return results[0];
@@ -19,7 +37,13 @@ class AuthRepository {
       WHERE user_id = $5 AND deleted = false
       RETURNING user_id, username, name, email, avatar_url, theme_mode, created_at
     `;
-    const results = await executeQuery(query, [name, email, username, theme_mode, userId]);
+    const results = await executeQuery(query, [
+      name,
+      email,
+      username,
+      theme_mode,
+      userId,
+    ]);
     return results[0];
   }
 

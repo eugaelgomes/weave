@@ -141,10 +141,14 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               <span className="rounded-md bg-yellow-500/20 px-2 text-lg font-semibold tracking-tight text-neutral-900 dark:bg-yellow-500/40 dark:text-neutral-100">
                 Weave
               </span>
-              <div className="h-5 w-px bg-neutral-300 dark:bg-neutral-700"></div>
-              <span className="text-sm text-neutral-900 dark:text-neutral-100">
-                {"Pedrosa Calçados"}
-              </span>
+              {user?.org_unique_name && (
+                <>
+                  <div className="h-5 w-px bg-neutral-300 dark:bg-neutral-700"></div>
+                  <span className="text-sm text-neutral-900 dark:text-neutral-100">
+                    {user.org_unique_name}
+                  </span>
+                </>
+              )}
             </Link>
           </div>
 
