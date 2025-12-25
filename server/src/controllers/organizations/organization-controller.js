@@ -6,6 +6,7 @@ const {
   normalizeOrganizationProperties,
   updateOrganizationProperties,
   getDefaultOrganizationProperties,
+  validRoles,
 } = require("./normalizer");
 
 class OrganizationsController {
@@ -371,7 +372,6 @@ class OrganizationsController {
         return res.status(400).json({ success: false, error: "memberId é obrigatório" });
       }
 
-      const validRoles = ["admin", "member", "guest"];
       if (!validRoles.includes(role)) {
         return res.status(400).json({
           success: false,

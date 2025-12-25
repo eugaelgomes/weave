@@ -6,7 +6,7 @@
 
 const notesRepository = require("@/repositories/notes-manager");
 const projectsRepository = require("@/repositories/projetcs");
-const userRepository = require("@/repositories/user-manager");
+const userRepository = require("@/repositories/users");
 const chatRepository = require("@/repositories/chat-manager");
 
 /**

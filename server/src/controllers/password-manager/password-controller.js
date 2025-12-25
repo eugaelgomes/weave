@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const { validationResult } = require("express-validator");
 const PasswordRepository = require("@/repositories/password-manager");
-const mail_rescue_pass = require("@/services/email/templates/rescue-access/rescue-password-mail");
+const mail_rescue_pass = require("@/services/email/templates/access/rescue-password-mail");
 
 const getCurrentDateTimeUTCMinus3 = () => {
   const date = new Date();

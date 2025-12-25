@@ -178,7 +178,10 @@ const getPropertiesSchema = () => {
   return JSON.parse(JSON.stringify(PREDEFINED_PROPERTIES));
 };
 
+const validRoles = ["admin", "member", "guest"];
+
 module.exports = {
+  validRoles,
   normalizeOrganizationName,
   suggestUniqueOrganizationName,
   generateUniqueOrganizationName,

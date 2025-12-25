@@ -1,6 +1,13 @@
 const nodemailer = require("nodemailer");
 
+let transporterInstance = null;
+
 function MailService() {
+  if (transporterInstance) {
+    return transporterInstance;
+  }
+
+  // Variáveis de ambiente
   const requiredEnv = [
     "EMAIL_HOST",
     "EMAIL_PORT",
@@ -18,12 +25,16 @@ function MailService() {
     throw new Error(`EMAIL_PORT inválida: "${process.env.EMAIL_PORT}"`);
   }
 
-  let transporter;
   try {
-    transporter = nodemailer.createTransport({
+    transporterInstance = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port,
-      secure: port === 465, // 465 = SMTPS; otherwise, try STARTTLS
+      secure: port === 465,
+      pool: true,
+      maxConnections: 5,
+      maxMessages: 100,
+      rateDelta: 1000,
+      rateLimit: 10,
       auth: {
         user: process.env.EMAIL_USERNAME,
         pass: process.env.EMAIL_PASSWORD,
@@ -37,16 +48,24 @@ function MailService() {
     throw new Error("Falha ao criar transporter do Nodemailer");
   }
 
-  // Test connection with server SMTP
-  transporter.verify((err, success) => {
+  transporterInstance.verify((err, success) => {
     if (err) {
       console.error("Falha ao conectar ao servidor SMTP:", err);
+      transporterInstance = null;
     } else {
-      console.log("SMTP conectado com sucesso:", success);
+      console.log("SMTP conectado com sucesso (pooling habilitado):", success);
     }
   });
 
-  return transporter;
+  // Cleanup on process exit
+  process.on("SIGTERM", () => {
+    if (transporterInstance) {
+      transporterInstance.close();
+      console.log("SMTP connection pool closed");
+    }
+  });
+
+  return transporterInstance;
 }
 
 module.exports = { MailService };

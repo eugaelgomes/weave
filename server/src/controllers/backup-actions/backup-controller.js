@@ -1,9 +1,9 @@
 const getAllDataRepository = require("@/repositories/backups");
-const userRepository = require("@/repositories/user-manager");
+const userRepository = require("@/repositories/users");
 const jobManager = require("@/services/jobs/job-manager");
 const {
   sendBackupEmail,
-} = require("@/services/email/templates/backup-mails/backup-notification");
+} = require("@/services/email/templates/backup/backup-notification");
 
 class BackupController {
   constructor() {

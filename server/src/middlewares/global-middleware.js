@@ -4,10 +4,9 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const { getClientIp } = require("@/middlewares/security/ip-address");
 const { sessionMiddleware } = require("@/middlewares/security/session");
-const ALLOWED_ORIGINS = require("@/config/allowed-origins");
-
+const { allowedOrigins } = require("@/config/allowed-origins");
 // Domínios
-const WHITELIST = ALLOWED_ORIGINS;
+const WHITELIST = allowedOrigins;
 
 
 /**

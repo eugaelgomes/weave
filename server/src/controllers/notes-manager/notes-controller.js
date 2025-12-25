@@ -1,9 +1,9 @@
 const notesRepository = require("@/repositories/notes-manager");
 const blocksRepository = require("@/repositories/blocks-manager");
-const userRepository = require("@/repositories/user-manager");
+const userRepository = require("@/repositories/users");
 const {
   sendCollaborationNotification,
-} = require("@/services/email/templates/notes-mails/collab-notification");
+} = require("@/services/email/templates/notes/collab-notification");
 const { ALLOWED_NOTE_STATUSES } = require("../product-patterns");
 
 class NotesController {

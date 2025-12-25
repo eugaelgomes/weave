@@ -1,5 +1,5 @@
 const { MailService } = require("@/services/email/config/mail-service");
-const backupReadyTemplate = require("@/services/email/templates/backup-mails/backup-ready");
+const backupReadyTemplate = require("@/services/email/templates/backup/backup-ready");
 
 /**
  * Envia email com backup de dados do usuário

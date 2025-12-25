@@ -2,46 +2,36 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const AuthRepository = require("@/repositories/authentication");
-const ALLOWED_ORIGINS = require("@/config/allowed-origins");
+const { getCookieDomain } = require("@/config/allowed-origins");
 
 const secretKey = process.env.SECRET_KEY;
-
-const ALLOWED_HOSTNAMES = ALLOWED_ORIGINS.map((url) => {
-  try {
-    return new URL(url).hostname;
-  } catch (e) {
-    return null;
-  }
-}).filter(Boolean);
-
-const getCookieDomain = (hostname) => {
-  if (process.env.NODE_ENV !== "production") return undefined;
-
-  if (ALLOWED_HOSTNAMES.includes(hostname)) {
-    if (hostname.endsWith("weavenotes.app")) return "weavenotes.app";
-    if (hostname.endsWith("codaweb.com.br")) return "codaweb.com.br";
-    if (hostname.endsWith("gaelgomes.dev")) return "gaelgomes.dev";
-    return hostname;
-  }
-
-  return undefined;
-};
 
 class AuthController {
   async login(req, res) {
     const { username, password } = req.body;
-    // Validação de entrada, se não ddos vazios
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
     try {
-      // username pode ser o username ou o email
+      // username: email ou username
       const user = await AuthRepository.findUserByUsername(username);
 
-      // Compara senha e usuário se existe/confere
-      if (!user || !(await bcrypt.compare(password, user.password))) {
+      if (!user) {
+        return res.status(401).json({ message: "Usuário/e-mail ou senha inválidos" });
+      }
+
+      // Autenticação via Google
+      if (user.auth_with_google) {
+        return res.status(401).json({ 
+          message: "Esta conta usa autenticação via Google. Por favor, faça login com o Google." 
+        });
+      }
+
+      // Compara senha
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
         return res.status(401).json({ message: "Usuário/e-mail ou senha inválidos" });
       }
 
@@ -66,9 +56,9 @@ class AuthController {
         `[Login] Setting cookie domain: ${domain} (Request hostname: ${req.hostname})`
       );
 
-      // Envia token como HttpOnly cookie
+      // Tokens https only
       res.cookie("token", token, {
-        httpOnly: true, // não acessível via JS
+        httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Permite cross-origin em produção
         maxAge: 12 * 60 * 60 * 1000,
@@ -81,19 +71,22 @@ class AuthController {
         success: true,
         logged_at: login_time,
         message: "Login realizado com sucesso",
-        data: {
-          user: {
+        user_data: {
+          profile: {
             id: user.user_id,
+            name: user.name,
             username: user.username,
             email: user.email,
-            name: user.name,
             avatar_url: user.avatar_url,
-            org_id: user.org_id,
-            org_unique_name: user.org_unique_name,
-            org_name: user.org_name,
+            created_at: user.created_at,
           },
-          token: token,
+          organization: {
+            id: user.org_id,
+            unique_name: user.org_unique_name,
+            name: user.org_name,
+          },
         },
+        token: token,
       });
     } catch (error) {
       console.error(error);
@@ -223,7 +216,6 @@ class AuthController {
         `[Logout] Clearing cookie domain: ${domain} (Request hostname: ${req.hostname})`
       );
 
-      // Remove cookie do token
       res.clearCookie("token", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -232,7 +224,6 @@ class AuthController {
         domain: domain,
       });
 
-      // destruir sessão
       if (req.session) {
         req.session.destroy((err) => {
           if (err) {

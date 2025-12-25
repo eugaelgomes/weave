@@ -1,18 +1,25 @@
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const { validationResult } = require("express-validator");
-const UserRepository = require("@/repositories/user-manager");
+const UserRepository = require("@/repositories/users");
 const AuthRepository = require("@/repositories/authentication");
-const welcomeMailModule = require("@/services/email/templates/welcome-mails/welcome-mail");
-const deleteAccountModule = require("@/services/email/templates/delete-account/delete-account-message");
+const welcomeMailModule = require("@/services/email/templates/welcome/welcome-mail");
+const deleteAccountModule = require("@/services/email/templates/delete/delete-account-message");
+const emailChangeModule = require("@/services/email/templates/access/email-change-validation");
 const imageUtils = require("@/middlewares/data/image-utils");
 const { welcome_message } = welcomeMailModule;
 const { delete_account_notification } = deleteAccountModule;
+const { sendEmailChangeValidation } = emailChangeModule;
 
 const saltRounds = 12;
 
-const getCreationDate = () => {
+const getCurrentDateTime = () => {
   const data = new Date();
   return data.toISOString().slice(0, 19).replace("T", " ");
+};
+
+const getCreationDate = () => {
+  return getCurrentDateTime();
 };
 
 class UserController {
@@ -44,32 +51,31 @@ class UserController {
         return res.status(401).send("Username is already in use!");
       }
 
-      // 1. Cria o usuário sem imagem
       const newUser = await UserRepository.createUser(
         name,
         username,
         email,
         password,
-        null, // ainda sem imagem
+        null,
         createdAt
       );
 
       let profileImageUrl = null;
-      const userId = newUser[0].user_id; // Corrige o acesso ao ID
+      const userId = newUser[0].user_id; // Corrige acesso ao ID
 
-      // 2. Se tiver imagem, salva usando o id retornado pelo banco
+      // Se tiver imagem, salva usando o id retornado pelo banco
       if (req.file && req.file.buffer) {
         try {
           const saveResult = await imageUtils.saveProfileImage(
             req.file.buffer,
             req.file.mimetype,
-            userId // agora já existe id no banco
+            userId
           );
 
           if (saveResult.success) {
             profileImageUrl = saveResult.url;
 
-            // 3. Atualiza o usuário com a URL da imagem
+            // Insere url
             const updateResult = await UserRepository.updateProfileImage(
               userId,
               profileImageUrl
@@ -146,7 +152,6 @@ class UserController {
 
   async getProfileImageInfo(req, res) {
     try {
-      // Usa diretamente o userId do token do usuário logado
       const userId = req.user.userId;
 
       const user = await UserRepository.getProfileImage(userId);
@@ -177,24 +182,35 @@ class UserController {
 
   async getProfile(req, res) {
     try {
-      // O token já foi validado pelo middleware, usar dados do req.user
       const user = await AuthRepository.findUserByUsername(req.user.username);
       if (!user) {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
 
-      return res.json({
-        id: user.user_id,
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        org_id: user.org_id || null,
-        org_unique_name: user.org_unique_name || null,
-        org_name: user.org_name || null,
-        avatar_url: user.avatar_url || null,
-        theme_mode: user.theme_mode || "light",
-        createdAt: user.created_at,
-        updatedAt: user.updated_at,
+      return res.status(200).json({
+        user_data: {
+          profile: {
+            id: user.user_id,
+            name: user.name,
+            username: user.username,
+            email: user.email,
+            avatar_url: user.avatar_url,
+            birth_date: user.birth_date,
+            phone_numer: user.phone_number,
+            created_at: user.created_at,
+            updated_at: user.updated_at,
+          },
+          settings: {
+            theme_mode: user.theme_mode,
+            private_profile: user.private_profile,
+            auth_with_google: user.auth_with_google,
+          },
+          organization: {
+            id: user.org_id,
+            unique_name: user.org_unique_name,
+            name: user.org_name,
+          },
+        }
       });
     } catch (error) {
       console.error("Erro ao buscar perfil:", error);
@@ -203,27 +219,87 @@ class UserController {
   }
 
   async updateProfile(req, res) {
-    const { name, username, email, currentPassword, newPassword, theme_mode } = req.body;
+    const { name, username, email, emailValidationToken, currentPassword, newPassword, theme_mode, birth_date, phone_number, private_profile } = req.body;
     try {
-      // Buscar usuário atual para garantir que não sobrescrevemos com null/undefined
       const currentUser = await AuthRepository.findUserByUsername(req.user.username);
       if (!currentUser) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // 1) Atualiza dados básicos
-      const updatedUser = await UserRepository.updateUserProfile(
-        req.user.userId,
-        name || currentUser.name,
-        email || currentUser.email,
-        username || currentUser.username,
-        theme_mode || currentUser.theme_mode || "light"
-      );
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
+      let emailPendingValidation = false;
+      let pendingEmail = null;
+
+      // 1) Se veio token de email, valida e aplica o novo email primeiro
+      if (emailValidationToken) {
+        const tokenRecord = await UserRepository.findEmailChangeToken(req.user.userId, emailValidationToken);
+        
+        if (!tokenRecord) {
+          return res.status(400).json({ message: "Invalid or expired token" });
+        }
+
+        const dataToUpdate = await UserRepository.getDataToUpdate(req.user.userId);
+        if (!dataToUpdate || !dataToUpdate.new_email) {
+          return res.status(400).json({ message: "No pending email change" });
+        }
+
+        // Aplica o novo email
+        const emailUpdate = { email: dataToUpdate.new_email };
+        await UserRepository.updateUserProfile(req.user.userId, emailUpdate);
+        await UserRepository.clearDataToUpdate(req.user.userId);
+        await UserRepository.deactivateEmailToken(emailValidationToken);
       }
 
-      // 2) Se veio arquivo de imagem, faz upload e atualiza avatar_url
+      // 2) Se veio email sem token, prepara validação mas continua com outros updates
+      if (email !== undefined && email !== currentUser.email && !emailValidationToken) {
+        // Verifica se o novo email já está em uso
+        const emailExists = await UserRepository.findByUsernameOrEmail("", email);
+        if (emailExists.length > 0) {
+          return res.status(400).json({ message: "Email already in use" });
+        }
+
+        // Gera token e salva novo email em data_to_update (na tabela tokens)
+        const token = crypto.randomBytes(10).toString("hex");
+        const currentDateTime = getCurrentDateTime();
+
+        await UserRepository.deactivateOldEmailTokens(req.user.userId);
+        await UserRepository.createEmailChangeToken(req.user.userId, token, email, currentDateTime);
+
+        // Envia email de validação
+        const emailResult = await sendEmailChangeValidation(currentUser.email, email, token);
+        
+        if (!emailResult.success) {
+          return res.status(500).json({ message: "Error sending validation email" });
+        }
+
+        emailPendingValidation = true;
+        pendingEmail = email;
+        // Continua para atualizar outros campos
+      }
+
+      // 3) Atualiza dados básicos que foram enviados (email direto NÃO é permitido)
+      const updates = {};
+      if (name !== undefined) updates.name = name;
+      if (username !== undefined) updates.username = username;
+      if (theme_mode !== undefined) updates.theme_mode = theme_mode;
+      if (birth_date !== undefined) updates.birth_date = birth_date;
+      if (phone_number !== undefined) updates.phone_number = phone_number;
+      if (private_profile !== undefined) updates.private_profile = private_profile;
+
+      let updatedUser = null;
+      if (Object.keys(updates).length > 0) {
+        updatedUser = await UserRepository.updateUserProfile(
+          req.user.userId,
+          updates
+        );
+        if (!updatedUser) {
+          return res.status(404).json({ message: "User not found" });
+        }
+      } else {
+        // Se não há updates, busca dados atuais
+        updatedUser = await AuthRepository.findUserByUsername(req.user.username);
+      }
+
+      // 4) Se veio arquivo de imagem, faz upload e atualiza avatar_url
       let avatarUrl = updatedUser.avatar_url || null;
       if (req.file && req.file.buffer) {
         const uploadResult = await imageUtils.saveProfileImage(
@@ -247,7 +323,7 @@ class UserController {
         }
       }
 
-      // 3) Se veio senha, valida e atualiza
+      // 5) Se veio senha, valida e atualiza
       if (currentPassword && newPassword) {
         const user = await AuthRepository.findUserByUsername(
           updatedUser.username
@@ -270,15 +346,37 @@ class UserController {
         );
       }
 
-      return res.json({
-        id: updatedUser.user_id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        username: updatedUser.username,
-        avatar_url: avatarUrl,
-        createdAt: updatedUser.created_at,
-        message: "Profile updated successfully",
-      });
+      // 6) Monta resposta com dados atualizados
+      const response = {
+        user_data: {
+          profile: {
+            id: updatedUser.user_id,
+            name: updatedUser.name,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            avatar_url: avatarUrl,
+            birth_date: updatedUser.birth_date,
+            phone_number: updatedUser.phone_number,
+            created_at: updatedUser.created_at,
+          },
+          settings: {
+            theme_mode: updatedUser.theme_mode,
+            private_profile: updatedUser.private_profile,
+          },
+        },
+        message: "Profile updated successfully"
+      };
+
+      // Se há email pendente de validação, adiciona informação
+      if (emailPendingValidation) {
+        response.email_validation = {
+          pending: true,
+          pending_email: pendingEmail,
+          message: "Validation email sent. Please check your new email and provide the token to complete the change."
+        };
+      }
+
+      return res.status(200).json(response);
     } catch (error) {
       console.error("Error updating profile:", error);
       return res.status(500).json({ message: "Internal server error" });
