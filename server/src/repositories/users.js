@@ -206,6 +206,35 @@ class UserRepository {
     const query = `UPDATE tokens SET active = FALSE WHERE token = $1`;
     return await executeQuery(query, [token]);
   }
+
+  // Email activation
+  async createEmailActivationToken(userId, token, createdAt) {
+    const query = `
+      INSERT INTO tokens (user_id, token, type, expires_at, created_at, active) 
+      VALUES ($1, $2, 'email_verification', ($3::timestamp + interval '7 days'), $3, TRUE)
+    `;
+    return await executeQuery(query, [userId, token, createdAt]);
+  }
+
+  async findEmailActivationToken(token) {
+    const query = `
+      SELECT * FROM tokens 
+      WHERE token = $1 AND active = TRUE AND type = 'email_verification' AND expires_at > NOW()
+    `;
+    const results = await executeQuery(query, [token]);
+    return results[0];
+  }
+
+  async verifyUserEmail(userId) {
+    const query = `
+      UPDATE users
+      SET email_verified = TRUE, email_verified_at = NOW()
+      WHERE user_id = $1
+      RETURNING user_id, email, email_verified, email_verified_at
+    `;
+    const results = await executeQuery(query, [userId]);
+    return results[0];
+  }
 }
 
 module.exports = new UserRepository();

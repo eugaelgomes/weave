@@ -29,6 +29,10 @@ class AuthController {
         });
       }
 
+      const verifiedAccount = user.email_verified;
+      if (!verifiedAccount) {
+        return res.status(403).json({ message: "Por favor, verifique seu e-mail no mensagem de boas-vindas antes de fazer login." });
+      }
       // Compara senha
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {

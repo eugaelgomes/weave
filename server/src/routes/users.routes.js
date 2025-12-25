@@ -16,6 +16,11 @@ router.post(
   UserController.createUser.bind(UserController)
 );
 
+router.post(
+  "/activate-account",
+  UserController.activateAccount.bind(UserController)
+);
+
 router.get("/me", verifyToken, UserController.getProfile.bind(UserController));
 
 router.put(

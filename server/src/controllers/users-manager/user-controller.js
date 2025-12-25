@@ -103,8 +103,13 @@ class UserController {
         }
       }
 
-      // Envia email de boas-vindas
-      const mailResult = await welcome_message(name, email, username);
+      // Gera token de ativação de conta
+      const activationToken = crypto.randomBytes(16).toString("hex");
+      const currentDateTime = getCurrentDateTime();
+      await UserRepository.createEmailActivationToken(userId, activationToken, currentDateTime);
+
+      // Envia email de boas-vindas com token de ativação
+      const mailResult = await welcome_message(name, email, username, activationToken);
       if (!mailResult.success) {
         console.warn("Welcome email not sent:", mailResult.error);
       }
@@ -218,12 +223,71 @@ class UserController {
     }
   }
 
+  // Atualização de perfil 
   async updateProfile(req, res) {
-    const { name, username, email, emailValidationToken, currentPassword, newPassword, theme_mode, birth_date, phone_number, private_profile } = req.body;
+    const { 
+      name, 
+      username, 
+      email, 
+      emailValidationToken, 
+      currentPassword, 
+      newPassword,
+      theme_mode, 
+      birth_date, 
+      phone_number, 
+      private_profile 
+    } = req.body;
     try {
       const currentUser = await AuthRepository.findUserByUsername(req.user.username);
+      // Usuário atual not found
       if (!currentUser) {
         return res.status(404).json({ message: "User not found" });
+      }
+
+      // Validação de tema
+      let validatethemeMode = ["light", "dark"];
+      if (theme_mode && !validatethemeMode.includes(theme_mode)) {
+        return res.status(400).json({ message: "Invalid theme mode" });
+      }
+
+      // Validação de data de nascimento
+      let validateBirthDate = null;
+      if (birth_date) {
+        validateBirthDate = new Date(birth_date);
+        if (isNaN(validateBirthDate.getTime())) {
+          return res.status(400).json({ message: "Invalid birth date format" });
+        }
+      }
+
+      // Validação de senha ( se não a mesma da atual, tamanho e complexidade )
+      let validatePasswordChange = false;
+      if ((currentPassword && !newPassword) || (!currentPassword && newPassword)) {
+        return res.status(400).json({ message: "Both current and new passwords are required to change password" });
+      } else if (currentPassword && newPassword) {
+        validatePasswordChange = true;
+      }
+      if (validatePasswordChange) {
+        if (newPassword.length < 8) {
+          return res.status(400).json({ message: "New password must be at least 8 characters long" });
+        }
+        if (!/[A-Z]/.test(newPassword)) {
+          return res.status(400).json({ message: "New password must contain at least one uppercase letter" });
+        }
+        if (!/[a-z]/.test(newPassword)) {
+          return res.status(400).json({ message: "New password must contain at least one lowercase letter" });
+        }
+        if (!/[0-9]/.test(newPassword)) {
+          return res.status(400).json({ message: "New password must contain at least one digit" });
+        }
+        if (!/[\W_]/.test(newPassword)) {
+          return res.status(400).json({ message: "New password must contain at least one special character" });
+        }
+        if (newPassword === currentPassword) {
+          return res.status(400).json({ message: "New password must be different from the current password" });
+        }
+        if (newPassword.length > 20) {
+          return res.status(400).json({ message: "New password must not exceed 20 characters" });
+        }
       }
 
       let emailPendingValidation = false;
@@ -240,6 +304,14 @@ class UserController {
         const dataToUpdate = await UserRepository.getDataToUpdate(req.user.userId);
         if (!dataToUpdate || !dataToUpdate.new_email) {
           return res.status(400).json({ message: "No pending email change" });
+        }
+
+        // Verifica novamente se o email ainda está disponível (pode ter sido registrado entre a solicitação e validação)
+        const emailExists = await UserRepository.findByUsernameOrEmail("", dataToUpdate.new_email);
+        if (emailExists.length > 0) {
+          await UserRepository.clearDataToUpdate(req.user.userId);
+          await UserRepository.deactivateEmailToken(emailValidationToken);
+          return res.status(400).json({ message: "Email is no longer available" });
         }
 
         // Aplica o novo email
@@ -279,7 +351,16 @@ class UserController {
       // 3) Atualiza dados básicos que foram enviados (email direto NÃO é permitido)
       const updates = {};
       if (name !== undefined) updates.name = name;
-      if (username !== undefined) updates.username = username;
+      
+      // Valida username se foi enviado e é diferente do atual
+      if (username !== undefined && username !== currentUser.username) {
+        const usernameExists = await UserRepository.findByUsernameOrEmail(username, "");
+        if (usernameExists.length > 0) {
+          return res.status(400).json({ message: "Username already in use" });
+        }
+        updates.username = username;
+      }
+      
       if (theme_mode !== undefined) updates.theme_mode = theme_mode;
       if (birth_date !== undefined) updates.birth_date = birth_date;
       if (phone_number !== undefined) updates.phone_number = phone_number;
@@ -339,7 +420,7 @@ class UserController {
             .json({ message: "Current password is incorrect" });
         }
 
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
         await UserRepository.updateUserPassword(
           req.user.userId,
           hashedPassword
@@ -425,6 +506,45 @@ class UserController {
     } catch (error) {
       console.error("Error deleting user:", error);
       res.status(500).json({ error: "Internal server error." });
+    }
+  }
+
+  async activateAccount(req, res) {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ message: "Activation token is required" });
+    }
+
+    try {
+      const tokenRecord = await UserRepository.findEmailActivationToken(token);
+      
+      if (!tokenRecord) {
+        return res.status(400).json({ message: "Invalid or expired activation token" });
+      }
+
+      // Verifica o email
+      const verifiedUser = await UserRepository.verifyUserEmail(tokenRecord.user_id);
+      
+      if (!verifiedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Desativa o token
+      await UserRepository.deactivateEmailToken(token);
+
+      return res.status(200).json({
+        message: "Email verified successfully",
+        user: {
+          id: verifiedUser.user_id,
+          email: verifiedUser.email,
+          email_verified: verifiedUser.email_verified,
+          email_verified_at: verifiedUser.email_verified_at
+        }
+      });
+    } catch (error) {
+      console.error("Error activating account:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 }

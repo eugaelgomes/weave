@@ -17,6 +17,8 @@ class AuthRepository {
       u.theme_mode,
       u.created_at,
       u.updated_at,
+      u.email_verified,
+      u.email_verified_at,
       o.id AS org_id,
       o.unique_name AS org_unique_name,
       o.org_name AS org_name

@@ -1,11 +1,16 @@
 const { MailService } = require("@/services/email/config/mail-service");
 
-async function welcome_message(nome, email, username) {
+async function welcome_message(nome, email, username, activationToken) {
+  const env = process.env.NODE_ENV || "development";
+  const activationLink = env === "production"
+    ? `${process.env.FRONTEND_URL}/auth/activate?token=${activationToken}`
+    : `${process.env.FRONTEND_URL}/auth/activate?token=${activationToken}`;
+
   try {
     let mailOptions = {
       from: "Weave Notes <hello@gaelgomes.dev>",
       to: email,
-      subject: "Bem-vindo ao Weave Notes",
+      subject: "Bem-vindo ao Weave Notes - Ative sua conta",
       html: `<!DOCTYPE html>
   <html lang="pt-BR">
   <head>
@@ -148,21 +153,29 @@ async function welcome_message(nome, email, username) {
       </div>
 
       <div class="main-content">
-        <h2>Cadastro Realizado com Sucesso</h2>
+        <h2>Ative sua Conta</h2>
         
         <p>Prezado(a) <strong>${nome}</strong>,</p>
         
-        <p>Sua conta no Weave Notes foi criada com sucesso. Você agora tem acesso à plataforma de anotações e organização.</p>
+        <p>Sua conta no Weave Notes foi criada com sucesso! Para começar a usar a plataforma, é necessário ativar sua conta clicando no botão abaixo:</p>
+
+        <div style="text-align: center;">
+          <a href="${activationLink}" class="button">Ativar Conta</a>
+        </div>
+
+        <div class="info-box">
+          ⚠️ Este link expira em 7 dias
+        </div>
+
+        <p>Caso o botão não funcione, utilize o token abaixo na página de ativação:</p>
+        
+        <div class="token-box">${activationToken}</div>
         
         <div class="info-box">
           <p>Nome de usuário: <strong>${username}</strong></p>
         </div>
 
-        <div style="text-align: center;">
-          <a href="https://notes.gaelgomes.dev" class="button">Acessar Conta</a>
-        </div>
-
-        <p style="font-size: 14px; color: #737373;">Caso tenha dúvidas, entre em contato com nossa equipe de suporte.</p>
+        <p style="font-size: 14px; color: #737373;">Caso não tenha se cadastrado, ignore este email.</p>
       </div>
 
       <div class="footer">
