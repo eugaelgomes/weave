@@ -1,4 +1,5 @@
 const organizationsRepository = require("@/repositories/organizations");
+const imageUtils = require("@/middlewares/data/image-utils");
 const {
   normalizeOrganizationName,
   generateUniqueOrganizationName,
@@ -12,75 +13,38 @@ class OrganizationsController {
     this.organizationsRepository = organizationsRepository;
   }
 
-  // ========================================
-  // MÉTODOS UTILITÁRIOS E VALIDAÇÃO
-  // ========================================
-
-  /**
-   * Valida se o usuário está autenticado
-   * @param {Object} req - Request object
-   * @param {Object} res - Response object
-   * @returns {string|null} - Retorna o userId se válido, ou envia erro HTTP
-   */
   _validateAuthentication(req, res) {
     const userId = req.user?.userId;
-
     if (!userId) {
       res.status(401).json({ error: "Usuário não autenticado" });
       return null;
     }
-
     return userId;
   }
 
-  /**
-   * Busca a organização do usuário
-   * @param {string} userId - ID do usuário
-   * @returns {Object|null} - Organização encontrada ou null
-   */
   async _getUserOrganization(userId) {
-    const organizations = await this.organizationsRepository.getOrgsByUserId(
-      userId
-    );
+    const organizations = await this.organizationsRepository.getOrgsByUserId(userId);
     return organizations.find((org) => !org.deleted) || null;
   }
 
-  /**
-   * Valida campos obrigatórios para criação
-   * @param {Object} data - Dados da organização
-   * @throws {Error} - Se houver campos inválidos
-   */
   _validateRequiredFields(data) {
     if (!data.org_name || typeof data.org_name !== "string") {
       throw new Error("Nome da organização é obrigatório");
     }
-
     if (data.org_name.trim().length < 2) {
       throw new Error("Nome da organização deve ter pelo menos 2 caracteres");
     }
-
     if (data.org_name.length > 100) {
       throw new Error("Nome da organização deve ter no máximo 100 caracteres");
     }
   }
 
-  /**
-   * Valida e sanitiza org_domains
-   * @param {Array} domains - Domínios a serem validados
-   * @returns {Array|null} - Domínios validados
-   */
   _validateOrgDomains(domains) {
-    if (!domains) {
-      return null;
-    }
+    if (!domains) return null;
+    if (!Array.isArray(domains)) throw new Error("org_domains deve ser um array");
 
-    if (!Array.isArray(domains)) {
-      throw new Error("org_domains deve ser um array");
-    }
-
-    // Validação básica de domínio
     const domainRegex = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
-
+    
     const validatedDomains = domains.filter((domain) => {
       if (typeof domain !== "string") return false;
       return domainRegex.test(domain.trim());
@@ -89,22 +53,12 @@ class OrganizationsController {
     return validatedDomains.length > 0 ? validatedDomains : null;
   }
 
-  // ========================================
-  // CREATE - Criar Organização
-  // ========================================
-
-  /**
-   * Cria uma nova organização (usuário só pode ter uma)
-   * POST /api/organizations
-   */
   async createOrganization(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar se o usuário já tem uma organização
       const existingOrg = await this._getUserOrganization(userId);
-
       if (existingOrg) {
         return res.status(400).json({
           success: false,
@@ -122,55 +76,29 @@ class OrganizationsController {
         org_domains,
       } = req.body;
 
-      // Validar campos obrigatórios
       this._validateRequiredFields({ org_name });
 
-      // Determinar unique_name (fornecido ou gerado)
       let unique_name;
-
       if (providedUniqueName) {
-        // Se o usuário forneceu, normalizar e validar disponibilidade
         unique_name = normalizeOrganizationName(providedUniqueName);
-
         if (!unique_name) {
           throw new Error("Nome único fornecido é inválido após normalização");
         }
 
-        // Verificar se já existe
-        const existingNames = await this.organizationsRepository.getAvailableOrgNames(
-          unique_name
-        );
-
+        const existingNames = await this.organizationsRepository.getAvailableOrgNames(unique_name);
         if (existingNames.includes(unique_name)) {
           throw new Error(`Nome único '${unique_name}' já está em uso`);
         }
       } else {
-        // Se não forneceu, gerar automaticamente
         unique_name = await generateUniqueOrganizationName(org_name);
       }
 
-      // Normalizar properties (aplicar defaults e validar)
       const normalizedProperties = properties
         ? normalizeOrganizationProperties(properties)
         : getDefaultOrganizationProperties();
 
-      // Validar domínios
       const validatedDomains = this._validateOrgDomains(org_domains);
 
-      // Inicializar members e projects vazios
-      const initialMembers = {
-        owner: userId,
-        admins: [],
-        members: [],
-        invited: [],
-      };
-
-      const initialProjects = {
-        projects: [],
-        count: 0,
-      };
-
-      // Criar organização
       const newOrganization = await this.organizationsRepository.createOrgs(
         userId,
         org_name.trim(),
@@ -179,8 +107,6 @@ class OrganizationsController {
         banner_url || null,
         description?.trim() || "Type description here...",
         normalizedProperties,
-        initialMembers,
-        initialProjects,
         validatedDomains
       );
 
@@ -198,21 +124,12 @@ class OrganizationsController {
     }
   }
 
-  // ========================================
-  // READ - Buscar Organização
-  // ========================================
-
-  /**
-   * Retorna a organização do usuário
-   * GET /api/organizations
-   */
   async getOrganization(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       const organization = await this._getUserOrganization(userId);
-
       if (!organization) {
         return res.status(404).json({
           success: false,
@@ -221,27 +138,36 @@ class OrganizationsController {
         });
       }
 
-      res.status(200).json({
-        success: true,
-        data: organization,
-      });
+      // Construir resposta formatada
+      const formattedOrganization = {
+        id: organization.id,
+        user_id: organization.user_id,
+        org_name: organization.org_name,
+        unique_name: organization.unique_name,
+        logo_url: organization.logo_url,
+        banner_url: organization.banner_url,
+        description: organization.description,
+        properties: organization.properties,
+        org_domains: organization.org_domains || [],
+        deleted: organization.deleted,
+        created_at: organization.created_at,
+        updated_at: organization.updated_at,
+        owner: {
+          id: organization.user_id,
+          name: organization.name,
+          username: organization.username,
+          email: organization.email,
+          avatar_url: organization.avatar_url,
+        },
+      };
+
+      res.status(200).json({ success: true, data: formattedOrganization });
     } catch (error) {
       console.error("Erro ao buscar organização:", error);
-      res.status(500).json({
-        success: false,
-        error: "Erro ao buscar organização",
-      });
+      res.status(500).json({ success: false, error: "Erro ao buscar organização" });
     }
   }
 
-  // ========================================
-  // UPDATE - Atualizar Organização
-  // ========================================
-
-  /**
-   * Atualiza a organização do usuário
-   * PUT /api/organizations
-   */
   async updateOrganization(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -254,58 +180,40 @@ class OrganizationsController {
         banner_url,
         description,
         properties,
-        members,
-        projects,
         org_domains,
       } = req.body;
 
-      // Buscar organização do usuário
       const currentOrg = await this._getUserOrganization(userId);
-
       if (!currentOrg) {
-        return res.status(404).json({
-          success: false,
-          error: "Organização não encontrada",
-        });
+        return res.status(404).json({ success: false, error: "Organização não encontrada" });
       }
 
-      // Preparar dados para atualização
       let updatedUniqueName = currentOrg.unique_name;
 
-      // Se o nome mudou, gerar novo unique_name
       if (org_name && org_name !== currentOrg.org_name) {
         this._validateRequiredFields({ org_name });
         updatedUniqueName = await generateUniqueOrganizationName(org_name);
       }
 
-      // Se unique_name foi fornecido explicitamente, validar
       if (unique_name && unique_name !== currentOrg.unique_name) {
         const normalizedName = normalizeOrganizationName(unique_name);
-        // Verificar disponibilidade
-        const existingNames = await this.organizationsRepository.getAvailableOrgNames(
-          normalizedName
-        );
+        const existingNames = await this.organizationsRepository.getAvailableOrgNames(normalizedName);
+        
         if (existingNames.includes(normalizedName)) {
           throw new Error("Nome único já está em uso");
         }
         updatedUniqueName = normalizedName;
       }
 
-      // Atualizar properties (merge com as atuais)
       let updatedProperties = currentOrg.properties;
       if (properties) {
-        updatedProperties = updateOrganizationProperties(
-          currentOrg.properties,
-          properties
-        );
+        updatedProperties = updateOrganizationProperties(currentOrg.properties, properties);
       }
 
-      // Validar domínios
       const validatedDomains = org_domains
         ? this._validateOrgDomains(org_domains)
         : currentOrg.org_domains;
 
-      // Atualizar organização
       const updatedOrg = await this.organizationsRepository.updateOrg(
         currentOrg.id,
         userId,
@@ -313,13 +221,9 @@ class OrganizationsController {
         updatedUniqueName,
         logo_url !== undefined ? logo_url : currentOrg.logo_url,
         banner_url !== undefined ? banner_url : currentOrg.banner_url,
-        description !== undefined
-          ? description?.trim()
-          : currentOrg.description,
+        description !== undefined ? description?.trim() : currentOrg.description,
         updatedProperties,
         currentOrg.deleted,
-        members || currentOrg.members,
-        projects || currentOrg.projects,
         validatedDomains
       );
 
@@ -338,17 +242,12 @@ class OrganizationsController {
     }
   }
 
-  /**
-   * Atualiza apenas as properties da organização do usuário
-   * PATCH /api/organizations/properties
-   */
   async updateOrganizationProperties(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       const { properties } = req.body;
-
       if (!properties || typeof properties !== "object") {
         return res.status(400).json({
           success: false,
@@ -356,23 +255,13 @@ class OrganizationsController {
         });
       }
 
-      // Buscar organização do usuário
       const currentOrg = await this._getUserOrganization(userId);
-
       if (!currentOrg) {
-        return res.status(404).json({
-          success: false,
-          error: "Organização não encontrada",
-        });
+        return res.status(404).json({ success: false, error: "Organização não encontrada" });
       }
 
-      // Atualizar properties (merge com as atuais)
-      const updatedProperties = updateOrganizationProperties(
-        currentOrg.properties,
-        properties
-      );
+      const updatedProperties = updateOrganizationProperties(currentOrg.properties, properties);
 
-      // Atualizar apenas properties
       const updatedOrg = await this.organizationsRepository.updateOrg(
         currentOrg.id,
         userId,
@@ -383,8 +272,6 @@ class OrganizationsController {
         currentOrg.description,
         updatedProperties,
         currentOrg.deleted,
-        currentOrg.members,
-        currentOrg.projects,
         currentOrg.org_domains
       );
 
@@ -403,30 +290,16 @@ class OrganizationsController {
     }
   }
 
-  // ========================================
-  // DELETE - Excluir Organização (Soft Delete)
-  // ========================================
-
-  /**
-   * Marca a organização do usuário como deletada (soft delete)
-   * DELETE /api/organizations
-   */
   async deleteOrganization(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Buscar organização do usuário
       const currentOrg = await this._getUserOrganization(userId);
-
       if (!currentOrg) {
-        return res.status(404).json({
-          success: false,
-          error: "Organização não encontrada",
-        });
+        return res.status(404).json({ success: false, error: "Organização não encontrada" });
       }
 
-      // Marcar como deletada
       const deletedOrg = await this.organizationsRepository.updateOrg(
         currentOrg.id,
         userId,
@@ -436,9 +309,7 @@ class OrganizationsController {
         currentOrg.banner_url,
         currentOrg.description,
         currentOrg.properties,
-        true, // deleted = true
-        currentOrg.members,
-        currentOrg.projects,
+        true,
         currentOrg.org_domains
       );
 
@@ -449,36 +320,22 @@ class OrganizationsController {
       });
     } catch (error) {
       console.error("Erro ao excluir organização:", error);
-      res.status(500).json({
-        success: false,
-        error: "Erro ao excluir organização",
-      });
+      res.status(500).json({ success: false, error: "Erro ao excluir organização" });
     }
   }
 
-  /**
-   * Restaura a organização deletada do usuário
-   * POST /api/organizations/restore
-   */
   async restoreOrganization(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Buscar organização deletada
-      const organizations = await this.organizationsRepository.getOrgsByUserId(
-        userId
-      );
+      const organizations = await this.organizationsRepository.getOrgsByUserId(userId);
       const organization = organizations.find((org) => org.deleted);
 
       if (!organization) {
-        return res.status(404).json({
-          success: false,
-          error: "Nenhuma organização deletada encontrada",
-        });
+        return res.status(404).json({ success: false, error: "Nenhuma organização deletada encontrada" });
       }
 
-      // Restaurar organização
       const restoredOrg = await this.organizationsRepository.updateOrg(
         organization.id,
         userId,
@@ -488,9 +345,7 @@ class OrganizationsController {
         organization.banner_url,
         organization.description,
         organization.properties,
-        false, // deleted = false
-        organization.members,
-        organization.projects,
+        false,
         organization.org_domains
       );
 
@@ -501,21 +356,10 @@ class OrganizationsController {
       });
     } catch (error) {
       console.error("Erro ao restaurar organização:", error);
-      res.status(500).json({
-        success: false,
-        error: "Erro ao restaurar organização",
-      });
+      res.status(500).json({ success: false, error: "Erro ao restaurar organização" });
     }
   }
 
-  // ========================================
-  // MEMBERS - Gerenciamento de Membros
-  // ========================================
-
-  /**
-   * Adiciona um membro à organização do usuário
-   * POST /api/organizations/members
-   */
   async addMember(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -524,81 +368,39 @@ class OrganizationsController {
       const { memberId, role = "member" } = req.body;
 
       if (!memberId) {
-        return res.status(400).json({
-          success: false,
-          error: "memberId é obrigatório",
-        });
+        return res.status(400).json({ success: false, error: "memberId é obrigatório" });
       }
 
-      const validRoles = ["admin", "member"];
+      const validRoles = ["admin", "member", "guest"];
       if (!validRoles.includes(role)) {
         return res.status(400).json({
           success: false,
-          error: "Role deve ser 'admin' ou 'member'",
+          error: "Role deve ser 'admin', 'member' ou 'guest'",
         });
       }
 
-      // Buscar organização do usuário
       const currentOrg = await this._getUserOrganization(userId);
-
       if (!currentOrg) {
-        return res.status(404).json({
-          success: false,
-          error: "Organização não encontrada",
-        });
+        return res.status(404).json({ success: false, error: "Organização não encontrada" });
       }
 
-      // Verificar se já é membro
-      const members = currentOrg.members || {
-        owner: userId,
-        admins: [],
-        members: [],
-        invited: [],
-      };
-
-      if (
-        members.owner === memberId ||
-        members.admins?.includes(memberId) ||
-        members.members?.includes(memberId)
-      ) {
-        return res.status(400).json({
-          success: false,
-          error: "Usuário já é membro da organização",
-        });
+      const isMember = await this.organizationsRepository.isMember(currentOrg.id, memberId);
+      if (isMember) {
+        return res.status(400).json({ success: false, error: "Usuário já é membro da organização" });
       }
 
-      // Adicionar membro
-      if (role === "admin") {
-        members.admins = [...(members.admins || []), memberId];
-      } else {
-        members.members = [...(members.members || []), memberId];
-      }
-
-      // Remover de invited se existir
-      if (members.invited?.includes(memberId)) {
-        members.invited = members.invited.filter((id) => id !== memberId);
-      }
-
-      // Atualizar organização
-      const updatedOrg = await this.organizationsRepository.updateOrg(
+      const newMember = await this.organizationsRepository.addOrganizationMember(
         currentOrg.id,
-        userId,
-        currentOrg.org_name,
-        currentOrg.unique_name,
-        currentOrg.logo_url,
-        currentOrg.banner_url,
-        currentOrg.description,
-        currentOrg.properties,
-        currentOrg.deleted,
-        members,
-        currentOrg.projects,
-        currentOrg.org_domains
+        memberId,
+        role,
+        "active",
+        userId
       );
 
       res.status(200).json({
         success: true,
         message: "Membro adicionado com sucesso",
-        data: updatedOrg,
+        data: newMember,
       });
     } catch (error) {
       console.error("Erro ao adicionar membro:", error);
@@ -609,10 +411,6 @@ class OrganizationsController {
     }
   }
 
-  /**
-   * Remove um membro da organização do usuário
-   * DELETE /api/organizations/members/:memberId
-   */
   async removeMember(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -620,60 +418,28 @@ class OrganizationsController {
 
       const { memberId } = req.params;
 
-      // Buscar organização do usuário
       const currentOrg = await this._getUserOrganization(userId);
-
       if (!currentOrg) {
-        return res.status(404).json({
-          success: false,
-          error: "Organização não encontrada",
-        });
+        return res.status(404).json({ success: false, error: "Organização não encontrada" });
       }
 
-      const members = currentOrg.members || {
-        owner: userId,
-        admins: [],
-        members: [],
-        invited: [],
-      };
-
-      // Não pode remover o owner
-      if (members.owner === memberId) {
+      const owner = await this.organizationsRepository.getOrganizationOwner(currentOrg.id);
+      if (owner && owner.user_id === memberId) {
         return res.status(400).json({
           success: false,
           error: "Não é possível remover o proprietário da organização",
         });
       }
 
-      // Remover membro de todas as listas
-      members.admins = (members.admins || []).filter((id) => id !== memberId);
-      members.members = (members.members || []).filter(
-        (id) => id !== memberId
-      );
-      members.invited = (members.invited || []).filter(
-        (id) => id !== memberId
-      );
-
-      // Atualizar organização
-      const updatedOrg = await this.organizationsRepository.updateOrg(
-        currentOrg.id,
-        userId,
-        currentOrg.org_name,
-        currentOrg.unique_name,
-        currentOrg.logo_url,
-        currentOrg.banner_url,
-        currentOrg.description,
-        currentOrg.properties,
-        currentOrg.deleted,
-        members,
-        currentOrg.projects,
-        currentOrg.org_domains
-      );
+      const removed = await this.organizationsRepository.removeOrganizationMember(currentOrg.id, memberId);
+      if (!removed) {
+        return res.status(404).json({ success: false, error: "Membro não encontrado" });
+      }
 
       res.status(200).json({
         success: true,
         message: "Membro removido com sucesso",
-        data: updatedOrg,
+        data: removed,
       });
     } catch (error) {
       console.error("Erro ao remover membro:", error);
@@ -681,6 +447,135 @@ class OrganizationsController {
         success: false,
         error: error.message || "Erro ao remover membro",
       });
+    }
+  }
+
+  async getMembers(req, res) {
+    try {
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      const currentOrg = await this._getUserOrganization(userId);
+      if (!currentOrg) {
+        return res.status(404).json({ success: false, error: "Organização não encontrada" });
+      }
+
+      const members = await this.organizationsRepository.getOrganizationMembers(currentOrg.id);
+
+      res.status(200).json({ success: true, data: members });
+    } catch (error) {
+      console.error("Erro ao buscar membros:", error);
+      res.status(500).json({ success: false, error: "Erro ao buscar membros" });
+    }
+  }
+
+  async uploadLogo(req, res) {
+    try {
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: "Nenhum arquivo foi enviado" });
+      }
+
+      const currentOrg = await this._getUserOrganization(userId);
+      if (!currentOrg) {
+        return res.status(404).json({ success: false, error: "Organização não encontrada" });
+      }
+
+      const result = await imageUtils.saveOrganizationLogo(
+        req.file.buffer,
+        req.file.mimetype,
+        currentOrg.id
+      );
+
+      if (!result.success) {
+        return res.status(500).json({ success: false, error: "Erro ao salvar logo" });
+      }
+
+      const updatedOrg = await this.organizationsRepository.updateOrg(
+        currentOrg.id,
+        userId,
+        currentOrg.org_name,
+        currentOrg.unique_name,
+        result.url,
+        currentOrg.banner_url,
+        currentOrg.description,
+        currentOrg.properties,
+        currentOrg.deleted,
+        currentOrg.org_domains
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Logo atualizado com sucesso",
+        data: {
+          organization: updatedOrg,
+          upload: {
+            url: result.url,
+            filename: result.filename,
+            size: result.size,
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Erro ao fazer upload do logo:", error);
+      res.status(500).json({ success: false, error: "Erro ao fazer upload do logo" });
+    }
+  }
+
+  async uploadBanner(req, res) {
+    try {
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: "Nenhum arquivo foi enviado" });
+      }
+
+      const currentOrg = await this._getUserOrganization(userId);
+      if (!currentOrg) {
+        return res.status(404).json({ success: false, error: "Organização não encontrada" });
+      }
+
+      const result = await imageUtils.saveOrganizationBanner(
+        req.file.buffer,
+        req.file.mimetype,
+        currentOrg.id
+      );
+
+      if (!result.success) {
+        return res.status(500).json({ success: false, error: "Erro ao salvar banner" });
+      }
+
+      const updatedOrg = await this.organizationsRepository.updateOrg(
+        currentOrg.id,
+        userId,
+        currentOrg.org_name,
+        currentOrg.unique_name,
+        currentOrg.logo_url,
+        result.url,
+        currentOrg.description,
+        currentOrg.properties,
+        currentOrg.deleted,
+        currentOrg.org_domains
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Banner atualizado com sucesso",
+        data: {
+          organization: updatedOrg,
+          upload: {
+            url: result.url,
+            filename: result.filename,
+            size: result.size,
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Erro ao fazer upload do banner:", error);
+      res.status(500).json({ success: false, error: "Erro ao fazer upload do banner" });
     }
   }
 }

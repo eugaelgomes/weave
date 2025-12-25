@@ -4,7 +4,7 @@ import { useTheme } from "@/app/contexts/ThemeContext";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { FiSun, FiMoon } from "react-icons/fi";
 
-export function ThemeToggle() {
+const ThemeToggle = () => {
   const { theme, setTheme } = useTheme();
   const { user, updateUser } = useAuth();
 
@@ -22,7 +22,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={handleToggle}
-      className="rounded-lg bg-white p-2 text-neutral-700 transition-colors hover:bg-neutral-100 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
+      className="rounded-lg p-2 text-neutral-700 transition-colors dark:text-neutral-300"
       aria-label="Toggle theme"
       type="button"
     >
@@ -30,3 +30,5 @@ export function ThemeToggle() {
     </button>
   );
 }
+
+export { ThemeToggle };

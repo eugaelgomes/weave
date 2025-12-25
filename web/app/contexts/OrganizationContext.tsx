@@ -16,7 +16,7 @@ import {
   type UpdateOrganizationData,
   type OrganizationProperties,
   type AddMemberData,
-} from "../services/organization-service/OrganizationService";
+} from "../services/organization-service/orgs-service";
 
 export interface OrganizationStats {
   totalMembers: number;

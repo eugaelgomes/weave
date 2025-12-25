@@ -27,16 +27,33 @@ export interface OrganizationProperties {
   };
 }
 
-export interface OrganizationMembers {
-  owner: string;
-  admins: string[];
-  members: string[];
-  invited: string[];
+export interface OrganizationMember {
+  id: string;
+  organization_id: string;
+  user_id: string;
+  role: "owner" | "admin" | "member" | "guest";
+  status: "active" | "pending_invite" | "suspended";
+  created_at: string;
+  updated_at?: string;
+  invited_by?: string | null;
+  // Dados do usuário (via JOIN)
+  name?: string;
+  username?: string;
+  email?: string;
+  avatar_url?: string;
 }
 
 export interface OrganizationProjects {
   projects: string[];
   count: number;
+}
+
+export interface Owner {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  avatar_url?: string | null;
 }
 
 export interface Organization {
@@ -48,12 +65,12 @@ export interface Organization {
   banner_url?: string | null;
   description?: string;
   properties?: OrganizationProperties;
-  members?: OrganizationMembers;
   projects?: OrganizationProjects;
   org_domains?: string[] | null;
   deleted: boolean;
   created_at: string;
   updated_at: string;
+  owner?: Owner;
 }
 
 export interface CreateOrganizationData {
@@ -73,14 +90,13 @@ export interface UpdateOrganizationData {
   banner_url?: string | null;
   description?: string;
   properties?: OrganizationProperties;
-  members?: OrganizationMembers;
   projects?: OrganizationProjects;
   org_domains?: string[] | null;
 }
 
 export interface AddMemberData {
   memberId: string;
-  role?: "admin" | "member";
+  role?: "admin" | "member" | "guest";
 }
 
 // Helper para tratar propriedades que podem vir como string JSON do banco
@@ -91,15 +107,6 @@ const parseOrganizationProperties = (org: Organization): Organization => {
     } catch (e) {
       console.error("Erro ao parsear properties:", e);
       org.properties = undefined;
-    }
-  }
-
-  if (typeof org.members === "string") {
-    try {
-      org.members = JSON.parse(org.members);
-    } catch (e) {
-      console.error("Erro ao parsear members:", e);
-      org.members = undefined;
     }
   }
 
@@ -221,9 +228,28 @@ export const restoreOrganization = async (): Promise<Organization> => {
 };
 
 /**
+ * Busca todos os membros da organização do usuário autenticado
+ */
+export const fetchOrganizationMembers = async (): Promise<OrganizationMember[]> => {
+  try {
+    const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_MEMBERS);
+    const data = await handleResponse(response);
+
+    if (data.success && data.data) {
+      return data.data as OrganizationMember[];
+    }
+
+    return [];
+  } catch (error: any) {
+    console.error("Erro ao buscar membros:", error);
+    throw error;
+  }
+};
+
+/**
  * Adiciona um membro à organização
  */
-export const addMember = async (memberData: AddMemberData): Promise<Organization> => {
+export const addMember = async (memberData: AddMemberData): Promise<OrganizationMember> => {
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_MEMBERS, memberData);
   const data = await handleResponse(response);
 
@@ -231,13 +257,13 @@ export const addMember = async (memberData: AddMemberData): Promise<Organization
     throw new Error(data.error || "Erro ao adicionar membro");
   }
 
-  return parseOrganizationProperties(data.data);
+  return data.data as OrganizationMember;
 };
 
 /**
  * Remove um membro da organização
  */
-export const removeMember = async (memberId: string): Promise<Organization> => {
+export const removeMember = async (memberId: string): Promise<OrganizationMember> => {
   const response = await apiClient.delete(API_ENDPOINTS.ORGANIZATIONS_MEMBER(memberId));
   const data = await handleResponse(response);
 
@@ -245,5 +271,47 @@ export const removeMember = async (memberId: string): Promise<Organization> => {
     throw new Error(data.error || "Erro ao remover membro");
   }
 
-  return parseOrganizationProperties(data.data);
+  return data.data as OrganizationMember;
+};
+
+/**
+ * Faz upload do logo da organização
+ */
+export const uploadOrganizationLogo = async (file: File): Promise<Organization> => {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_LOGO, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  const data = await handleResponse(response);
+
+  if (!data.success || !data.data?.organization) {
+    throw new Error(data.error || "Erro ao fazer upload do logo");
+  }
+
+  return parseOrganizationProperties(data.data.organization);
+};
+
+/**
+ * Faz upload do banner da organização
+ */
+export const uploadOrganizationBanner = async (file: File): Promise<Organization> => {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_BANNER, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  const data = await handleResponse(response);
+
+  if (!data.success || !data.data?.organization) {
+    throw new Error(data.error || "Erro ao fazer upload do banner");
+  }
+
+  return parseOrganizationProperties(data.data.organization);
 };

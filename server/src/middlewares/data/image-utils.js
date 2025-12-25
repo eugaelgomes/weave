@@ -84,6 +84,98 @@ class ImageUtils {
   }
 
   /**
+   * Salva logo de organização no Digital Ocean Spaces
+   * @param {Buffer} imageBuffer - Buffer da imagem
+   * @param {string} mimeType - Tipo MIME da imagem
+   * @param {string} organizationId - ID da organização
+   * @returns {Promise<Object>} - Resultado do upload
+   */
+  async saveOrganizationLogo(imageBuffer, mimeType, organizationId) {
+    try {
+      if (!this.s3Client) {
+        throw new Error("Digital Ocean Spaces not configured");
+      }
+
+      const extension = this.getExtensionFromMimeType(mimeType);
+      const filename = `org-${organizationId}-logo${extension}`;
+      const key = `organization-images/${filename}`;
+
+      const uploadParams = {
+        Bucket: this.bucketName,
+        Key: key,
+        Body: imageBuffer,
+        ContentType: mimeType,
+        ACL: "public-read",
+      };
+
+      const command = new PutObjectCommand(uploadParams);
+      await this.s3Client.send(command);
+
+      const imageUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
+
+      return {
+        success: true,
+        url: imageUrl,
+        filename,
+        key,
+        size: imageBuffer.length,
+      };
+    } catch (error) {
+      console.error("Erro ao fazer upload do logo:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * Salva banner de organização no Digital Ocean Spaces
+   * @param {Buffer} imageBuffer - Buffer da imagem
+   * @param {string} mimeType - Tipo MIME da imagem
+   * @param {string} organizationId - ID da organização
+   * @returns {Promise<Object>} - Resultado do upload
+   */
+  async saveOrganizationBanner(imageBuffer, mimeType, organizationId) {
+    try {
+      if (!this.s3Client) {
+        throw new Error("Digital Ocean Spaces not configured");
+      }
+
+      const extension = this.getExtensionFromMimeType(mimeType);
+      const filename = `org-${organizationId}-banner${extension}`;
+      const key = `organization-images/${filename}`;
+
+      const uploadParams = {
+        Bucket: this.bucketName,
+        Key: key,
+        Body: imageBuffer,
+        ContentType: mimeType,
+        ACL: "public-read",
+      };
+
+      const command = new PutObjectCommand(uploadParams);
+      await this.s3Client.send(command);
+
+      const imageUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
+
+      return {
+        success: true,
+        url: imageUrl,
+        filename,
+        key,
+        size: imageBuffer.length,
+      };
+    } catch (error) {
+      console.error("Erro ao fazer upload do banner:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  /**
    * Remove uma imagem do Digital Ocean Spaces
    * @param {string} key - Chave da imagem no Spaces
    * @returns {Promise<boolean>} - True se removido com sucesso

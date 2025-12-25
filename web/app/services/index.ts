@@ -69,7 +69,7 @@ export {
   type CreateOrganizationData,
   type UpdateOrganizationData,
   type AddMemberData,
-} from "./organization-service/OrganizationService";
+} from "./organization-service/orgs-service";
 
 // Backup Services
 export * from "./backup-service/BackupService";

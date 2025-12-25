@@ -13,6 +13,7 @@ export interface User {
   role_name?: string;
   theme_mode?: "light" | "dark";
   org_id?: string;
+  org_name?: string;
   org_unique_name?: string;
   [key: string]: unknown;
 }
@@ -114,20 +115,24 @@ export const getUserData = async (): Promise<User> => {
   return await handleResponse<User>(response);
 };
 
-export const updateUserData = async (userData: Partial<User>): Promise<User> => {
+export const updateUserData = async (userData: Partial<User>): Promise<Partial<User>> => {
   const response = await apiClient.put(API_ENDPOINTS.UPDATE_PROFILE, userData);
   const data = await handleResponse<User>(response);
 
-  return {
-    name: data.name,
-    email: data.email,
-    username: data.username,
-    avatar_url: data.avatar_url,
-    role: data.role_name,
-    theme_mode: data.theme_mode,
-    org_id: data.org_id,
-    org_unique_name: data.org_unique_name,
-  };
+  // Retorna apenas os campos que vieram do backend para não sobrescrever dados existentes
+  const result: Partial<User> = {};
+
+  if (data.name !== undefined) result.name = data.name;
+  if (data.email !== undefined) result.email = data.email;
+  if (data.username !== undefined) result.username = data.username;
+  if (data.avatar_url !== undefined) result.avatar_url = data.avatar_url;
+  if (data.role_name !== undefined) result.role = data.role_name;
+  if (data.theme_mode !== undefined) result.theme_mode = data.theme_mode;
+  if (data.org_id !== undefined) result.org_id = data.org_id;
+  if (data.org_name !== undefined) result.org_name = data.org_name;
+  if (data.org_unique_name !== undefined) result.org_unique_name = data.org_unique_name;
+
+  return result;
 };
 
 export const updatePassword = async (

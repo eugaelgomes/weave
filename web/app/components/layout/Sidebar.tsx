@@ -10,21 +10,22 @@ import {
   FaHome,
   FaProjectDiagram,
   FaTimes,
-  FaGithub,
   FaRegSadTear,
   FaComments,
-  FaList,
   FaChevronDown,
   FaChevronRight,
+  FaRobot,
+  FaUsers,
+  FaUserFriends,
+  FaBriefcase,
 } from "react-icons/fa";
-import { MdPersonAdd, MdInfo } from "react-icons/md";
+import { MdPersonAdd } from "react-icons/md";
 import { IoMdSettings } from "react-icons/io";
+import { HiSparkles } from "react-icons/hi2";
 import { IconType } from "react-icons";
-
 interface SidebarProps {
   onLinkClick?: () => void;
 }
-
 interface NavigationItem {
   path: string;
   icon: IconType;
@@ -41,19 +42,19 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
   const authData = useSafeAuthenticatedData();
   const pathname = usePathname();
 
-  // Estado de itens expandidos
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
-  // Efeito de automático para expandir itens com base na rota atual
   useEffect(() => {
     const newExpandedState: Record<string, boolean> = {};
 
-    // Lista subitens
-    const itemsWithSubs = ["/app/weave-ai"];
+    const itemsWithSubs = [
+      { path: "/app/weave-ai", checkPath: "/app/weave-ai" },
+      { path: "/app/organization", checkPath: "/app/organization" }
+    ];
 
-    itemsWithSubs.forEach((parentPath) => {
-      if (pathname.startsWith(parentPath)) {
-        newExpandedState[parentPath] = true;
+    itemsWithSubs.forEach(({ path, checkPath }) => {
+      if (pathname.startsWith(checkPath)) {
+        newExpandedState[path] = true;
       }
     });
 
@@ -91,15 +92,24 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
     { path: "/app/notes", icon: FaBook, label: "Notas" },
     { path: "/app/projects", icon: FaProjectDiagram, label: "Projetos" },
     {
-      path: "/app/weave-ai/chat",
-      icon: FaProjectDiagram,
+      path: "/app/weave-ai",
+      icon: HiSparkles,
       label: "Weave AI",
       subItems: [
         { path: "/app/weave-ai/chat", icon: FaComments, label: "Chat" },
-        { path: "/app/weave-ai/agent", icon: FaList, label: "Agente" },
+        { path: "/app/weave-ai/agent", icon: FaRobot, label: "Agente" },
       ],
     },
-    { path: "/app/organization", icon: MdPersonAdd, label: "Orgnização" },
+    {
+      path: "/app/organization",
+      icon: FaUsers,
+      label: "Organização",
+      subItems: [
+        { path: "/app/organization/settings", icon: IoMdSettings, label: "Configurações" },
+        { path: "/app/organization/members", icon: FaUserFriends, label: "Membros" },
+        { path: "/app/organization/projects", icon: FaProjectDiagram, label: "Projetos" },
+      ],
+    },
     { path: "/app/settings", icon: IoMdSettings, label: "Configurações" },
   ];
 
@@ -159,11 +169,8 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
                   <Link
                     href={item.path}
                     onClick={(e) => {
-                      // Se tiver subitems, alterna a expansão
                       if (hasSubItems) {
                         toggleExpand(item.path, e);
-                        // NÃO chamamos handleLinkClick aqui se quisermos manter o menu aberto no mobile
-                        // ao expandir uma categoria. Se for um link direto, chamamos.
                       } else {
                         handleLinkClick();
                       }
@@ -194,7 +201,7 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
                   </Link>
                 </div>
 
-                {/* Renderização Condicional dos Subitens */}
+                {/* Renderização dos Subitens */}
                 {hasSubItems && isExpanded && (
                   <ul className="animate-in slide-in-from-top-1 mt-0.5 space-y-0.5 pl-4 duration-200">
                     {item.subItems!.map((subItem) => {
@@ -205,10 +212,10 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
                         <li key={subItem.path}>
                           <Link
                             href={subItem.path}
-                            onClick={handleLinkClick} // Fecha o menu mobile ao clicar no filho
+                            onClick={handleLinkClick}
                             className={`group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 transition-all duration-200 ${
                               isSubActive
-                                ? "bg-neutral-100 text-yellow-600 dark:bg-neutral-900 dark:text-yellow-500"
+                                ? "bg-yellow-500/10 font-medium text-yellow-600 dark:text-yellow-500"
                                 : "text-neutral-500 hover:text-neutral-800 dark:text-neutral-500 dark:hover:text-neutral-300"
                             }`}
                           >
@@ -227,7 +234,6 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
           })}
         </ul>
 
-        {/* ... Resto do código (Divisor, Recentes, Footer) permanece igual ... */}
         <div className="divisor my-4 h-0.5 w-full shrink-0 rounded-full bg-neutral-300 opacity-50 dark:bg-neutral-800 dark:opacity-20" />
 
         <div className="flex-1">
@@ -281,27 +287,6 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
           </ul>
         </div>
       </nav>
-
-      {/* Footer */}
-      <div className="flex-shrink-0 border-t border-neutral-200 p-2 dark:border-neutral-800">
-        <div className="flex gap-1">
-          <Link
-            href="https://github.com/eugaelgomes/notes-web-app"
-            target="_blank"
-            className="flex flex-1 items-center justify-center gap-1.5 rounded bg-neutral-200/50 py-1.5 text-[10px] font-medium text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 dark:bg-neutral-900/50 dark:text-neutral-500 dark:hover:bg-neutral-900 dark:hover:text-neutral-300"
-          >
-            <FaGithub className="h-3 w-3" />
-            <span>Github</span>
-          </Link>
-          <Link
-            href="/about"
-            className="flex flex-1 items-center justify-center gap-1.5 rounded bg-neutral-200/50 py-1.5 text-[10px] font-medium text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 dark:bg-neutral-900/50 dark:text-neutral-500 dark:hover:bg-neutral-900 dark:hover:text-neutral-300"
-          >
-            <MdInfo className="h-3 w-3" />
-            <span>Sobre</span>
-          </Link>
-        </div>
-      </div>
     </aside>
   );
 };

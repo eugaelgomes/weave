@@ -30,32 +30,6 @@ class AuthRepository {
     return results[0];
   }
 
-  async updateUserProfile(userId, name, email, username, theme_mode) {
-    const query = `
-      UPDATE users
-      SET name = $1, email = $2, username = $3, theme_mode = $4
-      WHERE user_id = $5 AND deleted = false
-      RETURNING user_id, username, name, email, avatar_url, theme_mode, created_at
-    `;
-    const results = await executeQuery(query, [
-      name,
-      email,
-      username,
-      theme_mode,
-      userId,
-    ]);
-    return results[0];
-  }
-
-  async updateUserPassword(userId, hashedPassword) {
-    const query = `
-      UPDATE users
-      SET password = $1
-      WHERE user_id = $2 AND deleted = false
-    `;
-    return await executeQuery(query, [hashedPassword, userId]);
-  }
-
   async logUserLocation(userId, ip, timestamp, location, userAgent) {
     const query = `
       INSERT INTO user_location_logs (user_id, ip_address, created_at, location, user_agent) 

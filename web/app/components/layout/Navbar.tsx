@@ -8,19 +8,27 @@ import { FaBars, FaTimes } from "react-icons/fa";
 import { IoPersonCircleSharp } from "react-icons/io5";
 import { ThemeToggle } from "@/app/components/ui/theme-toggle";
 
-const getDisplayName = (user: any) => {
+interface User {
+  name?: string;
+  email?: string;
+  username?: string;
+  avatar_url?: string;
+  org_unique_name?: string;
+}
+
+const getDisplayName = (user: User) => {
   const name = user?.name || "Usuário";
   const parts = name.trim().split(" ");
   return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : parts[0];
 };
 
-const getUserUsername = (user: any) => {
+const getUserUsername = (user: User) => {
   if (user?.username) return user.username;
   if (user?.email) return user.email.split("@")[0];
   return "usuario";
 };
 
-const UserAvatar = ({ user, size = "sm" }: { user: any; size?: "sm" | "md" | "lg" }) => {
+const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "sm" | "md" | "lg" }) => {
   const sizeClasses = {
     sm: "h-8 w-8 sm:h-9 sm:w-9",
     md: "h-12 w-12",
@@ -55,7 +63,7 @@ const MenuContent = ({
   logout,
   onClose,
 }: {
-  user: any;
+  user: User;
   logout: () => void;
   onClose: () => void;
 }) => (
@@ -154,78 +162,61 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
           {/* Dados e botões*/}
           <div className="flex items-center gap-3">
-            {authenticated && user ? (
-              <>
-                <ThemeToggle />
-                <div className="relative" ref={menuRef}>
-                  {/* Trigger Button */}
-                  <button
-                    onClick={() => setMenuOpen(!isMenuOpen)}
-                    className="group flex items-center justify-end gap-3 rounded-md pl-2 transition-all"
-                  >
-                    <div className="hidden flex-col items-end md:flex">
-                      <span className="text-sm font-medium text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-200 dark:group-hover:text-yellow-500">
-                        {getDisplayName(user)}
-                      </span>
-                      <span className="text-xs text-neutral-500 dark:text-neutral-500">
-                        {getUserUsername(user)}
-                      </span>
+            <ThemeToggle />
+            {authenticated && user && (
+              <div className="relative" ref={menuRef}>
+                {/* Trigger Button */}
+                <button
+                  onClick={() => setMenuOpen(!isMenuOpen)}
+                  className="group flex items-center justify-end gap-3 rounded-md pl-2 transition-all"
+                >
+                  <div className="hidden flex-col items-end md:flex">
+                    <span className="text-sm font-medium text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-200 dark:group-hover:text-yellow-500">
+                      {getDisplayName(user)}
+                    </span>
+                    <span className="text-xs text-neutral-500 dark:text-neutral-500">
+                      {getUserUsername(user)}
+                    </span>
+                  </div>
+
+                  <UserAvatar user={user} size="sm" />
+                </button>
+
+                {/* Dropdowns / Modals */}
+                {isMenuOpen && (
+                  <>
+                    {/* Desktop Dropdown */}
+                    <div className="ring-opacity-5 absolute right-0 mt-2 hidden w-72 origin-top-right overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-xl ring-1 ring-black/5 sm:block dark:border-neutral-800 dark:bg-neutral-900 dark:ring-white/5">
+                      <MenuContent user={user} logout={logout} onClose={() => setMenuOpen(false)} />
                     </div>
 
-                    <UserAvatar user={user} size="sm" />
-                  </button>
+                    {/* Fundo backdrop */}
+                    <div
+                      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm sm:hidden"
+                      onClick={() => setMenuOpen(false)}
+                    />
 
-                  {/* Dropdowns / Modals */}
-                  {isMenuOpen && (
-                    <>
-                      {/* Desktop Dropdown */}
-                      <div className="ring-opacity-5 absolute right-0 mt-2 hidden w-72 origin-top-right overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-xl ring-1 ring-black/5 sm:block dark:border-neutral-800 dark:bg-neutral-900 dark:ring-white/5">
-                        <MenuContent
-                          user={user}
-                          logout={logout}
-                          onClose={() => setMenuOpen(false)}
-                        />
+                    {/* Botão mobile */}
+                    <div className="fixed right-0 bottom-0 left-0 z-50 rounded-t-xl border-t border-neutral-300 bg-white shadow-2xl sm:hidden dark:border-neutral-700 dark:bg-neutral-900">
+                      {/* Indicador de arrasto */}
+                      <div className="flex justify-center py-3">
+                        <div className="h-1 w-12 rounded-md bg-neutral-300 dark:bg-neutral-700" />
                       </div>
 
-                      {/* Fundo backdrop */}
-                      <div
-                        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm sm:hidden"
-                        onClick={() => setMenuOpen(false)}
-                      />
+                      <MenuContent user={user} logout={logout} onClose={() => setMenuOpen(false)} />
 
-                      {/* Botão mobile */}
-                      <div className="fixed right-0 bottom-0 left-0 z-50 rounded-t-xl border-t border-neutral-300 bg-white shadow-2xl sm:hidden dark:border-neutral-700 dark:bg-neutral-900">
-                        {/* Indicador de arrasto */}
-                        <div className="flex justify-center py-3">
-                          <div className="h-1 w-12 rounded-md bg-neutral-300 dark:bg-neutral-700" />
-                        </div>
-
-                        <MenuContent
-                          user={user}
-                          logout={logout}
-                          onClose={() => setMenuOpen(false)}
-                        />
-
-                        <div className="px-4 pt-2 pb-6">
-                          <button
-                            onClick={() => setMenuOpen(false)}
-                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-100 py-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-white"
-                          >
-                            <FaTimes /> Fechar
-                          </button>
-                        </div>
+                      <div className="px-4 pt-2 pb-6">
+                        <button
+                          onClick={() => setMenuOpen(false)}
+                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-100 py-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-white"
+                        >
+                          <FaTimes /> Fechar
+                        </button>
                       </div>
-                    </>
-                  )}
-                </div>
-              </>
-            ) : (
-              <Link
-                href="/auth/signin"
-                className="rounded-md bg-yellow-500 px-4 py-2 text-sm font-semibold text-neutral-950 transition-colors hover:bg-yellow-600 dark:bg-yellow-500 dark:text-neutral-950 dark:hover:bg-yellow-400"
-              >
-                Entrar
-              </Link>
+                    </div>
+                  </>
+                )}
+              </div>
             )}
           </div>
         </div>

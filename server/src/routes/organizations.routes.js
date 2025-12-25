@@ -1,6 +1,8 @@
 const express = require("express");
 const organizationsController = require("@/controllers/organizations/organization-controller");
 const { verifyToken } = require("@/middlewares/auth/auth-middleware");
+const upload = require("@/middlewares/data/profile-img");
+const validateImageMVP = require("@/middlewares/data/image-validator");
 
 const router = express.Router();
 
@@ -53,6 +55,12 @@ router.post(
 // ROTAS DE GERENCIAMENTO DE MEMBROS
 // ========================================
 
+// Listar todos os membros da organização
+router.get(
+  "/members",
+  organizationsController.getMembers.bind(organizationsController)
+);
+
 // Adicionar um membro à organização
 router.post(
   "/members",
@@ -63,6 +71,26 @@ router.post(
 router.delete(
   "/members/:memberId",
   organizationsController.removeMember.bind(organizationsController)
+);
+
+// ========================================
+// ROTAS DE UPLOAD DE IMAGENS
+// ========================================
+
+// Upload do logo da organização
+router.post(
+  "/logo",
+  upload.single("image"),
+  validateImageMVP,
+  organizationsController.uploadLogo.bind(organizationsController)
+);
+
+// Upload do banner da organização
+router.post(
+  "/banner",
+  upload.single("image"),
+  validateImageMVP,
+  organizationsController.uploadBanner.bind(organizationsController)
 );
 
 module.exports = router;

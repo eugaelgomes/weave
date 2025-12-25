@@ -1,92 +1,26 @@
 const { getAvailableOrgNames } = require("../../repositories/organizations");
 
-/**
- * Normaliza uma string para ser usada como nome único de organização
- * Remove caracteres especiais, converte para minúsculas e substitui espaços por hífens
- * @param {string} name - Nome a ser normalizado
- * @returns {string} Nome normalizado
- */
-const normalizeOrganizationName = (name) => {
-  if (!name || typeof name !== "string") {
-    throw new Error("Nome inválido: deve ser uma string não vazia");
-  }
+// ==========================================
+// CONFIGURAÇÃO DE PROPRIEDADES (SCHEMA)
+// ==========================================
 
-  return name
-    .toLowerCase()
-    .trim()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Remove acentos
-    .replace(/[^a-z0-9\s-]/g, "") // Remove caracteres especiais
-    .replace(/\s+/g, "-") // Substitui espaços por hífens
-    .replace(/-+/g, "-") // Remove hífens duplicados
-    .replace(/^-|-$/g, ""); // Remove hífens do início e fim
-};
-
-/**
- * Sugere um nome único de organização baseado em uma lista de nomes existentes
- * Adiciona sufixo numérico se necessário
- * @param {string} baseName - Nome base a ser usado
- * @param {string[]} existingNames - Array de nomes já existentes
- * @returns {string} Nome único sugerido
- */
-const suggestUniqueOrganizationName = (baseName, existingNames) => {
-  if (!baseName || typeof baseName !== "string") {
-    throw new Error("Nome base inválido: deve ser uma string não vazia");
-  }
-
-  if (!Array.isArray(existingNames)) {
-    throw new Error("existingNames deve ser um array");
-  }
-
-  const normalizedBase = normalizeOrganizationName(baseName);
-
-  if (!normalizedBase) {
-    throw new Error("Nome base resultou em string vazia após normalização");
-  }
-
-  let uniqueName = normalizedBase;
-  let counter = 1;
-
-  while (existingNames.includes(uniqueName)) {
-    uniqueName = `${normalizedBase}-${counter}`;
-    counter += 1;
-  }
-
-  return uniqueName;
-};
-
-/**
- * Busca nomes existentes no banco e sugere um nome único normalizado
- * @param {string} baseName - Nome base desejado
- * @returns {Promise<string>} Nome único normalizado e disponível
- */
-const generateUniqueOrganizationName = async (baseName) => {
-  const normalizedBase = normalizeOrganizationName(baseName);
-  const existingNames = await getAvailableOrgNames(normalizedBase);
-  return suggestUniqueOrganizationName(normalizedBase, existingNames);
-};
-
-/**
- * Define as propriedades predefinidas permitidas para organizações
- * Cada propriedade tem tipo, valor padrão e validação
- */
-const predefinedProperties = {
+const PREDEFINED_PROPERTIES = Object.freeze({
   theme: {
     type: "string",
     default: "light",
     allowed: ["light", "dark", "auto"],
-    description: "Tema da interface da organização",
+    description: "Tema da interface",
   },
   language: {
     type: "string",
     default: "pt-BR",
-    defined: ["pt-BR", "en-US", "es-ES", "fr-FR"],
-    description: "Idioma padrão da organização",
+    allowed: ["pt-BR", "en-US", "es-ES", "fr-FR"], // 'defined' alterado para 'allowed' para padronizar
+    description: "Idioma padrão",
   },
   timezone: {
     type: "string",
     default: "America/Sao_Paulo",
-    description: "Fuso horário da organização",
+    description: "Fuso horário",
   },
   allowPublicNotes: {
     type: "boolean",
@@ -97,15 +31,15 @@ const predefinedProperties = {
     type: "number",
     default: 10,
     min: 1,
-    max: 1000,
-    description: "Número máximo de membros",
+    max: 10000,
+    description: "Limite de membros",
   },
   maxProjects: {
     type: "number",
     default: 5,
     min: 1,
     max: 100,
-    description: "Número máximo de projetos",
+    description: "Limite de projetos",
   },
   features: {
     type: "object",
@@ -115,7 +49,7 @@ const predefinedProperties = {
       collaboration: false,
       passwordManager: false,
     },
-    description: "Features habilitadas para a organização",
+    description: "Funcionalidades ativas",
   },
   branding: {
     type: "object",
@@ -124,7 +58,7 @@ const predefinedProperties = {
       secondaryColor: "#c4c4c4",
       customDomain: null,
     },
-    description: "Configurações de marca da organização",
+    description: "Identidade visual",
   },
   notifications: {
     type: "object",
@@ -133,155 +67,115 @@ const predefinedProperties = {
       push: false,
       digest: "weekly",
     },
-    description: "Configurações de notificações",
+    description: "Preferências de notificação",
   },
+});
+
+// ==========================================
+// HELPER FUNCTIONS (CORE)
+// ==========================================
+
+// Transforma strings em slugs URL-friendly (ex: "Minha  Org!" -> "minha-org")
+const normalizeOrganizationName = (name) => {
+  if (typeof name !== "string" || !name) throw new Error("Nome inválido para normalização");
+
+  return name
+    .toLowerCase()
+    .trim()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
+    .replace(/[^a-z0-9\s-]/g, "") // Remove especiais
+    .replace(/\s+/g, "-") // Espaço -> Hífen
+    .replace(/-+/g, "-") // Remove hífens duplicados
+    .replace(/^-+|-+$/g, ""); // Trim hífens
 };
 
-/**
- * Valida um valor baseado na definição da propriedade
- * @param {any} value - Valor a ser validado
- * @param {Object} definition - Definição da propriedade
- * @returns {boolean} True se válido
- */
-const validatePropertyValue = (value, definition) => {
-  // Validação de tipo
-  if (definition.type === "string" && typeof value !== "string") {
-    return false;
-  }
-  if (definition.type === "number" && typeof value !== "number") {
-    return false;
-  }
-  if (definition.type === "boolean" && typeof value !== "boolean") {
-    return false;
-  }
-  if (
-    definition.type === "object" &&
-    (typeof value !== "object" || value === null)
-  ) {
-    return false;
+// Garante unicidade adicionando sufixo numérico se necessário
+const suggestUniqueOrganizationName = (baseName, existingNames) => {
+  if (!Array.isArray(existingNames)) throw new Error("Lista de nomes existentes inválida");
+  
+  const normalized = normalizeOrganizationName(baseName);
+  if (!normalized) throw new Error("Nome base inválido após normalização");
+
+  let uniqueName = normalized;
+  let counter = 1;
+
+  while (existingNames.includes(uniqueName)) {
+    uniqueName = `${normalized}-${counter++}`;
   }
 
-  // Validação de valores permitidos
-  if (definition.allowed && !definition.allowed.includes(value)) {
-    return false;
-  }
+  return uniqueName;
+};
 
-  // Validação de min/max para números
-  if (definition.type === "number") {
-    if (definition.min !== undefined && value < definition.min) {
-      return false;
-    }
-    if (definition.max !== undefined && value > definition.max) {
-      return false;
-    }
+// Orquestrador: Normaliza, verifica disponibilidade e sugere nome
+const generateUniqueOrganizationName = async (baseName) => {
+  const normalizedBase = normalizeOrganizationName(baseName);
+  const existingNames = await getAvailableOrgNames(normalizedBase);
+  return suggestUniqueOrganizationName(normalizedBase, existingNames);
+};
+
+// Valida tipo, range numérico e valores permitidos (enum)
+const isValidValue = (value, def) => {
+  // Validação de Tipo
+  if (def.type === "object" && (value === null || typeof value !== "object")) return false;
+  if (typeof value !== def.type) return false;
+
+  // Validação de Enum (Allowed values)
+  if (def.allowed && !def.allowed.includes(value)) return false;
+
+  // Validação de Range (Numbers)
+  if (def.type === "number") {
+    if (def.min !== undefined && value < def.min) return false;
+    if (def.max !== undefined && value > def.max) return false;
   }
 
   return true;
 };
 
-/**
- * Normaliza as propriedades JSONB da organização
- * Remove propriedades inválidas e aplica valores padrão
- * @param {Object} properties - Propriedades a serem normalizadas
- * @returns {Object} Propriedades normalizadas
- */
+// ==========================================
+// EXPORTED METHODS
+// ==========================================
+
 const normalizeOrganizationProperties = (properties = {}) => {
-  if (typeof properties !== "object" || properties === null) {
-    throw new Error("Properties deve ser um objeto");
-  }
+  if (typeof properties !== "object" || properties === null) throw new Error("Properties deve ser um objeto");
 
-  const normalized = {};
-
-  // Processa cada propriedade predefinida
-  for (const [key, definition] of Object.entries(predefinedProperties)) {
-    if (properties.hasOwnProperty(key)) {
-      // Se a propriedade existe, valida e usa o valor fornecido
-      if (validatePropertyValue(properties[key], definition)) {
-        normalized[key] = properties[key];
-      } else {
-        // Se inválida, usa o valor padrão
-        normalized[key] = definition.default;
-      }
-    } else {
-      // Se não existe, usa o valor padrão
-      normalized[key] = definition.default;
-    }
-  }
-
-  return normalized;
+  return Object.entries(PREDEFINED_PROPERTIES).reduce((acc, [key, def]) => {
+    // Usa valor recebido se válido, senão usa default
+    const value = properties[key];
+    acc[key] = isValidValue(value, def) ? value : def.default;
+    return acc;
+  }, {});
 };
 
-/**
- * Atualiza propriedades existentes com novos valores
- * Mantém propriedades não modificadas e valida as novas
- * @param {Object} currentProperties - Propriedades atuais
- * @param {Object} updates - Atualizações a serem aplicadas
- * @returns {Object} Propriedades atualizadas
- */
 const updateOrganizationProperties = (currentProperties = {}, updates = {}) => {
-  if (typeof currentProperties !== "object" || currentProperties === null) {
-    throw new Error("Current properties deve ser um objeto");
-  }
-  if (typeof updates !== "object" || updates === null) {
-    throw new Error("Updates deve ser um objeto");
-  }
+  if (!currentProperties || !updates) throw new Error("Parâmetros inválidos para atualização");
 
-  const normalized = { ...currentProperties };
+  const nextProps = { ...currentProperties };
 
-  // Aplica as atualizações validando cada uma
   for (const [key, value] of Object.entries(updates)) {
-    const definition = predefinedProperties[key];
+    const def = PREDEFINED_PROPERTIES[key];
+    
+    if (!def) continue; // Ignora campos estranhos ao schema
 
-    if (!definition) {
-      // Ignora propriedades não predefinidas
-      continue;
+    if (!isValidValue(value, def)) {
+      throw new Error(`Valor inválido para '${key}': ${JSON.stringify(value)}`);
     }
 
-    if (validatePropertyValue(value, definition)) {
-      normalized[key] = value;
-    } else {
-      throw new Error(
-        `Valor inválido para propriedade '${key}': ${JSON.stringify(value)}`
-      );
-    }
+    nextProps[key] = value;
   }
 
-  return normalized;
+  return nextProps;
 };
 
-/**
- * Retorna as propriedades padrão para uma nova organização
- * @returns {Object} Propriedades padrão
- */
+// Getters utilitários
 const getDefaultOrganizationProperties = () => {
-  const defaults = {};
-
-  for (const [key, definition] of Object.entries(predefinedProperties)) {
-    defaults[key] = definition.default;
-  }
-
-  return defaults;
+  return Object.fromEntries(
+    Object.entries(PREDEFINED_PROPERTIES).map(([k, v]) => [k, v.default])
+  );
 };
 
-/**
- * Retorna a documentação das propriedades disponíveis
- * @returns {Object} Documentação das propriedades
- */
 const getPropertiesSchema = () => {
-  const schema = {};
-
-  for (const [key, definition] of Object.entries(predefinedProperties)) {
-    schema[key] = {
-      type: definition.type,
-      default: definition.default,
-      description: definition.description,
-      ...(definition.allowed && { allowed: definition.allowed }),
-      ...(definition.min !== undefined && { min: definition.min }),
-      ...(definition.max !== undefined && { max: definition.max }),
-    };
-  }
-
-  return schema;
+  // Retorna cópia limpa do schema para documentation/frontend
+  return JSON.parse(JSON.stringify(PREDEFINED_PROPERTIES));
 };
 
 module.exports = {
@@ -292,5 +186,5 @@ module.exports = {
   updateOrganizationProperties,
   getDefaultOrganizationProperties,
   getPropertiesSchema,
-  predefinedProperties,
+  predefinedProperties: PREDEFINED_PROPERTIES,
 };

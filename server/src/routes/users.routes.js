@@ -16,6 +16,16 @@ router.post(
   UserController.createUser.bind(UserController)
 );
 
+router.get("/me", verifyToken, UserController.getProfile.bind(UserController));
+
+router.put(
+  "/me/update-profile",
+  verifyToken,
+  upload.single("profilePicture"),
+  validateCompressedImageSize,
+  UserController.updateProfile.bind(UserController)
+);
+
 router.get("/search", verifyToken, (req, res, next) => {
   NotesController.searchUsers(req, res, next);
 });

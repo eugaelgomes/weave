@@ -57,6 +57,8 @@ export const API_ENDPOINTS = {
   ORGANIZATIONS_RESTORE: "/organizations/restore",
   ORGANIZATIONS_MEMBERS: "/organizations/members",
   ORGANIZATIONS_MEMBER: (memberId: string) => `/organizations/members/${memberId}`,
+  ORGANIZATIONS_LOGO: "/organizations/logo",
+  ORGANIZATIONS_BANNER: "/organizations/banner",
 
   // AI
   AI_MODELS: "/ai/models",

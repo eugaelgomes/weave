@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const { validationResult } = require("express-validator");
 const UserRepository = require("@/repositories/user-manager");
+const AuthRepository = require("@/repositories/authentication");
 const welcomeMailModule = require("@/services/email/templates/welcome-mails/welcome-mail");
 const deleteAccountModule = require("@/services/email/templates/delete-account/delete-account-message");
 const imageUtils = require("@/middlewares/data/image-utils");
@@ -171,6 +172,116 @@ class UserController {
       res.status(500).json({
         error: "Internal server error",
       });
+    }
+  }
+
+  async getProfile(req, res) {
+    try {
+      // O token já foi validado pelo middleware, usar dados do req.user
+      const user = await AuthRepository.findUserByUsername(req.user.username);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      return res.json({
+        id: user.user_id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        org_id: user.org_id || null,
+        org_unique_name: user.org_unique_name || null,
+        org_name: user.org_name || null,
+        avatar_url: user.avatar_url || null,
+        theme_mode: user.theme_mode || "light",
+        createdAt: user.created_at,
+        updatedAt: user.updated_at,
+      });
+    } catch (error) {
+      console.error("Erro ao buscar perfil:", error);
+      return res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  }
+
+  async updateProfile(req, res) {
+    const { name, username, email, currentPassword, newPassword, theme_mode } = req.body;
+    try {
+      // Buscar usuário atual para garantir que não sobrescrevemos com null/undefined
+      const currentUser = await AuthRepository.findUserByUsername(req.user.username);
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // 1) Atualiza dados básicos
+      const updatedUser = await UserRepository.updateUserProfile(
+        req.user.userId,
+        name || currentUser.name,
+        email || currentUser.email,
+        username || currentUser.username,
+        theme_mode || currentUser.theme_mode || "light"
+      );
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // 2) Se veio arquivo de imagem, faz upload e atualiza avatar_url
+      let avatarUrl = updatedUser.avatar_url || null;
+      if (req.file && req.file.buffer) {
+        const uploadResult = await imageUtils.saveProfileImage(
+          req.file.buffer,
+          req.file.mimetype,
+          req.user.userId
+        );
+        if (!uploadResult.success) {
+          return res.status(500).json({
+            message: "Image upload failed",
+            error: uploadResult.error,
+          });
+        }
+
+        const updateImage = await UserRepository.updateProfileImage(
+          req.user.userId,
+          uploadResult.url
+        );
+        if (updateImage && updateImage.length > 0) {
+          avatarUrl = updateImage[0].avatar_url;
+        }
+      }
+
+      // 3) Se veio senha, valida e atualiza
+      if (currentPassword && newPassword) {
+        const user = await AuthRepository.findUserByUsername(
+          updatedUser.username
+        );
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        const match = await bcrypt.compare(currentPassword, user.password);
+        if (!match) {
+          return res
+            .status(401)
+            .json({ message: "Current password is incorrect" });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await UserRepository.updateUserPassword(
+          req.user.userId,
+          hashedPassword
+        );
+      }
+
+      return res.json({
+        id: updatedUser.user_id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        username: updatedUser.username,
+        avatar_url: avatarUrl,
+        createdAt: updatedUser.created_at,
+        message: "Profile updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 
