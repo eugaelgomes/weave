@@ -3,7 +3,7 @@ const { executeQuery } = require("@/services/db/db-connection");
 class PasswordRepository {
   async findUserByEmail(email) {
     const query = `SELECT 
-        user_id, user_id, email 
+        user_id, email, email_verified
      FROM 
         users 
      WHERE 

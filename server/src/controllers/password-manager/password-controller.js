@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const { validationResult } = require("express-validator");
-const PasswordRepository = require("@/repositories/password-manager");
+const PasswordRepository = require("@/repositories/password");
 const mail_rescue_pass = require("@/services/email/templates/access/rescue-password-mail");
 
 const getCurrentDateTimeUTCMinus3 = () => {
@@ -27,6 +27,14 @@ class PasswordController {
 
       if (!userExists) {
         return res.status(400).json({ message: "User not found." });
+      }
+
+      // Verifica se o email foi validado
+      if (!userExists.email_verified) {
+        return res.status(403).json({ 
+          message: "Email not verified. Please activate your account first.",
+          email_verified: false
+        });
       }
 
       const token = crypto.randomBytes(10).toString("hex");
