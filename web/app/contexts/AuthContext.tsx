@@ -132,13 +132,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await loginService({ username, password: pwd });
 
-      if (response && response.user) {
-        const t = response.token || null;
+      // Backend retorna user_data: { profile, organization }
+      const responseData = response as unknown as {
+        user_data?: { profile: User; organization: { id: string; name: string; unique_name: string } };
+        user?: User;
+        token?: string;
+      };
+
+      const userData = responseData.user_data?.profile || responseData.user;
+
+      if (responseData && userData) {
+        const t = responseData.token || null;
         // backend já envia cookie HttpOnly com o token; não gravamos token manualmente
         if (t) {
           setToken("authenticated"); // dummy token para indicar estado autenticado
         }
-        const userData = response.user;
+        
+        // Adiciona dados da organização ao userData
+        if (responseData.user_data?.organization) {
+          userData.org_id = responseData.user_data.organization.id;
+          userData.org_name = responseData.user_data.organization.name;
+          userData.org_unique_name = responseData.user_data.organization.unique_name;
+        }
+        
         setUser(userData);
         setTheme(userData.theme_mode || "light");
         try {

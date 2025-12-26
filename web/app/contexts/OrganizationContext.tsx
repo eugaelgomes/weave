@@ -228,7 +228,9 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
       try {
         const memberData: AddMemberData = { memberId, role };
-        const updatedOrganization = await addMemberService(memberData);
+        await addMemberService(memberData);
+        // Busca a organização atualizada após adicionar o membro
+        const updatedOrganization = await fetchOrganizationService();
         setOrganization(updatedOrganization);
         setLastFetch(new Date());
         return true;
@@ -252,7 +254,9 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       setError(null);
 
       try {
-        const updatedOrganization = await removeMemberService(memberId);
+        await removeMemberService(memberId);
+        // Busca a organização atualizada após remover o membro
+        const updatedOrganization = await fetchOrganizationService();
         setOrganization(updatedOrganization);
         setLastFetch(new Date());
         return true;

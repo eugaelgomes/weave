@@ -64,7 +64,7 @@ export {
   removeMember,
   type Organization,
   type OrganizationProperties,
-  type OrganizationMembers,
+  type OrganizationMember,
   type OrganizationProjects,
   type CreateOrganizationData,
   type UpdateOrganizationData,

@@ -71,6 +71,12 @@ export interface Organization {
   created_at: string;
   updated_at: string;
   owner?: Owner;
+  members?: {
+    owner: string;
+    admins: string[];
+    members: string[];
+    invited: string[];
+  };
 }
 
 export interface CreateOrganizationData {
@@ -137,7 +143,7 @@ const parseOrganizationProperties = (org: Organization): Organization => {
 export const fetchOrganization = async (): Promise<Organization | null> => {
   try {
     const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS);
-    const data = await handleResponse(response);
+    const data = await handleResponse<{ success?: boolean; data?: Organization }>(response);
 
     if (data.success && data.data) {
       return parseOrganizationProperties(data.data);
@@ -160,7 +166,7 @@ export const createOrganization = async (
   organizationData: CreateOrganizationData
 ): Promise<Organization> => {
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS, organizationData);
-  const data = await handleResponse(response);
+  const data = await handleResponse<{ success?: boolean; data?: Organization; error?: string }>(response);
 
   if (!data.success || !data.data) {
     throw new Error(data.error || "Erro ao criar organização");
@@ -176,7 +182,7 @@ export const updateOrganization = async (
   organizationData: UpdateOrganizationData
 ): Promise<Organization> => {
   const response = await apiClient.put(API_ENDPOINTS.ORGANIZATIONS, organizationData);
-  const data = await handleResponse(response);
+  const data = await handleResponse<{ success?: boolean; data?: Organization; error?: string }>(response);
 
   if (!data.success || !data.data) {
     throw new Error(data.error || "Erro ao atualizar organização");
@@ -194,7 +200,7 @@ export const updateOrganizationProperties = async (
   const response = await apiClient.patch(API_ENDPOINTS.ORGANIZATIONS_PROPERTIES, {
     properties,
   });
-  const data = await handleResponse(response);
+  const data = await handleResponse<{ success?: boolean; data?: Organization; error?: string }>(response);
 
   if (!data.success || !data.data) {
     throw new Error(data.error || "Erro ao atualizar propriedades");
@@ -208,7 +214,7 @@ export const updateOrganizationProperties = async (
  */
 export const deleteOrganization = async (): Promise<boolean> => {
   const response = await apiClient.delete(API_ENDPOINTS.ORGANIZATIONS);
-  const data = await handleResponse(response);
+  const data = await handleResponse<{ success?: boolean }>(response);
 
   return data.success === true;
 };
@@ -218,7 +224,7 @@ export const deleteOrganization = async (): Promise<boolean> => {
  */
 export const restoreOrganization = async (): Promise<Organization> => {
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_RESTORE);
-  const data = await handleResponse(response);
+  const data = await handleResponse<{ success?: boolean; data?: Organization; error?: string }>(response);
 
   if (!data.success || !data.data) {
     throw new Error(data.error || "Erro ao restaurar organização");
@@ -233,10 +239,10 @@ export const restoreOrganization = async (): Promise<Organization> => {
 export const fetchOrganizationMembers = async (): Promise<OrganizationMember[]> => {
   try {
     const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_MEMBERS);
-    const data = await handleResponse(response);
+    const data = await handleResponse<{ success?: boolean; data?: OrganizationMember[] }>(response);
 
     if (data.success && data.data) {
-      return data.data as OrganizationMember[];
+      return data.data;
     }
 
     return [];
@@ -251,13 +257,13 @@ export const fetchOrganizationMembers = async (): Promise<OrganizationMember[]> 
  */
 export const addMember = async (memberData: AddMemberData): Promise<OrganizationMember> => {
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_MEMBERS, memberData);
-  const data = await handleResponse(response);
+  const data = await handleResponse<{ success?: boolean; data?: OrganizationMember; error?: string }>(response);
 
   if (!data.success || !data.data) {
     throw new Error(data.error || "Erro ao adicionar membro");
   }
 
-  return data.data as OrganizationMember;
+  return data.data;
 };
 
 /**
@@ -265,13 +271,13 @@ export const addMember = async (memberData: AddMemberData): Promise<Organization
  */
 export const removeMember = async (memberId: string): Promise<OrganizationMember> => {
   const response = await apiClient.delete(API_ENDPOINTS.ORGANIZATIONS_MEMBER(memberId));
-  const data = await handleResponse(response);
+  const data = await handleResponse<{ success?: boolean; data?: OrganizationMember; error?: string }>(response);
 
   if (!data.success || !data.data) {
     throw new Error(data.error || "Erro ao remover membro");
   }
 
-  return data.data as OrganizationMember;
+  return data.data;
 };
 
 /**
@@ -286,7 +292,7 @@ export const uploadOrganizationLogo = async (file: File): Promise<Organization> 
       "Content-Type": "multipart/form-data",
     },
   });
-  const data = await handleResponse(response);
+  const data = await handleResponse<{ success?: boolean; data?: { organization: Organization }; error?: string }>(response);
 
   if (!data.success || !data.data?.organization) {
     throw new Error(data.error || "Erro ao fazer upload do logo");
@@ -307,7 +313,7 @@ export const uploadOrganizationBanner = async (file: File): Promise<Organization
       "Content-Type": "multipart/form-data",
     },
   });
-  const data = await handleResponse(response);
+  const data = await handleResponse<{ success?: boolean; data?: { organization: Organization }; error?: string }>(response);
 
   if (!data.success || !data.data?.organization) {
     throw new Error(data.error || "Erro ao fazer upload do banner");

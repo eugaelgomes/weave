@@ -6,6 +6,7 @@ import { useAuth } from "@/app/contexts/AuthContext";
 import Image from "next/image";
 import { getUsers } from "@/app/services/auth-service/AuthService";
 import type { User } from "@/app/services/auth-service/AuthService";
+import type { Organization } from "@/types/organization";
 import {
   Users,
   Plus,
@@ -297,6 +298,7 @@ const MembersPage = () => {
     );
   }
 
+  // Certifique-se que organization é do tipo Organization
   const members = organization?.members || { owner: "", admins: [], members: [], invited: [] };
 
   const allMembers = [
