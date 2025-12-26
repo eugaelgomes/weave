@@ -33,7 +33,7 @@ cd web && npm run build     # Next.js production build
 ### Path Aliases
 Use `@/` prefix for all internal imports (configured via `module-alias`):
 ```javascript
-const { pool } = require('@/services/db/db-connection');
+const { pool } = require('@/services/db/index');
 const authController = require('@/controllers/authentication/auth-controller');
 ```
 
@@ -49,7 +49,7 @@ const authController = require('@/controllers/authentication/auth-controller');
 
 ### Database Access
 ```javascript
-const { executeQuery, rowCount } = require('@/services/db/db-connection');
+const { executeQuery, rowCount } = require('@/services/db/index');
 
 // Always use parameterized queries ($1, $2, ...)
 const results = await executeQuery(

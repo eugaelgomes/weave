@@ -7,13 +7,15 @@ const allowedOrigins = [
   "https://www.weavenotes.app",
 ];
 
-const ALLOWED_HOSTNAMES = allowedOrigins.map((url) => {
-  try {
-    return new URL(url).hostname;
-  } catch (e) {
-    return null;
-  }
-}).filter(Boolean);
+const ALLOWED_HOSTNAMES = allowedOrigins
+  .map((url) => {
+    try {
+      return new URL(url).hostname;
+    } catch (e) {
+      return null;
+    }
+  })
+  .filter(Boolean);
 
 const getCookieDomain = (hostname) => {
   if (process.env.NODE_ENV !== "production") return undefined;
@@ -32,4 +34,3 @@ module.exports = {
   allowedOrigins,
   getCookieDomain,
 };
-

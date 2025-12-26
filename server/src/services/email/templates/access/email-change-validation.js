@@ -1,10 +1,11 @@
-const { MailService } = require("@/services/email/config/mail-service");
+const { MailService } = require("@/services/email/config/index");
 
 async function sendEmailChangeValidation(currentEmail, newEmail, token) {
   const env = process.env.NODE_ENV || "development";
-  const validationLink = env === "production"
-    ? `${process.env.FRONTEND_URL}/auth/validate-email?token=${token}`
-    : `${process.env.FRONTEND_URL}/auth/validate-email?token=${token}`;
+  const validationLink =
+    env === "production"
+      ? `${process.env.FRONTEND_URL}/auth/validate-email?token=${token}`
+      : `${process.env.FRONTEND_URL}/auth/validate-email?token=${token}`;
 
   try {
     const mailOptions = {
@@ -211,7 +212,7 @@ async function sendEmailChangeValidation(currentEmail, newEmail, token) {
 </html>
       `,
     };
-    
+
     await MailService().sendMail(mailOptions);
     return { success: true };
   } catch (error) {

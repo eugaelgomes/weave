@@ -1,10 +1,11 @@
-const { MailService } = require("@/services/email/config/mail-service");
+const { MailService } = require("@/services/email/config/index");
 
 async function welcome_message(nome, email, username, activationToken) {
   const env = process.env.NODE_ENV || "development";
-  const activationLink = env === "production"
-    ? `${process.env.FRONTEND_URL}/auth/activate?token=${activationToken}`
-    : `${process.env.FRONTEND_URL}/auth/activate?token=${activationToken}`;
+  const activationLink =
+    env === "production"
+      ? `${process.env.FRONTEND_URL}/auth/activate?token=${activationToken}`
+      : `${process.env.FRONTEND_URL}/auth/activate?token=${activationToken}`;
 
   try {
     let mailOptions = {

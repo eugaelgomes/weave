@@ -1,7 +1,7 @@
 require("module-alias/register");
 const http = require("http");
 const { app } = require("@/app");
-const { pool } = require("@/services/db/db-connection");
+const { pool } = require("@/services/db/index");
 
 const normalizePort = (val) => {
   const port = parseInt(val, 10);

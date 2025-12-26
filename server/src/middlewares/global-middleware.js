@@ -8,7 +8,6 @@ const { allowedOrigins } = require("@/config/allowed-origins");
 // Domínios
 const WHITELIST = allowedOrigins;
 
-
 /**
  * Escapa caracteres especiais em uma string para uso em expressões regulares.
  */
@@ -35,7 +34,6 @@ function buildMatcher(allowed) {
 function makeCorsOptions() {
   const isDev = process.env.NODE_ENV !== "production";
 
-
   const devMatchers = isDev
     ? [
         (origin) => /^http:\/\/localhost(:\d+)?$/.test(origin),
@@ -43,7 +41,6 @@ function makeCorsOptions() {
       ]
     : [];
 
- 
   const matchers = WHITELIST.map(buildMatcher).concat(devMatchers);
 
   return {

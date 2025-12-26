@@ -1,4 +1,4 @@
-const { executeQuery } = require("../db/db-connection");
+const { executeQuery } = require("../db/index");
 
 class JobManager {
   constructor() {

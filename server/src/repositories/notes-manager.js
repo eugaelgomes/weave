@@ -1,4 +1,4 @@
-const { executeQuery, rowCount } = require("@/services/db/db-connection");
+const { executeQuery, rowCount } = require("@/services/db/index");
 
 class notesRepository {
   async createNotesQuerie(

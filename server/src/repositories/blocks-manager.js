@@ -1,5 +1,5 @@
 /* eslint-disable quotes */
-const { executeQuery } = require("@/services/db/db-connection");
+const { executeQuery } = require("@/services/db/index");
 
 class BlocksRepository {
   // ========================================

@@ -1,4 +1,4 @@
-const { executeQuery } = require("@/services/db/db-connection");
+const { executeQuery } = require("@/services/db/index");
 
 class AuthRepository {
   async findUserByUsername(username) {
@@ -35,7 +35,7 @@ class AuthRepository {
     return results[0];
   }
 
-  async loginLogs (userId, ip, timestamp, success, userAgent) {
+  async loginLogs(userId, ip, timestamp, success, userAgent) {
     const query = `
       INSERT INTO user_login_logs (user_id, ip_address, created_at, success, user_agent)
       VALUES ($1, $2, $3, $4, $5)

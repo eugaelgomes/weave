@@ -1,4 +1,4 @@
-const { MailService } = require("@/services/email/config/mail-service");
+const { MailService } = require("@/services/email/config/index");
 const backupReadyTemplate = require("@/services/email/templates/backup/backup-ready");
 
 /**

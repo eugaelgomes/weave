@@ -1,4 +1,4 @@
-const { MailService } = require("@/services/email/config/mail-service");
+const { MailService } = require("@/services/email/config/index");
 
 async function delete_account_notification(nome, email, username) {
   try {

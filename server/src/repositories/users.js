@@ -1,5 +1,5 @@
 /* eslint-disable quotes */
-const { executeQuery } = require("@/services/db/db-connection");
+const { executeQuery } = require("@/services/db/index");
 
 class UserRepository {
   async createUser(
@@ -142,7 +142,7 @@ class UserRepository {
     values.push(userId);
     const query = `
       UPDATE users
-      SET ${fields.join(', ')}
+      SET ${fields.join(", ")}
       WHERE user_id = $${paramIndex} AND deleted = false
       RETURNING user_id, username, name, email, avatar_url, theme_mode, birth_date, phone_number, private_profile, created_at
     `;
@@ -179,7 +179,12 @@ class UserRepository {
       INSERT INTO tokens (user_id, token, type, expires_at, created_at, active, data_to_update) 
       VALUES ($1, $2, 'email_verification', ($3::timestamp + interval '1 hour'), $3, TRUE, $4)
     `;
-    return await executeQuery(query, [userId, token, createdAt, JSON.stringify({ new_email: newEmail })]);
+    return await executeQuery(query, [
+      userId,
+      token,
+      createdAt,
+      JSON.stringify({ new_email: newEmail }),
+    ]);
   }
 
   async findEmailChangeToken(userId, token) {

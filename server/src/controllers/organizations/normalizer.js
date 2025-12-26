@@ -77,12 +77,14 @@ const PREDEFINED_PROPERTIES = Object.freeze({
 
 // Transforma strings em slugs URL-friendly (ex: "Minha  Org!" -> "minha-org")
 const normalizeOrganizationName = (name) => {
-  if (typeof name !== "string" || !name) throw new Error("Nome inválido para normalização");
+  if (typeof name !== "string" || !name)
+    throw new Error("Nome inválido para normalização");
 
   return name
     .toLowerCase()
     .trim()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove acentos
     .replace(/[^a-z0-9\s-]/g, "") // Remove especiais
     .replace(/\s+/g, "-") // Espaço -> Hífen
     .replace(/-+/g, "-") // Remove hífens duplicados
@@ -91,8 +93,9 @@ const normalizeOrganizationName = (name) => {
 
 // Garante unicidade adicionando sufixo numérico se necessário
 const suggestUniqueOrganizationName = (baseName, existingNames) => {
-  if (!Array.isArray(existingNames)) throw new Error("Lista de nomes existentes inválida");
-  
+  if (!Array.isArray(existingNames))
+    throw new Error("Lista de nomes existentes inválida");
+
   const normalized = normalizeOrganizationName(baseName);
   if (!normalized) throw new Error("Nome base inválido após normalização");
 
@@ -116,7 +119,8 @@ const generateUniqueOrganizationName = async (baseName) => {
 // Valida tipo, range numérico e valores permitidos (enum)
 const isValidValue = (value, def) => {
   // Validação de Tipo
-  if (def.type === "object" && (value === null || typeof value !== "object")) return false;
+  if (def.type === "object" && (value === null || typeof value !== "object"))
+    return false;
   if (typeof value !== def.type) return false;
 
   // Validação de Enum (Allowed values)
@@ -136,7 +140,8 @@ const isValidValue = (value, def) => {
 // ==========================================
 
 const normalizeOrganizationProperties = (properties = {}) => {
-  if (typeof properties !== "object" || properties === null) throw new Error("Properties deve ser um objeto");
+  if (typeof properties !== "object" || properties === null)
+    throw new Error("Properties deve ser um objeto");
 
   return Object.entries(PREDEFINED_PROPERTIES).reduce((acc, [key, def]) => {
     // Usa valor recebido se válido, senão usa default
@@ -147,13 +152,14 @@ const normalizeOrganizationProperties = (properties = {}) => {
 };
 
 const updateOrganizationProperties = (currentProperties = {}, updates = {}) => {
-  if (!currentProperties || !updates) throw new Error("Parâmetros inválidos para atualização");
+  if (!currentProperties || !updates)
+    throw new Error("Parâmetros inválidos para atualização");
 
   const nextProps = { ...currentProperties };
 
   for (const [key, value] of Object.entries(updates)) {
     const def = PREDEFINED_PROPERTIES[key];
-    
+
     if (!def) continue; // Ignora campos estranhos ao schema
 
     if (!isValidValue(value, def)) {

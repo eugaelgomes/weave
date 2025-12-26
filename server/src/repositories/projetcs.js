@@ -1,4 +1,4 @@
-const { executeQuery } = require("@/services/db/db-connection");
+const { executeQuery } = require("@/services/db/index");
 
 class ProjectsRepository {
   async getAllProjects(userId) {

@@ -19,24 +19,34 @@ class AuthController {
       const user = await AuthRepository.findUserByUsername(username);
 
       if (!user) {
-        return res.status(401).json({ message: "Usuário/e-mail ou senha inválidos" });
+        return res
+          .status(401)
+          .json({ message: "Usuário/e-mail ou senha inválidos" });
       }
 
       // Autenticação via Google
       if (user.auth_with_google) {
-        return res.status(401).json({ 
-          message: "Esta conta usa autenticação via Google. Por favor, faça login com o Google." 
+        return res.status(401).json({
+          message:
+            "Esta conta usa autenticação via Google. Por favor, faça login com o Google.",
         });
       }
 
       const verifiedAccount = user.email_verified;
       if (!verifiedAccount) {
-        return res.status(403).json({ message: "Por favor, verifique seu e-mail no mensagem de boas-vindas antes de fazer login." });
+        return res
+          .status(403)
+          .json({
+            message:
+              "Por favor, verifique seu e-mail no mensagem de boas-vindas antes de fazer login.",
+          });
       }
       // Compara senha
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
-        return res.status(401).json({ message: "Usuário/e-mail ou senha inválidos" });
+        return res
+          .status(401)
+          .json({ message: "Usuário/e-mail ou senha inválidos" });
       }
 
       const payload = {

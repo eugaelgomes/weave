@@ -1,4 +1,4 @@
-const { MailService } = require("@/services/email/config/mail-service");
+const { MailService } = require("@/services/email/config/index");
 
 async function mail_rescue_pass(email, token) {
   const env = process.env.NODE_ENV || "development";

@@ -31,9 +31,9 @@ class PasswordController {
 
       // Verifica se o email foi validado
       if (!userExists.email_verified) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           message: "Email not verified. Please activate your account first.",
-          email_verified: false
+          email_verified: false,
         });
       }
 
