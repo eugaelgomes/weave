@@ -48,19 +48,37 @@ export const decodeToken = (token: string) => {
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   const response = await apiClient.post(API_ENDPOINTS.SIGNIN, credentials);
 
-  // Tipagem da resposta
+  // Tipagem da resposta do backend
   const data = await handleResponse<{
     success?: boolean;
-    data?: LoginResponse;
-    user?: User;
+    user_data?: {
+      profile: User;
+      organization: {
+        id: string;
+        name: string;
+        unique_name: string;
+      };
+    };
     token?: string;
+    message?: string;
   }>(response);
 
-  if (data.success && data.data) {
-    return data.data;
+  if (data.success && data.user_data) {
+    // Mescla os dados da organização no objeto do usuário
+    const user: User = {
+      ...data.user_data.profile,
+      org_id: data.user_data.organization.id,
+      org_name: data.user_data.organization.name,
+      org_unique_name: data.user_data.organization.unique_name,
+    };
+
+    return {
+      user,
+      token: data.token || "",
+    };
   }
 
-  return data as LoginResponse;
+  throw new Error(data.message || "Erro ao fazer login");
 };
 
 export const createUserService = async (
