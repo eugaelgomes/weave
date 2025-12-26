@@ -302,7 +302,7 @@ await jobManager.updateJob(jobId, {
 
 ### 3.4 Spaces Service (Storage)
 
-**Localização:** `src/services/storage/spaces-service.js`
+**Localização:** `src/services/storage/index.js`
 
 **Descrição:**  
 Serviço para gerenciamento de arquivos no Digital Ocean Spaces (compatível com S3).
@@ -389,7 +389,7 @@ Valida se todas as configurações necessárias estão presentes.
 
 **Exemplo de Uso:**
 ```javascript
-const spacesService = require('@/services/storage/spaces-service');
+const spacesService = require('@/services/storage/index');
 
 // Upload
 const result = await spacesService.uploadImage(

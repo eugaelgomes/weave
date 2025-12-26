@@ -1,5 +1,4 @@
 const express = require("express");
-const { body } = require("express-validator");
 const UserController = require("@/controllers/users-manager/user-controller");
 const NotesController = require("@/controllers/notes-manager/notes-controller");
 const dataValidator = require("@/middlewares/data/data-validator");
@@ -11,12 +10,6 @@ const router = express.Router();
 
 router.post(
   "/create-account",
-  [
-    body("name").trim().escape(),
-    body("username").trim().escape(),
-    body("email").isEmail().normalizeEmail(),
-    body("password").trim(),
-  ],
   upload.single("profileImage"),
   validateCompressedImageSize,
   dataValidator(),

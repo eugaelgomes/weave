@@ -1,4 +1,5 @@
 const { executeQuery, rowCount } = require("@/services/db/index");
+const imageUtils = require("@/middlewares/data/image-utils");
 
 class OrganizationsRepository {
   async getOrgsByUserId(user_id) {
@@ -25,7 +26,12 @@ JOIN users u ON u.user_id = o.user_id
 WHERE o.user_id = $1;
 
     `;
-    return await executeQuery(query, [user_id]);
+    const results = await executeQuery(query, [user_id]);
+    return await imageUtils.addSignedUrlsToArray(results, [
+      "logo_url",
+      "banner_url",
+      "avatar_url",
+    ]);
   }
 
   async getAvailableOrgNames(baseName) {
@@ -52,7 +58,8 @@ WHERE o.user_id = $1;
         END,
         om.created_at ASC;
     `;
-    return await executeQuery(query, [organization_id]);
+    const results = await executeQuery(query, [organization_id]);
+    return await imageUtils.addSignedUrlsToArray(results, ["avatar_url"]);
   }
 
   async addOrganizationMember(
@@ -132,6 +139,9 @@ WHERE o.user_id = $1;
       LIMIT 1;
     `;
     const results = await executeQuery(query, [organization_id]);
+    if (results[0]) {
+      return await imageUtils.addSignedUrls(results[0], ["avatar_url"]);
+    }
     return results[0] || null;
   }
 
@@ -236,6 +246,12 @@ WHERE o.user_id = $1;
       deleted,
       org_domains,
     ]);
+    if (results[0]) {
+      return await imageUtils.addSignedUrls(results[0], [
+        "logo_url",
+        "banner_url",
+      ]);
+    }
     return results[0];
   }
 

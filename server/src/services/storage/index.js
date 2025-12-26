@@ -57,14 +57,13 @@ class SpacesService {
         Key: key,
         Body: imageBuffer,
         ContentType: mimeType,
-        ACL: "public-read", // Torna a imagem publicamente acessível
         CacheControl: "max-age=31536000", // Cache por 1 ano
       };
 
       const command = new PutObjectCommand(uploadParams);
       await this.s3Client.send(command);
 
-      // Construir URL público
+      // Construir URL (requer URL assinada para acesso)
       const publicUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
 
       return {
