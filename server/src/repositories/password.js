@@ -2,8 +2,9 @@ const { executeQuery } = require("@/services/db/index");
 
 class PasswordRepository {
   async findUserByEmail(email) {
-    const query = `SELECT 
-        user_id, email, email_verified
+    const query = `
+     SELECT 
+        user_id, email, name, email_verified
      FROM 
         users 
      WHERE 
@@ -14,13 +15,26 @@ class PasswordRepository {
   }
 
   async deactivateOldTokens(userId) {
-    const query = `UPDATE tokens SET active = FALSE WHERE user_id = $1 AND active = TRUE`;
+    const query = `
+    UPDATE 
+      tokens 
+    SET 
+      active = FALSE 
+    WHERE 
+      user_id = $1 
+      AND active = TRUE
+    `;
     return await executeQuery(query, [userId]);
   }
 
-  async createToken(userId, token, createdAt) {
-    const query = `INSERT INTO tokens (user_id, token, type, expires_at, created_at, active) VALUES ($1, $2, 'password_reset', ($3::timestamp + interval '1 day'), $3, TRUE)`;
-    return await executeQuery(query, [userId, token, createdAt]);
+  async createToken(userId, token) {
+    // Definindo expiração para 1 hora a partir de agora
+    const query = `
+    INSERT INTO tokens (user_id, token, type, expires_at, active) 
+    VALUES ($1, $2, 'password_reset', NOW() + INTERVAL '1 hour', TRUE)
+  `;
+
+    return await executeQuery(query, [userId, token]);
   }
 
   async findTokenByValue(token) {

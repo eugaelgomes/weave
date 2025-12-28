@@ -1,6 +1,6 @@
 const { MailService } = require("@/services/email/config/index");
 
-async function mail_rescue_pass(email, token) {
+async function mail_rescue_pass(email, token, name) {
   const env = process.env.NODE_ENV || "development";
   let resetLink;
   if (env === "production") {
@@ -166,7 +166,7 @@ async function mail_rescue_pass(email, token) {
       <div class="main-content">
         <h2>Solicitação de Redefinição de Senha</h2>
         
-        <p>Prezado(a),</p>
+        <p>Prezado(a) ${name},</p>
         
         <p>Recebemos uma solicitação para redefinir a senha da sua conta. Para prosseguir, utilize o botão abaixo:</p>
 
@@ -177,10 +177,6 @@ async function mail_rescue_pass(email, token) {
         <div class="info-box">
           Este link expira em 1 hora
         </div>
-
-        <p>Caso o botão não funcione, utilize o token abaixo na página de recuperação:</p>
-        
-        <div class="token-box">${token}</div>
 
         <p style="font-size: 14px; color: #737373;">Se você não solicitou esta alteração, ignore este email. Nenhuma modificação será realizada em sua conta.</p>
       </div>

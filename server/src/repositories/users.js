@@ -3,26 +3,47 @@ const { executeQuery } = require("@/services/db/index");
 const imageUtils = require("@/middlewares/data/image-utils");
 
 class UserRepository {
-  async createUser(
-    name,
-    username,
-    email,
-    password,
-    profileImageUrl,
-    createdAt
-  ) {
+  async createUser(userData) {
+    // 1. Desestruturamos o objeto que vem do Controller
+    const {
+      name,
+      username,
+      email,
+      password,
+      timezone,
+      private_profile,
+      birth_date,
+      phone_number,
+      avatar_url,
+    } = userData;
+
+    // 2. Atualizamos a Query para incluir as novas colunas
     const query = `
-      INSERT INTO users (name, username, email, password, avatar_url, created_at) 
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING user_id
-    `;
+    INSERT INTO users (
+      name, 
+      username, 
+      email, 
+      password, 
+      timezone, 
+      private_profile, 
+      birth_date, 
+      phone_number, 
+      avatar_url
+    ) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    RETURNING user_id, email, name;
+  `;
+
     return await executeQuery(query, [
       name,
       username,
       email,
       password,
-      profileImageUrl,
-      createdAt,
+      timezone,
+      private_profile,
+      birth_date,
+      phone_number,
+      avatar_url,
     ]);
   }
 

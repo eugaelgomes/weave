@@ -11,6 +11,8 @@ const { welcome_message } = welcomeMailModule;
 const { delete_account_notification } = deleteAccountModule;
 const { sendEmailChangeValidation } = emailChangeModule;
 
+const allTimezones = Intl.supportedValuesOf("timeZone");
+
 const saltRounds = 12;
 
 const getCurrentDateTime = () => {
@@ -18,8 +20,8 @@ const getCurrentDateTime = () => {
   return data.toISOString().slice(0, 19).replace("T", " ");
 };
 
-const getCreationDate = () => {
-  return getCurrentDateTime();
+const validTimezones = (timezone) => {
+  return allTimezones.includes(timezone);
 };
 
 class UserController {
@@ -30,40 +32,73 @@ class UserController {
     }
 
     try {
-      let { name, username, email, password } = req.body;
-      password = await bcrypt.hash(password, saltRounds);
-      const createdAt = getCreationDate();
+      let {
+        name,
+        username,
+        email,
+        password,
+        timezone = null,
+        private_profile = false,
+        birth_date = null,
+        phone_number = null,
+      } = req.body;
+
+      if (timezone && !validTimezones(timezone)) {
+        return res.status(400).json({
+          status: "error",
+          message: "Invalid timezone provided.",
+          validTimezones: allTimezones,
+        });
+      }
 
       const existingUsers = await UserRepository.findByUsernameOrEmail(
         username,
         email
       );
+      if (existingUsers.length > 0) {
+        const emailExists = existingUsers.some((u) => u.email === email);
+        const userExists = existingUsers.some((u) => u.usuario === username);
 
-      if (
-        existingUsers.some(
-          (user) => user.email === email && user.usuario === username
-        )
-      ) {
-        return res.status(401).send("User and email already exists!");
-      } else if (existingUsers.some((user) => user.email === email)) {
-        return res.status(401).send("Email is already in use!");
-      } else if (existingUsers.some((user) => user.usuario === username)) {
-        return res.status(401).send("Username is already in use!");
+        if (emailExists && userExists)
+          return res
+            .status(409)
+            .json({
+              status: "failed",
+              message: "User and email already exist!",
+            });
+        if (emailExists)
+          return res
+            .status(409)
+            .json({
+              status: "failed",
+              message: "Email is already in use! Try another.",
+            });
+        if (userExists)
+          return res
+            .status(409)
+            .json({
+              status: "failed",
+              message: "Username is already in use! Try another.",
+            });
       }
 
-      const newUser = await UserRepository.createUser(
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+      const newUser = await UserRepository.createUser({
         name,
         username,
         email,
-        password,
-        null,
-        createdAt
-      );
+        password: hashedPassword,
+        timezone,
+        private_profile,
+        birth_date,
+        phone_number,
+        avatar_url: null,
+      });
+
+      const userId = newUser[0].user_id;
 
       let profileImageUrl = null;
-      const userId = newUser[0].user_id; // Corrige acesso ao ID
-
-      // Se tiver imagem, salva usando o id retornado pelo banco
       if (req.file && req.file.buffer) {
         try {
           const saveResult = await imageUtils.saveProfileImage(
@@ -74,37 +109,16 @@ class UserController {
 
           if (saveResult.success) {
             profileImageUrl = saveResult.url;
-
-            // Insere url
-            const updateResult = await UserRepository.updateProfileImage(
-              userId,
-              profileImageUrl
-            );
-
-            if (updateResult && updateResult.length > 0) {
-              console.log(
-                `Avatar URL atualizado no banco para usuário ${userId}: ${profileImageUrl}`
-              );
-            } else {
-              console.error(
-                `Falha ao atualizar avatar URL no banco para usuário ${userId}`
-              );
-            }
+            await UserRepository.updateProfileImage(userId, profileImageUrl);
           } else {
-            throw new Error("Failed to upload to Digital Ocean Spaces");
+            console.error("Image upload failed:", saveResult.error);
           }
         } catch (imageError) {
-          console.error("Erro ao fazer upload da imagem:", imageError);
-          return res.status(500).json({
-            error: "Image upload failed",
-            message:
-              "Unable to upload the image to Digital Ocean Spaces. Please try again.",
-          });
+          console.error("Erro processando imagem:", imageError);
         }
       }
 
-      // Gera token de ativação de conta
-      const activationToken = crypto.randomBytes(16).toString("hex");
+      const activationToken = crypto.randomBytes(12).toString("hex");
       const currentDateTime = getCurrentDateTime();
       await UserRepository.createEmailActivationToken(
         userId,
@@ -112,7 +126,6 @@ class UserController {
         currentDateTime
       );
 
-      // Envia email de boas-vindas com token de ativação
       const mailResult = await welcome_message(
         name,
         email,
@@ -123,16 +136,21 @@ class UserController {
         console.warn("Welcome email not sent:", mailResult.error);
       }
 
-      res.status(201).json({
-        message: "User registered successfully!",
+      return res.status(201).json({
+        status: "success",
+        message:
+          "User registered successfully! Please check your email to activate your account.",
+        user_data: {
+          id: userId,
+          name,
+          username,
+          email,
+        },
+        redirect: "/auth/signin",
       });
     } catch (error) {
-      console.error("An error occurred during the process", error);
-      res
-        .status(500)
-        .send(
-          "An internal error occurred. Please try again later or contact support."
-        );
+      console.error("An error occurred during registration:", error);
+      return res.status(500).send("An internal error occurred.");
     }
   }
 
