@@ -276,38 +276,28 @@ class UserController {
         (currentPassword && !newPassword) ||
         (!currentPassword && newPassword)
       ) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Both current and new passwords are required to change password",
-          });
+        return res.status(400).json({
+          message:
+            "Both current and new passwords are required to change password",
+        });
       } else if (currentPassword && newPassword) {
         validatePasswordChange = true;
       }
       if (validatePasswordChange) {
         if (newPassword.length < 8) {
-          return res
-            .status(400)
-            .json({
-              message: "New password must be at least 8 characters long",
-            });
+          return res.status(400).json({
+            message: "New password must be at least 8 characters long",
+          });
         }
         if (!/[A-Z]/.test(newPassword)) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "New password must contain at least one uppercase letter",
-            });
+          return res.status(400).json({
+            message: "New password must contain at least one uppercase letter",
+          });
         }
         if (!/[a-z]/.test(newPassword)) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "New password must contain at least one lowercase letter",
-            });
+          return res.status(400).json({
+            message: "New password must contain at least one lowercase letter",
+          });
         }
         if (!/[0-9]/.test(newPassword)) {
           return res
@@ -315,20 +305,14 @@ class UserController {
             .json({ message: "New password must contain at least one digit" });
         }
         if (!/[\W_]/.test(newPassword)) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "New password must contain at least one special character",
-            });
+          return res.status(400).json({
+            message: "New password must contain at least one special character",
+          });
         }
         if (newPassword === currentPassword) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "New password must be different from the current password",
-            });
+          return res.status(400).json({
+            message: "New password must be different from the current password",
+          });
         }
         if (newPassword.length > 20) {
           return res

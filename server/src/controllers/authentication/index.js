@@ -35,12 +35,10 @@ class AuthController {
 
       const verifiedAccount = user.email_verified;
       if (!verifiedAccount) {
-        return res
-          .status(403)
-          .json({
-            message:
-              "Por favor, verifique seu e-mail no mensagem de boas-vindas antes de fazer login.",
-          });
+        return res.status(403).json({
+          message:
+            "Por favor, verifique seu e-mail no mensagem de boas-vindas antes de fazer login.",
+        });
       }
       // Compara senha
       const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -109,7 +107,6 @@ class AuthController {
     }
   }
 
-
   async googleAuth(req, res) {
     // Redireciona para o endpoint do Google OAuth2
     const googleOAuthURL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.GOOGLE_REDIRECT_URI)}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`;
@@ -137,7 +134,10 @@ class AuthController {
       console.log("=== DEBUG Google OAuth ===");
       console.log("CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
       console.log("REDIRECT_URI:", process.env.GOOGLE_REDIRECT_URI);
-      console.log("CLIENT_SECRET presente:", !!process.env.GOOGLE_CLIENT_SECRET);
+      console.log(
+        "CLIENT_SECRET presente:",
+        !!process.env.GOOGLE_CLIENT_SECRET
+      );
       console.log("Code recebido:", code.substring(0, 20) + "...");
 
       // Trocar o código por tokens de acesso
@@ -236,14 +236,16 @@ class AuthController {
       console.error("Mensagem:", error.message);
       if (error.response) {
         console.error("Status:", error.response.status);
-        console.error("Dados do erro:", JSON.stringify(error.response.data, null, 2));
+        console.error(
+          "Dados do erro:",
+          JSON.stringify(error.response.data, null, 2)
+        );
       }
       console.error("Stack:", error.stack);
       const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
       res.redirect(`${frontendURL}/?error=auth_failed`);
     }
   }
-
 
   async logout(req, res) {
     try {

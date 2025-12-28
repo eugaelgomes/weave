@@ -4,7 +4,7 @@
  */
 
 const express = require("express");
-const aiController = require("@/controllers/ai-agent/ai-controller");
+const aiController = require("@/controllers/weave-ai");
 const { verifyToken } = require("@/middlewares/auth/auth-middleware");
 
 const router = express.Router();

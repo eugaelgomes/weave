@@ -1,7 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 
-const PasswordController = require("@/controllers/password-manager/password-controller");
+const PasswordController = require("@/controllers/password-manager");
 
 const router = express.Router();
 

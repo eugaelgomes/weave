@@ -150,30 +150,34 @@ class OrganizationsController {
 
       // Construir resposta formatada
       const formattedOrganization = {
-          created_at: organization.created_at,
-          updated_at: organization.updated_at,
-          identity: {
-            id: organization.id,
-            user_id: organization.user_id,
-            org_name: organization.org_name,
-            unique_name: organization.unique_name,
-            logo_url: organization.logo_url,
-            banner_url: organization.banner_url,
-            description: organization.description,
-          },
-          properties: organization.properties,
-          org_domains: organization.org_domains || [],
-          owners: [{
+        created_at: organization.created_at,
+        updated_at: organization.updated_at,
+        identity: {
+          id: organization.id,
+          user_id: organization.user_id,
+          org_name: organization.org_name,
+          unique_name: organization.unique_name,
+          logo_url: organization.logo_url,
+          banner_url: organization.banner_url,
+          description: organization.description,
+        },
+        properties: organization.properties,
+        org_domains: organization.org_domains || [],
+        owners: [
+          {
             id: organization.user_id,
             name: organization.name,
             username: organization.username,
             email: organization.email,
             avatar_url: organization.avatar_url,
-          }],
-          deleted: organization.deleted,
+          },
+        ],
+        deleted: organization.deleted,
       };
 
-      res.status(200).json({ success: true, organization_data: formattedOrganization });
+      res
+        .status(200)
+        .json({ success: true, organization_data: formattedOrganization });
     } catch (error) {
       console.error("Erro ao buscar organização:", error);
       res
