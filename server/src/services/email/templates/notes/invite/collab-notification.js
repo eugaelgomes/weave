@@ -1,5 +1,5 @@
 const { MailService } = require("@/services/email/config/index");
-const addedToNoteTemplate = require("./added-to-note");
+const addedToNoteTemplate = require(".");
 
 /**
  * Envia email de notificação quando um colaborador é adicionado à nota

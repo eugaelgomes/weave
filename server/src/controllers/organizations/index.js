@@ -910,7 +910,7 @@ class OrganizationsController {
       await this.organizationsRepository.verifyOrgInvite(invite.invite_id);
 
       // Envia email de boas-vindas (sem token de ativação, pois já está ativado)
-      const welcomeMailModule = require("@/services/email/templates/welcome/welcome-mail");
+      const welcomeMailModule = require("@/services/email/templates/welcome-mail");
       const { welcome_message } = welcomeMailModule;
       const mailResult = await welcome_message(name, invite.email, username);
       if (!mailResult.success) {
