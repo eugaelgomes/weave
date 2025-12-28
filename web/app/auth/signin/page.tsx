@@ -17,7 +17,7 @@ export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
 
-  const { login, authenticated } = useAuth();
+  const { login, loginWithGoogle, authenticated } = useAuth();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect") || "/app/home";
 
@@ -152,7 +152,7 @@ export default function SignIn() {
             </div>
           </div>
 
-          {/*<button
+          <button
             type="button"
             onClick={() => loginWithGoogle()}
             className="flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -178,7 +178,7 @@ export default function SignIn() {
             </div>
           </div>
 
-        */}
+        
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label
