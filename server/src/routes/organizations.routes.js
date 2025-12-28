@@ -2,7 +2,7 @@ const express = require("express");
 const organizationsController = require("@/controllers/organizations");
 const { verifyToken } = require("@/middlewares/auth/auth-middleware");
 const upload = require("@/middlewares/data/profile-img");
-const validateImageMVP = require("@/middlewares/data/image-validator");
+const validateImageMVP = require("@/utils/image-validator");
 
 const router = express.Router();
 

@@ -3,7 +3,7 @@ const UserController = require("@/controllers/users");
 const NotesController = require("@/controllers/notes");
 const dataValidator = require("@/middlewares/data/data-validator");
 const upload = require("@/middlewares/data/profile-img");
-const validateCompressedImageSize = require("@/middlewares/data/image-validator");
+const validateCompressedImageSize = require("@/utils/image-validator");
 const { verifyToken } = require("@/middlewares/auth/auth-middleware");
 
 const router = express.Router();
