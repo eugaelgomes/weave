@@ -2,9 +2,7 @@ const jwt = require("jsonwebtoken");
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
-function verifyToken(req, res, next) {
-  // Debug logs para produção
-
+const verifyToken = (req, res, next) => {
   // Token HTTP Only
   let token = req.cookies?.token;
 

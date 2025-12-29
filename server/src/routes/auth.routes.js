@@ -1,7 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 
-const { verifyToken } = require("@/middlewares/auth/auth-middleware");
+const { verifyToken } = require("@/middlewares/authentication");
 const { loginLimiter } = require("@/middlewares/security/limiters");
 const toString = require("@/middlewares/data/stringfy");
 

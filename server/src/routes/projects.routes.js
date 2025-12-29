@@ -1,6 +1,6 @@
 const express = require("express");
 const projectsController = require("@/controllers/projects");
-const { verifyToken } = require("@/middlewares/auth/auth-middleware");
+const { verifyToken } = require("@/middlewares/authentication");
 
 const router = express.Router();
 

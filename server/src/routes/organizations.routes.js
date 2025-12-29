@@ -1,6 +1,6 @@
 const express = require("express");
 const organizationsController = require("@/controllers/organizations");
-const { verifyToken } = require("@/middlewares/auth/auth-middleware");
+const { verifyToken } = require("@/middlewares/authentication");
 const upload = require("@/middlewares/data/profile-img");
 const validateImageMVP = require("@/utils/image-validator");
 

@@ -188,7 +188,7 @@ Aplica todos os middlewares globais na ordem correta.
 
 ## 2. Middlewares de Autenticação
 
-### 📄 Arquivo: `auth/auth-middleware.js`
+### 📄 Arquivo: `authentication.js`
 
 Middleware de autenticação JWT que valida tokens de acesso.
 

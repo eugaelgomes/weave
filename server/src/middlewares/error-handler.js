@@ -1,5 +1,4 @@
 const errorHandler = {
-  // not found handler
   notFoundHandler: (req, res, next) => {
     const err = new Error(`Route "${req.originalUrl}" not found`);
     err.statusCode = 404;
@@ -8,7 +7,7 @@ const errorHandler = {
 
   // Global error handler
   globalErrorHandler: (err, req, res, next) => {
-    // Only log if not 404 and in development
+    // Logs se 404 ou erro de servidor
     if (process.env.NODE_ENV === "development" || err.statusCode >= 500) {
       console.error(err.stack || err);
     }

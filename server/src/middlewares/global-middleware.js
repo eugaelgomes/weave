@@ -5,7 +5,9 @@ const cookieParser = require("cookie-parser");
 const { getClientIp } = require("@/middlewares/security/ip-address");
 const { sessionMiddleware } = require("@/middlewares/security/session");
 const { allowedOrigins } = require("@/config/allowed-origins");
-// Domínios
+
+
+// Lista de origens CORS
 const WHITELIST = allowedOrigins;
 
 /**
@@ -17,7 +19,6 @@ function escapeRegExp(s) {
 
 /**
  * Validação para a origem.
- * Coringa (ex.: https://*.domain.com).
  */
 function buildMatcher(allowed) {
   if (allowed.includes("*")) {
