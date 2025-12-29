@@ -253,6 +253,12 @@ class ProjectsController {
           name: project.owner_name,
           avatar_url: project.owner_avatar_url,
         },
+        organization: project.organization_id ? {
+          id: project.organization_id,
+          name: project.organization_name,
+          unique_name: project.organization_unique_name,
+          logo_url: project.organization_logo_url,
+        } : null,
         collaborators: (project.collaborators || []).filter((c) => !c.removed),
         notes: project.associated_notes || [],
       }));

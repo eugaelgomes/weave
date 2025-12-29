@@ -4,27 +4,26 @@ const imageUtils = require("@/middlewares/data/image-utils");
 class OrganizationsRepository {
   async getOrgsByUserId(user_id) {
     const query = `
-SELECT
-  o.id,
-  o.user_id,
-  o.org_name,
-  o.unique_name,
-  o.logo_url,
-  o.banner_url,
-  o.description,
-  o.properties,
-  o.org_domains,
-  o.deleted,
-  o.created_at,
-  o.updated_at,
-  u.avatar_url,
-  u.name,
-  u.username,
-  u.email
-FROM organizations o
-JOIN users u ON u.user_id = o.user_id
-WHERE o.user_id = $1;
-
+    SELECT
+      o.id,
+      o.user_id,
+      o.org_name,
+      o.unique_name,
+      o.logo_url,
+      o.banner_url,
+      o.description,
+      o.properties,
+      o.org_domains,
+      o.deleted,
+      o.created_at,
+      o.updated_at,
+      u.avatar_url,
+      u.name,
+      u.username,
+      u.email
+    FROM organizations o
+    JOIN users u ON u.user_id = o.user_id
+    WHERE o.user_id = $1;
     `;
     const results = await executeQuery(query, [user_id]);
     return await imageUtils.addSignedUrlsToArray(results, [
