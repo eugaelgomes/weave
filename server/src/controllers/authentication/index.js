@@ -5,6 +5,8 @@ const { validationResult } = require("express-validator");
 const AuthRepository = require("@/repositories/authentication");
 const { getCookieDomain } = require("@/config/allowed-origins");
 
+const authLogs = require("@/utils/system_logs/auth-logs");
+
 const secretKey = process.env.SECRET_KEY;
 
 class AuthController {
@@ -63,25 +65,28 @@ class AuthController {
         expiresIn: "12h",
       });
 
+      authLogs.createLog(user.user_id, "auth_login", req, "success");
+
       const domain = getCookieDomain(req.hostname);
 
       console.log(
         `[Login] Setting cookie domain: ${domain} (Request hostname: ${req.hostname})`
       );
 
-      // Tokens https only
+      // Token https only
       res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Permite cross-origin em produção
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: 12 * 60 * 60 * 1000,
         path: "/",
         domain: domain,
       });
 
+      // Res de login com token para login via Request Postman/Insomnia/Curl
       const login_time = new Date();
       return res.status(200).json({
-        success: true,
+        status: "OK",
         logged_at: login_time,
         message: "Login realizado com sucesso",
         user_data: {

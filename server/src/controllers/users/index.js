@@ -1,15 +1,21 @@
+// Biblioteca de encriptação
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
+// Validadores de dados
 const { validationResult } = require("express-validator");
+const imageUtils = require("@/middlewares/data/image-utils");
+// Repositórios
 const UserRepository = require("@/repositories/users");
 const AuthRepository = require("@/repositories/authentication");
+// Emails
 const welcomeMailModule = require("@/services/email/templates/welcome-mail");
 const deleteAccountModule = require("@/services/email/templates/delete-account");
 const emailChangeModule = require("@/services/email/templates/users-access/reset-password");
-const imageUtils = require("@/middlewares/data/image-utils");
 const { welcome_message } = welcomeMailModule;
 const { delete_account_notification } = deleteAccountModule;
 const { sendEmailChangeValidation } = emailChangeModule;
+
+const updateProfileLogs = require("@/utils/system_logs/update_profile-logs");
 
 const allTimezones = Intl.supportedValuesOf("timeZone");
 
@@ -26,9 +32,13 @@ const validTimezones = (timezone) => {
 
 class UserController {
   async createUser(req, res) {
+    // Validação de entrada nula
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({
+        errors: errors.array(),
+        message: "Some inputs cannot be null.",
+      });
     }
 
     try {
@@ -55,31 +65,26 @@ class UserController {
         username,
         email
       );
+
       if (existingUsers.length > 0) {
         const emailExists = existingUsers.some((u) => u.email === email);
         const userExists = existingUsers.some((u) => u.usuario === username);
 
         if (emailExists && userExists)
-          return res
-            .status(409)
-            .json({
-              status: "failed",
-              message: "User and email already exist!",
-            });
+          return res.status(409).json({
+            status: "failed",
+            message: "User and email already exist!",
+          });
         if (emailExists)
-          return res
-            .status(409)
-            .json({
-              status: "failed",
-              message: "Email is already in use! Try another.",
-            });
+          return res.status(409).json({
+            status: "failed",
+            message: "Email is already in use! Try another.",
+          });
         if (userExists)
-          return res
-            .status(409)
-            .json({
-              status: "failed",
-              message: "Username is already in use! Try another.",
-            });
+          return res.status(409).json({
+            status: "failed",
+            message: "Username is already in use! Try another.",
+          });
       }
 
       const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -264,240 +269,156 @@ class UserController {
       phone_number,
       private_profile,
     } = req.body;
+
+    const auditChanges = {};
+
     try {
       const currentUser = await AuthRepository.findUserByUsername(
         req.user.username
       );
-      // Usuário atual not found
+
       if (!currentUser) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Validação de tema
-      let validatethemeMode = ["light", "dark"];
-      if (theme_mode && !validatethemeMode.includes(theme_mode)) {
+      if (theme_mode && !["light", "dark"].includes(theme_mode)) {
         return res.status(400).json({ message: "Invalid theme mode" });
       }
 
-      // Validação de data de nascimento
-      let validateBirthDate = null;
-      if (birth_date) {
-        validateBirthDate = new Date(birth_date);
-        if (isNaN(validateBirthDate.getTime())) {
-          return res.status(400).json({ message: "Invalid birth date format" });
-        }
+      if (birth_date && isNaN(new Date(birth_date).getTime())) {
+        return res.status(400).json({ message: "Invalid birth date format" });
       }
 
-      // Validação de senha ( se não a mesma da atual, tamanho e complexidade )
-      let validatePasswordChange = false;
       if (
         (currentPassword && !newPassword) ||
         (!currentPassword && newPassword)
       ) {
-        return res.status(400).json({
-          message:
-            "Both current and new passwords are required to change password",
-        });
-      } else if (currentPassword && newPassword) {
-        validatePasswordChange = true;
+        return res
+          .status(400)
+          .json({ message: "Both current and new passwords are required" });
       }
-      if (validatePasswordChange) {
-        if (newPassword.length < 8) {
-          return res.status(400).json({
-            message: "New password must be at least 8 characters long",
+
+      if (emailValidationToken) {
+        const tokenRecord = await UserRepository.findEmailChangeToken(
+          req.user.userId,
+          emailValidationToken
+        );
+        if (!tokenRecord)
+          return res.status(400).json({ message: "Invalid or expired token" });
+
+        const dataToUpdate = await UserRepository.getDataToUpdate(
+          req.user.userId
+        );
+        if (dataToUpdate?.new_email) {
+          await UserRepository.updateUserProfile(req.user.userId, {
+            email: dataToUpdate.new_email,
           });
-        }
-        if (!/[A-Z]/.test(newPassword)) {
-          return res.status(400).json({
-            message: "New password must contain at least one uppercase letter",
-          });
-        }
-        if (!/[a-z]/.test(newPassword)) {
-          return res.status(400).json({
-            message: "New password must contain at least one lowercase letter",
-          });
-        }
-        if (!/[0-9]/.test(newPassword)) {
-          return res
-            .status(400)
-            .json({ message: "New password must contain at least one digit" });
-        }
-        if (!/[\W_]/.test(newPassword)) {
-          return res.status(400).json({
-            message: "New password must contain at least one special character",
-          });
-        }
-        if (newPassword === currentPassword) {
-          return res.status(400).json({
-            message: "New password must be different from the current password",
-          });
-        }
-        if (newPassword.length > 20) {
-          return res
-            .status(400)
-            .json({ message: "New password must not exceed 20 characters" });
+          await UserRepository.clearDataToUpdate(req.user.userId);
+          await UserRepository.deactivateEmailToken(emailValidationToken);
+
+          auditChanges.email_status = "verified_and_changed";
+          auditChanges.new_email = dataToUpdate.new_email;
         }
       }
 
       let emailPendingValidation = false;
       let pendingEmail = null;
 
-      // 1) Se veio token de email, valida e aplica o novo email primeiro
-      if (emailValidationToken) {
-        const tokenRecord = await UserRepository.findEmailChangeToken(
-          req.user.userId,
-          emailValidationToken
-        );
-
-        if (!tokenRecord) {
-          return res.status(400).json({ message: "Invalid or expired token" });
-        }
-
-        const dataToUpdate = await UserRepository.getDataToUpdate(
-          req.user.userId
-        );
-        if (!dataToUpdate || !dataToUpdate.new_email) {
-          return res.status(400).json({ message: "No pending email change" });
-        }
-
-        // Verifica novamente se o email ainda está disponível (pode ter sido registrado entre a solicitação e validação)
-        const emailExists = await UserRepository.findByUsernameOrEmail(
-          "",
-          dataToUpdate.new_email
-        );
-        if (emailExists.length > 0) {
-          await UserRepository.clearDataToUpdate(req.user.userId);
-          await UserRepository.deactivateEmailToken(emailValidationToken);
-          return res
-            .status(400)
-            .json({ message: "Email is no longer available" });
-        }
-
-        // Aplica o novo email
-        const emailUpdate = { email: dataToUpdate.new_email };
-        await UserRepository.updateUserProfile(req.user.userId, emailUpdate);
-        await UserRepository.clearDataToUpdate(req.user.userId);
-        await UserRepository.deactivateEmailToken(emailValidationToken);
-      }
-
-      // 2) Se veio email sem token, prepara validação mas continua com outros updates
       if (
         email !== undefined &&
         email !== currentUser.email &&
         !emailValidationToken
       ) {
-        // Verifica se o novo email já está em uso
         const emailExists = await UserRepository.findByUsernameOrEmail(
           "",
           email
         );
-        if (emailExists.length > 0) {
+        if (emailExists.length > 0)
           return res.status(400).json({ message: "Email already in use" });
-        }
 
-        // Gera token e salva novo email em data_to_update (na tabela tokens)
         const token = crypto.randomBytes(10).toString("hex");
-        const currentDateTime = getCurrentDateTime();
-
         await UserRepository.deactivateOldEmailTokens(req.user.userId);
         await UserRepository.createEmailChangeToken(
           req.user.userId,
           token,
           email,
-          currentDateTime
+          getCurrentDateTime()
         );
 
-        // Envia email de validação
         const emailResult = await sendEmailChangeValidation(
           currentUser.email,
           email,
           token
         );
-
-        if (!emailResult.success) {
+        if (!emailResult.success)
           return res
             .status(500)
             .json({ message: "Error sending validation email" });
-        }
 
         emailPendingValidation = true;
         pendingEmail = email;
-        // Continua para atualizar outros campos
+
+        auditChanges.email_request = "pending_validation";
+        auditChanges.requested_email = email;
       }
 
-      // 3) Atualiza dados básicos que foram enviados (email direto NÃO é permitido)
       const updates = {};
       if (name !== undefined) updates.name = name;
-
-      // Valida username se foi enviado e é diferente do atual
-      if (username !== undefined && username !== currentUser.username) {
-        const usernameExists = await UserRepository.findByUsernameOrEmail(
-          username,
-          ""
-        );
-        if (usernameExists.length > 0) {
-          return res.status(400).json({ message: "Username already in use" });
-        }
-        updates.username = username;
-      }
-
       if (theme_mode !== undefined) updates.theme_mode = theme_mode;
       if (birth_date !== undefined) updates.birth_date = birth_date;
       if (phone_number !== undefined) updates.phone_number = phone_number;
       if (private_profile !== undefined)
         updates.private_profile = private_profile;
 
-      let updatedUser = null;
+      if (username !== undefined && username !== currentUser.username) {
+        const usernameExists = await UserRepository.findByUsernameOrEmail(
+          username,
+          ""
+        );
+        if (usernameExists.length > 0)
+          return res.status(400).json({ message: "Username already in use" });
+        updates.username = username;
+      } 
+
+      let updatedUser = currentUser;
       if (Object.keys(updates).length > 0) {
         updatedUser = await UserRepository.updateUserProfile(
           req.user.userId,
           updates
         );
-        if (!updatedUser) {
-          return res.status(404).json({ message: "User not found" });
-        }
-      } else {
-        // Se não há updates, busca dados atuais
-        updatedUser = await AuthRepository.findUserByUsername(
-          req.user.username
-        );
+        Object.assign(auditChanges, updates);
       }
 
-      // 4) Se veio arquivo de imagem, faz upload e atualiza avatar_url
-      let avatarUrl = updatedUser.avatar_url || null;
-      if (req.file && req.file.buffer) {
+      let avatarUrl = updatedUser.avatar_url;
+      if (req.file?.buffer) {
         const uploadResult = await imageUtils.saveProfileImage(
           req.file.buffer,
           req.file.mimetype,
           req.user.userId
         );
-        if (!uploadResult.success) {
-          return res.status(500).json({
-            message: "Image upload failed",
-            error: uploadResult.error,
-          });
-        }
-
-        const updateImage = await UserRepository.updateProfileImage(
-          req.user.userId,
-          uploadResult.url
-        );
-        if (updateImage && updateImage.length > 0) {
+        if (uploadResult.success) {
+          const updateImage = await UserRepository.updateProfileImage(
+            req.user.userId,
+            uploadResult.url
+          );
           avatarUrl = updateImage[0].avatar_url;
+          auditChanges.avatar_updated = true;
         }
       }
 
-      // 5) Se veio senha, valida e atualiza
       if (currentPassword && newPassword) {
-        const user = await AuthRepository.findUserByUsername(
-          updatedUser.username
+        const match = await bcrypt.compare(
+          currentPassword,
+          currentUser.password
         );
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
-        }
-
-        const match = await bcrypt.compare(currentPassword, user.password);
         if (!match) {
+          updateProfileLogs.createLog(
+            req.user.userId,
+            "security_change",
+            req,
+            "failure",
+            { reason: "wrong_current_password" }
+          );
           return res
             .status(401)
             .json({ message: "Current password is incorrect" });
@@ -508,9 +429,17 @@ class UserController {
           req.user.userId,
           hashedPassword
         );
+
+        auditChanges.password_changed = true;
+        updateProfileLogs.createLog(
+          req.user.userId,
+          "security_change",
+          req,
+          "success",
+          { action: "password_update" }
+        );
       }
 
-      // 6) Monta resposta com dados atualizados
       const response = {
         user_data: {
           profile: {
@@ -531,19 +460,38 @@ class UserController {
         message: "Profile updated successfully",
       };
 
-      // Se há email pendente de validação, adiciona informação
       if (emailPendingValidation) {
         response.email_validation = {
           pending: true,
           pending_email: pendingEmail,
-          message:
-            "Validation email sent. Please check your new email and provide the token to complete the change.",
         };
+      }
+
+      if (Object.keys(auditChanges).length > 0) {
+        updateProfileLogs.createLog(
+          req.user.userId,
+          "profile_update",
+          req,
+          "success",
+          auditChanges
+        );
       }
 
       return res.status(200).json(response);
     } catch (error) {
       console.error("Error updating profile:", error);
+
+      updateProfileLogs.createLog(
+        req.user?.userId,
+        "system_error",
+        req,
+        "failure",
+        {
+          error: error.message,
+          context: "updateProfile",
+        }
+      );
+
       return res.status(500).json({ message: "Internal server error" });
     }
   }

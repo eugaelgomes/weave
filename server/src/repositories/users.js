@@ -4,7 +4,6 @@ const imageUtils = require("@/middlewares/data/image-utils");
 
 class UserRepository {
   async createUser(userData) {
-    // 1. Desestruturamos o objeto que vem do Controller
     const {
       name,
       username,
@@ -17,7 +16,6 @@ class UserRepository {
       avatar_url,
     } = userData;
 
-    // 2. Atualizamos a Query para incluir as novas colunas
     const query = `
     INSERT INTO users (
       name, 
@@ -68,9 +66,6 @@ class UserRepository {
   async getProfileImage(userId) {
     const query = `SELECT avatar_url, name FROM users WHERE user_id = $1 LIMIT 1`;
     const results = await executeQuery(query, [userId]);
-    if (results[0]) {
-      return await imageUtils.addSignedUrls(results[0], ["avatar_url"]);
-    }
     return results[0];
   }
 
@@ -80,11 +75,11 @@ class UserRepository {
   }
 
   async getUserById(userId) {
-    const query = `SELECT user_id, username, name, email, avatar_url, created_at FROM users WHERE user_id = $1 AND deleted = false LIMIT 1`;
+    const query = `
+    SELECT user_id, username, name, email, avatar_url, created_at FROM users 
+    WHERE user_id = $1 AND deleted = false 
+    LIMIT 1`;
     const results = await executeQuery(query, [userId]);
-    if (results[0]) {
-      return await imageUtils.addSignedUrls(results[0], ["avatar_url"]);
-    }
     return results[0];
   }
 
@@ -105,9 +100,6 @@ class UserRepository {
   async findById(userId) {
     const query = `SELECT user_id, username, name, email, avatar_url FROM users WHERE user_id = $1 AND deleted = false LIMIT 1`;
     const results = await executeQuery(query, [userId]);
-    if (results[0]) {
-      return await imageUtils.addSignedUrls(results[0], ["avatar_url"]);
-    }
     return results[0];
   }
 
@@ -194,7 +186,7 @@ class UserRepository {
   async deleteUser(userId) {
     const query = `
       DELETE FROM users
-      WHERE user_id = $1
+      WHERE user_id = $1 AND email_verified = true
       RETURNING user_id
     `;
     return await executeQuery(query, [userId]);
