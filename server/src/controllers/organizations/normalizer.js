@@ -1,9 +1,5 @@
 const { getAvailableOrgNames } = require("../../repositories/organizations");
 
-// ==========================================
-// CONFIGURAÇÃO DE PROPRIEDADES (SCHEMA)
-// ==========================================
-
 const PREDEFINED_PROPERTIES = Object.freeze({
   theme: {
     type: "string",
@@ -14,7 +10,7 @@ const PREDEFINED_PROPERTIES = Object.freeze({
   language: {
     type: "string",
     default: "pt-BR",
-    allowed: ["pt-BR", "en-US", "es-ES", "fr-FR"], // 'defined' alterado para 'allowed' para padronizar
+    allowed: ["pt-BR", "en-US", "es-ES", "fr-FR"],
     description: "Idioma padrão",
   },
   timezone: {
@@ -71,11 +67,7 @@ const PREDEFINED_PROPERTIES = Object.freeze({
   },
 });
 
-// ==========================================
-// HELPER FUNCTIONS (CORE)
-// ==========================================
 
-// Transforma strings em slugs URL-friendly (ex: "Minha  Org!" -> "minha-org")
 const normalizeOrganizationName = (name) => {
   if (typeof name !== "string" || !name)
     throw new Error("Nome inválido para normalização");
@@ -91,7 +83,6 @@ const normalizeOrganizationName = (name) => {
     .replace(/^-+|-+$/g, ""); // Trim hífens
 };
 
-// Garante unicidade adicionando sufixo numérico se necessário
 const suggestUniqueOrganizationName = (baseName, existingNames) => {
   if (!Array.isArray(existingNames))
     throw new Error("Lista de nomes existentes inválida");
@@ -109,14 +100,12 @@ const suggestUniqueOrganizationName = (baseName, existingNames) => {
   return uniqueName;
 };
 
-// Orquestrador: Normaliza, verifica disponibilidade e sugere nome
 const generateUniqueOrganizationName = async (baseName) => {
   const normalizedBase = normalizeOrganizationName(baseName);
   const existingNames = await getAvailableOrgNames(normalizedBase);
   return suggestUniqueOrganizationName(normalizedBase, existingNames);
 };
 
-// Valida tipo, range numérico e valores permitidos (enum)
 const isValidValue = (value, def) => {
   // Validação de Tipo
   if (def.type === "object" && (value === null || typeof value !== "object"))
@@ -134,10 +123,6 @@ const isValidValue = (value, def) => {
 
   return true;
 };
-
-// ==========================================
-// EXPORTED METHODS
-// ==========================================
 
 const normalizeOrganizationProperties = (properties = {}) => {
   if (typeof properties !== "object" || properties === null)
