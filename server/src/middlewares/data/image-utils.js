@@ -2,10 +2,9 @@ const {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
-  GetObjectCommand,
 } = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-//const { v4: uuidv4 } = require("uuid");
+
+// const { v4: uuidv4 } = require("uuid"); // Mantido comentado conforme original
 
 class ImageUtils {
   constructor() {
@@ -60,6 +59,7 @@ class ImageUtils {
         Key: key,
         Body: imageBuffer,
         ContentType: mimeType,
+        ACL: "public-read", // Importante: torna o arquivo público
       };
 
       const command = new PutObjectCommand(uploadParams);
@@ -106,6 +106,7 @@ class ImageUtils {
         Key: key,
         Body: imageBuffer,
         ContentType: mimeType,
+        ACL: "public-read", // Importante: torna o arquivo público
       };
 
       const command = new PutObjectCommand(uploadParams);
@@ -151,6 +152,7 @@ class ImageUtils {
         Key: key,
         Body: imageBuffer,
         ContentType: mimeType,
+        ACL: "public-read", // Importante: torna o arquivo público
       };
 
       const command = new PutObjectCommand(uploadParams);
@@ -263,73 +265,6 @@ class ImageUtils {
       console.error("Erro ao extrair key da URL:", error);
       return null;
     }
-  }
-
-  /**
-   * Gera URL assinada temporária para acesso privado
-   * @param {string} key - Chave do arquivo no Spaces
-   * @param {number} expiresIn - Tempo de expiração em segundos (padrão: 1 hora)
-   * @returns {Promise<string|null>} - URL assinada ou null
-   */
-  async getSignedUrl(key, expiresIn = 3600) {
-    try {
-      if (!this.s3Client || !key) return null;
-
-      const command = new GetObjectCommand({
-        Bucket: this.bucketName,
-        Key: key,
-      });
-
-      const signedUrl = await getSignedUrl(this.s3Client, command, {
-        expiresIn,
-      });
-      return signedUrl;
-    } catch (error) {
-      console.error("Erro ao gerar URL assinada:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Processa um objeto substituindo URLs de imagem por URLs assinadas
-   * @param {Object} obj - Objeto com campos de URL
-   * @param {Array<string>} urlFields - Nomes dos campos que contêm URLs
-   * @param {number} expiresIn - Tempo de expiração das URLs
-   * @returns {Promise<Object>} - Objeto com URLs assinadas
-   */
-  async addSignedUrls(obj, urlFields = [], expiresIn = 3600) {
-    if (!obj || !this.s3Client) return obj;
-
-    const result = { ...obj };
-
-    for (const field of urlFields) {
-      if (result[field]) {
-        const key = this.extractKeyFromUrl(result[field]);
-        if (key) {
-          const signedUrl = await this.getSignedUrl(key, expiresIn);
-          if (signedUrl) {
-            result[field] = signedUrl;
-          }
-        }
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Processa array de objetos substituindo URLs por URLs assinadas
-   * @param {Array<Object>} items - Array de objetos
-   * @param {Array<string>} urlFields - Campos de URL a processar
-   * @param {number} expiresIn - Tempo de expiração
-   * @returns {Promise<Array<Object>>} - Array processado
-   */
-  async addSignedUrlsToArray(items, urlFields = [], expiresIn = 3600) {
-    if (!items || !Array.isArray(items) || !this.s3Client) return items;
-
-    return Promise.all(
-      items.map((item) => this.addSignedUrls(item, urlFields, expiresIn))
-    );
   }
 }
 

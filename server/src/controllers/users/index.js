@@ -233,7 +233,7 @@ class UserController {
             email: user.email,
             avatar_url: user.avatar_url,
             birth_date: user.birth_date,
-            phone_numer: user.phone_number,
+            phone_number: user.phone_number,
             created_at: user.created_at,
             updated_at: user.updated_at,
           },

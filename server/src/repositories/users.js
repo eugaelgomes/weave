@@ -94,7 +94,6 @@ class UserRepository {
       LIMIT 10
     `;
     const results = await executeQuery(query, [`%${searchTerm}%`]);
-    return await imageUtils.addSignedUrlsToArray(results, ["avatar_url"]);
   }
 
   async findById(userId) {

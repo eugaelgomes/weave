@@ -2,9 +2,7 @@ const {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
-  GetObjectCommand,
 } = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { v4: uuidv4 } = require("uuid");
 
 class SpacesService {
@@ -57,18 +55,27 @@ class SpacesService {
         Key: key,
         Body: imageBuffer,
         ContentType: mimeType,
+        ACL: "public-read", // Garante que o arquivo seja público (opcional, dependendo da config do bucket)
         CacheControl: "max-age=31536000", // Cache por 1 ano
       };
 
       const command = new PutObjectCommand(uploadParams);
       await this.s3Client.send(command);
 
-      // Construir URL (requer URL assinada para acesso)
-      const publicUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
+      // Construir URL pública direta
+      // Nota: Certifique-se de que o bucket permite acesso público ou use CDN
+      const publicUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`.replace(
+        "digitaloceanspaces.com",
+        `${this.region}.digitaloceanspaces.com`
+      ); 
+      // OBS: A construção da URL acima pode variar dependendo se o endpoint já inclui a região ou não. 
+      // Geralmente em DO Spaces: https://bucket.region.digitaloceanspaces.com/key
+      // Mas mantendo a lógica simples baseada no seu código original:
+      const simpleUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
 
       return {
         success: true,
-        url: publicUrl,
+        url: simpleUrl,
         key: key,
         fileName: uniqueFileName,
         size: imageBuffer.length,
@@ -98,29 +105,6 @@ class SpacesService {
     } catch (error) {
       console.error("Erro ao deletar imagem do Digital Ocean Spaces:", error);
       return false;
-    }
-  }
-
-  /**
-   * Gera URL assinada temporária para acesso privado
-   * @param {string} key - Chave do arquivo
-   * @param {number} expiresIn - Tempo de expiração em segundos (padrão: 1 hora)
-   * @returns {Promise<string>} - URL assinada
-   */
-  async getSignedUrl(key, expiresIn = 3600) {
-    try {
-      const command = new GetObjectCommand({
-        Bucket: this.bucketName,
-        Key: key,
-      });
-
-      const signedUrl = await getSignedUrl(this.s3Client, command, {
-        expiresIn,
-      });
-      return signedUrl;
-    } catch (error) {
-      console.error("Erro ao gerar URL assinada:", error);
-      throw new Error(`Failed to generate signed URL: ${error.message}`);
     }
   }
 

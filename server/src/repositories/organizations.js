@@ -26,11 +26,7 @@ class OrganizationsRepository {
     WHERE o.user_id = $1;
     `;
     const results = await executeQuery(query, [user_id]);
-    return await imageUtils.addSignedUrlsToArray(results, [
-      "logo_url",
-      "banner_url",
-      "avatar_url",
-    ]);
+    return results[0];
   }
 
   async getAvailableOrgNames(baseName) {
@@ -58,7 +54,7 @@ class OrganizationsRepository {
         om.created_at ASC;
     `;
     const results = await executeQuery(query, [organization_id]);
-    return await imageUtils.addSignedUrlsToArray(results, ["avatar_url"]);
+    return results[0];
   }
 
   async addOrganizationMember(
@@ -138,9 +134,6 @@ class OrganizationsRepository {
       LIMIT 1;
     `;
     const results = await executeQuery(query, [organization_id]);
-    if (results[0]) {
-      return await imageUtils.addSignedUrls(results[0], ["avatar_url"]);
-    }
     return results[0] || null;
   }
 
@@ -245,12 +238,6 @@ class OrganizationsRepository {
       deleted,
       org_domains,
     ]);
-    if (results[0]) {
-      return await imageUtils.addSignedUrls(results[0], [
-        "logo_url",
-        "banner_url",
-      ]);
-    }
     return results[0];
   }
 

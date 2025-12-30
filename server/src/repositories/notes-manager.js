@@ -500,9 +500,6 @@ class notesRepository {
       projectId,
       initialBlockContent,
     ]);
-    if (results[0]) {
-      return await imageUtils.addSignedUrls(results[0], ["user_avatar_url"]);
-    }
     return results[0];
   }
 
@@ -612,7 +609,7 @@ class notesRepository {
     ORDER BY nc.added_at ASC;
     `;
     const results = await executeQuery(query, [noteId]);
-    return await imageUtils.addSignedUrlsToArray(results, ["avatar_url"]);
+    return results[0];
   }
 
   /**
