@@ -1,11 +1,21 @@
 const express = require("express");
-const organizationsController = require("@/controllers/organizations/organization-controller");
-const { verifyToken } = require("@/middlewares/auth/auth-middleware");
+const organizationsController = require("@/controllers/organizations");
+const { verifyToken } = require("@/middlewares/authentication");
 const upload = require("@/middlewares/data/profile-img");
-const validateImageMVP = require("@/middlewares/data/image-validator");
+const validateImageMVP = require("@/utils/image-validator");
 
 const router = express.Router();
 
+// Aceitar convite (não requer autenticação - novos usuários podem usar)
+// Suporta FormData com imagem de perfil opcional
+router.post(
+  "/invites/accept",
+  upload.single("profileImage"),
+  validateImageMVP,
+  organizationsController.acceptInvite.bind(organizationsController)
+);
+
+// Todas as outras rotas requerem autenticação
 router.use(verifyToken);
 
 // ========================================
@@ -71,6 +81,28 @@ router.post(
 router.delete(
   "/members/:memberId",
   organizationsController.removeMember.bind(organizationsController)
+);
+
+// ========================================
+// ROTAS DE CONVITES
+// ========================================
+
+// Enviar convite para um novo membro
+router.post(
+  "/invites",
+  organizationsController.inviteMember.bind(organizationsController)
+);
+
+// Listar convites pendentes da organização
+router.get(
+  "/invites",
+  organizationsController.getPendingInvites.bind(organizationsController)
+);
+
+// Cancelar um convite
+router.delete(
+  "/invites/:invite_id",
+  organizationsController.cancelInvite.bind(organizationsController)
 );
 
 // ========================================

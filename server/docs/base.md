@@ -91,7 +91,7 @@ Importado automaticamente via `module-alias/register` no `index.js`.
 
 ### 3.1 Database Connection
 
-**Localização:** `src/services/db/db-connection.js`
+**Localização:** `src/services/db/index.js`
 
 **Descrição:**  
 Gerencia conexões com banco de dados PostgreSQL usando pool de conexões.
@@ -158,7 +158,7 @@ const affected = await rowCount('DELETE FROM sessions WHERE user_id = $1', [user
 
 ### 3.2 Email Service
 
-**Localização:** `src/services/email/config/mail-service.js`
+**Localização:** `src/services/email/config/index.js`
 
 **Descrição:**  
 Configura e exporta transporter Nodemailer para envio de emails via SMTP.
@@ -183,7 +183,7 @@ Cria e retorna um transporter Nodemailer configurado.
 
 **Exemplo de Uso:**
 ```javascript
-const { MailService } = require('@/services/email/config/mail-service');
+const { MailService } = require('@/services/email/config/index');
 
 const transporter = MailService();
 await transporter.sendMail({
@@ -207,7 +207,7 @@ await transporter.sendMail({
 
 ### 3.3 Job Manager
 
-**Localização:** `src/services/jobs/job-manager.js`
+**Localização:** `src/services/jobs/index.js`
 
 **Descrição:**  
 Gerenciador de jobs assíncronos com persistência em arquivo e recuperação após reinicialização.
@@ -275,7 +275,7 @@ Gera ID único para job.
 
 **Exemplo de Uso:**
 ```javascript
-const jobManager = require('@/services/jobs/job-manager');
+const jobManager = require('@/services/jobs/index');
 
 // Criar job
 const jobId = jobManager.generateJobId('backup');
@@ -302,7 +302,7 @@ await jobManager.updateJob(jobId, {
 
 ### 3.4 Spaces Service (Storage)
 
-**Localização:** `src/services/storage/spaces-service.js`
+**Localização:** `src/services/storage/index.js`
 
 **Descrição:**  
 Serviço para gerenciamento de arquivos no Digital Ocean Spaces (compatível com S3).
@@ -389,7 +389,7 @@ Valida se todas as configurações necessárias estão presentes.
 
 **Exemplo de Uso:**
 ```javascript
-const spacesService = require('@/services/storage/spaces-service');
+const spacesService = require('@/services/storage/index');
 
 // Upload
 const result = await spacesService.uploadImage(
@@ -417,7 +417,7 @@ const signedUrl = await spacesService.getSignedUrl(result.key, 7200);
 ### 4.1 Importações
 Sempre utilize o alias `@` para importações:
 ```javascript
-const { executeQuery } = require('@/services/db/db-connection');
+const { executeQuery } = require('@/services/db/index');
 ```
 
 ### 4.2 Tratamento de Erros

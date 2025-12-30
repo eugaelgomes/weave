@@ -1,4 +1,4 @@
-const { executeQuery } = require("@/services/db/db-connection");
+const { executeQuery } = require("@/services/db/index");
 
 class AuthRepository {
   async findUserByUsername(username) {
@@ -10,15 +10,20 @@ class AuthRepository {
       u.email,
       u.password,
       u.avatar_url,
+      u.birth_date,
+      u.private_profile,
+      u.phone_number,
       u.auth_with_google,
       u.theme_mode,
       u.created_at,
       u.updated_at,
+      u.email_verified,
+      u.email_verified_at,
       o.id AS org_id,
       o.unique_name AS org_unique_name,
       o.org_name AS org_name
     FROM users u
-    LEFT JOIN organizations o ON o.id = u.org_id
+    LEFT JOIN organizations o ON o.user_id = u.user_id
     WHERE (
         (u.username IS NOT NULL AND u.username = $1)
      OR (u.email IS NOT NULL AND u.email = $1)
@@ -28,6 +33,20 @@ class AuthRepository {
     `;
     const results = await executeQuery(query, [username]);
     return results[0];
+  }
+
+  async loginLogs(userId, ip, timestamp, success, userAgent) {
+    const query = `
+      INSERT INTO user_login_logs (user_id, ip_address, created_at, success, user_agent)
+      VALUES ($1, $2, $3, $4, $5)
+    `;
+    return await executeQuery(query, [
+      userId,
+      ip,
+      timestamp,
+      success,
+      userAgent,
+    ]);
   }
 
   async logUserLocation(userId, ip, timestamp, location, userAgent) {

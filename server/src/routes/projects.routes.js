@@ -1,21 +1,21 @@
 const express = require("express");
-const projectsController = require("@/controllers/projects/projects-controller");
-const { verifyToken } = require("@/middlewares/auth/auth-middleware");
+const projectsController = require("@/controllers/projects");
+const { verifyToken } = require("@/middlewares/authentication");
 
 const router = express.Router();
 
 router.use(verifyToken);
 
-// Consultar toodos os projetos
+// Todos os projetos
 router.get("/", projectsController.getAllProjects.bind(projectsController));
 
 // Criar um novo projeto
 router.post("/", projectsController.createProject.bind(projectsController));
 
-// Consultar um projeto específico pelo ID
+// Consultar um projeto ID
 router.get("/:id", projectsController.getProjectById.bind(projectsController));
 
-// Atualizar um projeto existente pelo ID
+// Atualizar um projeto ID
 router.put("/:id", projectsController.updateProject.bind(projectsController));
 
 // Deletar um projeto pelo ID

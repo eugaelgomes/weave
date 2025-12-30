@@ -3,7 +3,7 @@
  * Gerencia sessões de chat e mensagens da IA
  */
 
-const { pool } = require("@/services/db/db-connection");
+const { pool } = require("@/services/db/index");
 
 /**
  * Cria uma nova sessão de chat

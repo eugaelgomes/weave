@@ -1,4 +1,5 @@
-const { executeQuery, rowCount } = require("@/services/db/db-connection");
+const { executeQuery, rowCount } = require("@/services/db/index");
+const imageUtils = require("@/middlewares/data/image-utils");
 
 class notesRepository {
   async createNotesQuerie(
@@ -73,7 +74,8 @@ class notesRepository {
     GROUP BY n.id, u.user_id, p.title
     ORDER BY n.updated_at DESC;
     `;
-    return await executeQuery(query, [userId]);
+    const results = await executeQuery(query, [userId]);
+    return await this.processNotesWithSignedUrls(results);
   }
 
   async getAllNotesFormatted(userId) {
@@ -125,7 +127,8 @@ class notesRepository {
       GROUP BY n.id, u.user_id, p.title
       ORDER BY n.updated_at DESC;
     `;
-    return await executeQuery(query, [userId]);
+    const results = await executeQuery(query, [userId]);
+    return await this.processNotesWithSignedUrls(results);
   }
 
   /**
@@ -243,8 +246,10 @@ class notesRepository {
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
 
+    const processedNotes = await this.processNotesWithSignedUrls(notes);
+
     return {
-      notes,
+      notes: processedNotes,
       pagination: {
         currentPage: parseInt(page),
         limit: parseInt(limit),
@@ -299,7 +304,11 @@ class notesRepository {
       LIMIT 1
     `;
     const results = await executeQuery(query, [noteId]);
-    return results[0] || null;
+    if (results[0]) {
+      const processed = await this.processNotesWithSignedUrls([results[0]]);
+      return processed[0];
+    }
+    return null;
   }
 
   async getAllNotesStats(userId) {
@@ -491,6 +500,9 @@ class notesRepository {
       projectId,
       initialBlockContent,
     ]);
+    if (results[0]) {
+      return await imageUtils.addSignedUrls(results[0], ["user_avatar_url"]);
+    }
     return results[0];
   }
 
@@ -599,7 +611,8 @@ class notesRepository {
     WHERE nc.note_id = $1
     ORDER BY nc.added_at ASC;
     `;
-    return await executeQuery(query, [noteId]);
+    const results = await executeQuery(query, [noteId]);
+    return await imageUtils.addSignedUrlsToArray(results, ["avatar_url"]);
   }
 
   /**
@@ -616,6 +629,57 @@ class notesRepository {
     `;
     const results = await executeQuery(query, [noteId, userId]);
     return results.length > 0;
+  }
+
+  /**
+   * Processa URLs assinadas para avatares em notas e colaboradores
+   * @param {Array} notes - Array de notas
+   * @returns {Promise<Array>} - Notas com URLs assinadas
+   */
+  async processNotesWithSignedUrls(notes) {
+    if (!notes || !Array.isArray(notes)) return notes;
+
+    return Promise.all(
+      notes.map(async (note) => {
+        const processedNote = { ...note };
+
+        // Processar avatar do criador da nota
+        if (processedNote.user_avatar_url) {
+          const key = imageUtils.extractKeyFromUrl(
+            processedNote.user_avatar_url
+          );
+          if (key) {
+            const signedUrl = await imageUtils.getSignedUrl(key);
+            if (signedUrl) {
+              processedNote.user_avatar_url = signedUrl;
+            }
+          }
+        }
+
+        // Processar avatares dos colaboradores
+        if (
+          processedNote.collaborators &&
+          Array.isArray(processedNote.collaborators)
+        ) {
+          processedNote.collaborators = await Promise.all(
+            processedNote.collaborators.map(async (collab) => {
+              if (collab.avatar_url) {
+                const key = imageUtils.extractKeyFromUrl(collab.avatar_url);
+                if (key) {
+                  const signedUrl = await imageUtils.getSignedUrl(key);
+                  if (signedUrl) {
+                    return { ...collab, avatar_url: signedUrl };
+                  }
+                }
+              }
+              return collab;
+            })
+          );
+        }
+
+        return processedNote;
+      })
+    );
   }
 }
 

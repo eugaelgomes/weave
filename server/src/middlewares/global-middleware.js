@@ -4,11 +4,11 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const { getClientIp } = require("@/middlewares/security/ip-address");
 const { sessionMiddleware } = require("@/middlewares/security/session");
-const ALLOWED_ORIGINS = require("@/config/allowed-origins");
+const { allowedOrigins } = require("@/config/allowed-origins");
 
-// Domínios
-const WHITELIST = ALLOWED_ORIGINS;
 
+// Lista de origens CORS
+const WHITELIST = allowedOrigins;
 
 /**
  * Escapa caracteres especiais em uma string para uso em expressões regulares.
@@ -19,7 +19,6 @@ function escapeRegExp(s) {
 
 /**
  * Validação para a origem.
- * Coringa (ex.: https://*.domain.com).
  */
 function buildMatcher(allowed) {
   if (allowed.includes("*")) {
@@ -36,7 +35,6 @@ function buildMatcher(allowed) {
 function makeCorsOptions() {
   const isDev = process.env.NODE_ENV !== "production";
 
-
   const devMatchers = isDev
     ? [
         (origin) => /^http:\/\/localhost(:\d+)?$/.test(origin),
@@ -44,7 +42,6 @@ function makeCorsOptions() {
       ]
     : [];
 
- 
   const matchers = WHITELIST.map(buildMatcher).concat(devMatchers);
 
   return {

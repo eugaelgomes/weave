@@ -2,7 +2,9 @@ const {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 //const { v4: uuidv4 } = require("uuid");
 
 class ImageUtils {
@@ -50,7 +52,7 @@ class ImageUtils {
       // Nome do arquivo simples
       const extension = this.getExtensionFromMimeType(mimeType);
       const filename = `user-${userId}-avatar${extension}`;
-      const key = `profile-images/${filename}`;
+      const key = `users-content/profile/${filename}`;
 
       // Upload para Digital Ocean Spaces
       const uploadParams = {
@@ -58,7 +60,6 @@ class ImageUtils {
         Key: key,
         Body: imageBuffer,
         ContentType: mimeType,
-        ACL: "public-read", // Imagem publicamente acessível
       };
 
       const command = new PutObjectCommand(uploadParams);
@@ -98,14 +99,13 @@ class ImageUtils {
 
       const extension = this.getExtensionFromMimeType(mimeType);
       const filename = `org-${organizationId}-logo${extension}`;
-      const key = `organization-images/${filename}`;
+      const key = `organizations/${organizationId}/images/logo/${filename}`;
 
       const uploadParams = {
         Bucket: this.bucketName,
         Key: key,
         Body: imageBuffer,
         ContentType: mimeType,
-        ACL: "public-read",
       };
 
       const command = new PutObjectCommand(uploadParams);
@@ -144,14 +144,13 @@ class ImageUtils {
 
       const extension = this.getExtensionFromMimeType(mimeType);
       const filename = `org-${organizationId}-banner${extension}`;
-      const key = `organization-images/${filename}`;
+      const key = `organizations/${organizationId}/images/banner/${filename}`;
 
       const uploadParams = {
         Bucket: this.bucketName,
         Key: key,
         Body: imageBuffer,
         ContentType: mimeType,
-        ACL: "public-read",
       };
 
       const command = new PutObjectCommand(uploadParams);
@@ -241,6 +240,96 @@ class ImageUtils {
   isValidImageSize(size) {
     const maxSize = 5 * 1024 * 1024; // 5MB
     return size <= maxSize;
+  }
+
+  /**
+   * Extrai a key do arquivo a partir da URL
+   * @param {string} url - URL completa do arquivo
+   * @returns {string|null} - Key do arquivo ou null
+   */
+  extractKeyFromUrl(url) {
+    if (!url) return null;
+
+    try {
+      // Se já for uma key (sem protocolo), retorna direto
+      if (!url.startsWith("http")) return url;
+
+      const urlObj = new URL(url);
+      // Remove a primeira barra e o nome do bucket
+      const pathWithoutBucket = urlObj.pathname.substring(1);
+      const bucketPrefixLength = this.bucketName.length + 1;
+      return pathWithoutBucket.substring(bucketPrefixLength);
+    } catch (error) {
+      console.error("Erro ao extrair key da URL:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Gera URL assinada temporária para acesso privado
+   * @param {string} key - Chave do arquivo no Spaces
+   * @param {number} expiresIn - Tempo de expiração em segundos (padrão: 1 hora)
+   * @returns {Promise<string|null>} - URL assinada ou null
+   */
+  async getSignedUrl(key, expiresIn = 3600) {
+    try {
+      if (!this.s3Client || !key) return null;
+
+      const command = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      });
+
+      const signedUrl = await getSignedUrl(this.s3Client, command, {
+        expiresIn,
+      });
+      return signedUrl;
+    } catch (error) {
+      console.error("Erro ao gerar URL assinada:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Processa um objeto substituindo URLs de imagem por URLs assinadas
+   * @param {Object} obj - Objeto com campos de URL
+   * @param {Array<string>} urlFields - Nomes dos campos que contêm URLs
+   * @param {number} expiresIn - Tempo de expiração das URLs
+   * @returns {Promise<Object>} - Objeto com URLs assinadas
+   */
+  async addSignedUrls(obj, urlFields = [], expiresIn = 3600) {
+    if (!obj || !this.s3Client) return obj;
+
+    const result = { ...obj };
+
+    for (const field of urlFields) {
+      if (result[field]) {
+        const key = this.extractKeyFromUrl(result[field]);
+        if (key) {
+          const signedUrl = await this.getSignedUrl(key, expiresIn);
+          if (signedUrl) {
+            result[field] = signedUrl;
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Processa array de objetos substituindo URLs por URLs assinadas
+   * @param {Array<Object>} items - Array de objetos
+   * @param {Array<string>} urlFields - Campos de URL a processar
+   * @param {number} expiresIn - Tempo de expiração
+   * @returns {Promise<Array<Object>>} - Array processado
+   */
+  async addSignedUrlsToArray(items, urlFields = [], expiresIn = 3600) {
+    if (!items || !Array.isArray(items) || !this.s3Client) return items;
+
+    return Promise.all(
+      items.map((item) => this.addSignedUrls(item, urlFields, expiresIn))
+    );
   }
 }
 
