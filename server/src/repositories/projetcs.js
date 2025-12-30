@@ -78,9 +78,14 @@ class ProjectsRepository {
         u.username AS owner_username,
         u.email AS owner_email,
         u.name AS owner_name,
-        u.avatar_url AS owner_avatar_url
+        u.avatar_url AS owner_avatar_url,
+        p.org_id as organization_id,
+        o.org_name as organization_name,
+        o.unique_name as organization_unique_name,
+        o.logo_url as organization_logo_url
       FROM projects p
       JOIN users u ON u.user_id = p.user_id
+      LEFT JOIN organizations o ON o.id = p.org_id
       WHERE p.id = $1::uuid
         AND p.deleted = false
         AND (
