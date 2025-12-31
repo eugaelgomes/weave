@@ -1,38 +1,70 @@
-// Biblioteca de encriptação
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
-// Validadores de dados
 const { validationResult } = require("express-validator");
 const imageUtils = require("@/middlewares/data/image-utils");
+
 // Repositórios
 const UserRepository = require("@/repositories/users");
 const AuthRepository = require("@/repositories/authentication");
-// Emails
+
+// Serviços de Email e Logs
 const welcomeMailModule = require("@/services/email/templates/welcome-mail");
 const deleteAccountModule = require("@/services/email/templates/delete-account");
 const emailChangeModule = require("@/services/email/templates/users-access/reset-password");
+const updateProfileLogs = require("@/utils/system_logs/update_profile-logs");
+
 const { welcome_message } = welcomeMailModule;
 const { delete_account_notification } = deleteAccountModule;
 const { sendEmailChangeValidation } = emailChangeModule;
 
-const updateProfileLogs = require("@/utils/system_logs/update_profile-logs");
-
-const allTimezones = Intl.supportedValuesOf("timeZone");
-
-const saltRounds = 12;
-
-const getCurrentDateTime = () => {
-  const data = new Date();
-  return data.toISOString().slice(0, 19).replace("T", " ");
-};
-
-const validTimezones = (timezone) => {
-  return allTimezones.includes(timezone);
-};
+const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
+const ALL_TIMEZONES = Intl.supportedValuesOf("timeZone");
 
 class UserController {
-  async createUser(req, res) {
-    // Validação de entrada nula
+  constructor() {
+    this.userRepository = UserRepository;
+    this.authRepository = AuthRepository;
+  }
+
+  _getCurrentDateTime() {
+    return new Date().toISOString().slice(0, 19).replace("T", " ");
+  }
+
+  _isValidTimezone(timezone) {
+    return ALL_TIMEZONES.includes(timezone);
+  }
+
+  _handleError(error, res, next) {
+    console.error(`[UserController Error]: ${error.message}`, {
+      stack: error.stack,
+    });
+
+    if (
+      error.message.includes("obrigatório") ||
+      error.message.includes("Invalid")
+    ) {
+      return res.status(400).json({ error: error.message });
+    }
+    if (
+      error.message.includes("não encontrada") ||
+      error.message.includes("negado")
+    ) {
+      return res.status(404).json({ error: error.message });
+    }
+
+    return res.status(500).json({ error: "Internal server error." });
+  }
+
+  // Simulação do método que estava faltando
+  _validateAuthentication(req) {
+    if (!req.user || !req.user.userId) {
+      throw new Error("Acesso negado: Usuário não autenticado");
+    }
+    return req.user.userId;
+  }
+
+  // Criação de novo usuário
+  async createUser(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -53,11 +85,11 @@ class UserController {
         phone_number = null,
       } = req.body;
 
-      if (timezone && !validTimezones(timezone)) {
+      if (timezone && !this._isValidTimezone(timezone)) {
         return res.status(400).json({
           status: "error",
           message: "Invalid timezone provided.",
-          validTimezones: allTimezones,
+          isValidTimezones: ALL_TIMEZONES,
         });
       }
 
@@ -68,23 +100,26 @@ class UserController {
 
       if (existingUsers.length > 0) {
         const emailExists = existingUsers.some((u) => u.email === email);
-        const userExists = existingUsers.some((u) => u.usuario === username);
+
+        const userExists = existingUsers.some(
+          (u) => u.username === username || u.usuario === username
+        );
 
         if (emailExists && userExists)
-          return res.status(409).json({
-            status: "failed",
-            message: "User and email already exist!",
-          });
+          return res
+            .status(409)
+            .json({
+              status: "failed",
+              message: "User and email already exist!",
+            });
         if (emailExists)
-          return res.status(409).json({
-            status: "failed",
-            message: "Email is already in use! Try another.",
-          });
+          return res
+            .status(409)
+            .json({ status: "failed", message: "Email is already in use!" });
         if (userExists)
-          return res.status(409).json({
-            status: "failed",
-            message: "Username is already in use! Try another.",
-          });
+          return res
+            .status(409)
+            .json({ status: "failed", message: "Username is already in use!" });
       }
 
       const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -108,10 +143,11 @@ class UserController {
         try {
           const saveResult = await imageUtils.saveProfileImage(
             req.file.buffer,
+
             req.file.mimetype,
+
             userId
           );
-
           if (saveResult.success) {
             profileImageUrl = saveResult.url;
             await UserRepository.updateProfileImage(userId, profileImageUrl);
@@ -124,54 +160,40 @@ class UserController {
       }
 
       const activationToken = crypto.randomBytes(12).toString("hex");
-      const currentDateTime = getCurrentDateTime();
+      const currentDateTime = this._getCurrentDateTime();
       await UserRepository.createEmailActivationToken(
         userId,
         activationToken,
         currentDateTime
       );
 
-      const mailResult = await welcome_message(
-        name,
-        email,
-        username,
-        activationToken
-      );
-      if (!mailResult.success) {
-        console.warn("Welcome email not sent:", mailResult.error);
-      }
+      await welcome_message(name, email, username, activationToken);
 
       return res.status(201).json({
-        status: "success",
-        message:
-          "User registered successfully! Please check your email to activate your account.",
-        user_data: {
+        status: "OK",
+        message: `Welcome to Weave Notes ${name}! Check your email to activate your account.`,
+        user: {
           id: userId,
           name,
           username,
           email,
+          avatar_url: profileImageUrl,
+          created_at: newUser[0].created_at,
         },
         redirect: "/auth/signin",
       });
     } catch (error) {
       console.error("An error occurred during registration:", error);
-      return res.status(500).send("An internal error occurred.");
+      return this._handleError(error, res, next);
     }
   }
 
-  //async getAllUsers(req, res) {
-  //  try {
-  //    const users = await UserRepository.findAll();
-  //    res.status(200).json(users);
-  //  } catch (error) {
-  //    res.status(500).send("Internal server error.");
-  //  }
-  //}
-
   async getProfileImage(req, res) {
     try {
-      // Usa diretamente o userId do token do usuário logado
+      // Usa userId do usuário logado
       const userId = req.user.userId;
+
+      this._validateAuthentication(req, res);
 
       const user = await UserRepository.getProfileImage(userId);
 
@@ -183,13 +205,15 @@ class UserController {
       return res.redirect(user.avatar_url);
     } catch (error) {
       console.error("Error retrieving profile image:", error);
-      res.status(500).send("Internal server error.");
+      this._handleError(error, res);
     }
   }
 
   async getProfileImageInfo(req, res) {
     try {
       const userId = req.user.userId;
+
+      this._validateAuthentication(req, res);
 
       const user = await UserRepository.getProfileImage(userId);
 
@@ -211,9 +235,7 @@ class UserController {
       });
     } catch (error) {
       console.error("Error retrieving profile image info:", error);
-      res.status(500).json({
-        error: "Internal server error",
-      });
+      this._handleError(error, res);
     }
   }
 
@@ -223,6 +245,8 @@ class UserController {
       if (!user) {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
+
+      this._validateAuthentication(req, res);
 
       return res.status(200).json({
         user_data: {
@@ -251,7 +275,7 @@ class UserController {
       });
     } catch (error) {
       console.error("Erro ao buscar perfil:", error);
-      return res.status(500).json({ message: "Erro interno do servidor" });
+      this._handleError(error, res);
     }
   }
 
@@ -378,7 +402,7 @@ class UserController {
         if (usernameExists.length > 0)
           return res.status(400).json({ message: "Username already in use" });
         updates.username = username;
-      } 
+      }
 
       let updatedUser = currentUser;
       if (Object.keys(updates).length > 0) {
@@ -492,16 +516,14 @@ class UserController {
         }
       );
 
-      return res.status(500).json({ message: "Internal server error" });
+      this._handleError(error, res);
     }
   }
 
   async deleteUser(req, res) {
     try {
-      // Usa diretamente o userId do token do usuário logado
       const userId = req.user.userId;
 
-      // Busca os dados do usuário antes de excluir para enviar o email
       const userData = await UserRepository.findById(userId);
 
       if (!userData) {
@@ -513,9 +535,7 @@ class UserController {
 
       const result = await UserRepository.deleteUser(userId);
 
-      // Verifica se o usuário foi realmente deletado
       if (result && result.length > 0) {
-        // Envia email de confirmação de exclusão
         try {
           await delete_account_notification(
             userData.name,
@@ -525,7 +545,6 @@ class UserController {
           console.log(`Delete account email sent to: ${userData.email}`);
         } catch (emailError) {
           console.error("Failed to send delete account email:", emailError);
-          // Não falha a operação se o email não for enviado
         }
 
         res.status(200).json({ message: "User deleted successfully." });
@@ -537,7 +556,7 @@ class UserController {
       }
     } catch (error) {
       console.error("Error deleting user:", error);
-      res.status(500).json({ error: "Internal server error." });
+      this._handleError(error, res);
     }
   }
 
@@ -580,7 +599,48 @@ class UserController {
       });
     } catch (error) {
       console.error("Error activating account:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      this._handleError(error, res);
+    }
+  }
+
+  /**
+   * GET /api/users/search - Buscar usuários para adicionar como colaboradores
+   * Busca usuários por email, username, ou nome
+   */
+  async searchUsers(req, res, next) {
+    try {
+      const { q } = req.query;
+
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      // Validação de query
+      if (!q || q.trim().length < 2) {
+        return res.status(400).json({
+          error: "The search query must be at least 2 characters long.",
+        });
+      }
+
+      const searchTerm = q.trim();
+
+      const users = await this.userRepository.searchUsers(searchTerm);
+
+      const filteredUsers = users
+        .filter((user) => user && user.user_id !== userId)
+        .map((user) => ({
+          id: user.user_id,
+          username: user.username,
+          name: user.name,
+          email: user.email,
+          avatar_url: user.avatar_url,
+        }));
+
+      res.status(200).json({
+        users: filteredUsers,
+        query: searchTerm,
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
     }
   }
 }

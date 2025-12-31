@@ -26,7 +26,7 @@ class OrganizationsRepository {
     WHERE o.user_id = $1;
     `;
     const results = await executeQuery(query, [user_id]);
-    return results[0];
+    return results;
   }
 
   async getAvailableOrgNames(baseName) {

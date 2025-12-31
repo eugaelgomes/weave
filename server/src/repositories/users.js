@@ -29,7 +29,7 @@ class UserRepository {
       avatar_url
     ) 
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    RETURNING user_id, email, name;
+    RETURNING user_id, email, name, avatar_url, created_at;
   `;
 
     return await executeQuery(query, [
@@ -85,15 +85,26 @@ class UserRepository {
 
   async searchUsers(searchTerm) {
     const query = `
-      SELECT user_id, username, name, email, avatar_url 
-      FROM users 
-      WHERE (LOWER(username) LIKE LOWER($1) 
-         OR LOWER(email) LIKE LOWER($1))
-         AND deleted = false
-      ORDER BY username
-      LIMIT 10
+      SELECT 
+        user_id, 
+        username, 
+        name, 
+        email, 
+        avatar_url 
+      FROM 
+        users 
+      WHERE 
+        (LOWER(username) LIKE LOWER($1) 
+        OR LOWER(email) LIKE LOWER($1))
+        OR LOWER(name) LIKE LOWER($1)
+        AND deleted = false
+        AND private_profile = false
+      ORDER BY 
+        name ASC
+      LIMIT 15;
     `;
     const results = await executeQuery(query, [`%${searchTerm}%`]);
+    return results;
   }
 
   async findById(userId) {

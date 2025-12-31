@@ -6,9 +6,7 @@ const AuthRepository = require("@/repositories/authentication");
 const { getCookieDomain } = require("@/config/allowed-origins");
 
 const authLogs = require("@/utils/system_logs/auth-logs");
-
-const secretKey = process.env.SECRET_KEY;
-
+const { secretsManager } = require("@/services/secrets");
 class AuthController {
   async login(req, res) {
     const { username, password } = req.body;
@@ -60,7 +58,7 @@ class AuthController {
         org_name: user.org_name,
       };
 
-      const token = jwt.sign(payload, secretKey, {
+      const token = jwt.sign(payload, secretsManager(), {
         algorithm: "HS256",
         expiresIn: "12h",
       });
@@ -219,7 +217,7 @@ class AuthController {
         name: user.name,
       };
 
-      const token = jwt.sign(payload, secretKey, {
+      const token = jwt.sign(payload, secretsManager(), {
         algorithm: "HS256",
         expiresIn: "24h",
       });

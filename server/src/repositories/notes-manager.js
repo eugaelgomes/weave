@@ -129,6 +129,7 @@ class notesRepository {
     `;
     const results = await executeQuery(query, [userId]);
     return await this.processNotesWithSignedUrls(results);
+
   }
 
   /**
@@ -640,19 +641,6 @@ class notesRepository {
       notes.map(async (note) => {
         const processedNote = { ...note };
 
-        // Processar avatar do criador da nota
-        if (processedNote.user_avatar_url) {
-          const key = imageUtils.extractKeyFromUrl(
-            processedNote.user_avatar_url
-          );
-          if (key) {
-            const signedUrl = await imageUtils.getSignedUrl(key);
-            if (signedUrl) {
-              processedNote.user_avatar_url = signedUrl;
-            }
-          }
-        }
-
         // Processar avatares dos colaboradores
         if (
           processedNote.collaborators &&
@@ -660,15 +648,6 @@ class notesRepository {
         ) {
           processedNote.collaborators = await Promise.all(
             processedNote.collaborators.map(async (collab) => {
-              if (collab.avatar_url) {
-                const key = imageUtils.extractKeyFromUrl(collab.avatar_url);
-                if (key) {
-                  const signedUrl = await imageUtils.getSignedUrl(key);
-                  if (signedUrl) {
-                    return { ...collab, avatar_url: signedUrl };
-                  }
-                }
-              }
               return collab;
             })
           );

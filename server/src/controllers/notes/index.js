@@ -13,15 +13,11 @@ class NotesController {
     this.userRepository = userRepository;
   }
 
-  // ========================================
-  // MÉTODOS UTILITÁRIOS E VALIDAÇÃO
-  // ========================================
-
   /**
-   * Valida se o usuário está autenticado
-   * @param {Object} req - Request object
-   * @param {Object} res - Response object
-   * @returns {Object|null} - Retorna o userId se válido, ou envia erro HTTP
+   * Validação de autenticação do usuário
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object|null}
    */
   _validateAuthentication(req, res) {
     const userId = req.user?.userId;
@@ -36,10 +32,10 @@ class NotesController {
 
   /**
    * Valida e verifica propriedade da nota ou se é colaborador
-   * @param {string} noteId - ID da nota
-   * @param {string} userId - ID do usuário
-   * @returns {Object} - Nota encontrada
-   * @throws {Error} - Se nota não existir ou usuário não ter acesso
+   * @param {string} noteId
+   * @param {string} userId
+   * @returns {Object}
+   * @throws {Error}
    */
   async _validateNoteAccess(noteId, userId) {
     if (!noteId) {
@@ -52,10 +48,8 @@ class NotesController {
       throw new Error("Nota não encontrada");
     }
 
-    // Verifica se é o dono da nota
     const isOwner = note.user_id === userId;
 
-    // Verifica se é colaborador
     const isCollaborator = await this.notesRepository.isCollaborator(
       noteId,
       userId
@@ -70,10 +64,10 @@ class NotesController {
 
   /**
    * Valida e verifica propriedade da nota
-   * @param {string} noteId - ID da nota
-   * @param {string} userId - ID do usuário
-   * @returns {Object} - Nota encontrada
-   * @throws {Error} - Se nota não existir ou não pertencer ao usuário
+   * @param {string} noteId
+   * @param {string} userId
+   * @returns {Object}
+   * @throws {Error}
    */
   async _validateNoteOwnership(noteId, userId) {
     if (!noteId) {
@@ -95,9 +89,9 @@ class NotesController {
 
   /**
    * Formata a resposta padrão de uma nota
-   * @param {Object} note - Dados da nota do banco
-   * @param {Array} blocks - Blocos da nota (opcional)
-   * @returns {Object} - Nota formatada
+   * @param {Object} note
+   * @param {Array} blocks
+   * @returns {Object}
    */
   _formatNoteResponse(note, blocks = []) {
     return {
@@ -108,25 +102,23 @@ class NotesController {
       status: note.status,
       created_at: note.created_at,
       updated_at: note.updated_at,
-      blocks: blocks, // Nova estrutura de blocos hierárquicos
+      blocks: blocks,
     };
   }
 
   /**
    * Trata erros específicos e retorna resposta HTTP apropriada
-   * @param {Error} error - Erro capturado
-   * @param {Object} res - Response object
-   * @param {Function} next - Next middleware function
+   * @param {Error} error
+   * @param {Object} res
+   * @param {Function} next
    */
   _handleError(error, res, next) {
     const errorMessage = error.message;
 
-    // Erros de validação (400 Bad Request)
     if (errorMessage.includes("obrigatório")) {
       return res.status(400).json({ error: errorMessage });
     }
 
-    // Erros de autorização e não encontrado (404 Not Found)
     if (
       errorMessage.includes("não encontrada") ||
       errorMessage.includes("Acesso negado")
@@ -134,13 +126,8 @@ class NotesController {
       return res.status(404).json({ error: errorMessage });
     }
 
-    // Outros erros passam para o middleware de erro global
     next(error);
   }
-
-  // ========================================
-  // ENDPOINTS DA API
-  // ========================================
 
   /**
    * GET /api/notes - Buscar todas as notas do usuário
@@ -158,11 +145,10 @@ class NotesController {
    */
   async getAllNotes(req, res, next) {
     try {
-      // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // EXTRAÇÃO DOS PARÂMETROS DE QUERY
+      // Parâmetros de query com valores padrão
       const {
         page = 1,
         limit = 10,
@@ -172,10 +158,10 @@ class NotesController {
         sortOrder = "desc",
       } = req.query;
 
-      // PROCESSAMENTO DOS PARÂMETROS
+      //  Processar parâmetros de paginação e filtros
       const paginationOptions = {
         page: parseInt(page) || 1,
-        limit: Math.min(parseInt(limit) || 10, 50), // Máximo 50 itens por página
+        limit: Math.min(parseInt(limit) || 10, 50),
         search: search.trim(),
         tags: tags
           ? tags
@@ -187,10 +173,8 @@ class NotesController {
         sortOrder: sortOrder.toLowerCase(),
       };
 
-      // BUSCA COM PAGINAÇÃO OU SEM (para compatibilidade)
       let result;
 
-      // SE TEM PARÂMETROS DE PAGINAÇÃO, usa o método paginado
       if (
         req.query.page ||
         req.query.limit ||
@@ -293,17 +277,15 @@ class NotesController {
         },
         collaborators: note.collaborators || [],
         blocks: blockTree,
-        // Metadados de acesso
         access: {
           isOwner,
           isCollaborator,
-          canEdit: isOwner || isCollaborator, // Dono e colaboradores podem editar
-          canDelete: isOwner, // Apenas o dono pode excluir
-          canShare: isOwner, // Apenas o dono pode compartilhar
+          canEdit: isOwner || isCollaborator,
+          canDelete: isOwner,
+          canShare: isOwner,
         },
       };
 
-      // Retorna a nota completa
       res.status(200).json(completeNote);
     } catch (error) {
       this._handleError(error, res, next);
@@ -319,10 +301,9 @@ class NotesController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Buscar estatísticas
       const stats = await this.notesRepository.getAllNotesStats(userId);
 
-      // Formatar dados para o frontend
+      // Formatar dados
       const formattedStats = {
         totalNotes: parseInt(stats.total_notes) || 0,
         totalTags: parseInt(stats.unique_tags_count) || 0,
@@ -951,50 +932,6 @@ class NotesController {
           collaborators,
         });
       }
-    } catch (error) {
-      this._handleError(error, res, next);
-    }
-  }
-
-  /**
-   * GET /api/users/search - Buscar usuários para adicionar como colaboradores
-   * Busca usuários por email ou username
-   */
-  async searchUsers(req, res, next) {
-    try {
-      const { q } = req.query; // query string
-
-      // Validação de autenticação
-      const userId = this._validateAuthentication(req, res);
-      if (!userId) return;
-
-      // Validação de dados obrigatórios
-      if (!q || q.trim().length < 2) {
-        return res.status(400).json({
-          error: "Query deve ter pelo menos 2 caracteres",
-        });
-      }
-
-      const searchTerm = q.trim();
-
-      // Buscar usuários (limitado para evitar sobrecarga)
-      const users = await this.userRepository.searchUsers(searchTerm);
-
-      // Filtrar dados sensíveis e excluir o próprio usuário
-      const filteredUsers = users
-        .filter((user) => user && user.user_id !== userId)
-        .map((user) => ({
-          id: user.user_id,
-          username: user.username,
-          name: user.name, // Incluir o campo name
-          email: user.email, // Pode ser útil para identificação
-          avatar_url: user.avatar_url,
-        }));
-
-      res.status(200).json({
-        users: filteredUsers,
-        query: searchTerm,
-      });
     } catch (error) {
       this._handleError(error, res, next);
     }

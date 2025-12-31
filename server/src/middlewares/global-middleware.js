@@ -29,9 +29,7 @@ function buildMatcher(allowed) {
   return (origin) => origin === allowed;
 }
 
-/**
- * Configura opções do CORS usando a WHITELIST
- */
+
 function makeCorsOptions() {
   const isDev = process.env.NODE_ENV !== "production";
 

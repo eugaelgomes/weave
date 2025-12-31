@@ -32,7 +32,7 @@ router.put(
 );
 
 router.get("/search", verifyToken, (req, res, next) => {
-  NotesController.searchUsers(req, res, next);
+  UserController.searchUsers(req, res, next);
 });
 
 router.get(
