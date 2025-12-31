@@ -24,6 +24,10 @@ router.get("/:id", (req, res, next) => {
   notesController.getNoteById(req, res, next);
 });
 
+router.get("/:noteId/export/pdf", (req, res, next) => {
+  notesController.exportNoteAsPDF(req, res, next);
+});
+
 router.post("/", (req, res, next) => {
   notesController.createNote(req, res, next);
 });

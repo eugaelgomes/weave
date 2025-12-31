@@ -187,24 +187,28 @@ class notesRepository {
     const notesQuery = `
       SELECT 
         n.id::text,
-        n.user_id::text,
-        n.project_id::text,
         n.title,
         n.description,
+        n.status,
+        n.properties,
         n.tags,
         n.created_at,
         n.updated_at,
         n.deleted,
-
         -- criador da nota
+        n.user_id::text,
         u.name as user_name,
         u.username as user_username,
         u.email as user_email,
         u.avatar_url as user_avatar_url,
-
         -- projeto associado
+        n.project_id::text,
         p.title as project_name,
-
+        -- organização associada
+        p.org_id::text,
+        o.org_name,
+        o.unique_name as org_unique_name,
+        o.logo_url as org_logo_url,
         -- colaboradores em JSON
         COALESCE(
             json_agg(
@@ -223,9 +227,15 @@ class notesRepository {
       LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
       LEFT JOIN note_collaborators nc ON n.id = nc.note_id
       LEFT JOIN users c ON nc.user_id = c.user_id
+      LEFT JOIN organizations o ON p.org_id = o.id AND o.deleted = false
       WHERE ${whereConditions.join(" AND ")}
-      GROUP BY n.id, u.user_id, p.title
-      ORDER BY n.${validSortField} ${validSortOrder}
+      GROUP BY 
+        n.id,
+        u.user_id,
+        p.id,
+        o.id
+      ORDER BY 
+        n.${validSortField} ${validSortOrder}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1};
     `;
 
@@ -265,26 +275,30 @@ class notesRepository {
 
   async getNoteById(noteId) {
     const query = `
-      SELECT 
+    SELECT 
         n.id::text,
-        n.user_id::text,
-        n.project_id::text,
         n.title,
         n.description,
-        n.tags,
         n.status,
+        n.properties,
+        n.tags,
         n.created_at,
         n.updated_at,
-
+        n.deleted,
         -- criador da nota
-        u.name as user_name,
-        u.username as user_username,
-        u.email as user_email,
-        u.avatar_url as user_avatar_url,
-
+        n.user_id::text,
+        u.name AS user_name,
+        u.username AS user_username,
+        u.email AS user_email,
+        u.avatar_url AS user_avatar_url,
         -- projeto associado
-        p.title as project_name,
-
+        n.project_id::text,
+        p.title AS project_name,
+        -- organização associada
+        p.org_id::text,
+        o.org_name,
+        o.unique_name AS org_unique_name,
+        o.logo_url AS org_logo_url,
         -- colaboradores em JSON
         COALESCE(
             json_agg(
@@ -295,14 +309,21 @@ class notesRepository {
                 )
             ) FILTER (WHERE c.user_id IS NOT NULL), '[]'
         ) AS collaborators
-      FROM notes n
-      INNER JOIN users u ON n.user_id = u.user_id
-      LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
-      LEFT JOIN note_collaborators nc ON n.id = nc.note_id
-      LEFT JOIN users c ON nc.user_id = c.user_id
-      WHERE n.id = $1 AND n.deleted = false
-      GROUP BY n.id, u.user_id, p.title
-      LIMIT 1
+    FROM notes n
+    INNER JOIN users u ON n.user_id = u.user_id
+    LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
+    LEFT JOIN note_collaborators nc ON n.id = nc.note_id
+    LEFT JOIN users c ON nc.user_id = c.user_id
+    LEFT JOIN organizations o ON p.org_id = o.id AND o.deleted = false
+    WHERE n.id = $1 AND n.deleted = false
+    GROUP BY 
+        n.id, 
+        u.user_id, 
+        p.id,
+        p.org_id,
+        o.id
+    
+    LIMIT 1;
     `;
     const results = await executeQuery(query, [noteId]);
     if (results[0]) {

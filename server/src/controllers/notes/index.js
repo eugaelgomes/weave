@@ -5,6 +5,7 @@ const {
   sendCollaborationNotification,
 } = require("@/services/email/templates/notes/invite");
 const { ALLOWED_NOTE_STATUSES } = require("../product-patterns");
+const { PDFService } = require("../../services/note_export/pdf");
 
 class NotesController {
   constructor() {
@@ -186,12 +187,10 @@ class NotesController {
           paginationOptions
         );
       } else {
-        // MODO COMPATIBILIDADE: retorna todas as notas como antes
         const notes = await this.notesRepository.getAllNotesFormatted(userId);
         result = { notes, pagination: null };
       }
 
-      // PROCESSAMENTO DOS BLOCOS (mesmo lógica anterior)
       const notesWithBlocks = await Promise.all(
         result.notes.map(async (note) => {
           const blocks = await this.blocksRepository.getBlocksByNoteId(note.id);
@@ -199,18 +198,33 @@ class NotesController {
 
           return {
             id: note.id,
-            project_id: note.project_id,
-            project_name: note.project_name,
             title: note.title,
-            description: note.description,
-            tags: note.tags || [],
-            status: note.status,
+            description: note.description || null,
+            properties: note.properties || {},
+            tags: note.tags || [] || null,
+            status: note.status || null,
             created_at: note.created_at,
             updated_at: note.updated_at,
             deleted: note.deleted,
+            associated_project: note.project_id
+              ? {
+                  id: note.project_id,
+                  name: note.project_name,
+                }
+              : null,
+            associated_organization: note.org_id
+              ? {
+                  id: note.org_id,
+                  name: note.org_name,
+                  unique_name: note.org_unique_name,
+                  logo_url: note.org_logo_url,
+                }
+              : null,
             author: {
               id: note.user_id,
+              name: note.user_name,
               username: note.user_username,
+              email: note.user_email,
               avatar_url: note.user_avatar_url,
             },
             collaborators: note.collaborators || [],
@@ -219,15 +233,12 @@ class NotesController {
         })
       );
 
-      // RESPOSTA COM OU SEM PAGINAÇÃO
       if (result.pagination) {
-        // RESPOSTA COM PAGINAÇÃO
         res.status(200).json({
           notes: notesWithBlocks,
           pagination: result.pagination,
         });
       } else {
-        // RESPOSTA ORIGINAL (compatibilidade)
         res.status(200).json({ notes: notesWithBlocks });
       }
     } catch (error) {
@@ -260,14 +271,28 @@ class NotesController {
       // Montar estrutura completa da nota
       const completeNote = {
         id: note.id,
-        user_id: note.user_id,
-        project_id: note.project_id,
         title: note.title,
-        description: note.description,
-        tags: note.tags || [],
-        status: note.status || "sem_status",
+        description: note.description || null,
+        properties: note.properties || {},
+        tags: note.tags || [] || null,
+        status: note.status || null,
         created_at: note.created_at,
         updated_at: note.updated_at,
+        deleted: note.deleted,
+        associated_project: note.project_id
+          ? {
+              id: note.project_id,
+              name: note.project_name,
+            }
+          : null,
+        associated_organization: note.org_id
+          ? {
+              id: note.org_id,
+              name: note.org_name,
+              unique_name: note.org_unique_name,
+              logo_url: note.org_logo_url,
+            }
+          : null,
         user: {
           id: note.user_id,
           name: note.user_name,
@@ -297,13 +322,11 @@ class NotesController {
    */
   async getNotesStats(req, res, next) {
     try {
-      // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       const stats = await this.notesRepository.getAllNotesStats(userId);
 
-      // Formatar dados
       const formattedStats = {
         totalNotes: parseInt(stats.total_notes) || 0,
         totalTags: parseInt(stats.unique_tags_count) || 0,
@@ -552,10 +575,6 @@ class NotesController {
     }
   }
 
-  // ========================================
-  // ENDPOINTS PARA GERENCIAMENTO DE BLOCOS
-  // ========================================
-
   /**
    * POST /api/notes/:id/blocks - Criar um novo bloco
    * Adiciona um novo bloco à nota especificada
@@ -734,10 +753,6 @@ class NotesController {
       this._handleError(error, res, next);
     }
   }
-
-  // ========================================
-  // ENDPOINTS PARA GERENCIAMENTO DE COLABORADORES
-  // ========================================
 
   /**
    * POST /api/notes/:noteId/collaborators - Adicionar colaborador
@@ -932,6 +947,47 @@ class NotesController {
           collaborators,
         });
       }
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  async exportNoteAsPDF(req, res, next) {
+    try {
+      const { noteId } = req.params; // Nas rotas você definiu como /:id/export/pdf
+
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      const { note } = await this._validateNoteAccess(noteId, userId);
+
+      if (!note) {
+        return res.status(404).json({ error: "Nota não encontrada" });
+      }
+
+      const blocks = await this.blocksRepository.getBlocksByNoteId(noteId);
+      const blockTree = this.blocksRepository.buildBlockTree(blocks);
+
+      const dataForPDF = {
+        ...note,
+        blocks: blockTree,
+        collaborators: note.collaborators || [],
+        user_name: note.user_name,
+        user_email: note.user_email,
+      };
+
+      const pdfBuffer = await PDFService.generateNotePDF(dataForPDF);
+
+      const filename = `nota-${noteId}-${new Date().getTime()}.pdf`;
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${filename}"`
+      );
+      res.setHeader("Content-Length", pdfBuffer.length);
+
+      return res.status(200).send(pdfBuffer);
     } catch (error) {
       this._handleError(error, res, next);
     }
