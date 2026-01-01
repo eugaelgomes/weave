@@ -7,6 +7,9 @@ const {
 const { ALLOWED_NOTE_STATUSES } = require("../product-patterns");
 const { PDFService } = require("../../services/note_export/pdf");
 
+const PlanUsageManager = require("@/services/plans/usage"); // Ajuste o path conforme seu projeto
+const PlansRepository = require("@/repositories/plans");
+
 class NotesController {
   constructor() {
     this.notesRepository = notesRepository;
@@ -351,27 +354,59 @@ class NotesController {
     try {
       const { title, description, tags = [], status, project_id } = req.body;
 
-      // Validação de autenticação
+      // 1. Validação de autenticação
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Validação de dados obrigatórios
+      // 2. BUSCAR/CRIAR O REGISTRO DE USO (USANDO O MANAGER)
+      // Alteração: Chamamos o Manager em vez do Repository diretamente.
+      // O managePlanUsage garante que o registro exista (cria se for novo) e reseta o mês se necessário.
+      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const getUserPlan = await PlansRepository.getUserAndPlan(userId);
+
+      // 3. BUSCAR DETALHES DO PLANO (LIMITES E NOME)
+      // Pegamos o plan_id do objeto req.user (preenchido no seu middleware de auth)
+      const planDetails = await PlansRepository.getPlanById(
+        getUserPlan.plan_id
+      );
+
+      if (!usageRecord || !planDetails) {
+        return res.status(404).json({
+          error: "Configuração de plano não encontrada para este usuário.",
+        });
+      }
+
+      // 4. VALIDAR LIMITE DE NOTAS
+      // Alteração: Passamos usageRecord.usage_details (o JSON) para a função de check
+      const canCreate = PlanUsageManager.checkLimit(
+        planDetails.details,
+        usageRecord.usage_details,
+        "usage_summary.notes_total",
+        "limits.max_notes"
+      );
+
+      if (!canCreate) {
+        return res.status(403).json({
+          error: "Limite de notas atingido",
+          message: `Seu plano (${planDetails.name}) permite apenas ${planDetails.details.limits.max_notes} notas.`,
+        });
+      }
+
+      // 5. Validação de dados obrigatórios
       if (!title) {
         throw new Error("Título é obrigatório");
       }
 
-      // Definir status padrão se não fornecido
       const noteStatus =
         status === undefined || status === null ? "open" : status;
 
-      // Validar status
       if (!ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
         return res.status(400).json({
           error: `Status inválido. Permitidos: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
         });
       }
 
-      // Criação da nota
+      // 6. Criação da nota no banco
       const newNote = await this.notesRepository.createNotesQuerie(
         userId,
         title,
@@ -381,7 +416,11 @@ class NotesController {
         project_id
       );
 
-      // Formata e retorna a nota criada
+      // 7. INCREMENTAR O USO
+      // Alteração: Usamos usageRecord.id (o UUID da tabela plans_usage)
+      await PlanUsageManager.consumeNoteCreation(usageRecord.id);
+
+      // 8. Formata e retorna a nota criada
       const formattedNote = this._formatNoteResponse(newNote);
       res.status(201).json(formattedNote);
     } catch (error) {
@@ -407,6 +446,36 @@ class NotesController {
       // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
+
+      // Buscar/Criar registro de uso
+      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const getUserPlan = await PlansRepository.getUserAndPlan(userId);
+
+      // Buscar detalhes do plano
+      const planDetails = await PlansRepository.getPlanById(
+        getUserPlan.plan_id
+      );
+
+      if (!usageRecord || !planDetails) {
+        return res.status(404).json({
+          error: "Configuração de plano não encontrada para este usuário.",
+        });
+      }
+
+      // Validar limite de notas
+      const canCreate = PlanUsageManager.checkLimit(
+        planDetails.details,
+        usageRecord.usage_details,
+        "usage_summary.notes_total",
+        "limits.max_notes"
+      );
+
+      if (!canCreate) {
+        return res.status(403).json({
+          error: "Limite de notas atingido",
+          message: `Seu plano (${planDetails.name}) permite apenas ${planDetails.details.limits.max_notes} notas.`,
+        });
+      }
 
       // Validação de dados obrigatórios
       if (!title) {
@@ -434,6 +503,9 @@ class NotesController {
         noteStatus,
         project_id
       );
+
+      // Incrementar o uso de notas
+      await PlanUsageManager.consumeNoteCreation(usageRecord.id);
 
       // Montar estrutura completa da nota com todos os dados das tabelas relacionadas
       const completeNote = {
@@ -556,17 +628,26 @@ class NotesController {
     try {
       const { id } = req.params;
 
-      // Validação de autenticação
+      // 1. Validação de autenticação
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Validação de propriedade da nota
+      // 2. BUSCAR O REGISTRO DE USO
+      // Precisamos dele para saber qual usageId atualizar após o delete
+      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+
+      // 3. Validação de propriedade da nota
       await this._validateNoteOwnership(id, userId);
 
-      // Exclusão da nota
+      // 4. Exclusão da nota no repositório
       await this.notesRepository.deleteNoteById(id);
 
-      // Confirmação de exclusão
+      // 5. DECREMENTAR O USO NO JSONB
+      if (usageRecord) {
+        await PlanUsageManager.decrementNoteUsage(usageRecord.id);
+      }
+
+      // 6. Confirmação de exclusão
       res.status(200).json({
         message: "Nota deletada com sucesso",
       });
@@ -767,6 +848,34 @@ class NotesController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
+      // Buscar/Criar registro de uso
+      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const getUserPlan = await PlansRepository.getUserAndPlan(userId);
+
+      // Buscar detalhes do plano
+      const planDetails = await PlansRepository.getPlanById(
+        getUserPlan.plan_id
+      );
+
+      if (!usageRecord || !planDetails) {
+        return res.status(404).json({
+          error: "Configuração de plano não encontrada para este usuário.",
+        });
+      }
+
+      // Validar limite de colaboradores por nota
+      const currentCollaborators =
+        await this.notesRepository.getCollaboratorsByNoteId(noteId);
+      const maxCollaborators =
+        planDetails.details?.limits?.max_collaborators_per_note;
+
+      if (maxCollaborators && currentCollaborators.length >= maxCollaborators) {
+        return res.status(403).json({
+          error: "Limite de colaboradores atingido",
+          message: `Seu plano (${planDetails.name}) permite apenas ${maxCollaborators} colaboradores por nota.`,
+        });
+      }
+
       // Verificar se a nota existe e pertence ao usuário
       await this._validateNoteOwnership(noteId, userId);
 
@@ -959,6 +1068,36 @@ class NotesController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
+      // Buscar/Criar registro de uso
+      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const getUserPlan = await PlansRepository.getUserAndPlan(userId);
+
+      // Buscar detalhes do plano
+      const planDetails = await PlansRepository.getPlanById(
+        getUserPlan.plan_id
+      );
+
+      if (!usageRecord || !planDetails) {
+        return res.status(404).json({
+          error: "Configuração de plano não encontrada para este usuário.",
+        });
+      }
+
+      // Validar limite de exportações mensais
+      const canExport = PlanUsageManager.checkLimit(
+        planDetails.details,
+        usageRecord.usage_details,
+        "monthly_cycle.exports.notes_count",
+        "limits.exports.notes_monthly"
+      );
+
+      if (!canExport) {
+        return res.status(403).json({
+          error: "Limite de exportações atingido",
+          message: `Seu plano (${planDetails.name}) permite apenas ${planDetails.details.limits.exports.notes_monthly} exportações de notas por mês.`,
+        });
+      }
+
       const { note } = await this._validateNoteAccess(noteId, userId);
 
       if (!note) {
@@ -977,6 +1116,9 @@ class NotesController {
       };
 
       const pdfBuffer = await PDFService.generateNotePDF(dataForPDF);
+
+      // Incrementar contador de exportações
+      await PlanUsageManager.consumeExport(usageRecord.id, "notes");
 
       const filename = `nota-${noteId}-${new Date().getTime()}.pdf`;
 

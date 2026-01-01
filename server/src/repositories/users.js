@@ -83,6 +83,52 @@ class UserRepository {
     return results[0];
   }
 
+  async getUserByUsername(username) {
+    const query = `
+    SELECT
+      u.user_id,
+      u.username,
+      u.name,
+      u.email,
+      u.password,
+      u.avatar_url,
+      u.birth_date,
+      u.private_profile,
+      u.phone_number,
+      u.auth_with_google,
+      u.theme_mode,
+      u.created_at,
+      u.updated_at,
+      u.email_verified,
+      u.email_verified_at,
+      u.plan_id,
+      o.id AS org_id,
+      o.unique_name AS org_unique_name,
+      o.org_name AS org_name,
+      p.plan_id AS user_plan_id,
+      p.name,
+      p.details AS plan_details,
+      pu.plan_id AS usage_plan_id,
+      pu.client_type,
+      pu.usage_details,
+      pu.period_start,
+      pu.period_end
+    FROM users u
+    LEFT JOIN organizations o ON o.user_id = u.user_id
+    LEFT JOIN plans p ON p.plan_id = u.plan_id
+    LEFT JOIN plans_usage pu ON pu.user_id = u.user_id
+    WHERE (
+      (u.username IS NOT NULL AND u.username = $1)
+      OR (u.email IS NOT NULL AND u.email = $1)
+    )
+    AND u.deleted = false
+    LIMIT 1;
+  `;
+
+    const results = await executeQuery(query, [username]);
+    return results[0];
+  }
+
   async searchUsers(searchTerm) {
     const query = `
       SELECT 

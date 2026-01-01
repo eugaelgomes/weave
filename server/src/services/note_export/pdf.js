@@ -25,14 +25,13 @@ export class PDFService {
         }
         doc.moveDown(0.5);
 
-
         doc
           .fontSize(18)
           .fillColor("#000000")
           .font("Helvetica-Bold")
           .text(note.title, { align: "left" });
 
-        doc.moveDown(0.5);        
+        doc.moveDown(0.5);
         doc
           .moveTo(50, doc.y)
           .lineTo(545, doc.y)
@@ -47,7 +46,6 @@ export class PDFService {
           .text(note.description || "", { align: "justify", lineGap: 2 });
         doc.moveDown(1);
 
-        
         doc.fontSize(10).font("Helvetica").fillColor("#444444");
         const dateStr = new Date(note.created_at).toLocaleDateString("pt-BR");
         doc.text(`Autor: ${note.user_name} (${note.user_email})`);

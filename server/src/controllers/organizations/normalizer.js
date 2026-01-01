@@ -67,7 +67,6 @@ const PREDEFINED_PROPERTIES = Object.freeze({
   },
 });
 
-
 const normalizeOrganizationName = (name) => {
   if (typeof name !== "string" || !name)
     throw new Error("Nome inválido para normalização");

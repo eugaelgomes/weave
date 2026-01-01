@@ -8,7 +8,7 @@ class updateProfileLogs {
     "key",
     "password_confirmation",
     "new_password",
-    "old_password"
+    "old_password",
   ];
 
   static #sanitize(obj) {

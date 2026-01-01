@@ -12,6 +12,7 @@ const welcomeMailModule = require("@/services/email/templates/welcome-mail");
 const deleteAccountModule = require("@/services/email/templates/delete-account");
 const emailChangeModule = require("@/services/email/templates/users-access/reset-password");
 const updateProfileLogs = require("@/utils/system_logs/update_profile-logs");
+const PlansManager = require("@/services/plans/manager");
 
 const { welcome_message } = welcomeMailModule;
 const { delete_account_notification } = deleteAccountModule;
@@ -106,12 +107,10 @@ class UserController {
         );
 
         if (emailExists && userExists)
-          return res
-            .status(409)
-            .json({
-              status: "failed",
-              message: "User and email already exist!",
-            });
+          return res.status(409).json({
+            status: "failed",
+            message: "User and email already exist!",
+          });
         if (emailExists)
           return res
             .status(409)
@@ -166,6 +165,14 @@ class UserController {
         activationToken,
         currentDateTime
       );
+
+      // Atribuir plano padrão ao novo usuário
+      try {
+        await PlansManager.setDefaultPlanForNewUser(userId);
+      } catch (planError) {
+        console.error("Erro ao atribuir plano padrão:", planError);
+        // Não bloqueamos a criação do usuário por causa disso
+      }
 
       await welcome_message(name, email, username, activationToken);
 
@@ -241,12 +248,15 @@ class UserController {
 
   async getProfile(req, res) {
     try {
-      const user = await AuthRepository.findUserByUsername(req.user.username);
+      this._validateAuthentication(req, res);
+
+      const user = await this.userRepository.getUserByUsername(
+        req.user.username
+      );
+
       if (!user) {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
-
-      this._validateAuthentication(req, res);
 
       return res.status(200).json({
         user_data: {
@@ -270,6 +280,20 @@ class UserController {
             id: user.org_id,
             unique_name: user.org_unique_name,
             name: user.org_name,
+          },
+          current_plan: {
+            id: user.user_plan_id,
+            name: user.name,
+            client_type: user.client_type,
+            details: user.plan_details || {},
+          },
+          current_plan_usage: {
+            plan_id: user.usage_plan_id,
+            plan_name: user.name,
+            client_type: user.client_type,
+            period_start: user.period_start,
+            period_end: user.period_end,
+            details: user.usage_details || {},
           },
         },
       });

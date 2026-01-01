@@ -1,35 +1,30 @@
 const getAllDataRepository = require("@/repositories/backups");
 const userRepository = require("@/repositories/users");
 const jobManager = require("@/services/jobs/index");
-const { sendBackupEmail } = require("@/services/email/templates/backup");
+const {
+  sendBackupEmail,
+} = require("@/services/email/templates/backup/backup-notification");
 
 class BackupController {
   constructor() {
     this.getAllDataRepository = getAllDataRepository;
     this.userRepository = userRepository;
   }
-  /**
-   * Valida autenticação
-   * @param {Object} req - Request object
-   * @param {Object} res - Response object
-   * @returns {Object|null} - Retornar ID Usário ou Erro se nulo
-   */
+
   _validateAuthentication(req, res) {
     const userId = req.user?.userId;
     if (!userId) {
-      res.status(401).json({ error: "Usuário não autenticado" });
+      res.status(401).json({
+        status: "Unauthorized",
+        error: "Autenticação necessária",
+        message: "Usuário não autenticado",
+      });
       return null;
     }
     return userId;
   }
 
-  /**
-   * Validação de ID do usuário
-   * @param {string} userId
-   * @returns {boolean} - true se válido, false se contrário
-   */
   _validateUserId(userId) {
-    // Verificar se é um número ou UUID válido
     const isNumeric = /^\d+$/.test(userId);
     const isUUID =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -38,28 +33,31 @@ class BackupController {
     return isNumeric || isUUID;
   }
 
-  // BakcUp Job - Assíncrono
-  /**
-   * @param {string} jobId - ID do job
-   * @param {string} userId - ID do usuário
-   */
   async _executeBackupJob(jobId, userId) {
     try {
-      // Atualizar status para processando no banco/tabela de jobs
+      const usageBackupsJobs = await jobManager.getUserJobs(userId);
+      const activeUsageJob = usageBackupsJobs.find(
+        (job) =>
+          job.type === "backup_export_usage" &&
+          ["pending", "processing"].includes(job.status)
+      );
+
+      if (activeUsageJob) {
+        throw new Error(
+          "Já existe um job de backup de uso em andamento. Aguarde a conclusão antes de iniciar outro."
+        );
+      }
+
       await jobManager.updateJob(jobId, {
         status: "processing",
         progress: 10,
       });
 
-      // Buscar dados do usuário para email
       const user = await this.userRepository.getUserById(userId);
-      if (!user) {
-        throw new Error("Usuário não encontrado");
-      }
+      if (!user) throw new Error("Usuário não encontrado");
 
       await jobManager.updateJob(jobId, { progress: 20 });
 
-      // Buscar todos os dados com timeout
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(
           () => reject(new Error("Timeout: Backup demorou mais que 5 minutos")),
@@ -72,7 +70,6 @@ class BackupController {
 
       await jobManager.updateJob(jobId, { progress: 60 });
 
-      // Verificar se usuário tem muitos dados (proteção)
       const totalNotes = rawData.length;
       const totalBlocks = rawData.reduce(
         (sum, note) => sum + (note.blocks?.length || 0),
@@ -85,12 +82,10 @@ class BackupController {
         );
       }
 
-      // Formatação em CSV
       const backupData = this._formatBackupDataCSV(rawData);
 
       await jobManager.updateJob(jobId, { progress: 80 });
 
-      // Enviar por email
       const emailResult = await sendBackupEmail(
         user.email,
         user.name || user.username,
@@ -98,14 +93,16 @@ class BackupController {
       );
 
       if (!emailResult.success) {
-        throw new Error(`Falha ao enviar email: ${emailResult.error}`);
+        throw new Error(
+          `Falha ao enviar email: ${emailResult.error || "Erro desconhecido"}`
+        );
       }
 
       await jobManager.updateJob(jobId, {
         status: "completed",
         progress: 100,
         result: {
-          totalNotes: totalNotes,
+          totalNotes,
           fileSize: emailResult.fileSize,
           sentAsAttachment: emailResult.sentAsAttachment,
           completedAt: new Date().toISOString(),
@@ -115,7 +112,6 @@ class BackupController {
       console.log(`Backup job ${jobId} concluído para usuário ${userId}`);
     } catch (error) {
       console.error(`Erro no backup job ${jobId}:`, error);
-
       await jobManager.updateJob(jobId, {
         status: "failed",
         error: error.message,
@@ -124,49 +120,40 @@ class BackupController {
     }
   }
 
-  /**
-   * Trata erros específicos e retorna resposta HTTP apropriada
-   * @param {Error} error - Erro capturado
-   * @param {Object} res - Response object
-   * @param {Function} next - Next middleware function
-   */
   _handleError(error, res, next) {
-    const errorMessage = error.message;
+    const { message } = error;
 
-    // Erros de validação (400 Bad Request)
+    if (message.includes("obrigatório") || message.includes("inválido")) {
+      return res.status(400).json({
+        status: "Bad Request",
+        error: message,
+      });
+    }
+
     if (
-      errorMessage.includes("obrigatório") ||
-      errorMessage.includes("inválido")
+      message.includes("não encontrada") ||
+      message.includes("Acesso negado")
     ) {
-      return res.status(400).json({ error: errorMessage });
+      return res.status(404).json({
+        status: "Not Found",
+        error: message,
+      });
     }
 
-    // Erros de autorização e não encontrado (404 Not Found)
-    if (
-      errorMessage.includes("não encontrada") ||
-      errorMessage.includes("Acesso negado")
-    ) {
-      return res.status(404).json({ error: errorMessage });
+    if (message.includes("Muitos dados")) {
+      return res.status(413).json({
+        status: "Payload Too Large",
+        error: message,
+        message: "Volume de dados excede o limite suportado",
+      });
     }
 
-    // Erro de muitos dados (413 Payload Too Large)
-    if (errorMessage.includes("Muitos dados")) {
-      return res.status(413).json({ error: errorMessage });
-    }
-
-    // Outros erros passam para o middleware de erro global
     next(error);
   }
 
-  /**
-   * Converte dados para formato CSV
-   * @param {Array} rawData - Dados brutos do banco
-   * @returns {string} - String CSV
-   */
   _formatBackupDataCSV(rawData) {
     const lines = [];
 
-    // Cabeçalho
     lines.push(
       [
         "note_id",
@@ -188,7 +175,6 @@ class BackupController {
       ].join(",")
     );
 
-    // Processar cada nota e seus blocos
     rawData.forEach((note) => {
       const activeBlocks = note.blocks?.filter((block) => !block.deleted) || [];
       const collaborators =
@@ -197,43 +183,26 @@ class BackupController {
           .map((c) => c.username || c.name)
           .join(";") || "";
 
+      const baseNoteData = [
+        this._escapeCsv(note.note_id),
+        this._escapeCsv(note.title || ""),
+        this._escapeCsv(note.description || ""),
+        this._escapeCsv(note.tags?.join(";") || ""),
+        this._escapeCsv(note.created_at),
+        this._escapeCsv(note.updated_at),
+        this._escapeCsv(note.owner_id),
+        this._escapeCsv(note.owner?.name || ""),
+        this._escapeCsv(note.owner?.username || ""),
+        this._escapeCsv(collaborators),
+      ];
+
       if (activeBlocks.length === 0) {
-        // Nota sem blocos
-        lines.push(
-          [
-            this._escapeCsv(note.note_id),
-            this._escapeCsv(note.title || ""),
-            this._escapeCsv(note.description || ""),
-            this._escapeCsv(note.tags?.join(";") || ""),
-            this._escapeCsv(note.created_at),
-            this._escapeCsv(note.updated_at),
-            this._escapeCsv(note.owner_id),
-            this._escapeCsv(note.owner?.name || ""),
-            this._escapeCsv(note.owner?.username || ""),
-            this._escapeCsv(collaborators),
-            "", // block_id
-            "", // block_type
-            "", // block_text
-            "", // block_position
-            "", // block_done
-            "", // block_created_at
-          ].join(",")
-        );
+        lines.push([...baseNoteData, "", "", "", "", "", ""].join(","));
       } else {
-        // Nota com blocos (uma linha por bloco)
         activeBlocks.forEach((block) => {
           lines.push(
             [
-              this._escapeCsv(note.note_id),
-              this._escapeCsv(note.title || ""),
-              this._escapeCsv(note.description || ""),
-              this._escapeCsv(note.tags?.join(";") || ""),
-              this._escapeCsv(note.created_at),
-              this._escapeCsv(note.updated_at),
-              this._escapeCsv(note.owner_id),
-              this._escapeCsv(note.owner?.name || ""),
-              this._escapeCsv(note.owner?.username || ""),
-              this._escapeCsv(collaborators),
+              ...baseNoteData,
               this._escapeCsv(block.block_id),
               this._escapeCsv(block.type || ""),
               this._escapeCsv(block.text || ""),
@@ -249,39 +218,17 @@ class BackupController {
     return lines.join("\n");
   }
 
-  /**
-   * Escapa valores para CSV (RFC 4180)
-   * @param {any} value - Valor a ser escapado
-   * @returns {string} - Valor escapado
-   */
   _escapeCsv(value) {
-    if (value === null || value === undefined) {
-      return "";
-    }
-
+    if (value === null || value === undefined) return "";
     const str = String(value);
-
-    // Se contém vírgula, aspas ou quebra de linha, envolver em aspas
-    if (
-      str.includes(",") ||
-      str.includes('"') ||
-      str.includes("\n") ||
-      str.includes("\r")
-    ) {
-      // Duplicar aspas internas
-      return '"' + str.replace(/"/g, '""') + '"';
+    if (/[,"\n\r]/.test(str)) {
+      return `"${str.replace(/"/g, '""')}"`;
     }
-
     return str;
   }
 
-  /**
-   * Formata os dados de backup removendo informações sensíveis
-   * @param {Array} rawData - Dados brutos do banco
-   * @returns {Object} - Dados formatados para backup
-   */
   _formatBackupData(rawData) {
-    const backupData = {
+    return {
       backup_info: {
         generated_at: new Date().toISOString(),
         total_notes: rawData.length,
@@ -292,11 +239,21 @@ class BackupController {
         name: rawData[0]?.owner?.name || null,
         username: rawData[0]?.owner?.username || null,
         avatar_url: rawData[0]?.owner?.avatar_url || null,
-        // email removido por segurança
       },
-      notes: rawData.map((note) => {
-        // Remove informações sensíveis dos colaboradores (emails)
-        const collaborators =
+      notes: rawData.map((note) => ({
+        id: note.note_id,
+        title: note.title,
+        description: note.description,
+        tags: note.tags || [],
+        created_at: note.created_at,
+        updated_at: note.updated_at,
+        owner: {
+          id: note.owner_id,
+          name: note.owner?.name,
+          username: note.owner?.username,
+          avatar_url: note.owner?.avatar_url,
+        },
+        collaborators:
           note.collaborators?.map((collab) => ({
             id: collab.collaborator_id,
             name: collab.name,
@@ -305,32 +262,9 @@ class BackupController {
             added_at: collab.added_at,
             removed: collab.removed,
             removed_at: collab.removed_at,
-            // email removido por segurança
-          })) || [];
-
-        // Remove informações sensíveis do proprietário (email)
-        const owner = {
-          id: note.owner_id,
-          name: note.owner?.name,
-          username: note.owner?.username,
-          avatar_url: note.owner?.avatar_url,
-          // email removido por segurança
-        };
-
-        // Filtrar blocos não deletados
-        const activeBlocks =
-          note.blocks?.filter((block) => !block.deleted) || [];
-
-        return {
-          id: note.note_id,
-          title: note.title,
-          description: note.description,
-          tags: note.tags || [],
-          created_at: note.created_at,
-          updated_at: note.updated_at,
-          owner: owner,
-          collaborators: collaborators,
-          blocks: activeBlocks.map((block) => ({
+          })) || [],
+        blocks: (note.blocks?.filter((block) => !block.deleted) || []).map(
+          (block) => ({
             id: block.block_id,
             user_id: block.user_id,
             parent_id: block.parent_id,
@@ -341,26 +275,25 @@ class BackupController {
             position: block.position,
             created_at: block.created_at,
             updated_at: block.updated_at,
-          })),
-        };
-      }),
+          })
+        ),
+      })),
     };
-
-    return backupData;
   }
 
   async requestBackup(req, res, next) {
     try {
-      // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Validação de entrada
       if (!this._validateUserId(userId)) {
-        return res.status(400).json({ error: "ID de usuário inválido" });
+        return res.status(400).json({
+          status: "Bad Request",
+          error: "ID de usuário inválido",
+          message: "O formato do ID de usuário não é válido",
+        });
       }
 
-      // Verificar se já existe backup em andamento para este usuário
       const existingJobs = await jobManager.getUserJobs(userId);
       const activeJob = existingJobs.find(
         (job) =>
@@ -370,165 +303,148 @@ class BackupController {
 
       if (activeJob) {
         return res.status(409).json({
+          status: "Conflict",
           error: "Backup já em andamento",
-          job_id: activeJob.id,
-          status: activeJob.status,
-          progress: activeJob.progress,
+          message: "Aguarde a conclusão do backup atual antes de solicitar outro",
+          details: {
+            job_id: activeJob.id,
+            backup_status: activeJob.status,
+            progress: activeJob.progress,
+          },
         });
       }
 
-      // Buscar dados básicos do usuário
       const user = await this.userRepository.getUserById(userId);
-      if (!user) {
-        return res.status(404).json({ error: "Usuário não encontrado" });
-      }
+      if (!user)
+        return res.status(404).json({
+          status: "Not Found",
+          error: "Usuário não encontrado",
+        });
 
-      // Criar novo job
       const jobId = jobManager.generateJobId("backup");
       const job = await jobManager.createJob(jobId, "backup_export", userId, {
-        userEmail: user.email,
-        userName: user.name || user.username,
+        email: user.email,
+        username: user.name || user.username,
         requestedAt: new Date().toISOString(),
       });
 
-      // Iniciar processamento em background (não bloquear resposta)
-      setTimeout(() => {
-        this._executeBackupJob(jobId, userId);
-      }, 100);
+      setTimeout(() => this._executeBackupJob(jobId, userId), 100);
 
-      // Resposta imediata
       res.status(202).json({
-        message:
-          "Backup solicitado com sucesso! Você receberá um email quando estiver pronto.",
+        status: "OK",
         job_id: jobId,
-        status: "pending",
-        estimated_time: "2-5 minutos",
-        user_email: user.email,
-        created_at: job.createdAt,
+        message: "Backup solicitado com sucesso! Você receberá um email quando estiver pronto.",
+        details: {
+          backup_status: "pending",
+          estimated_time: "2-5 minutos",
+          user_email: user.email,
+          created_at: job.createdAt,
+        },
       });
     } catch (error) {
       this._handleError(error, res, next);
     }
   }
 
-  /**
-   * GET /api/backup/status/:jobId - Verificar status de backup
-   * Retorna o progresso de um job de backup específico
-   */
   async getBackupStatus(req, res, next) {
     try {
       const { jobId } = req.params;
-
-      // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Buscar job
       const job = await jobManager.getJob(jobId);
-      if (!job) {
-        return res.status(404).json({ error: "Job não encontrado" });
-      }
+      if (!job) return res.status(404).json({
+        status: "Not Found",
+        error: "Job não encontrado",
+        message: "O job solicitado não existe ou expirou",
+      });
 
-      // Verificar se o job pertence ao usuário
       if (job.userId !== userId) {
-        return res.status(403).json({ error: "Acesso negado a este job" });
+        return res.status(403).json({
+          status: "Forbidden",
+          error: "Acesso negado a este job",
+          message: "Você não tem permissão para acessar este job",
+        });
       }
 
-      // Calcular tempo decorrido
-      const createdAt = new Date(job.createdAt);
-      const now = new Date();
-      const elapsedMinutes = Math.floor((now - createdAt) / (1000 * 60));
+      const elapsedMinutes = Math.floor(
+        (new Date() - new Date(job.createdAt)) / (1000 * 60)
+      );
 
-      const response = {
+      res.status(200).json({
+        status: "OK",
         job_id: job.id,
-        status: job.status,
-        progress: job.progress,
-        created_at: job.createdAt,
-        started_at: job.startedAt,
-        completed_at: job.completedAt,
-        elapsed_time: `${elapsedMinutes} minuto${elapsedMinutes !== 1 ? "s" : ""}`,
-        error: job.error,
-        result: job.result,
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      this._handleError(error, res, next);
-    }
-  }
-
-  /**
-   * GET /api/backup/jobs - Listar jobs de backup do usuário
-   * Lista histórico de backups solicitados
-   */
-  async getUserBackupJobs(req, res, next) {
-    try {
-      // Validação de autenticação
-      const userId = this._validateAuthentication(req, res);
-      if (!userId) return;
-
-      // Buscar jobs do usuário
-      const jobs = (await jobManager.getUserJobs(userId))
-        .filter((job) => job.type === "backup_export")
-        .slice(0, 10); // Limitar a 10 mais recentes
-
-      const response = {
-        total: jobs.length,
-        jobs: jobs.map((job) => ({
-          job_id: job.id,
-          status: job.status,
+        message: "Status do backup recuperado com sucesso",
+        details: {
+          backup_status: job.status,
           progress: job.progress,
           created_at: job.createdAt,
+          started_at: job.startedAt,
           completed_at: job.completedAt,
-          error: job.error ? job.error.substring(0, 100) : null, // Truncar erro
-          result: job.result
-            ? {
-                totalNotes: job.result.totalNotes,
-                fileSize: job.result.fileSize,
-              }
-            : null,
-        })),
-      };
-
-      res.status(200).json(response);
+          elapsed_time: `${elapsedMinutes} minuto${elapsedMinutes !== 1 ? "s" : ""}`,
+          error: job.error,
+          result: job.result,
+        },
+      });
     } catch (error) {
       this._handleError(error, res, next);
     }
   }
 
-  /**
-   * GET /api/backup/summary - Resumo dos dados para backup
-   * Retorna informações estatísticas sobre os dados do usuário
-   *
-   * RESPOSTA:
-   * - summary: estatísticas gerais (total de notas, blocos, colaborações)
-   * - notes_by_month: distribuição de notas por mês
-   * - recent_activity: atividade recente
-   */
-  async getBackupSummary(req, res, next) {
+  async getUserBackupJobs(req, res, next) {
     try {
-      // Validação de Autenticação do Usuário
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Buscar todos os dados do usuário
+      const jobs = (await jobManager.getUserJobs(userId))
+        .filter((job) => job.type === "backup_export")
+        .slice(0, 10);
+
+      res.status(200).json({
+        status: "OK",
+        message: "Histórico de backups recuperado com sucesso",
+        total: jobs.length,
+        details: {
+          jobs: jobs.map((job) => ({
+            job_id: job.id,
+            status: job.status,
+            progress: job.progress,
+            created_at: job.createdAt,
+            completed_at: job.completedAt,
+            error: job.error ? job.error.substring(0, 100) : null,
+            result: job.result
+              ? {
+                  totalNotes: job.result.totalNotes,
+                  fileSize: job.result.fileSize,
+                }
+              : null,
+          })),
+        },
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  async getBackupSummary(req, res, next) {
+    try {
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
       const rawData = await this.getAllDataRepository.getAllData(userId);
 
-      // Calcular estatísticas dos dados
       const summary = {
         total_notes: rawData.length,
-        owned_notes: rawData.filter((note) => note.owner_id === userId).length,
-        collaborated_notes: rawData.filter((note) => note.owner_id !== userId)
-          .length,
+        owned_notes: rawData.filter((n) => n.owner_id === userId).length,
+        collaborated_notes: rawData.filter((n) => n.owner_id !== userId).length,
         total_blocks: rawData.reduce(
-          (sum, note) =>
-            sum + (note.blocks?.filter((b) => !b.deleted).length || 0),
+          (sum, n) => sum + (n.blocks?.filter((b) => !b.deleted).length || 0),
           0
         ),
         total_collaborators: new Set(
           rawData.flatMap(
-            (note) =>
-              note.collaborators
+            (n) =>
+              n.collaborators
                 ?.filter((c) => !c.removed)
                 .map((c) => c.collaborator_id) || []
           )
@@ -547,7 +463,6 @@ class BackupController {
             : null,
       };
 
-      // Distribuição por mês (últimos 12 meses)
       const notesByMonth = {};
       const now = new Date();
       for (let i = 11; i >= 0; i--) {
@@ -557,34 +472,30 @@ class BackupController {
       }
 
       rawData.forEach((note) => {
-        const createdDate = new Date(note.created_at);
-        const key = `${createdDate.getFullYear()}-${String(createdDate.getMonth() + 1).padStart(2, "0")}`;
-        if (notesByMonth.hasOwnProperty(key)) {
-          notesByMonth[key]++;
-        }
+        const key = `${new Date(note.created_at).getFullYear()}-${String(new Date(note.created_at).getMonth() + 1).padStart(2, "0")}`;
+        if (notesByMonth.hasOwnProperty(key)) notesByMonth[key]++;
       });
 
-      // Atividade recente (últimos 30 dias)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const recentActivity = {
-        notes_created: rawData.filter(
-          (note) => new Date(note.created_at) > thirtyDaysAgo
-        ).length,
-        notes_updated: rawData.filter(
-          (note) => new Date(note.updated_at) > thirtyDaysAgo
-        ).length,
-      };
-
-      const response = {
+      res.status(200).json({
+        status: "OK",
+        message: "Resumo de backup gerado com sucesso",
         generated_at: new Date().toISOString(),
-        summary,
-        notes_by_month: notesByMonth,
-        recent_activity: recentActivity,
-      };
-
-      res.status(200).json(response);
+        details: {
+          summary,
+          notes_by_month: notesByMonth,
+          recent_activity: {
+            notes_created: rawData.filter(
+              (n) => new Date(n.created_at) > thirtyDaysAgo
+            ).length,
+            notes_updated: rawData.filter(
+              (n) => new Date(n.updated_at) > thirtyDaysAgo
+            ).length,
+          },
+        },
+      });
     } catch (error) {
       this._handleError(error, res, next);
     }

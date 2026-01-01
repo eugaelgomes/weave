@@ -40,5 +40,4 @@ class authLogs {
   }
 }
 
-
 module.exports = authLogs;

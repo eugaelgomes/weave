@@ -50,7 +50,8 @@ class PasswordController {
       // Retorno em caso 200
       return res.status(202).json({
         status: "OK",
-        message: "Recovery instructions sent to your email. Please check your inbox and spam folder. If you do not receive the email within a few minutes, try again.",
+        message:
+          "Recovery instructions sent to your email. Please check your inbox and spam folder. If you do not receive the email within a few minutes, try again.",
       });
     } catch (error) {
       console.error("Error recovering password:", error);

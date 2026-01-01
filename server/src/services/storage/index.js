@@ -64,11 +64,12 @@ class SpacesService {
 
       // Construir URL pública direta
       // Nota: Certifique-se de que o bucket permite acesso público ou use CDN
-      const publicUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`.replace(
-        "digitaloceanspaces.com",
-        `${this.region}.digitaloceanspaces.com`
-      ); 
-      // OBS: A construção da URL acima pode variar dependendo se o endpoint já inclui a região ou não. 
+      const publicUrl =
+        `${this.spacesEndpoint}/${this.bucketName}/${key}`.replace(
+          "digitaloceanspaces.com",
+          `${this.region}.digitaloceanspaces.com`
+        );
+      // OBS: A construção da URL acima pode variar dependendo se o endpoint já inclui a região ou não.
       // Geralmente em DO Spaces: https://bucket.region.digitaloceanspaces.com/key
       // Mas mantendo a lógica simples baseada no seu código original:
       const simpleUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;

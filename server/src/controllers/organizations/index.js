@@ -419,7 +419,7 @@ class OrganizationsController {
       if (!validRoles.includes(role)) {
         return res.status(400).json({
           success: false,
-          error: "Role deve ser 'admin', 'member' ou 'guest'",
+          error: "Role deve ser 'admin', 'super_admin', 'member' ou 'guest'",
         });
       }
 

@@ -6,7 +6,6 @@ const { getClientIp } = require("@/middlewares/security/ip-address");
 const { sessionMiddleware } = require("@/middlewares/security/session");
 const { allowedOrigins } = require("@/config/allowed-origins");
 
-
 // Lista de origens CORS
 const WHITELIST = allowedOrigins;
 
@@ -28,7 +27,6 @@ function buildMatcher(allowed) {
   }
   return (origin) => origin === allowed;
 }
-
 
 function makeCorsOptions() {
   const isDev = process.env.NODE_ENV !== "production";

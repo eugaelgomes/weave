@@ -129,7 +129,6 @@ class notesRepository {
     `;
     const results = await executeQuery(query, [userId]);
     return await this.processNotesWithSignedUrls(results);
-
   }
 
   /**

@@ -9,6 +9,7 @@ const backupRoutes = require("@/routes/backup.routes");
 const projectsRoutes = require("@/routes/projects.routes");
 const aiRoutes = require("@/routes/ai.routes");
 const organizationsRoutes = require("@/routes/organizations.routes");
+const plansRoutes = require("@/routes/plans.routes");
 
 const router = express.Router();
 
@@ -43,6 +44,7 @@ const routeMap = [
   { path: "/projects", handler: projectsRoutes },
   { path: "/ai", handler: aiRoutes },
   { path: "/organizations", handler: organizationsRoutes },
+  { path: "/plans", handler: plansRoutes },
 ];
 
 // Router mapping

@@ -1,6 +1,10 @@
 const projectsRepository = require("@/repositories/projetcs");
 const { ALLOWED_PROJECT_STATUSES } = require("../product-patterns");
 
+const PlanUsageManager = require("@/services/plans/usage");
+const PlansRepository = require("@/repositories/plans");
+const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
+
 class ProjectsController {
   constructor() {
     this.projectsRepository = projectsRepository;
@@ -253,12 +257,14 @@ class ProjectsController {
           name: project.owner_name,
           avatar_url: project.owner_avatar_url,
         },
-        organization: project.organization_id ? {
-          id: project.organization_id,
-          name: project.organization_name,
-          unique_name: project.organization_unique_name,
-          logo_url: project.organization_logo_url,
-        } : null,
+        organization: project.organization_id
+          ? {
+              id: project.organization_id,
+              name: project.organization_name,
+              unique_name: project.organization_unique_name,
+              logo_url: project.organization_logo_url,
+            }
+          : null,
         collaborators: (project.collaborators || []).filter((c) => !c.removed),
         notes: project.associated_notes || [],
       }));
@@ -302,12 +308,14 @@ class ProjectsController {
           name: project.owner_name,
           avatar_url: project.owner_avatar_url,
         },
-          organization: project.organization_id ? {
-          id: project.organization_id,
-          name: project.organization_name,
-          unique_name: project.organization_unique_name,
-          logo_url: project.organization_logo_url,
-        } : null,
+        organization: project.organization_id
+          ? {
+              id: project.organization_id,
+              name: project.organization_name,
+              unique_name: project.organization_unique_name,
+              logo_url: project.organization_logo_url,
+            }
+          : null,
         collaborators: (project.collaborators || []).filter((c) => !c.removed),
         notes: project.associated_notes || [],
       };
@@ -370,6 +378,84 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
+      // Buscar/Criar registro de uso
+      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const getUserPlan = await PlansRepository.getUserAndPlan(userId);
+
+      // Buscar detalhes do plano
+      const planDetails = await PlansRepository.getPlanById(
+        getUserPlan.plan_id
+      );
+
+      if (!usageRecord || !planDetails) {
+        return res.status(404).json({
+          error: "Configuração de plano não encontrada para este usuário.",
+        });
+      }
+
+      // Validar se o plano tem estrutura válida
+      if (!planDetails.details) {
+        return res.status(500).json({
+          error: "Configuração de plano inválida",
+          message: "O plano não possui configuração (details) no banco de dados.",
+          debug: {
+            planId: getUserPlan.plan_id,
+            planName: planDetails.name,
+            hasDetails: !!planDetails.details,
+          },
+        });
+      }
+
+      // Helper para acessar valores nested
+      const getNestedValue = (obj, path) => {
+        return path.split(".").reduce((acc, part) => acc && acc[part], obj);
+      };
+
+      const maxProjects = getNestedValue(planDetails.details, PLAN_PATHS.LIMITS.MAX_PROJECTS);
+      
+      if (maxProjects === undefined) {
+        return res.status(500).json({
+          error: "Configuração de plano inválida",
+          message: "O plano não possui limite de projetos configurado.",
+          debug: {
+            planId: getUserPlan.plan_id,
+            planName: planDetails.name,
+            expectedPath: PLAN_PATHS.LIMITS.MAX_PROJECTS,
+            detailsStructure: Object.keys(planDetails.details || {}),
+          },
+        });
+      }
+
+      // Validar limite de projetos
+      const currentProjectsCount = getNestedValue(
+        usageRecord.usage_details,
+        USAGE_PATHS.SUMMARY.PROJECTS_TOTAL
+      ) || 0;
+      
+      console.log('[CREATE PROJECT] Validando limite:', {
+        currentProjectsCount,
+        maxProjects,
+        planName: planDetails.name,
+        planId: getUserPlan.plan_id,
+        userId
+      });
+
+      const canCreate = PlanUsageManager.checkLimit(
+        planDetails.details,
+        usageRecord.usage_details,
+        USAGE_PATHS.SUMMARY.PROJECTS_TOTAL,
+        PLAN_PATHS.LIMITS.MAX_PROJECTS
+      );
+
+      console.log('[CREATE PROJECT] Resultado validação:', { canCreate });
+
+      if (!canCreate) {
+        return res.status(403).json({
+          error: "Limite de projetos atingido",
+          message: `Seu plano (${planDetails.name}) permite apenas ${maxProjects} projetos.`,
+        });
+      }
+
       // Validação de dados obrigatórios
       if (!title) {
         throw new Error("Título é obrigatório");
@@ -403,6 +489,9 @@ class ProjectsController {
       if (!result || result.length === 0) {
         throw new Error("Falha ao criar projeto");
       }
+
+      // Incrementar o uso de projetos
+      await PlanUsageManager.consumeProjectCreation(usageRecord.id);
 
       const newProject = result[0];
 
@@ -495,6 +584,9 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
+      // Buscar o registro de uso
+      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+
       // Validação de propriedade do projeto
       await this._validateProjectOwnership(id, userId);
 
@@ -503,6 +595,15 @@ class ProjectsController {
 
       if (!result || result.length === 0) {
         throw new Error("Falha ao deletar projeto");
+      }
+
+      // Decrementar o uso de projetos
+      if (usageRecord) {
+        await PlanUsageManager.incrementUsage(
+          usageRecord.id,
+          USAGE_PATHS.SUMMARY.PROJECTS_TOTAL,
+          -1
+        );
       }
 
       res.status(200).json({
@@ -545,6 +646,42 @@ class ProjectsController {
 
       if (!collaboratorId) {
         throw new Error("ID do colaborador é obrigatório");
+      }
+
+      // Se a ação for adicionar, validar limites do plano
+      if (action === "add") {
+        const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+        const getUserPlan = await PlansRepository.getUserAndPlan(userId);
+        const planDetails = await PlansRepository.getPlanById(
+          getUserPlan.plan_id
+        );
+
+        if (!usageRecord || !planDetails) {
+          return res.status(404).json({
+            error: "Configuração de plano não encontrada para este usuário.",
+          });
+        }
+
+        // Validar limite de colaboradores por projeto
+        const project = await this.projectsRepository.getProjectById(
+          projectId,
+          userId
+        );
+        const currentCollaborators = (project[0]?.collaborators || []).filter(
+          (c) => !c.removed
+        );
+        const maxCollaborators =
+          planDetails.details?.limits?.max_collaborators_per_project;
+
+        if (
+          maxCollaborators &&
+          currentCollaborators.length >= maxCollaborators
+        ) {
+          return res.status(403).json({
+            error: "Limite de colaboradores atingido",
+            message: `Seu plano (${planDetails.name}) permite apenas ${maxCollaborators} colaboradores por projeto.`,
+          });
+        }
       }
 
       let result;
@@ -659,8 +796,37 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
+      // Buscar/Criar registro de uso
+      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const getUserPlan = await PlansRepository.getUserAndPlan(userId);
+
+      // Buscar detalhes do plano
+      const planDetails = await PlansRepository.getPlanById(
+        getUserPlan.plan_id
+      );
+
+      if (!usageRecord || !planDetails) {
+        return res.status(404).json({
+          error: "Configuração de plano não encontrada para este usuário.",
+        });
+      }
+
       // Verificar se o projeto existe e pertence ao usuário
-      await this._validateProjectOwnership(projectId, userId);
+      const project = await this._validateProjectOwnership(projectId, userId);
+
+      // Validar limite de colaboradores por projeto
+      const currentCollaborators = (project.collaborators || []).filter(
+        (c) => !c.removed
+      );
+      const maxCollaborators =
+        planDetails.details?.limits?.max_collaborators_per_project;
+
+      if (maxCollaborators && currentCollaborators.length >= maxCollaborators) {
+        return res.status(403).json({
+          error: "Limite de colaboradores atingido",
+          message: `Seu plano (${planDetails.name}) permite apenas ${maxCollaborators} colaboradores por projeto.`,
+        });
+      }
 
       // Validação de dados obrigatórios
       if (!collaboratorId) {
