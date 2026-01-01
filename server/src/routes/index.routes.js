@@ -13,7 +13,7 @@ const plansRoutes = require("@/modules/plans/plans.routes");
 const router = express.Router();
 
 // Health Check
-router.get("/health", (res) => {
+router.get("/health", (req, res) => {
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.setHeader("Pragma", "no-cache");
 
