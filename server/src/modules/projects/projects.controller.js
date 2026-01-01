@@ -432,22 +432,12 @@ class ProjectsController {
         USAGE_PATHS.SUMMARY.PROJECTS_TOTAL
       ) || 0;
       
-      console.log('[CREATE PROJECT] Validando limite:', {
-        currentProjectsCount,
-        maxProjects,
-        planName: planDetails.name,
-        planId: getUserPlan.plan_id,
-        userId
-      });
-
       const canCreate = PlanUsageManager.checkLimit(
         planDetails.details,
         usageRecord.usage_details,
         USAGE_PATHS.SUMMARY.PROJECTS_TOTAL,
         PLAN_PATHS.LIMITS.MAX_PROJECTS
       );
-
-      console.log('[CREATE PROJECT] Resultado validação:', { canCreate });
 
       if (!canCreate) {
         return res.status(403).json({

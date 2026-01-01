@@ -21,7 +21,7 @@ const { sendEmailChangeValidation } = emailChangeModule;
 const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
 const ALL_TIMEZONES = Intl.supportedValuesOf("timeZone");
 
-class UserController {
+class userController {
   constructor() {
     this.userRepository = UserRepository;
     this.authRepository = AuthRepository;
@@ -36,7 +36,7 @@ class UserController {
   }
 
   _handleError(error, res, next) {
-    console.error(`[UserController Error]: ${error.message}`, {
+    console.error(`[userController Error]: ${error.message}`, {
       stack: error.stack,
     });
 
@@ -566,7 +566,6 @@ class UserController {
             userData.email,
             userData.username
           );
-          console.log(`Delete account email sent to: ${userData.email}`);
         } catch (emailError) {
           console.error("Failed to send delete account email:", emailError);
         }
@@ -669,4 +668,4 @@ class UserController {
   }
 }
 
-module.exports = new UserController();
+module.exports = new userController();

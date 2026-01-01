@@ -87,12 +87,6 @@ class AuthRepository {
 
   async createUserWithGoogle(googleId, name, email, avatarUrl = null) {
     try {
-      console.log("Tentando criar usuário com Google:", {
-        googleId,
-        name,
-        email,
-        avatarUrl,
-      });
 
       const username = email.split("@")[0] + "_" + Date.now();
 

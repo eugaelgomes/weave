@@ -53,7 +53,6 @@ function MailService() {
       console.error("Falha ao conectar ao servidor SMTP:", err);
       transporterInstance = null;
     } else {
-      console.log("SMTP conectado com sucesso (pooling habilitado):", success);
     }
   });
 
@@ -61,7 +60,6 @@ function MailService() {
   process.on("SIGTERM", () => {
     if (transporterInstance) {
       transporterInstance.close();
-      console.log("SMTP connection pool closed");
     }
   });
 

@@ -5,9 +5,7 @@ const errorHandler = {
     next(err);
   },
 
-  // Global error handler
   globalErrorHandler: (err, req, res, next) => {
-    // Logs se 404 ou erro de servidor
     if (process.env.NODE_ENV === "development" || err.statusCode >= 500) {
       console.error(err.stack || err);
     }

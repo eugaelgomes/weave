@@ -1,5 +1,4 @@
 const { executeQuery, rowCount } = require("@/services/db");
-const imageUtils = require("@/middlewares/data/image-utils");
 
 class notesRepository {
   async createNotesQuerie(
@@ -524,10 +523,24 @@ class notesRepository {
     return results[0];
   }
 
-  async deleteNoteById(noteId) {
-    const query = `UPDATE notes SET deleted = true WHERE id = $1`;
-    await executeQuery(query, [noteId]);
+async deleteNoteById(noteIds) {
+  const idsArray = Array.isArray(noteIds) ? noteIds : [noteIds];
+
+  const query = `
+    UPDATE notes
+    SET deleted = true
+    WHERE id = ANY($1);
+  `;
+  
+  const result = await executeQuery(query, [idsArray]);
+
+  if (result.rowCount === 0) {
+    throw new Error("Nenhuma nota encontrada para deleção.");
   }
+
+  return result.rowCount;
+}
+
 
   // ========================================
   // MÉTODOS PARA GERENCIAR COLABORADORES

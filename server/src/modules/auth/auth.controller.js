@@ -9,7 +9,8 @@ const authLogs = require("@/utils/system_logs/auth-logs");
 const { secretsManager } = require("@/services/secrets");
 class AuthController {
   async login(req, res) {
-    const { username, password } = req.body;
+    const { login, password } = req.body;
+    const username = login;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -66,11 +67,6 @@ class AuthController {
       authLogs.createLog(user.user_id, "auth_login", req, "success");
 
       const domain = getCookieDomain(req.hostname);
-
-      console.log(
-        `[Login] Setting cookie domain: ${domain} (Request hostname: ${req.hostname})`
-      );
-
       // Token https only
       res.cookie("token", token, {
         httpOnly: true,

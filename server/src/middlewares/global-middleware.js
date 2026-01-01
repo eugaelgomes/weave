@@ -9,16 +9,12 @@ const { allowedOrigins } = require("@/config/allowed-origins");
 // Lista de origens CORS
 const WHITELIST = allowedOrigins;
 
-/**
- * Escapa caracteres especiais em uma string para uso em expressões regulares.
- */
+// Limpeza de caracteres especiais para uso em RegExp
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/**
- * Validação para a origem.
- */
+// Validador de origens CORS
 function buildMatcher(allowed) {
   if (allowed.includes("*")) {
     const pattern = "^" + allowed.split("*").map(escapeRegExp).join(".*") + "$";

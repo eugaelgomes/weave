@@ -2,7 +2,9 @@ const notesRepository = require("@/modules/notes/notes.repository");
 const blocksRepository = require("@/modules/notes/blocks.repository");
 const userRepository = require("@/modules/users/users.repository");
 const { collabMail } = require("@/services/email/templates/notes/invite");
-const { ALLOWED_NOTE_STATUSES } = require("@/services/patterns/product-patterns");
+const {
+  ALLOWED_NOTE_STATUSES,
+} = require("@/services/patterns/product-patterns");
 const { PDFService } = require("@/services/note_export/pdf");
 
 const PlanUsageManager = require("@/modules/plans/plans.controller");
@@ -619,35 +621,43 @@ class NotesController {
   }
 
   /**
-   * DELETE /api/notes/:id - Deletar uma nota
-   * Remove uma nota e todos os seus itens associados
+   * DELETE /api/notes/:id
    */
   async deleteNote(req, res, next) {
     try {
       const { id } = req.params;
+      const { ids } = req.body;
 
-      // 1. Validação de autenticação
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // 2. BUSCAR O REGISTRO DE USO
-      // Precisamos dele para saber qual usageId atualizar após o delete
       const usageRecord = await PlanUsageManager.managePlanUsage(userId);
 
-      // 3. Validação de propriedade da nota
-      await this._validateNoteOwnership(id, userId);
+      let noteIds = [];
 
-      // 4. Exclusão da nota no repositório
-      await this.notesRepository.deleteNoteById(id);
-
-      // 5. DECREMENTAR O USO NO JSONB
-      if (usageRecord) {
-        await PlanUsageManager.decrementNoteUsage(usageRecord.id);
+      if (ids && Array.isArray(ids) && ids.length > 0) {
+        noteIds = ids;
+      } else if (id) {
+        noteIds = [id];
+      } else {
+        return res.status(400).json({ error: "Nenhum ID recebido." });
       }
 
-      // 6. Confirmação de exclusão
-      res.status(200).json({
-        message: "Nota deletada com sucesso",
+      for (const noteId of noteIds) {
+        await this._validateNoteOwnership(noteId, userId);
+      }
+
+      const affectedRows = await this.notesRepository.deleteNoteById(noteIds);
+
+      if (usageRecord) {
+        await PlanUsageManager.decrementNoteUsage(usageRecord.id, affectedRows);
+      }
+
+      return res.status(200).json({
+        message:
+          affectedRows > 1
+            ? `${affectedRows} notas deletadas com sucesso`
+            : "Nota deletada com sucesso",
       });
     } catch (error) {
       this._handleError(error, res, next);
@@ -676,7 +686,9 @@ class NotesController {
       }
 
       // Validar tipos permitidos
-      const { ALLOWED_BLOCK_TYPES } = require("@/services/patterns/product-patterns");
+      const {
+        ALLOWED_BLOCK_TYPES,
+      } = require("@/services/patterns/product-patterns");
       if (!ALLOWED_BLOCK_TYPES.includes(type)) {
         throw new Error(
           `Tipo inválido. Tipos permitidos: ${ALLOWED_BLOCK_TYPES.join(", ")}`

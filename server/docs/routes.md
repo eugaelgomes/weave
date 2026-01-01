@@ -205,7 +205,7 @@ profilePicture: [arquivo de imagem]
 **Middlewares:**
 - `upload.single("profileImage")`: Upload opcional de imagem de perfil
 - `validateCompressedImageSize`: Validação de imagem
-- `dataValidator()`: Validação de dados
+- `inputValidation()`: Validação de dados
 
 **Body (FormData):**
 ```

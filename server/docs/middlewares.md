@@ -257,11 +257,11 @@ router.get('/protected', verifyToken, (req, res) => {
 
 ## 3. Middlewares de Validação de Dados
 
-### 📄 Arquivo: `data/data-validator.js`
+### 📄 Arquivo: `data/input-validation.js`
 
 Validador de dados de usuário usando `express-validator`.
 
-#### `dataValidator()`
+#### `inputValidation()`
 
 Retorna array de validadores para criação/atualização de conta.
 
@@ -335,7 +335,7 @@ body('password')
 
 ```javascript
 router.post('/create-account', 
-  dataValidator(),
+  inputValidation(),
   validationResult,  // Middleware para checar erros
   controller.createAccount
 );
@@ -1179,7 +1179,7 @@ router.put('/me/update-profile',
 | **Session**   | sameSite: lax     | Proteção CSRF        |
 | **Rate**      | loginLimiter      | Brute force            |
 | **Auth**      | verifyToken       | Acesso não autorizado |
-| **Input**     | dataValidator     | Injeção SQL/XSS      |
+| **Input**     | inputValidation     | Injeção SQL/XSS      |
 | **Upload**    | imageValidator    | Arquivos maliciosos    |
 
 ---
@@ -1197,7 +1197,7 @@ router.put('/me/update-profile',
 // ✅ Correto: Validação em camadas
 router.post('/create',
   verifyToken,         // 1. Autenticação
-  dataValidator(),     // 2. Validação de dados
+  inputValidation(),     // 2. Validação de dados
   imageValidator,      // 3. Validação de arquivo
   controller.create    // 4. Lógica de negócio (+ validação DB)
 );
