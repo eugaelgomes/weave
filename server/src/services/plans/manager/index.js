@@ -1,6 +1,6 @@
-const PlansRepository = require("@/repositories/plans");
+const PlansRepository = require("@/modules/plans/plans.repository");
 
-const { USAGE_PATHS } = require("../plan-paths");
+const { USAGE_PATHS } = require("@/services/plans/plan-paths");
 
 class PlansManager {
   async getAllPlans(req, res) {

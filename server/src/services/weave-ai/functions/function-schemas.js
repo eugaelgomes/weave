@@ -9,7 +9,7 @@ const {
   ALLOWED_NOTE_STATUSES,
   ALLOWED_BLOCK_TYPES,
   PROJECT_FIELDS,
-} = require("@/controllers/product-patterns");
+} = require("@/services/patterns/product-patterns");
 
 /**
  * Níveis de segurança para operações

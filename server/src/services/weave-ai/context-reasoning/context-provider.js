@@ -4,10 +4,10 @@
  * Fornece informações relevantes baseadas na situação e necessidades do usuário
  */
 
-const notesRepository = require("@/repositories/notes-manager");
-const projectsRepository = require("@/repositories/projetcs");
-const userRepository = require("@/repositories/users");
-const chatRepository = require("@/repositories/chat-manager");
+const notesRepository = require("@/modules/notes/notes.repository");
+const projectsRepository = require("@/modules/projects/projects.repository");
+const userRepository = require("@/modules/users/users.repository");
+const chatRepository = require("@/modules/weave-ai/weave-ai.repository");
 
 /**
  * Obtém informações temporais atualizadas

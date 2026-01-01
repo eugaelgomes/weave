@@ -1,20 +1,19 @@
 const express = require("express");
 
-// Sub-rotas
-const authRoutes = require("@/routes/auth.routes");
-const userRoutes = require("@/routes/users.routes");
-const passwordRoutes = require("@/routes/password.routes");
-const notesRoutes = require("@/routes/notes.routes");
-const backupRoutes = require("@/routes/backup.routes");
-const projectsRoutes = require("@/routes/projects.routes");
-const aiRoutes = require("@/routes/ai.routes");
-const organizationsRoutes = require("@/routes/organizations.routes");
-const plansRoutes = require("@/routes/plans.routes");
+const authRoutes = require("@/modules/auth/auth.routes");
+const userRoutes = require("@/modules/users/users.routes");
+const passwordRoutes = require("@/modules/password/password.routes");
+const notesRoutes = require("@/modules/notes/notes.routes");
+const backupRoutes = require("@/modules/backup/backup.routes");
+const projectsRoutes = require("@/modules/projects/projects.routes");
+const aiRoutes = require("@/modules/weave-ai/weave-ai.routes");
+const organizationsRoutes = require("@/modules/organizations/organizations.routes");
+const plansRoutes = require("@/modules/plans/plans.routes");
 
 const router = express.Router();
 
 // Health Check
-router.get("/health", (req, res) => {
+router.get("/health", (res) => {
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.setHeader("Pragma", "no-cache");
 
@@ -34,7 +33,6 @@ router.get("/health", (req, res) => {
   }
 });
 
-// Endpoints das subrotas
 const routeMap = [
   { path: "/auth", handler: authRoutes },
   { path: "/users", handler: userRoutes },
@@ -42,7 +40,7 @@ const routeMap = [
   { path: "/notes", handler: notesRoutes },
   { path: "/backup", handler: backupRoutes },
   { path: "/projects", handler: projectsRoutes },
-  { path: "/ai", handler: aiRoutes },
+  { path: "/weave-ai", handler: aiRoutes },
   { path: "/organizations", handler: organizationsRoutes },
   { path: "/plans", handler: plansRoutes },
 ];

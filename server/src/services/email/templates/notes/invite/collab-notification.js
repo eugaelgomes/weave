@@ -10,7 +10,7 @@ const addedToNoteTemplate = require(".");
  * @param {string} noteId - ID da nota (opcional)
  * @returns {Object} - { success: boolean, error?: string }
  */
-async function sendCollaborationNotification(
+async function collabMail(
   collaboratorEmail,
   collaboratorName,
   noteName,
@@ -52,5 +52,5 @@ async function sendCollaborationNotification(
 }
 
 module.exports = {
-  sendCollaborationNotification,
+  collabMail,
 };
