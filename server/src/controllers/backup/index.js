@@ -4,6 +4,9 @@ const jobManager = require("@/services/jobs/index");
 const {
   sendBackupEmail,
 } = require("@/services/email/templates/backup/backup-notification");
+const PlansRepository = require("@/repositories/plans");
+const PlanUsageManager = require("@/services/plans/usage/index");
+const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
 
 class BackupController {
   constructor() {
@@ -145,6 +148,13 @@ class BackupController {
         status: "Payload Too Large",
         error: message,
         message: "Volume de dados excede o limite suportado",
+      });
+    }
+
+    if (message.includes("limite") || message.includes("Limite")) {
+      return res.status(429).json({
+        status: "Too Many Requests",
+        error: message,
       });
     }
 
@@ -294,6 +304,53 @@ class BackupController {
         });
       }
 
+      // Verificar plano e limites de uso
+      const userPlan = await PlansRepository.getUserWithPlan(userId);
+      if (!userPlan || !userPlan.plan_id) {
+        return res.status(403).json({
+          status: "Forbidden",
+          error: "Plano não encontrado",
+          message: "Você precisa ter um plano ativo para solicitar backups",
+        });
+      }
+
+      const planDetails = await PlansRepository.getPlanById(userPlan.plan_id);
+      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+
+      // Verificar limite de backups mensais
+      const canBackup = PlanUsageManager.checkLimit(
+        planDetails.details,
+        usageRecord.usage_details,
+        USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT,
+        PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
+      );
+
+      if (!canBackup) {
+        const currentUsage = PlanUsageManager.getNestedValue(
+          usageRecord.usage_details,
+          USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
+        );
+        const limit = PlanUsageManager.getNestedValue(
+          planDetails.details,
+          PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
+        );
+
+        return res.status(429).json({
+          status: "Too Many Requests",
+          error: "Limite de backups atingido",
+          message: `Você atingiu o limite de ${limit} backup(s) por mês do seu plano ${planDetails.name}`,
+          details: {
+            current_usage: currentUsage,
+            monthly_limit: limit,
+            plan_name: planDetails.name,
+            period_end: PlanUsageManager.getNestedValue(
+              usageRecord.usage_details,
+              USAGE_PATHS.MONTHLY.PERIOD_END
+            ),
+          },
+        });
+      }
+
       const existingJobs = await jobManager.getUserJobs(userId);
       const activeJob = existingJobs.find(
         (job) =>
@@ -328,7 +385,19 @@ class BackupController {
         requestedAt: new Date().toISOString(),
       });
 
+      // Consumir uso de backup após criar o job com sucesso
+      await PlanUsageManager.consumeExport(usageRecord.id, "backup");
+
       setTimeout(() => this._executeBackupJob(jobId, userId), 100);
+
+      const updatedUsage = PlanUsageManager.getNestedValue(
+        usageRecord.usage_details,
+        USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
+      ) + 1;
+      const monthlyLimit = PlanUsageManager.getNestedValue(
+        planDetails.details,
+        PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
+      );
 
       res.status(202).json({
         status: "OK",
@@ -339,6 +408,11 @@ class BackupController {
           estimated_time: "2-5 minutos",
           user_email: user.email,
           created_at: job.createdAt,
+          usage: {
+            backups_used: updatedUsage,
+            backups_limit: monthlyLimit,
+            remaining: monthlyLimit - updatedUsage,
+          },
         },
       });
     } catch (error) {

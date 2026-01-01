@@ -103,6 +103,7 @@ class AuthController {
           },
         },
         token: token,
+        redirect_url: "/app/home",
       });
     } catch (error) {
       console.error(error);

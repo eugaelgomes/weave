@@ -47,16 +47,18 @@ class UserRepository {
 
   async createGithubUser(username, name, githubId) {
     const query = `
-      INSERT INTO users (username, name, github_id) 
+      INSERT INTO 
+        users (username, name, github_id) 
       VALUES ($1, $2, $3)
-      RETURNING user_id
+      RETURNING user_id;
     `;
     return await executeQuery(query, [username, name, githubId]);
   }
 
   async findAll() {
     const query = `
-    SELECT name, email, username, 
+    SELECT 
+      name, email, username, 
     CASE WHEN avatar_url IS NOT NULL THEN true ELSE false END as has_profile_image 
     FROM users
     `;
@@ -64,7 +66,12 @@ class UserRepository {
   }
 
   async getProfileImage(userId) {
-    const query = `SELECT avatar_url, name FROM users WHERE user_id = $1 LIMIT 1`;
+    const query = `
+    SELECT
+      avatar_url, name 
+    FROM users
+    WHERE user_id = $1 
+    LIMIT 1`;
     const results = await executeQuery(query, [userId]);
     return results[0];
   }
@@ -76,7 +83,9 @@ class UserRepository {
 
   async getUserById(userId) {
     const query = `
-    SELECT user_id, username, name, email, avatar_url, created_at FROM users 
+    SELECT 
+      user_id, username, name, email, avatar_url, created_at 
+    FROM users 
     WHERE user_id = $1 AND deleted = false 
     LIMIT 1`;
     const results = await executeQuery(query, [userId]);
@@ -154,13 +163,23 @@ class UserRepository {
   }
 
   async findById(userId) {
-    const query = `SELECT user_id, username, name, email, avatar_url FROM users WHERE user_id = $1 AND deleted = false LIMIT 1`;
+    const query = `
+      SELECT 
+        user_id, username, name, email, avatar_url 
+      FROM users
+      WHERE user_id = $1 AND deleted = false 
+      LIMIT 1`;
     const results = await executeQuery(query, [userId]);
     return results[0];
   }
 
   async findByGithubId(githubId) {
-    const query = `SELECT user_id, username, name FROM users WHERE github_id = $1 LIMIT 1`;
+    const query = `
+      SELECT
+        user_id, username, name 
+      FROM users
+      WHERE github_id = $1
+      LIMIT 1`;
     const results = await executeQuery(query, [githubId]);
     return results[0];
   }
@@ -170,7 +189,7 @@ class UserRepository {
       UPDATE users
       SET avatar_url = $1
       WHERE user_id = $2
-      RETURNING user_id, avatar_url
+      RETURNING user_id, avatar_url;
     `;
     return await executeQuery(query, [url, userId]);
   }
@@ -224,7 +243,7 @@ class UserRepository {
       UPDATE users
       SET ${fields.join(", ")}
       WHERE user_id = $${paramIndex} AND deleted = false
-      RETURNING user_id, username, name, email, avatar_url, theme_mode, birth_date, phone_number, private_profile, created_at
+      RETURNING user_id, username, name, email, avatar_url, theme_mode, birth_date, phone_number, private_profile, created_at;
     `;
     const results = await executeQuery(query, values);
     return results[0];
@@ -250,14 +269,20 @@ class UserRepository {
 
   // Email change validation
   async deactivateOldEmailTokens(userId) {
-    const query = `UPDATE tokens SET active = FALSE WHERE user_id = $1 AND active = TRUE AND type = 'email_verification'`;
+    const query = `
+      UPDATE tokens
+      SET active = FALSE
+      WHERE user_id = $1 AND active = TRUE AND type = 'email_verification'
+    `;
     return await executeQuery(query, [userId]);
   }
 
   async createEmailChangeToken(userId, token, newEmail, createdAt) {
     const query = `
-      INSERT INTO tokens (user_id, token, type, expires_at, created_at, active, data_to_update) 
-      VALUES ($1, $2, 'email_verification', ($3::timestamp + interval '1 hour'), $3, TRUE, $4)
+      INSERT INTO tokens
+        (user_id, token, type, expires_at, created_at, active, data_to_update) 
+      VALUES 
+        ($1, $2, 'email_verification', ($3::timestamp + interval '1 hour'), $3, TRUE, $4);
     `;
     return await executeQuery(query, [
       userId,
@@ -277,25 +302,35 @@ class UserRepository {
   }
 
   async getDataToUpdate(userId) {
-    const query = `SELECT data_to_update FROM tokens WHERE user_id = $1 AND active = TRUE AND type = 'email_verification' AND expires_at > NOW()`;
+    const query = `
+      SELECT data_to_update 
+      FROM tokens 
+      WHERE user_id = $1 AND active = TRUE AND type = 'email_verification' AND expires_at > NOW()'`;
     const results = await executeQuery(query, [userId]);
     return results[0]?.data_to_update;
   }
 
   async clearDataToUpdate(userId) {
-    const query = `UPDATE tokens SET data_to_update = NULL WHERE user_id = $1 AND type = 'email_verification'`;
+    const query = `
+      UPDATE tokens 
+      SET data_to_update = NULL 
+      WHERE user_id = $1 AND type = 'email_verification'`;
     return await executeQuery(query, [userId]);
   }
 
   async deactivateEmailToken(token) {
-    const query = `UPDATE tokens SET active = FALSE WHERE token = $1`;
+    const query = `
+      UPDATE tokens 
+      SET active = FALSE 
+      WHERE token = $1;`;
     return await executeQuery(query, [token]);
   }
 
   // Email activation
   async createEmailActivationToken(userId, token, createdAt) {
     const query = `
-      INSERT INTO tokens (user_id, token, type, expires_at, created_at, active) 
+      INSERT INTO tokens 
+        (user_id, token, type, expires_at, created_at, active) 
       VALUES ($1, $2, 'email_verification', ($3::timestamp + interval '7 days'), $3, TRUE)
     `;
     return await executeQuery(query, [userId, token, createdAt]);

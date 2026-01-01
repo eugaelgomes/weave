@@ -42,10 +42,8 @@ async function sendCollaborationNotification(
 
     await MailService().sendMail(mailOptions);
 
-    console.log(`📧 Email de colaboração enviado para ${collaboratorEmail}`);
     return { success: true };
   } catch (error) {
-    console.error("❌ Erro ao enviar email de colaboração:", error);
     return {
       success: false,
       error: error.message || "Falha ao enviar email de notificação.",

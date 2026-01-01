@@ -52,14 +52,12 @@ async function sendBackupEmail(userEmail, userName, backupData, options = {}) {
 
     await MailService().sendMail(mailOptions);
 
-    console.log(`📧 Email de backup enviado para ${userEmail} (${fileSize})`);
     return {
       success: true,
       fileSize: fileSizeBytes,
       sentAsAttachment: sendAsAttachment,
     };
   } catch (error) {
-    console.error("❌ Erro ao enviar email de backup:", error);
     return {
       success: false,
       error: error.message || "Falha ao enviar email de backup.",
