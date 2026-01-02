@@ -4,6 +4,7 @@ const { ALLOWED_PROJECT_STATUSES } = require("@/services/patterns/product-patter
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
 const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
+const { inviteProjectMember } = require("@/services/email/templates/projects/add-person");
 
 class ProjectsController {
   constructor() {
@@ -265,7 +266,7 @@ class ProjectsController {
               logo_url: project.organization_logo_url,
             }
           : null,
-        collaborators: (project.collaborators || []).filter((c) => !c.removed),
+        collaborators: project.collaborators || [],
         notes: project.associated_notes || [],
       }));
 
@@ -316,7 +317,7 @@ class ProjectsController {
               logo_url: project.organization_logo_url,
             }
           : null,
-        collaborators: (project.collaborators || []).filter((c) => !c.removed),
+        collaborators: project.collaborators || [],
         notes: project.associated_notes || [],
       };
 
@@ -617,9 +618,10 @@ class ProjectsController {
     try {
       const { projectId } = req.params;
       const {
-        action,
+        action = null,
         userId: collaboratorId,
-        permission = "viewer",
+        role = "member",
+        suspended = null,
       } = req.body;
 
       // Validação de autenticação
@@ -630,8 +632,9 @@ class ProjectsController {
       await this._validateProjectOwnership(projectId, userId);
 
       // Validação de dados obrigatórios
-      if (!action || !["add", "update", "remove"].includes(action)) {
-        throw new Error("Ação inválida. Use 'add', 'update' ou 'remove'");
+      // Permitir action null se suspended for fornecido
+      if (suspended === null && (!action || !["add", "update", "remove", "suspend"].includes(action))) {
+        throw new Error("Ação inválida. Use 'add', 'update', 'remove' ou 'suspend'");
       }
 
       if (!collaboratorId) {
@@ -653,13 +656,11 @@ class ProjectsController {
         }
 
         // Validar limite de colaboradores por projeto
-        const project = await this.projectsRepository.getProjectById(
+        const collaborators = await this.projectsRepository.getCollaborators(
           projectId,
           userId
         );
-        const currentCollaborators = (project[0]?.collaborators || []).filter(
-          (c) => !c.removed
-        );
+        const currentCollaborators = collaborators[0]?.collaborators || [];
         const maxCollaborators =
           planDetails.details?.limits?.max_collaborators_per_project;
 
@@ -677,12 +678,15 @@ class ProjectsController {
       let result;
       let message;
 
-      switch (action) {
+      // Se suspended for fornecido e action for null, tratar como ação de suspensão
+      const effectiveAction = suspended !== null && !action ? "suspend" : action;
+
+      switch (effectiveAction) {
         case "add":
-          // Validar permissão
-          const validPermissions = ["admin", "viewer"];
-          if (!validPermissions.includes(permission)) {
-            throw new Error("Permissão inválida. Use 'admin' ou 'viewer'");
+          // Validar role
+          const validRoles = ["admin", "viewer", "member"];
+          if (!validRoles.includes(role)) {
+            throw new Error("Role inválido. Use 'admin', 'viewer' ou 'member'");
           }
 
           // Verificar se o usuário não está tentando adicionar a si mesmo
@@ -690,6 +694,16 @@ class ProjectsController {
             throw new Error(
               "Você não pode adicionar a si mesmo como colaborador"
             );
+          }
+
+          // Verificar se o usuário está suspenso
+          const isSuspended = await this.projectsRepository.isSuspendedCollaborator(
+            projectId,
+            collaboratorId
+          );
+
+          if (isSuspended) {
+            throw new Error("Usuário suspenso do projeto, basta remover suspensão e o mesmo voltará como colaborador.");
           }
 
           // Verificar se o colaborador já está ativo
@@ -706,15 +720,56 @@ class ProjectsController {
             projectId,
             userId,
             collaboratorId,
-            permission
+            role
           );
           message = "Colaborador adicionado com sucesso";
+
+          // Enviar email de notificação usando dados do repository
+          try {
+            // Buscar dados completos do projeto com owner
+            const projectWithOwner = await this.projectsRepository.getProjectByIdWithAccess(
+              projectId,
+              userId
+            );
+            
+            // Encontrar o colaborador recém-adicionado no array de collaborators do projeto
+            const addedCollaborator = projectWithOwner?.[0]?.collaborators?.find(
+              c => c.user_id === collaboratorId
+            );
+            
+            console.log("📧 [EMAIL DEBUG] addedCollaborator:", addedCollaborator);
+            console.log("📧 [EMAIL DEBUG] projectWithOwner:", projectWithOwner?.[0]);
+            
+            if (addedCollaborator && projectWithOwner && projectWithOwner[0]) {
+              console.log("📧 [EMAIL DEBUG] Enviando email com params:", {
+                nome: addedCollaborator.name,
+                email: addedCollaborator.email,
+                projectName: projectWithOwner[0].title,
+                projectId,
+                addedByName: projectWithOwner[0].owner_name
+              });
+              
+              inviteProjectMember(
+                addedCollaborator.name,
+                addedCollaborator.email,
+                projectWithOwner[0].title,
+                projectId,
+                projectWithOwner[0].owner_name
+              ).catch((err) => {
+                console.error("❌ [EMAIL DEBUG] Erro ao enviar email de convite:", err);
+              });
+            } else {
+              console.log("⚠️ [EMAIL DEBUG] Dados insuficientes para enviar email");
+            }
+          } catch (emailError) {
+            console.error("Erro ao preparar email de convite:", emailError);
+          }
           break;
 
         case "update":
-          // Validar permissão
-          if (!permission || !["admin", "viewer"].includes(permission)) {
-            throw new Error("Permissão inválida. Use 'admin' ou 'viewer'");
+          // Validar role
+          if (!role || !["admin", "viewer"].includes(role)) {
+            throw new Error("Role inválido. Use 'admin' ou 'viewer'");
           }
 
           // Verificar se o colaborador existe
@@ -731,9 +786,9 @@ class ProjectsController {
             projectId,
             userId,
             collaboratorId,
-            permission
+            role
           );
-          message = "Permissão atualizada com sucesso";
+          message = "Role atualizado com sucesso";
           break;
 
         case "remove":
@@ -754,6 +809,28 @@ class ProjectsController {
           );
           message = "Colaborador removido com sucesso";
           break;
+
+        case "suspend":
+          // Verificar se o colaborador existe (independente de estar suspenso ou não)
+          const existsInProject = await this.projectsRepository.isCollaboratorInProject(
+            projectId,
+            collaboratorId
+          );
+
+          if (!existsInProject) {
+            throw new Error("Usuário não é colaborador deste projeto");
+          }
+
+          result = await this.projectsRepository.updateCollaboratorSuspension(
+            projectId,
+            userId,
+            collaboratorId,
+            suspended
+          );
+          message = suspended
+            ? "Colaborador suspenso com sucesso"
+            : "Suspensão removida com sucesso";
+          break;
       }
 
       if (!result || result.length === 0) {
@@ -765,7 +842,7 @@ class ProjectsController {
         collaborators:
           action === "remove"
             ? undefined
-            : result[0].collaborators?.filter((c) => !c.removed),
+            : result[0].collaborators,
       });
     } catch (error) {
       this._handleError(error, res, next);
@@ -780,7 +857,7 @@ class ProjectsController {
   async addCollaborator(req, res, next) {
     try {
       const { projectId } = req.params;
-      const { userId: collaboratorId, permission = "viewer" } = req.body;
+      const { userId: collaboratorId, role = "viewer" } = req.body;
 
       // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
@@ -802,12 +879,14 @@ class ProjectsController {
       }
 
       // Verificar se o projeto existe e pertence ao usuário
-      const project = await this._validateProjectOwnership(projectId, userId);
+      await this._validateProjectOwnership(projectId, userId);
 
       // Validar limite de colaboradores por projeto
-      const currentCollaborators = (project.collaborators || []).filter(
-        (c) => !c.removed
+      const collaborators = await this.projectsRepository.getCollaborators(
+        projectId,
+        userId
       );
+      const currentCollaborators = collaborators[0]?.collaborators || [];
       const maxCollaborators =
         planDetails.details?.limits?.max_collaborators_per_project;
 
@@ -823,10 +902,10 @@ class ProjectsController {
         throw new Error("ID do colaborador é obrigatório");
       }
 
-      // Validar permissão
-      const validPermissions = ["admin", "viewer"];
-      if (!validPermissions.includes(permission)) {
-        throw new Error("Permissão inválida. Use 'admin' ou 'viewer'");
+      // Validar role
+      const validRoles = ["admin", "viewer"];
+      if (!validRoles.includes(role)) {
+        throw new Error("Role inválido. Use 'admin' ou 'viewer'");
       }
 
       // Verificar se o usuário não está tentando adicionar a si mesmo
@@ -847,7 +926,7 @@ class ProjectsController {
         projectId,
         userId,
         collaboratorId,
-        permission
+        role
       );
 
       if (!result || result.length === 0) {
@@ -924,13 +1003,8 @@ class ProjectsController {
 
       const collaborators = project.collaborators || [];
 
-      // Filtrar apenas colaboradores ativos
-      const activeCollaborators = collaborators.filter(
-        (collab) => !collab.removed
-      );
-
       res.status(200).json({
-        collaborators: activeCollaborators,
+        collaborators: collaborators,
       });
     } catch (error) {
       this._handleError(error, res, next);
@@ -944,7 +1018,7 @@ class ProjectsController {
   async updateCollaboratorPermission(req, res, next) {
     try {
       const { projectId, collaboratorId } = req.params;
-      const { permission } = req.body;
+      const { role } = req.body;
 
       // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
@@ -953,10 +1027,10 @@ class ProjectsController {
       // Verificar se o projeto existe e pertence ao usuário
       await this._validateProjectOwnership(projectId, userId);
 
-      // Validar permissão
-      const validPermissions = ["admin", "viewer"];
-      if (!permission || !validPermissions.includes(permission)) {
-        throw new Error("Permissão inválida. Use 'admin' ou 'viewer'");
+      // Validar role
+      const validRoles = ["admin", "viewer"];
+      if (!role || !validRoles.includes(role)) {
+        throw new Error("Role inválido. Use 'admin' ou 'viewer'");
       }
 
       // Verificar se o colaborador existe no projeto
@@ -969,20 +1043,20 @@ class ProjectsController {
         throw new Error("Usuário não é colaborador deste projeto");
       }
 
-      // Atualizar permissão
+      // Atualizar role
       const result = await this.projectsRepository.updateCollaboratorPermission(
         projectId,
         userId,
         collaboratorId,
-        permission
+        role
       );
 
       if (!result || result.length === 0) {
-        throw new Error("Falha ao atualizar permissão");
+        throw new Error("Falha ao atualizar role");
       }
 
       res.status(200).json({
-        message: "Permissão atualizada com sucesso",
+        message: "Role atualizado com sucesso",
         collaborators: result[0].collaborators,
       });
     } catch (error) {

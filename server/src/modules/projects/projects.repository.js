@@ -13,7 +13,6 @@ class ProjectsRepository {
         p.created_at,
         p.updated_at,
         p.deleted,
-        p.collaborators,
         p.associated_notes,
         u.username AS owner_username,
         u.email AS owner_email,
@@ -22,19 +21,40 @@ class ProjectsRepository {
         p.org_id as organization_id,
         o.org_name as organization_name,
         o.unique_name as organization_unique_name,
-        o.logo_url as organization_logo_url
+        o.logo_url as organization_logo_url,
+        COALESCE(
+          jsonb_agg(
+            DISTINCT jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', cu.name,
+              'username', cu.username,
+              'email', cu.email,
+              'avatar_url', cu.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
+          '[]'::jsonb
+        ) AS collaborators
       FROM projects p
       JOIN users u ON u.user_id = p.user_id
       LEFT JOIN organizations o ON o.id = p.org_id
+      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN users cu ON cu.user_id = pm.user_id
       WHERE p.deleted = false
         AND (
           p.user_id = $1::uuid
           OR EXISTS (
-            SELECT 1 FROM jsonb_array_elements(COALESCE(p.collaborators, '[]'::jsonb)) AS collab
-            WHERE collab->>'user_id' = $1::text
-              AND (collab->>'removed')::boolean = false
+            SELECT 1 FROM projects_members pm2
+            WHERE pm2.project_id = p.id
+              AND pm2.user_id = $1::uuid
+              AND pm2.deleted = false
+              AND pm2.suspended = false
           )
         )
+      GROUP BY p.id, u.username, u.email, u.name, u.avatar_url, o.org_name, o.unique_name, o.logo_url
       ORDER BY p.created_at DESC;
     `;
     return executeQuery(query, [userId]);
@@ -73,7 +93,6 @@ class ProjectsRepository {
         p.created_at,
         p.updated_at,
         p.deleted,
-        p.collaborators,
         p.associated_notes,
         u.username AS owner_username,
         u.email AS owner_email,
@@ -82,20 +101,41 @@ class ProjectsRepository {
         p.org_id as organization_id,
         o.org_name as organization_name,
         o.unique_name as organization_unique_name,
-        o.logo_url as organization_logo_url
+        o.logo_url as organization_logo_url,
+        COALESCE(
+          jsonb_agg(
+            DISTINCT jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', cu.name,
+              'username', cu.username,
+              'email', cu.email,
+              'avatar_url', cu.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
+          '[]'::jsonb
+        ) AS collaborators
       FROM projects p
       JOIN users u ON u.user_id = p.user_id
       LEFT JOIN organizations o ON o.id = p.org_id
+      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN users cu ON cu.user_id = pm.user_id
       WHERE p.id = $1::uuid
         AND p.deleted = false
         AND (
           p.user_id = $2::uuid
           OR EXISTS (
-            SELECT 1 FROM jsonb_array_elements(COALESCE(p.collaborators, '[]'::jsonb)) AS collab
-            WHERE collab->>'user_id' = $2::text
-              AND (collab->>'removed')::boolean = false
+            SELECT 1 FROM projects_members pm2
+            WHERE pm2.project_id = p.id
+              AND pm2.user_id = $2::uuid
+              AND pm2.deleted = false
+              AND pm2.suspended = false
           )
         )
+      GROUP BY p.id, u.username, u.email, u.name, u.avatar_url, o.org_name, o.unique_name, o.logo_url
       LIMIT 1;
     `;
     return executeQuery(query, [projectId, userId]);
@@ -225,69 +265,83 @@ class ProjectsRepository {
     projectId,
     ownerId,
     collaboratorUserId,
-    permission = "viewer"
+    role = "viewer"
   ) {
     const query = `
-      UPDATE projects
-      SET 
-        collaborators = COALESCE(collaborators, '[]'::jsonb) || 
-        jsonb_build_array(
-          jsonb_build_object(
-            'user_id', $3::uuid::text,
-            'name', (SELECT name FROM users WHERE user_id = $3::uuid),
-            'username', (SELECT username FROM users WHERE user_id = $3::uuid),
-            'email', (SELECT email FROM users WHERE user_id = $3::uuid),
-            'avatar_url', (SELECT avatar_url FROM users WHERE user_id = $3::uuid),
-            'added_at', NOW(),
-            'removed_at', NULL,
-            'removed', false,
-            'permission', $4::text
-          )
-        ),
-        updated_at = NOW()
-      WHERE id = $1::uuid
-        AND user_id = $2::uuid
-        AND deleted = false
-        AND NOT EXISTS (
-          SELECT 1 
-          FROM jsonb_array_elements(COALESCE(collaborators, '[]'::jsonb)) AS collab
-          WHERE collab->>'user_id' = $3::text 
-            AND (collab->>'removed')::boolean = false
-        )
-      RETURNING 
-        id::text,
-        collaborators;
+      WITH inserted_member AS (
+        INSERT INTO projects_members (project_id, user_id, role, added_by)
+        VALUES ($1, $3, $4, $2)
+        RETURNING *
+      )
+      SELECT 
+        p.id::text,
+        COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', u.name,
+              'username', u.username,
+              'email', u.email,
+              'avatar_url', u.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
+          '[]'::jsonb
+        ) AS collaborators
+      FROM projects p
+      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN users u ON u.user_id = pm.user_id
+      WHERE p.id = $1::uuid
+      GROUP BY p.id;
     `;
 
     return executeQuery(query, [
       projectId,
       ownerId,
       collaboratorUserId,
-      permission,
+      role,
     ]);
   }
 
   async removeCollaborator(projectId, ownerId, collaboratorUserId) {
     const query = `
-      UPDATE projects
-      SET 
-        collaborators = (
-          SELECT jsonb_agg(
-            CASE 
-              WHEN elem->>'user_id' = $3::text 
-              THEN elem || jsonb_build_object('removed', true, 'removed_at', NOW())
-              ELSE elem
-            END
+      WITH deleted_member AS (
+        UPDATE projects_members
+        SET deleted = true, updated_at = NOW()
+        WHERE project_id = $1::uuid
+          AND user_id = $3::uuid
+          AND EXISTS (
+            SELECT 1 FROM projects
+            WHERE id = $1::uuid AND user_id = $2::uuid AND deleted = false
           )
-          FROM jsonb_array_elements(COALESCE(collaborators, '[]'::jsonb)) AS elem
-        ),
-        updated_at = NOW()
-      WHERE id = $1 
-        AND user_id = $2
-        AND deleted = false
-      RETURNING 
-        id::text,
-        collaborators;
+        RETURNING *
+      )
+      SELECT 
+        p.id::text,
+        COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', u.name,
+              'username', u.username,
+              'email', u.email,
+              'avatar_url', u.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
+          '[]'::jsonb
+        ) AS collaborators
+      FROM projects p
+      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN users u ON u.user_id = pm.user_id
+      WHERE p.id = $1::uuid
+      GROUP BY p.id;
     `;
 
     return executeQuery(query, [projectId, ownerId, collaboratorUserId]);
@@ -296,18 +350,40 @@ class ProjectsRepository {
   async getCollaborators(projectId, userId) {
     const query = `
       SELECT 
-        id::text,
-        user_id::text,
-        collaborators
-      FROM projects
-      WHERE id = $1
-        AND (user_id = $2 OR EXISTS (
-          SELECT 1 
-          FROM jsonb_array_elements(COALESCE(collaborators, '[]'::jsonb)) AS collab
-          WHERE collab->>'user_id' = $2::text 
-            AND (collab->>'removed')::boolean = false
-        ))
-        AND deleted = false;
+        p.id::text,
+        p.user_id::text,
+        COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', u.name,
+              'username', u.username,
+              'email', u.email,
+              'avatar_url', u.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
+          '[]'::jsonb
+        ) AS collaborators
+      FROM projects p
+      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN users u ON u.user_id = pm.user_id
+      WHERE p.id = $1::uuid
+        AND p.deleted = false
+        AND (
+          p.user_id = $2::uuid
+          OR EXISTS (
+            SELECT 1 FROM projects_members pm2
+            WHERE pm2.project_id = p.id
+              AND pm2.user_id = $2::uuid
+              AND pm2.deleted = false
+              AND pm2.suspended = false
+          )
+        )
+      GROUP BY p.id;
     `;
 
     return executeQuery(query, [projectId, userId]);
@@ -317,35 +393,51 @@ class ProjectsRepository {
     projectId,
     ownerId,
     collaboratorUserId,
-    newPermission
+    newRole
   ) {
     const query = `
-      UPDATE projects
-      SET 
-        collaborators = (
-          SELECT jsonb_agg(
-            CASE 
-              WHEN elem->>'user_id' = $3::text AND (elem->>'removed')::boolean = false
-              THEN elem || jsonb_build_object('permission', $4::text)
-              ELSE elem
-            END
+      WITH updated_member AS (
+        UPDATE projects_members
+        SET role = $4, updated_at = NOW()
+        WHERE project_id = $1::uuid
+          AND user_id = $3::uuid
+          AND deleted = false
+          AND EXISTS (
+            SELECT 1 FROM projects
+            WHERE id = $1::uuid AND user_id = $2::uuid AND deleted = false
           )
-          FROM jsonb_array_elements(COALESCE(collaborators, '[]'::jsonb)) AS elem
-        ),
-        updated_at = NOW()
-      WHERE id = $1 
-        AND user_id = $2
-        AND deleted = false
-      RETURNING 
-        id::text,
-        collaborators;
+        RETURNING *
+      )
+      SELECT 
+        p.id::text,
+        COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', u.name,
+              'username', u.username,
+              'email', u.email,
+              'avatar_url', u.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
+          '[]'::jsonb
+        ) AS collaborators
+      FROM projects p
+      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN users u ON u.user_id = pm.user_id
+      WHERE p.id = $1::uuid
+      GROUP BY p.id;
     `;
 
     return executeQuery(query, [
       projectId,
       ownerId,
       collaboratorUserId,
-      newPermission,
+      newRole,
     ]);
   }
 
@@ -353,17 +445,87 @@ class ProjectsRepository {
     const query = `
       SELECT EXISTS (
         SELECT 1
-        FROM projects,
-        jsonb_array_elements(COALESCE(collaborators, '[]'::jsonb)) AS collab
-        WHERE id = $1
-          AND collab->>'user_id' = $2::text
-          AND (collab->>'removed')::boolean = false
-          AND deleted = false
+        FROM projects_members pm
+        WHERE pm.project_id = $1::uuid
+          AND pm.user_id = $2::uuid
+          AND pm.deleted = false
+          AND pm.suspended = false
       ) AS is_collaborator;
     `;
 
     const result = await executeQuery(query, [projectId, userId]);
     return result[0]?.is_collaborator || false;
+  }
+
+  async isSuspendedCollaborator(projectId, userId) {
+    const query = `
+      SELECT EXISTS (
+        SELECT 1
+        FROM projects_members pm
+        WHERE pm.project_id = $1::uuid
+          AND pm.user_id = $2::uuid
+          AND pm.deleted = false
+          AND pm.suspended = true
+      ) AS is_suspended;
+    `;
+
+    const result = await executeQuery(query, [projectId, userId]);
+    return result[0]?.is_suspended || false;
+  }
+
+  async isCollaboratorInProject(projectId, userId) {
+    const query = `
+      SELECT EXISTS (
+        SELECT 1
+        FROM projects_members pm
+        WHERE pm.project_id = $1::uuid
+          AND pm.user_id = $2::uuid
+          AND pm.deleted = false
+      ) AS is_collaborator;
+    `;
+
+    const result = await executeQuery(query, [projectId, userId]);
+    return result[0]?.is_collaborator || false;
+  }
+
+  async updateCollaboratorSuspension(projectId, ownerId, collaboratorUserId, suspended) {
+    const query = `
+      WITH updated_member AS (
+        UPDATE projects_members
+        SET suspended = $4, updated_at = NOW()
+        WHERE project_id = $1::uuid
+          AND user_id = $3::uuid
+          AND deleted = false
+          AND EXISTS (
+            SELECT 1 FROM projects WHERE id = $1::uuid AND user_id = $2::uuid
+          )
+        RETURNING project_id
+      )
+      SELECT 
+        COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', u.name,
+              'username', u.username,
+              'email', u.email,
+              'avatar_url', u.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL),
+          '[]'::jsonb
+        ) AS collaborators
+      FROM projects_members pm
+      JOIN users u ON pm.user_id = u.user_id
+      WHERE pm.project_id = $1::uuid
+        AND pm.deleted = false
+      GROUP BY pm.project_id;
+    `;
+
+    return executeQuery(query, [projectId, ownerId, collaboratorUserId, suspended]);
   }
 
   async addNoteToProject(projectId, noteId, userId) {
@@ -377,6 +539,24 @@ class ProjectsRepository {
             WHERE nc.note_id = $2::uuid AND nc.user_id = $3::uuid AND nc.removed = false
           ))
         RETURNING id::text, title, description, tags, status, created_at, updated_at, user_id
+      ),
+      project_collaborators AS (
+        SELECT COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', u.name,
+              'username', u.username,
+              'email', u.email,
+              'avatar_url', u.avatar_url,
+              'role', pm.role
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL),
+          '[]'::jsonb
+        ) AS collaborators
+        FROM projects_members pm
+        LEFT JOIN users u ON u.user_id = pm.user_id
+        WHERE pm.project_id = $1::uuid AND pm.deleted = false
       ),
       updated_project AS (
         UPDATE projects
@@ -392,7 +572,7 @@ class ProjectsRepository {
                 'user_id', (SELECT user_id::text FROM updated_note),
                 'username', (SELECT u.username FROM updated_note un JOIN users u ON u.user_id = un.user_id)
               ),
-              'collaborators', (SELECT COALESCE(collaborators, '[]'::jsonb) FROM projects WHERE id = $1::uuid),
+              'collaborators', (SELECT collaborators FROM project_collaborators),
               'status', (SELECT status FROM updated_note),
               'created_at', (SELECT created_at FROM updated_note),
               'updated_at', (SELECT updated_at FROM updated_note)
@@ -419,10 +599,11 @@ class ProjectsRepository {
           updated_at = NOW()
         WHERE id = $1::uuid
           AND (user_id = $3::uuid OR EXISTS (
-            SELECT 1 
-            FROM jsonb_array_elements(COALESCE(collaborators, '[]'::jsonb)) AS collab
-            WHERE collab->>'user_id' = $3::text 
-              AND (collab->>'removed')::boolean = false
+            SELECT 1 FROM projects_members pm
+            WHERE pm.project_id = $1::uuid
+              AND pm.user_id = $3::uuid
+              AND pm.deleted = false
+              AND pm.suspended = false
           ))
           AND deleted = false
           AND NOT EXISTS (
@@ -474,11 +655,12 @@ class ProjectsRepository {
           updated_at = NOW()
         WHERE id = $1::uuid
           AND (user_id = $3::uuid OR EXISTS (
-            SELECT 1 
-            FROM jsonb_array_elements(COALESCE(collaborators, '[]'::jsonb)) AS collab
-            WHERE collab->>'user_id' = $3::text 
-              AND (collab->>'removed')::boolean = false
-              AND collab->>'permission' = 'admin'
+            SELECT 1 FROM projects_members pm
+            WHERE pm.project_id = $1::uuid
+              AND pm.user_id = $3::uuid
+              AND pm.deleted = false
+              AND pm.suspended = false
+              AND pm.role = 'admin'
           ))
           AND deleted = false
         RETURNING id::text, associated_notes
@@ -498,10 +680,11 @@ class ProjectsRepository {
       FROM projects
       WHERE id = $1::uuid
         AND (user_id = $2::uuid OR EXISTS (
-          SELECT 1 
-          FROM jsonb_array_elements(COALESCE(collaborators, '[]'::jsonb)) AS collab
-          WHERE collab->>'user_id' = $2::text 
-            AND (collab->>'removed')::boolean = false
+          SELECT 1 FROM projects_members pm
+          WHERE pm.project_id = $1::uuid
+            AND pm.user_id = $2::uuid
+            AND pm.deleted = false
+            AND pm.suspended = false
         ))
         AND deleted = false;
     `;
@@ -511,7 +694,25 @@ class ProjectsRepository {
 
   async updateNoteInProject(projectId, noteId, userId) {
     const query = `
-      WITH updated_notes AS (
+      WITH project_collaborators AS (
+        SELECT COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', u.name,
+              'username', u.username,
+              'email', u.email,
+              'avatar_url', u.avatar_url,
+              'role', pm.role
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL),
+          '[]'::jsonb
+        ) AS collaborators
+        FROM projects_members pm
+        LEFT JOIN users u ON u.user_id = pm.user_id
+        WHERE pm.project_id = $1::uuid AND pm.deleted = false
+      ),
+      updated_notes AS (
         SELECT jsonb_agg(
           CASE 
             WHEN elem->>'id' = $2::text 
@@ -524,7 +725,7 @@ class ProjectsRepository {
                 'user_id', (SELECT n.user_id::text FROM notes n WHERE n.id = $2::uuid),
                 'username', (SELECT u.username FROM notes n JOIN users u ON u.user_id = n.user_id WHERE n.id = $2::uuid)
               ),
-              'collaborators', (SELECT COALESCE(p.collaborators, '[]'::jsonb) FROM projects p WHERE p.id = $1::uuid),
+              'collaborators', (SELECT collaborators FROM project_collaborators),
               'status', (SELECT status FROM notes WHERE id = $2::uuid),
               'created_at', (SELECT created_at FROM notes WHERE id = $2::uuid),
               'updated_at', (SELECT updated_at FROM notes WHERE id = $2::uuid)
@@ -556,10 +757,11 @@ class ProjectsRepository {
         updated_at = NOW()
       WHERE id = $1::uuid
         AND (user_id = $3::uuid OR EXISTS (
-          SELECT 1 
-          FROM jsonb_array_elements(COALESCE(collaborators, '[]'::jsonb)) AS collab
-          WHERE collab->>'user_id' = $3::text 
-            AND (collab->>'removed')::boolean = false
+          SELECT 1 FROM projects_members pm
+          WHERE pm.project_id = $1::uuid
+            AND pm.user_id = $3::uuid
+            AND pm.deleted = false
+            AND pm.suspended = false
         ))
         AND deleted = false
       RETURNING 
