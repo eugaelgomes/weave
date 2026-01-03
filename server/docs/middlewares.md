@@ -361,7 +361,7 @@ router.post('/create-account',
 
 Valida imagens enviadas via upload.
 
-#### `validateImageMVP(req, res, next)`
+#### `validateImages(req, res, next)`
 
 Validação básica de tipo e tamanho de imagem.
 
@@ -408,7 +408,7 @@ if (!isValidImageSize(req.file.size)) {
 ```javascript
 router.post('/upload', 
   upload.single('profile_image'),
-  validateImageMVP,
+  validateImages,
   controller.uploadImage
 );
 ```
@@ -1148,7 +1148,7 @@ if (!imageUtils.isValidImageSize(req.file.size)) {
 router.put('/me/update-profile',
   verifyToken,              // 1. Autentica usuário
   upload.single('image'),   // 2. Processa upload (Multer)
-  validateImageMVP,         // 3. Valida tipo/tamanho
+  validateImages,         // 3. Valida tipo/tamanho
   authController.updateProfile  // 4. Controller
 );
 ```
@@ -1158,7 +1158,7 @@ router.put('/me/update-profile',
 1. **CORS**: Valida origem
 2. **verifyToken**: Decodifica JWT → `req.user = { userId, email }`
 3. **upload.single**: Parseia multipart → `req.file = { buffer, mimetype, size }`
-4. **validateImageMVP**: Valida MIME e tamanho
+4. **validateImages**: Valida MIME e tamanho
 5. **Controller**:
    - `imageUtils.saveProfileImage()` → Upload para Spaces
    - Atualiza banco com URL

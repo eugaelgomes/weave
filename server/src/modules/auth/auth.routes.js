@@ -14,7 +14,7 @@ router.post(
   requestLimiter,
   loginValidation(),
   toString,
-  AuthController.login.bind(AuthController)
+  AuthController.userSignin.bind(AuthController)
 );
 
 router.get(

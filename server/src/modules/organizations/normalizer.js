@@ -4,38 +4,38 @@ const PREDEFINED_PROPERTIES = Object.freeze({
   theme: {
     type: "string",
     default: "light",
-    allowed: ["light", "dark", "auto"],
-    description: "Tema da interface",
+    allowed: ["light", "dark"],
+    description: "Interface theme",
   },
   language: {
     type: "string",
-    default: "pt-BR",
+    default: "en-US",
     allowed: ["pt-BR", "en-US", "es-ES", "fr-FR"],
-    description: "Idioma padrão",
+    description: "Default language",
   },
   timezone: {
     type: "string",
     default: "America/Sao_Paulo",
-    description: "Fuso horário",
+    description: "Time zone",
   },
   allowPublicNotes: {
     type: "boolean",
     default: false,
-    description: "Permite notas públicas",
+    description: "Allows public notes",
   },
   maxMembers: {
     type: "number",
     default: 10,
     min: 1,
     max: 10000,
-    description: "Limite de membros",
+    description: "Members limit",
   },
   maxProjects: {
     type: "number",
     default: 5,
     min: 1,
     max: 100,
-    description: "Limite de projetos",
+    description: "Projects limit",
   },
   features: {
     type: "object",
@@ -45,7 +45,7 @@ const PREDEFINED_PROPERTIES = Object.freeze({
       collaboration: false,
       passwordManager: false,
     },
-    description: "Funcionalidades ativas",
+    description: "Active features",
   },
   branding: {
     type: "object",
@@ -54,7 +54,7 @@ const PREDEFINED_PROPERTIES = Object.freeze({
       secondaryColor: "#c4c4c4",
       customDomain: null,
     },
-    description: "Identidade visual",
+    description: "Visual identity",
   },
   notifications: {
     type: "object",
@@ -63,7 +63,7 @@ const PREDEFINED_PROPERTIES = Object.freeze({
       push: false,
       digest: "weekly",
     },
-    description: "Preferências de notificação",
+    description: "Notification preferences",
   },
 });
 

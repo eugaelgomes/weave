@@ -2,7 +2,7 @@ const imageUtils = require("@/middlewares/data/image-utils");
 
 /**
  */
-const validateImageMVP = (req, res, next) => {
+const validateImages = (req, res, next) => {
   try {
     // Se não há arquivo, continua
     if (!req.file || !req.file.buffer) {
@@ -35,4 +35,4 @@ const validateImageMVP = (req, res, next) => {
   }
 };
 
-module.exports = validateImageMVP;
+module.exports = validateImages;
