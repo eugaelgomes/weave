@@ -3,12 +3,8 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useAuth } from "@/app/contexts/AuthContext";
-import { User } from "@/app/services/auth-service/AuthService";
-import {
-  requestBackup,
-  getBackupStatus,
-  getBackupSummary,
-} from "@/app/services/backup-service/BackupService";
+import { User } from "@/app/services/authentication/AuthService";
+import { requestBackup, getBackupStatus } from "@/app/services/backup-service/BackupService";
 import {
   Camera,
   Save,

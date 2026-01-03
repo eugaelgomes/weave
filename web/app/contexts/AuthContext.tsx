@@ -14,7 +14,7 @@ import {
   initiateGoogleLogin,
   type User,
   type CreateUserData,
-} from "../services/auth-service/AuthService";
+} from "../services/authentication/AuthService";
 import { useTheme } from "./ThemeContext";
 
 type AuthContextType = {
@@ -22,9 +22,8 @@ type AuthContextType = {
   token: string | null;
   loading: boolean;
   authenticated: boolean;
-  // login can be called as login(username, password) or login({ username, password, remember? })
   login: (
-    usernameOrPayload: string | { username: string; password: string; remember?: boolean },
+    usernameOrPayload: string | { login: string; password: string },
     password?: string
   ) => Promise<{ success: boolean; message?: string; data?: unknown }>;
   loginWithGoogle: () => void;
@@ -46,6 +45,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_USER_KEY = "codaweb_user";
 
+// --- Helpers de Cookie ---
 function setCookie(name: string, value: string, days?: number) {
   if (typeof document === "undefined") return;
   let cookie = `${name}=${encodeURIComponent(value)}; path=/;`;
@@ -71,6 +71,7 @@ function deleteCookie(name: string) {
   document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
 }
 
+// --- Provider ---
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -82,28 +83,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // 1. Tenta recuperar usuário do Cookie (para UI instantânea)
         const u = getCookie(AUTH_USER_KEY);
         if (u) {
           try {
             const userData = JSON.parse(decodeURIComponent(u));
             setUser(userData);
-            setTheme(userData.theme_mode || "light");
+            if (userData.theme_mode) setTheme(userData.theme_mode);
           } catch {}
         }
 
+        // 2. Valida sessão com o Backend
         try {
+          // O service getUserData agora já retorna o objeto User 'achatado' e pronto
           const profileData = await getUserDataService();
+
           setUser(profileData);
-          setToken("authenticated");
-          setTheme(profileData.theme_mode || "light");
-        } catch (error) {
-          if (u) {
-            deleteCookie(AUTH_USER_KEY);
+          setToken("authenticated"); // Ou use um token real se tiver acesso a ele via cookie http-only
+
+          if (profileData.theme_mode) {
+            setTheme(profileData.theme_mode);
           }
+
+          // Atualiza o cookie local com os dados mais recentes
+          setCookie(AUTH_USER_KEY, JSON.stringify(profileData));
+        } catch (error) {
+          // Se falhar (401/403), limpa tudo
+          if (u) deleteCookie(AUTH_USER_KEY);
           setUser(null);
           setToken(null);
         }
       } catch {
+        // Erros gerais
       } finally {
         setLoading(false);
       }
@@ -113,59 +124,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  type LoginPayload = { username: string; password: string; remember?: boolean };
+  type LoginPayload = { login: string; password: string; remember?: boolean };
 
   const login = async (usernameOrPayload: string | LoginPayload, password?: string) => {
     setLoading(true);
-    let username: string;
+    let login: string;
     let pwd: string;
-    let remember = false;
+
     if (typeof usernameOrPayload === "object") {
-      username = usernameOrPayload.username;
+      login = usernameOrPayload.login;
       pwd = usernameOrPayload.password;
-      remember = !!(usernameOrPayload as LoginPayload).remember;
     } else {
-      username = usernameOrPayload;
+      login = usernameOrPayload;
       pwd = password || "";
     }
 
     try {
-      const response = await loginService({ username, password: pwd });
+      // O loginService agora retorna { user: User, token: string }
+      // Já processado e limpo. Não precisamos de 'as unknown' nem parsing manual.
+      const response = await loginService({ login, password: pwd });
 
-      // Backend retorna user_data: { profile, organization }
-      const responseData = response as unknown as {
-        user_data?: { profile: User; organization: { id: string; name: string; unique_name: string } };
-        user?: User;
-        token?: string;
-      };
+      if (response && response.user) {
+        const userData = response.user;
+        const authToken = response.token;
 
-      const userData = responseData.user_data?.profile || responseData.user;
-
-      if (responseData && userData) {
-        const t = responseData.token || null;
-        // backend já envia cookie HttpOnly com o token; não gravamos token manualmente
-        if (t) {
-          setToken("authenticated"); // dummy token para indicar estado autenticado
-        }
-        
-        // Adiciona dados da organização ao userData
-        if (responseData.user_data?.organization) {
-          userData.org_id = responseData.user_data.organization.id;
-          userData.org_name = responseData.user_data.organization.name;
-          userData.org_unique_name = responseData.user_data.organization.unique_name;
-        }
-        
+        setToken(authToken || "authenticated");
         setUser(userData);
-        setTheme(userData.theme_mode || "light");
-        try {
-          setCookie(
-            AUTH_USER_KEY,
-            encodeURIComponent(JSON.stringify(userData)),
-            remember ? 30 : undefined
-          );
-        } catch {}
+
+        if (userData.theme_mode) {
+          setTheme(userData.theme_mode);
+        }
+
         setLoading(false);
-        // Return success without navigation
         return { success: true, data: response };
       } else {
         throw new Error("Resposta de login inválida");
@@ -195,6 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await logoutService();
       deleteCookie(AUTH_USER_KEY);
     } catch {}
+    // Redirecionamento forçado para garantir limpeza de estado
     window.location.href = "/auth/signin";
   };
 
@@ -209,10 +200,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateUser = async (userData: Partial<User>) => {
     try {
+      // O service retorna os campos atualizados
       const updatedData = await updateUserData(userData);
-      setUser((prev) => ({ ...prev, ...updatedData }));
+
+      // Atualizamos o estado local mesclando o anterior com o novo
+      setUser((prev) => {
+        if (!prev) return null;
+        const newUserState = { ...prev, ...updatedData };
+
+        // Atualiza o cookie para persistir a mudança no reload
+        setCookie(AUTH_USER_KEY, JSON.stringify(newUserState));
+
+        return newUserState;
+      });
+
       if (updatedData.theme_mode) {
-        setTheme(updatedData.theme_mode);
         setTheme(updatedData.theme_mode);
       }
       return { success: true };
@@ -253,6 +255,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteUserPermanently = async () => {
     try {
       await deleteUser();
+      await logout(); // Logout automático após deletar
       return { success: true };
     } catch (error) {
       console.error("Erro ao deletar usuário:", error);

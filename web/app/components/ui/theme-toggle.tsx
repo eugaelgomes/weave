@@ -29,6 +29,6 @@ const ThemeToggle = () => {
       {theme === "light" ? <FiMoon className="h-5 w-5" /> : <FiSun className="h-5 w-5" />}
     </button>
   );
-}
+};
 
 export { ThemeToggle };

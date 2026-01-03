@@ -3,10 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useOrganization } from "@/app/contexts/OrganizationContext";
 import { useAuth } from "@/app/contexts/AuthContext";
-import {
-  fetchOrganizationMembers,
-  type OrganizationMember,
-} from "@/app/services/organization-service/orgs-service";
+import { fetchOrganizationMembers, type OrganizationMember } from "@/app/services/organization";
 import {
   Building2,
   Settings,
@@ -133,17 +130,7 @@ const ImageEditModal = ({
 
 const OrganizationPage = () => {
   const { user } = useAuth();
-  const {
-    organization,
-    loading,
-    hasOrganization,
-    createOrganization,
-    updateOrganization,
-    updateProperties,
-    deleteOrganization,
-    getStats,
-    isOwner,
-  } = useOrganization();
+  const { organization, loading, hasOrganization, getStats, isOwner } = useOrganization();
 
   const [isCreating, setIsCreating] = useState(false);
   const [isEditingInfo, setIsEditingInfo] = useState(false);
@@ -322,35 +309,35 @@ const OrganizationPage = () => {
             </div>
           </div>
           <div className="p-6">
-          <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
-            {organization?.description || (
-              <span className="text-zinc-400 italic">Nenhuma descrição fornecida.</span>
-            )}
-          </p>
-          <div className="mt-6 flex flex-wrap gap-4 border-t border-zinc-100 pt-4 text-xs text-zinc-500 dark:border-zinc-800">
-            <div className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" />
-              Criado em{" "}
-              {organization?.created_at
-                ? new Date(organization.created_at).toLocaleDateString("pt-BR")
-                : "-"}
+            <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
+              {organization?.description || (
+                <span className="text-zinc-400 italic">Nenhuma descrição fornecida.</span>
+              )}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-4 border-t border-zinc-100 pt-4 text-xs text-zinc-500 dark:border-zinc-800">
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5" />
+                Criado em{" "}
+                {organization?.created_at
+                  ? new Date(organization.created_at).toLocaleDateString("pt-BR")
+                  : "-"}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5" />
+                Atualizado em{" "}
+                {organization?.updated_at
+                  ? new Date(organization.updated_at).toLocaleDateString("pt-BR")
+                  : "-"}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Languages className="h-3.5 w-3.5" />
+                {organization?.properties?.language || "pt-BR"}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5" />
+                {organization?.properties?.timezone || "America/Sao_Paulo"}
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" />
-              Atualizado em{" "}
-              {organization?.updated_at
-                ? new Date(organization.updated_at).toLocaleDateString("pt-BR")
-                : "-"}
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Languages className="h-3.5 w-3.5" />
-              {organization?.properties?.language || "pt-BR"}
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Globe className="h-3.5 w-3.5" />
-              {organization?.properties?.timezone || "America/Sao_Paulo"}
-            </div>
-          </div>
           </div>
         </div>
 
@@ -366,248 +353,259 @@ const OrganizationPage = () => {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               {/* Coluna Esquerda: Stats & Info (2/3) */}
               <div className="space-y-6 lg:col-span-2">
-            {/* Mini Stats Grid */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {[
-                { label: "Projetos", value: stats.totalProjects, icon: Layers },
-                { label: "Recursos", value: stats.featuresEnabled, icon: Activity },
-                { label: "Domínios", value: organization?.org_domains?.length || 0, icon: Globe },
-              ].map((stat, i) => (
-                <div key={i} className="flex h-24 flex-col justify-between rounded-lg border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-700 dark:bg-zinc-800/30">
-                  <div className="flex items-center justify-between text-zinc-500">
-                    <span className="text-xs font-medium uppercase">{stat.label}</span>
-                    <stat.icon className="h-4 w-4 opacity-50" />
-                  </div>
-                  <span className="text-2xl font-bold text-zinc-900 dark:text-white">
-                    {loading ? "-" : stat.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Branding Colors (Visual Compacto) */}
-            {organization?.properties?.branding && (
-              <div className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-700 dark:bg-zinc-800/30">
-                <div className="mb-4">
-                  <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                    <Palette className="h-4 w-4 text-zinc-500" />
-                    Identidade Visual
-                  </h3>
-                </div>
+                {/* Mini Stats Grid */}
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                  <div className="space-y-1">
+                  {[
+                    { label: "Projetos", value: stats.totalProjects, icon: Layers },
+                    { label: "Recursos", value: stats.featuresEnabled, icon: Activity },
+                    {
+                      label: "Domínios",
+                      value: organization?.org_domains?.length || 0,
+                      icon: Globe,
+                    },
+                  ].map((stat, i) => (
                     <div
-                      className="h-8 w-full rounded-md border border-zinc-200 shadow-sm"
-                      style={{ backgroundColor: organization.properties.branding.primaryColor }}
-                    />
-                    <p className="font-mono text-xs text-zinc-500">
-                      {organization.properties.branding.primaryColor}
-                    </p>
+                      key={i}
+                      className="flex h-24 flex-col justify-between rounded-lg border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-700 dark:bg-zinc-800/30"
+                    >
+                      <div className="flex items-center justify-between text-zinc-500">
+                        <span className="text-xs font-medium uppercase">{stat.label}</span>
+                        <stat.icon className="h-4 w-4 opacity-50" />
+                      </div>
+                      <span className="text-2xl font-bold text-zinc-900 dark:text-white">
+                        {loading ? "-" : stat.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Branding Colors (Visual Compacto) */}
+                {organization?.properties?.branding && (
+                  <div className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-700 dark:bg-zinc-800/30">
+                    <div className="mb-4">
+                      <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                        <Palette className="h-4 w-4 text-zinc-500" />
+                        Identidade Visual
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                      <div className="space-y-1">
+                        <div
+                          className="h-8 w-full rounded-md border border-zinc-200 shadow-sm"
+                          style={{ backgroundColor: organization.properties.branding.primaryColor }}
+                        />
+                        <p className="font-mono text-xs text-zinc-500">
+                          {organization.properties.branding.primaryColor}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <div
+                          className="h-8 w-full rounded-md border border-zinc-200 shadow-sm"
+                          style={{
+                            backgroundColor: organization.properties.branding.secondaryColor,
+                          }}
+                        />
+                        <p className="font-mono text-xs text-zinc-500">
+                          {organization.properties.branding.secondaryColor}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <div
-                      className="h-8 w-full rounded-md border border-zinc-200 shadow-sm"
-                      style={{ backgroundColor: organization.properties.branding.secondaryColor }}
-                    />
-                    <p className="font-mono text-xs text-zinc-500">
-                      {organization.properties.branding.secondaryColor}
-                    </p>
+                )}
+              </div>
+
+              {/* Coluna Direita: Status & Limites (1/3) */}
+              <div className="space-y-6">
+                <div className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-700 dark:bg-zinc-800/30">
+                  <div className="mb-4">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                      <UserCog className="h-4 w-4 text-zinc-500" />
+                      Limites do Plano
+                    </h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="mb-1 flex justify-between text-xs">
+                        <span className="text-zinc-500">Projetos</span>
+                        <span className="font-medium text-zinc-900 dark:text-white">
+                          {stats.totalProjects} / {organization?.properties?.maxProjects || 5}
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-zinc-100 dark:bg-zinc-800">
+                        <div
+                          className="h-full rounded-full bg-zinc-900 dark:bg-zinc-100"
+                          style={{
+                            width: `${(stats.totalProjects / (organization?.properties?.maxProjects || 5)) * 100}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Domínios - Lista Compacta */}
+                <div className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-700 dark:bg-zinc-800/30">
+                  <div className="mb-4">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                      <Globe className="h-4 w-4 text-zinc-500" />
+                      Domínios
+                    </h3>
+                  </div>
+                  <div>
+                    {organization?.org_domains && organization.org_domains.length > 0 ? (
+                      <div className="space-y-2">
+                        {organization.org_domains.map((domain, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                            {domain}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-zinc-400 italic">Nenhum domínio configurado.</p>
+                    )}
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Coluna Direita: Status & Limites (1/3) */}
-          <div className="space-y-6">
-            <div className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-700 dark:bg-zinc-800/30">
-              <div className="mb-4">
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  <UserCog className="h-4 w-4 text-zinc-500" />
-                  Limites do Plano
-                </h3>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <div className="mb-1 flex justify-between text-xs">
-                    <span className="text-zinc-500">Projetos</span>
-                    <span className="font-medium text-zinc-900 dark:text-white">
-                      {stats.totalProjects} / {organization?.properties?.maxProjects || 5}
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-zinc-100 dark:bg-zinc-800">
-                    <div
-                      className="h-full rounded-full bg-zinc-900 dark:bg-zinc-100"
-                      style={{
-                        width: `${(stats.totalProjects / (organization?.properties?.maxProjects || 5)) * 100}%`,
-                      }}
-                    />
-                  </div>
+          {/* Section: Configurações */}
+          <div className="overflow-hidden rounded-md border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+              <h2 className="flex items-center gap-2 text-base font-bold text-zinc-900 dark:text-zinc-100">
+                <Settings className="h-5 w-5 text-zinc-500" />
+                Configurações
+              </h2>
+            </div>
+            <div className="grid gap-6 p-6 md:grid-cols-2">
+              {/* Features Toggles */}
+              <div className="h-fit rounded-lg border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-700 dark:bg-zinc-800/30">
+                <div className="mb-4">
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                    <Layers className="h-4 w-4 text-zinc-500" />
+                    Funcionalidades
+                  </h3>
+                </div>
+                <div className="space-y-4">
+                  {Object.entries(organization?.properties?.features || {}).map(
+                    ([feature, enabled]) => (
+                      <div key={feature} className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-zinc-700 capitalize dark:text-zinc-200">
+                            {feature}
+                          </span>
+                          <span className="text-xs text-zinc-500">
+                            Habilitar acesso a este módulo.
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleToggleFeature(feature)}
+                          disabled={!userIsOwner}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${enabled ? "bg-zinc-900 dark:bg-zinc-100" : "bg-zinc-200 dark:bg-zinc-700"}`}
+                        >
+                          <span
+                            className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${enabled ? "translate-x-4" : "translate-x-1"}`}
+                          />
+                        </button>
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
-            </div>
 
-            {/* Domínios - Lista Compacta */}
-            <div className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-700 dark:bg-zinc-800/30">
-              <div className="mb-4">
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  <Globe className="h-4 w-4 text-zinc-500" />
-                  Domínios
-                </h3>
-              </div>
-              <div>
-                {organization?.org_domains && organization.org_domains.length > 0 ? (
-                  <div className="space-y-2">
-                    {organization.org_domains.map((domain, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400"
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                        {domain}
-                      </div>
-                    ))}
+              <div className="space-y-6">
+                {/* Preferências */}
+                <div className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-700 dark:bg-zinc-800/30">
+                  <div className="mb-4">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                      <Settings className="h-4 w-4 text-zinc-500" />
+                      Preferências do Sistema
+                    </h3>
                   </div>
-                ) : (
-                  <p className="text-xs text-zinc-400 italic">Nenhum domínio configurado.</p>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
+                        <Moon className="h-4 w-4" /> Tema Padrão
+                      </span>
+                      <span className="font-medium text-zinc-900 capitalize dark:text-zinc-100">
+                        {organization?.properties?.theme || "auto"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
+                        <Globe className="h-4 w-4" /> Notas Públicas
+                      </span>
+                      <span
+                        className={`font-medium ${organization?.properties?.allowPublicNotes ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400"}`}
+                      >
+                        {organization?.properties?.allowPublicNotes ? "Permitido" : "Desabilitado"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
+                        <Bell className="h-4 w-4" /> Notificações por Email
+                      </span>
+                      <span
+                        className={`font-medium ${organization?.properties?.notifications?.email ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400"}`}
+                      >
+                        {organization?.properties?.notifications?.email ? "Ativo" : "Inativo"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
+                        <Bell className="h-4 w-4" /> Notificações Push
+                      </span>
+                      <span
+                        className={`font-medium ${organization?.properties?.notifications?.push ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400"}`}
+                      >
+                        {organization?.properties?.notifications?.push ? "Ativo" : "Inativo"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
+                        <Activity className="h-4 w-4" /> Resumo de Atividades
+                      </span>
+                      <span className="font-medium text-zinc-900 capitalize dark:text-zinc-100">
+                        {organization?.properties?.notifications?.digest
+                          ? organization.properties.notifications.digest === "daily"
+                            ? "Diário"
+                            : organization.properties.notifications.digest === "weekly"
+                              ? "Semanal"
+                              : "Mensal"
+                          : "Não configurado"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Danger Zone */}
+                {userIsOwner && (
+                  <div className="rounded-md border border-red-200 bg-red-50 p-4 dark:border-red-900/30 dark:bg-red-900/10">
+                    <h3 className="flex items-center gap-2 text-sm font-bold text-red-700 dark:text-red-400">
+                      <ShieldAlert className="h-4 w-4" /> Zona de Perigo
+                    </h3>
+                    <p className="mt-1 text-xs text-red-600/80 dark:text-red-400/70">
+                      Ações aqui não podem ser desfeitas. Tenha cuidado.
+                    </p>
+                    <button
+                      onClick={handleDeleteOrganization}
+                      className="mt-3 text-xs font-semibold text-red-600 underline hover:text-red-800"
+                    >
+                      Deletar Organização
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Section: Configurações */}
-      <div className="overflow-hidden rounded-md border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
-            <h2 className="flex items-center gap-2 text-base font-bold text-zinc-900 dark:text-zinc-100">
-              <Settings className="h-5 w-5 text-zinc-500" />
-              Configurações
-            </h2>
-          </div>
-          <div className="grid gap-6 p-6 md:grid-cols-2">
-          {/* Features Toggles */}
-          <div className="h-fit rounded-lg border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-700 dark:bg-zinc-800/30">
-            <div className="mb-4">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                <Layers className="h-4 w-4 text-zinc-500" />
-                Funcionalidades
-              </h3>
-            </div>
-            <div className="space-y-4">
-              {Object.entries(organization?.properties?.features || {}).map(
-                ([feature, enabled]) => (
-                  <div key={feature} className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-zinc-700 capitalize dark:text-zinc-200">
-                        {feature}
-                      </span>
-                      <span className="text-xs text-zinc-500">Habilitar acesso a este módulo.</span>
-                    </div>
-                    <button
-                      onClick={() => handleToggleFeature(feature)}
-                      disabled={!userIsOwner}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${enabled ? "bg-zinc-900 dark:bg-zinc-100" : "bg-zinc-200 dark:bg-zinc-700"}`}
-                    >
-                      <span
-                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${enabled ? "translate-x-4" : "translate-x-1"}`}
-                      />
-                    </button>
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            {/* Preferências */}
-            <div className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-700 dark:bg-zinc-800/30">
-              <div className="mb-4">
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  <Settings className="h-4 w-4 text-zinc-500" />
-                  Preferências do Sistema
-                </h3>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
-                    <Moon className="h-4 w-4" /> Tema Padrão
-                  </span>
-                  <span className="font-medium text-zinc-900 capitalize dark:text-zinc-100">
-                    {organization?.properties?.theme || "auto"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
-                    <Globe className="h-4 w-4" /> Notas Públicas
-                  </span>
-                  <span
-                    className={`font-medium ${organization?.properties?.allowPublicNotes ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400"}`}
-                  >
-                    {organization?.properties?.allowPublicNotes ? "Permitido" : "Desabilitado"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
-                    <Bell className="h-4 w-4" /> Notificações por Email
-                  </span>
-                  <span
-                    className={`font-medium ${organization?.properties?.notifications?.email ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400"}`}
-                  >
-                    {organization?.properties?.notifications?.email ? "Ativo" : "Inativo"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
-                    <Bell className="h-4 w-4" /> Notificações Push
-                  </span>
-                  <span
-                    className={`font-medium ${organization?.properties?.notifications?.push ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400"}`}
-                  >
-                    {organization?.properties?.notifications?.push ? "Ativo" : "Inativo"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
-                    <Activity className="h-4 w-4" /> Resumo de Atividades
-                  </span>
-                  <span className="font-medium text-zinc-900 capitalize dark:text-zinc-100">
-                    {organization?.properties?.notifications?.digest
-                      ? organization.properties.notifications.digest === "daily"
-                        ? "Diário"
-                        : organization.properties.notifications.digest === "weekly"
-                          ? "Semanal"
-                          : "Mensal"
-                      : "Não configurado"}
-                  </span>
-                </div>
-                </div>
-              </div>
-
-              {/* Danger Zone */}
-            {userIsOwner && (
-              <div className="rounded-md border border-red-200 bg-red-50 p-4 dark:border-red-900/30 dark:bg-red-900/10">
-                <h3 className="flex items-center gap-2 text-sm font-bold text-red-700 dark:text-red-400">
-                  <ShieldAlert className="h-4 w-4" /> Zona de Perigo
-                </h3>
-                <p className="mt-1 text-xs text-red-600/80 dark:text-red-400/70">
-                  Ações aqui não podem ser desfeitas. Tenha cuidado.
-                </p>
-                <button
-                  onClick={handleDeleteOrganization}
-                  className="mt-3 text-xs font-semibold text-red-600 underline hover:text-red-800"
-                >
-                  Deletar Organização
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      </div>
-
-      {/* Owner Section */}
-      <div className="overflow-hidden rounded-md border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        {/* Owner Section */}
+        <div className="overflow-hidden rounded-md border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
           <div className="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
             <h2 className="flex items-center gap-2 text-base font-bold text-zinc-900 dark:text-zinc-100">
               <UserCog className="h-5 w-5 text-zinc-500" />
@@ -639,7 +637,9 @@ const OrganizationPage = () => {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-zinc-400 italic">Informações do proprietário não disponíveis</p>
+              <p className="text-sm text-zinc-400 italic">
+                Informações do proprietário não disponíveis
+              </p>
             )}
           </div>
         </div>

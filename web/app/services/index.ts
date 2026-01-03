@@ -1,8 +1,8 @@
 // services/index.ts
 
 // Auth Services
-export * from "./auth-service/AuthService";
-export * from "./auth-service/UseAuthProvider";
+export * from "./authentication/AuthService";
+export * from "./authentication/UseAuthProvider";
 
 // Notes Services
 export {
@@ -69,7 +69,7 @@ export {
   type CreateOrganizationData,
   type UpdateOrganizationData,
   type AddMemberData,
-} from "./organization-service/orgs-service";
+} from "./organization";
 
 // Backup Services
 export * from "./backup-service/BackupService";

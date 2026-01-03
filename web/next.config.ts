@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "sfo3.digitaloceanspaces.com" },
       { protocol: "https", hostname: "cwn.sfo3.cdn.digitaloceanspaces.com" },
       { protocol: "https", hostname: "cw-notes.sfo3.cdn.digitaloceanspaces.com" },
+      { protocol: "https", hostname: "weave-notes.sfo3.digitaloceanspaces.com" },
     ],
   },
   reactStrictMode: true,

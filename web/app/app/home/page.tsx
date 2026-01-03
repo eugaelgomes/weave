@@ -12,7 +12,6 @@ import ProjectsCarousel from "../../components/ui/project-carousel";
 import { FileText, Tag, Activity } from "lucide-react";
 import { FaProjectDiagram } from "react-icons/fa";
 
-// Tamanhos de fonte do menor para o maior
 const FONT_SIZES = [
   "text-xs",
   "text-sm",
@@ -22,6 +21,21 @@ const FONT_SIZES = [
   "text-2xl",
   "text-3xl",
 ];
+
+const getFirstAndLastUserName = (fullName: string): string => {
+  const names = fullName.trim().split(/\s+/);
+  const capitalize = (name: string) => 
+    name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+
+  if (names.length === 1) {
+    return capitalize(names[0]);
+  }
+
+  const firstName = capitalize(names[0]);
+  const lastName = capitalize(names[names.length - 1]);
+
+  return `${firstName} ${lastName}`;
+};
 
 export default function HomePage() {
   const { authenticated, loading, user } = useAuth();
@@ -72,33 +86,24 @@ export default function HomePage() {
   const recentProjects = getRecentProjects();
   const userName = String(user?.name || user?.username || "usuário");
 
-  // --- LÓGICA DA NUVEM DE PALAVRAS ---
   const tagCloudData = useMemo(() => {
     if (!stats?.mostUsedTags || stats.mostUsedTags.length === 0) return [];
 
     const tags = stats.mostUsedTags;
-    // Encontrar o maior e menor count para normalizar
     const maxCount = Math.max(...tags.map((t) => t.count));
     const minCount = Math.min(...tags.map((t) => t.count));
 
-    // Embaralhar levemente o array para não ficar ordenado por tamanho (estética de nuvem)
-    // Criamos uma cópia para não mutar o original
     const shuffledTags = [...tags].sort(() => Math.random() - 0.5);
 
     return shuffledTags.map((tagItem, index) => {
-      // Cálculo de proporção para definir o tamanho (0 a 1)
       const ratio =
         maxCount === minCount ? 0.5 : (tagItem.count - minCount) / (maxCount - minCount);
 
-      // Mapear ratio para um índice do array de tamanhos
       const sizeIndex = Math.floor(ratio * (FONT_SIZES.length - 1));
 
-      // Obter cor baseada na primeira letra da tag (consistente com o resto da aplicação)
       const tagColors = getTagColor(tagItem.tag);
-      // Extrair apenas a classe de texto da cor
       const colorClass = tagColors.text;
 
-      // Aleatoriedade para peso da fonte (Bold ou Normal)
       const isBold = Math.random() > 0.4 ? "font-bold" : "font-medium";
 
       return {
@@ -117,7 +122,7 @@ export default function HomePage() {
         <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
           <div className="flex items-center justify-between gap-2">
             <span className="sm:text-md text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
-              <span className="text-yellow-500">Olá,</span> {userName}!
+              <span className="text-yellow-500">Olá,</span> {getFirstAndLastUserName(userName)}!
             </span>
           </div>
           <div className="flex items-center justify-between gap-3 text-xs text-neutral-600 sm:gap-4 sm:text-sm dark:text-neutral-400">

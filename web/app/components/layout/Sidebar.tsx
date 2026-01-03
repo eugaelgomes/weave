@@ -17,15 +17,15 @@ import {
   FaRobot,
   FaUsers,
   FaUserFriends,
-  FaBriefcase,
 } from "react-icons/fa";
-import { MdPersonAdd } from "react-icons/md";
 import { IoMdSettings } from "react-icons/io";
 import { HiSparkles } from "react-icons/hi2";
 import { IconType } from "react-icons";
+
 interface SidebarProps {
   onLinkClick?: () => void;
 }
+
 interface NavigationItem {
   path: string;
   icon: IconType;
@@ -49,7 +49,7 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
 
     const itemsWithSubs = [
       { path: "/app/weave-ai", checkPath: "/app/weave-ai" },
-      { path: "/app/organization", checkPath: "/app/organization" }
+      { path: "/app/organization", checkPath: "/app/organization" },
     ];
 
     itemsWithSubs.forEach(({ path, checkPath }) => {
@@ -62,14 +62,12 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
   }, [pathname]);
 
   const isActive = (path: string) => {
-    if (path === "/app/home" && pathname === "/app/home") return true;
-    if (path === "/app/notes" && pathname.startsWith("/app/notes")) return true;
-    if (path === "/app/projects" && pathname.startsWith("/app/projects")) return true;
-
-    if (path === "/app/weave-ai" && pathname === "/app/weave-ai") return true;
-
-    if (path === "/app/organization" && pathname.startsWith("/app/organization")) return true;
-    if (path === "/app/settings" && pathname.startsWith("/app/settings")) return true;
+    if (path === "/app/home" && pathname === "/app/home/") return true;
+    if (path === "/app/notes" && pathname.startsWith("/app/notes/")) return true;
+    if (path === "/app/projects" && pathname.startsWith("/app/projects/")) return true;
+    if (path === "/app/weave-ai" && pathname === "/app/weave-ai/") return true;
+    if (path === "/app/organization" && pathname.startsWith("/app/organization/")) return true;
+    if (path === "/app/settings" && pathname.startsWith("/app/settings/")) return true;
 
     return pathname === path;
   };
@@ -80,7 +78,6 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
 
   const toggleExpand = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
-
     setExpandedItems((prev) => ({
       ...prev,
       [path]: !prev[path],
@@ -134,8 +131,8 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
   ];
 
   return (
-    <aside className="flex h-full flex-col border-r border-neutral-200 bg-white text-neutral-600 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400">
-      {/* Botão de Menu em telas pequenas */}
+    <aside className="flex h-full flex-col rounded-md border border-neutral-200 bg-white text-neutral-600 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400">
+      {" "}
       <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 p-3 lg:hidden dark:border-neutral-800">
         <div className="flex items-center gap-2">
           <FaBook className="h-4 w-4 text-yellow-500" />
@@ -151,7 +148,6 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
           <FaTimes size={16} />
         </button>
       </div>
-
       <nav className="flex flex-1 flex-col overflow-y-auto px-2 py-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-800/50 hover:[&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar-track]:bg-transparent">
         <h2 className="mb-2 px-2 text-[10px] font-bold tracking-wider text-yellow-500 uppercase">
           <span className="h-4 w-1 text-yellow-500"></span> Menu
@@ -192,7 +188,6 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
                       <span className="text-sm">{item.label}</span>
                     </div>
 
-                    {/* Ícone de Chevron para indicar expansão */}
                     {hasSubItems && (
                       <div className="text-neutral-400">
                         {isExpanded ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}
@@ -201,7 +196,6 @@ const Sidebar = ({ onLinkClick }: SidebarProps) => {
                   </Link>
                 </div>
 
-                {/* Renderização dos Subitens */}
                 {hasSubItems && isExpanded && (
                   <ul className="animate-in slide-in-from-top-1 mt-0.5 space-y-0.5 pl-4 duration-200">
                     {item.subItems!.map((subItem) => {

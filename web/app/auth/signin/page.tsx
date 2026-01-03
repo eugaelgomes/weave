@@ -9,7 +9,7 @@ import ForgotPasswordModal from "../modals/forgot-password";
 import Link from "next/link";
 
 export default function SignIn() {
-  const [username, setUsername] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [erro, setErro] = useState("");
   const [status, setStatus] = useState("");
@@ -17,18 +17,16 @@ export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
 
-  const { login, loginWithGoogle, authenticated } = useAuth();
+  const { login: loginUser, authenticated } = useAuth();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect") || "/app/home";
 
-  // Se auth = homepage
   useEffect(() => {
     if (authenticated && typeof window !== "undefined") {
       window.location.href = redirectUrl;
     }
   }, [authenticated, redirectUrl]);
 
-  // Não renderiza o formulário se já autenticado
   if (authenticated) {
     return null;
   }
@@ -36,16 +34,16 @@ export default function SignIn() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro("");
-    const u = username.trim();
+    const l = login.trim();
     const p = password;
-    if (!u || !p) {
+    if (!l || !p) {
       setErro("Por favor, preencha todos os campos para continuar.");
       return;
     }
     try {
       setSubmitting(true);
-      const result = await login({
-        username: u,
+      const result = await loginUser({
+        login: l,
         password: p,
       });
       if (result.success) {
@@ -152,7 +150,7 @@ export default function SignIn() {
             </div>
           </div>
 
-          <button
+          {/*<button
             type="button"
             onClick={() => loginWithGoogle()}
             className="flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -176,24 +174,23 @@ export default function SignIn() {
             <div className="relative flex justify-center text-sm">
               <span className="bg-white px-2 text-gray-500">ou</span>
             </div>
-          </div>
+          </div>*/}
 
-        
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label
-                htmlFor="username"
+                htmlFor="login"
                 className="mb-1 block text-sm font-semibold text-yellow-500"
               >
                 Usuário ou e-mail
               </label>
               <input
-                id="username"
-                name="username"
+                id="login"
+                name="login"
                 type="text"
                 placeholder="Digite seu usuário ou e-mail"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
                 disabled={submitting}
                 autoComplete="username email"
                 className="block w-full rounded-md border border-neutral-600 bg-neutral-900 px-2 py-2 text-sm text-gray-300 shadow-sm transition-all duration-200 placeholder:text-gray-500 hover:border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"

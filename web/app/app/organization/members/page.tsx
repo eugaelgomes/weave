@@ -4,9 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useOrganization } from "@/app/contexts/OrganizationContext";
 import { useAuth } from "@/app/contexts/AuthContext";
 import Image from "next/image";
-import { getUsers } from "@/app/services/auth-service/AuthService";
-import type { User } from "@/app/services/auth-service/AuthService";
-import type { Organization } from "@/types/organization";
+import { getUsers } from "@/app/services/authentication/AuthService";
+import type { User } from "@/app/services/authentication/AuthService";
 import {
   Users,
   Plus,
@@ -219,6 +218,8 @@ const MembersPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [usersData, setUsersData] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const { organization, members } = useOrganization();
+
 
   const userCanManage = user?.id ? canManageMembers(user.id) : false;
 

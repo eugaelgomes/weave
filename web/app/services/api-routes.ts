@@ -12,9 +12,9 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   // Auth
   SIGNIN: "/auth/signin",
-  SIGNUP: "/auth/signup",
+  SIGNUP: "/users/signup",
   LOGOUT: "/auth/logout",
-  ME: "/auth/me",
+  ME: "/users/me",
   REFRESH: "/auth/refresh",
   GOOGLE_AUTH: "/auth/signin/sso/google",
 
