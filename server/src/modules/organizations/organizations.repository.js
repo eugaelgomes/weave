@@ -12,7 +12,7 @@ class OrganizationsRepository {
       o.logo_url,
       o.banner_url,
       o.description,
-      o.properties,
+      o.basic_properties,
       o.org_domains,
       o.deleted,
       o.created_at,

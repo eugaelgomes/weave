@@ -5,7 +5,6 @@ import {
   login as loginService,
   logout as logoutService,
   getUserData as getUserDataService,
-  refreshToken as refreshTokenService,
   updateUserData,
   requestPasswordRecovery,
   resetPassword,
@@ -38,7 +37,6 @@ export interface AuthActions {
     token: string,
     password: string
   ) => Promise<{ success: boolean; message?: string }>;
-  refreshAuthToken: () => Promise<{ success: boolean; user?: User; message?: string }>;
   getUserData: () => Promise<{ success: boolean; data?: User; message?: string }>;
   loginWithGoogle: () => void;
   deleteUserPermanently: () => Promise<{ success: boolean; message?: string }>;
@@ -181,18 +179,6 @@ export function useAuthProvider(): AuthState & AuthActions {
     }
   };
 
-  const refreshAuthToken = async () => {
-    try {
-      const response = await refreshTokenService();
-      setUser(response.user);
-      return { success: true, user: response.user };
-    } catch (error) {
-      console.error("Token refresh failed:", error);
-      clearAuthState();
-      return { success: false, message: handleAuthError(error) };
-    }
-  };
-
   const getCurrentUser = async () => {
     try {
       const data = await getUserDataService();
@@ -228,7 +214,6 @@ export function useAuthProvider(): AuthState & AuthActions {
     updateUserPassword,
     recoverPassword,
     resetPassword: handleResetPassword,
-    refreshAuthToken,
     getUserData: getCurrentUser,
     loginWithGoogle,
     deleteUserPermanently,

@@ -159,8 +159,8 @@ const parseOrganizationProperties = (org: Organization): Organization => {
 export const fetchOrganization = async (userId?: string): Promise<Organization | null> => {
   try {
     // Constrói a URL com query string se userId existir
-    const url = userId 
-      ? `${API_ENDPOINTS.ORGANIZATIONS}?userId=${userId}` 
+    const url = userId
+      ? `${API_ENDPOINTS.ORGANIZATIONS}?userId=${userId}`
       : API_ENDPOINTS.ORGANIZATIONS;
 
     const response = await apiClient.get(url);
@@ -256,9 +256,9 @@ export const updateOrganizationProperties = async (
  * ou via query param. Aqui assumi query param para DELETE.
  */
 export const deleteOrganization = async (userId?: string): Promise<boolean> => {
-  const url = userId 
-      ? `${API_ENDPOINTS.ORGANIZATIONS}?userId=${userId}` 
-      : API_ENDPOINTS.ORGANIZATIONS;
+  const url = userId
+    ? `${API_ENDPOINTS.ORGANIZATIONS}?userId=${userId}`
+    : API_ENDPOINTS.ORGANIZATIONS;
 
   const response = await apiClient.delete(url);
   const data = await handleResponse<{ success?: boolean }>(response);
@@ -286,8 +286,8 @@ export const restoreOrganization = async (userId?: string): Promise<Organization
 
 export const fetchOrganizationMembers = async (userId?: string): Promise<OrganizationMember[]> => {
   try {
-    const url = userId 
-      ? `${API_ENDPOINTS.ORGANIZATIONS_MEMBERS}?userId=${userId}` 
+    const url = userId
+      ? `${API_ENDPOINTS.ORGANIZATIONS_MEMBERS}?userId=${userId}`
       : API_ENDPOINTS.ORGANIZATIONS_MEMBERS;
 
     const response = await apiClient.get(url);
@@ -303,12 +303,18 @@ export const fetchOrganizationMembers = async (userId?: string): Promise<Organiz
   }
 };
 
-export const addMemberDirectly = async (memberId: string, role: string, userId?: string): Promise<OrganizationMember> => {
+export const addMemberDirectly = async (
+  memberId: string,
+  role: string,
+  userId?: string
+): Promise<OrganizationMember> => {
   const payload = { memberId, role, userId };
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_MEMBERS, payload);
-  const data = await handleResponse<{ success?: boolean; data?: OrganizationMember; error?: string }>(
-    response
-  );
+  const data = await handleResponse<{
+    success?: boolean;
+    data?: OrganizationMember;
+    error?: string;
+  }>(response);
 
   if (!data.success || !data.data) {
     throw new Error(data.error || "Erro ao adicionar membro");
@@ -316,7 +322,10 @@ export const addMemberDirectly = async (memberId: string, role: string, userId?:
   return data.data;
 };
 
-export const inviteMember = async (inviteData: InviteMemberData, userId?: string): Promise<{ message: string }> => {
+export const inviteMember = async (
+  inviteData: InviteMemberData,
+  userId?: string
+): Promise<{ message: string }> => {
   const payload = { ...inviteData, userId };
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_INVITES, payload);
   const data = await handleResponse<{ success?: boolean; message?: string; error?: string }>(
@@ -331,10 +340,10 @@ export const inviteMember = async (inviteData: InviteMemberData, userId?: string
 
 export const fetchPendingInvites = async (userId?: string): Promise<OrganizationInvite[]> => {
   try {
-    const url = userId 
-      ? `${API_ENDPOINTS.ORGANIZATIONS_INVITES}?userId=${userId}` 
+    const url = userId
+      ? `${API_ENDPOINTS.ORGANIZATIONS_INVITES}?userId=${userId}`
       : API_ENDPOINTS.ORGANIZATIONS_INVITES;
-      
+
     const response = await apiClient.get(url);
     const data = await handleResponse<{ success?: boolean; data?: OrganizationInvite[] }>(response);
 
@@ -349,7 +358,7 @@ export const fetchPendingInvites = async (userId?: string): Promise<Organization
 
 export const cancelInvite = async (inviteId: string, userId?: string): Promise<void> => {
   // Passando userId via Query String para DELETE
-  const url = userId 
+  const url = userId
     ? `${API_ENDPOINTS.ORGANIZATIONS_INVITES}/${inviteId}?userId=${userId}`
     : `${API_ENDPOINTS.ORGANIZATIONS_INVITES}/${inviteId}`;
 
@@ -372,15 +381,20 @@ export const acceptInvite = async (acceptData: AcceptInviteData, userId?: string
   return data.data;
 };
 
-export const removeMember = async (memberId: string, userId?: string): Promise<OrganizationMember> => {
-  const url = userId 
+export const removeMember = async (
+  memberId: string,
+  userId?: string
+): Promise<OrganizationMember> => {
+  const url = userId
     ? `${API_ENDPOINTS.ORGANIZATIONS_MEMBER(memberId)}?userId=${userId}`
     : API_ENDPOINTS.ORGANIZATIONS_MEMBER(memberId);
 
   const response = await apiClient.delete(url);
-  const data = await handleResponse<{ success?: boolean; data?: OrganizationMember; error?: string }>(
-    response
-  );
+  const data = await handleResponse<{
+    success?: boolean;
+    data?: OrganizationMember;
+    error?: string;
+  }>(response);
 
   if (!data.success || !data.data) {
     throw new Error(data.error || "Erro ao remover membro");
@@ -393,7 +407,10 @@ export const removeMember = async (memberId: string, userId?: string): Promise<O
 /**
  * Upload do Logo (UserId via FormData)
  */
-export const uploadOrganizationLogo = async (file: File, userId?: string): Promise<Organization> => {
+export const uploadOrganizationLogo = async (
+  file: File,
+  userId?: string
+): Promise<Organization> => {
   const formData = new FormData();
   formData.append("image", file);
   if (userId) {
@@ -420,7 +437,10 @@ export const uploadOrganizationLogo = async (file: File, userId?: string): Promi
 /**
  * Upload do Banner (UserId via FormData)
  */
-export const uploadOrganizationBanner = async (file: File, userId?: string): Promise<Organization> => {
+export const uploadOrganizationBanner = async (
+  file: File,
+  userId?: string
+): Promise<Organization> => {
   const formData = new FormData();
   formData.append("image", file);
   if (userId) {

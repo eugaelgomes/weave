@@ -8,7 +8,7 @@ class AuthRepository {
       -- User data
       u.user_id,
       u.username,
-      u.name,
+      u.name as user_name,
       u.email,
       u.password,
       u.avatar_url,
@@ -27,6 +27,9 @@ class AuthRepository {
       o.id AS org_id,
       o.unique_name AS org_unique_name,
       o.org_name AS org_name,
+      o.logo_url AS org_logo_url,
+
+      -- Organization member role
       om.role AS org_member_role,
       
       -- Current plan data
@@ -45,7 +48,7 @@ class AuthRepository {
       
     FROM users u
     LEFT JOIN organizations o ON o.user_id = u.user_id
-    LEFT JOIN organizations_members om ON om.user_id = u.user_id AND om.organization_id = o.id
+    LEFT JOIN organizations_members om ON om.user_id = u.user_id AND om.org_id = o.id
     LEFT JOIN plans p ON p.plan_id = u.plan_id
     LEFT JOIN plans_usage pu ON pu.user_id = u.user_id
     LEFT JOIN plans p2 ON p2.plan_id = pu.plan_id

@@ -178,10 +178,7 @@ export default function SignIn() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label
-                htmlFor="login"
-                className="mb-1 block text-sm font-semibold text-yellow-500"
-              >
+              <label htmlFor="login" className="mb-1 block text-sm font-semibold text-yellow-500">
                 Usuário ou e-mail
               </label>
               <input

@@ -11,18 +11,22 @@ import {
   Trash2,
   Download,
   User as UserIcon,
-  Lock,
   Mail,
   AlertTriangle,
   Loader2,
   Shield,
 } from "lucide-react";
+
 interface FormData {
   name: string;
   email: string;
   username: string;
   avatar_url: string;
   profilePicture: File | null;
+  birth_date: string;
+  phone_number: string;
+  theme_mode: string;
+  private_profile: boolean;
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
@@ -40,7 +44,7 @@ const SettingsPage = () => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Feedback de Backup (separado)
+  // Feedback de Backup
   const [backupMessage, setBackupMessage] = useState("");
   const [backupError, setBackupError] = useState("");
   const [backupLoading, setBackupLoading] = useState(false);
@@ -51,6 +55,10 @@ const SettingsPage = () => {
     username: "",
     avatar_url: "",
     profilePicture: null,
+    birth_date: "",
+    phone_number: "",
+    theme_mode: "system",
+    private_profile: false,
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
@@ -61,11 +69,15 @@ const SettingsPage = () => {
     if (user) {
       setUserData(user);
       setFormData({
-        name: user.name || "",
+        name: user.user_name || "",
         email: user.email || "",
         username: user.username || "",
         avatar_url: user.avatar_url || "",
         profilePicture: null,
+        birth_date: user.birth_date || "",
+        phone_number: user.phone_number || "",
+        theme_mode: user.theme_mode || "system",
+        private_profile: user.private_profile || false,
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
@@ -81,7 +93,7 @@ const SettingsPage = () => {
     };
   }, [formData.avatar_url]);
 
-  // ================== HANDLERS (Mantidos) ==================
+  // ================== HANDLERS ==================
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, files } = e.target;
     setError("");
@@ -110,11 +122,15 @@ const SettingsPage = () => {
     }
     if (userData) {
       setFormData({
-        name: userData.name || "",
+        name: userData.user_name || "",
         email: userData.email || "",
         username: userData.username || "",
         avatar_url: userData.avatar_url || "",
         profilePicture: null,
+        birth_date: userData.birth_date || "",
+        phone_number: userData.phone_number || "",
+        theme_mode: userData.theme_mode || "system",
+        private_profile: userData.private_profile || false,
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
@@ -148,7 +164,7 @@ const SettingsPage = () => {
         currentPassword?: string;
         newPassword?: string;
       } = {
-        name: formData.name,
+        user_name: formData.name,
         email: formData.email,
         username: formData.username,
       };
@@ -195,7 +211,6 @@ const SettingsPage = () => {
       setBackupError("");
       setBackupMessage("Solicitando backup...");
 
-      // Solicitar o backup
       const response = await requestBackup();
       const jobId = response.job_id;
 
@@ -203,13 +218,11 @@ const SettingsPage = () => {
         throw new Error("Erro ao iniciar backup");
       }
 
-      // Mostrar mensagem do backend e tempo estimado
       const estimatedTime = response.estimated_time
         ? ` Tempo estimado: ${response.estimated_time}.`
         : "";
       setBackupMessage(`${response.message || "Backup em processamento..."}${estimatedTime}`);
 
-      // Polling do status do job
       let attempts = 0;
       const maxAttempts = 60;
 
@@ -218,7 +231,6 @@ const SettingsPage = () => {
 
         const job = await getBackupStatus(jobId);
 
-        // Atualizar progresso se disponível
         if (job.progress !== undefined) {
           setBackupMessage(`Processando backup: ${job.progress}%`);
         }
@@ -269,37 +281,28 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="flex h-full flex-col bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-200">
-      {/* Scrollable Container */}
-      <div className="no-scrollbar flex-1 overflow-y-auto bg-neutral-50 dark:bg-neutral-950">
-        <div className="mx-auto max-w-6xl px-4 py-2 sm:px-6 lg:px-8">
-          {/* Header - Agora com largura total */}
-          <div className="mb-2 flex flex-col gap-4 border-b border-neutral-200 pb-6 md:flex-row md:items-center md:justify-between dark:border-neutral-800">
-            <div>
-              <h1 className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+    <div className="flex min-h-screen flex-col bg-neutral-50 py-2 dark:bg-neutral-950">
+      <div className="flex-1 space-y-3 overflow-y-auto sm:space-y-4">
+        <div className="mx-auto space-y-3">
+          {/* Header */}
+          <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
+            <div className="flex items-center justify-between">
+              <h1 className="sm:text-md text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
                 Configurações da Conta
               </h1>
-              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-500">
+              <h3 className="text-xs text-neutral-600 dark:text-neutral-400">
                 Gerencie seus dados pessoais e segurança.
-              </p>
+              </h3>
             </div>
-            {!editMode && (
-              <button
-                onClick={() => setEditMode(true)}
-                className="flex items-center gap-2 self-start rounded border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:border-neutral-400 hover:text-neutral-900 md:self-auto dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:border-neutral-700 dark:hover:text-neutral-100"
-              >
-                Editar Informações
-              </button>
-            )}
           </div>
 
-          {/* Feedback Messages - Largura total */}
+          {/* Feedback Messages */}
           {(error || successMessage) && (
             <div
-              className={`mb-8 rounded border px-4 py-2 text-sm ${
+              className={`rounded-md border px-3 py-2 text-xs ${
                 error
-                  ? "border-red-900/50 bg-red-900/10 text-red-400"
-                  : "border-green-900/50 bg-green-900/10 text-emerald-400"
+                  ? "border-red-500/30 bg-red-500/10 text-red-600 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400"
+                  : "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:border-emerald-900/30 dark:bg-emerald-900/20 dark:text-emerald-400"
               }`}
             >
               {error || successMessage}
@@ -307,14 +310,16 @@ const SettingsPage = () => {
           )}
 
           {/* ================== MAIN LAYOUT ================== */}
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
-            {/* Coluna Esquerda: Avatar (3/12 em telas grandes) */}
+          <div className="grid grid-cols-1 gap-3 space-y-3 md:gap-4 lg:grid-cols-12">
+            {/* Coluna Esquerda: Avatar */}
             <div className="lg:col-span-3">
-              <div className="flex flex-col items-start">
-                <span className="mb-4 text-xs font-medium tracking-wider text-neutral-600 uppercase dark:text-neutral-500">
+              <div className="flex flex-col items-center rounded-md border border-neutral-200 bg-white p-3 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+                <h3 className="mb-3 w-full text-left font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
                   Foto de Perfil
-                </span>
-                <div className="group relative h-32 w-32 overflow-hidden rounded-xl border border-neutral-300 bg-neutral-100 lg:h-40 lg:w-40 lg:rounded-2xl dark:border-neutral-800 dark:bg-neutral-900">
+                </h3>
+
+                {/* Avatar Wrapper */}
+                <div className="group relative h-32 w-32 overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800">
                   <Image
                     src={formData.avatar_url || "/default-avatar.png"}
                     alt="Profile"
@@ -323,7 +328,7 @@ const SettingsPage = () => {
                   />
                   {editMode && (
                     <label className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Camera size={24} className="text-white" />
+                      <Camera size={20} className="text-white" />
                       <input
                         type="file"
                         className="hidden"
@@ -334,57 +339,243 @@ const SettingsPage = () => {
                     </label>
                   )}
                 </div>
-                <p className="mt-3 text-xs text-neutral-600">
-                  Recomendado: 400x400px. <br /> Max 2MB.
+                <p className="mt-3 text-[10px] text-neutral-400 dark:text-neutral-500">
+                  Desde:{" "}
+                  {userData?.created_at ? new Date(userData.created_at).toLocaleDateString() : "-"}
                 </p>
               </div>
+              {/* Card de Organização */}
+              {user?.org_name && (
+                <div className="mt-3 flex flex-col rounded-md border border-neutral-200 bg-white p-3 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+                  <h3 className="mb-3 w-full text-left font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
+                    Organização
+                  </h3>
+                  <div className="w-full space-y-2">
+                    {/* Nome e Logo da Organização */}
+                    <div className="flex items-center gap-3 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-900/30">
+                      {user.org_logo_url && (
+                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800">
+                          <Image
+                            src={user.org_logo_url}
+                            alt={`Logo ${user.org_name}`}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <p className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400">
+                          Nome
+                        </p>
+                        <p className="mt-0.5 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                          {user.org_name}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Função na Organização */}
+                    {user.org_role && (
+                      <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900/30">
+                        <p className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400">
+                          Função
+                        </p>
+                        <p className="mt-0.5 text-sm font-semibold text-neutral-900 capitalize dark:text-neutral-100">
+                          {Array.isArray(user.org_role) ? user.org_role.join(", ") : user.org_role}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Card de Plano */}
+              {user?.plan_name && (
+                <div className="mt-3 flex flex-col rounded-md border border-neutral-200 bg-white p-3 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+                  <h3 className="mb-3 w-full text-left font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
+                    Assinatura
+                  </h3>
+                  <div className="w-full space-y-2">
+                    {/* Nome do Plano */}
+                    <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900/30">
+                      <p className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400">
+                        Plano Atual
+                      </p>
+                      <p className="mt-0.5 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                        {user.plan_name}
+                      </p>
+                    </div>
+
+                    {/* Tipo de Cliente */}
+                    {user.plan_client_type && (
+                      <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900/30">
+                        <p className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400">
+                          Tipo de Conta
+                        </p>
+                        <p className="mt-0.5 text-sm font-semibold text-neutral-900 capitalize dark:text-neutral-100">
+                          {user.plan_client_type}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Limites do Plano */}
+                    {user.plan_details?.limits && (
+                      <div className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900/30">
+                        <p className="text-[9px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                          Limites
+                        </p>
+                        <div className="grid grid-cols-2 gap-2 text-[10px]">
+                          {user.plan_details.limits.max_notes && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-neutral-600 dark:text-neutral-400">Notas</span>
+                              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                                {user.plan_details.limits.max_notes}
+                              </span>
+                            </div>
+                          )}
+                          {user.plan_details.limits.max_projects && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-neutral-600 dark:text-neutral-400">
+                                Projetos
+                              </span>
+                              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                                {user.plan_details.limits.max_projects}
+                              </span>
+                            </div>
+                          )}
+                          {user.plan_details.limits.max_team_members && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-neutral-600 dark:text-neutral-400">
+                                Membros
+                              </span>
+                              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                                {user.plan_details.limits.max_team_members}
+                              </span>
+                            </div>
+                          )}
+                          {user.plan_details.limits.storage?.max_file_size_mb && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-neutral-600 dark:text-neutral-400">
+                                Arquivo
+                              </span>
+                              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                                {user.plan_details.limits.storage.max_file_size_mb}MB
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Recursos do Plano */}
+                    {user.plan_details?.features && (
+                      <div className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900/30">
+                        <p className="text-[9px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                          Recursos
+                        </p>
+                        <div className="space-y-1">
+                          {Object.entries(user.plan_details.features).map(([key, value]) => (
+                            <div key={key} className="flex items-center gap-2 text-[10px]">
+                              <div
+                                className={`h-1.5 w-1.5 rounded-full ${
+                                  value
+                                    ? "bg-emerald-500 dark:bg-emerald-400"
+                                    : "bg-neutral-300 dark:bg-neutral-600"
+                                }`}
+                              />
+                              <span className="text-neutral-700 capitalize dark:text-neutral-300">
+                                {key.replace(/_/g, " ")}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Weave AI */}
+                    {user.plan_details?.weave_ai?.enabled && (
+                      <div className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900/30">
+                        <p className="text-[9px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                          Weave AI
+                        </p>
+                        <div className="space-y-1 text-[10px]">
+                          {user.plan_details.weave_ai.config?.monthly_messages && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-neutral-600 dark:text-neutral-400">
+                                Mensagens/mês
+                              </span>
+                              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                                {user.plan_details.weave_ai.config.monthly_messages}
+                              </span>
+                            </div>
+                          )}
+                          {user.plan_details.weave_ai.config?.default_model && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-neutral-600 dark:text-neutral-400">Modelo</span>
+                              <span className="font-mono text-[9px] font-semibold text-neutral-900 dark:text-neutral-100">
+                                {user.plan_details.weave_ai.config.default_model}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Coluna Direita: Formulários (ocupa 9/12 em telas grandes) */}
-            <div className="space-y-10 lg:col-span-9">
+            {/* Coluna Direita: Formulários */}
+            <div className="space-y-3 sm:space-y-4 lg:col-span-9">
               {/* Seção: Informações Públicas */}
-              <section>
-                <h3 className="text-md mb-6 flex items-center gap-2 font-medium text-neutral-900 dark:text-neutral-100">
-                  <UserIcon size={18} /> Informações Pessoais
-                </h3>
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-neutral-700 dark:text-neutral-400">
+              <section className="rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+                <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900/30">
+                  <h3 className="flex items-center gap-2 font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
+                    <UserIcon size={12} /> Informações Pessoais
+                  </h3>
+                  {!editMode && (
+                    <button
+                      onClick={() => setEditMode(true)}
+                      className="rounded-md border border-neutral-200 px-3 py-1 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                    >
+                      Editar
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid gap-4 p-3 sm:p-4 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
                       Nome Completo
                     </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        name="name"
-                        disabled={!editMode || isLoading}
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder-neutral-500 focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 focus:outline-none disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:placeholder-neutral-600 dark:focus:border-neutral-600 dark:focus:ring-neutral-600"
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      name="name"
+                      disabled={!editMode || isLoading}
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
+                    />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-neutral-700 dark:text-neutral-400">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
                       Username
                     </label>
                     <div className="relative flex items-center">
-                      <span className="absolute left-3 text-neutral-500 dark:text-neutral-600">
-                        @
-                      </span>
+                      <span className="absolute left-3 text-xs text-neutral-400">@</span>
                       <input
                         type="text"
                         name="username"
                         disabled={!editMode || isLoading}
                         value={formData.username}
                         onChange={handleInputChange}
-                        className="w-full rounded-md border border-neutral-300 bg-white py-2 pr-3 pl-7 text-sm text-neutral-900 placeholder-neutral-500 focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 focus:outline-none disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:placeholder-neutral-600 dark:focus:border-neutral-600 dark:focus:ring-neutral-600"
+                        className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-2 pr-3 pl-7 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-xs font-medium text-neutral-700 dark:text-neutral-400">
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
                       Email Principal
                     </label>
                     <div className="relative">
@@ -394,61 +585,157 @@ const SettingsPage = () => {
                         disabled={!editMode || isLoading}
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full rounded-md border border-neutral-300 bg-white py-2 pr-3 pl-10 text-sm text-neutral-900 placeholder-neutral-500 focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 focus:outline-none disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:placeholder-neutral-600 dark:focus:border-neutral-600 dark:focus:ring-neutral-600"
+                        className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-2 pr-3 pl-9 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
                       />
-                      <Mail
-                        size={16}
-                        className="absolute top-3 left-3 text-neutral-500 dark:text-neutral-600"
-                      />
+                      <Mail size={14} className="absolute top-3 left-3 text-neutral-400" />
                     </div>
                   </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
+                      Telefone
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone_number"
+                      disabled={!editMode || isLoading}
+                      value={formData.phone_number}
+                      onChange={handleInputChange}
+                      placeholder="(00) 00000-0000"
+                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
+                      Data de Nascimento
+                    </label>
+                    <input
+                      type="date"
+                      name="birth_date"
+                      disabled={!editMode || isLoading}
+                      value={formData.birth_date}
+                      onChange={handleInputChange}
+                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              {/* Seção: Preferências */}
+              <section className="rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+                <div className="border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900/30">
+                  <h3 className="flex items-center gap-2 font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
+                    Preferências
+                  </h3>
+                </div>
+
+                <div className="grid gap-4 p-3 sm:p-4 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
+                      Tema
+                    </label>
+                    <select
+                      name="theme_mode"
+                      disabled={!editMode || isLoading}
+                      value={formData.theme_mode}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, theme_mode: e.target.value }))
+                      }
+                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 transition-colors focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
+                    >
+                      <option value="light">Claro</option>
+                      <option value="dark">Escuro</option>
+                      <option value="system">Sistema</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
+                      Privacidade
+                    </label>
+                    <div className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-800">
+                      <input
+                        type="checkbox"
+                        name="private_profile"
+                        disabled={!editMode || isLoading}
+                        checked={formData.private_profile}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, private_profile: e.target.checked }))
+                        }
+                        className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-2 focus:ring-neutral-400 disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-700"
+                      />
+                      <span className="text-sm text-neutral-700 dark:text-neutral-300">
+                        Perfil Privado
+                      </span>
+                    </div>
+                  </div>
+
+                  {userData?.org_name && (
+                    <div className="space-y-1 md:col-span-2">
+                      <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
+                        Organização
+                      </label>
+                      <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                        {userData.org_name}{" "}
+                        {userData.org_role &&
+                          `(${Array.isArray(userData.org_role) ? userData.org_role.join(", ") : userData.org_role})`}
+                      </div>
+                    </div>
+                  )}
+
+                  {userData?.plan_name && (
+                    <div className="space-y-1 md:col-span-2">
+                      <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
+                        Plano Atual
+                      </label>
+                      <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                        {userData.plan_name} ({userData.plan_client_type})
+                      </div>
+                    </div>
+                  )}
                 </div>
               </section>
 
               {/* Seção: Segurança (Expandível) */}
               {editMode && (
-                <section className="animate-in slide-in-from-top-2 border-t border-neutral-200 pt-8 dark:border-neutral-800">
-                  <h3 className="text-md mb-6 flex items-center gap-2 font-medium text-neutral-900 dark:text-neutral-100">
-                    <Shield size={18} /> Segurança da Conta
+                <section className="animate-in slide-in-from-top-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900/50">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    <Shield size={16} /> Segurança e Senha
                   </h3>
 
-                  <div className="rounded-lg border border-neutral-300 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-900/30">
-                    <h4 className="mb-4 flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                      <Lock size={14} /> Alterar Senha
-                    </h4>
-                    <div className="grid max-w-2xl gap-4 md:grid-cols-2">
-                      <div className="space-y-2 md:col-span-2">
-                        <input
-                          type="password"
-                          name="currentPassword"
-                          value={formData.currentPassword}
-                          onChange={handleInputChange}
-                          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:focus:border-neutral-600"
-                          placeholder="Senha atual"
-                        />
-                      </div>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="space-y-1 md:col-span-2">
+                      <input
+                        type="password"
+                        name="currentPassword"
+                        value={formData.currentPassword}
+                        onChange={handleInputChange}
+                        className="w-full rounded-md border border-neutral-300 bg-white px-2 py-2 text-sm focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200"
+                        placeholder="Senha atual"
+                      />
+                    </div>
 
-                      <div className="space-y-2">
-                        <input
-                          type="password"
-                          name="newPassword"
-                          value={formData.newPassword}
-                          onChange={handleInputChange}
-                          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:focus:border-neutral-600"
-                          placeholder="Nova senha (min. 6 chars)"
-                        />
-                      </div>
+                    <div className="space-y-1">
+                      <input
+                        type="password"
+                        name="newPassword"
+                        value={formData.newPassword}
+                        onChange={handleInputChange}
+                        className="w-full rounded-md border border-neutral-300 bg-white px-2 py-2 text-sm focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200"
+                        placeholder="Nova senha (min. 6 chars)"
+                      />
+                    </div>
 
-                      <div className="space-y-2">
-                        <input
-                          type="password"
-                          name="confirmPassword"
-                          value={formData.confirmPassword}
-                          onChange={handleInputChange}
-                          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:focus:border-neutral-600"
-                          placeholder="Confirme a nova senha"
-                        />
-                      </div>
+                    <div className="space-y-1">
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        className="w-full rounded-md border border-neutral-300 bg-white px-2 py-2 text-sm focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200"
+                        placeholder="Confirme a nova senha"
+                      />
                     </div>
                   </div>
                 </section>
@@ -456,23 +743,23 @@ const SettingsPage = () => {
 
               {/* Actions Bar (Fixo no modo edição) */}
               {editMode && (
-                <div className="sticky bottom-0 z-10 flex items-center justify-end gap-3 border-t border-neutral-200 bg-white/90 py-4 pt-6 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-950/90">
+                <div className="sticky bottom-0 z-10 flex items-center justify-end gap-2 rounded-md border border-neutral-200 bg-white/95 p-3 backdrop-blur-sm sm:p-4 dark:border-neutral-800 dark:bg-neutral-900/95">
                   <button
                     onClick={handleCancelEdit}
                     disabled={isLoading}
-                    className="flex items-center gap-2 rounded border border-transparent px-4 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                    className="rounded-md px-4 py-2 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                   >
                     Cancelar
                   </button>
                   <button
                     onClick={handleSaveChanges}
                     disabled={isLoading}
-                    className="flex items-center gap-2 rounded bg-neutral-100 px-6 py-2 text-sm font-semibold text-neutral-950 transition-colors hover:bg-neutral-200 disabled:opacity-70"
+                    className="flex items-center gap-2 rounded-md bg-neutral-900 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-neutral-800 disabled:opacity-70 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
                   >
                     {isLoading ? (
-                      <Loader2 size={16} className="animate-spin" />
+                      <Loader2 size={14} className="animate-spin" />
                     ) : (
-                      <Save size={16} />
+                      <Save size={14} />
                     )}
                     Salvar Alterações
                   </button>
@@ -480,63 +767,64 @@ const SettingsPage = () => {
               )}
 
               {/* ================== DANGER ZONE ================== */}
-              <section className="mt-16 border-t border-neutral-800 pt-10">
-                <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-red-500">
-                  <AlertTriangle size={16} /> Zona de Perigo
-                </h3>
-                <p className="mb-6 text-xs text-neutral-500">
-                  Ações irreversíveis que afetam permanentemente sua conta e dados.
-                </p>
+              <section className="rounded-md border border-red-200 bg-white backdrop-blur-sm dark:border-red-900/30 dark:bg-neutral-900/50">
+                <div className="border-b border-red-200 bg-red-50 px-3 py-2 sm:px-4 dark:border-red-900/30 dark:bg-red-950/20">
+                  <h3 className="flex items-center gap-2 font-mono text-[9px] font-bold tracking-widest text-red-600 uppercase sm:text-[10px] dark:text-red-500">
+                    <AlertTriangle size={12} /> Zona de Perigo
+                  </h3>
+                </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3 p-3 sm:space-y-4 sm:p-4">
                   {/* Item 1: Backup */}
-                  <div className="flex flex-col gap-3 rounded-lg border border-neutral-800 p-4">
-                    <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                      <div>
-                        <h4 className="text-sm font-medium text-neutral-200">Exportar Dados</h4>
-                        <p className="mt-1 text-xs text-neutral-500">
-                          Baixe uma cópia de todas as suas notas e informações pessoais.
-                        </p>
-                      </div>
-                      <button
-                        onClick={handleCreateBackup}
-                        disabled={backupLoading}
-                        className="flex shrink-0 items-center gap-2 rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-xs font-medium text-neutral-300 transition-colors hover:border-neutral-700 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {backupLoading ? (
-                          <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                          <Download size={14} />
-                        )}
-                        {backupLoading ? "Processando..." : "Fazer Backup"}
-                      </button>
+                  <div className="flex flex-col items-center justify-between gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-3 sm:flex-row dark:border-neutral-800 dark:bg-neutral-900">
+                    <div>
+                      <h4 className="text-[11px] font-medium text-neutral-800 dark:text-neutral-200">
+                        Backup de Dados
+                      </h4>
+                      <p className="text-[10px] text-neutral-500 dark:text-neutral-400">
+                        Baixe uma cópia de suas notas.
+                      </p>
                     </div>
-
-                    {/* Feedback de Backup */}
-                    {(backupMessage || backupError) && (
-                      <div
-                        className={`rounded border px-3 py-2 text-xs ${
-                          backupError
-                            ? "border-red-900/50 bg-red-900/10 text-red-400"
-                            : "border-blue-900/50 bg-blue-900/10 text-blue-400"
-                        }`}
-                      >
-                        {backupError || backupMessage}
-                      </div>
-                    )}
+                    <button
+                      onClick={handleCreateBackup}
+                      disabled={backupLoading}
+                      className="flex shrink-0 items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                    >
+                      {backupLoading ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Download size={14} />
+                      )}
+                      Exportar Dados
+                    </button>
                   </div>
 
+                  {/* Feedback de Backup */}
+                  {(backupMessage || backupError) && (
+                    <div
+                      className={`rounded-md border px-3 py-2 text-xs ${
+                        backupError
+                          ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400"
+                          : "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/30 dark:bg-blue-900/20 dark:text-blue-400"
+                      }`}
+                    >
+                      {backupError || backupMessage}
+                    </div>
+                  )}
+
                   {/* Item 2: Delete */}
-                  <div className="flex flex-col items-start justify-between gap-4 rounded-lg border border-red-900/30 bg-red-950/5 p-4 sm:flex-row sm:items-center">
+                  <div className="flex flex-col items-center justify-between gap-3 rounded-md border border-red-200 bg-red-50 p-3 sm:flex-row dark:border-red-900/30 dark:bg-red-950/20">
                     <div>
-                      <h4 className="text-sm font-medium text-neutral-200">Excluir Conta</h4>
-                      <p className="mt-1 text-xs text-neutral-500">
-                        Isso removerá permanentemente sua conta. Não há volta.
+                      <h4 className="text-[11px] font-medium text-neutral-800 dark:text-neutral-200">
+                        Excluir Conta Permanentemente
+                      </h4>
+                      <p className="text-[10px] text-neutral-500 dark:text-neutral-400">
+                        Esta ação não pode ser desfeita.
                       </p>
                     </div>
                     <button
                       onClick={handleDeleteAccount}
-                      className="flex shrink-0 items-center gap-2 rounded border border-red-900/50 bg-red-600/10 px-3 py-2 text-xs font-medium text-red-500 transition-colors hover:border-transparent hover:bg-red-600 hover:text-white"
+                      className="flex shrink-0 items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-red-700"
                     >
                       <Trash2 size={14} /> Excluir Conta
                     </button>

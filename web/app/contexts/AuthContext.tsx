@@ -19,7 +19,6 @@ import { useTheme } from "./ThemeContext";
 
 type AuthContextType = {
   user: User | null;
-  token: string | null;
   loading: boolean;
   authenticated: boolean;
   login: (
@@ -43,133 +42,68 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_USER_KEY = "codaweb_user";
-
-// --- Helpers de Cookie ---
-function setCookie(name: string, value: string, days?: number) {
-  if (typeof document === "undefined") return;
-  let cookie = `${name}=${encodeURIComponent(value)}; path=/;`;
-  if (days && days > 0) {
-    const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    cookie += ` expires=${expires};`;
-  }
-  if (typeof window !== "undefined" && window.location.protocol === "https:") cookie += " Secure;";
-  cookie += " SameSite=Lax;";
-  document.cookie = cookie;
-}
-
-function getCookie(name: string) {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(
-    new RegExp("(?:^|; )" + name.replace(/([.$?*|{}()\[\]\\/+^])/g, "\\$1") + "=([^;]*)")
-  );
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-function deleteCookie(name: string) {
-  if (typeof document === "undefined") return;
-  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
-}
-
-// --- Provider ---
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { setTheme } = useTheme();
 
-  const authenticated = !!token;
+  const authenticated = !!user;
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // 1. Tenta recuperar usuário do Cookie (para UI instantânea)
-        const u = getCookie(AUTH_USER_KEY);
-        if (u) {
-          try {
-            const userData = JSON.parse(decodeURIComponent(u));
-            setUser(userData);
-            if (userData.theme_mode) setTheme(userData.theme_mode);
-          } catch {}
+        // A validação de sessão ocorre automaticamente aqui.
+        // Se o cookie HttpOnly for inválido ou expirado, o backend retornará 401.
+        const profileData = await getUserDataService();
+
+        setUser(profileData);
+        if (profileData.theme_mode) {
+          setTheme(profileData.theme_mode);
         }
-
-        // 2. Valida sessão com o Backend
-        try {
-          // O service getUserData agora já retorna o objeto User 'achatado' e pronto
-          const profileData = await getUserDataService();
-
-          setUser(profileData);
-          setToken("authenticated"); // Ou use um token real se tiver acesso a ele via cookie http-only
-
-          if (profileData.theme_mode) {
-            setTheme(profileData.theme_mode);
-          }
-
-          // Atualiza o cookie local com os dados mais recentes
-          setCookie(AUTH_USER_KEY, JSON.stringify(profileData));
-        } catch (error) {
-          // Se falhar (401/403), limpa tudo
-          if (u) deleteCookie(AUTH_USER_KEY);
-          setUser(null);
-          setToken(null);
-        }
-      } catch {
-        // Erros gerais
+      } catch (error) {
+        // Se falhar (401/403), o usuário não está logado.
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
     checkAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setTheme]);
 
   type LoginPayload = { login: string; password: string; remember?: boolean };
 
-  const login = async (usernameOrPayload: string | LoginPayload, password?: string) => {
+  const login = async (
+    usernameOrPayload: string | { login: string; password: string },
+    password?: string
+  ) => {
     setLoading(true);
-    let login: string;
+    let loginValue: string;
     let pwd: string;
 
     if (typeof usernameOrPayload === "object") {
-      login = usernameOrPayload.login;
+      loginValue = usernameOrPayload.login;
       pwd = usernameOrPayload.password;
     } else {
-      login = usernameOrPayload;
+      loginValue = usernameOrPayload;
       pwd = password || "";
     }
 
     try {
-      // O loginService agora retorna { user: User, token: string }
-      // Já processado e limpo. Não precisamos de 'as unknown' nem parsing manual.
-      const response = await loginService({ login, password: pwd });
+      const response = await loginService({ login: loginValue, password: pwd });
 
       if (response && response.user) {
-        const userData = response.user;
-        const authToken = response.token;
+        setUser(response.user);
+        if (response.user.theme_mode) setTheme(response.user.theme_mode);
 
-        setToken(authToken || "authenticated");
-        setUser(userData);
-
-        if (userData.theme_mode) {
-          setTheme(userData.theme_mode);
-        }
-
-        setLoading(false);
         return { success: true, data: response };
-      } else {
-        throw new Error("Resposta de login inválida");
       }
+      throw new Error("Resposta de login inválida");
     } catch (err: unknown) {
-      setLoading(false);
-      function extractMessage(e: unknown): string | undefined {
-        if (typeof e === "object" && e !== null && "message" in e) {
-          return (e as { message: string }).message;
-        }
-        return undefined;
-      }
-      const message = extractMessage(err) || "Erro de conexão";
+      const message = err instanceof Error ? err.message : "Erro de conexão";
       return { success: false, message };
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -178,15 +112,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    setUser(null);
-    setToken(null);
-    setTheme("light");
     try {
+      // O logout avisa o backend para invalidar a sessão e limpar o cookie (Set-Cookie: expires=1970)
       await logoutService();
-      deleteCookie(AUTH_USER_KEY);
-    } catch {}
-    // Redirecionamento forçado para garantir limpeza de estado
-    window.location.href = "/auth/signin";
+    } catch (error) {
+      console.error("Erro ao notificar logout no servidor", error);
+    } finally {
+      // Limpa estado local independentemente do sucesso da chamada de rede
+      setUser(null);
+      setTheme("light");
+      window.location.href = "/auth/signin";
+    }
   };
 
   const createUser = async (userData: CreateUserData | FormData) => {
@@ -197,29 +133,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
     }
   };
-
   const updateUser = async (userData: Partial<User>) => {
     try {
-      // O service retorna os campos atualizados
       const updatedData = await updateUserData(userData);
-
-      // Atualizamos o estado local mesclando o anterior com o novo
-      setUser((prev) => {
-        if (!prev) return null;
-        const newUserState = { ...prev, ...updatedData };
-
-        // Atualiza o cookie para persistir a mudança no reload
-        setCookie(AUTH_USER_KEY, JSON.stringify(newUserState));
-
-        return newUserState;
-      });
-
-      if (updatedData.theme_mode) {
-        setTheme(updatedData.theme_mode);
-      }
+      setUser((prev) => (prev ? { ...prev, ...updatedData } : null));
+      if (updatedData.theme_mode) setTheme(updatedData.theme_mode);
       return { success: true };
     } catch (error) {
-      console.error("Erro ao atualizar usuário:", error);
       return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
     }
   };
@@ -267,7 +187,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user,
-        token,
         loading,
         authenticated,
         login,
@@ -286,7 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;

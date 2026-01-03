@@ -1,4 +1,4 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://10.0.0.104:8080/api";
 
 // Configurações gerais da API
 export const API_CONFIG = {
@@ -8,7 +8,6 @@ export const API_CONFIG = {
   },
 };
 
-// URLs específicas
 export const API_ENDPOINTS = {
   // Auth
   SIGNIN: "/auth/signin",
@@ -19,8 +18,8 @@ export const API_ENDPOINTS = {
   GOOGLE_AUTH: "/auth/signin/sso/google",
 
   // User Management
-  UPDATE_PROFILE: "/auth/me/update-profile",
-  UPDATE_PASSWORD: "/auth/me/update-password",
+  UPDATE_PROFILE: "/users/me/update-profile",
+  UPDATE_PASSWORD: "/users/me/update-password",
   DELETE_ACCOUNT: "/users/delete-my-account",
   CREATE_ACCOUNT: "/users/create-account",
   USERS: "/auth/users",

@@ -91,7 +91,7 @@ class AuthController {
         user_data: {
           profile: {
             id: user.user_id,
-            name: user.name,
+            user_name: user.name,
             username: user.username,
             email: user.email,
             avatar_url: user.avatar_url,
@@ -108,12 +108,13 @@ class AuthController {
           organization: {
             id: user.org_id,
             unique_name: user.org_unique_name,
-            name: user.org_name,
+            org_name: user.org_name,
+            org_logo_url: user.org_logo_url,
             role: user.org_member_role || [] || null,
           },
           current_plan: {
             id: user.user_plan_id,
-            name: user.plan_name,
+            plan_name: user.plan_name,
             client_type: user.client_type,
             details: user.plan_details || {},
           },
@@ -127,6 +128,7 @@ class AuthController {
           },
         },
         token: token,
+        status: "OK",
         login_time: login_time,
         token_expires_in: 12 * 60 * 60,
         redirect: true,

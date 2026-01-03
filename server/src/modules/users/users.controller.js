@@ -250,7 +250,7 @@ class userController {
     try {
       this._validateAuthentication(req, res);
 
-      const user = await this.userRepository.getUserByUsername(
+      const user = await this.authRepository.findUserByUsername(
         req.user.username
       );
 
@@ -262,7 +262,7 @@ class userController {
         user_data: {
           profile: {
             id: user.user_id,
-            name: user.name,
+            user_name: user.user_name,
             username: user.username,
             email: user.email,
             avatar_url: user.avatar_url,
@@ -279,17 +279,19 @@ class userController {
           organization: {
             id: user.org_id,
             unique_name: user.org_unique_name,
-            name: user.org_name,
+            org_name: user.org_name,
+            org_logo_url: user.org_logo_url,
+            role: user.org_member_role || null,
           },
           current_plan: {
             id: user.user_plan_id,
-            name: user.name,
+            plan_name: user.plan_name,
             client_type: user.client_type,
             details: user.plan_details || {},
           },
           current_plan_usage: {
             plan_id: user.usage_plan_id,
-            plan_name: user.name,
+            plan_name: user.usage_plan_name,
             client_type: user.client_type,
             period_start: user.period_start,
             period_end: user.period_end,

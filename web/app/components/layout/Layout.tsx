@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import Navbar from "@/app/components/layout/Navbar";
-import Sidebar from "@/app/components/layout/Sidebar";
+import Navbar from "@/app/components/layout/navbar";
+import Sidebar from "@/app/components/layout/sidebar";
 import { useAuth } from "@/app/contexts/AuthContext";
 
 interface LayoutProps {

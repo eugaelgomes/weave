@@ -317,7 +317,6 @@ class BackupController {
       const planDetails = await PlansRepository.getPlanById(userPlan.plan_id);
       const usageRecord = await PlanUsageManager.managePlanUsage(userId);
 
-      // Verificar limite de backups mensais
       const canBackup = PlanUsageManager.checkLimit(
         planDetails.details,
         usageRecord.usage_details,
@@ -335,9 +334,8 @@ class BackupController {
           PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
         );
 
-        return res.status(429).json({
+        return res.status(406).json({
           status: "Too Many Requests",
-          error: "Limite de backups atingido",
           message: `Você atingiu o limite de ${limit} backup(s) por mês do seu plano ${planDetails.name}`,
           details: {
             current_usage: currentUsage,

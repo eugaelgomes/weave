@@ -220,7 +220,6 @@ const MembersPage = () => {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const { organization, members } = useOrganization();
 
-
   const userCanManage = user?.id ? canManageMembers(user.id) : false;
 
   // Buscar dados dos usuários

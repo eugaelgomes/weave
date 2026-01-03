@@ -83,7 +83,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [invites, setInvites] = useState<OrganizationInvite[]>([]);
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState<Date | null>(null);
@@ -104,7 +104,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         // 2. Se tem organização, busca membros e convites em paralelo
         const [membersData, invitesData] = await Promise.all([
           fetchMembersService(),
-          fetchInvitesService()
+          fetchInvitesService(),
         ]);
         setMembers(membersData);
         setInvites(invitesData);
@@ -269,36 +269,33 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   // 5.2 CANCELAR CONVITE
   const cancelInvite = useCallback(async (inviteId: string): Promise<boolean> => {
-      setLoading(true);
-      try {
-          await cancelInviteService(inviteId);
-          setInvites(prev => prev.filter(i => i.invite_id !== inviteId));
-          return true;
-      } catch (err) {
-          setError(err instanceof Error ? err.message : "Erro ao cancelar convite");
-          return false;
-      } finally {
-          setLoading(false);
-      }
+    setLoading(true);
+    try {
+      await cancelInviteService(inviteId);
+      setInvites((prev) => prev.filter((i) => i.invite_id !== inviteId));
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao cancelar convite");
+      return false;
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   // 6. REMOVER MEMBRO
-  const removeMember = useCallback(
-    async (memberId: string): Promise<boolean> => {
-      setLoading(true);
-      try {
-        await removeMemberService(memberId);
-        setMembers((prev) => prev.filter((m) => m.user_id !== memberId));
-        return true;
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Erro ao remover membro");
-        return false;
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+  const removeMember = useCallback(async (memberId: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      await removeMemberService(memberId);
+      setMembers((prev) => prev.filter((m) => m.user_id !== memberId));
+      return true;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao remover membro");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // 7. DADOS DERIVADOS E STATS
   const getStats = useCallback((): OrganizationStats => {
@@ -319,7 +316,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     const domains = organization.org_domains || [];
     const featuresEnabled = Object.values(features).filter(Boolean).length;
 
-    const adminsCount = members.filter(m => m.role === 'admin' || m.role === 'owner').length;
+    const adminsCount = members.filter((m) => m.role === "admin" || m.role === "owner").length;
 
     return {
       totalMembers: members.length,
@@ -332,38 +329,53 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   }, [organization, members, invites]);
 
   // Verifica permissões baseando-se no ID do usuário na lista de membros atualizada
-  const getMemberRole = useCallback((userId: string) => {
-    if (!userId || members.length === 0) return null;
-    const member = members.find(m => m.user_id === userId);
-    return member ? member.role : null;
-  }, [members]);
+  const getMemberRole = useCallback(
+    (userId: string) => {
+      if (!userId || members.length === 0) return null;
+      const member = members.find((m) => m.user_id === userId);
+      return member ? member.role : null;
+    },
+    [members]
+  );
 
-  const isOwner = useCallback((userId: string): boolean => {
-    // Check rápido na prop owner da organização
-    if (organization?.user_id === userId) return true;
-    // Fallback para lista de membros
-    return getMemberRole(userId) === 'owner';
-  }, [organization, getMemberRole]);
+  const isOwner = useCallback(
+    (userId: string): boolean => {
+      // Check rápido na prop owner da organização
+      if (organization?.user_id === userId) return true;
+      // Fallback para lista de membros
+      return getMemberRole(userId) === "owner";
+    },
+    [organization, getMemberRole]
+  );
 
-  const isAdmin = useCallback((userId: string): boolean => {
-    const role = getMemberRole(userId);
-    return role === 'admin';
-  }, [getMemberRole]);
+  const isAdmin = useCallback(
+    (userId: string): boolean => {
+      const role = getMemberRole(userId);
+      return role === "admin";
+    },
+    [getMemberRole]
+  );
 
-  const isMember = useCallback((userId: string): boolean => {
-    const role = getMemberRole(userId);
-    return role === 'member';
-  }, [getMemberRole]);
+  const isMember = useCallback(
+    (userId: string): boolean => {
+      const role = getMemberRole(userId);
+      return role === "member";
+    },
+    [getMemberRole]
+  );
 
-  const canManageMembers = useCallback((userId: string): boolean => {
-    return isOwner(userId) || isAdmin(userId);
-  }, [isOwner, isAdmin]);
+  const canManageMembers = useCallback(
+    (userId: string): boolean => {
+      return isOwner(userId) || isAdmin(userId);
+    },
+    [isOwner, isAdmin]
+  );
 
   // 8. INITIAL LOAD
   useEffect(() => {
     // Carrega apenas se tiver usuário e ainda não tiver carregado (ou se não estiver carregando)
     if (user?.id && !organization && !loading) {
-        fetchOrganizationData();
+      fetchOrganizationData();
     }
   }, [user?.id, organization, loading, fetchOrganizationData]);
 

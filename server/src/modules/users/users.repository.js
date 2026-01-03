@@ -115,7 +115,7 @@ class UserRepository {
       o.unique_name AS org_unique_name,
       o.org_name AS org_name,
       p.plan_id AS user_plan_id,
-      p.name,
+      p.name AS plan_name,
       p.details AS plan_details,
       pu.plan_id AS usage_plan_id,
       pu.client_type,

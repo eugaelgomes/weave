@@ -24,8 +24,7 @@ const FONT_SIZES = [
 
 const getFirstAndLastUserName = (fullName: string): string => {
   const names = fullName.trim().split(/\s+/);
-  const capitalize = (name: string) => 
-    name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  const capitalize = (name: string) => name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 
   if (names.length === 1) {
     return capitalize(names[0]);

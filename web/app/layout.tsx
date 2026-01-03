@@ -5,7 +5,8 @@ import { useEffect } from "react";
 import "./globals.css";
 import AuthProviderClient from "./contexts/AuthProviderClient";
 import { ConditionalProviders } from "./contexts/ConditionalProviders";
-import Layout from "./components/layout/Layout";
+import Layout from "./components/layout/layout";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -80,6 +81,7 @@ export default function RootLayout({
             <Layout>{children}</Layout>
           </ConditionalProviders>
         </AuthProviderClient>
+        <Toaster position="top-right" expand={true} richColors closeButton />
       </body>
     </html>
   );
