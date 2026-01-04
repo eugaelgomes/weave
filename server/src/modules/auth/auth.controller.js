@@ -110,7 +110,8 @@ class AuthController {
             unique_name: user.org_unique_name,
             org_name: user.org_name,
             org_logo_url: user.org_logo_url,
-            role: user.org_member_role || [] || null,
+            org_member_role: user.org_member_role,
+            org_member_since: user.org_member_since,
           },
           current_plan: {
             id: user.user_plan_id,

@@ -43,18 +43,19 @@ class OrganizationsRepository {
       SELECT om.*, u.name, u.username, u.email, u.avatar_url
       FROM organizations_members om
       LEFT JOIN users u ON om.user_id = u.user_id
-      WHERE om.organization_id = $1
+      WHERE om.org_id = $1
       ORDER BY 
         CASE om.role 
-          WHEN 'owner' THEN 1
+          WHEN 'super_admin' THEN 1
           WHEN 'admin' THEN 2
           WHEN 'member' THEN 3
-          ELSE 4
+          WHEN 'guest' THEN 4
+          ELSE 5
         END,
         om.created_at ASC;
     `;
     const results = await executeQuery(query, [organization_id]);
-    return results[0];
+    return results;
   }
 
   async addOrganizationMember(
@@ -130,7 +131,8 @@ class OrganizationsRepository {
       SELECT om.*, u.name, u.username, u.email, u.avatar_url
       FROM organizations_members om
       LEFT JOIN users u ON om.user_id = u.user_id
-      WHERE om.organization_id = $1 AND om.role = 'owner'
+      INNER JOIN organizations o ON o.id = om.org_id
+      WHERE om.org_id = $1 AND om.user_id = o.user_id
       LIMIT 1;
     `;
     const results = await executeQuery(query, [organization_id]);
@@ -182,7 +184,7 @@ class OrganizationsRepository {
       await this.addOrganizationMember(
         organization.id,
         user_id,
-        "owner",
+        "super_admin",
         "active",
         null,
         client // permite usar a mesma transação dentro do método

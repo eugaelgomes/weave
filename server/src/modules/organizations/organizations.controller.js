@@ -419,7 +419,7 @@ class OrganizationsController {
       if (!validRoles.includes(role)) {
         return res.status(400).json({
           success: false,
-          error: "Role deve ser 'admin', 'super_admin', 'member' ou 'guest'",
+          error: "Role deve ser 'super_admin', 'admin', 'member' ou 'guest'",
         });
       }
 
@@ -478,10 +478,8 @@ class OrganizationsController {
           .json({ success: false, error: "Organização não encontrada" });
       }
 
-      const owner = await this.organizationsRepository.getOrganizationOwner(
-        currentOrg.id
-      );
-      if (owner && owner.user_id === memberId) {
+      // Verifica se está tentando remover o criador/dono da organização
+      if (currentOrg.user_id === parseInt(memberId)) {
         return res.status(400).json({
           success: false,
           error: "Não é possível remover o proprietário da organização",
@@ -675,7 +673,9 @@ class OrganizationsController {
       }
 
       if (!validRoles.includes(role)) {
-        return res.status(400).json({ error: "Cargo inválido" });
+        return res.status(400).json({ 
+          error: "Cargo inválido. Roles válidas: super_admin, admin, member, guest" 
+        });
       }
 
       const currentOrg = await this._getUserOrganization(userId);

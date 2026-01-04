@@ -4,11 +4,10 @@ class AuthRepository {
   async findUserByUsername(username) {
     const query = `
     SELECT
-
       -- User data
-      u.user_id,
       u.username,
-      u.name as user_name,
+      u.user_id,
+      u.name AS user_name,
       u.email,
       u.password,
       u.avatar_url,
@@ -22,36 +21,41 @@ class AuthRepository {
       u.email_verified,
       u.email_verified_at,
       u.plan_id,
-
-      -- Organization data
-      o.id AS org_id,
-      o.unique_name AS org_unique_name,
-      o.org_name AS org_name,
-      o.logo_url AS org_logo_url,
-
-      -- Organization member role
+    
+      -- Organization membership
+      om.org_id,
       om.role AS org_member_role,
-      
+      om.created_at AS org_member_since,
+    
+      -- Organization data
+      o.unique_name AS org_unique_name,
+      o.org_name,
+      o.logo_url AS org_logo_url,
+    
       -- Current plan data
       p.plan_id::text AS user_plan_id,
       p.name AS plan_name,
       p.details AS plan_details,
-      
+    
       -- Current plan usage data
       pu.plan_id::text AS usage_plan_id,
       p2.name AS usage_plan_name,
-      pu.client_type,
       pu.client_type AS usage_client_type,
       pu.usage_details,
       pu.period_start,
       pu.period_end
-      
+    
     FROM users u
-    LEFT JOIN organizations o ON o.user_id = u.user_id
-    LEFT JOIN organizations_members om ON om.user_id = u.user_id AND om.org_id = o.id
-    LEFT JOIN plans p ON p.plan_id = u.plan_id
-    LEFT JOIN plans_usage pu ON pu.user_id = u.user_id
-    LEFT JOIN plans p2 ON p2.plan_id = pu.plan_id
+    LEFT JOIN organizations_members om 
+      ON om.user_id = u.user_id 
+    LEFT JOIN organizations o 
+      ON o.id = om.org_id 
+    LEFT JOIN plans p 
+      ON p.plan_id = u.plan_id   
+    LEFT JOIN plans_usage pu 
+      ON pu.user_id = u.user_id   
+    LEFT JOIN plans p2 
+      ON p2.plan_id = pu.plan_id    
     WHERE (
         (u.username IS NOT NULL AND u.username = $1)
      OR (u.email IS NOT NULL AND u.email = $1)
@@ -125,7 +129,6 @@ class AuthRepository {
 
   async createUserWithGoogle(googleId, name, email, avatarUrl = null) {
     try {
-
       const username = email.split("@")[0] + "_" + Date.now();
 
       const query = `

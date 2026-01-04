@@ -36,10 +36,6 @@ router.put("/:id", (req, res, next) => {
   notesController.updateNote(req, res, next);
 });
 
-router.delete("/:id", (req, res, next) => {
-  notesController.deleteNote(req, res, next);
-});
-
 router.delete("/", (req, res, next) => {
   notesController.deleteNote(req, res, next);
 });
