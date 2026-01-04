@@ -4,15 +4,16 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, Filter, Plus, X, SortAsc, RefreshCw, Loader2 } from "lucide-react";
+import { Search, Filter, Plus, X, SortAsc, RefreshCw, Loader2, Trash2, Tag } from "lucide-react";
 
-// =================== IMPORTS DE CONTEXTO E UTILS ===================
 import { useNotes } from "../../contexts/NotesContext";
+import { deleteNotes } from "@/app/services/notes-service/NotesService";
 import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/utils/collaborators";
 import { getTagColor } from "@/app/utils/tag-colors";
-import Pagination from "../../components/ui/pagination";
+import Pagination from "../components/ui/pagination";
+import { formatDate } from "@/app/utils/format";
+import { FiCheckSquare } from "react-icons/fi";
 
-// =================== TYPES ===================
 interface PaginationData {
   currentPage: number;
   totalPages: number;
@@ -25,7 +26,6 @@ type SortOrder = "asc" | "desc";
 const NotesWithPagination = () => {
   const router = useRouter();
 
-  // =================== ESTADOS ===================
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedCollaborators, setSelectedCollaborators] = useState<string[]>([]);
@@ -33,21 +33,22 @@ const NotesWithPagination = () => {
   const [showFilters, setShowFilters] = useState<boolean>(false);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage] = useState<number>(10); // Lista geralmente comporta menos itens por view que grid
+  const [itemsPerPage] = useState<number>(10);
 
   const [sortBy, setSortBy] = useState<SortBy>("updated_at");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
-  // =================== HOOK DE DADOS ===================
+  const [selectionMode, setSelectionMode] = useState<boolean>(false);
+  const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
+
   const { notes: allNotes, loading: isLoading, error, createNote, refreshNotes } = useNotes();
 
   const debouncedSearch = searchTerm;
 
-  // =================== LÓGICA DE FILTRAGEM ===================
+  // Filtragem e Ordenação
   const filteredNotes = React.useMemo(() => {
     let result = allNotes;
 
-    // Busca
     if (debouncedSearch.trim()) {
       const searchLower = debouncedSearch.toLowerCase();
       result = result.filter(
@@ -220,6 +221,50 @@ const NotesWithPagination = () => {
     await refreshNotes();
   };
 
+  const toggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    setSelectedNotes(new Set());
+  };
+
+  const toggleNoteSelection = (noteId: string) => {
+    const newSelected = new Set(selectedNotes);
+    if (newSelected.has(noteId)) {
+      newSelected.delete(noteId);
+    } else {
+      newSelected.add(noteId);
+    }
+    setSelectedNotes(newSelected);
+  };
+
+  const selectAllNotes = () => {
+    if (selectedNotes.size === notes.length) {
+      setSelectedNotes(new Set());
+    } else {
+      setSelectedNotes(new Set(notes.map((note) => note.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedNotes.size === 0) return;
+    
+    const confirmed = window.confirm(
+      `Tem certeza que deseja excluir ${selectedNotes.size} nota(s)?`
+    );
+    
+    if (confirmed) {
+      try { 
+        const noteIds = Array.from(selectedNotes);
+        await deleteNotes(noteIds);
+        await refreshNotes();
+        setSelectedNotes(new Set());
+        setSelectionMode(false);
+      } catch (error) {
+        console.error("Erro ao excluir notas:", error);
+        alert("Erro ao excluir notas selecionadas.");
+      }
+    }
+  };
+
   const availableTags: string[] = [...new Set(allNotes.flatMap((note) => note.tags || []))].sort(
     (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
   );
@@ -267,7 +312,7 @@ const NotesWithPagination = () => {
   return (
     <div className="flex h-full flex-col bg-neutral-50 dark:bg-neutral-950">
       {/* =================== HEADER / TOOLBAR =================== */}
-      <div className="flex flex-col rounded-md border border-neutral-200 bg-white px-2 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="flex flex-col rounded-md border border-neutral-200 bg-white px-2 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900">
         {/* Linha 1: Título e Ações */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
@@ -281,6 +326,17 @@ const NotesWithPagination = () => {
               </span>
               <span className="text-xs">registros</span>
             </div>
+            <button
+              onClick={toggleSelectionMode}
+              className={`hidden items-center gap-2 rounded-md px-2 py-1 text-sm transition-colors sm:flex ${
+                selectionMode
+                  ? "bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-500"
+                  : "text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              }`}
+              title="Modo de seleção"
+            >
+              <FiCheckSquare size={18} />
+            </button>
           </div>
 
           <div className="flex items-center gap-3">
@@ -484,17 +540,52 @@ const NotesWithPagination = () => {
         )}
       </div>
 
+      {/* =================== BARRA DE AÇÕES EM LOTE =================== */}
+      {selectionMode && selectedNotes.size > 0 && (
+        <div className="animate-in slide-in-from-top-2 mt-4 flex items-center justify-between rounded-md border border-yellow-500/30 bg-yellow-50 px-4 py-3 shadow-sm dark:border-yellow-500/20 dark:bg-yellow-500/10">
+          <div className="flex items-center gap-3">
+            <FiCheckSquare size={18} className="text-yellow-600 dark:text-yellow-500" />
+            <span className="text-sm font-medium text-yellow-900 dark:text-yellow-500">
+              {selectedNotes.size} nota(s) selecionada(s)
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={selectAllNotes}
+              className="text-xs font-medium text-yellow-700 underline hover:text-yellow-800 dark:text-yellow-500 dark:hover:text-yellow-400"
+            >
+              {selectedNotes.size === notes.length ? "Desmarcar todas" : "Selecionar todas"}
+            </button>
+            <div className="h-4 w-px bg-yellow-300 dark:bg-yellow-500/30"></div>
+            <button
+              onClick={handleBulkDelete}
+              className="flex items-center gap-1.5 rounded-md bg-red-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-600"
+            >
+              <Trash2 size={14} />
+              Excluir
+            </button>
+            <button
+              onClick={toggleSelectionMode}
+              className="flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+            >
+              <X size={14} />
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* =================== CONTEÚDO (LISTA) =================== */}
       <div
         id="notes-container"
-        className="flex-1 overflow-y-auto bg-neutral-50 p-2 sm:p-4 dark:bg-neutral-950"
+        className="mt-4 flex-1 overflow-y-auto bg-neutral-50 dark:bg-neutral-950"
       >
         <div className="mx-auto max-w-6xl">
           {" "}
           {/* Container limitador para telas muito largas */}
           {/* Headers da Lista (Opcional, mas ajuda no alinhamento visual) */}
           {notes.length > 0 && !showFullSkeleton && (
-            <div className="mb-2 hidden grid-cols-12 gap-4 px-4 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase sm:grid">
+            <div className="mb-4 hidden grid-cols-12 gap-4 rounded-md border border-neutral-800 bg-white p-2 px-4 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase sm:grid dark:bg-neutral-900">
               <div className="col-span-6">Detalhes</div>
               <div className="col-span-3">Tags</div>
               <div className="col-span-1 text-center">Colab.</div>
@@ -524,9 +615,45 @@ const NotesWithPagination = () => {
                 </div>
               )}
 
-              {notes.map((note) => (
-                <Link key={note.id} href={`/app/notes/view/${note.id}`} className="group block">
-                  <article className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm transition-all hover:border-neutral-300 hover:shadow-md sm:grid sm:grid-cols-12 sm:items-center sm:gap-4 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700 dark:hover:shadow-none">
+              {notes.map((note) => {
+                const isSelected = selectedNotes.has(note.id);
+                return (
+                  <div
+                    key={note.id}
+                    className={`group relative rounded-lg border transition-all ${
+                      isSelected
+                        ? "border-yellow-500 bg-yellow-50/50 ring-2 ring-yellow-500/20 dark:border-yellow-500/50 dark:bg-yellow-500/5 dark:ring-yellow-500/10"
+                        : "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
+                    }`}
+                  >
+                    {selectionMode && (
+                      <div className="absolute top-3 left-3 z-10">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleNoteSelection(note.id)}
+                          className="h-5 w-5 cursor-pointer rounded border-neutral-300 text-yellow-500 transition-colors focus:ring-2 focus:ring-yellow-500 focus:ring-offset-0 dark:border-neutral-600 dark:bg-neutral-800"
+                        />
+                      </div>
+                    )}
+                    <Link
+                      href={selectionMode ? "#" : `/app/notes/view/${note.id}`}
+                      onClick={(e) => {
+                        if (selectionMode) {
+                          e.preventDefault();
+                          toggleNoteSelection(note.id);
+                        }
+                      }}
+                      className="block"
+                    >
+                      <article
+                        className={`flex flex-col gap-3 p-4 shadow-sm transition-all sm:grid sm:grid-cols-12 sm:items-center sm:gap-4 ${
+                          selectionMode ? "pl-12" : ""
+                        } ${
+                          !selectionMode &&
+                          "hover:shadow-md dark:hover:shadow-none"
+                        }`}
+                      >
                     {/* Título e Descrição */}
                     <div className="col-span-1 min-w-0 sm:col-span-6">
                       <div className="flex items-center gap-2">
@@ -605,26 +732,15 @@ const NotesWithPagination = () => {
                       {/* Data */}
                       <div className="col-span-1 flex flex-col items-end sm:col-span-2">
                         <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                          {note.updated_at
-                            ? new Date(note.updated_at).toLocaleDateString("pt-BR", {
-                                day: "2-digit",
-                                month: "short",
-                              })
-                            : "--"}
-                        </span>
-                        <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
-                          {note.updated_at
-                            ? new Date(note.updated_at).toLocaleTimeString("pt-BR", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
-                            : "--"}
+                          {formatDate(note.updated_at)}
                         </span>
                       </div>
                     </div>
                   </article>
                 </Link>
-              ))}
+              </div>
+            );
+          })}
             </div>
           ) : (
             // Empty State

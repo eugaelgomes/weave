@@ -7,8 +7,8 @@ import { useNotes } from "../../contexts/NotesContext";
 import { useProjects } from "../../contexts/ProjectsContext";
 import { checkHealth, type HealthStatus } from "../../services";
 import { getTagColor } from "@/app/utils/tag-colors";
-import NotesCarousel from "../../components/ui/notes-carousel";
-import ProjectsCarousel from "../../components/ui/project-carousel";
+import NotesCarousel from "../components/ui/notes-carousel";
+import ProjectsCarousel from "../components/ui/project-carousel";
 import { FileText, Tag, Activity } from "lucide-react";
 import { FaProjectDiagram } from "react-icons/fa";
 
@@ -44,7 +44,6 @@ export default function HomePage() {
   const [showTags, setShowTags] = useState(false);
   const [healthStatus, setHealthStatus] = React.useState<HealthStatus | null>(null);
 
-  // Verificar health do servidor
   React.useEffect(() => {
     const fetchHealth = async () => {
       const status = await checkHealth();
@@ -115,7 +114,7 @@ export default function HomePage() {
   }, [stats?.mostUsedTags]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-neutral-50 py-2 dark:bg-neutral-950">
+    <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
       <div className="flex-1 space-y-3 overflow-y-auto sm:space-y-4">
         {/* Header */}
         <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">

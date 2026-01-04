@@ -59,7 +59,8 @@ export interface User {
   org_name?: string;
   org_unique_name?: string;
   org_logo_url?: string;
-  org_role?: string | string[] | null;
+  org_member_role?: string | string[] | null;
+  org_member_since?: string;
 
   theme_mode?: string;
   private_profile?: boolean;
@@ -105,7 +106,8 @@ interface BackendOrganization {
   unique_name: string;
   org_name: string;
   org_logo_url?: string;
-  role?: string | string[] | null;
+  org_member_role?: string | string[] | null;
+  org_member_since?: string;
 }
 
 interface BackendPlan {
@@ -202,7 +204,8 @@ const mapBackendDataToUser = (data: BackendUserData): User => {
     org_name: organization?.org_name,
     org_unique_name: organization?.unique_name,
     org_logo_url: organization?.org_logo_url,
-    org_role: organization?.role,
+    org_member_role: organization?.org_member_role,
+    org_member_since: organization?.org_member_since,
 
     // Plan (Optional)
     plan_id: current_plan?.id,

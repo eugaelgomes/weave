@@ -1,6 +1,6 @@
 // Exemplo de uso do sistema de mensagens do backend
 
-import { useBackendMessage } from "@/app/components/ui/backend-popup";
+import { useBackendMessage } from "@/app/app/components/ui/backend-popup";
 
 export default function ExampleComponent() {
   const { showSuccess, showError, showWarning, showInfo } = useBackendMessage();

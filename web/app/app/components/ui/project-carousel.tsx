@@ -17,7 +17,7 @@ import {
   CircleDot,
   FileText,
 } from "lucide-react";
-import type { ProjectOverview } from "../../contexts/ProjectsContext";
+import type { ProjectOverview } from "../../../contexts/ProjectsContext";
 import { getTagColor } from "@/app/utils/tag-colors";
 
 interface ProjectsCarouselProps {

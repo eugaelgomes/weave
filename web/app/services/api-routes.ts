@@ -60,12 +60,12 @@ export const API_ENDPOINTS = {
   ORGANIZATIONS_BANNER: "/organizations/banner",
 
   // AI
-  AI_MODELS: "/ai/models",
-  AI_CHAT: "/ai/chat",
-  AI_CHAT_HISTORY: "/ai/chat/history",
-  AI_GENERATE: "/ai/generate",
-  AI_ANALYZE_NOTE: "/ai/analyze-note",
-  AI_ANALYZE_PROJECT: "/ai/analyze-project",
-  AI_RESEARCH: "/ai/research",
-  AI_USE_CASES: "/ai/use-cases",
+  AI_MODELS: "/weave-ai/models",
+  AI_CHAT: "/weave-ai/chat",
+  AI_CHAT_HISTORY: "/weave-ai/chat/history",
+  AI_GENERATE: "/weave-ai/generate",
+  AI_ANALYZE_NOTE: "/weave-ai/analyze-note",
+  AI_ANALYZE_PROJECT: "/weave-ai/analyze-project",
+  AI_RESEARCH: "/weave-ai/research",
+  AI_USE_CASES: "/weave-ai/use-cases",
 };

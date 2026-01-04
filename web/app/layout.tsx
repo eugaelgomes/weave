@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import "./globals.css";
 import AuthProviderClient from "./contexts/AuthProviderClient";
 import { ConditionalProviders } from "./contexts/ConditionalProviders";
-import Layout from "./components/layout/layout";
+import Layout from "./app/components/layout/layout";
 import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({

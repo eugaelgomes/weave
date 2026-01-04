@@ -136,7 +136,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateUser = async (userData: Partial<User>) => {
     try {
       const updatedData = await updateUserData(userData);
-      setUser((prev) => (prev ? { ...prev, ...updatedData } : null));
+
+      // Remove campos undefined para não sobrescrever dados existentes
+      const cleanedData = Object.fromEntries(
+        Object.entries(updatedData).filter(([_, value]) => value !== undefined)
+      ) as Partial<User>;
+
+      setUser((prev) => (prev ? { ...prev, ...cleanedData } : null));
       if (updatedData.theme_mode) setTheme(updatedData.theme_mode);
       return { success: true };
     } catch (error) {

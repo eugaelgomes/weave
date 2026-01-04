@@ -16,6 +16,7 @@ import {
   Loader2,
   Shield,
 } from "lucide-react";
+import { formatDate, formatRoleName } from "@/app/utils/format";
 
 interface FormData {
   name: string;
@@ -286,10 +287,11 @@ const SettingsPage = () => {
         <div className="mx-auto space-y-3">
           {/* Header */}
           <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
-            <div className="flex items-center justify-between">
+            <div className="flex w-full items-center justify-between gap-2">
               <h1 className="sm:text-md text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
                 Configurações da Conta
               </h1>
+
               <h3 className="text-xs text-neutral-600 dark:text-neutral-400">
                 Gerencie seus dados pessoais e segurança.
               </h3>
@@ -311,7 +313,7 @@ const SettingsPage = () => {
 
           {/* ================== MAIN LAYOUT ================== */}
           <div className="grid grid-cols-1 gap-3 space-y-3 md:gap-4 lg:grid-cols-12">
-            {/* Coluna Esquerda: Avatar */}
+            {/* Coluna Esquerda */}
             <div className="lg:col-span-3">
               <div className="flex flex-col items-center rounded-md border border-neutral-200 bg-white p-3 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
                 <h3 className="mb-3 w-full text-left font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
@@ -340,188 +342,204 @@ const SettingsPage = () => {
                   )}
                 </div>
                 <p className="mt-3 text-[10px] text-neutral-400 dark:text-neutral-500">
-                  Desde:{" "}
-                  {userData?.created_at ? new Date(userData.created_at).toLocaleDateString() : "-"}
+                  Desde: {formatDate(user?.created_at ?? "")}
                 </p>
               </div>
+
               {/* Card de Organização */}
-              {user?.org_name && (
-                <div className="mt-3 flex flex-col rounded-md border border-neutral-200 bg-white p-3 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
-                  <h3 className="mb-3 w-full text-left font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
-                    Organização
-                  </h3>
-                  <div className="w-full space-y-2">
-                    {/* Nome e Logo da Organização */}
-                    <div className="flex items-center gap-3 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-900/30">
-                      {user.org_logo_url && (
-                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800">
+              {user?.org_id && (
+                <div className="mt-4 flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900/50">
+                  {/* Header sutil com estilo "System/Dev" */}
+                  <div className="border-b border-neutral-100 bg-neutral-50/50 px-4 py-2 dark:border-neutral-800 dark:bg-neutral-800/30">
+                    <h3 className="font-mono text-[10px] font-bold tracking-widest text-neutral-500 uppercase">
+                      Organização
+                    </h3>
+                  </div>
+
+                  <div className="space-y-4 p-4">
+                    {/* Identidade da Organização: Logo + Nomes */}
+                    <div className="flex items-center gap-4">
+                      {user.org_logo_url ? (
+                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100 shadow-inner dark:border-neutral-700 dark:bg-neutral-800">
                           <Image
                             src={user.org_logo_url}
-                            alt={`Logo ${user.org_name}`}
+                            alt={`Logo ${user.org_unique_name}`}
                             fill
-                            className="object-cover"
+                            className="object-cover transition-transform hover:scale-110"
                           />
                         </div>
+                      ) : (
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-neutral-100 dark:bg-neutral-800">
+                          <span className="text-xs font-bold text-neutral-400">
+                            {user.org_unique_name?.substring(0, 2).toUpperCase()}
+                          </span>
+                        </div>
                       )}
-                      <div className="flex-1">
-                        <p className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400">
-                          Nome
+
+                      <div className="flex min-w-0 flex-col">
+                        <p className="truncate text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                          @{user.org_unique_name}
                         </p>
-                        <p className="mt-0.5 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                        <p className="truncate text-base font-bold text-neutral-900 dark:text-neutral-100">
                           {user.org_name}
                         </p>
                       </div>
                     </div>
 
-                    {/* Função na Organização */}
-                    {user.org_role && (
-                      <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900/30">
-                        <p className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400">
-                          Função
-                        </p>
-                        <p className="mt-0.5 text-sm font-semibold text-neutral-900 capitalize dark:text-neutral-100">
-                          {Array.isArray(user.org_role) ? user.org_role.join(", ") : user.org_role}
-                        </p>
-                      </div>
-                    )}
+                    <div className="flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-3 dark:border-neutral-800">
+                      {user.org_member_role && (
+                        <>
+                          {(Array.isArray(user.org_member_role)
+                            ? user.org_member_role
+                            : [user.org_member_role]
+                          ).map((role, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-700/10 ring-inset dark:bg-emerald-400/10 dark:text-emerald-400 dark:ring-emerald-400/30"
+                            >
+                              {formatRoleName(role)}
+                            </span>
+                          ))}
+                        </>
+                      )}
+
+                      <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-0.5 text-[10px] font-semibold text-neutral-600 ring-1 ring-neutral-600/10 ring-inset dark:bg-neutral-800/30 dark:text-neutral-400 dark:ring-neutral-400/30">
+                        {formatDate(user.org_member_since ?? "")}
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
 
               {/* Card de Plano */}
-              {user?.plan_name && (
-                <div className="mt-3 flex flex-col rounded-md border border-neutral-200 bg-white p-3 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
-                  <h3 className="mb-3 w-full text-left font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
-                    Assinatura
-                  </h3>
-                  <div className="w-full space-y-2">
-                    {/* Nome do Plano */}
-                    <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900/30">
-                      <p className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400">
-                        Plano Atual
-                      </p>
-                      <p className="mt-0.5 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                        {user.plan_name}
-                      </p>
+              {user?.plan_id &&
+                (user.org_member_role === "admin" || user.org_member_role === "super_admin") && (
+                  <div className="mt-4 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+                    {/* Header com Badge de Status */}
+                    <div className="flex items-center justify-between border-b border-neutral-100 bg-neutral-50/50 px-4 py-2.5 dark:border-neutral-800 dark:bg-neutral-800/30">
+                      <h3 className="font-mono text-[10px] font-bold tracking-widest text-neutral-500 uppercase">
+                        Assinatura
+                      </h3>
+                      <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                        ATIVO
+                      </span>
                     </div>
 
-                    {/* Tipo de Cliente */}
-                    {user.plan_client_type && (
-                      <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900/30">
+                    <div className="space-y-4 p-4">
+                      {/* Resumo do Plano */}
+                      <div>
                         <p className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400">
-                          Tipo de Conta
+                          Plano Atual
                         </p>
-                        <p className="mt-0.5 text-sm font-semibold text-neutral-900 capitalize dark:text-neutral-100">
-                          {user.plan_client_type}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Limites do Plano */}
-                    {user.plan_details?.limits && (
-                      <div className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900/30">
-                        <p className="text-[9px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                          Limites
-                        </p>
-                        <div className="grid grid-cols-2 gap-2 text-[10px]">
-                          {user.plan_details.limits.max_notes && (
-                            <div className="flex items-center justify-between">
-                              <span className="text-neutral-600 dark:text-neutral-400">Notas</span>
-                              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-                                {user.plan_details.limits.max_notes}
-                              </span>
-                            </div>
-                          )}
-                          {user.plan_details.limits.max_projects && (
-                            <div className="flex items-center justify-between">
-                              <span className="text-neutral-600 dark:text-neutral-400">
-                                Projetos
-                              </span>
-                              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-                                {user.plan_details.limits.max_projects}
-                              </span>
-                            </div>
-                          )}
-                          {user.plan_details.limits.max_team_members && (
-                            <div className="flex items-center justify-between">
-                              <span className="text-neutral-600 dark:text-neutral-400">
-                                Membros
-                              </span>
-                              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-                                {user.plan_details.limits.max_team_members}
-                              </span>
-                            </div>
-                          )}
-                          {user.plan_details.limits.storage?.max_file_size_mb && (
-                            <div className="flex items-center justify-between">
-                              <span className="text-neutral-600 dark:text-neutral-400">
-                                Arquivo
-                              </span>
-                              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-                                {user.plan_details.limits.storage.max_file_size_mb}MB
-                              </span>
-                            </div>
-                          )}
+                        <div className="flex items-baseline gap-2">
+                          <h4 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                            {user.plan_name}
+                          </h4>
+                          <span className="border-l border-neutral-200 pl-2 text-[10px] font-medium text-neutral-400 dark:border-neutral-700">
+                            {user.plan_client_type?.toUpperCase()}
+                          </span>
                         </div>
                       </div>
-                    )}
 
-                    {/* Recursos do Plano */}
-                    {user.plan_details?.features && (
-                      <div className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900/30">
-                        <p className="text-[9px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                          Recursos
-                        </p>
-                        <div className="space-y-1">
+                      {/* Grid de Limites e Métricas */}
+                      {user.plan_details?.limits && (
+                        <div className="grid grid-cols-2 gap-3 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                          <div className="space-y-1">
+                            <p className="text-[9px] font-bold tracking-wider text-neutral-400 uppercase">
+                              Capacidade
+                            </p>
+                            <div className="space-y-1.5">
+                              {user.plan_details.limits.max_notes && (
+                                <div className="flex justify-between text-[11px]">
+                                  <span className="text-neutral-500">Notas</span>
+                                  <span className="font-mono font-bold text-neutral-800 dark:text-neutral-200">
+                                    {user.plan_details.limits.max_notes}
+                                  </span>
+                                </div>
+                              )}
+                              {user.plan_details.limits.max_projects && (
+                                <div className="flex justify-between text-[11px]">
+                                  <span className="text-neutral-500">Projetos</span>
+                                  <span className="font-mono font-bold text-neutral-800 dark:text-neutral-200">
+                                    {user.plan_details.limits.max_projects}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <p className="text-[9px] font-bold tracking-wider text-neutral-400 uppercase">
+                              Equipe e Cloud
+                            </p>
+                            <div className="space-y-1.5">
+                              {user.plan_details.limits.max_team_members && (
+                                <div className="flex justify-between text-[11px]">
+                                  <span className="text-neutral-500">Membros</span>
+                                  <span className="font-mono font-bold text-neutral-800 dark:text-neutral-200">
+                                    {user.plan_details.limits.max_team_members}
+                                  </span>
+                                </div>
+                              )}
+                              {user.plan_details.limits.storage?.max_file_size_mb && (
+                                <div className="flex justify-between text-[11px]">
+                                  <span className="text-neutral-500">Upload</span>
+                                  <span className="font-mono font-bold text-neutral-800 dark:text-neutral-200">
+                                    {user.plan_details.limits.storage.max_file_size_mb}MB
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Seção Weave AI - Estilizada como "Feature" */}
+                      {user.plan_details?.weave_ai?.enabled && (
+                        <div className="rounded-lg bg-neutral-900 p-3 dark:bg-white/5">
+                          <div className="mb-2 flex items-center gap-2">
+                            <div className="h-2 w-2 animate-pulse rounded-full bg-blue-400" />
+                            <p className="text-[10px] font-bold tracking-widest text-white uppercase">
+                              Weave AI Engine
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-[10px]">
+                            <div className="flex flex-col">
+                              <span className="text-neutral-400">Tokens/mês</span>
+                              <span className="font-mono font-bold text-white">
+                                {user.plan_details.weave_ai.config.monthly_messages}
+                              </span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-neutral-400">Base Model</span>
+                              <span className="font-mono font-bold text-blue-300">
+                                {user.plan_details.weave_ai.config.default_model}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Features Checklist - Mais compacto */}
+                      {user.plan_details?.features && (
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 pt-2">
                           {Object.entries(user.plan_details.features).map(([key, value]) => (
-                            <div key={key} className="flex items-center gap-2 text-[10px]">
+                            <div key={key} className="flex items-center gap-1.5">
                               <div
-                                className={`h-1.5 w-1.5 rounded-full ${
-                                  value
-                                    ? "bg-emerald-500 dark:bg-emerald-400"
-                                    : "bg-neutral-300 dark:bg-neutral-600"
-                                }`}
+                                className={`h-1 w-1 rounded-full ${value ? "bg-emerald-500" : "bg-neutral-300"}`}
                               />
-                              <span className="text-neutral-700 capitalize dark:text-neutral-300">
+                              <span
+                                className={`text-[10px] ${value ? "text-neutral-600 dark:text-neutral-300" : "text-neutral-400 line-through"}`}
+                              >
                                 {key.replace(/_/g, " ")}
                               </span>
                             </div>
                           ))}
                         </div>
-                      </div>
-                    )}
-
-                    {/* Weave AI */}
-                    {user.plan_details?.weave_ai?.enabled && (
-                      <div className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900/30">
-                        <p className="text-[9px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                          Weave AI
-                        </p>
-                        <div className="space-y-1 text-[10px]">
-                          {user.plan_details.weave_ai.config?.monthly_messages && (
-                            <div className="flex items-center justify-between">
-                              <span className="text-neutral-600 dark:text-neutral-400">
-                                Mensagens/mês
-                              </span>
-                              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-                                {user.plan_details.weave_ai.config.monthly_messages}
-                              </span>
-                            </div>
-                          )}
-                          {user.plan_details.weave_ai.config?.default_model && (
-                            <div className="flex items-center justify-between">
-                              <span className="text-neutral-600 dark:text-neutral-400">Modelo</span>
-                              <span className="font-mono text-[9px] font-semibold text-neutral-900 dark:text-neutral-100">
-                                {user.plan_details.weave_ai.config.default_model}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
 
             {/* Coluna Direita: Formulários */}

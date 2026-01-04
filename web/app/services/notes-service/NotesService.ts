@@ -205,6 +205,14 @@ export async function deleteNote(noteId: string): Promise<boolean> {
   return true;
 }
 
+export async function deleteNotes(noteIds: string[]): Promise<boolean> {
+  const response = await apiClient.delete(API_ENDPOINTS.NOTES, {
+    body: JSON.stringify({ ids: noteIds }),
+  });
+  await handleResponse<void>(response);
+  return true;
+}
+
 //
 // --- Blocks API ---
 //

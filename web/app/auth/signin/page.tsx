@@ -2,11 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSearchParams } from "next/navigation";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
-import ForgotPasswordModal from "../modals/forgot-password";
+import { FaExclamationCircle, FaEye, FaEyeSlash } from "react-icons/fa";
 import Link from "next/link";
+
+// Lazy loading para performance
+const ForgotPasswordModal = dynamic(() => import("../modals/forgot-password"), {
+  ssr: false,
+});
 
 export default function SignIn() {
   const [login, setLogin] = useState("");
@@ -27,80 +32,83 @@ export default function SignIn() {
     }
   }, [authenticated, redirectUrl]);
 
-  if (authenticated) {
-    return null;
-  }
+  if (authenticated) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro("");
+    setStatus("");
+
     const l = login.trim();
     const p = password;
+
     if (!l || !p) {
       setErro("Por favor, preencha todos os campos para continuar.");
       return;
     }
+
     try {
       setSubmitting(true);
-      const result = await loginUser({
-        login: l,
-        password: p,
-      });
+      const result = await loginUser({ login: l, password: p });
+
       if (result.success) {
         setStatus(result.message || "Login realizado com sucesso!");
         setTimeout(() => {
-          setStatus("");
           window.location.href = redirectUrl;
-        }, 200);
+        }, 500);
       } else {
         let message = result.message || "Falha no login";
         if (message.includes("Usuário ou senha inválidos")) {
-          message = "Usuário/e-mail ou senha incorretos. Verifique seus dados e tente novamente.";
+          message = "Usuário/e-mail ou senha incorretos. Verifique seus dados.";
         }
         setErro(message);
       }
     } catch {
-      setErro("Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.");
+      setErro("Não foi possível conectar ao servidor. Verifique sua conexão.");
     } finally {
       setSubmitting(false);
-      setTimeout(() => setErro(""), 5000);
+      // Auto-hide das mensagens após 5 segundos
+      setTimeout(() => {
+        setErro("");
+        setStatus("");
+      }, 5000);
     }
   };
 
   return (
-    <div className="relative flex h-screen">
-      {/* Imagem de fundo para mobile, escondida em telas grandes */}
-      <div className="absolute inset-0 lg:hidden">
+    <div className="relative flex h-screen w-full overflow-hidden bg-neutral-950 font-sans">
+      {/* Background Otimizado (LCP Priority) */}
+      <div className="absolute inset-0 z-0">
         <Image
-          src="https://cwn.sfo3.cdn.digitaloceanspaces.com/medias/bg-studying_guy.webp"
-          alt="Login visual"
+          src="/bg-auth.webp"
+          alt="Background visual"
           fill
-          className="object-cover"
-          unoptimized
           priority
+          sizes="100vw"
+          className="object-cover opacity-50"
+          quality={80}
         />
-        {/* Overlay escuro para melhorar legibilidade do formulário */}
-        <div className="absolute inset-0 bg-neutral-950/80 backdrop-blur-sm"></div>
+        <div className="absolute inset-0 bg-neutral-950/60 backdrop-blur-[2px]"></div>
       </div>
 
-      {/* Botão sobre */}
-      <div className="absolute top-10 right-10 z-50">
+      {/* Botão Sobre */}
+      <div className="absolute top-6 right-6 z-50">
         <Link
           href="/about"
-          className="flex items-center gap-2 rounded-md bg-neutral-950/50 px-3 py-2 text-sm font-medium text-gray-500 backdrop-blur-sm transition-colors hover:bg-neutral-800/70"
+          className="flex items-center gap-2 rounded-md bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all hover:bg-white/20"
         >
-          Sobre o App
+          Sobre <FaExclamationCircle />
         </Link>
       </div>
 
-      {/* Modal de mensagem de erro/sucesso */}
+      {/* BLOCO DE MENSAGENS (RESTAURADO) */}
       {(erro || status) && (
-        <div className="animate-in slide-in-from-bottom-5 fade-in fixed right-10 bottom-10 z-50 w-full max-w-md px-4 duration-300">
+        <div className="animate-in slide-in-from-bottom-5 fade-in fixed right-10 bottom-10 z-[60] w-full max-w-md px-4 duration-300">
           {erro && (
-            <div className="flex items-center gap-3 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-xl backdrop-blur-sm">
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-red-100">
+            <div className="flex items-center gap-3 rounded-md border border-red-500/50 bg-red-950/80 p-4 text-sm text-red-200 shadow-2xl backdrop-blur-xl">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-red-500/20">
                 <svg
-                  className="h-5 w-5 text-red-600"
+                  className="h-5 w-5 text-red-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -113,14 +121,14 @@ export default function SignIn() {
                   />
                 </svg>
               </div>
-              <span className="flex-1 font-medium">{erro}</span>
+              <span className="font-medium">{erro}</span>
             </div>
           )}
           {status && (
-            <div className="flex items-center gap-3 rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-800 shadow-xl backdrop-blur-sm">
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-green-100">
+            <div className="flex items-center gap-3 rounded-md border border-green-500/50 bg-green-950/80 p-4 text-sm text-green-200 shadow-2xl backdrop-blur-xl">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-green-500/20">
                 <svg
-                  className="h-5 w-5 text-green-600"
+                  className="h-5 w-5 text-green-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -133,150 +141,109 @@ export default function SignIn() {
                   />
                 </svg>
               </div>
-              <span className="flex-1 font-medium">{status}</span>
+              <span className="font-medium">{status}</span>
             </div>
           )}
         </div>
       )}
 
-      <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-4 sm:px-6 lg:bg-neutral-950 lg:px-8">
-        <div className="w-full max-w-xs space-y-6">
-          <div className="text-center">
-            <div className="flex items-center justify-center">
-              {/* Logo principal com gradiente */}
-              <h1 className="relative w-full rounded-md bg-gradient-to-br from-yellow-500 via-yellow-500 to-yellow-500 px-8 py-3 text-3xl font-black tracking-tight text-white">
-                Weave Notes
+      <div className="relative z-10 flex w-full">
+        {/* Esquerda: Forms */}
+        <div className="flex flex-1 items-center justify-center px-6">
+          <div className="w-full max-w-sm space-y-8 rounded-md border border-white/10 bg-neutral-900/50 p-6 shadow-2xl backdrop-blur-2xl">
+            <div className="text-center">
+              <h1 className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-4xl font-black tracking-tight text-transparent">
+                Weave
               </h1>
-            </div>
-          </div>
-
-          {/*<button
-            type="button"
-            onClick={() => loginWithGoogle()}
-            className="flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            disabled={submitting}
-          >
-            <Image
-              src="https://www.svgrepo.com/show/355037/google.svg"
-              alt="Google"
-              width={16}
-              height={16}
-              className="mr-2"
-              unoptimized
-            />
-            Entrar com Google
-          </button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500">ou</span>
-            </div>
-          </div>*/}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="login" className="mb-1 block text-sm font-semibold text-yellow-500">
-                Usuário ou e-mail
-              </label>
-              <input
-                id="login"
-                name="login"
-                type="text"
-                placeholder="Digite seu usuário ou e-mail"
-                value={login}
-                onChange={(e) => setLogin(e.target.value)}
-                disabled={submitting}
-                autoComplete="username email"
-                className="block w-full rounded-md border border-neutral-600 bg-neutral-900 px-2 py-2 text-sm text-gray-300 shadow-sm transition-all duration-200 placeholder:text-gray-500 hover:border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
-              />
+              <p className="mt-2 text-sm text-gray-400">Gerencie seus projetos e ideias!</p>
             </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="mb-1 block text-sm font-semibold text-yellow-500"
-              >
-                Senha
-              </label>
-              <div className="relative">
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-xs font-bold tracking-wider text-yellow-500">
+                  Usuário ou e-mail
+                </label>
                 <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Sua sennha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  type="text"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
                   disabled={submitting}
-                  autoComplete="current-password"
-                  className="block w-full rounded-md border border-neutral-600 bg-neutral-900 px-2 py-2 text-sm text-gray-300 shadow-sm transition-all duration-200 placeholder:text-gray-500 hover:border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
+                  className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-sm text-white transition-all placeholder:text-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                  placeholder="Seu usuário ou e-mail"
                 />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold tracking-wider text-yellow-500">Senha</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={submitting}
+                    className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-sm text-white transition-all focus:border-yellow-500 focus:outline-none"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-white"
+                  >
+                    {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 transition-colors hover:text-gray-600"
-                  tabIndex={-1}
+                  onClick={() => setShowForgotPasswordModal(true)}
+                  className="text-xs font-medium text-gray-400 transition-colors hover:text-yellow-500"
                 >
-                  {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                  Esqueceu a senha?
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="rounded-md bg-yellow-500 px-8 py-2.5 text-sm font-bold text-black shadow-lg shadow-yellow-500/20 transition-all hover:bg-yellow-400 active:scale-95 disabled:opacity-50"
+                >
+                  {submitting ? "Entrando..." : "Entrar"}
                 </button>
               </div>
+            </form>
+
+            <div className="border-t border-white/5 pt-4 text-center">
+              <p className="text-sm text-gray-500">
+                Não tem uma conta?{" "}
+                <Link href="/auth/signup" className="font-bold text-yellow-500 hover:underline">
+                  Cadastre-se
+                </Link>
+              </p>
             </div>
+          </div>
+        </div>
 
-            <div className="flex justify-between text-sm">
-              <button
-                type="button"
-                onClick={() => setShowForgotPasswordModal(true)}
-                className="font-semibold text-yellow-500 transition-colors hover:text-yellow-600"
-              >
-                Esqueceu a senha?
-              </button>
-              <button
-                type="submit"
-                className="flex justify-center rounded-md border border-transparent bg-yellow-500 px-4 py-2 font-bold text-white shadow-lg transition-all duration-200 hover:bg-yellow-600 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={submitting}
-              >
-                {submitting ? "Entrando..." : "Entrar"}
-              </button>
-            </div>
-          </form>
-
-          {/* Linha divisória */}
-          <div className="h-px bg-neutral-800"></div>
-
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Não tem uma conta?{" "}
-              <a
-                href="/auth/signup"
-                className="font-semibold text-yellow-500 transition-colors hover:text-yellow-600"
-              >
-                Cadastre-se
-              </a>
+        {/* Direita: Marketing */}
+        <div className="hidden flex-1 items-center justify-center p-12 lg:flex">
+          <div className="max-w-md space-y-6 rounded-md border border-white/10 bg-white/5 p-10 text-center shadow-2xl backdrop-blur-xl transition-transform hover:scale-[1.02]">
+            <h2 className="text-3xl font-bold text-white">O que você pode fazer!</h2>
+            <p className="text-lg leading-relaxed text-gray-400">
+              Criar projetos, organizar tarefas, colaborar com sua equipe e acompanhar o progresso
+              em tempo real. Tudo isso em uma plataforma intuitiva e fácil de usar.
+            </p>
+            <p className="text-lg leading-relaxed text-gray-400">
+              Junte-se a nós e transforme a maneira como você gerencia seus projetos!
             </p>
           </div>
         </div>
       </div>
 
-      {/* Modal de Recuperação de Senha */}
-      <ForgotPasswordModal
-        isOpen={showForgotPasswordModal}
-        onClose={() => setShowForgotPasswordModal(false)}
-      />
-
-      {/* Imagem lateral para desktop - escondida em mobile */}
-      <div className="relative hidden flex-1 lg:block">
-        <Image
-          src="https://cwn.sfo3.cdn.digitaloceanspaces.com/medias/bg-studying_guy.webp"
-          alt="Login visual"
-          fill
-          className="object-cover"
-          unoptimized
+      {showForgotPasswordModal && (
+        <ForgotPasswordModal
+          isOpen={showForgotPasswordModal}
+          onClose={() => setShowForgotPasswordModal(false)}
         />
-        {/* Overlay de vidro/claridade saindo da esquerda */}
-        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950 via-neutral-950/40 to-transparent"></div>
-      </div>
+      )}
     </div>
   );
 }
