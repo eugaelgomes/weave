@@ -246,13 +246,13 @@ const NotesWithPagination = () => {
 
   const handleBulkDelete = async () => {
     if (selectedNotes.size === 0) return;
-    
+
     const confirmed = window.confirm(
       `Tem certeza que deseja excluir ${selectedNotes.size} nota(s)?`
     );
-    
+
     if (confirmed) {
-      try { 
+      try {
         const noteIds = Array.from(selectedNotes);
         await deleteNotes(noteIds);
         await refreshNotes();
@@ -580,16 +580,17 @@ const NotesWithPagination = () => {
         id="notes-container"
         className="mt-4 flex-1 overflow-y-auto bg-neutral-50 dark:bg-neutral-950"
       >
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto">
           {" "}
           {/* Container limitador para telas muito largas */}
           {/* Headers da Lista (Opcional, mas ajuda no alinhamento visual) */}
           {notes.length > 0 && !showFullSkeleton && (
             <div className="mb-4 hidden grid-cols-12 gap-4 rounded-md border border-neutral-800 bg-white p-2 px-4 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase sm:grid dark:bg-neutral-900">
-              <div className="col-span-6">Detalhes</div>
+              <div className="col-span-4">Detalhes</div>
+              <div className="col-span-2">Projeto</div>
               <div className="col-span-3">Tags</div>
-              <div className="col-span-1 text-center">Colab.</div>
-              <div className="col-span-2 text-right">Data</div>
+              <div className="col-span-1 text-center">Colabs</div>
+              <div className="col-span-2 text-right">Última atualização</div>
             </div>
           )}
           {showFullSkeleton || showListSkeleton ? (
@@ -649,98 +650,115 @@ const NotesWithPagination = () => {
                       <article
                         className={`flex flex-col gap-3 p-4 shadow-sm transition-all sm:grid sm:grid-cols-12 sm:items-center sm:gap-4 ${
                           selectionMode ? "pl-12" : ""
-                        } ${
-                          !selectionMode &&
-                          "hover:shadow-md dark:hover:shadow-none"
-                        }`}
+                        } ${!selectionMode && "hover:shadow-md dark:hover:shadow-none"}`}
                       >
-                    {/* Título e Descrição */}
-                    <div className="col-span-1 min-w-0 sm:col-span-6">
-                      <div className="flex items-center gap-2">
-                        <h3 className="truncate text-sm font-semibold text-neutral-900 group-hover:text-yellow-600 dark:text-neutral-100 dark:group-hover:text-yellow-400">
-                          {note.title || "Sem título"}
-                        </h3>
-                        {/* Opcional: Badge de Novo */}
-                        {new Date(note.created_at).getTime() > Date.now() - 86400000 && (
-                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-500"></span>
-                        )}
-                      </div>
-                      <p className="mt-1 line-clamp-1 text-xs text-neutral-500 group-hover:text-neutral-600 dark:text-neutral-400 dark:group-hover:text-neutral-300">
-                        {note.description || "Sem descrição adicional..."}
-                      </p>
-                    </div>
+                        {/* Título e Descrição */}
+                        <div className="col-span-1 min-w-0 sm:col-span-4">
+                          <div className="flex items-center gap-2">
+                            <h3 className="truncate text-sm font-semibold text-neutral-900 group-hover:text-yellow-600 dark:text-neutral-100 dark:group-hover:text-yellow-400">
+                              {note.title?.length > 60
+                                ? `${note.title.slice(0, 60)}...`
+                                : note.title || "No title"}
+                            </h3>
+                            {/* Opcional: Badge de Novo */}
+                            {new Date(note.created_at).getTime() > Date.now() - 86400000 && (
+                              <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-500"></span>
+                            )}
+                          </div>
+                          <p className="mt-1 line-clamp-1 text-xs text-neutral-500 group-hover:text-neutral-600 dark:text-neutral-400 dark:group-hover:text-neutral-300">
+                            {note.description && note.description.length > 80
+                              ? `${note.description.slice(0, 80)}...`
+                              : note.description || ""}
+                          </p>
+                        </div>
 
-                    {/* Tags */}
-                    <div className="col-span-1 sm:col-span-3">
-                      <div className="flex flex-wrap gap-1.5">
-                        {note.tags?.slice(0, 2).map((tag, i) => {
-                          const colors = getTagColor(tag);
-                          return (
-                            <span
-                              key={i}
-                              className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
-                            >
-                              {tag}
+                        {/* Projeto */}
+                        <div className="col-span-1 sm:col-span-2">
+                          {note.project_name ? (
+                            <div className="flex items-center gap-1.5">
+                              <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                              <span className="truncate text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                                {note.project_name}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-neutral-400 dark:text-neutral-600">
+                              -
                             </span>
-                          );
-                        })}
-                        {(note.tags?.length || 0) > 2 && (
-                          <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
-                            +{note.tags!.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                          )}
+                        </div>
 
-                    {/* Colaboradores e Data - Flex row em mobile */}
-                    <div className="flex items-center justify-between sm:contents">
-                      {/* Colaboradores */}
-                      <div className="col-span-1 flex justify-start sm:col-span-1 sm:justify-center">
-                        {note.collaborators && note.collaborators.length > 0 ? (
-                          <div className="flex -space-x-2">
-                            {note.collaborators.slice(0, 3).map((c, i) => {
-                              const avatar = getCollaboratorAvatarUrl(c);
-                              const name = getCollaboratorDisplayName(c);
+                        {/* Tags */}
+                        <div className="col-span-1 sm:col-span-3">
+                          <div className="flex flex-wrap gap-1.5">
+                            {note.tags?.slice(0, 2).map((tag, i) => {
+                              const colors = getTagColor(tag);
                               return (
-                                <div
+                                <span
                                   key={i}
-                                  className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-100 ring-1 ring-neutral-100 dark:border-neutral-900 dark:bg-neutral-800 dark:ring-neutral-900"
-                                  title={name}
+                                  className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
                                 >
-                                  {avatar ? (
-                                    <Image
-                                      src={avatar}
-                                      alt={name}
-                                      width={24}
-                                      height={24}
-                                      className="h-full w-full object-cover"
-                                    />
-                                  ) : (
-                                    <span className="text-[8px] font-bold text-neutral-500">
-                                      {name.charAt(0)}
-                                    </span>
-                                  )}
-                                </div>
+                                  {tag}
+                                </span>
                               );
                             })}
+                            {(note.tags?.length || 0) > 2 && (
+                              <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
+                                +{note.tags!.length - 2}
+                              </span>
+                            )}
                           </div>
-                        ) : (
-                          <span className="text-neutral-300 dark:text-neutral-700">-</span>
-                        )}
-                      </div>
+                        </div>
 
-                      {/* Data */}
-                      <div className="col-span-1 flex flex-col items-end sm:col-span-2">
-                        <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                          {formatDate(note.updated_at)}
-                        </span>
-                      </div>
-                    </div>
-                  </article>
-                </Link>
-              </div>
-            );
-          })}
+                        {/* Colaboradores e Data - Flex row em mobile */}
+                        <div className="flex items-center justify-between sm:contents">
+                          {/* Colaboradores */}
+                          <div className="col-span-1 flex justify-start sm:col-span-1 sm:justify-center">
+                            {note.collaborators && note.collaborators.length > 0 ? (
+                              <div className="flex -space-x-2">
+                                {note.collaborators.slice(0, 3).map((c, i) => {
+                                  const avatar = getCollaboratorAvatarUrl(c);
+                                  const name = getCollaboratorDisplayName(c);
+                                  return (
+                                    <div
+                                      key={i}
+                                      className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-100 ring-1 ring-neutral-100 dark:border-neutral-600 dark:bg-neutral-800 dark:ring-neutral-900"
+                                      title={name}
+                                    >
+                                      {avatar ? (
+                                        <Image
+                                          src={avatar}
+                                          alt={name}
+                                          width={28}
+                                          height={28}
+                                          className="h-full w-full object-cover"
+                                        />
+                                      ) : (
+                                        <span className="text-[8px] font-bold text-neutral-500">
+                                          {name.charAt(0)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <span className="text-neutral-300 dark:text-neutral-700">-</span>
+                            )}
+                          </div>
+
+                          {/* Data */}
+                          <div className="col-span-1 flex flex-col items-end sm:col-span-2">
+                            <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                              {formatDate(note.updated_at)}
+                            </span>
+                          </div>
+                        </div>
+                      </article>
+                    </Link>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             // Empty State
