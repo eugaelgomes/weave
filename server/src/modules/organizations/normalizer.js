@@ -170,6 +170,22 @@ const getPropertiesSchema = () => {
 
 const validRoles = ["admin", "member", "guest"];
 
+const orgDataResponse = (organization) => {
+  return {
+    id: organization.id,
+    org_name: organization.org_name,
+    unique_name: organization.unique_name,
+    logo_url: organization.logo_url,
+    banner_url: organization.banner_url,
+    description: organization.description,
+    properties: organization.properties || {},
+    org_domains: organization.org_domains || [],
+    created_at: organization.created_at,
+    updated_at: organization.updated_at,
+    deleted: organization.deleted,
+  };
+};
+
 module.exports = {
   validRoles,
   normalizeOrganizationName,
@@ -180,4 +196,6 @@ module.exports = {
   getDefaultOrganizationProperties,
   getPropertiesSchema,
   predefinedProperties: PREDEFINED_PROPERTIES,
+  // Org data formatter
+  orgDataResponse,
 };

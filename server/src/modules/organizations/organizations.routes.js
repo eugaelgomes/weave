@@ -77,14 +77,14 @@ router.delete(
   organizationsController.cancelInvite.bind(organizationsController)
 );
 
-router.post(
+router.put(
   "/logo",
   upload.single("image"),
   validateImages,
   organizationsController.uploadLogo.bind(organizationsController)
 );
 
-router.post(
+router.put(
   "/banner",
   upload.single("image"),
   validateImages,

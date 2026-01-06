@@ -12,6 +12,7 @@ const {
   updateOrganizationProperties,
   getDefaultOrganizationProperties,
   validRoles,
+  orgDataResponse,
 } = require("./normalizer");
 
 class OrganizationsController {
@@ -564,17 +565,10 @@ class OrganizationsController {
           .json({ success: false, error: "Erro ao salvar logo" });
       }
 
-      const updatedOrg = await this.organizationsRepository.updateOrg(
+      const updatedOrg = await this.organizationsRepository.updateOrgLogo(
         currentOrg.id,
-        userId,
-        currentOrg.org_name,
-        currentOrg.unique_name,
         result.url,
-        currentOrg.banner_url,
-        currentOrg.description,
-        currentOrg.properties,
-        currentOrg.deleted,
-        currentOrg.org_domains
+        userId
       );
 
       res.status(200).json({
@@ -600,6 +594,7 @@ class OrganizationsController {
   async uploadBanner(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
+
       if (!userId) return;
 
       if (!req.file) {
@@ -627,24 +622,17 @@ class OrganizationsController {
           .json({ success: false, error: "Erro ao salvar banner" });
       }
 
-      const updatedOrg = await this.organizationsRepository.updateOrg(
+      const updatedOrg = await this.organizationsRepository.updateOrgBanner(
         currentOrg.id,
-        userId,
-        currentOrg.org_name,
-        currentOrg.unique_name,
-        currentOrg.logo_url,
         result.url,
-        currentOrg.description,
-        currentOrg.properties,
-        currentOrg.deleted,
-        currentOrg.org_domains
+        userId
       );
 
       res.status(200).json({
         success: true,
-        message: "Banner atualizado com sucesso",
-        data: {
-          organization: updatedOrg,
+        message: "Banner updated successfully!",
+        organization_data: {
+          organization: orgDataResponse(updatedOrg),
           upload: {
             url: result.url,
             filename: result.filename,

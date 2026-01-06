@@ -328,6 +328,36 @@ class OrganizationsRepository {
     const results = await executeQuery(query, [org_id, email]);
     return results[0];
   }
+
+  async updateOrgLogo(org_id, logo_url, user_id) {
+    const query = `
+WITH user_check AS (
+    SELECT 1 FROM organizations_members 
+    WHERE org_id = $1 AND user_id = $3 AND role IN ('super_admin', 'admin')
+)
+UPDATE organizations
+SET logo_url = $2, updated_at = NOW()
+WHERE id = $1 AND EXISTS (SELECT 1 FROM user_check)
+RETURNING *;
+    `;
+    const results = await executeQuery(query, [org_id, logo_url, user_id]);
+    return results[0];
+  }
+
+  async updateOrgBanner(org_id, banner_url, user_id) {
+    const query = `
+WITH user_check AS (
+    SELECT 1 FROM organizations_members 
+    WHERE org_id = $1 AND user_id = $3 AND role IN ('super_admin', 'admin')
+)
+UPDATE organizations
+SET banner_url = $2, updated_at = NOW()
+WHERE id = $1 AND EXISTS (SELECT 1 FROM user_check)
+RETURNING *;
+    `;
+    const results = await executeQuery(query, [org_id, banner_url, user_id]);
+    return results[0];
+  }
 }
 
 module.exports = new OrganizationsRepository();
