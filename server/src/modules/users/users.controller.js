@@ -455,8 +455,7 @@ class userController {
       }
 
       const response = {
-        userDataResponse(user),
-        message: "Profile updated successfully",
+        user: userDataResponse(user),
       };
 
       if (emailPendingValidation) {

@@ -3,15 +3,15 @@ const {
   configureGlobalMiddlewares,
 } = require("@/middlewares/global-middleware");
 const { errorHandler } = require("@/middlewares/error-handler");
-const routes = require("@/routes/index.routes");
+const routes = require("@/index.routes");
 
 const app = express();
 
 // Middlewares globais
 configureGlobalMiddlewares(app);
 
-// Rota base
-app.use("/api", routes);
+// api v1
+app.use("/api/v1", routes);
 
 // Not Found Handler
 app.use(errorHandler.notFoundHandler);
