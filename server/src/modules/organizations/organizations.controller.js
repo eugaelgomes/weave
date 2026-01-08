@@ -641,7 +641,7 @@ class OrganizationsController {
         },
       });
     } catch (error) {
-      console.error("Erro ao fazer upload do banner:", error);
+      //console.error("Erro ao fazer upload do banner:", error);
       res
         .status(500)
         .json({ success: false, error: "Erro ao fazer upload do banner" });
