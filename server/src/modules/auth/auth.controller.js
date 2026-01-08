@@ -7,6 +7,7 @@ const { getCookieDomain } = require("@/config/allowed-origins");
 
 const authLogs = require("@/utils/system_logs/auth-logs");
 const { secretsManager } = require("@/services/secrets");
+
 class AuthController {
   async userSignin(req, res) {
     const { login, password } = req.body;
@@ -45,12 +46,12 @@ class AuthController {
       if (!verifiedAccount) {
         return res.status(403).json({
           message:
-            "Por favor, verifique seu e-mail no mensagem de boas-vindas antes de fazer login.",
+            "Por favor, verifique seu e-mail antes de fazer login.",
         });
       }
-      // Compara senha
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) {
+
+      const comparePassword = await bcrypt.compare(password, user.password);
+      if (!comparePassword) {
         return res
           .status(401)
           .json({ message: "Usuário/e-mail ou senha inválidos" });
@@ -64,6 +65,7 @@ class AuthController {
         org_id: user.org_id,
         org_unique_name: user.org_unique_name,
         plan_id: user.plan_id,
+        org_member_role: user.org_member_role,
       };
 
       const token = jwt.sign(payload, secretsManager(), {
