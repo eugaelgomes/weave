@@ -258,13 +258,51 @@ class UserRepository {
     return await executeQuery(query, [hashedPassword, userId]);
   }
 
+  async createDeleteAccountToken(userId, token) {
+    // Desativa tokens antigos de exclusão
+    await executeQuery(
+      `UPDATE tokens SET active = FALSE 
+       WHERE user_id = $1 AND type = 'delete_user_account' AND active = TRUE`,
+      [userId]
+    );
+
+    const query = `
+      INSERT INTO tokens (user_id, token, type, expires_at, created_at, active)
+      VALUES ($1, $2, 'delete_user_account', ($3::timestamp + interval '7 days'), $3, TRUE)
+      RETURNING *;
+    `;
+    return await executeQuery(query, [
+      userId,
+      token,
+      new Date().toISOString(),
+    ]);
+  }
+
+  async findDeleteAccountToken(token) {
+    const query = `
+      SELECT * FROM tokens 
+      WHERE token = $1 AND active = TRUE AND type = 'delete_user_account' AND expires_at > NOW()
+    `;
+    const results = await executeQuery(query, [token]);
+    return results[0];
+  }
+
   async deleteUser(userId) {
     const query = `
       DELETE FROM users
-      WHERE user_id = $1 AND email_verified = true
+      WHERE user_id = $1
       RETURNING user_id
     `;
     return await executeQuery(query, [userId]);
+  }
+
+  async deactivateDeleteAccountToken(token) {
+    const query = `
+      UPDATE tokens 
+      SET active = FALSE 
+      WHERE token = $1 AND type = 'delete_user_account'
+    `;
+    return await executeQuery(query, [token]);
   }
 
   // Email change validation

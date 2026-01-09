@@ -9,15 +9,15 @@ const AuthRepository = require("@/modules/auth/auth.repository");
 
 // Serviços de Email e Logs
 const welcomeMailModule = require("@/services/email/templates/welcome-mail");
-const deleteAccountModule = require("@/services/email/templates/delete-account");
-const emailChangeModule = require("@/services/email/templates/users-access/reset-password");
+const { delete_account_notification } = require("@/services/email/templates/delete-account/deleted-account-message");
+const { sendEmailChangeValidation } = require("@/services/email/templates/users-access/reset-password");
+const { delete_account_request } = require("@/services/email/templates/delete-account/delete-account-request");
 const updateProfileLogs = require("@/utils/system_logs/update_profile-logs");
 const PlansManager = require("@/services/plans/manager");
 const { userDataResponse } = require("./normalizer");
+const { stat } = require("fs");
 
 const { welcome_message } = welcomeMailModule;
-const { delete_account_notification } = deleteAccountModule;
-const { sendEmailChangeValidation } = emailChangeModule;
 
 const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
 const ALL_TIMEZONES = Intl.supportedValuesOf("timeZone");
@@ -494,7 +494,7 @@ class userController {
     }
   }
 
-  async deleteUser(req, res) {
+  async requestDeleteUser(req, res) {
     try {
       const userId = req.user.userId;
 
@@ -503,13 +503,83 @@ class userController {
       if (!userData) {
         return res.status(404).json({
           error: "User not found",
-          message: "User does not exist.",
+          message: "Usuário não existe.",
         });
       }
 
-      const result = await UserRepository.deleteUser(userId);
+      const token = crypto.randomBytes(12).toString("hex");
 
+      const result = await UserRepository.createDeleteAccountToken(userId, token);
+      
       if (result && result.length > 0) {
+        try {
+          await delete_account_request(
+            userData.name,
+            userData.email,
+            userData.username,
+            token
+          );
+        } catch (emailError) {
+          console.error("Falha ao enviar email para:", emailError);
+          return res.status(500).json({
+            error: "Email error",
+            message: "Falha ao enviar email de confirmação. Por favor, tente novamente.",
+          });
+        }
+
+        res.status(200).json({ 
+          status: "OK",
+          message: "Email de confirmação enviado. Por favor, verifique sua caixa de entrada para confirmar a exclusão da conta." 
+        });
+      } else {
+        res.status(500).json({
+          error: "Token error",
+          message: "Falha ao gerar token de exclusão.",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao solicitar exclusão da conta:", error);
+      this._handleError(error, res);
+    }
+  }
+
+  async confirmDeleteUser(req, res) {
+    try {
+      const { token } = req.body;
+
+      if (!token) {
+        return res.status(400).json({
+          error: "Validation error",
+          message: "Token é obrigatório.",
+        });
+      }
+
+      const tokenData = await UserRepository.findDeleteAccountToken(token);
+
+      if (!tokenData) {
+        return res.status(400).json({
+          error: "Invalid token",
+          message: "Token inválido ou expirado.",
+        });
+      }
+
+      const userId = tokenData.user_id;
+      const userData = await UserRepository.findById(userId);
+
+      if (!userData) {
+        return res.status(404).json({
+          error: "User not found",
+          message: "Usuário não existe.",
+        });
+      }
+
+      // Desativa o token
+      await UserRepository.deactivateDeleteAccountToken(token);
+
+      // Deleta o usuário
+      const deleteResult = await UserRepository.deleteUser(userId);
+
+      if (deleteResult && deleteResult.length > 0) {
         try {
           await delete_account_notification(
             userData.name,
@@ -517,18 +587,21 @@ class userController {
             userData.username
           );
         } catch (emailError) {
-          console.error("Failed to send delete account email:", emailError);
+          console.error("Falha ao enviar email de confirmação de exclusão:", emailError);
         }
 
-        res.status(200).json({ message: "User deleted successfully." });
+        res.status(200).json({ 
+          status: "OK",
+          message: "Conta excluída com sucesso." 
+        });
       } else {
-        res.status(404).json({
-          error: "User not found",
-          message: "User does not exist or has already been deleted.",
+        res.status(500).json({
+          error: "Deletion error",
+          message: "Falha ao excluir a conta.",
         });
       }
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Erro ao confirmar exclusão da conta:", error);
       this._handleError(error, res);
     }
   }
@@ -537,7 +610,7 @@ class userController {
     const { token } = req.body;
 
     if (!token) {
-      return res.status(400).json({ message: "Activation token is required" });
+      return res.status(400).json({ message: "Token de ativação é obrigatório" });
     }
 
     try {
@@ -546,7 +619,7 @@ class userController {
       if (!tokenRecord) {
         return res
           .status(400)
-          .json({ message: "Invalid or expired activation token" });
+          .json({ message: "Token de ativação inválido ou expirado" });
       }
 
       // Verifica o email
@@ -555,14 +628,14 @@ class userController {
       );
 
       if (!verifiedUser) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({ message: "Usuário não encontrado" });
       }
 
       // Desativa o token
       await UserRepository.deactivateEmailToken(token);
 
       return res.status(200).json({
-        message: "Email verified successfully",
+        message: "Email verificado com sucesso",
         user: {
           id: verifiedUser.user_id,
           email: verifiedUser.email,
@@ -571,14 +644,13 @@ class userController {
         },
       });
     } catch (error) {
-      console.error("Error activating account:", error);
+      console.error("Erro ao ativar conta:", error);
       this._handleError(error, res);
     }
   }
 
   /**
-   * GET /api/users/search - Buscar usuários para adicionar como colaboradores
-   * Busca usuários por email, username, ou nome
+   * GET /users/search - Buscar usuários para adicionar como colaboradores
    */
   async searchUsers(req, res, next) {
     try {
@@ -587,18 +659,17 @@ class userController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Validação de query
-      if (!q || q.trim().length < 2) {
+      if (!q || q.trim().length < 3) {
         return res.status(400).json({
-          error: "The search query must be at least 2 characters long.",
+          error: "The search query must be at least 3 characters long.",
         });
       }
 
       const searchTerm = q.trim();
 
-      const users = await this.userRepository.searchUsers(searchTerm);
+      const search_users = await this.userRepository.searchUsers(searchTerm);
 
-      const filteredUsers = users
+      const filteredUsers = search_users
         .filter((user) => user && user.user_id !== userId)
         .map((user) => ({
           id: user.user_id,
@@ -609,8 +680,8 @@ class userController {
         }));
 
       res.status(200).json({
-        users: filteredUsers,
-        query: searchTerm,
+        search_users_query: searchTerm,
+        search_users: filteredUsers,
       });
     } catch (error) {
       this._handleError(error, res, next);

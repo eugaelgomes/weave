@@ -59,7 +59,12 @@ router.get(
 router.delete(
   "/delete-my-account",
   verifyToken,
-  userController.deleteUser.bind(userController)
+  userController.requestDeleteUser.bind(userController)
+);
+
+router.post(
+  "/confirm-delete-account",
+  userController.confirmDeleteUser.bind(userController)
 );
 
 module.exports = router;
