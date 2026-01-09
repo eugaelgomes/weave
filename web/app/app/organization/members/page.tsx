@@ -299,12 +299,12 @@ const MembersPage = () => {
   }
 
   // Certifique-se que organization é do tipo Organization
-  const members = organization?.members || { owner: "", admins: [], members: [], invited: [] };
+  const memberData = organization?.members || { owner: "", admins: [], members: [], invited: [] };
 
   const allMembers = [
-    { id: members.owner, role: "owner" as const },
-    ...(members.admins || []).map((id) => ({ id, role: "admin" as const })),
-    ...(members.members || []).map((id) => ({ id, role: "member" as const })),
+    { id: memberData.owner, role: "owner" as const },
+    ...(memberData.admins || []).map((id) => ({ id, role: "admin" as const })),
+    ...(memberData.members || []).map((id) => ({ id, role: "member" as const })),
   ].filter((m) => {
     const userData = getUserData(m.id);
     const searchLower = searchTerm.toLowerCase();

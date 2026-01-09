@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -21,7 +21,7 @@ interface Message {
 }
 
 export default function SignUp() {
-  const { createUser } = useAuth();
+  const { createUser, authenticated } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -37,6 +37,16 @@ export default function SignUp() {
   const [dragActive, setDragActive] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<Message>({ type: "", text: "" });
+
+  // Redireciona usuários já autenticados
+  useEffect(() => {
+    if (authenticated) {
+      router.push("/app");
+    }
+  }, [authenticated, router]);
+
+  // Não renderiza o formulário se já estiver autenticado
+  if (authenticated) return null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

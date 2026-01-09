@@ -71,6 +71,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
     if (path === "/app/projects" && pathname.startsWith("/app/projects/")) return true;
     if (path === "/app/weave-ai" && pathname === "/app/weave-ai/") return true;
     if (path === "/app/organization" && pathname.startsWith("/app/organization/")) return true;
+    if (path === "/app/notifications" && pathname.startsWith("/app/organization/notifications/")) return true;
     if (path === "/app/settings" && pathname.startsWith("/app/settings/")) return true;
     return pathname === path;
   };
@@ -107,6 +108,9 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
         { path: "/app/organization/members", icon: FaUserFriends, label: "Membros" },
         { path: "/app/organization/projects", icon: FaProjectDiagram, label: "Projetos" },
       ],
+    },
+    {
+      path : "/app/notifications", icon: FaComments, label: "Notificações"
     },
     { path: "/app/settings", icon: IoMdSettings, label: "Configurações" },
   ];

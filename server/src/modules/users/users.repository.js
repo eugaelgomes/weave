@@ -288,12 +288,25 @@ class UserRepository {
   }
 
   async deleteUser(userId) {
+    const randomSuffix = Math.floor(Math.random() * 1000000000);
     const query = `
-      DELETE FROM users
+      UPDATE users
+      SET 
+        email = $2, 
+        username = $3, 
+        phone_number = NULL, 
+        avatar_url = NULL, 
+        name = 'Deleted User',
+        deleted = TRUE, 
+        deleted_at = NOW()
       WHERE user_id = $1
       RETURNING user_id
     `;
-    return await executeQuery(query, [userId]);
+    return await executeQuery(query, [
+      userId,
+      `deleted_user_${randomSuffix}@weavenotes.app`,
+      `deleted_user_${randomSuffix}`
+    ]);
   }
 
   async deactivateDeleteAccountToken(token) {

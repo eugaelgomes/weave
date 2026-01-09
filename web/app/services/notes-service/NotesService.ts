@@ -1,6 +1,6 @@
 // services/notes-service/NotesService.ts
 import { apiClient, handleResponse } from "../api-methods";
-import { API_ENDPOINTS } from "../api-routes";
+import { API_ENDPOINTS } from "../api-methods";
 
 //
 // --- Types ---

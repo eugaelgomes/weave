@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSearchParams } from "next/navigation";
 import { FaExclamationCircle, FaEye, FaEyeSlash } from "react-icons/fa";
+import { RiArrowLeftLine } from "react-icons/ri";
 import Link from "next/link";
 
 // Lazy loading para performance
@@ -97,7 +98,17 @@ export default function SignIn() {
           href="/about"
           className="flex items-center gap-2 rounded-md bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all hover:bg-white/20"
         >
-          Sobre <FaExclamationCircle />
+          <FaExclamationCircle />
+        </Link>
+      </div>
+
+            {/* Botão Sobre */}
+      <div className="absolute top-6 left-6 z-50">
+        <Link
+          href="/home/"
+          className="flex items-center gap-2 rounded-md bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all hover:bg-white/20"
+        >
+          Home
         </Link>
       </div>
 
@@ -147,10 +158,24 @@ export default function SignIn() {
         </div>
       )}
 
-      <div className="relative z-10 flex w-full">
-        {/* Esquerda: Forms */}
-        <div className="flex flex-1 items-center justify-center px-6">
-          <div className="w-full max-w-sm space-y-8 rounded-md border border-white/10 bg-neutral-900/50 p-6 shadow-2xl backdrop-blur-2xl">
+      <div className="relative z-10 flex h-full w-full items-stretch">
+        {/* Esquerdo: Marketing */}
+        <div className="hidden h-full flex-1 items-center justify-center p-12 lg:flex">
+          <div className="max-w-md space-y-6 rounded-md border border-white/10 bg-white/5 p-10 text-center shadow-2xl backdrop-blur-xl transition-transform hover:scale-[1.02]">
+            <h2 className="text-3xl font-bold text-white">O que você pode fazer!</h2>
+            <p className="text-lg leading-relaxed text-gray-400">
+              Criar projetos, organizar tarefas, colaborar com sua equipe e acompanhar o progresso
+              em tempo real. Tudo isso em uma plataforma intuitiva e fácil de usar.
+            </p>
+            <p className="text-lg leading-relaxed text-gray-400">
+              Junte-se a nós e transforme a maneira como você gerencia seus projetos!
+            </p>
+          </div>
+        </div>
+
+        {/* Direito: Forms */}
+        <div className="flex h-full flex-1 items-center justify-center px-6">
+          <div className="w-full max-w-md space-y-8 rounded-md border border-white/10 bg-neutral-900/50 p-6 shadow-2xl backdrop-blur-2xl">
             <div className="text-center">
               <h1 className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-4xl font-black tracking-tight text-transparent">
                 Weave
@@ -223,19 +248,6 @@ export default function SignIn() {
           </div>
         </div>
 
-        {/* Direita: Marketing */}
-        <div className="hidden flex-1 items-center justify-center p-12 lg:flex">
-          <div className="max-w-md space-y-6 rounded-md border border-white/10 bg-white/5 p-10 text-center shadow-2xl backdrop-blur-xl transition-transform hover:scale-[1.02]">
-            <h2 className="text-3xl font-bold text-white">O que você pode fazer!</h2>
-            <p className="text-lg leading-relaxed text-gray-400">
-              Criar projetos, organizar tarefas, colaborar com sua equipe e acompanhar o progresso
-              em tempo real. Tudo isso em uma plataforma intuitiva e fácil de usar.
-            </p>
-            <p className="text-lg leading-relaxed text-gray-400">
-              Junte-se a nós e transforme a maneira como você gerencia seus projetos!
-            </p>
-          </div>
-        </div>
       </div>
 
       {showForgotPasswordModal && (

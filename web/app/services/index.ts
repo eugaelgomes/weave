@@ -93,5 +93,12 @@ export {
   type GenerateContentData,
 } from "./ai-agent-service/agent-servevice";
 
-// API Client
-export * from "./api-methods";
+// API Client e Endpoints
+export {
+  apiClient,
+  ApiError,
+  handleResponse,
+  API_BASE_URL,
+  API_CONFIG,
+  API_ENDPOINTS,
+} from "./api-methods";

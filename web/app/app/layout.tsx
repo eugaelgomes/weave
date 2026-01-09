@@ -1,9 +1,43 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../contexts/AuthContext";
 import { AuthenticatedProviders } from "../contexts/AuthenticatedProviders";
+import Layout from "./components/layout/layout";
 
 export const dynamicParams = true;
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return <AuthenticatedProviders>{children}</AuthenticatedProviders>;
+  const { authenticated, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !authenticated) {
+      router.push("/auth/signin");
+    }
+  }, [authenticated, loading, router]);
+
+  // Aguarda verificação de autenticação
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Redireciona se não autenticado
+  if (!authenticated) {
+    return null;
+  }
+
+  // Renderiza com providers e layout apenas se autenticado
+  return (
+    <AuthenticatedProviders>
+      <Layout>{children}</Layout>
+    </AuthenticatedProviders>
+  );
 }

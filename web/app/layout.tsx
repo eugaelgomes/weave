@@ -1,11 +1,11 @@
 "use client";
 
+"use client";
+
 import { Geist, Geist_Mono } from "next/font/google";
 import { useEffect } from "react";
 import "./globals.css";
 import AuthProviderClient from "./contexts/AuthProviderClient";
-import { ConditionalProviders } from "./contexts/ConditionalProviders";
-import Layout from "./app/components/layout/layout";
 import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
@@ -76,11 +76,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProviderClient>
-          <ConditionalProviders>
-            <Layout>{children}</Layout>
-          </ConditionalProviders>
-        </AuthProviderClient>
+        <AuthProviderClient>{children}</AuthProviderClient>
         <Toaster position="top-right" expand={true} richColors closeButton />
       </body>
     </html>

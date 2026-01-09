@@ -160,7 +160,7 @@ async function delete_account_request(nome, email, username, token) {
           </div>
     
           <div class="main-content">
-            <h2>⚠️ Solicitação de Exclusão de Conta</h2>
+            <h2>Solicitação de Exclusão de Conta</h2>
             
             <p>Prezado(a) <strong>${nome}</strong>,</p>
             
@@ -169,7 +169,7 @@ async function delete_account_request(nome, email, username, token) {
             <p>Nome de usuário: <strong>${username}</strong></p>
     
             <div class="warning-box">
-              <h3>⚠️ Atenção: Esta ação é irreversível</h3>
+              <h3>Atenção: Esta ação é irreversível</h3>
               <p>Ao confirmar a exclusão, os seguintes dados serão permanentemente removidos:</p>
               <ul>
                 <li>Todas as suas anotações e rascunhos</li>
@@ -181,8 +181,6 @@ async function delete_account_request(nome, email, username, token) {
               <p><strong>Este processo não pode ser desfeito.</strong></p>
             </div>
     
-            <p>Para confirmar a exclusão da sua conta, clique no botão abaixo:</p>
-            
             <div class="btn-container">
               <a href="${confirmationLink}" class="btn">Confirmar Exclusão da Conta</a>
             </div>

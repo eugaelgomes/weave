@@ -1,6 +1,6 @@
 // services/projects-service/ProjectsService.ts
 import { apiClient, handleResponse } from "../api-methods";
-import { API_ENDPOINTS } from "../api-routes";
+import { API_ENDPOINTS } from "../api-methods";
 
 export interface ProjectProperties {
   priority?: "alta" | "media" | "baixa";

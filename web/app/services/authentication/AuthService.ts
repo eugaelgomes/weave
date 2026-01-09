@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import { API_ENDPOINTS } from "../api-routes";
+import { API_ENDPOINTS } from "../api-methods";
 import { apiClient, handleResponse } from "../api-methods";
 
 // --- 1. Interfaces de Domínio (Frontend) ---
