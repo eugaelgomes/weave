@@ -40,9 +40,37 @@ class OrganizationsRepository {
 
   async getOrganizationMembers(organization_id) {
     const query = `
-      SELECT om.*, u.name, u.username, u.email, u.avatar_url
+      SELECT 
+        om.*,
+        u1.name,
+        u1.username,
+        u1.email,
+        u1.avatar_url,
+        u2.name as inviter_name,
+        u2.username as inviter_username,
+        u2.avatar_url as inviter_avatar_url,
+        (SELECT COUNT(*) 
+         FROM notes n 
+         WHERE n.user_id = u1.user_id AND n.deleted = false) as notes_count,
+        (SELECT COALESCE(json_agg(json_build_object(
+           'project_id', p.id::text,
+           'project_name', p.title,
+           'role', pm.role
+         )), '[]'::json)
+         FROM projects_members pm
+         JOIN projects p ON p.id = pm.project_id
+         WHERE pm.user_id = u1.user_id
+           AND pm.deleted = false 
+           AND p.deleted = false) as projects,
+        (SELECT ul.created_at as last_login_at
+         FROM users_logs ul
+         WHERE ul.user_id = u1.user_id 
+           AND ul.log_type = 'auth_login'
+         ORDER BY ul.created_at DESC
+         LIMIT 1) as last_login
       FROM organizations_members om
-      LEFT JOIN users u ON om.user_id = u.user_id
+      LEFT JOIN users u1 ON om.user_id = u1.user_id
+      LEFT JOIN users u2 ON om.invited_by = u2.user_id
       WHERE om.org_id = $1
       ORDER BY 
         CASE om.role 
@@ -357,6 +385,30 @@ RETURNING *;
     `;
     const results = await executeQuery(query, [org_id, banner_url, user_id]);
     return results[0];
+  }
+
+  async getOrganizationProjects(organization_id) {
+    const query = `
+      SELECT 
+        p.id,
+        p.title,
+        p.description,
+        p.user_id as owner_user_id,
+        p.org_id,
+        p.properties,
+        p.created_at,
+        p.updated_at,
+        pm.user_id as project_member_user_id,
+        (SELECT COUNT(*) 
+         FROM projects_members pm 
+         WHERE pm.project_id = p.id AND pm.deleted = false) as members_count
+      FROM projects p
+      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.user_id = p.user_id AND pm.deleted = false
+      WHERE p.org_id = $1 AND p.deleted = false
+      ORDER BY p.created_at DESC;
+    `;
+    const results = await executeQuery(query, [organization_id]);
+    return results;
   }
 }
 

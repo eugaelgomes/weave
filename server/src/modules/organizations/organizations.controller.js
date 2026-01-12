@@ -14,6 +14,8 @@ const {
   validRoles,
   orgDataResponse,
 } = require("./normalizer");
+const { create } = require("domain");
+const { count } = require("console");
 
 class OrganizationsController {
   constructor() {
@@ -122,7 +124,7 @@ class OrganizationsController {
       );
 
       res.status(201).json({
-        success: true,
+        status: "OK",
         message: "Organização criada com sucesso",
         data: newOrganization,
       });
@@ -178,7 +180,7 @@ class OrganizationsController {
 
       res
         .status(200)
-        .json({ success: true, organization_data: formattedOrganization });
+        .json({ status: "OK", organization_data: formattedOrganization });
     } catch (error) {
       console.error("Erro ao buscar organização:", error);
       res
@@ -257,7 +259,7 @@ class OrganizationsController {
       );
 
       res.status(200).json({
-        success: true,
+        status: "OK",
         message: "Organização atualizada com sucesso",
         data: updatedOrg,
       });
@@ -310,7 +312,7 @@ class OrganizationsController {
       );
 
       res.status(200).json({
-        success: true,
+        status: "OK",
         message: "Propriedades atualizadas com sucesso",
         data: updatedOrg,
       });
@@ -350,7 +352,7 @@ class OrganizationsController {
       );
 
       res.status(200).json({
-        success: true,
+        status: "OK",
         message: "Organização excluída com sucesso",
         data: deletedOrg,
       });
@@ -392,7 +394,7 @@ class OrganizationsController {
       );
 
       res.status(200).json({
-        success: true,
+        status: "OK",
         message: "Organização restaurada com sucesso",
         data: restoredOrg,
       });
@@ -452,7 +454,7 @@ class OrganizationsController {
         );
 
       res.status(200).json({
-        success: true,
+        status: "OK",
         message: "Membro adicionado com sucesso",
         data: newMember,
       });
@@ -499,7 +501,7 @@ class OrganizationsController {
       }
 
       res.status(200).json({
-        success: true,
+        status: "OK",
         message: "Membro removido com sucesso",
         data: removed,
       });
@@ -528,10 +530,56 @@ class OrganizationsController {
         currentOrg.id
       );
 
-      res.status(200).json({ success: true, data: members });
+      res.status(200).json({
+        status: "OK",
+        organization_id: currentOrg.id,
+        count: members.length,
+        count_by_role: members.reduce((acc, member) => {
+          acc[member.role] = (acc[member.role] || 0) + 1;
+          return acc;
+        }, {}),
+        count_by_status: members.reduce((acc, member) => {
+          acc[member.status] = (acc[member.status] || 0) + 1;
+          return acc;
+        }, {}),
+        count_by_suspended: members.reduce((acc, member) => {
+          const key = member.suspended || false ? "suspended" : "active";
+          acc[key] = (acc[key] || 0) + 1;
+          return acc;
+        }, {}),
+        list_org_members: members.map((member) => ({
+          member_data: {
+            id: member.user_id,
+            name: member.name,
+            username: member.username,
+            email: member.email,
+            avatar_url: member.avatar_url || null,
+            membership: {
+              role: member.role,
+              status: member.status,
+              suspended: member.suspended,
+              created_at: member.created_at,
+              updated_at: member.updated_at,
+            },
+            activity: {
+              notes_count: parseInt(member.notes_count) || 0,
+              projects: member.projects || [],
+              last_login_at: member.last_login_at || null,
+            },
+            invited_by: member.invited_by
+              ? {
+                  id: member.invited_by,
+                  name: member.inviter_name,
+                  username: member.inviter_username,
+                  avatar_url: member.inviter_avatar_url || null,
+                }
+              : null,
+          },
+        })),
+      });
     } catch (error) {
       console.error("Erro ao buscar membros:", error);
-      res.status(500).json({ success: false, error: "Erro ao buscar membros" });
+      res.status(500).json({ status: "ERROR", error: "Erro ao buscar membros" });
     }
   }
 
@@ -572,7 +620,7 @@ class OrganizationsController {
       );
 
       res.status(200).json({
-        success: true,
+        status: "OK",
         message: "Logo atualizado com sucesso",
         data: {
           organization: updatedOrg,
@@ -629,7 +677,7 @@ class OrganizationsController {
       );
 
       res.status(200).json({
-        success: true,
+        status: "OK",
         message: "Banner updated successfully!",
         organization_data: {
           organization: orgDataResponse(updatedOrg),
@@ -727,7 +775,7 @@ class OrganizationsController {
       }
 
       res.status(201).json({
-        success: true,
+        status: "OK",
         message: "Convite enviado com sucesso",
         data: {
           invite_id: invite.invite_id,
@@ -783,7 +831,7 @@ class OrganizationsController {
         await this.organizationsRepository.verifyOrgInvite(invite.invite_id);
 
         return res.status(200).json({
-          success: true,
+          status: "OK",
           message: "Convite aceito com sucesso",
           data: {
             organization: {
@@ -906,7 +954,7 @@ class OrganizationsController {
       }
 
       return res.status(201).json({
-        success: true,
+        status: "OK",
         message: "Conta criada e convite aceito com sucesso",
         data: {
           user_id: newUserId,
@@ -940,7 +988,7 @@ class OrganizationsController {
       );
 
       res.status(200).json({
-        success: true,
+        status: "OK",
         data: invites,
       });
     } catch (error) {
@@ -976,12 +1024,43 @@ class OrganizationsController {
       await this.organizationsRepository.deleteOrgInvite(invite_id);
 
       res.status(200).json({
-        success: true,
+        status: "OK",
         message: "Convite cancelado com sucesso",
       });
     } catch (error) {
       console.error("Erro ao cancelar convite:", error);
       res.status(500).json({ error: "Erro ao cancelar convite" });
+    }
+  }
+
+  async organizationProjects(req, res) {
+    try {
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      const currentOrg = await this._getUserOrganization(userId);
+      if (!currentOrg) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Organização não encontrada" });
+      }
+
+      const projects =
+        await this.organizationsRepository.getOrganizationProjects(
+          currentOrg.id
+        );
+
+      res.status(200).json({
+        status: "OK",
+        organization_id: currentOrg.id,
+        projects: projects,
+      });
+    } catch (error) {
+      console.error("Erro ao buscar projetos da organização:", error);
+      res.status(500).json({
+        status: "ERROR",
+        error: "Erro ao buscar projetos da organização",
+      });
     }
   }
 }

@@ -91,4 +91,10 @@ router.put(
   organizationsController.uploadBanner.bind(organizationsController)
 );
 
+
+router.get(
+  "/organization-projects",
+  organizationsController.organizationProjects.bind(organizationsController)
+);
+
 module.exports = router;

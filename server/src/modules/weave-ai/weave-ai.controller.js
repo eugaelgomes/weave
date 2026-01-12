@@ -946,7 +946,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         });
       }
 
-      const chatRepository = require("@/repositories/chat-manager");
+      const chatRepository = require("@/modules/weave-ai/weave-ai.repository");
 
       // Cria ou obtém sessão
       let currentSessionId = sessionId;
@@ -1131,7 +1131,7 @@ Inclua apenas os campos que devem ser atualizados.`,
       const userId = req.user?.userId;
       const { sessionId } = req.query;
 
-      const chatRepository = require("@/repositories/chat-manager");
+      const chatRepository = require("@/modules/weave-ai/weave-ai.repository");
 
       if (sessionId) {
         // Busca mensagens de uma sessão específica
