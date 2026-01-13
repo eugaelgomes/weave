@@ -9,12 +9,17 @@ const AuthRepository = require("@/modules/auth/auth.repository");
 
 // Serviços de Email e Logs
 const welcomeMailModule = require("@/services/email/templates/welcome-mail");
-const { delete_account_notification } = require("@/services/email/templates/delete-account/deleted-account-message");
-const { sendEmailChangeValidation } = require("@/services/email/templates/users-access/reset-password");
-const { delete_account_request } = require("@/services/email/templates/delete-account/delete-account-request");
+const {
+  delete_account_notification,
+} = require("@/services/email/templates/delete-account/deleted-account-message");
+const {
+  sendEmailChangeValidation,
+} = require("@/services/email/templates/users-access/reset-password");
+const {
+  delete_account_request,
+} = require("@/services/email/templates/delete-account/delete-account-request");
 const updateProfileLogs = require("@/utils/system_logs/update_profile-logs");
 const PlansManager = require("@/services/plans/manager");
-const { userDataResponse } = require("./normalizer");
 const { stat } = require("fs");
 
 const { welcome_message } = welcomeMailModule;
@@ -259,10 +264,48 @@ class userController {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
 
-      return res.status(200).json(
-        userDataResponse(user)
-      );
-
+      return res.status(200).json({
+        user: {
+          user_profile: {
+            id: user.user_id,
+            user_name: user.user_name,
+            username: user.username,
+            email: user.email,
+            avatar_url: user.avatar_url,
+            birth_date: user.birth_date,
+            phone_number: user.phone_number,
+            created_at: user.created_at,
+            updated_at: user.updated_at,
+          },
+          user_settings: {
+            theme_mode: user.theme_mode,
+            private_profile: user.private_profile,
+            auth_with_google: user.auth_with_google,
+          },
+          user_organization: {
+            id: user.org_id,
+            unique_name: user.org_unique_name,
+            name: user.org_name,
+            logo_url: user.org_logo_url,
+            member_role: user.org_member_role,
+            member_since: user.org_member_since,
+          },
+          current_plan: {
+            id: user.user_plan_id,
+            plan_name: user.plan_name,
+            client_type: user.client_type,
+            details: user.plan_details || {},
+          },
+          current_plan_usage: {
+            plan_id: user.usage_plan_id,
+            plan_name: user.usage_plan_name,
+            client_type: user.client_type,
+            period_start: user.period_start,
+            period_end: user.period_end,
+            details: user.usage_details || {},
+          },
+        },
+      });
     } catch (error) {
       console.error("Erro ao buscar perfil:", error);
       this._handleError(error, res);
@@ -509,8 +552,11 @@ class userController {
 
       const token = crypto.randomBytes(12).toString("hex");
 
-      const result = await UserRepository.createDeleteAccountToken(userId, token);
-      
+      const result = await UserRepository.createDeleteAccountToken(
+        userId,
+        token
+      );
+
       if (result && result.length > 0) {
         try {
           await delete_account_request(
@@ -523,13 +569,15 @@ class userController {
           console.error("Falha ao enviar email para:", emailError);
           return res.status(500).json({
             error: "Email error",
-            message: "Falha ao enviar email de confirmação. Por favor, tente novamente.",
+            message:
+              "Falha ao enviar email de confirmação. Por favor, tente novamente.",
           });
         }
 
-        res.status(200).json({ 
+        res.status(200).json({
           status: "OK",
-          message: "Email de confirmação enviado. Por favor, verifique sua caixa de entrada para confirmar a exclusão da conta." 
+          message:
+            "Email de confirmação enviado. Por favor, verifique sua caixa de entrada para confirmar a exclusão da conta.",
         });
       } else {
         res.status(500).json({
@@ -587,12 +635,15 @@ class userController {
             userData.username
           );
         } catch (emailError) {
-          console.error("Falha ao enviar email de confirmação de exclusão:", emailError);
+          console.error(
+            "Falha ao enviar email de confirmação de exclusão:",
+            emailError
+          );
         }
 
-        res.status(200).json({ 
+        res.status(200).json({
           status: "OK",
-          message: "Conta excluída com sucesso." 
+          message: "Conta excluída com sucesso.",
         });
       } else {
         res.status(500).json({
@@ -610,7 +661,9 @@ class userController {
     const { token } = req.body;
 
     if (!token) {
-      return res.status(400).json({ message: "Token de ativação é obrigatório" });
+      return res
+        .status(400)
+        .json({ message: "Token de ativação é obrigatório" });
     }
 
     try {

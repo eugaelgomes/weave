@@ -238,8 +238,8 @@ class NotesController {
 
       if (result.pagination) {
         res.status(200).json({
-          notes: notesWithBlocks,
           pagination: result.pagination,
+          notes: notesWithBlocks,
         });
       } else {
         res.status(200).json({ notes: notesWithBlocks });

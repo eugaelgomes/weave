@@ -376,7 +376,7 @@ Inclua apenas os campos que devem ser atualizados.`,
    * @private
    */
   async _executeAction(userId, action, aiResponse, context) {
-    const blocksRepository = require("@/repositories/blocks-manager");
+    const blocksRepository = require("@/modules/notes/blocks.repository");
 
     try {
       // Parse da resposta se for string

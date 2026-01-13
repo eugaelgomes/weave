@@ -16,12 +16,10 @@ class AuthController {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({
-          message: "Dados não podem ser nulos ou inválidos.",
-          errors: errors.array(),
-        });
+      return res.status(400).json({
+        message: "Dados não podem ser nulos ou inválidos.",
+        errors: errors.array(),
+      });
     }
 
     try {
@@ -45,8 +43,7 @@ class AuthController {
       const verifiedAccount = user.email_verified;
       if (!verifiedAccount) {
         return res.status(403).json({
-          message:
-            "Por favor, verifique seu e-mail antes de fazer login.",
+          message: "Por favor, verifique seu e-mail antes de fazer login.",
         });
       }
 
@@ -87,55 +84,38 @@ class AuthController {
         domain: domain,
       });
 
-      // Res de login com token para login via Request Postman/Insomnia/Curl
-      const login_time = new Date();
+      // Res de login com token para login via Request Postman/Curl
       return res.status(200).json({
-        user_data: {
-          profile: {
+        status: "OK",
+        message: "Autenticação realizada com sucesso",
+        user: {
+          user_profile: {
             id: user.user_id,
-            user_name: user.name,
+            name: user.name,
             username: user.username,
             email: user.email,
             avatar_url: user.avatar_url,
-            birth_date: user.birth_date,
-            phone_number: user.phone_number,
-            created_at: user.created_at,
-            updated_at: user.updated_at,
           },
-          settings: {
+          user_settings: {
             theme_mode: user.theme_mode,
             private_profile: user.private_profile,
-            auth_with_google: user.auth_with_google,
           },
-          organization: {
+          user_organization: {
             id: user.org_id,
             unique_name: user.org_unique_name,
-            org_name: user.org_name,
-            org_logo_url: user.org_logo_url,
-            org_member_role: user.org_member_role,
-            org_member_since: user.org_member_since,
+            name: user.org_name,
+            role: user.org_member_role,
           },
-          current_plan: {
-            id: user.user_plan_id,
+          user_subscription: {
+            plan_id: user.user_plan_id,
             plan_name: user.plan_name,
-            client_type: user.client_type,
-            details: user.plan_details || {},
-          },
-          current_plan_usage: {
-            plan_id: user.usage_plan_id,
-            plan_name: user.usage_plan_name,
-            client_type: user.usage_client_type,
-            period_start: user.period_start,
-            period_end: user.period_end,
-            details: user.usage_details || {},
           },
         },
-        token: token,
-        status: "OK",
-        login_time: login_time,
-        token_expires_in: 12 * 60 * 60,
-        redirect: true,
-        redirect_url: "/app/home",
+        auth: {
+          token: token,
+          expires_in: 12 * 60 * 60,
+          login_time: new Date(),
+        },
       });
     } catch (error) {
       console.error(error);

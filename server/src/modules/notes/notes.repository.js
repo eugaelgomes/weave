@@ -155,8 +155,8 @@ class notesRepository {
     const offset = (page - 1) * limit;
 
     let whereConditions = [
-      `(n.user_id = $1 OR EXISTS (SELECT 1 FROM note_collaborators nc2 WHERE nc2.note_id = n.id AND nc2.user_id = $1))",
-      "n.deleted = false`,
+      `(n.user_id = $1 OR EXISTS (SELECT 1 FROM note_collaborators nc2 WHERE nc2.note_id = n.id AND nc2.user_id = $1))`,
+      `n.deleted = false`,
     ];
     let queryParams = [userId];
     let paramIndex = 2;
