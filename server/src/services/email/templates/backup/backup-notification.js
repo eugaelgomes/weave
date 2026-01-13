@@ -2,32 +2,26 @@ const { MailService } = require("@/services/email/config/index");
 const backupReadyTemplate = require("@/services/email/templates/backup/index");
 
 /**
- * Envia email com backup de dados do usuário
+ * Envia email com link de download do backup
  * @param {string} userEmail - Email do usuário
  * @param {string} userName - Nome do usuário
- * @param {Object} backupData - Dados do backup
- * @param {Object} options - Opções do envio
+ * @param {string} downloadUrl - URL de download do backup
+ * @param {Date} expiresAt - Data de expiração do link
  * @returns {Object} - { success: boolean, error?: string }
  */
-async function sendBackupEmail(userEmail, userName, backupData, options = {}) {
+async function sendBackupEmail(userEmail, userName, downloadUrl, expiresAt) {
   try {
-    // backupData agora é uma string CSV
-    const fileSizeBytes = Buffer.byteLength(backupData, "utf8");
-    const fileSize = formatFileSize(fileSizeBytes);
-
-    // Contar linhas para obter total de registros (linha 1 é cabeçalho)
-    const totalLines = backupData.split("\n").length - 1;
-
-    // Verificar se arquivo não é muito grande para email (limite: 25MB)
-    const maxEmailSize = 25 * 1024 * 1024; // 25MB
-    const sendAsAttachment = fileSizeBytes < maxEmailSize;
+    // Calcular tempo até expiração
+    const hoursUntilExpiration = Math.round(
+      (new Date(expiresAt) - new Date()) / (1000 * 60 * 60)
+    );
 
     // Gerar o template do email
     const emailTemplate = backupReadyTemplate({
       userName: userName,
-      totalNotes: totalLines,
-      fileSize: fileSize,
-      downloadUrl: options.downloadUrl || null,
+      downloadUrl: downloadUrl,
+      expiresAt: new Date(expiresAt).toLocaleString("pt-BR"),
+      hoursValid: hoursUntilExpiration,
     });
 
     const mailOptions = {
@@ -38,24 +32,10 @@ async function sendBackupEmail(userEmail, userName, backupData, options = {}) {
       html: emailTemplate.html,
     };
 
-    // Adicionar anexo se arquivo não for muito grande
-    if (sendAsAttachment && !options.downloadUrl) {
-      const filename = `notes-backup-${Date.now()}.csv`;
-      mailOptions.attachments = [
-        {
-          filename: filename,
-          content: backupData,
-          contentType: "text/csv",
-        },
-      ];
-    }
-
     await MailService().sendMail(mailOptions);
 
     return {
       success: true,
-      fileSize: fileSizeBytes,
-      sentAsAttachment: sendAsAttachment,
     };
   } catch (error) {
     return {

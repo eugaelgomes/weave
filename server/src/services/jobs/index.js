@@ -1,26 +1,29 @@
 const { executeQuery } = require("../db/index");
+const storageService = require("../storage/index");
 
 class JobManager {
   constructor() {
     this.jobs = new Map(); // Cache em memória para performance
+    this.cleanupIsRunning = false;
+    
+    // Iniciar serviço de limpeza automática
+    this.startCleanupService();
   }
 
   /**
    * Cria um novo job
-   * @param {string} jobId - ID único do job
    * @param {string} type - Tipo do job (backup_export)
    * @param {string} userId - ID do usuário
    * @param {Object} metadata - Metadados adicionais
    */
-  async createJob(jobId, type, userId, metadata = {}) {
+  async createJob(type, userId, metadata = {}) {
     const query = `
-      INSERT INTO jobs (id, type, user_id, status, progress, metadata)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO jobs (type, user_id, status, progress, metadata)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *
     `;
 
     const [job] = await executeQuery(query, [
-      jobId,
       type,
       userId,
       "pending",
@@ -29,9 +32,10 @@ class JobManager {
     ]);
 
     // Cache em memória
-    this.jobs.set(jobId, this.formatJob(job));
+    const formattedJob = this.formatJob(job);
+    this.jobs.set(formattedJob.id, formattedJob);
 
-    return this.formatJob(job);
+    return formattedJob;
   }
 
   /**
@@ -75,7 +79,7 @@ class JobManager {
     const query = `
       UPDATE jobs 
       SET ${setParts.join(", ")}
-      WHERE id = $${paramIndex}
+      WHERE job_id = $${paramIndex}
       RETURNING *
     `;
 
@@ -104,7 +108,7 @@ class JobManager {
     }
 
     // Buscar no banco
-    const query = "SELECT * FROM jobs WHERE id = $1";
+    const query = "SELECT * FROM jobs WHERE job_id = $1";
     const [job] = await executeQuery(query, [jobId]);
 
     if (job) {
@@ -133,15 +137,11 @@ class JobManager {
   }
 
   /**
-   * Remove job do banco e cache
+   * Remove job apenas do cache (mantém no banco)
    * @param {string} jobId - ID do job
    */
-  async deleteJob(jobId) {
-    // Remover do banco
-    const query = "DELETE FROM jobs WHERE id = $1";
-    await executeQuery(query, [jobId]);
-
-    // Remover do cache
+  clearJobFromCache(jobId) {
+    // Remover apenas do cache
     this.jobs.delete(jobId);
   }
 
@@ -152,7 +152,7 @@ class JobManager {
    */
   formatJob(dbJob) {
     return {
-      id: dbJob.id,
+      id: dbJob.job_id,
       type: dbJob.type,
       userId: dbJob.user_id,
       status: dbJob.status,
@@ -167,45 +167,117 @@ class JobManager {
   }
 
   /**
-   * Cleanup de jobs antigos (executar periodicamente)
-   * Remove jobs finalizados há mais de 24 horas
+   * Limpa apenas o cache em memória (mantém todos os jobs no banco)
    */
-  async cleanupOldJobs() {
-    const query = `
-      DELETE FROM jobs 
-      WHERE status IN ('completed', 'failed') 
-      AND completed_at < NOW() - INTERVAL '24 hours'
-    `;
-
-    const result = await executeQuery(query);
-
-    // Limpar cache também
+  clearCache() {
+    // Limpar apenas cache, não remove do banco
     this.jobs.clear();
-
-    console.log("Cleanup executado: jobs antigos removidos");
+    console.log("Cache de jobs limpo");
   }
 
   /**
-   * Gera ID único para job
-   * @param {string} prefix - Prefixo (ex: backup)
-   * @returns {string} ID único
+   * Inicia o serviço de limpeza automática de backups expirados
    */
-  generateJobId(prefix = "job") {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 8);
-    return `${prefix}_${timestamp}_${random}`;
+  startCleanupService() {
+    // Executar limpeza a cada 6 horas
+    this.cleanupIntervalId = setInterval(() => this.cleanupExpiredBackups(), 6 * 60 * 60 * 1000);
+    
+    // Executar imediatamente ao iniciar (após 5 segundos)
+    setTimeout(() => this.cleanupExpiredBackups(), 5000);
+    
+    console.log("Serviço de limpeza de backups iniciado (execução a cada 6h)");
+  }
+
+  /**
+   * Limpa backups expirados (mais de 48h)
+   */
+  async cleanupExpiredBackups() {
+    if (this.cleanupIsRunning) {
+      console.log("Limpeza de backups já está em execução, pulando...");
+      return;
+    }
+
+    this.cleanupIsRunning = true;
+
+    try {
+      console.log("Iniciando limpeza de backups expirados...");
+
+      // Buscar tokens de backup expirados com seus jobs relacionados
+      const expiredTokensQuery = `
+        SELECT t.token, t.user_id, j.result
+        FROM tokens t
+        LEFT JOIN jobs j ON j.user_id = t.user_id 
+          AND j.type = 'backup_export' 
+          AND j.result IS NOT NULL
+          AND j.result->>'downloadToken' = t.token
+        WHERE t.type = 'backup_download' 
+        AND t.expires_at < NOW()
+      `;
+
+      const expiredTokens = await executeQuery(expiredTokensQuery);
+
+      if (expiredTokens.length === 0) {
+        console.log("Nenhum backup expirado encontrado.");
+        return;
+      }
+
+      console.log(`Encontrados ${expiredTokens.length} backups expirados para limpar.`);
+
+      let deletedCount = 0;
+      let failedCount = 0;
+
+      for (const token of expiredTokens) {
+        try {
+          const result = token.result;
+          const storageKey = result?.storageKey;
+
+          if (storageKey) {
+            // Deletar arquivo do storage
+            const deleted = await storageService.deleteImage(storageKey);
+
+            if (deleted) {
+              deletedCount++;
+              console.log(`Backup deletado: ${storageKey}`);
+            } else {
+              failedCount++;
+              console.error(`Falha ao deletar backup: ${storageKey}`);
+            }
+          } else {
+            console.warn(`Token ${token.token} sem storage_key associado`);
+          }
+
+          // Deletar token do banco (mesmo se falhar no storage)
+          await executeQuery("DELETE FROM tokens WHERE token = $1", [token.token]);
+
+        } catch (error) {
+          failedCount++;
+          console.error(`Erro ao processar token ${token.token}:`, error.message);
+        }
+      }
+
+      console.log(
+        `Limpeza concluída: ${deletedCount} backups deletados, ${failedCount} falhas.`
+      );
+
+    } catch (error) {
+      console.error("Erro durante limpeza de backups:", error);
+    } finally {
+      this.cleanupIsRunning = false;
+    }
+  }
+
+  /**
+   * Para o serviço de limpeza
+   */
+  stopCleanupService() {
+    if (this.cleanupIntervalId) {
+      clearInterval(this.cleanupIntervalId);
+      console.log("Serviço de limpeza de backups parado.");
+    }
   }
 }
 
 // Singleton
 const jobManager = new JobManager();
-
-// Cleanup automático a cada 6 horas
-setInterval(
-  () => {
-    jobManager.cleanupOldJobs();
-  },
-  6 * 60 * 60 * 1000
-);
 
 module.exports = jobManager;

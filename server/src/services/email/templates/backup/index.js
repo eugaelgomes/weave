@@ -2,40 +2,38 @@
  * Template de email para entrega de backup de dados
  * @param {Object} options - Opções do template
  * @param {string} options.userName - Nome do usuário
- * @param {string} options.totalNotes - Total de notas no backup
- * @param {string} options.fileSize - Tamanho do arquivo
- * @param {string} options.downloadUrl - URL para download (opcional)
+ * @param {string} options.downloadUrl - URL para download
+ * @param {string} options.expiresAt - Data/hora de expiração
+ * @param {number} options.hoursValid - Horas até expiração
  * @returns {Object} Template do email
  */
 function backupReadyTemplate({
   userName,
-  totalNotes,
-  fileSize,
-  downloadUrl = null,
+  downloadUrl,
+  expiresAt,
+  hoursValid,
 }) {
-  const subject = "Backup de dados disponível";
+  const subject = "Seu backup está pronto para download";
 
   const text = `
 Prezado(a) ${userName},
 
 Seu backup de dados foi processado com sucesso e está disponível para download.
 
-DETALHES DO BACKUP:
-Total de registros: ${totalNotes}
-Tamanho do arquivo: ${fileSize}
-Data de geração: ${new Date().toLocaleString("pt-BR")}
+LINK DE DOWNLOAD:
+${downloadUrl}
 
-${
-  downloadUrl
-    ? `Link para download: ${downloadUrl}`
-    : "O arquivo está anexado a este email."
-}
+ATENÇÃO:
+- Este link expira em ${hoursValid} horas (${expiresAt})
+- Após a expiração, o arquivo será automaticamente deletado
+- O link só pode ser usado uma vez
+- Mantenha este link em segurança
 
-INFORMAÇÕES IMPORTANTES:
-- Este backup contém todas as suas notas e blocos ativos
-- Dados sensíveis foram removidos por segurança
+SOBRE O ARQUIVO:
 - Formato: CSV (compatível com Excel e Google Sheets)
+- Contém todas as suas notas e blocos ativos
 - Cada linha representa um bloco de uma nota
+- Blocos deletados não estão incluídos
 
 Atenciosamente,
 Equipe Weave Notes
@@ -55,19 +53,18 @@ support@gaelgomes.dev
     .header p { margin: 0; font-size: 14px; color: #d4d4d4; }
     .content { padding: 40px 30px; }
     .greeting { font-size: 16px; margin-bottom: 20px; color: #0a0a0a; }
-    .details { background: #fafafa; padding: 20px; border-radius: 6px; margin: 25px 0; border-left: 4px solid #eab308; }
-    .details h3 { margin: 0 0 15px 0; font-size: 16px; color: #0a0a0a; font-weight: 600; }
-    .detail-item { margin: 12px 0; padding: 10px 0; border-bottom: 1px solid #e5e5e5; display: flex; justify-content: space-between; }
-    .detail-item:last-child { border-bottom: none; }
-    .detail-label { color: #737373; font-size: 14px; }
-    .detail-value { color: #0a0a0a; font-weight: 500; font-size: 14px; }
-    .download-section { text-align: center; margin: 30px 0; }
-    .download-btn { background: #eab308; color: #0a0a0a; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 15px; }
+    .download-section { text-align: center; margin: 30px 0; padding: 30px; background: #fafafa; border-radius: 6px; }
+    .download-btn { background: #eab308; color: #0a0a0a; padding: 16px 40px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 16px; }
     .download-btn:hover { background: #ca9a06; }
+    .warning-box { background: #fef3c7; border: 2px solid #eab308; padding: 20px; border-radius: 6px; margin: 25px 0; }
+    .warning-box h4 { margin: 0 0 12px 0; font-size: 15px; color: #92400e; font-weight: 600; }
+    .warning-box ul { margin: 10px 0; padding-left: 20px; color: #92400e; font-size: 14px; }
+    .warning-box li { margin: 8px 0; }
     .info-box { background: #fafafa; border: 1px solid #e5e5e5; padding: 20px; border-radius: 6px; margin: 25px 0; }
     .info-box h4 { margin: 0 0 12px 0; font-size: 15px; color: #0a0a0a; font-weight: 600; }
     .info-box ul { margin: 10px 0; padding-left: 20px; color: #525252; font-size: 14px; }
     .info-box li { margin: 8px 0; }
+    .expiry-notice { text-align: center; color: #92400e; font-size: 13px; margin-top: 15px; font-weight: 500; }
     .footer { background: #fafafa; padding: 30px; text-align: center; border-top: 1px solid #e5e5e5; }
     .footer-content { color: #737373; font-size: 14px; }
     .footer-content strong { color: #0a0a0a; }
@@ -78,58 +75,42 @@ support@gaelgomes.dev
 <body>
   <div class="container">
     <div class="header">
-      <h1>Backup Disponível</h1>
-      <p>Processamento concluído com sucesso</p>
+      <h1>Backup Pronto!</h1>
+      <p>Seu arquivo está disponível para download</p>
     </div>
     
     <div class="content">
       <p class="greeting">Prezado(a) ${userName},</p>
       
-      <p>Seu backup de dados foi processado com sucesso e está disponível para download.</p>
+      <p>Seu backup de dados foi processado com sucesso e está pronto para download.</p>
       
-      <div class="details">
-        <h3>Detalhes do Backup</h3>
-        <div class="detail-item">
-          <span class="detail-label">Total de registros</span>
-          <span class="detail-value">${totalNotes}</span>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Tamanho do arquivo</span>
-          <span class="detail-value">${fileSize}</span>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Data de geração</span>
-          <span class="detail-value">${new Date().toLocaleString("pt-BR")}</span>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Formato</span>
-          <span class="detail-value">CSV</span>
-        </div>
+      <div class="download-section">
+        <a href="${downloadUrl}" class="download-btn">⬇️ Baixar Backup Agora</a>
+        <p class="expiry-notice">⏱️ Expira em ${hoursValid} horas (${expiresAt})</p>
       </div>
 
-      ${
-        downloadUrl
-          ? `<div class="download-section">
-             <a href="${downloadUrl}" class="download-btn">Baixar Backup</a>
-           </div>`
-          : `<div class="info-box">
-             <h4>Arquivo Anexado</h4>
-             <p style="margin: 0; color: #525252;">O arquivo de backup está anexado a este email.</p>
-           </div>`
-      }
-
-      <div class="info-box">
-        <h4>Informações de Segurança</h4>
+      <div class="warning-box">
+        <h4>⚠️ Importante: Segurança e Validade</h4>
         <ul>
-          <li>Contém todas as notas e blocos ativos da sua conta</li>
-          <li>Dados sensíveis foram removidos por segurança</li>
-          <li>Blocos deletados não estão incluídos</li>
-          <li>Formato CSV compatível com Excel e Google Sheets</li>
-          <li>Cada linha representa um bloco de uma nota</li>
+          <li>Este link expira em <strong>${hoursValid} horas</strong></li>
+          <li>Após a expiração, o arquivo será <strong>automaticamente deletado</strong></li>
+          <li>O link só pode ser usado <strong>uma única vez</strong></li>
+          <li>Não compartilhe este link com outras pessoas</li>
+          <li>Faça o download em um local seguro</li>
         </ul>
       </div>
 
-      <p style="color: #525252; font-size: 14px;">Caso tenha dúvidas, entre em contato com nossa equipe de suporte.</p>
+      <div class="info-box">
+        <h4>📄 Sobre o Arquivo</h4>
+        <ul>
+          <li><strong>Formato:</strong> CSV (compatível com Excel e Google Sheets)</li>
+          <li><strong>Conteúdo:</strong> Todas as suas notas e blocos ativos</li>
+          <li><strong>Estrutura:</strong> Cada linha representa um bloco de uma nota</li>
+          <li><strong>Filtros:</strong> Blocos deletados não estão incluídos</li>
+        </ul>
+      </div>
+
+      <p style="color: #525252; font-size: 14px;">Caso tenha dúvidas ou precise de um novo backup, entre em contato com nossa equipe de suporte.</p>
     </div>
 
     <div class="footer">

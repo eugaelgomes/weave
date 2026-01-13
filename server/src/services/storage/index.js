@@ -2,6 +2,7 @@ const {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } = require("@aws-sdk/client-s3");
 const { v4: uuidv4 } = require("uuid");
 
@@ -33,6 +34,50 @@ class SpacesService {
       },
       forcePathStyle: false, // Digital Ocean Spaces usa virtual hosted-style
     });
+  }
+
+  /**
+   * Faz upload de um arquivo de backup para o Digital Ocean Spaces
+   * @param {Buffer|string} fileContent - Conteúdo do arquivo (Buffer ou string)
+   * @param {string} userId - ID do usuário
+   * @param {string} fileName - Nome do arquivo (opcional)
+   * @returns {Promise<Object>} - Objeto com key do arquivo
+   */
+  async uploadBackup(fileContent, userId, fileName = null) {
+    try {
+      const timestamp = Date.now();
+      const uniqueFileName = fileName || `backup_${userId}_${timestamp}.csv`;
+      const key = `weave-notes/users-content/backups/${userId}/${uniqueFileName}`;
+
+      // Converter string para Buffer se necessário
+      const buffer = Buffer.isBuffer(fileContent) 
+        ? fileContent 
+        : Buffer.from(fileContent, 'utf-8');
+
+      const uploadParams = {
+        Bucket: this.bucketName,
+        Key: key,
+        Body: buffer,
+        ContentType: 'text/csv',
+        ACL: 'private', // Backup privado, só acessível via token
+        CacheControl: 'no-cache, no-store, must-revalidate',
+        Expires: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 horas
+      };
+
+      const command = new PutObjectCommand(uploadParams);
+      await this.s3Client.send(command);
+
+      return {
+        success: true,
+        key: key,
+        fileName: uniqueFileName,
+        size: buffer.length,
+        expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+      };
+    } catch (error) {
+      console.error("Erro ao fazer upload do backup:", error);
+      throw new Error(`Upload de backup falhou: ${error.message}`);
+    }
   }
 
   /**
@@ -106,6 +151,34 @@ class SpacesService {
     } catch (error) {
       console.error("Erro ao deletar imagem do Digital Ocean Spaces:", error);
       return false;
+    }
+  }
+
+  /**
+   * Faz download de um arquivo do Digital Ocean Spaces
+   * @param {string} key - Chave do arquivo no Spaces
+   * @returns {Promise<Buffer>} - Buffer com conteúdo do arquivo
+   */
+  async downloadFile(key) {
+    try {
+      const getParams = {
+        Bucket: this.bucketName,
+        Key: key,
+      };
+
+      const command = new GetObjectCommand(getParams);
+      const response = await this.s3Client.send(command);
+
+      // Converter stream para buffer
+      const chunks = [];
+      for await (const chunk of response.Body) {
+        chunks.push(chunk);
+      }
+
+      return Buffer.concat(chunks);
+    } catch (error) {
+      console.error("Erro ao fazer download do arquivo:", error);
+      throw new Error(`Download falhou: ${error.message}`);
     }
   }
 

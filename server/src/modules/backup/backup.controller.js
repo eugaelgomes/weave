@@ -1,4 +1,4 @@
-const getAllDataRepository = require("@/modules/backup/backup.repository");
+const backupRepository = require("@/modules/backup/backup.repository");
 const userRepository = require("@/modules/users/users.repository");
 const jobManager = require("@/services/jobs/index");
 const {
@@ -7,10 +7,12 @@ const {
 const PlansRepository = require("@/modules/plans/plans.repository");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
+const storageService = require("@/services/storage/index");
+const crypto = require("crypto");
 
 class BackupController {
   constructor() {
-    this.getAllDataRepository = getAllDataRepository;
+    this.backupRepository = backupRepository;
     this.userRepository = userRepository;
   }
 
@@ -68,7 +70,7 @@ class BackupController {
         );
       });
 
-      const dataPromise = this.getAllDataRepository.getAllData(userId);
+      const dataPromise = this.backupRepository.getAllData(userId);
       const rawData = await Promise.race([dataPromise, timeoutPromise]);
 
       await jobManager.updateJob(jobId, { progress: 60 });
@@ -87,12 +89,41 @@ class BackupController {
 
       const backupData = this._formatBackupDataCSV(rawData);
 
+      await jobManager.updateJob(jobId, { progress: 70 });
+
+      // Upload do backup para o storage
+      const uploadResult = await storageService.uploadBackup(
+        backupData,
+        userId,
+        `backup_${userId}_${Date.now()}.csv`
+      );
+
+      if (!uploadResult.success) {
+        throw new Error("Falha ao fazer upload do backup para o storage");
+      }
+
       await jobManager.updateJob(jobId, { progress: 80 });
 
+      // Gerar token de download com validade de 48h
+      const downloadToken = crypto.randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 horas
+
+      await this.backupRepository.createDownloadToken(
+        downloadToken,
+        userId,
+        "backup_download",
+        expiresAt
+      );
+
+      await jobManager.updateJob(jobId, { progress: 90 });
+
+      // Enviar email com link de download
+      const downloadUrl = `${process.env.API_URL || "http://localhost:8080"}/api/backup/download/${downloadToken}`;
       const emailResult = await sendBackupEmail(
         user.email,
         user.name || user.username,
-        backupData
+        downloadUrl,
+        expiresAt
       );
 
       if (!emailResult.success) {
@@ -106,8 +137,11 @@ class BackupController {
         progress: 100,
         result: {
           totalNotes,
-          fileSize: emailResult.fileSize,
-          sentAsAttachment: emailResult.sentAsAttachment,
+          fileSize: uploadResult.size,
+          storageKey: uploadResult.key,
+          downloadToken: downloadToken,
+          expiresAt: expiresAt.toISOString(),
+          emailSent: emailResult.success,
           completedAt: new Date().toISOString(),
         },
       });
@@ -376,8 +410,7 @@ class BackupController {
           error: "Usuário não encontrado",
         });
 
-      const jobId = jobManager.generateJobId("backup");
-      const job = await jobManager.createJob(jobId, "backup_export", userId, {
+      const job = await jobManager.createJob("backup_export", userId, {
         email: user.email,
         username: user.name || user.username,
         requestedAt: new Date().toISOString(),
@@ -386,7 +419,7 @@ class BackupController {
       // Consumir uso de backup após criar o job com sucesso
       await PlanUsageManager.consumeExport(usageRecord.id, "backup");
 
-      setTimeout(() => this._executeBackupJob(jobId, userId), 100);
+      setTimeout(() => this._executeBackupJob(job.id, userId), 100);
 
       const updatedUsage = PlanUsageManager.getNestedValue(
         usageRecord.usage_details,
@@ -399,7 +432,7 @@ class BackupController {
 
       res.status(202).json({
         status: "OK",
-        job_id: jobId,
+        job_id: job.id,
         message: "Backup solicitado com sucesso! Você receberá um email quando estiver pronto.",
         details: {
           backup_status: "pending",
@@ -503,7 +536,7 @@ class BackupController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const rawData = await this.getAllDataRepository.getAllData(userId);
+      const rawData = await this.backupRepository.getAllData(userId);
 
       const summary = {
         total_notes: rawData.length,
@@ -569,6 +602,83 @@ class BackupController {
         },
       });
     } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  async downloadBackup(req, res, next) {
+    try {
+      const { token } = req.params;
+
+      if (!token) {
+        return res.status(400).json({
+          status: "Bad Request",
+          error: "Token não fornecido",
+        });
+      }
+
+      // Buscar token no banco com job relacionado
+      const tokenRecord = await this.backupRepository.getTokenWithJob(token);
+
+      if (!tokenRecord) {
+        return res.status(404).json({
+          status: "Not Found",
+          error: "Token inválido ou já utilizado",
+          message: "O link de download não é válido ou já foi usado",
+        });
+      }
+
+      // Verificar expiração
+      if (new Date() > new Date(tokenRecord.expires_at)) {
+        return res.status(410).json({
+          status: "Gone",
+          error: "Token expirado",
+          message: "O link de download expirou. Solicite um novo backup.",
+        });
+      }
+
+      // Verificar se é o dono (se usuário estiver autenticado)
+      if (req.user?.userId && req.user.userId !== tokenRecord.user_id) {
+        return res.status(403).json({
+          status: "Forbidden",
+          error: "Acesso negado",
+          message: "Você não tem permissão para acessar este backup",
+        });
+      }
+
+      const result = tokenRecord.result;
+      if (!result || !result.storageKey) {
+        return res.status(500).json({
+          status: "Internal Server Error",
+          error: "Backup não encontrado no storage",
+          message: "Não foi possível localizar o arquivo de backup",
+        });
+      }
+
+      const storageKey = result.storageKey;
+      const fileName = `backup_${tokenRecord.user_id}_${Date.now()}.csv`;
+
+      // Fazer download do storage
+      const fileContent = await storageService.downloadFile(storageKey);
+
+      if (!fileContent) {
+        return res.status(500).json({
+          status: "Internal Server Error",
+          error: "Falha ao recuperar arquivo do storage",
+        });
+      }
+
+      // Marcar token como usado
+      await this.backupRepository.markTokenAsUsed(token);
+
+      // Enviar arquivo
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+      res.setHeader("Content-Length", fileContent.length);
+      res.send(fileContent);
+
+    } catch (error) {
+      console.error("Erro no download de backup:", error);
       this._handleError(error, res, next);
     }
   }

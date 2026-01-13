@@ -5,6 +5,9 @@ const {
 const { errorHandler } = require("@/middlewares/error-handler");
 const routes = require("@/routes");
 
+// Inicializar JobManager (que já inicia o serviço de limpeza automaticamente)
+require("@/services/jobs/index");
+
 const app = express();
 
 // Middlewares globais

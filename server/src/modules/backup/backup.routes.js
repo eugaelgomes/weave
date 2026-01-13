@@ -6,7 +6,12 @@ const { verifyToken } = require("@/middlewares/authentication");
 
 const router = express.Router();
 
-// Aplicar middleware de autenticação em todas as rotas
+// GET /api/backup/download/:token - Download de backup (não requer autenticação)
+router.get("/download/:token", (req, res, next) => {
+  backupController.downloadBackup(req, res, next);
+});
+
+// Aplicar middleware de autenticação nas demais rotas
 router.use(verifyToken);
 
 // POST /api/backup/request - Solicitar backup assíncrono
