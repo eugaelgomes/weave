@@ -173,9 +173,9 @@ class PlansRepository {
       total_projects_created,
       total_ai_messages,
       total_storage_mb,
-      total_exports
+      total_exports,
     } = historyData;
-    
+
     const query = `
       INSERT INTO plan_usage_history 
         (plan_usage_id, user_id, org_id, plan_id, period_start, period_end, 
@@ -183,7 +183,7 @@ class PlansRepository {
          total_ai_messages, total_storage_mb, total_exports)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING id`;
-      
+
     const results = await executeQuery(query, [
       plan_usage_id,
       user_id,
@@ -196,9 +196,9 @@ class PlansRepository {
       total_projects_created || 0,
       total_ai_messages || 0,
       total_storage_mb || 0,
-      total_exports || 0
+      total_exports || 0,
     ]);
-    
+
     return results[0];
   }
 
@@ -235,7 +235,7 @@ class PlansRepository {
       increments.notes || 0,
       increments.projects || 0,
       increments.ai_messages || 0,
-      increments.storage_mb || 0
+      increments.storage_mb || 0,
     ]);
 
     return results[0];

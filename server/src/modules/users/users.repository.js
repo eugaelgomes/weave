@@ -271,11 +271,7 @@ class UserRepository {
       VALUES ($1, $2, 'delete_user_account', ($3::timestamp + interval '7 days'), $3, TRUE)
       RETURNING *;
     `;
-    return await executeQuery(query, [
-      userId,
-      token,
-      new Date().toISOString(),
-    ]);
+    return await executeQuery(query, [userId, token, new Date().toISOString()]);
   }
 
   async findDeleteAccountToken(token) {
@@ -305,7 +301,7 @@ class UserRepository {
     return await executeQuery(query, [
       userId,
       `deleted_user_${randomSuffix}@weavenotes.app`,
-      `deleted_user_${randomSuffix}`
+      `deleted_user_${randomSuffix}`,
     ]);
   }
 

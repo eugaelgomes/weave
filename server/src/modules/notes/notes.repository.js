@@ -1,7 +1,7 @@
 const { executeQuery, rowCount } = require("@/services/db");
 
 class notesRepository {
-  async createNotesQuerie(
+  async createNotesQuery(
     userId,
     title,
     content,
@@ -18,7 +18,7 @@ class notesRepository {
       userId,
       title,
       content,
-      tags, // PostgreSQL aceita arrays diretamente
+      tags,
       status,
       projectId,
     ]);
@@ -131,16 +131,16 @@ class notesRepository {
   }
 
   /**
-   * Busca notas com suporte a paginação, busca e filtros
-   * @param {string} userId - ID do usuário
+   * Paginação e filtros
+   * @param {string} userId
    * @param {Object} options - Opções de paginação e filtros
    * @param {number} options.page - Página atual (default: 1)
    * @param {number} options.limit - Itens por página (default: 10)
    * @param {string} options.search - Termo de busca (opcional)
    * @param {Array} options.tags - Tags para filtrar (opcional)
-   * @param {string} options.sortBy - Campo de ordenação (default: "updated_at")
+   * @param {string} options.sortBy - Ordenação (default: "updated_at")
    * @param {string} options.sortOrder - Ordem: "asc" ou "desc" (default: "desc")
-   * @returns {Object} - { notes: Array, pagination: Object }
+   * @returns {Object}
    */
   async getAllNotesWithPagination(userId, options = {}) {
     const {
@@ -320,7 +320,6 @@ class notesRepository {
         p.id,
         p.org_id,
         o.id
-    
     LIMIT 1;
     `;
     const results = await executeQuery(query, [noteId]);
@@ -523,27 +522,26 @@ class notesRepository {
     return results[0];
   }
 
-async deleteNoteById(noteIds) {
-  const idsArray = Array.isArray(noteIds) ? noteIds : [noteIds];
+  async deleteNoteById(noteIds) {
+    const idsArray = Array.isArray(noteIds) ? noteIds : [noteIds];
 
-  const query = `
+    const query = `
     UPDATE notes
     SET deleted = true
     WHERE id = ANY($1);
   `;
-  
-  const result = await executeQuery(query, [idsArray]);
 
-  if (result.rowCount === 0) {
-    throw new Error("Nenhuma nota encontrada para deleção.");
+    const result = await executeQuery(query, [idsArray]);
+
+    if (result.rowCount === 0) {
+      throw new Error("Nenhuma nota encontrada para deleção.");
+    }
+
+    return result.rowCount;
   }
 
-  return result.rowCount;
-}
-
-
   // ========================================
-  // MÉTODOS PARA GERENCIAR COLABORADORES
+  // Collaborators
   // ========================================
 
   /**

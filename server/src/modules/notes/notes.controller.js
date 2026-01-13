@@ -407,7 +407,7 @@ class NotesController {
       }
 
       // 6. Criação da nota no banco
-      const newNote = await this.notesRepository.createNotesQuerie(
+      const newNote = await this.notesRepository.createNotesQuery(
         userId,
         title,
         description,

@@ -579,7 +579,9 @@ class OrganizationsController {
       });
     } catch (error) {
       console.error("Erro ao buscar membros:", error);
-      res.status(500).json({ status: "ERROR", error: "Erro ao buscar membros" });
+      res
+        .status(500)
+        .json({ status: "ERROR", error: "Erro ao buscar membros" });
     }
   }
 
@@ -709,8 +711,9 @@ class OrganizationsController {
       }
 
       if (!validRoles.includes(role)) {
-        return res.status(400).json({ 
-          error: "Cargo inválido. Roles válidas: super_admin, admin, member, guest" 
+        return res.status(400).json({
+          error:
+            "Cargo inválido. Roles válidas: super_admin, admin, member, guest",
         });
       }
 

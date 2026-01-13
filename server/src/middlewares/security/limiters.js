@@ -10,7 +10,10 @@ const requestLimiter = rateLimit({
   handler: (req, res) => {
     res
       .status(429)
-      .json({ message: "Too many requests. Please wait at least 10 minutes to try again." });
+      .json({
+        message:
+          "Too many requests. Please wait at least 10 minutes to try again.",
+      });
   },
 });
 

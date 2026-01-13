@@ -1,9 +1,21 @@
 const { MailService } = require("@/services/email/config/index");
 
-async function inviteProjectMember(nome, email, projectName, projectId, addedByName) {
+async function inviteProjectMember(
+  nome,
+  email,
+  projectName,
+  projectId,
+  addedByName
+) {
   console.log("📨 [EMAIL TEMPLATE] Iniciando envio de email...");
-  console.log("📨 [EMAIL TEMPLATE] Parâmetros recebidos:", { nome, email, projectName, projectId, addedByName });
-  
+  console.log("📨 [EMAIL TEMPLATE] Parâmetros recebidos:", {
+    nome,
+    email,
+    projectName,
+    projectId,
+    addedByName,
+  });
+
   const personFirstName = (fullName) => {
     return fullName.split(" ")[0];
   };
@@ -216,7 +228,10 @@ async function inviteProjectMember(nome, email, projectName, projectId, addedByN
 
     return { success: true };
   } catch (error) {
-    console.error("❌ [EMAIL TEMPLATE] Project invitation email failed:", error);
+    console.error(
+      "❌ [EMAIL TEMPLATE] Project invitation email failed:",
+      error
+    );
     return {
       success: false,
       error: error.message || "Failed to send project invitation email.",

@@ -50,17 +50,17 @@ class SpacesService {
       const key = `weave-notes/users-content/backups/${userId}/${uniqueFileName}`;
 
       // Converter string para Buffer se necessário
-      const buffer = Buffer.isBuffer(fileContent) 
-        ? fileContent 
-        : Buffer.from(fileContent, 'utf-8');
+      const buffer = Buffer.isBuffer(fileContent)
+        ? fileContent
+        : Buffer.from(fileContent, "utf-8");
 
       const uploadParams = {
         Bucket: this.bucketName,
         Key: key,
         Body: buffer,
-        ContentType: 'text/csv',
-        ACL: 'private', // Backup privado, só acessível via token
-        CacheControl: 'no-cache, no-store, must-revalidate',
+        ContentType: "text/csv",
+        ACL: "private", // Backup privado, só acessível via token
+        CacheControl: "no-cache, no-store, must-revalidate",
         Expires: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 horas
       };
 

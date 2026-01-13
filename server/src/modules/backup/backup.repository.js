@@ -82,8 +82,13 @@ class GetAllDataRepository {
       VALUES ($1, $2, $3, $4)
       RETURNING *
     `;
-    
-    const [result] = await executeQuery(query, [token, userId, type, expiresAt]);
+
+    const [result] = await executeQuery(query, [
+      token,
+      userId,
+      type,
+      expiresAt,
+    ]);
     return result;
   }
 
@@ -99,7 +104,7 @@ class GetAllDataRepository {
       AND t.type = 'backup_download'
       AND t.used_at IS NULL
     `;
-    
+
     const [result] = await executeQuery(query, [token]);
     return result;
   }
@@ -111,7 +116,7 @@ class GetAllDataRepository {
       WHERE token = $1
       RETURNING *
     `;
-    
+
     const [result] = await executeQuery(query, [token]);
     return result;
   }

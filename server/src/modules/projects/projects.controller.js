@@ -1,10 +1,14 @@
 const projectsRepository = require("@/modules/projects/projects.repository");
-const { ALLOWED_PROJECT_STATUSES } = require("@/services/patterns/product-patterns");
+const {
+  ALLOWED_PROJECT_STATUSES,
+} = require("@/services/patterns/product-patterns");
 
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
 const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
-const { inviteProjectMember } = require("@/services/email/templates/projects/add-person");
+const {
+  inviteProjectMember,
+} = require("@/services/email/templates/projects/add-person");
 
 class ProjectsController {
   constructor() {
@@ -398,7 +402,8 @@ class ProjectsController {
       if (!planDetails.details) {
         return res.status(500).json({
           error: "Configuração de plano inválida",
-          message: "O plano não possui configuração (details) no banco de dados.",
+          message:
+            "O plano não possui configuração (details) no banco de dados.",
           debug: {
             planId: getUserPlan.plan_id,
             planName: planDetails.name,
@@ -412,8 +417,11 @@ class ProjectsController {
         return path.split(".").reduce((acc, part) => acc && acc[part], obj);
       };
 
-      const maxProjects = getNestedValue(planDetails.details, PLAN_PATHS.LIMITS.MAX_PROJECTS);
-      
+      const maxProjects = getNestedValue(
+        planDetails.details,
+        PLAN_PATHS.LIMITS.MAX_PROJECTS
+      );
+
       if (maxProjects === undefined) {
         return res.status(500).json({
           error: "Configuração de plano inválida",
@@ -428,11 +436,12 @@ class ProjectsController {
       }
 
       // Validar limite de projetos
-      const currentProjectsCount = getNestedValue(
-        usageRecord.usage_details,
-        USAGE_PATHS.SUMMARY.PROJECTS_TOTAL
-      ) || 0;
-      
+      const currentProjectsCount =
+        getNestedValue(
+          usageRecord.usage_details,
+          USAGE_PATHS.SUMMARY.PROJECTS_TOTAL
+        ) || 0;
+
       const canCreate = PlanUsageManager.checkLimit(
         planDetails.details,
         usageRecord.usage_details,
@@ -633,8 +642,13 @@ class ProjectsController {
 
       // Validação de dados obrigatórios
       // Permitir action null se suspended for fornecido
-      if (suspended === null && (!action || !["add", "update", "remove", "suspend"].includes(action))) {
-        throw new Error("Ação inválida. Use 'add', 'update', 'remove' ou 'suspend'");
+      if (
+        suspended === null &&
+        (!action || !["add", "update", "remove", "suspend"].includes(action))
+      ) {
+        throw new Error(
+          "Ação inválida. Use 'add', 'update', 'remove' ou 'suspend'"
+        );
       }
 
       if (!collaboratorId) {
@@ -679,7 +693,8 @@ class ProjectsController {
       let message;
 
       // Se suspended for fornecido e action for null, tratar como ação de suspensão
-      const effectiveAction = suspended !== null && !action ? "suspend" : action;
+      const effectiveAction =
+        suspended !== null && !action ? "suspend" : action;
 
       switch (effectiveAction) {
         case "add":
@@ -697,13 +712,16 @@ class ProjectsController {
           }
 
           // Verificar se o usuário está suspenso
-          const isSuspended = await this.projectsRepository.isSuspendedCollaborator(
-            projectId,
-            collaboratorId
-          );
+          const isSuspended =
+            await this.projectsRepository.isSuspendedCollaborator(
+              projectId,
+              collaboratorId
+            );
 
           if (isSuspended) {
-            throw new Error("Usuário suspenso do projeto, basta remover suspensão e o mesmo voltará como colaborador.");
+            throw new Error(
+              "Usuário suspenso do projeto, basta remover suspensão e o mesmo voltará como colaborador."
+            );
           }
 
           // Verificar se o colaborador já está ativo
@@ -727,28 +745,36 @@ class ProjectsController {
           // Enviar email de notificação usando dados do repository
           try {
             // Buscar dados completos do projeto com owner
-            const projectWithOwner = await this.projectsRepository.getProjectByIdWithAccess(
-              projectId,
-              userId
-            );
-            
+            const projectWithOwner =
+              await this.projectsRepository.getProjectByIdWithAccess(
+                projectId,
+                userId
+              );
+
             // Encontrar o colaborador recém-adicionado no array de collaborators do projeto
-            const addedCollaborator = projectWithOwner?.[0]?.collaborators?.find(
-              c => c.user_id === collaboratorId
+            const addedCollaborator =
+              projectWithOwner?.[0]?.collaborators?.find(
+                (c) => c.user_id === collaboratorId
+              );
+
+            console.log(
+              "📧 [EMAIL DEBUG] addedCollaborator:",
+              addedCollaborator
             );
-            
-            console.log("📧 [EMAIL DEBUG] addedCollaborator:", addedCollaborator);
-            console.log("📧 [EMAIL DEBUG] projectWithOwner:", projectWithOwner?.[0]);
-            
+            console.log(
+              "📧 [EMAIL DEBUG] projectWithOwner:",
+              projectWithOwner?.[0]
+            );
+
             if (addedCollaborator && projectWithOwner && projectWithOwner[0]) {
               console.log("📧 [EMAIL DEBUG] Enviando email com params:", {
                 nome: addedCollaborator.name,
                 email: addedCollaborator.email,
                 projectName: projectWithOwner[0].title,
                 projectId,
-                addedByName: projectWithOwner[0].owner_name
+                addedByName: projectWithOwner[0].owner_name,
               });
-              
+
               inviteProjectMember(
                 addedCollaborator.name,
                 addedCollaborator.email,
@@ -756,10 +782,15 @@ class ProjectsController {
                 projectId,
                 projectWithOwner[0].owner_name
               ).catch((err) => {
-                console.error("❌ [EMAIL DEBUG] Erro ao enviar email de convite:", err);
+                console.error(
+                  "❌ [EMAIL DEBUG] Erro ao enviar email de convite:",
+                  err
+                );
               });
             } else {
-              console.log("⚠️ [EMAIL DEBUG] Dados insuficientes para enviar email");
+              console.log(
+                "⚠️ [EMAIL DEBUG] Dados insuficientes para enviar email"
+              );
             }
           } catch (emailError) {
             console.error("Erro ao preparar email de convite:", emailError);
@@ -812,10 +843,11 @@ class ProjectsController {
 
         case "suspend":
           // Verificar se o colaborador existe (independente de estar suspenso ou não)
-          const existsInProject = await this.projectsRepository.isCollaboratorInProject(
-            projectId,
-            collaboratorId
-          );
+          const existsInProject =
+            await this.projectsRepository.isCollaboratorInProject(
+              projectId,
+              collaboratorId
+            );
 
           if (!existsInProject) {
             throw new Error("Usuário não é colaborador deste projeto");
@@ -840,9 +872,7 @@ class ProjectsController {
       res.status(200).json({
         message,
         collaborators:
-          action === "remove"
-            ? undefined
-            : result[0].collaborators,
+          action === "remove" ? undefined : result[0].collaborators,
       });
     } catch (error) {
       this._handleError(error, res, next);

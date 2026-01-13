@@ -5,7 +5,7 @@ class JobManager {
   constructor() {
     this.jobs = new Map(); // Cache em memória para performance
     this.cleanupIsRunning = false;
-    
+
     // Iniciar serviço de limpeza automática
     this.startCleanupService();
   }
@@ -180,11 +180,14 @@ class JobManager {
    */
   startCleanupService() {
     // Executar limpeza a cada 6 horas
-    this.cleanupIntervalId = setInterval(() => this.cleanupExpiredBackups(), 6 * 60 * 60 * 1000);
-    
+    this.cleanupIntervalId = setInterval(
+      () => this.cleanupExpiredBackups(),
+      6 * 60 * 60 * 1000
+    );
+
     // Executar imediatamente ao iniciar (após 5 segundos)
     setTimeout(() => this.cleanupExpiredBackups(), 5000);
-    
+
     console.log("Serviço de limpeza de backups iniciado (execução a cada 6h)");
   }
 
@@ -221,7 +224,9 @@ class JobManager {
         return;
       }
 
-      console.log(`Encontrados ${expiredTokens.length} backups expirados para limpar.`);
+      console.log(
+        `Encontrados ${expiredTokens.length} backups expirados para limpar.`
+      );
 
       let deletedCount = 0;
       let failedCount = 0;
@@ -247,18 +252,21 @@ class JobManager {
           }
 
           // Deletar token do banco (mesmo se falhar no storage)
-          await executeQuery("DELETE FROM tokens WHERE token = $1", [token.token]);
-
+          await executeQuery("DELETE FROM tokens WHERE token = $1", [
+            token.token,
+          ]);
         } catch (error) {
           failedCount++;
-          console.error(`Erro ao processar token ${token.token}:`, error.message);
+          console.error(
+            `Erro ao processar token ${token.token}:`,
+            error.message
+          );
         }
       }
 
       console.log(
         `Limpeza concluída: ${deletedCount} backups deletados, ${failedCount} falhas.`
       );
-
     } catch (error) {
       console.error("Erro durante limpeza de backups:", error);
     } finally {

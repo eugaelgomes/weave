@@ -195,7 +195,7 @@ async function delete_account_request(nome, email, username, token) {
             </p>
     
             <p style="font-size: 13px; color: #a3a3a3;">
-              Este link expira em <strong>7 dias</strong> (${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}).
+              Este link expira em <strong>7 dias</strong> (${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("pt-BR")}).
             </p>
           </div>
     

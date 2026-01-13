@@ -22,7 +22,10 @@ class PlanUsageManager {
 
     const now = new Date();
     const periodEnd = new Date(
-      this.getNestedValue(usageRecord.usage_details, USAGE_PATHS.MONTHLY.PERIOD_END)
+      this.getNestedValue(
+        usageRecord.usage_details,
+        USAGE_PATHS.MONTHLY.PERIOD_END
+      )
     );
 
     // 2. Reset de Ciclo Mensal
@@ -75,7 +78,11 @@ class PlanUsageManager {
    * Incrementa o total de notas criadas
    */
   async consumeNoteCreation(usageId) {
-    return await this.incrementUsage(usageId, USAGE_PATHS.SUMMARY.NOTES_TOTAL, 1);
+    return await this.incrementUsage(
+      usageId,
+      USAGE_PATHS.SUMMARY.NOTES_TOTAL,
+      1
+    );
   }
 
   /**
@@ -83,7 +90,11 @@ class PlanUsageManager {
    */
   async decrementNoteUsage(usageId) {
     // Passamos -1 para o incrementUsage
-    return await this.incrementUsage(usageId, USAGE_PATHS.SUMMARY.NOTES_TOTAL, -1);
+    return await this.incrementUsage(
+      usageId,
+      USAGE_PATHS.SUMMARY.NOTES_TOTAL,
+      -1
+    );
   }
 
   /**
@@ -119,7 +130,11 @@ class PlanUsageManager {
    * Incrementa uso de storage (arquivos e MB)
    */
   async consumeStorage(usageId, fileSizeMb) {
-    await this.incrementUsage(usageId, USAGE_PATHS.MONTHLY.STORAGE.FILES_COUNT, 1);
+    await this.incrementUsage(
+      usageId,
+      USAGE_PATHS.MONTHLY.STORAGE.FILES_COUNT,
+      1
+    );
     return await this.incrementUsage(
       usageId,
       USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB,
@@ -151,8 +166,14 @@ class PlanUsageManager {
 
   async resetMonthlyCycle(usageRecord) {
     const oldDetails = usageRecord.usage_details;
-    const periodStart = this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.PERIOD_START);
-    const periodEnd = this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.PERIOD_END);
+    const periodStart = this.getNestedValue(
+      oldDetails,
+      USAGE_PATHS.MONTHLY.PERIOD_START
+    );
+    const periodEnd = this.getNestedValue(
+      oldDetails,
+      USAGE_PATHS.MONTHLY.PERIOD_END
+    );
 
     // 1. SALVAR SNAPSHOT NO HISTÓRICO com agregações
     await PlansRepository.saveUsageHistory({
@@ -164,12 +185,30 @@ class PlanUsageManager {
       period_end: periodEnd,
       final_usage_details: oldDetails,
       // Agregações denormalizadas para queries rápidas
-      total_notes_created: this.getNestedValue(oldDetails, USAGE_PATHS.SUMMARY.NOTES_TOTAL) || 0,
-      total_projects_created: this.getNestedValue(oldDetails, USAGE_PATHS.SUMMARY.PROJECTS_TOTAL) || 0,
-      total_ai_messages: this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT) || 0,
-      total_storage_mb: this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB) || 0,
-      total_exports: (this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT) || 0) +
-                     (this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT) || 0)
+      total_notes_created:
+        this.getNestedValue(oldDetails, USAGE_PATHS.SUMMARY.NOTES_TOTAL) || 0,
+      total_projects_created:
+        this.getNestedValue(oldDetails, USAGE_PATHS.SUMMARY.PROJECTS_TOTAL) ||
+        0,
+      total_ai_messages:
+        this.getNestedValue(
+          oldDetails,
+          USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT
+        ) || 0,
+      total_storage_mb:
+        this.getNestedValue(
+          oldDetails,
+          USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB
+        ) || 0,
+      total_exports:
+        (this.getNestedValue(
+          oldDetails,
+          USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT
+        ) || 0) +
+        (this.getNestedValue(
+          oldDetails,
+          USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
+        ) || 0),
     });
 
     // 2. ATUALIZAR LIFETIME STATS
@@ -205,16 +244,27 @@ class PlanUsageManager {
    * Atualiza estatísticas de lifetime
    */
   async _updateLifetimeStats(usageId, monthDetails) {
-    const notesCount = this.getNestedValue(monthDetails, USAGE_PATHS.SUMMARY.NOTES_TOTAL) || 0;
-    const projectsCount = this.getNestedValue(monthDetails, USAGE_PATHS.SUMMARY.PROJECTS_TOTAL) || 0;
-    const aiMessages = this.getNestedValue(monthDetails, USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT) || 0;
-    const storageMb = this.getNestedValue(monthDetails, USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB) || 0;
-    
+    const notesCount =
+      this.getNestedValue(monthDetails, USAGE_PATHS.SUMMARY.NOTES_TOTAL) || 0;
+    const projectsCount =
+      this.getNestedValue(monthDetails, USAGE_PATHS.SUMMARY.PROJECTS_TOTAL) ||
+      0;
+    const aiMessages =
+      this.getNestedValue(
+        monthDetails,
+        USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT
+      ) || 0;
+    const storageMb =
+      this.getNestedValue(
+        monthDetails,
+        USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB
+      ) || 0;
+
     return await PlansRepository.updateLifetimeStats(usageId, {
       notes: notesCount,
       projects: projectsCount,
       ai_messages: aiMessages,
-      storage_mb: storageMb
+      storage_mb: storageMb,
     });
   }
 
@@ -231,18 +281,18 @@ class PlanUsageManager {
   async generateUsageReport(userId) {
     const history = await this.getUserUsageHistory(userId);
     const currentUsage = await PlansRepository.getPlanUsage(userId);
-    
+
     return {
       current_period: currentUsage?.usage_details,
       lifetime_stats: currentUsage?.lifetime_stats,
-      history: history.map(h => ({
+      history: history.map((h) => ({
         period: `${h.period_start} - ${h.period_end}`,
         notes: h.total_notes_created,
         projects: h.total_projects_created,
         ai_messages: h.total_ai_messages,
         storage_mb: h.total_storage_mb,
-        exports: h.total_exports
-      }))
+        exports: h.total_exports,
+      })),
     };
   }
 

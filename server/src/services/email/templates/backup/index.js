@@ -7,12 +7,7 @@
  * @param {number} options.hoursValid - Horas até expiração
  * @returns {Object} Template do email
  */
-function backupReadyTemplate({
-  userName,
-  downloadUrl,
-  expiresAt,
-  hoursValid,
-}) {
+function backupReadyTemplate({ userName, downloadUrl, expiresAt, hoursValid }) {
   const subject = "Seu backup está pronto para download";
 
   const text = `

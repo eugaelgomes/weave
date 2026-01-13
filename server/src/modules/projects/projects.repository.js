@@ -298,12 +298,7 @@ class ProjectsRepository {
       GROUP BY p.id;
     `;
 
-    return executeQuery(query, [
-      projectId,
-      ownerId,
-      collaboratorUserId,
-      role,
-    ]);
+    return executeQuery(query, [projectId, ownerId, collaboratorUserId, role]);
   }
 
   async removeCollaborator(projectId, ownerId, collaboratorUserId) {
@@ -488,7 +483,12 @@ class ProjectsRepository {
     return result[0]?.is_collaborator || false;
   }
 
-  async updateCollaboratorSuspension(projectId, ownerId, collaboratorUserId, suspended) {
+  async updateCollaboratorSuspension(
+    projectId,
+    ownerId,
+    collaboratorUserId,
+    suspended
+  ) {
     const query = `
       WITH updated_member AS (
         UPDATE projects_members
@@ -525,7 +525,12 @@ class ProjectsRepository {
       GROUP BY pm.project_id;
     `;
 
-    return executeQuery(query, [projectId, ownerId, collaboratorUserId, suspended]);
+    return executeQuery(query, [
+      projectId,
+      ownerId,
+      collaboratorUserId,
+      suspended,
+    ]);
   }
 
   async addNoteToProject(projectId, noteId, userId) {

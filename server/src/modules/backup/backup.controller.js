@@ -394,7 +394,8 @@ class BackupController {
         return res.status(409).json({
           status: "Conflict",
           error: "Backup já em andamento",
-          message: "Aguarde a conclusão do backup atual antes de solicitar outro",
+          message:
+            "Aguarde a conclusão do backup atual antes de solicitar outro",
           details: {
             job_id: activeJob.id,
             backup_status: activeJob.status,
@@ -421,10 +422,11 @@ class BackupController {
 
       setTimeout(() => this._executeBackupJob(job.id, userId), 100);
 
-      const updatedUsage = PlanUsageManager.getNestedValue(
-        usageRecord.usage_details,
-        USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
-      ) + 1;
+      const updatedUsage =
+        PlanUsageManager.getNestedValue(
+          usageRecord.usage_details,
+          USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
+        ) + 1;
       const monthlyLimit = PlanUsageManager.getNestedValue(
         planDetails.details,
         PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
@@ -433,7 +435,8 @@ class BackupController {
       res.status(202).json({
         status: "OK",
         job_id: job.id,
-        message: "Backup solicitado com sucesso! Você receberá um email quando estiver pronto.",
+        message:
+          "Backup solicitado com sucesso! Você receberá um email quando estiver pronto.",
         details: {
           backup_status: "pending",
           estimated_time: "2-5 minutos",
@@ -458,11 +461,12 @@ class BackupController {
       if (!userId) return;
 
       const job = await jobManager.getJob(jobId);
-      if (!job) return res.status(404).json({
-        status: "Not Found",
-        error: "Job não encontrado",
-        message: "O job solicitado não existe ou expirou",
-      });
+      if (!job)
+        return res.status(404).json({
+          status: "Not Found",
+          error: "Job não encontrado",
+          message: "O job solicitado não existe ou expirou",
+        });
 
       if (job.userId !== userId) {
         return res.status(403).json({
@@ -673,10 +677,12 @@ class BackupController {
 
       // Enviar arquivo
       res.setHeader("Content-Type", "text/csv");
-      res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${fileName}"`
+      );
       res.setHeader("Content-Length", fileContent.length);
       res.send(fileContent);
-
     } catch (error) {
       console.error("Erro no download de backup:", error);
       this._handleError(error, res, next);

@@ -23,11 +23,7 @@ router.post(
   userController.activateAccount.bind(userController)
 );
 
-router.get(
-  "/me",
-  verifyToken,
-  userController.getProfile.bind(userController)
-);
+router.get("/me", verifyToken, userController.getProfile.bind(userController));
 
 router.put(
   "/me/update-profile",
@@ -37,10 +33,7 @@ router.put(
   userController.updateProfile.bind(userController)
 );
 
-router.get(
-  "/search",
-  verifyToken,
-  (req, res, next) => {
+router.get("/search", verifyToken, (req, res, next) => {
   userController.searchUsers(req, res, next);
 });
 
