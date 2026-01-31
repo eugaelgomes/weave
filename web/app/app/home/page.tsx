@@ -82,7 +82,7 @@ export default function HomePage() {
   const projectsStats = getProjectsStats();
   const recentNotes = getRecentNotes();
   const recentProjects = getRecentProjects();
-  const userName = String(user?.name || user?.username || "usuário");
+  const userName = String(user?.user_name || user?.username || "usuário");
 
   const tagCloudData = useMemo(() => {
     if (!stats?.mostUsedTags || stats.mostUsedTags.length === 0) return [];

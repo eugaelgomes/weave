@@ -9,7 +9,7 @@ export default function NotFound() {
   const router = useRouter();
 
   return (
-    <div className="flex h-screen items-center rounded-md border border-neutral-800/50 justify-center bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 px-4">
+    <div className="flex h-screen items-center justify-center rounded-md border border-neutral-800/50 bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 px-4">
       <div className="w-full max-w-md text-center">
         <div className="mb-8">
           <div className="mb-4 text-8xl font-bold text-yellow-500">404</div>

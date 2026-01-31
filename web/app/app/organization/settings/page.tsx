@@ -170,7 +170,7 @@ const OrganizationPage = () => {
   const stats = getStats();
   const userIsOwner = user?.id ? isOwner(user.id) : false;
   const userCanManage =
-    userIsOwner || members.find((m) => m.user_id === user?.id)?.role === "admin";
+    userIsOwner || members.find((m) => m.id === user?.id)?.membership.role === "admin";
 
   // ... Handlers
   const handleUpdateInfo = async (e: React.FormEvent) => {

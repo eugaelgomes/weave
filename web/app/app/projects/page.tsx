@@ -50,7 +50,7 @@ export default function ProjectsPage() {
 
   const stats = getProjectsStats();
   const recentProjects = getRecentProjects();
-  const userName = String(user?.name || user?.username || "usuário");
+  const userName = String(user?.user_name || user?.username || "usuário");
 
   // Controle do carrossel
   const scrollToSlide = (index: number) => {

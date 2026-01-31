@@ -102,7 +102,7 @@ export default function SignIn() {
         </Link>
       </div>
 
-            {/* Botão Sobre */}
+      {/* Botão Sobre */}
       <div className="absolute top-6 left-6 z-50">
         <Link
           href="/home/"
@@ -247,7 +247,6 @@ export default function SignIn() {
             </div>
           </div>
         </div>
-
       </div>
 
       {showForgotPasswordModal && (

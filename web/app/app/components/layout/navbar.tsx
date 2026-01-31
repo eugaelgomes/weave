@@ -154,7 +154,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
 
   return (
     <nav className="sticky top-0 z-40 w-full border-b border-neutral-200 bg-white/90 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/90 print:hidden">
-      <div className="mx-auto w-full max-w-[1920px] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1920px] px-4 sm:px-2 lg:px-4">
         <div className="flex h-16 items-center justify-between">
           {/* LADO ESQUERDO: Toggle Mobile + Logo */}
           <div className="flex items-center gap-3 sm:gap-5">
@@ -173,7 +173,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
               className="group flex items-center gap-3 outline-none"
             >
               {/* App Logo */}
-              <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-md bg-neutral-200 shadow-md transition-transform group-hover:scale-105 group-active:scale-95 dark:bg-neutral-800">
+              <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-md shadow-md transition-transform group-hover:scale-105 group-active:scale-95">
                 <Image
                   src="/weave.png"
                   alt="Weave Logo"
@@ -190,7 +190,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
 
                   <div className="flex items-center gap-2">
                     {user.org_logo_url && (
-                      <div className="relative h-9 w-9 overflow-hidden rounded-md border border-neutral-100 dark:border-neutral-800">
+                      <div className="relative h-9 w-9 overflow-hidden rounded-md shadow-md">
                         <Image src={user.org_logo_url} alt="Org" fill className="object-cover" />
                       </div>
                     )}

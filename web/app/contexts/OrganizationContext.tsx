@@ -287,7 +287,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     setLoading(true);
     try {
       await removeMemberService(memberId);
-      setMembers((prev) => prev.filter((m) => m.user_id !== memberId));
+      setMembers((prev) => prev.filter((m) => m.id !== memberId));
       return true;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erro ao remover membro");
@@ -316,7 +316,9 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     const domains = organization.org_domains || [];
     const featuresEnabled = Object.values(features).filter(Boolean).length;
 
-    const adminsCount = members.filter((m) => m.role === "admin" || m.role === "owner").length;
+    const adminsCount = members.filter(
+      (m) => m.membership.role === "admin" || m.membership.role === "super_admin"
+    ).length;
 
     return {
       totalMembers: members.length,
@@ -332,8 +334,8 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const getMemberRole = useCallback(
     (userId: string) => {
       if (!userId || members.length === 0) return null;
-      const member = members.find((m) => m.user_id === userId);
-      return member ? member.role : null;
+      const member = members.find((m) => m.id === userId);
+      return member ? member.membership.role : null;
     },
     [members]
   );
@@ -343,7 +345,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       // Check rápido na prop owner da organização
       if (organization?.user_id === userId) return true;
       // Fallback para lista de membros
-      return getMemberRole(userId) === "owner";
+      return getMemberRole(userId) === "super_admin";
     },
     [organization, getMemberRole]
   );

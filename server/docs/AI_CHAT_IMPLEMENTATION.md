@@ -3,20 +3,24 @@
 ## ✅ Arquivos Criados
 
 ### Frontend (Web)
+
 - `web/app/contexts/ChatContext.tsx` - Context React para gerenciar estado do chat
 - `web/app/services/ai-service/AIService.ts` - Service de comunicação com API de IA
 
 ### Backend (Server)
+
 - `server/src/repositories/chat-manager.js` - Repository para gerenciar sessões e mensagens
 - `server/docs/ai-chat-tables.sql` - **Queries SQL para criar tabelas**
 
 ## ✅ Arquivos Modificados
 
 ### Frontend
+
 - `web/app/services/api-routes.ts` - Adicionados endpoints de IA
 - `web/app/services/index.ts` - Exportações dos serviços de IA
 
 ### Backend
+
 - `server/src/routes/ai.routes.js` - Adicionadas rotas de chat e modelos
 - `server/src/controllers/ai-agent/ai-controller.js` - Novos métodos:
   - `getAvailableModels()` - Lista modelos disponíveis
@@ -30,6 +34,7 @@
 Execute o arquivo: `server/docs/ai-chat-tables.sql`
 
 ### Tabelas criadas:
+
 1. **ai_chat_sessions** - Sessões de conversa
 2. **ai_chat_messages** - Mensagens do chat
 3. **ai_agent_actions** - Histórico de ações do agente
@@ -37,6 +42,7 @@ Execute o arquivo: `server/docs/ai-chat-tables.sql`
 ## 🔌 Endpoints Disponíveis
 
 ### Frontend pode chamar:
+
 - `GET /api/ai/models` - Lista modelos disponíveis
 - `POST /api/ai/chat` - Envia mensagem
 - `GET /api/ai/chat/history` - Busca histórico

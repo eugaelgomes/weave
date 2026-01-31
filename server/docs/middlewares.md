@@ -70,15 +70,15 @@ Cria uma função de validação de origem que suporta padrões wildcard.
 
 ```javascript
 // Exata
-const matcher1 = buildMatcher('https://app.example.com');
-matcher1('https://app.example.com'); // true
-matcher1('https://other.com'); // false
+const matcher1 = buildMatcher("https://app.example.com");
+matcher1("https://app.example.com"); // true
+matcher1("https://other.com"); // false
 
 // Wildcard
-const matcher2 = buildMatcher('https://*.example.com');
-matcher2('https://api.example.com'); // true
-matcher2('https://app.example.com'); // true
-matcher2('https://example.com'); // false
+const matcher2 = buildMatcher("https://*.example.com");
+matcher2("https://api.example.com"); // true
+matcher2("https://app.example.com"); // true
+matcher2("https://example.com"); // false
 ```
 
 ---
@@ -97,13 +97,13 @@ Configura opções CORS com validação dinâmica de origem.
 
 **Configurações:**
 
-| Propriedade              | Valor                                                             | Descrição                      |
-| ------------------------ | ----------------------------------------------------------------- | -------------------------------- |
+| Propriedade            | Valor                                                           | Descrição                        |
+| ---------------------- | --------------------------------------------------------------- | -------------------------------- |
 | `credentials`          | `true`                                                          | Permite cookies HttpOnly         |
-| `methods`              | `GET, POST, PUT, DELETE, PATCH, OPTIONS`                        | Métodos HTTP permitidos         |
+| `methods`              | `GET, POST, PUT, DELETE, PATCH, OPTIONS`                        | Métodos HTTP permitidos          |
 | `allowedHeaders`       | `Content-Type, Authorization, X-Requested-With, Accept, Cookie` | Headers aceitos                  |
 | `exposedHeaders`       | `Content-Range, X-Content-Range, Set-Cookie`                    | Headers expostos ao cliente      |
-| `maxAge`               | `600` (10 minutos)                                              | Cache de requisições preflight |
+| `maxAge`               | `600` (10 minutos)                                              | Cache de requisições preflight   |
 | `optionsSuccessStatus` | `204`                                                           | Status para OPTIONS bem-sucedido |
 
 **Comportamento por Ambiente:**
@@ -113,6 +113,7 @@ Configura opções CORS com validação dinâmica de origem.
   - Permite `localhost` em qualquer porta
   - Permite `127.0.0.1` em qualquer porta
   - Aceita requisições sem header `Origin` (útil para Postman, curl)
+
 - **Produção**:
 
   - Exige header `Origin` obrigatório
@@ -159,7 +160,7 @@ Aplica todos os middlewares globais na ordem correta.
     includeSubDomains: true,
     preload: true
   },
-  
+
   // Content Security Policy
   contentSecurityPolicy: {
     directives: {
@@ -169,7 +170,7 @@ Aplica todos os middlewares globais na ordem correta.
       upgradeInsecureRequests: []  // HTTP → HTTPS automático
     }
   },
-  
+
   frameguard: { action: "deny" },           // Previne clickjacking
   noSniff: true,                            // Previne MIME sniffing
   referrerPolicy: {                         // Controla informação de referrer
@@ -205,27 +206,27 @@ Verifica e decodifica tokens JWT de cookies HttpOnly ou header Authorization.
 
 ```javascript
 // 1. Extrair token
-const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
+const token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
 
 // 2. Verificar presença
 if (!token) {
-  return res.status(401).json({ 
-    message: "Acesso negado. Token não fornecido." 
+  return res.status(401).json({
+    message: "Acesso negado. Token não fornecido.",
   });
 }
 
 // 3. Validar JWT
-const decoded = jwt.verify(token, SECRET_KEY, { algorithms: ['HS256'] });
+const decoded = jwt.verify(token, SECRET_KEY, { algorithms: ["HS256"] });
 
 // 4. Anexar usuário ao request
-req.user = decoded;  // { userId, email, etc. }
+req.user = decoded; // { userId, email, etc. }
 ```
 
 **Respostas:**
 
-| Status | Condição               | Mensagem                               |
-| ------ | ------------------------ | -------------------------------------- |
-| 401    | Token ausente            | "Acesso negado. Token não fornecido." |
+| Status | Condição                | Mensagem                              |
+| ------ | ----------------------- | ------------------------------------- |
+| 401    | Token ausente           | "Acesso negado. Token não fornecido." |
 | 401    | Token inválido/expirado | "Token inválido ou expirado."         |
 | 200    | Token válido            | Continua para próximo middleware      |
 
@@ -243,7 +244,7 @@ req.user = decoded;  // { userId, email, etc. }
 **Uso em Rotas:**
 
 ```javascript
-router.get('/protected', verifyToken, (req, res) => {
+router.get("/protected", verifyToken, (req, res) => {
   const userId = req.user.userId;
   // ... lógica protegida
 });
@@ -270,13 +271,13 @@ Retorna array de validadores para criação/atualização de conta.
 ##### 1. **Name** (Nome)
 
 ```javascript
-body('name')
+body("name")
   .trim()
-  .matches(/^[\p{L}\s]+$/u)  // Unicode letters + espaços
-  .withMessage('Apenas letras e espaços são permitidos.')
+  .matches(/^[\p{L}\s]+$/u) // Unicode letters + espaços
+  .withMessage("Apenas letras e espaços são permitidos.")
   .isLength({ min: 1, max: 100 })
-  .withMessage('Name cannot be empty or too long.')
-  .escape()
+  .withMessage("Name cannot be empty or too long.")
+  .escape();
 ```
 
 - **Permitido**: Letras de qualquer idioma (unicode) e espaços
@@ -286,13 +287,13 @@ body('name')
 ##### 2. **Username** (Nome de usuário)
 
 ```javascript
-body('username')
+body("username")
   .trim()
-  .matches(/^[a-zA-Z0-9._-]+$/)  // Alfanumérico + . _ -
-  .withMessage('Invalid characters...')
+  .matches(/^[a-zA-Z0-9._-]+$/) // Alfanumérico + . _ -
+  .withMessage("Invalid characters...")
   .isLength({ min: 6, max: 18 })
-  .withMessage('Username must be between 6 and 18 characters.')
-  .escape()
+  .withMessage("Username must be between 6 and 18 characters.")
+  .escape();
 ```
 
 - **Permitido**: Letras, números, `.`, `_`, `-`
@@ -302,9 +303,7 @@ body('username')
 ##### 3. **Email**
 
 ```javascript
-body('email')
-  .isEmail()
-  .withMessage('Email is invalid.')
+body("email").isEmail().withMessage("Email is invalid.");
 ```
 
 - Validação padrão de email
@@ -313,7 +312,7 @@ body('email')
 ##### 4. **Password** (Senha)
 
 ```javascript
-body('password')
+body("password")
   .isStrongPassword({
     minLength: 6,
     minLowercase: 1,
@@ -321,7 +320,7 @@ body('password')
     minNumbers: 1,
     // minSymbols: 1  // Comentado
   })
-  .withMessage('Password must contain at least 8 characters...')
+  .withMessage("Password must contain at least 8 characters...");
 ```
 
 - **Requisitos**:
@@ -334,9 +333,10 @@ body('password')
 **Uso em Rotas:**
 
 ```javascript
-router.post('/create-account', 
+router.post(
+  "/create-account",
   inputValidation(),
-  validationResult,  // Middleware para checar erros
+  validationResult, // Middleware para checar erros
   controller.createAccount
 );
 ```
@@ -370,17 +370,17 @@ Validação básica de tipo e tamanho de imagem.
 ```javascript
 // 1. Verificar presença de arquivo
 if (!req.file || !req.file.buffer) {
-  return next();  // Sem arquivo = OK (campo opcional)
+  return next(); // Sem arquivo = OK (campo opcional)
 }
 
 // 2. Validar tipo MIME
 if (!isValidImageType(req.file.mimetype)) {
-  return 400 - "Invalid file type"
+  return 400 - "Invalid file type";
 }
 
 // 3. Validar tamanho
 if (!isValidImageSize(req.file.size)) {
-  return 413 - "File too large"
+  return 413 - "File too large";
 }
 ```
 
@@ -397,17 +397,18 @@ if (!isValidImageSize(req.file.size)) {
 
 **Respostas:**
 
-| Status | Erro             | Mensagem                                           |
-| ------ | ---------------- | -------------------------------------------------- |
-| 400    | Tipo inválido   | "Only JPEG, PNG, WebP and GIF images are allowed." |
-| 413    | Arquivo grande   | "Image size (XMB) exceeds limit (5MB)."            |
+| Status | Erro           | Mensagem                                           |
+| ------ | -------------- | -------------------------------------------------- |
+| 400    | Tipo inválido  | "Only JPEG, PNG, WebP and GIF images are allowed." |
+| 413    | Arquivo grande | "Image size (XMB) exceeds limit (5MB)."            |
 | 500    | Erro validação | "Unable to validate the uploaded image."           |
 
 **Uso com Multer:**
 
 ```javascript
-router.post('/upload', 
-  upload.single('profile_image'),
+router.post(
+  "/upload",
+  upload.single("profile_image"),
   validateImages,
   controller.uploadImage
 );
@@ -433,23 +434,21 @@ const storage = multer.memoryStorage();
 ```javascript
 const upload = multer({
   storage: storage,
-  limits: { 
-    fileSize: 2 * 1024 * 1024  // 2 MB
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 2 MB
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = [
-      'image/png',
-      'image/jpeg',
-      'image/jpg',
-      'image/webp'
-    ];
-  
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+
     if (!allowedTypes.includes(file.mimetype)) {
-      return cb(new Error('Only PNG, JPEG, JPG, and WEBP formats are allowed!'), false);
+      return cb(
+        new Error("Only PNG, JPEG, JPG, and WEBP formats are allowed!"),
+        false
+      );
     }
-  
+
     cb(null, true);
-  }
+  },
 });
 ```
 
@@ -495,7 +494,7 @@ Transforma valores não-string em string.
 
 ```javascript
 for (let key in req.body) {
-  if (typeof req.body[key] !== 'string') {
+  if (typeof req.body[key] !== "string") {
     req.body[key] = String(req.body[key]);
   }
 }
@@ -515,22 +514,22 @@ req.body = {
   name: "John",
   age: 25,
   active: true,
-  score: 98.5
-}
+  score: 98.5,
+};
 
 // Depois
 req.body = {
   name: "John",
   age: "25",
   active: "true",
-  score: "98.5"
-}
+  score: "98.5",
+};
 ```
 
 **Uso:**
 
 ```javascript
-router.post('/form', toString, controller.processForm);
+router.post("/form", toString, controller.processForm);
 ```
 
 ---
@@ -549,33 +548,32 @@ Limita tentativas de login por IP e username.
 
 ```javascript
 const loginLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,        // Janela de 10 minutos
-  max: 15,                          // Máximo 15 tentativas
-  message: 'Too many login attempts. Please try again later.',
-  standardHeaders: true,            // Headers RateLimit-*
-  legacyHeaders: false,             // Remove X-RateLimit-*
-  
-  keyGenerator: (req) => 
-    req.body.username || req.ip,    // Bloqueia por username OU IP
-  
+  windowMs: 10 * 60 * 1000, // Janela de 10 minutos
+  max: 15, // Máximo 15 tentativas
+  message: "Too many login attempts. Please try again later.",
+  standardHeaders: true, // Headers RateLimit-*
+  legacyHeaders: false, // Remove X-RateLimit-*
+
+  keyGenerator: (req) => req.body.username || req.ip, // Bloqueia por username OU IP
+
   handler: (req, res) => {
-    res.status(429).json({ 
-      message: 'Too many attempts. Please wait 15 minutes.' 
+    res.status(429).json({
+      message: "Too many attempts. Please wait 15 minutes.",
     });
   },
-  
-  skipSuccessfulRequests: true      // Reset após login bem-sucedido
+
+  skipSuccessfulRequests: true, // Reset após login bem-sucedido
 });
 ```
 
 **Características:**
 
-| Propriedade | Valor                  | Descrição                   |
-| ----------- | ---------------------- | ----------------------------- |
-| Janela      | 10 minutos             | Período de contagem          |
-| Máximo     | 15 tentativas          | Limite de requisições       |
+| Propriedade | Valor              | Descrição                    |
+| ----------- | ------------------ | ---------------------------- |
+| Janela      | 10 minutos         | Período de contagem          |
+| Máximo      | 15 tentativas      | Limite de requisições        |
 | Chave       | `username` ou `ip` | Identificador único          |
-| Reset       | Em sucesso             | Limpa contador após login OK |
+| Reset       | Em sucesso         | Limpa contador após login OK |
 
 **Headers de Resposta:**
 
@@ -598,7 +596,7 @@ Status: `429 Too Many Requests`
 **Uso:**
 
 ```javascript
-router.post('/signin', loginLimiter, authController.signin);
+router.post("/signin", loginLimiter, authController.signin);
 ```
 
 **Proteção:**
@@ -622,22 +620,22 @@ Middleware de sessão com persistência em banco de dados.
 ```javascript
 const sessionConfig = {
   store: new pgSession({
-    pool: pool,              // Pool de conexão PostgreSQL
-    tableName: 'sessions'    // Tabela de sessões
+    pool: pool, // Pool de conexão PostgreSQL
+    tableName: "sessions", // Tabela de sessões
   }),
-  
-  name: 'auth.sid',          // Nome do cookie
+
+  name: "auth.sid", // Nome do cookie
   secret: process.env.SESSION_SECRET,
-  resave: false,             // Não salva se não modificada
-  saveUninitialized: false,  // Não salva sessões vazias
-  rolling: true,             // Renova expiração a cada request
-  
+  resave: false, // Não salva se não modificada
+  saveUninitialized: false, // Não salva sessões vazias
+  rolling: true, // Renova expiração a cada request
+
   cookie: {
-    httpOnly: true,          // Previne acesso via JavaScript
-    secure: process.env.NODE_ENV === 'production',  // HTTPS apenas em produção
-    sameSite: 'lax',         // Proteção CSRF moderada
-    maxAge: 1000 * 60 * 60 * 24  // 24 horas
-  }
+    httpOnly: true, // Previne acesso via JavaScript
+    secure: process.env.NODE_ENV === "production", // HTTPS apenas em produção
+    sameSite: "lax", // Proteção CSRF moderada
+    maxAge: 1000 * 60 * 60 * 24, // 24 horas
+  },
 };
 ```
 
@@ -661,14 +659,14 @@ CREATE INDEX "IDX_session_expire" ON sessions ("expire");
 
 **Cookie de Sessão:**
 
-| Propriedade  | Valor           | Descrição                  |
-| ------------ | --------------- | ---------------------------- |
-| `name`     | `auth.sid`    | Nome do cookie               |
-| `httpOnly` | `true`        | Não acessível via JS (XSS) |
-| `secure`   | `true` (prod) | Apenas HTTPS em produção   |
-| `sameSite` | `lax`         | Permite GET cross-origin     |
-| `maxAge`   | 24 horas        | Duração da sessão         |
-| `rolling`  | `true`        | Renova a cada requisição   |
+| Propriedade | Valor         | Descrição                  |
+| ----------- | ------------- | -------------------------- |
+| `name`      | `auth.sid`    | Nome do cookie             |
+| `httpOnly`  | `true`        | Não acessível via JS (XSS) |
+| `secure`    | `true` (prod) | Apenas HTTPS em produção   |
+| `sameSite`  | `lax`         | Permite GET cross-origin   |
+| `maxAge`    | 24 horas      | Duração da sessão          |
+| `rolling`   | `true`        | Renova a cada requisição   |
 
 **Comportamento Rolling:**
 
@@ -710,20 +708,20 @@ Detecta IP real do cliente mesmo atrás de proxies/load balancers.
 **Ordem de Verificação:**
 
 ```javascript
-req.clientIp = 
-  req.headers['x-forwarded-for']?.split(',')[0] ||  // 1. Proxy/LB
-  req.headers['x-real-ip'] ||                       // 2. Nginx
-  req.connection.remoteAddress ||                   // 3. Conexão direta
-  req.socket.remoteAddress ||                       // 4. Socket
-  req.connection.socket?.remoteAddress ||           // 5. Socket aninhado
-  '127.0.0.1';                                      // 6. Fallback
+req.clientIp =
+  req.headers["x-forwarded-for"]?.split(",")[0] || // 1. Proxy/LB
+  req.headers["x-real-ip"] || // 2. Nginx
+  req.connection.remoteAddress || // 3. Conexão direta
+  req.socket.remoteAddress || // 4. Socket
+  req.connection.socket?.remoteAddress || // 5. Socket aninhado
+  "127.0.0.1"; // 6. Fallback
 ```
 
 **Normalização IPv6:**
 
 ```javascript
 // Remove prefixo IPv6
-if (req.clientIp.startsWith('::ffff:')) {
+if (req.clientIp.startsWith("::ffff:")) {
   req.clientIp = req.clientIp.substr(7);
 }
 
@@ -733,8 +731,8 @@ if (req.clientIp.startsWith('::ffff:')) {
 
 **Headers de Proxy:**
 
-| Header              | Fonte         | Exemplo                       |
-| ------------------- | ------------- | ----------------------------- |
+| Header            | Fonte         | Exemplo                     |
+| ----------------- | ------------- | --------------------------- |
 | `X-Forwarded-For` | Load Balancer | `203.0.113.1, 198.51.100.1` |
 | `X-Real-IP`       | Nginx         | `203.0.113.1`               |
 
@@ -752,7 +750,7 @@ const location = geoip.lookup(req.clientIp);
 
 // Bloqueio
 if (blacklist.includes(req.clientIp)) {
-  return res.status(403).send('Forbidden');
+  return res.status(403).send("Forbidden");
 }
 ```
 
@@ -781,7 +779,7 @@ notFoundHandler: (req, res, next) => {
   const err = new Error(`Route "${req.originalUrl}" not found`);
   err.statusCode = 404;
   next(err);
-}
+};
 ```
 
 **Uso:**
@@ -810,20 +808,20 @@ Handler global de erros com logging condicional.
 ```javascript
 globalErrorHandler: (err, req, res, next) => {
   // Logging condicional
-  if (process.env.NODE_ENV === 'development' || err.statusCode >= 500) {
+  if (process.env.NODE_ENV === "development" || err.statusCode >= 500) {
     console.error(err.stack || err);
   }
-  
+
   res.status(err.statusCode || 500).json({
     error: {
-      message: err.message || 'Internal Server Error',
+      message: err.message || "Internal Server Error",
       status: err.statusCode || 500,
       timestamp: new Date().toISOString(),
       path: req.originalUrl,
-      method: req.method
-    }
+      method: req.method,
+    },
   });
-}
+};
 ```
 
 **Logging:**
@@ -852,28 +850,28 @@ globalErrorHandler: (err, req, res, next) => {
 try {
   const user = await findUser(id);
   if (!user) {
-    const err = new Error('User not found');
+    const err = new Error("User not found");
     err.statusCode = 404;
     throw err;
   }
   res.json(user);
 } catch (error) {
-  next(error);  // Passa para globalErrorHandler
+  next(error); // Passa para globalErrorHandler
 }
 ```
 
 **Códigos de Status Comuns:**
 
-| Status | Tipo                  | Exemplo                       |
-| ------ | --------------------- | ----------------------------- |
-| 400    | Bad Request           | Dados inválidos              |
-| 401    | Unauthorized          | Token inválido               |
-| 403    | Forbidden             | Permissão negada             |
-| 404    | Not Found             | Recurso não existe           |
+| Status | Tipo                  | Exemplo                     |
+| ------ | --------------------- | --------------------------- |
+| 400    | Bad Request           | Dados inválidos             |
+| 401    | Unauthorized          | Token inválido              |
+| 403    | Forbidden             | Permissão negada            |
+| 404    | Not Found             | Recurso não existe          |
 | 409    | Conflict              | Duplicação (email/username) |
-| 413    | Payload Too Large     | Arquivo muito grande          |
-| 429    | Too Many Requests     | Rate limit excedido           |
-| 500    | Internal Server Error | Erro inesperado               |
+| 413    | Payload Too Large     | Arquivo muito grande        |
+| 429    | Too Many Requests     | Rate limit excedido         |
+| 500    | Internal Server Error | Erro inesperado             |
 
 ---
 
@@ -896,7 +894,7 @@ constructor() {
   this.secretAccessKey = process.env.DO_SPACES_SECRET_KEY;
   this.bucketName = process.env.DO_SPACES_BUCKET_NAME;
   this.region = process.env.DO_SPACES_REGION || 'nyc3';
-  
+
   // Inicializa S3 Client
   this.s3Client = new S3Client({
     endpoint: this.spacesEndpoint,
@@ -966,10 +964,10 @@ const result = await imageUtils.saveProfileImage(
 );
 
 if (result.success) {
-  await db.query(
-    'UPDATE users SET profile_image_url = $1 WHERE id = $2',
-    [result.url, req.user.userId]
-  );
+  await db.query("UPDATE users SET profile_image_url = $1 WHERE id = $2", [
+    result.url,
+    req.user.userId,
+  ]);
 }
 ```
 
@@ -1004,11 +1002,11 @@ Remove imagem do Digital Ocean Spaces.
 
 ```javascript
 const deleted = await imageUtils.deleteProfileImage(
-  'profile-images/user-123-avatar.jpg'
+  "profile-images/user-123-avatar.jpg"
 );
 
 if (deleted) {
-  console.log('Image removed successfully');
+  console.log("Image removed successfully");
 }
 ```
 
@@ -1047,9 +1045,9 @@ Converte tipo MIME em extensão de arquivo.
 **Exemplo:**
 
 ```javascript
-getExtensionFromMimeType('image/png');  // '.png'
-getExtensionFromMimeType('image/webp'); // '.webp'
-getExtensionFromMimeType('unknown');    // '.jpg'
+getExtensionFromMimeType("image/png"); // '.png'
+getExtensionFromMimeType("image/webp"); // '.webp'
+getExtensionFromMimeType("unknown"); // '.jpg'
 ```
 
 ---
@@ -1071,9 +1069,9 @@ Valida se o tipo MIME é uma imagem suportada.
 **Exemplo:**
 
 ```javascript
-isValidImageType('image/png');    // true
-isValidImageType('image/svg+xml'); // false
-isValidImageType('video/mp4');    // false
+isValidImageType("image/png"); // true
+isValidImageType("image/svg+xml"); // false
+isValidImageType("video/mp4"); // false
 ```
 
 ---
@@ -1093,8 +1091,8 @@ Valida se o tamanho da imagem está dentro do limite.
 **Exemplo:**
 
 ```javascript
-isValidImageSize(1024 * 1024);       // 1 MB → true
-isValidImageSize(10 * 1024 * 1024);  // 10 MB → false
+isValidImageSize(1024 * 1024); // 1 MB → true
+isValidImageSize(10 * 1024 * 1024); // 10 MB → false
 ```
 
 **Uso no Middleware:**
@@ -1102,8 +1100,8 @@ isValidImageSize(10 * 1024 * 1024);  // 10 MB → false
 ```javascript
 if (!imageUtils.isValidImageSize(req.file.size)) {
   return res.status(413).json({
-    error: 'File too large',
-    message: `Image size (${Math.round(req.file.size / 1024 / 1024)}MB) exceeds limit (5MB).`
+    error: "File too large",
+    message: `Image size (${Math.round(req.file.size / 1024 / 1024)}MB) exceeds limit (5MB).`,
   });
 }
 ```
@@ -1145,11 +1143,12 @@ if (!imageUtils.isValidImageSize(req.file.size)) {
 ### Exemplo Prático: Upload de Imagem de Perfil
 
 ```javascript
-router.put('/me/update-profile',
-  verifyToken,              // 1. Autentica usuário
-  upload.single('image'),   // 2. Processa upload (Multer)
-  validateImages,         // 3. Valida tipo/tamanho
-  authController.updateProfile  // 4. Controller
+router.put(
+  "/me/update-profile",
+  verifyToken, // 1. Autentica usuário
+  upload.single("image"), // 2. Processa upload (Multer)
+  validateImages, // 3. Valida tipo/tamanho
+  authController.updateProfile // 4. Controller
 );
 ```
 
@@ -1170,16 +1169,16 @@ router.put('/me/update-profile',
 
 ### Proteções Implementadas
 
-| Camada              | Middleware        | Proteção             |
-| ------------------- | ----------------- | ---------------------- |
+| Camada        | Middleware        | Proteção               |
+| ------------- | ----------------- | ---------------------- |
 | **Transport** | Helmet HSTS       | Force HTTPS            |
 | **Origin**    | CORS              | Whitelist de origens   |
 | **Headers**   | Helmet CSP        | Previne XSS            |
 | **Cookies**   | httpOnly + secure | Previne roubo de token |
-| **Session**   | sameSite: lax     | Proteção CSRF        |
+| **Session**   | sameSite: lax     | Proteção CSRF          |
 | **Rate**      | loginLimiter      | Brute force            |
-| **Auth**      | verifyToken       | Acesso não autorizado |
-| **Input**     | inputValidation     | Injeção SQL/XSS      |
+| **Auth**      | verifyToken       | Acesso não autorizado  |
+| **Input**     | inputValidation   | Injeção SQL/XSS        |
 | **Upload**    | imageValidator    | Arquivos maliciosos    |
 
 ---
@@ -1195,15 +1194,16 @@ router.put('/me/update-profile',
 
 ```javascript
 // ✅ Correto: Validação em camadas
-router.post('/create',
-  verifyToken,         // 1. Autenticação
-  inputValidation(),     // 2. Validação de dados
-  imageValidator,      // 3. Validação de arquivo
-  controller.create    // 4. Lógica de negócio (+ validação DB)
+router.post(
+  "/create",
+  verifyToken, // 1. Autenticação
+  inputValidation(), // 2. Validação de dados
+  imageValidator, // 3. Validação de arquivo
+  controller.create // 4. Lógica de negócio (+ validação DB)
 );
 
 // ❌ Errado: Validação apenas no controller
-router.post('/create', controller.create);
+router.post("/create", controller.create);
 ```
 
 ### 3. Tratamento de Erros
@@ -1234,7 +1234,7 @@ req.session.regenerate((err) => {
 });
 
 // ❌ Nunca armazenar senhas em sessão
-req.session.password = password;  // NUNCA faça isso
+req.session.password = password; // NUNCA faça isso
 ```
 
 ### 5. Rate Limiting Granular

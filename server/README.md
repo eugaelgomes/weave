@@ -31,12 +31,14 @@ A **Weave Notes API** é uma solução completa para criação e gerenciamento d
 ## 🛠️ Tecnologias e Bibliotecas
 
 ### Core
+
 - **Node.js** 18+ - Runtime JavaScript
 - **Express.js** 4.21+ - Framework web minimalista e rápido
 - **TypeScript** 5.9+ - Superset JavaScript com tipagem estática
 - **PostgreSQL** - Banco de dados relacional
 
 ### Autenticação & Segurança
+
 - **jsonwebtoken** (9.0+) - Geração e validação de JWT
 - **express-jwt** (8.4+) - Middleware de autenticação JWT
 - **Google OAuth 2.0** - Login social via Google
@@ -51,6 +53,7 @@ A **Weave Notes API** é uma solução completa para criação e gerenciamento d
 - **connect-pg-simple** (10.0+) - Armazenamento de sessões no PostgreSQL
 
 ### Validação e Processamento
+
 - **express-validator** (7.0+) - Validação de dados de entrada
 - **multer** (2.0+) - Upload de arquivos multipart/form-data
 - **sharp** (0.33+) - Processamento e otimização de imagens
@@ -58,20 +61,24 @@ A **Weave Notes API** é uma solução completa para criação e gerenciamento d
 - **cookie-parser** (1.4+) - Parser de cookies
 
 ### Banco de Dados e Storage
+
 - **pg** (8.16+) - Cliente PostgreSQL nativo
 - **@aws-sdk/client-s3** (3.892+) - SDK AWS S3 v3
 - **Digital Ocean Spaces** - Armazenamento compatível com S3
 
 ### Email e Comunicação
+
 - **nodemailer** (7.0+) - Envio de emails via SMTP
 - **axios** (1.7+) - Cliente HTTP para requisições externas
 
 ### Utilitários
+
 - **dotenv** (16.4+) - Gerenciamento de variáveis de ambiente
 - **module-alias** (2.2+) - Aliases para importações
 - **request-ip** (3.3+) - Detecção de IP real do cliente
 
 ### DevOps e Infraestrutura
+
 - **Docker** - Containerização da aplicação
 - **nodemon** (3.1+) - Auto-reload em desenvolvimento
 - **ts-node** (10.9+) - Execução direta de TypeScript
@@ -84,6 +91,7 @@ Endpoint Global /api/
 ```
 
 ### 🔐 Autenticação
+
 ```
 POST   /auth/signin          # Login com email/senha
 GET    /auth/sso/google         # Iniciar OAuth Google
@@ -94,6 +102,7 @@ PUT    /auth/password       # Alterar senha
 ```
 
 ### 👤 Usuários
+
 ```
 POST   /users/create-account              # Criar novo usuário
 PUT    /users/:id          # Atualizar usuário
@@ -101,6 +110,7 @@ DELETE /users/:id          # Deletar usuário
 ```
 
 ### 📝 Notas
+
 ```
 GET    /notes              # Listar notas do usuário
 GET    /notes/:id          # Obter nota específica
@@ -111,6 +121,7 @@ POST   /notes/complete     # Marcar nota como completa
 ```
 
 ### 🧩 Blocos (Dentro das Notas)
+
 ```
 GET    /notes/:noteId/blocks           # Listar blocos da nota
 POST   /notes/:id/blocks              # Criar bloco
@@ -120,6 +131,7 @@ PUT    /notes/:noteId/blocks/reorder  # Reordenar blocos
 ```
 
 ### 🔑 Recuperação de Senha
+
 ```
 POST   /password/forgot-password    # Solicitar reset de senha
 POST   /password/reset-password     # Confirmar reset com token
@@ -128,6 +140,7 @@ POST   /password/reset-password     # Confirmar reset com token
 ## ⚡ Quick Start
 
 ### 1. Pré-requisitos
+
 ```bash
 # Dependências necessárias
 - Node.js 18+
@@ -136,6 +149,7 @@ POST   /password/reset-password     # Confirmar reset com token
 ```
 
 ### 2. Instalação
+
 ```bash
 # Clone o repositório
 git clone <repository-url>
@@ -149,6 +163,7 @@ cp .env.example .env
 ```
 
 ### 3. Configuração do Banco
+
 ```bash
 # Veja instruções detalhadas em:
 # DATABASE_SETUP.md
@@ -157,17 +172,20 @@ cp .env.example .env
 ### 4. Executar a Aplicação
 
 #### Desenvolvimento
+
 ```bash
 npm run dev
 ```
 
 #### Produção
+
 ```bash
 npm run build
 npm start
 ```
 
 #### Docker
+
 ```bash
 # Na raiz do projeto
 docker-compose up
@@ -184,6 +202,7 @@ cp .env.example .env
 ```
 
 #### 🗄️ Banco de Dados
+
 ```env
 DATABASE_NAME=weave_notes
 DATABASE_HOST_URL=localhost
@@ -194,6 +213,7 @@ SSL_CERTIFICATE=           # Opcional: certificado SSL para conexão
 ```
 
 #### 🔐 Autenticação e Sessões
+
 ```env
 SESSION_SECRET=seu_session_secret_super_seguro_aqui
 SECRET_KEY=sua_chave_secreta_para_jwt
@@ -201,6 +221,7 @@ SECRET_KEY_VARIABLE=outra_chave_secreta_opcional
 ```
 
 #### 📧 Serviço de Email (SMTP)
+
 ```env
 EMAIL_HOSTNAME=smtp.gmail.com         # Host do servidor SMTP
 EMAIL_PORT=587                        # Porta (587 para TLS, 465 para SSL)
@@ -211,6 +232,7 @@ EMAIL_PASSWORD=sua_senha_de_app       # Senha de app (não a senha do email)
 **Nota:** Para Gmail, use [senhas de aplicativo](https://support.google.com/accounts/answer/185833).
 
 #### 🌍 Servidor e CORS
+
 ```env
 NODE_ENV=development                  # development | production
 APP_PORT=8080                         # Porta do servidor
@@ -222,6 +244,7 @@ COOKIE_DOMAIN=localhost               # Domínio para cookies
 ```
 
 #### 🔑 OAuth - Google
+
 ```env
 GOOGLE_CLIENT_ID=seu_google_client_id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=seu_google_client_secret
@@ -229,12 +252,14 @@ GOOGLE_REDIRECT_URI=http://localhost:8080/api/auth/signin/sso/google/callback
 ```
 
 **Como obter credenciais Google:**
+
 1. Acesse [Google Cloud Console](https://console.cloud.google.com/)
 2. Crie um projeto e ative a Google+ API
 3. Configure OAuth 2.0 em "Credenciais"
 4. Veja guia completo em: [docs/GOOGLE_AUTH_SETUP.md](./docs/GOOGLE_AUTH_SETUP.md)
 
 #### 🐙 OAuth - GitHub (Opcional)
+
 ```env
 GITHUB_CLIENT_ID=seu_github_client_id
 GITHUB_CLIENT_SECRET=seu_github_client_secret
@@ -242,6 +267,7 @@ GITHUB_REDIRECT_URI=http://localhost:8080/api/auth/signin/sso/github/callback
 ```
 
 #### ☁️ Digital Ocean Spaces (Storage)
+
 ```env
 DO_SPACES_ENDPOINT=https://nyc3.digitaloceanspaces.com
 DO_SPACES_ACCESS_KEY=sua_access_key
@@ -253,11 +279,13 @@ DO_SPACES_REGION=nyc3                 # Região do datacenter
 **Regiões disponíveis:** `nyc3`, `sfo3`, `ams3`, `sgp1`, `fra1`, `blr1`
 
 #### 🎨 Frontend
+
 ```env
 FRONTEND_URL=http://localhost:3000    # URL do app React/Next.js
 ```
 
 #### 📍 IP Tracking (Opcional)
+
 ```env
 TOKEN_IP=seu_token_ipinfo             # Token para ipinfo.io (geolocalização)
 ```
@@ -265,27 +293,33 @@ TOKEN_IP=seu_token_ipinfo             # Token para ipinfo.io (geolocalização)
 ### ⚙️ Configurações Importantes
 
 #### Rate Limiting
+
 Configure em `src/middlewares/security/limiters.js`:
+
 ```javascript
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  // 15 minutos
-  max: 100                   // 100 requisições por IP
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // 100 requisições por IP
 });
 ```
 
 #### CORS
+
 As origens permitidas são configuradas via `ALLOWED_ORIGINS`. Suporta:
+
 - Múltiplas origens: `http://localhost:3000,https://app.com`
 - Wildcards: `https://*.exemplo.com`
 - IPs: `http://192.168.1.100:3000`
 
 #### Session Store
+
 As sessões são armazenadas no PostgreSQL via `connect-pg-simple`:
+
 ```javascript
 store: new pgSession({
-  pool: pool,           // Pool de conexões
-  tableName: 'sessions' // Tabela de sessões
-})
+  pool: pool, // Pool de conexões
+  tableName: "sessions", // Tabela de sessões
+});
 ```
 
 ## 🔒 Segurança
@@ -309,18 +343,21 @@ A API suporta duas formas de autenticação:
 ## 📊 Features Principais
 
 ### Sistema de Notas
+
 - ✅ CRUD completo de notas
 - ✅ Sistema de blocos estruturados
 - ✅ Reordenação de blocos
 - ✅ Marcação de conclusão
 
 ### Gerenciamento de Usuários
+
 - ✅ Registro e login seguro
 - ✅ Perfis de usuário
 - ✅ Upload de foto de perfil
 - ✅ Recuperação de senha
 
 ### Integrações
+
 - ✅ Google OAuth 2.0
 - ✅ AWS S3 para arquivos
 - ✅ Email transacional
@@ -328,6 +365,7 @@ A API suporta duas formas de autenticação:
 ## 📁 Estrutura de Dados
 
 ### Nota (Note)
+
 ```json
 {
   "id": "uuid",
@@ -340,6 +378,7 @@ A API suporta duas formas de autenticação:
 ```
 
 ### Bloco (Block)
+
 ```json
 {
   "id": "uuid",
@@ -380,6 +419,7 @@ server/
 ```
 
 **Processo de Build:**
+
 1. `npm run build` → Babel transpila `src/` para `dist/`
 2. `npm start` → Node executa `dist/index.js`
 
@@ -398,6 +438,7 @@ server/
 ### Problemas Comuns
 
 #### ❌ Erro de Conexão com Banco de Dados
+
 ```bash
 # 1. Verificar se PostgreSQL está rodando
 sudo systemctl status postgresql  # Linux
@@ -417,6 +458,7 @@ psql -U seu_usuario -d weave_notes -f sql/create_sessions_table.sql
 **Erro comum:** `ECONNREFUSED` → PostgreSQL não está rodando ou host/porta incorretos
 
 #### ❌ Erro de Autenticação Google OAuth
+
 ```bash
 # 1. Verificar variáveis
 echo $GOOGLE_CLIENT_ID
@@ -431,15 +473,17 @@ echo $GOOGLE_CLIENT_SECRET
 **Erro comum:** `redirect_uri_mismatch` → URI de callback não corresponde
 
 #### ❌ Rate Limit Excedido
+
 ```javascript
 // Ajustar em: src/middlewares/security/limiters.js
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  // Aumentar janela de tempo
-  max: 200                   // Aumentar limite
+  windowMs: 15 * 60 * 1000, // Aumentar janela de tempo
+  max: 200, // Aumentar limite
 });
 ```
 
 #### ❌ Erro ao Enviar Email
+
 ```bash
 # 1. Para Gmail, usar senha de aplicativo (não a senha normal)
 # 2. Verificar configurações
@@ -452,6 +496,7 @@ nc -zv smtp.gmail.com 587
 **Erro comum:** `Invalid login` → Use senha de aplicativo do Gmail
 
 #### ❌ Erro de Upload de Imagem
+
 ```bash
 # 1. Verificar credenciais Digital Ocean Spaces
 grep DO_SPACES .env
@@ -463,6 +508,7 @@ grep DO_SPACES .env
 ```
 
 #### ❌ Módulo não Encontrado (Module Not Found)
+
 ```bash
 # 1. Limpar e reinstalar dependências
 rm -rf node_modules package-lock.json
@@ -474,6 +520,7 @@ npm run build
 ```
 
 #### ❌ Port Already in Use
+
 ```bash
 # Linux/macOS
 lsof -ti:8080 | xargs kill -9
@@ -488,12 +535,14 @@ APP_PORT=8081
 ### 🔍 Debug Mode
 
 Ative logs detalhados:
+
 ```env
 NODE_ENV=development
 DEBUG=express:*
 ```
 
 Execute com logs:
+
 ```bash
 DEBUG=* npm run dev
 ```
@@ -513,6 +562,7 @@ Este projeto está sob a licença ISC. Veja o arquivo [LICENSE](LICENSE) para de
 ## 👨‍💻 Autor
 
 **Gael Gomes**
+
 - GitHub: [@eugaelgomes](https://github.com/eugaelgomes)
 - Aceito uma estrelinha nesse projeto hahaha!
 

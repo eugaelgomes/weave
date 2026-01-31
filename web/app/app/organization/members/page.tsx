@@ -91,8 +91,6 @@ const Badge = ({ role }: { role: string }) => {
     guest: "Convidado",
   };
 
-
-
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium ${styles[role as keyof typeof styles] || styles.member}`}
@@ -102,8 +100,9 @@ const Badge = ({ role }: { role: string }) => {
   );
 };
 
-
-const personIcon = (<IoPersonCircleSharp className="h-10 w-10 text-neutral-400 dark:text-neutral-500" />);
+const personIcon = (
+  <IoPersonCircleSharp className="h-10 w-10 text-neutral-400 dark:text-neutral-500" />
+);
 
 // --- Modal de Atividade ---
 const ActivityModal = ({
@@ -509,7 +508,7 @@ const MembersPage = () => {
   });
 
   return (
-    <div className="flex h-full flex-col bg-white dark:bg-neutral-950 space-y-4">
+    <div className="flex h-full flex-col space-y-4 bg-white dark:bg-neutral-950">
       {/* Header */}
       <div className="border-b border-neutral-200 dark:border-neutral-800">
         <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
@@ -523,7 +522,7 @@ const MembersPage = () => {
 
         {/* Barra de Busca */}
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative flex-1 max-w-md">
+          <div className="relative max-w-md flex-1">
             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400" />
             <input
               placeholder="Buscar por nome, email ou username..."
@@ -532,7 +531,7 @@ const MembersPage = () => {
               className="w-full rounded-md border border-neutral-200 bg-white py-2.5 pr-4 pl-10 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:placeholder:text-neutral-500"
             />
           </div>
-          
+
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 rounded-md bg-neutral-100 px-3 py-2 dark:bg-neutral-800/50">
               <Users className="h-4 w-4 text-neutral-500" />
@@ -540,7 +539,7 @@ const MembersPage = () => {
                 {allMembers.length} {allMembers.length === 1 ? "membro" : "membros"}
               </span>
             </div>
-            
+
             {userCanManage && (
               <button
                 onClick={() => setShowAddMember(true)}

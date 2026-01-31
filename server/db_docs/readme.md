@@ -1,7 +1,7 @@
-
 # Database Schema Documentation - Weave Notes
 
 ## Overview
+
 Esta documentação descreve a estrutura completa do banco de dados PostgreSQL da aplicação Weave Notes, incluindo tabelas, tipos customizados, relacionamentos e índices.
 
 ---
@@ -17,7 +17,9 @@ CREATE SCHEMA public AUTHORIZATION pg_database_owner;
 ## Custom Types (ENUM)
 
 ### 1. access_status_enum
+
 Status de tentativas de acesso ao sistema
+
 ```sql
 CREATE TYPE public."access_status_enum" AS ENUM (
 	'success',   -- Login bem-sucedido
@@ -26,7 +28,9 @@ CREATE TYPE public."access_status_enum" AS ENUM (
 ```
 
 ### 2. theme_mode_pattern
+
 Preferência de tema do usuário
+
 ```sql
 CREATE TYPE public."theme_mode_pattern" AS ENUM (
 	'dark',   -- Modo escuro
@@ -35,7 +39,9 @@ CREATE TYPE public."theme_mode_pattern" AS ENUM (
 ```
 
 ### 3. token_type_enum
+
 Tipos de tokens para autenticação e verificação
+
 ```sql
 CREATE TYPE public."token_type_enum" AS ENUM (
 	'password_reset',        -- Recuperação de senha
@@ -46,7 +52,9 @@ CREATE TYPE public."token_type_enum" AS ENUM (
 ```
 
 ### 4. user_log_category
+
 Categorias de logs de atividade do usuário
+
 ```sql
 CREATE TYPE public."user_log_category" AS ENUM (
 	'auth_login',       -- Login no sistema
@@ -59,7 +67,9 @@ CREATE TYPE public."user_log_category" AS ENUM (
 ```
 
 ### 5. user_role
+
 Papéis/permissões de usuários em organizações e projetos
+
 ```sql
 CREATE TYPE public."user_role" AS ENUM (
 	'admin',        -- Administrador
@@ -99,10 +109,10 @@ CREATE SEQUENCE public.tokens_token_id_seq
 
 ### 📋 MÓDULO: PLANOS E ASSINATURAS
 
-
-
 #### plans
+
 Definição de planos disponíveis no sistema (free, pro, enterprise, etc)
+
 ```sql
 
 CREATE TABLE public.aisessions (
@@ -752,7 +762,7 @@ DECLARE
 BEGIN
     -- Define o nome da tabela de log baseado na tabela de origem
     target_table := projects || '_logs';
-    
+
     IF (TG_OP = 'DELETE') THEN
         EXECUTE format('INSERT INTO %I (project_id, operation, old_data, changed_at) VALUES ($1, $2, $3, $4)', target_table)
         USING OLD.id, 'DELETE', row_to_json(OLD), now();
@@ -886,3 +896,4 @@ CREATE OR REPLACE FUNCTION public.uuid_ns_x500()
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/uuid-ossp', $function$uuid_ns_x500$function$
 ;
+```

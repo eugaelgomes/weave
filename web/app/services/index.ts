@@ -60,15 +60,15 @@ export {
   updateOrganizationProperties,
   deleteOrganization,
   restoreOrganization,
-  addMember,
+  addMemberDirectly,
+  inviteMember,
   removeMember,
   type Organization,
   type OrganizationProperties,
   type OrganizationMember,
-  type OrganizationProjects,
   type CreateOrganizationData,
   type UpdateOrganizationData,
-  type AddMemberData,
+  type InviteMemberData,
 } from "./organization";
 
 // Backup Services

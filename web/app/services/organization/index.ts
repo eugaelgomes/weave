@@ -308,13 +308,13 @@ export const fetchOrganizationMembers = async (userId?: string): Promise<Organiz
       : API_ENDPOINTS.ORGANIZATIONS_MEMBERS;
 
     const response = await apiClient.get(url);
-    const data = await handleResponse<{ 
-      status?: string; 
-      list_org_members?: Array<{ member_data: OrganizationMember }>
+    const data = await handleResponse<{
+      status?: string;
+      list_org_members?: Array<{ member_data: OrganizationMember }>;
     }>(response);
 
     if (data.status === "OK" && data.list_org_members) {
-      return data.list_org_members.map(item => item.member_data);
+      return data.list_org_members.map((item) => item.member_data);
     }
     return [];
   } catch (error) {

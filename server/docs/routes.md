@@ -29,10 +29,12 @@ Todas as rotas da API são prefixadas com `/api`. Este documento descreve todos 
 **Autenticação:** Não requerida
 
 **Middlewares:**
+
 - `loginLimiter`: Rate limiting para proteção contra força bruta
 - Validação e sanitização de entrada
 
 **Body:**
+
 ```json
 {
   "username": "usuario@email.com",
@@ -41,6 +43,7 @@ Todas as rotas da API são prefixadas com `/api`. Este documento descreve todos 
 ```
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -54,6 +57,7 @@ Todas as rotas da API são prefixadas com `/api`. Este documento descreve todos 
 ```
 
 **Erros Possíveis:**
+
 - `400`: Dados inválidos
 - `401`: Credenciais incorretas
 - `429`: Rate limit excedido
@@ -81,6 +85,7 @@ Todas as rotas da API são prefixadas com `/api`. Este documento descreve todos 
 **Autenticação:** Não requerida
 
 **Query Parameters:**
+
 - `code`: Código de autorização do Google
 
 **Resposta:** Redireciona para frontend com token JWT
@@ -96,6 +101,7 @@ Todas as rotas da API são prefixadas com `/api`. Este documento descreve todos 
 **Autenticação:** ✅ Requerida (Bearer Token)
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "id": "uuid",
@@ -119,10 +125,12 @@ Todas as rotas da API são prefixadas com `/api`. Este documento descreve todos 
 **Content-Type:** `multipart/form-data`
 
 **Middlewares:**
+
 - `upload.single("profilePicture")`: Upload de imagem
 - `validateImage`: Validação de tamanho e formato
 
 **Body (FormData):**
+
 ```
 name: "Novo Nome"
 profilePicture: [arquivo de imagem]
@@ -132,6 +140,7 @@ profilePicture: [arquivo de imagem]
 **Tamanho Máximo:** Configurável no middleware
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -155,6 +164,7 @@ profilePicture: [arquivo de imagem]
 **Autenticação:** ✅ Requerida
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -173,6 +183,7 @@ profilePicture: [arquivo de imagem]
 **Autenticação:** Não requerida (usa refresh token)
 
 **Body:**
+
 ```json
 {
   "refreshToken": "refresh_token_aqui"
@@ -180,6 +191,7 @@ profilePicture: [arquivo de imagem]
 ```
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -203,11 +215,13 @@ profilePicture: [arquivo de imagem]
 **Content-Type:** `multipart/form-data`
 
 **Middlewares:**
+
 - `upload.single("profileImage")`: Upload opcional de imagem de perfil
 - `validateCompressedImageSize`: Validação de imagem
 - `inputValidation()`: Validação de dados
 
 **Body (FormData):**
+
 ```
 username: "usuario@email.com"
 password: "senha_segura123"
@@ -216,11 +230,13 @@ profileImage: [arquivo opcional]
 ```
 
 **Validações:**
+
 - Email válido e único
 - Senha mínima de 8 caracteres
 - Nome obrigatório
 
 **Resposta de Sucesso (201):**
+
 ```json
 {
   "success": true,
@@ -231,6 +247,7 @@ profileImage: [arquivo opcional]
 ```
 
 **Erros Possíveis:**
+
 - `400`: Dados inválidos ou email já cadastrado
 - `413`: Imagem muito grande
 
@@ -245,12 +262,14 @@ profileImage: [arquivo opcional]
 **Autenticação:** ✅ Requerida
 
 **Query Parameters:**
+
 - `q`: Termo de busca (nome ou email)
 - `limit`: Número máximo de resultados (padrão: 10)
 
 **Exemplo:** `GET /api/users/search?q=maria&limit=5`
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "users": [
@@ -275,6 +294,7 @@ profileImage: [arquivo opcional]
 **Autenticação:** ✅ Requerida
 
 **Resposta de Sucesso (200):**
+
 - Content-Type: `image/jpeg`, `image/png`, etc.
 - Body: Arquivo binário da imagem
 
@@ -289,6 +309,7 @@ profileImage: [arquivo opcional]
 **Autenticação:** ✅ Requerida
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "url": "https://spaces.digitalocean.com/bucket/profile.jpg",
@@ -307,13 +328,15 @@ profileImage: [arquivo opcional]
 
 **Autenticação:** ✅ Requerida
 
-**Ação:** 
+**Ação:**
+
 - Remove todos os dados do usuário
 - Deleta notas criadas
 - Remove colaborações
 - Envia email de confirmação
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -336,6 +359,7 @@ profileImage: [arquivo opcional]
 **Autenticação:** Não requerida
 
 **Body:**
+
 ```json
 {
   "email": "usuario@email.com"
@@ -343,9 +367,11 @@ profileImage: [arquivo opcional]
 ```
 
 **Validação:**
+
 - Email válido
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -354,6 +380,7 @@ profileImage: [arquivo opcional]
 ```
 
 **Comportamento:**
+
 - Envia email com link de reset
 - Token expira em 1 hora
 - Retorna sucesso mesmo se email não existir (segurança)
@@ -369,6 +396,7 @@ profileImage: [arquivo opcional]
 **Autenticação:** Não requerida
 
 **Body:**
+
 ```json
 {
   "token": "token_recebido_por_email",
@@ -377,10 +405,12 @@ profileImage: [arquivo opcional]
 ```
 
 **Validações:**
+
 - Token válido e não expirado
 - Senha mínima de 8 caracteres
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -389,6 +419,7 @@ profileImage: [arquivo opcional]
 ```
 
 **Erros Possíveis:**
+
 - `400`: Token inválido ou expirado
 - `400`: Senha não atende critérios de segurança
 
@@ -405,6 +436,7 @@ profileImage: [arquivo opcional]
 **Descrição:** Retorna todas as notas do usuário autenticado (criadas e compartilhadas).
 
 **Query Parameters:**
+
 - `page`: Página (padrão: 1)
 - `limit`: Itens por página (padrão: 20)
 - `sort`: Ordenação (`createdAt`, `updatedAt`, `title`)
@@ -413,6 +445,7 @@ profileImage: [arquivo opcional]
 **Exemplo:** `GET /api/notes?page=1&limit=10&sort=updatedAt&order=desc`
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "notes": [
@@ -445,9 +478,11 @@ profileImage: [arquivo opcional]
 **Descrição:** Retorna detalhes de uma nota específica.
 
 **Parâmetros:**
+
 - `id`: ID da nota (UUID)
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "id": "uuid",
@@ -477,6 +512,7 @@ profileImage: [arquivo opcional]
 ```
 
 **Erros Possíveis:**
+
 - `404`: Nota não encontrada
 - `403`: Usuário não tem permissão para acessar
 
@@ -489,6 +525,7 @@ profileImage: [arquivo opcional]
 **Descrição:** Cria uma nova nota básica (sem blocos iniciais).
 
 **Body:**
+
 ```json
 {
   "title": "Nova Nota",
@@ -497,6 +534,7 @@ profileImage: [arquivo opcional]
 ```
 
 **Resposta de Sucesso (201):**
+
 ```json
 {
   "success": true,
@@ -514,6 +552,7 @@ profileImage: [arquivo opcional]
 **Descrição:** Cria uma nota com bloco inicial de conteúdo.
 
 **Body:**
+
 ```json
 {
   "title": "Nova Nota Completa",
@@ -528,6 +567,7 @@ profileImage: [arquivo opcional]
 **Tipos de Bloco:** `text`, `image`, `list`, `code`, `quote`
 
 **Resposta de Sucesso (201):**
+
 ```json
 {
   "success": true,
@@ -546,9 +586,11 @@ profileImage: [arquivo opcional]
 **Descrição:** Atualiza informações básicas da nota (título e conteúdo).
 
 **Parâmetros:**
+
 - `id`: ID da nota
 
 **Body:**
+
 ```json
 {
   "title": "Título Atualizado",
@@ -559,6 +601,7 @@ profileImage: [arquivo opcional]
 **Permissão:** Apenas o dono pode atualizar
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -575,11 +618,13 @@ profileImage: [arquivo opcional]
 **Descrição:** Deleta uma nota e todos os seus blocos e colaborações.
 
 **Parâmetros:**
+
 - `id`: ID da nota
 
 **Permissão:** Apenas o dono pode deletar
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -588,6 +633,7 @@ profileImage: [arquivo opcional]
 ```
 
 **Erros Possíveis:**
+
 - `404`: Nota não encontrada
 - `403`: Apenas o dono pode deletar
 
@@ -602,9 +648,11 @@ profileImage: [arquivo opcional]
 **Descrição:** Retorna todos os blocos de uma nota ordenados.
 
 **Parâmetros:**
+
 - `noteId`: ID da nota
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "blocks": [
@@ -637,9 +685,11 @@ profileImage: [arquivo opcional]
 **Descrição:** Adiciona um novo bloco à nota.
 
 **Parâmetros:**
+
 - `id`: ID da nota
 
 **Body:**
+
 ```json
 {
   "type": "text",
@@ -649,6 +699,7 @@ profileImage: [arquivo opcional]
 ```
 
 **Tipos Disponíveis:**
+
 - `text`: Texto simples
 - `image`: URL de imagem
 - `list`: Lista de itens
@@ -656,6 +707,7 @@ profileImage: [arquivo opcional]
 - `quote`: Citação
 
 **Resposta de Sucesso (201):**
+
 ```json
 {
   "success": true,
@@ -673,10 +725,12 @@ profileImage: [arquivo opcional]
 **Descrição:** Atualiza conteúdo de um bloco específico.
 
 **Parâmetros:**
+
 - `noteId`: ID da nota
 - `blockId`: ID do bloco
 
 **Body:**
+
 ```json
 {
   "type": "text",
@@ -685,6 +739,7 @@ profileImage: [arquivo opcional]
 ```
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -701,10 +756,12 @@ profileImage: [arquivo opcional]
 **Descrição:** Remove um bloco da nota.
 
 **Parâmetros:**
+
 - `noteId`: ID da nota
 - `blockId`: ID do bloco
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -721,9 +778,11 @@ profileImage: [arquivo opcional]
 **Descrição:** Reordena os blocos da nota.
 
 **Parâmetros:**
+
 - `noteId`: ID da nota
 
 **Body:**
+
 ```json
 {
   "blocks": [
@@ -735,6 +794,7 @@ profileImage: [arquivo opcional]
 ```
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -753,9 +813,11 @@ profileImage: [arquivo opcional]
 **Descrição:** Lista todos os colaboradores de uma nota.
 
 **Parâmetros:**
+
 - `noteId`: ID da nota
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "collaborators": [
@@ -779,9 +841,11 @@ profileImage: [arquivo opcional]
 **Descrição:** Adiciona um colaborador à nota e envia notificação por email.
 
 **Parâmetros:**
+
 - `noteId`: ID da nota
 
 **Body:**
+
 ```json
 {
   "userId": "uuid-do-colaborador"
@@ -791,6 +855,7 @@ profileImage: [arquivo opcional]
 **Permissão:** Apenas o dono pode adicionar colaboradores
 
 **Resposta de Sucesso (201):**
+
 ```json
 {
   "success": true,
@@ -799,6 +864,7 @@ profileImage: [arquivo opcional]
 ```
 
 **Erros Possíveis:**
+
 - `400`: Colaborador já existe na nota
 - `403`: Apenas o dono pode adicionar colaboradores
 - `404`: Usuário não encontrado
@@ -812,9 +878,11 @@ profileImage: [arquivo opcional]
 **Descrição:** Permite que um colaborador se remova da nota.
 
 **Parâmetros:**
+
 - `noteId`: ID da nota
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -833,12 +901,14 @@ profileImage: [arquivo opcional]
 **Descrição:** Remove um colaborador da nota.
 
 **Parâmetros:**
+
 - `noteId`: ID da nota
 - `collaboratorId`: ID do colaborador a ser removido
 
 **Permissão:** Apenas o dono pode remover colaboradores
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "success": true,
@@ -847,6 +917,7 @@ profileImage: [arquivo opcional]
 ```
 
 **Erros Possíveis:**
+
 - `403`: Apenas o dono pode remover colaboradores
 - `404`: Colaborador não encontrado na nota
 
@@ -863,6 +934,7 @@ profileImage: [arquivo opcional]
 **Descrição:** Inicia um job assíncrono para exportar todos os dados do usuário.
 
 **Resposta de Sucesso (202):**
+
 ```json
 {
   "success": true,
@@ -872,6 +944,7 @@ profileImage: [arquivo opcional]
 ```
 
 **Processo:**
+
 1. Cria job assíncrono
 2. Exporta notas, blocos e dados do usuário
 3. Gera arquivo JSON
@@ -886,9 +959,11 @@ profileImage: [arquivo opcional]
 **Descrição:** Consulta o status de um job de backup.
 
 **Parâmetros:**
+
 - `jobId`: ID do job retornado ao solicitar backup
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "job": {
@@ -906,6 +981,7 @@ profileImage: [arquivo opcional]
 ```
 
 **Status Possíveis:**
+
 - `pending`: Aguardando processamento
 - `processing`: Em execução
 - `completed`: Finalizado com sucesso
@@ -920,9 +996,11 @@ profileImage: [arquivo opcional]
 **Descrição:** Lista todos os jobs de backup do usuário.
 
 **Query Parameters:**
+
 - `limit`: Número de resultados (padrão: 10)
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "jobs": [
@@ -951,6 +1029,7 @@ profileImage: [arquivo opcional]
 **Descrição:** Retorna resumo estatístico dos dados do usuário para backup.
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "summary": {
@@ -968,11 +1047,13 @@ profileImage: [arquivo opcional]
 ## 📊 Códigos de Status HTTP
 
 ### Sucesso
+
 - `200 OK`: Requisição bem-sucedida
 - `201 Created`: Recurso criado com sucesso
 - `202 Accepted`: Requisição aceita para processamento assíncrono
 
 ### Erro do Cliente
+
 - `400 Bad Request`: Dados inválidos ou malformados
 - `401 Unauthorized`: Token ausente ou inválido
 - `403 Forbidden`: Sem permissão para acessar recurso
@@ -981,6 +1062,7 @@ profileImage: [arquivo opcional]
 - `429 Too Many Requests`: Rate limit excedido
 
 ### Erro do Servidor
+
 - `500 Internal Server Error`: Erro interno do servidor
 - `503 Service Unavailable`: Serviço temporariamente indisponível
 
@@ -991,11 +1073,13 @@ profileImage: [arquivo opcional]
 ### Formato do Token JWT
 
 **Header:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 ### Estrutura do Token
+
 ```json
 {
   "userId": "uuid",
@@ -1006,6 +1090,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 ### Expiração
+
 - **Access Token**: 7 dias (configurável)
 - **Refresh Token**: 30 dias
 
@@ -1016,9 +1101,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ### Rate Limiting
 
 **Limites Globais:**
+
 - 100 requisições por 15 minutos (por IP)
 
 **Limites Específicos:**
+
 - Login: 5 tentativas por 15 minutos
 - Criar conta: 3 tentativas por hora
 - Recuperação de senha: 3 tentativas por hora
@@ -1026,15 +1113,18 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ### Validações
 
 **Senhas:**
+
 - Mínimo 8 caracteres
 - Armazenadas com bcrypt (10 rounds)
 
 **Imagens:**
+
 - Formatos: JPEG, PNG, WebP, GIF
 - Tamanho máximo: 5MB (antes da compressão)
 - Compressão automática aplicada
 
 **Emails:**
+
 - Validação de formato RFC 5322
 - Sanitização contra XSS
 
@@ -1124,4 +1214,4 @@ curl -X POST http://localhost:8080/api/notes/{noteId}/collaborators \
 
 ---
 
-*Documentação atualizada em: Novembro de 2025*
+_Documentação atualizada em: Novembro de 2025_

@@ -57,8 +57,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const profileData = await getUserDataService();
 
         setUser(profileData);
-        if (profileData.theme_mode) {
-          setTheme(profileData.theme_mode);
+        if (
+          profileData.theme_mode &&
+          (profileData.theme_mode === "light" || profileData.theme_mode === "dark")
+        ) {
+          setTheme(profileData.theme_mode as "light" | "dark");
         }
       } catch (error) {
         // Se falhar (401/403), o usuário não está logado.
@@ -94,7 +97,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (response && response.user) {
         setUser(response.user);
-        if (response.user.theme_mode) setTheme(response.user.theme_mode);
+        if (
+          response.user.theme_mode &&
+          (response.user.theme_mode === "light" || response.user.theme_mode === "dark")
+        ) {
+          setTheme(response.user.theme_mode as "light" | "dark");
+        }
 
         return { success: true, data: response };
       }
@@ -143,7 +151,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ) as Partial<User>;
 
       setUser((prev) => (prev ? { ...prev, ...cleanedData } : null));
-      if (updatedData.theme_mode) setTheme(updatedData.theme_mode);
+      if (
+        updatedData.theme_mode &&
+        (updatedData.theme_mode === "light" || updatedData.theme_mode === "dark")
+      ) {
+        setTheme(updatedData.theme_mode as "light" | "dark");
+      }
       return { success: true };
     } catch (error) {
       return { success: false, message: error instanceof Error ? error.message : "Unknown error" };

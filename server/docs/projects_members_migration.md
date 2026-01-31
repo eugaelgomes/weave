@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS public.projects_members (
 -- Criar índices
 CREATE INDEX idx_projects_members_project_id ON projects_members(project_id);
 CREATE INDEX idx_projects_members_user_id ON projects_members(user_id);
-CREATE INDEX idx_projects_members_active ON projects_members(project_id, user_id) 
+CREATE INDEX idx_projects_members_active ON projects_members(project_id, user_id)
   WHERE deleted = false AND suspended = false;
 ```
 
@@ -47,20 +47,20 @@ CREATE INDEX idx_projects_members_active ON projects_members(project_id, user_id
 ```sql
 -- Migrar colaboradores existentes do JSONB para a tabela
 WITH projects_with_collabs AS (
-  SELECT 
+  SELECT
     id as project_id,
     user_id as owner_id,
     collaborators
   FROM projects
-  WHERE collaborators IS NOT NULL 
+  WHERE collaborators IS NOT NULL
     AND jsonb_array_length(collaborators) > 0
 ),
 expanded_collabs AS (
-  SELECT 
+  SELECT
     pwc.project_id,
     pwc.owner_id,
     (collab->>'user_id')::uuid as collaborator_id,
-    CASE 
+    CASE
       WHEN collab->>'permission' = 'admin' THEN 'admin'::text
       ELSE 'viewer'::text
     END as role,
@@ -71,7 +71,7 @@ expanded_collabs AS (
   WHERE collab->>'user_id' IS NOT NULL
 )
 INSERT INTO projects_members (project_id, user_id, role, deleted, created_at, added_by)
-SELECT 
+SELECT
   project_id,
   collaborator_id,
   role,
@@ -99,6 +99,7 @@ ALTER TABLE projects RENAME COLUMN collaborators TO collaborators_old;
 ### Repository (`projects.repository.js`)
 
 Todos os métodos foram atualizados para:
+
 - Usar JOINs com `projects_members` ao invés de processar JSONB
 - Filtrar por `deleted = false` e `suspended = false`
 - Usar `role` ao invés de `permission`
@@ -106,6 +107,7 @@ Todos os métodos foram atualizados para:
 ### Controller (`projects.controller.js`)
 
 Alterações principais:
+
 - Trocado `permission` por `role` em todos os endpoints
 - Removido filtros `.filter((c) => !c.removed)` pois a query já filtra
 - Atualizado validação de limites para buscar da tabela
@@ -123,6 +125,7 @@ Todos os endpoints relacionados a colaboradores:
 ### Mudanças na API
 
 **Antes:**
+
 ```json
 {
   "action": "add",
@@ -132,6 +135,7 @@ Todos os endpoints relacionados a colaboradores:
 ```
 
 **Depois:**
+
 ```json
 {
   "action": "add",

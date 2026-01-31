@@ -8,12 +8,10 @@ const requestLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req) => req.ip,
   handler: (req, res) => {
-    res
-      .status(429)
-      .json({
-        message:
-          "Too many requests. Please wait at least 10 minutes to try again.",
-      });
+    res.status(429).json({
+      message:
+        "Too many requests. Please wait at least 10 minutes to try again.",
+    });
   },
 });
 

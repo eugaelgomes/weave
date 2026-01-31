@@ -106,6 +106,7 @@ Lista todos os projetos pertencentes ao usuário autenticado, incluindo informa�
 ```
 
 **Observações:**
+
 - O campo `progress` em `properties` é calculado automaticamente com base no status das notas (somente leitura)
 - Apenas colaboradores não removidos são retornados
 - Projetos marcados como deletados não são incluídos
@@ -140,12 +141,12 @@ Cria um novo projeto para o usuário autenticado.
 
 **Parâmetros:**
 
-| Campo | Tipo | Obrigatório | Descrição |
-|-------|------|-------------|-----------|
-| `title` | string | Sim | Título do projeto (máx. 255 caracteres) |
-| `description` | string | Não | Descrição detalhada do projeto |
-| `status` | string | Não | Status inicial: `ativo`, `arquivado`, `concluído` (padrão: `ativo`) |
-| `properties` | object | Não | Propriedades adicionais (ver [Schema de Properties](#schema-de-properties)) |
+| Campo         | Tipo   | Obrigatório | Descrição                                                                   |
+| ------------- | ------ | ----------- | --------------------------------------------------------------------------- |
+| `title`       | string | Sim         | Título do projeto (máx. 255 caracteres)                                     |
+| `description` | string | Não         | Descrição detalhada do projeto                                              |
+| `status`      | string | Não         | Status inicial: `ativo`, `arquivado`, `concluído` (padrão: `ativo`)         |
+| `properties`  | object | Não         | Propriedades adicionais (ver [Schema de Properties](#schema-de-properties)) |
 
 **Resposta de Sucesso:** `201 Created`
 
@@ -172,6 +173,7 @@ Cria um novo projeto para o usuário autenticado.
 ```
 
 **Erros Possíveis:**
+
 - `400 Bad Request`: Título não fornecido ou propriedades inválidas
 - `401 Unauthorized`: Token de autenticação ausente ou inválido
 
@@ -187,9 +189,9 @@ Retorna os detalhes de um projeto específico. O usuário deve ser o proprietár
 
 **Parâmetros de URL:**
 
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `id` | UUID | ID do projeto |
+| Campo | Tipo | Descrição     |
+| ----- | ---- | ------------- |
+| `id`  | UUID | ID do projeto |
 
 **Exemplo:** `GET /api/projects/550e8400-e29b-41d4-a716-446655440000`
 
@@ -218,6 +220,7 @@ Retorna os detalhes de um projeto específico. O usuário deve ser o proprietár
 ```
 
 **Erros Possíveis:**
+
 - `401 Unauthorized`: Token de autenticação ausente ou inválido
 - `404 Not Found`: Projeto não encontrado ou usuário não tem acesso
 
@@ -233,9 +236,9 @@ Atualiza campos de um projeto existente. Suporta atualização parcial, onde ape
 
 **Parâmetros de URL:**
 
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `id` | UUID | ID do projeto |
+| Campo | Tipo | Descrição     |
+| ----- | ---- | ------------- |
+| `id`  | UUID | ID do projeto |
 
 **Corpo da Requisição (todos os campos opcionais):**
 
@@ -254,12 +257,12 @@ Atualiza campos de um projeto existente. Suporta atualização parcial, onde ape
 
 **Parâmetros:**
 
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `title` | string | Novo título do projeto |
-| `description` | string | Nova descrição |
-| `status` | string | Novo status: `ativo`, `arquivado`, `concluído` |
-| `properties` | object | Propriedades a serem mescladas (merge) com as existentes |
+| Campo         | Tipo   | Descrição                                                |
+| ------------- | ------ | -------------------------------------------------------- |
+| `title`       | string | Novo título do projeto                                   |
+| `description` | string | Nova descrição                                           |
+| `status`      | string | Novo status: `ativo`, `arquivado`, `concluído`           |
+| `properties`  | object | Propriedades a serem mescladas (merge) com as existentes |
 
 **Resposta de Sucesso:** `200 OK`
 
@@ -289,11 +292,13 @@ Atualiza campos de um projeto existente. Suporta atualização parcial, onde ape
 ```
 
 **Observações:**
+
 - `properties` são mescladas (merge) com as existentes, não sobrescritas completamente
 - O campo `progress` é recalculado automaticamente ao atualizar propriedades
 - Enviar um corpo vazio ou sem campos válidos retorna erro `400`
 
 **Erros Possíveis:**
+
 - `400 Bad Request`: Nenhum campo válido fornecido ou valores inválidos
 - `401 Unauthorized`: Token de autenticação ausente ou inválido
 - `404 Not Found`: Projeto não encontrado ou usuário não é proprietário
@@ -310,9 +315,9 @@ Remove um projeto do sistema (soft delete). O projeto é marcado como deletado, 
 
 **Parâmetros de URL:**
 
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `id` | UUID | ID do projeto a ser deletado |
+| Campo | Tipo | Descrição                    |
+| ----- | ---- | ---------------------------- |
+| `id`  | UUID | ID do projeto a ser deletado |
 
 **Exemplo:** `DELETE /api/projects/550e8400-e29b-41d4-a716-446655440000`
 
@@ -325,11 +330,13 @@ Remove um projeto do sistema (soft delete). O projeto é marcado como deletado, 
 ```
 
 **Observações:**
+
 - Apenas o proprietário do projeto pode deletá-lo
 - Soft delete: o projeto é marcado como `deleted = true`, mas não é removido fisicamente
 - Colaboradores e notas associadas não são afetados
 
 **Erros Possíveis:**
+
 - `401 Unauthorized`: Token de autenticação ausente ou inválido
 - `404 Not Found`: Projeto não encontrado ou usuário não é proprietário
 
@@ -347,8 +354,8 @@ Lista todos os colaboradores ativos de um projeto. Acessível pelo proprietário
 
 **Parâmetros de URL:**
 
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
+| Campo       | Tipo | Descrição     |
+| ----------- | ---- | ------------- |
 | `projectId` | UUID | ID do projeto |
 
 **Exemplo:** `GET /api/projects/550e8400-e29b-41d4-a716-446655440000/collaborators`
@@ -383,10 +390,12 @@ Lista todos os colaboradores ativos de um projeto. Acessível pelo proprietário
 ```
 
 **Observações:**
+
 - Apenas colaboradores não removidos (`removed = false`) são retornados
 - Proprietário e colaboradores podem visualizar a lista
 
 **Erros Possíveis:**
+
 - `401 Unauthorized`: Token de autenticação ausente ou inválido
 - `404 Not Found`: Projeto não encontrado ou usuário não tem acesso
 
@@ -402,8 +411,8 @@ Endpoint consolidado para adicionar, atualizar permissões ou remover colaborado
 
 **Parâmetros de URL:**
 
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
+| Campo       | Tipo | Descrição     |
+| ----------- | ---- | ------------- |
 | `projectId` | UUID | ID do projeto |
 
 ---
@@ -424,11 +433,11 @@ Adiciona um novo colaborador ao projeto.
 
 **Parâmetros:**
 
-| Campo | Tipo | Obrigatório | Descrição |
-|-------|------|-------------|-----------|
-| `action` | string | Sim | Deve ser `"add"` |
-| `userId` | UUID | Sim | ID do usuário a ser adicionado |
-| `permission` | string | Não | Permissão: `admin` ou `viewer` (padrão: `viewer`) |
+| Campo        | Tipo   | Obrigatório | Descrição                                         |
+| ------------ | ------ | ----------- | ------------------------------------------------- |
+| `action`     | string | Sim         | Deve ser `"add"`                                  |
+| `userId`     | UUID   | Sim         | ID do usuário a ser adicionado                    |
+| `permission` | string | Não         | Permissão: `admin` ou `viewer` (padrão: `viewer`) |
 
 **Resposta de Sucesso:** `200 OK`
 
@@ -451,6 +460,7 @@ Adiciona um novo colaborador ao projeto.
 ```
 
 **Observações:**
+
 - Não é possível adicionar o proprietário como colaborador
 - Usuário não pode estar já adicionado como colaborador ativo
 - Informações do usuário são buscadas automaticamente
@@ -473,11 +483,11 @@ Atualiza a permissão de um colaborador existente.
 
 **Parâmetros:**
 
-| Campo | Tipo | Obrigatório | Descrição |
-|-------|------|-------------|-----------|
-| `action` | string | Sim | Deve ser `"update"` |
-| `userId` | UUID | Sim | ID do colaborador |
-| `permission` | string | Sim | Nova permissão: `admin` ou `viewer` |
+| Campo        | Tipo   | Obrigatório | Descrição                           |
+| ------------ | ------ | ----------- | ----------------------------------- |
+| `action`     | string | Sim         | Deve ser `"update"`                 |
+| `userId`     | UUID   | Sim         | ID do colaborador                   |
+| `permission` | string | Sim         | Nova permissão: `admin` ou `viewer` |
 
 **Resposta de Sucesso:** `200 OK`
 
@@ -516,10 +526,10 @@ Remove um colaborador do projeto (soft delete).
 
 **Parâmetros:**
 
-| Campo | Tipo | Obrigatório | Descrição |
-|-------|------|-------------|-----------|
-| `action` | string | Sim | Deve ser `"remove"` |
-| `userId` | UUID | Sim | ID do colaborador a ser removido |
+| Campo    | Tipo   | Obrigatório | Descrição                        |
+| -------- | ------ | ----------- | -------------------------------- |
+| `action` | string | Sim         | Deve ser `"remove"`              |
+| `userId` | UUID   | Sim         | ID do colaborador a ser removido |
 
 **Resposta de Sucesso:** `200 OK`
 
@@ -530,10 +540,12 @@ Remove um colaborador do projeto (soft delete).
 ```
 
 **Observações:**
+
 - Remoção é soft delete: colaborador é marcado como `removed = true`
 - Colaborador removido não aparece mais nas listagens
 
 **Erros Possíveis (para todas as ações):**
+
 - `400 Bad Request`: Ação inválida, userId não fornecido, ou permissão inválida
 - `401 Unauthorized`: Token de autenticação ausente ou inválido
 - `404 Not Found`: Projeto não encontrado ou usuário não é proprietário
@@ -554,8 +566,8 @@ Lista todas as notas associadas ao projeto. Acessível pelo proprietário e cola
 
 **Parâmetros de URL:**
 
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
+| Campo       | Tipo | Descrição     |
+| ----------- | ---- | ------------- |
 | `projectId` | UUID | ID do projeto |
 
 **Exemplo:** `GET /api/projects/550e8400-e29b-41d4-a716-446655440000/notes`
@@ -604,10 +616,12 @@ Lista todas as notas associadas ao projeto. Acessível pelo proprietário e cola
 ```
 
 **Observações:**
+
 - Retorna todas as notas associadas ao projeto via `associated_notes`
 - Propriedade `progress` do projeto é calculada com base no status das notas
 
 **Erros Possíveis:**
+
 - `401 Unauthorized`: Token de autenticação ausente ou inválido
 - `404 Not Found`: Projeto não encontrado ou usuário não tem acesso
 
@@ -623,8 +637,8 @@ Endpoint consolidado para adicionar, sincronizar ou remover notas de um projeto.
 
 **Parâmetros de URL:**
 
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
+| Campo       | Tipo | Descrição     |
+| ----------- | ---- | ------------- |
 | `projectId` | UUID | ID do projeto |
 
 ---
@@ -644,10 +658,10 @@ Associa uma nota existente ao projeto. A nota deve pertencer ao usuário ou ter 
 
 **Parâmetros:**
 
-| Campo | Tipo | Obrigatório | Descrição |
-|-------|------|-------------|-----------|
-| `action` | string | Sim | Deve ser `"add"` |
-| `noteId` | UUID | Sim | ID da nota a ser associada |
+| Campo    | Tipo   | Obrigatório | Descrição                  |
+| -------- | ------ | ----------- | -------------------------- |
+| `action` | string | Sim         | Deve ser `"add"`           |
+| `noteId` | UUID   | Sim         | ID da nota a ser associada |
 
 **Resposta de Sucesso:** `200 OK`
 
@@ -673,6 +687,7 @@ Associa uma nota existente ao projeto. A nota deve pertencer ao usuário ou ter 
 ```
 
 **Observações:**
+
 - A nota é adicionada ao array `associated_notes` do projeto
 - O campo `project_id` da nota é atualizado para referenciar o projeto
 - O `progress` do projeto é recalculado automaticamente
@@ -695,10 +710,10 @@ Atualiza os dados de uma nota associada, sincronizando com as informações mais
 
 **Parâmetros:**
 
-| Campo | Tipo | Obrigatório | Descrição |
-|-------|------|-------------|-----------|
-| `action` | string | Sim | Deve ser `"sync"` |
-| `noteId` | UUID | Sim | ID da nota a ser sincronizada |
+| Campo    | Tipo   | Obrigatório | Descrição                     |
+| -------- | ------ | ----------- | ----------------------------- |
+| `action` | string | Sim         | Deve ser `"sync"`             |
+| `noteId` | UUID   | Sim         | ID da nota a ser sincronizada |
 
 **Resposta de Sucesso:** `200 OK`
 
@@ -724,6 +739,7 @@ Atualiza os dados de uma nota associada, sincronizando com as informações mais
 ```
 
 **Observações:**
+
 - Útil quando a nota foi editada fora do contexto do projeto
 - O `progress` do projeto é recalculado após sincronização
 
@@ -744,10 +760,10 @@ Remove a associação entre nota e projeto. A nota permanece na tabela `notes`, 
 
 **Parâmetros:**
 
-| Campo | Tipo | Obrigatório | Descrição |
-|-------|------|-------------|-----------|
-| `action` | string | Sim | Deve ser `"remove"` |
-| `noteId` | UUID | Sim | ID da nota a ser removida |
+| Campo    | Tipo   | Obrigatório | Descrição                 |
+| -------- | ------ | ----------- | ------------------------- |
+| `action` | string | Sim         | Deve ser `"remove"`       |
+| `noteId` | UUID   | Sim         | ID da nota a ser removida |
 
 **Resposta de Sucesso:** `200 OK`
 
@@ -758,12 +774,14 @@ Remove a associação entre nota e projeto. A nota permanece na tabela `notes`, 
 ```
 
 **Observações:**
+
 - A nota é removida do array `associated_notes`
 - O campo `project_id` da nota é definido como `NULL`
 - O `progress` do projeto é recalculado automaticamente
 - A nota não é deletada, apenas desassociada
 
 **Erros Possíveis (para todas as ações):**
+
 - `400 Bad Request`: Ação inválida ou noteId não fornecido
 - `401 Unauthorized`: Token de autenticação ausente ou inválido
 - `404 Not Found`: Projeto ou nota não encontrados, ou usuário sem permissão
@@ -804,15 +822,15 @@ O campo `properties` em projetos aceita os seguintes atributos personalizáveis:
 
 ### Regras de Validação
 
-| Campo | Validação |
-|-------|-----------|
-| `priority` | Deve ser `"alta"`, `"media"` ou `"baixa"` |
-| `tags` | Deve ser um array de strings |
-| `estimated_time` | Deve ser uma data válida no formato ISO 8601 (ex: `2024-12-31T23:59:59Z`) |
-| `progress` | **Somente leitura**. Calculado automaticamente com base no status das notas (`done` / total) |
-| `complexity` | Deve ser `"alta"`, `"media"` ou `"baixa"` |
-| `color` | Deve ser um código hexadecimal válido (ex: `#ff0000`, `#3f51b5`) |
-| `icon` | Aceita qualquer string (emojis, texto, etc.) |
+| Campo            | Validação                                                                                    |
+| ---------------- | -------------------------------------------------------------------------------------------- |
+| `priority`       | Deve ser `"alta"`, `"media"` ou `"baixa"`                                                    |
+| `tags`           | Deve ser um array de strings                                                                 |
+| `estimated_time` | Deve ser uma data válida no formato ISO 8601 (ex: `2024-12-31T23:59:59Z`)                    |
+| `progress`       | **Somente leitura**. Calculado automaticamente com base no status das notas (`done` / total) |
+| `complexity`     | Deve ser `"alta"`, `"media"` ou `"baixa"`                                                    |
+| `color`          | Deve ser um código hexadecimal válido (ex: `#ff0000`, `#3f51b5`)                             |
+| `icon`           | Aceita qualquer string (emojis, texto, etc.)                                                 |
 
 **Observações Importantes:**
 
@@ -820,7 +838,7 @@ O campo `properties` em projetos aceita os seguintes atributos personalizáveis:
 
 2. **Merge de Properties**: Ao atualizar um projeto, as `properties` são mescladas (merge) com as existentes, não sobrescritas. Apenas os campos enviados são atualizados.
 
-3. **Cálculo de Progress**: 
+3. **Cálculo de Progress**:
    ```
    progress = (notas com status "done" / total de notas) × 100
    ```
@@ -832,18 +850,19 @@ O campo `properties` em projetos aceita os seguintes atributos personalizáveis:
 
 ### Respostas HTTP
 
-| Código | Status | Descrição |
-|--------|--------|-----------|
-| `200` | OK | Requisição bem-sucedida |
-| `201` | Created | Recurso criado com sucesso |
-| `400` | Bad Request | Dados inválidos, campos obrigatórios ausentes ou validação falhou |
-| `401` | Unauthorized | Token de autenticação ausente, inválido ou expirado |
-| `404` | Not Found | Recurso não encontrado ou usuário sem permissão de acesso |
-| `500` | Internal Server Error | Erro interno do servidor |
+| Código | Status                | Descrição                                                         |
+| ------ | --------------------- | ----------------------------------------------------------------- |
+| `200`  | OK                    | Requisição bem-sucedida                                           |
+| `201`  | Created               | Recurso criado com sucesso                                        |
+| `400`  | Bad Request           | Dados inválidos, campos obrigatórios ausentes ou validação falhou |
+| `401`  | Unauthorized          | Token de autenticação ausente, inválido ou expirado               |
+| `404`  | Not Found             | Recurso não encontrado ou usuário sem permissão de acesso         |
+| `500`  | Internal Server Error | Erro interno do servidor                                          |
 
 ### Exemplos de Respostas de Erro
 
 **400 Bad Request:**
+
 ```json
 {
   "error": "Título é obrigatório"
@@ -851,6 +870,7 @@ O campo `properties` em projetos aceita os seguintes atributos personalizáveis:
 ```
 
 **401 Unauthorized:**
+
 ```json
 {
   "error": "Usuário não autenticado"
@@ -858,6 +878,7 @@ O campo `properties` em projetos aceita os seguintes atributos personalizáveis:
 ```
 
 **404 Not Found:**
+
 ```json
 {
   "error": "Projeto não encontrado"
@@ -870,16 +891,17 @@ O campo `properties` em projetos aceita os seguintes atributos personalizáveis:
 
 ### Permissões de Colaboradores
 
-| Permissão | Descrição | Ações Permitidas |
-|-----------|-----------|------------------|
-| `admin` | Administrador | Gerenciar notas, visualizar projeto, editar configurações |
-| `viewer` | Visualizador | Apenas visualizar projeto e notas |
+| Permissão | Descrição     | Ações Permitidas                                          |
+| --------- | ------------- | --------------------------------------------------------- |
+| `admin`   | Administrador | Gerenciar notas, visualizar projeto, editar configurações |
+| `viewer`  | Visualizador  | Apenas visualizar projeto e notas                         |
 
 **Observação:** Apenas o proprietário pode adicionar/remover colaboradores e deletar o projeto.
 
 ### Soft Delete
 
 Projetos e colaboradores removidos não são excluídos fisicamente do banco de dados:
+
 - **Projetos**: marcados com `deleted = true`
 - **Colaboradores**: marcados com `removed = true` e `removed_at` preenchido
 

@@ -202,7 +202,7 @@ erDiagram
     notes ||--o{ blocks : "composed of"
     blocks ||--o{ blocks : "nested in"
     blocks ||--o{ blocks_logs : "logs"
-  
+
     notes ||--o{ note_collaborators : "shared with"
     users ||--o{ note_collaborators : "collaborates"
     notes ||--o{ note_collaborators_logs : "logs collab"
@@ -210,6 +210,6 @@ erDiagram
     users ||--o{ ai_chat_sessions : "chats"
     ai_chat_sessions ||--o{ ai_chat_messages : "contains"
     ai_chat_sessions ||--o{ ai_agent_actions : "triggers"
-  
+
     aisessions ||--o{ aiservermessages : "contains"
 ```

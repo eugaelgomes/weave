@@ -507,13 +507,13 @@ const SettingsPage = () => {
                             <div className="flex flex-col">
                               <span className="text-neutral-400">Tokens/mês</span>
                               <span className="font-mono font-bold text-white">
-                                {user.plan_details.weave_ai.config.monthly_messages}
+                                {user.plan_details.weave_ai.config?.monthly_messages ?? "N/A"}
                               </span>
                             </div>
                             <div className="flex flex-col">
                               <span className="text-neutral-400">Base Model</span>
                               <span className="font-mono font-bold text-blue-300">
-                                {user.plan_details.weave_ai.config.default_model}
+                                {user.plan_details.weave_ai.config?.default_model ?? "N/A"}
                               </span>
                             </div>
                           </div>
@@ -696,8 +696,8 @@ const SettingsPage = () => {
                       </label>
                       <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
                         {userData.org_name}{" "}
-                        {userData.org_role &&
-                          `(${Array.isArray(userData.org_role) ? userData.org_role.join(", ") : userData.org_role})`}
+                        {userData.org_member_role &&
+                          `(${Array.isArray(userData.org_member_role) ? userData.org_member_role.join(", ") : userData.org_member_role})`}
                       </div>
                     </div>
                   )}
