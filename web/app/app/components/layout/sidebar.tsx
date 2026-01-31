@@ -52,7 +52,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
 
     const newExpandedState: Record<string, boolean> = {};
     const itemsWithSubs = [
-      { path: "/app/weave-ai", checkPath: "/app/weave-ai" },
+      { path: "/app/weave-ai/chat", checkPath: "/app/weave-ai/chat" },
       { path: "/app/organization", checkPath: "/app/organization" },
     ];
 
@@ -69,7 +69,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
     if (path === "/app/home" && pathname === "/app/home/") return true;
     if (path === "/app/notes" && pathname.startsWith("/app/notes/")) return true;
     if (path === "/app/projects" && pathname.startsWith("/app/projects/")) return true;
-    if (path === "/app/weave-ai" && pathname === "/app/weave-ai/") return true;
+    if (path === "/app/weave-ai/chat" && pathname === "/app/weave-ai/chat") return true;
     if (path === "/app/organization" && pathname.startsWith("/app/organization/")) return true;
     if (path === "/app/notifications" && pathname.startsWith("/app/organization/notifications/"))
       return true;
@@ -92,7 +92,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
     { path: "/app/notes", icon: FaBook, label: "Notas" },
     { path: "/app/projects", icon: FaProjectDiagram, label: "Projetos" },
     {
-      path: "/app/weave-ai",
+      path: "/app/weave-ai/chat",
       icon: HiSparkles,
       label: "Weave AI",
       subItems: [

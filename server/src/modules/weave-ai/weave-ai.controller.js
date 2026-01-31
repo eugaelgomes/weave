@@ -418,7 +418,7 @@ Inclua apenas os campos que devem ser atualizados.`,
           ];
           const uniqueTags = [...new Set(tags)];
 
-          const note = await notesRepository.createNotesQuerie(
+          const note = await notesRepository.createNotesQuery(
             userId,
             parsedResponse.title,
             parsedResponse.description,
@@ -471,7 +471,7 @@ Inclua apenas os campos que devem ser atualizados.`,
             parsedResponse.notes.length > 0
           ) {
             for (const noteData of parsedResponse.notes) {
-              const note = await notesRepository.createNotesQuerie(
+              const note = await notesRepository.createNotesQuery(
                 userId,
                 noteData.title,
                 noteData.description || "",
@@ -678,7 +678,7 @@ Inclua apenas os campos que devem ser atualizados.`,
    */
   async _executeFunctionCall(userId, functionCall, context) {
     const { name, arguments: args } = functionCall;
-    const blocksRepository = require("@/repositories/blocks-manager");
+    const blocksRepository = require("@/modules/notes/blocks.repository");
 
     // Valida se a função não é proibida
     if (isFunctionForbidden(name)) {
@@ -697,7 +697,7 @@ Inclua apenas os campos que devem ser atualizados.`,
     switch (name) {
       // ========== NOTAS ==========
       case "create_note":
-        const newNote = await notesRepository.createNotesQuerie(
+        const newNote = await notesRepository.createNotesQuery(
           userId,
           args.title,
           args.description || "",

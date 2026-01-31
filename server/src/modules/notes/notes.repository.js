@@ -6,7 +6,7 @@ class notesRepository {
     title,
     content,
     tags = [],
-    status = "open",
+    status = "visible",
     projectId = null
   ) {
     const query = `
@@ -465,7 +465,7 @@ class notesRepository {
     description,
     tags = [],
     initialBlockContent = "",
-    status = "open",
+    status = "visible",
     projectId = null
   ) {
     const query = `

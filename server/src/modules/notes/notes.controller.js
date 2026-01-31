@@ -398,7 +398,7 @@ class NotesController {
       }
 
       const noteStatus =
-        status === undefined || status === null ? "open" : status;
+        status === undefined || status === null ? "visible" : status;
 
       if (!ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
         return res.status(400).json({
@@ -484,7 +484,7 @@ class NotesController {
 
       // Definir status padrão se não fornecido
       const noteStatus =
-        status === undefined || status === null ? "open" : status;
+        status === undefined || status === null ? "visible" : status;
 
       // Validar status
       if (!ALLOWED_NOTE_STATUSES.includes(noteStatus)) {

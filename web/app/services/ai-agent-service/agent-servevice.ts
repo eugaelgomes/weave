@@ -16,6 +16,7 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  created_at?: string;
   model?: string;
   sessionId?: string;
   metadata?: Record<string, any>;
