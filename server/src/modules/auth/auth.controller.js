@@ -87,7 +87,7 @@ class AuthController {
       // Res de login com token para login via Request Postman/Curl
       return res.status(200).json({
         status: "OK",
-        message: "Autenticação realizada com sucesso",
+        message: "Successfully performed user signin.",
         user: {
           user_profile: {
             id: user.user_id,

@@ -29,17 +29,33 @@ export interface OrganizationProperties {
 }
 
 export interface OrganizationMember {
-  id?: string;
-  user_id: string;
-  organization_id: string;
-  role: "owner" | "admin" | "member" | "guest";
-  status: "active" | "pending_invite" | "suspended";
-  created_at?: string;
-  invited_by?: string | null;
+  id: string;
   name?: string;
   username?: string;
   email?: string;
-  avatar_url?: string;
+  avatar_url?: string | null;
+  membership: {
+    role: "super_admin" | "admin" | "member" | "guest";
+    status: "active" | "pending" | "suspended";
+    suspended: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+  activity: {
+    notes_count: number;
+    projects: Array<{
+      project_id: string;
+      project_name: string;
+      role: string;
+    }>;
+    last_login_at: string | null;
+  };
+  invited_by: {
+    id: string;
+    name?: string;
+    username?: string;
+    avatar_url?: string | null;
+  } | null;
 }
 
 export interface OrganizationInvite {
@@ -165,12 +181,13 @@ export const fetchOrganization = async (userId?: string): Promise<Organization |
 
     const response = await apiClient.get(url);
     const data = await handleResponse<{
+      status?: string;
       success?: boolean;
       organization_data?: any;
       error?: string;
     }>(response);
 
-    if (data.success && data.organization_data) {
+    if ((data.status === "OK" || data.success) && data.organization_data) {
       return transformBackendOrganization(data.organization_data);
     }
 
@@ -291,10 +308,13 @@ export const fetchOrganizationMembers = async (userId?: string): Promise<Organiz
       : API_ENDPOINTS.ORGANIZATIONS_MEMBERS;
 
     const response = await apiClient.get(url);
-    const data = await handleResponse<{ success?: boolean; data?: OrganizationMember[] }>(response);
+    const data = await handleResponse<{ 
+      status?: string; 
+      list_org_members?: Array<{ member_data: OrganizationMember }>
+    }>(response);
 
-    if (data.success && data.data) {
-      return data.data;
+    if (data.status === "OK" && data.list_org_members) {
+      return data.list_org_members.map(item => item.member_data);
     }
     return [];
   } catch (error) {

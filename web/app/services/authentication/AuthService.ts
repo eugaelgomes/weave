@@ -135,17 +135,90 @@ interface BackendUserData {
   current_plan_usage?: BackendPlanUsage;
 }
 
+// Interfaces específicas para a resposta de login
+interface BackendLoginUserProfile {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  avatar_url: string;
+}
+
+interface BackendLoginUserSettings {
+  theme_mode?: string;
+  private_profile?: boolean;
+}
+
+interface BackendLoginUserOrganization {
+  id: string;
+  unique_name: string;
+  name: string;
+  role?: string | string[] | null;
+}
+
+interface BackendLoginUserSubscription {
+  plan_id: string;
+  plan_name: string;
+}
+
 interface BackendAuthResponse {
   status: string;
-  logged_at?: string;
   message?: string;
-  token?: string;
-  user_data?: BackendUserData;
+  user: {
+    user_profile: BackendLoginUserProfile;
+    user_settings: BackendLoginUserSettings;
+    user_organization: BackendLoginUserOrganization;
+    user_subscription: BackendLoginUserSubscription;
+  };
+  auth: {
+    token: string;
+    expires_in: number;
+    login_time: string;
+  };
 }
 
 interface BackendMeResponse {
   message?: string;
-  user_data?: BackendUserData;
+  user: {
+    user_profile: {
+      id: string;
+      user_name: string;
+      username: string;
+      email: string;
+      avatar_url: string;
+      birth_date?: string;
+      phone_number?: string;
+      created_at: string;
+      updated_at?: string;
+    };
+    user_settings: {
+      theme_mode?: string;
+      private_profile?: boolean;
+      auth_with_google?: boolean;
+    };
+    user_organization: {
+      id: string;
+      unique_name: string;
+      name: string;
+      logo_url?: string;
+      member_role?: string | string[] | null;
+      member_since?: string;
+    };
+    current_plan: {
+      id: string;
+      plan_name: string;
+      client_type: string;
+      details: Record<string, unknown>;
+    };
+    current_plan_usage: {
+      plan_id: string;
+      plan_name: string;
+      client_type: string;
+      period_start: string;
+      period_end: string;
+      details: Record<string, unknown>;
+    };
+  };
 }
 
 export interface LoginCredentials {
@@ -223,16 +296,93 @@ const mapBackendDataToUser = (data: BackendUserData): User => {
   };
 };
 
+/**
+ * Converte a resposta de login do backend para o modelo de usuário do frontend.
+ */
+const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
+  const { user } = data;
+
+  return {
+    // Profile
+    id: user.user_profile.id,
+    user_name: user.user_profile.name,
+    username: user.user_profile.username,
+    email: user.user_profile.email,
+    avatar_url: user.user_profile.avatar_url,
+
+    // Settings
+    theme_mode: user.user_settings.theme_mode,
+    private_profile: user.user_settings.private_profile,
+
+    // Organization
+    org_id: user.user_organization.id,
+    org_name: user.user_organization.name,
+    org_unique_name: user.user_organization.unique_name,
+    org_member_role: user.user_organization.role,
+
+    // Plan
+    plan_id: user.user_subscription.plan_id,
+    plan_name: user.user_subscription.plan_name,
+  };
+};
+
+/**
+ * Converte a resposta de /me do backend para o modelo de usuário do frontend.
+ */
+const mapMeResponseToUser = (data: BackendMeResponse): User => {
+  const { user } = data;
+
+  return {
+    // Profile
+    id: user.user_profile.id,
+    user_name: user.user_profile.user_name,
+    username: user.user_profile.username,
+    email: user.user_profile.email,
+    avatar_url: user.user_profile.avatar_url,
+    birth_date: user.user_profile.birth_date,
+    phone_number: user.user_profile.phone_number,
+    created_at: user.user_profile.created_at,
+    updated_at: user.user_profile.updated_at,
+
+    // Settings
+    theme_mode: user.user_settings.theme_mode,
+    private_profile: user.user_settings.private_profile,
+    auth_with_google: user.user_settings.auth_with_google,
+
+    // Organization
+    org_id: user.user_organization.id,
+    org_name: user.user_organization.name,
+    org_unique_name: user.user_organization.unique_name,
+    org_logo_url: user.user_organization.logo_url,
+    org_member_role: user.user_organization.member_role,
+    org_member_since: user.user_organization.member_since,
+
+    // Plan
+    plan_id: user.current_plan.id,
+    plan_name: user.current_plan.plan_name,
+    plan_client_type: user.current_plan.client_type,
+    plan_details: user.current_plan.details,
+
+    // Usage
+    usage_plan_id: user.current_plan_usage.plan_id,
+    usage_plan_name: user.current_plan_usage.plan_name,
+    usage_client_type: user.current_plan_usage.client_type,
+    usage_period_start: user.current_plan_usage.period_start,
+    usage_period_end: user.current_plan_usage.period_end,
+    usage_details: user.current_plan_usage.details,
+  };
+};
+
 // --- 4. Serviços de Autenticação ---
 
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   const response = await apiClient.post(API_ENDPOINTS.SIGNIN, credentials);
   const data = await handleResponse<BackendAuthResponse>(response);
 
-  if (data.status === "OK" && data.user_data) {
+  if (data.status === "OK" && data.user && data.auth) {
     return {
-      user: mapBackendDataToUser(data.user_data), // Reuso limpo
-      token: data.token || "",
+      user: mapLoginResponseToUser(data),
+      token: data.auth.token,
     };
   }
 
@@ -250,8 +400,8 @@ export const getUserData = async (): Promise<User> => {
 
   const data = await handleResponse<BackendMeResponse>(response);
 
-  if (data.user_data) {
-    return mapBackendDataToUser(data.user_data); // Reuso limpo
+  if (data.user) {
+    return mapMeResponseToUser(data);
   }
 
   throw new Error("Formato de resposta do perfil inválido.");

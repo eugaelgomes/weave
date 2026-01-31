@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useOrganization } from "@/app/contexts/OrganizationContext";
 import { useAuth } from "@/app/contexts/AuthContext";
 import Image from "next/image";
-import { getUsers } from "@/app/services/authentication/AuthService";
 import type { User } from "@/app/services/authentication/AuthService";
 import {
   Users,
@@ -13,13 +12,34 @@ import {
   Shield,
   X,
   Activity,
-  Crown,
-  Mail,
   Search,
   CheckCircle2,
   AlertCircle,
+  FileText,
+  FolderOpen,
+  Clock,
+  Info,
+  Calendar,
 } from "lucide-react";
 import { IoPersonCircleSharp } from "react-icons/io5";
+
+// --- Tipos ---
+interface ActivityData {
+  notes_count: number;
+  projects: Array<{
+    project_id: string;
+    project_name: string;
+    role: string;
+  }>;
+  last_login_at: string | null;
+}
+
+interface InviterData {
+  id: string;
+  name?: string;
+  username?: string;
+  avatar_url?: string | null;
+}
 
 // --- Componentes de UI Reutilizáveis ---
 
@@ -54,35 +74,241 @@ const UserAvatar = ({ user, size = "sm" }: { user?: User; size?: "sm" | "md" }) 
 
 const Badge = ({ role }: { role: string }) => {
   const styles = {
-    owner:
+    super_admin:
       "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-400 dark:border-yellow-500/20",
     admin:
       "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20",
     member:
       "bg-neutral-100 text-neutral-700 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700",
+    guest:
+      "bg-neutral-100 text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-500 dark:border-neutral-700",
   };
 
   const labels = {
-    owner: "Proprietário",
+    super_admin: "Super Admin",
     admin: "Admin",
     member: "Membro",
+    guest: "Convidado",
   };
 
-  const icons = {
-    owner: Crown,
-    admin: Shield,
-    member: Users,
-  };
 
-  const Icon = icons[role as keyof typeof icons] || Users;
 
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium ${styles[role as keyof typeof styles] || styles.member}`}
     >
-      <Icon className="h-3 w-3" />
       {labels[role as keyof typeof labels] || role}
     </span>
+  );
+};
+
+
+const personIcon = (<IoPersonCircleSharp className="h-10 w-10 text-neutral-400 dark:text-neutral-500" />);
+
+// --- Modal de Atividade ---
+const ActivityModal = ({
+  isOpen,
+  onClose,
+  memberName,
+  activity,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  memberName: string;
+  activity: ActivityData;
+}) => {
+  if (!isOpen) return null;
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "Nunca";
+    return new Date(dateString).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  return (
+    <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm duration-200">
+      <div className="w-full max-w-lg rounded-md border border-neutral-200 bg-white p-5 shadow-2xl dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              Atividade de {memberName}
+            </h3>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              Resumo de atividades na organização
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {/* Notas */}
+          <div className="rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
+            <div className="flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              <FileText className="h-4 w-4 text-neutral-500" />
+              Notas Criadas
+            </div>
+            <p className="mt-1 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+              {activity.notes_count}
+            </p>
+          </div>
+
+          {/* Último Login */}
+          <div className="rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
+            <div className="flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              <Clock className="h-4 w-4 text-neutral-500" />
+              Último Login
+            </div>
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+              {formatDate(activity.last_login_at)}
+            </p>
+          </div>
+
+          {/* Projetos */}
+          <div className="rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
+            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              <FolderOpen className="h-4 w-4 text-neutral-500" />
+              Projetos ({activity.projects.length})
+            </div>
+            {activity.projects.length > 0 ? (
+              <div className="space-y-2">
+                {activity.projects.map((project) => (
+                  <div
+                    key={project.project_id}
+                    className="flex items-center justify-between rounded-md bg-neutral-50 px-3 py-2 dark:bg-neutral-950"
+                  >
+                    <span className="text-sm text-neutral-900 dark:text-neutral-100">
+                      {project.project_name}
+                    </span>
+                    <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                      {project.role}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-neutral-500">Nenhum projeto</p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={onClose}
+            className="rounded-md px-4 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Modal de Informações (Quem Convidou) ---
+const InviterModal = ({
+  isOpen,
+  onClose,
+  memberName,
+  inviter,
+  joinedAt,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  memberName: string;
+  inviter: InviterData | null;
+  joinedAt: string;
+}) => {
+  if (!isOpen) return null;
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  return (
+    <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm duration-200">
+      <div className="w-full max-w-md rounded-md border border-neutral-200 bg-white p-5 shadow-2xl dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              Detalhes de {memberName}
+            </h3>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              Detalhes do ingresso na organização
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {/* Data de Ingresso */}
+          <div className="rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
+            <div className="flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              <Calendar className="h-4 w-4 text-neutral-500" />
+              Data de Ingresso
+            </div>
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+              {formatDate(joinedAt)}
+            </p>
+          </div>
+
+          {/* Convidado Por */}
+          <div className="rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
+            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              <Info className="h-4 w-4 text-neutral-500" />
+              Convidado Por
+            </div>
+            {inviter ? (
+              <div className="flex items-center gap-3">
+                <UserAvatar
+                  user={{ id: inviter.id, avatar_url: inviter.avatar_url || undefined } as User}
+                  size="md"
+                />
+                <div>
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    {inviter.name || inviter.id}
+                  </p>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                    {inviter.username || inviter.id}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-neutral-500">Membro fundador</p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={onClose}
+            className="rounded-md px-4 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -203,12 +429,9 @@ const AddMemberModal = ({
 const MembersPage = () => {
   const { user } = useAuth();
   const {
-    organization,
-    loading,
     hasOrganization,
     addMember: addMemberToOrg,
     removeMember: removeMemberFromOrg,
-    isOwner,
     canManageMembers,
   } = useOrganization();
 
@@ -216,34 +439,19 @@ const MembersPage = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [usersData, setUsersData] = useState<User[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const { organization, members } = useOrganization();
+  const [selectedActivity, setSelectedActivity] = useState<{
+    name: string;
+    data: ActivityData;
+  } | null>(null);
+  const [selectedInviter, setSelectedInviter] = useState<{
+    name: string;
+    inviter: InviterData | null;
+    joinedAt: string;
+  } | null>(null);
+  const { members: organizationMembers } = useOrganization();
 
+  // Apenas admin e super_admin podem gerenciar membros (adicionar/remover)
   const userCanManage = user?.id ? canManageMembers(user.id) : false;
-
-  // Buscar dados dos usuários
-  useEffect(() => {
-    const fetchUsersData = async () => {
-      if (!hasOrganization) return;
-
-      setLoadingUsers(true);
-      try {
-        const users = await getUsers();
-        setUsersData(users);
-      } catch (error) {
-        console.error("Erro ao buscar usuários:", error);
-      } finally {
-        setLoadingUsers(false);
-      }
-    };
-
-    fetchUsersData();
-  }, [hasOrganization]);
-
-  const getUserData = (userId: string): User | undefined => {
-    return usersData.find((u) => u.id === userId);
-  };
 
   const handleAddMember = async (memberId: string, role: "admin" | "member") => {
     setActionLoading(true);
@@ -274,14 +482,6 @@ const MembersPage = () => {
     }
   };
 
-  if (loading || loadingUsers) {
-    return (
-      <div className="flex h-full items-center justify-center bg-white dark:bg-neutral-950">
-        <Activity className="h-6 w-6 animate-spin text-yellow-500" />
-      </div>
-    );
-  }
-
   if (!hasOrganization) {
     return (
       <div className="flex h-full flex-col items-center justify-center p-6 text-center">
@@ -298,60 +498,59 @@ const MembersPage = () => {
     );
   }
 
-  // Certifique-se que organization é do tipo Organization
-  const memberData = organization?.members || { owner: "", admins: [], members: [], invited: [] };
-
-  const allMembers = [
-    { id: memberData.owner, role: "owner" as const },
-    ...(memberData.admins || []).map((id) => ({ id, role: "admin" as const })),
-    ...(memberData.members || []).map((id) => ({ id, role: "member" as const })),
-  ].filter((m) => {
-    const userData = getUserData(m.id);
+  const allMembers = (organizationMembers || []).filter((member) => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      m.id.toLowerCase().includes(searchLower) ||
-      userData?.name?.toLowerCase().includes(searchLower) ||
-      userData?.username?.toLowerCase().includes(searchLower) ||
-      userData?.email?.toLowerCase().includes(searchLower)
+      member.id.toLowerCase().includes(searchLower) ||
+      member.name?.toLowerCase().includes(searchLower) ||
+      member.username?.toLowerCase().includes(searchLower) ||
+      member.email?.toLowerCase().includes(searchLower)
     );
   });
 
   return (
-    <div className="flex h-full flex-col bg-white dark:bg-neutral-950">
+    <div className="flex h-full flex-col bg-white dark:bg-neutral-950 space-y-4">
       {/* Header */}
-      <div className="border-b border-neutral-200 px-6 py-5 dark:border-neutral-800">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">Equipe</h1>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              Gerencie o acesso e funções dos membros.
-            </p>
-          </div>
-
-          {userCanManage && (
-            <button
-              onClick={() => setShowAddMember(true)}
-              className="flex items-center gap-2 rounded-md bg-yellow-500 px-4 py-2 text-sm font-semibold text-neutral-950 transition-colors hover:bg-yellow-600"
-            >
-              <Plus className="h-4 w-4" />
-              Adicionar Membro
-            </button>
-          )}
+      <div className="border-b border-neutral-200 dark:border-neutral-800">
+        <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
+          <h1 className="sm:text-md text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
+            Equipe
+          </h1>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            Gerencie o acesso e funções dos membros
+          </p>
         </div>
 
         {/* Barra de Busca */}
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <div className="relative w-full max-w-sm">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400" />
             <input
-              placeholder="Buscar membros..."
+              placeholder="Buscar por nome, email ou username..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-2 pr-4 pl-9 text-sm focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900"
+              className="w-full rounded-md border border-neutral-200 bg-white py-2.5 pr-4 pl-10 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:placeholder:text-neutral-500"
             />
           </div>
-          <div className="text-sm text-neutral-600 dark:text-neutral-400">
-            {allMembers.length} {allMembers.length === 1 ? "membro" : "membros"}
+          
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 rounded-md bg-neutral-100 px-3 py-2 dark:bg-neutral-800/50">
+              <Users className="h-4 w-4 text-neutral-500" />
+              <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                {allMembers.length} {allMembers.length === 1 ? "membro" : "membros"}
+              </span>
+            </div>
+            
+            {userCanManage && (
+              <button
+                onClick={() => setShowAddMember(true)}
+                className="flex items-center gap-2 rounded-md bg-yellow-500 px-4 py-2.5 text-sm font-semibold text-neutral-950 shadow-sm transition-all hover:bg-yellow-600 hover:shadow-md"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Adicionar Membro</span>
+                <span className="sm:hidden">Adicionar</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -375,21 +574,30 @@ const MembersPage = () => {
       </div>
 
       {/* Tabela de Membros */}
-      <div className="flex-1 overflow-auto px-6 py-4">
+      <div className="flex-1 overflow-auto">
         <div className="overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800">
           <table className="w-full text-left text-sm">
             <thead className="bg-neutral-50 text-neutral-600 dark:bg-neutral-900 dark:text-neutral-400">
               <tr>
                 <th className="px-4 py-3 font-medium">Membro</th>
                 <th className="px-4 py-3 font-medium">Função</th>
+                <th className="px-4 py-3 font-medium">Atividade</th>
+                <th className="px-4 py-3 font-medium">Detalhes</th>
                 <th className="px-4 py-3 text-right font-medium">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200 bg-white dark:divide-neutral-800 dark:bg-neutral-950">
               {allMembers.map((member) => {
                 const isCurrentUser = member.id === user?.id;
-                const canRemove = userCanManage && member.role !== "owner" && !isCurrentUser;
-                const userData = getUserData(member.id);
+                // Apenas super_admin pode remover admin/member/guest, admin pode remover member/guest
+                const currentUserMember = organizationMembers?.find((m) => m.id === user?.id);
+                const currentUserRole = currentUserMember?.membership.role;
+                const canRemove =
+                  userCanManage &&
+                  !isCurrentUser &&
+                  member.membership.role !== "super_admin" &&
+                  (currentUserRole === "super_admin" ||
+                    (currentUserRole === "admin" && member.membership.role !== "admin"));
 
                 return (
                   <tr
@@ -398,10 +606,15 @@ const MembersPage = () => {
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <UserAvatar user={userData} size="md" />
+                        <UserAvatar
+                          user={
+                            { id: member.id, avatar_url: member.avatar_url || personIcon } as User
+                          }
+                          size="md"
+                        />
                         <div className="min-w-0">
                           <p className="font-medium text-neutral-900 dark:text-neutral-100">
-                            {userData?.name || member.id}
+                            {member.name || member.id}
                             {isCurrentUser && (
                               <span className="ml-2 text-xs font-normal text-neutral-500">
                                 (Você)
@@ -409,13 +622,41 @@ const MembersPage = () => {
                             )}
                           </p>
                           <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                            {userData?.username || userData?.email || member.id}
+                            {member.username || member.email || member.id}
                           </p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge role={member.role} />
+                      <Badge role={member.membership.role} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() =>
+                          setSelectedActivity({
+                            name: member.name || member.username || member.id,
+                            data: member.activity,
+                          })
+                        }
+                        className="flex items-center gap-2 text-sm text-neutral-600 hover:text-yellow-600 dark:text-neutral-400 dark:hover:text-yellow-400"
+                      >
+                        <Activity className="h-4 w-4" />
+                        <span>{member.activity.notes_count} notas</span>
+                      </button>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() =>
+                          setSelectedInviter({
+                            name: member.name || member.username || member.id,
+                            inviter: member.invited_by,
+                            joinedAt: member.membership.created_at,
+                          })
+                        }
+                        className="flex items-center gap-2 text-sm text-neutral-600 hover:text-yellow-600 dark:text-neutral-400 dark:hover:text-yellow-400"
+                      >
+                        <Info className="h-4 w-4" />
+                      </button>
                     </td>
                     <td className="px-4 py-3 text-right">
                       {canRemove && (
@@ -441,55 +682,22 @@ const MembersPage = () => {
             </div>
           )}
         </div>
-
-        {/* Seção de Convites Pendentes */}
-        {members.invited && members.invited.length > 0 && (
-          <div className="mt-6">
-            <h3 className="mb-3 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-              Convites Pendentes
-            </h3>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {members.invited.map((invitedId) => {
-                const invitedUser = getUserData(invitedId);
-
-                return (
-                  <div
-                    key={invitedId}
-                    className="flex items-center justify-between rounded-md border border-dashed border-neutral-300 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-900/30"
-                  >
-                    <div className="flex items-center gap-2.5 overflow-hidden">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white shadow-sm dark:bg-neutral-800">
-                        <Mail className="h-4 w-4 text-neutral-400" />
-                      </div>
-                      <div className="min-w-0">
-                        <p
-                          className="truncate text-sm font-medium text-neutral-900 dark:text-neutral-100"
-                          title={invitedUser?.name || invitedId}
-                        >
-                          {invitedUser?.name || invitedId}
-                        </p>
-                        {invitedUser?.email && (
-                          <p className="truncate text-xs text-neutral-600 dark:text-neutral-400">
-                            {invitedUser.email}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    {userCanManage && (
-                      <button
-                        onClick={() => handleRemoveMember(invitedId)}
-                        className="ml-2 shrink-0 text-xs font-medium text-neutral-500 hover:text-red-600 dark:text-neutral-500 dark:hover:text-red-400"
-                      >
-                        Revogar
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
+
+      <ActivityModal
+        isOpen={selectedActivity !== null}
+        onClose={() => setSelectedActivity(null)}
+        memberName={selectedActivity?.name || ""}
+        activity={selectedActivity?.data || { notes_count: 0, projects: [], last_login_at: null }}
+      />
+
+      <InviterModal
+        isOpen={selectedInviter !== null}
+        onClose={() => setSelectedInviter(null)}
+        memberName={selectedInviter?.name || ""}
+        inviter={selectedInviter?.inviter || null}
+        joinedAt={selectedInviter?.joinedAt || ""}
+      />
 
       <AddMemberModal
         isOpen={showAddMember}
