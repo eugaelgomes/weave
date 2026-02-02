@@ -23,15 +23,28 @@ export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
 
-  const { login: loginUser, authenticated } = useAuth();
+  const { login: loginUser, authenticated, loading } = useAuth();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirect") || "/app/home";
+  const redirectParam = searchParams.get("redirect");
+  // Normaliza a URL removendo barras finais para evitar loops de redirecionamento
+  const redirectUrl = redirectParam 
+    ? redirectParam.replace(/\/+$/, "") || "/app/home"
+    : "/app/home";
 
   useEffect(() => {
-    if (authenticated && typeof window !== "undefined") {
+    if (!loading && authenticated && typeof window !== "undefined") {
       window.location.href = redirectUrl;
     }
-  }, [authenticated, redirectUrl]);
+  }, [authenticated, loading, redirectUrl]);
+
+  // Aguarda verificação de autenticação antes de renderizar
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-neutral-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"></div>
+      </div>
+    );
+  }
 
   if (authenticated) return null;
 

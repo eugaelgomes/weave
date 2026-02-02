@@ -21,7 +21,7 @@ interface Message {
 }
 
 export default function SignUp() {
-  const { createUser, authenticated } = useAuth();
+  const { createUser, authenticated, loading } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -40,10 +40,19 @@ export default function SignUp() {
 
   // Redireciona usuários já autenticados
   useEffect(() => {
-    if (authenticated) {
+    if (!loading && authenticated) {
       router.push("/app");
     }
-  }, [authenticated, router]);
+  }, [authenticated, loading, router]);
+
+  // Aguarda verificação de autenticação antes de renderizar
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-neutral-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"></div>
+      </div>
+    );
+  }
 
   // Não renderiza o formulário se já estiver autenticado
   if (authenticated) return null;

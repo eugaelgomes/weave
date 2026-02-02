@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
 import { AuthenticatedProviders } from "../contexts/AuthenticatedProviders";
 import Layout from "./components/layout/layout";
@@ -11,12 +11,15 @@ export const dynamicParams = true;
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { authenticated, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && !authenticated) {
-      router.push("/auth/signin");
+      // Normaliza o pathname removendo barras finais para evitar loops
+      const normalizedPath = pathname.replace(/\/+$/, "") || "/app";
+      router.push(`/auth/signin?redirect=${encodeURIComponent(normalizedPath)}`);
     }
-  }, [authenticated, loading, router]);
+  }, [authenticated, loading, router, pathname]);
 
   // Aguarda verificação de autenticação
   if (loading) {
