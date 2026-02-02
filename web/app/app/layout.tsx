@@ -35,9 +35,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Redireciona se não autenticado
+  // Mostra loading enquanto redireciona para signin
   if (!authenticated) {
-    return null;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"></div>
+        </div>
+      </div>
+    );
   }
 
   // Renderiza com providers e layout apenas se autenticado

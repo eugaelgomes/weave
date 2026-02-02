@@ -41,7 +41,7 @@ export default function SignIn() {
     }
   }, [authenticated, loading, redirectUrl, router]);
 
-  // Aguarda verificação de autenticação antes de renderizar
+  // Aguarda verificação de autenticação ou redirecionamento
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-neutral-950">
@@ -50,7 +50,14 @@ export default function SignIn() {
     );
   }
 
-  if (authenticated) return null;
+  // Se autenticado, mostra loading enquanto redireciona
+  if (authenticated) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-neutral-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"></div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
