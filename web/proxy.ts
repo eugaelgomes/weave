@@ -85,9 +85,12 @@ function createRedirectUrl(request: NextRequest, destination: string, preserveOr
 
   if (preserveOrigin && destination === SIGNIN_URL) {
     const originalPath = request.nextUrl.pathname + request.nextUrl.search;
+    // Normaliza removendo barras finais
+    const normalizedPath = originalPath.replace(/\/+$/, "") || "/";
+    
     // Não preservar redirect se já estiver indo para home
-    if (originalPath !== "/" && originalPath !== DEFAULT_AUTHENTICATED_REDIRECT) {
-      url.searchParams.set("redirect", originalPath);
+    if (normalizedPath !== "/" && normalizedPath !== DEFAULT_AUTHENTICATED_REDIRECT) {
+      url.searchParams.set("redirect", normalizedPath);
     }
   }
 
@@ -140,13 +143,14 @@ export default function proxy(request: NextRequest): NextResponse {
   if (matchesRoute(pathname, AUTH_ROUTES)) {
     if (isAuthenticated) {
       const redirectUrl = request.nextUrl.searchParams.get("redirect");
-      const destination = redirectUrl || DEFAULT_AUTHENTICATED_REDIRECT;
-
+      // Normaliza o redirect removendo barras finais e validando
+      const normalizedRedirect = redirectUrl?.replace(/\/+$/, "") || DEFAULT_AUTHENTICATED_REDIRECT;
+      
       // Validar que o redirect é uma URL interna (previne open redirect)
-      const isInternalRedirect = destination.startsWith("/");
+      const isInternalRedirect = normalizedRedirect.startsWith("/");
 
       return NextResponse.redirect(
-        new URL(isInternalRedirect ? destination : DEFAULT_AUTHENTICATED_REDIRECT, request.url)
+        new URL(isInternalRedirect ? normalizedRedirect : DEFAULT_AUTHENTICATED_REDIRECT, request.url)
       );
     }
 

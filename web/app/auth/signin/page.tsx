@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useAuth } from "../../contexts/AuthContext";
@@ -22,6 +22,8 @@ export default function SignIn() {
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const hasRedirected = useRef(false);
+  
   const { login: loginUser, authenticated, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,19 +34,9 @@ export default function SignIn() {
     : "/app/home";
 
   useEffect(() => {
-    if (!loading && authenticated && typeof window !== "undefined") {
-      // Usa sessionStorage para prevenir loops
-      const redirectKey = `redirecting_${redirectUrl}`;
-      const isRedirecting = sessionStorage.getItem(redirectKey);
-      
-      if (!isRedirecting) {
-        sessionStorage.setItem(redirectKey, 'true');
-        router.push(redirectUrl);
-        // Limpa após navegação
-        setTimeout(() => {
-          sessionStorage.removeItem(redirectKey);
-        }, 1000);
-      }
+    if (!loading && authenticated && !hasRedirected.current) {
+      hasRedirected.current = true;
+      router.push(redirectUrl);
     }
   }, [authenticated, loading, redirectUrl, router]);
 

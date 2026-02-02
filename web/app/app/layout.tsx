@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
 import { AuthenticatedProviders } from "../contexts/AuthenticatedProviders";
@@ -12,21 +12,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { authenticated, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const hasRedirected = useRef(false);
+  
   useEffect(() => {
-    if (!loading && !authenticated && typeof window !== "undefined") {
+    if (!loading && !authenticated && !hasRedirected.current) {
+      hasRedirected.current = true;
       // Normaliza o pathname removendo barras finais
       const normalizedPath = pathname.replace(/\/+$/, "") || "/app";
-      const redirectKey = `redirecting_to_signin_${normalizedPath}`;
-      const isRedirecting = sessionStorage.getItem(redirectKey);
-      
-      if (!isRedirecting) {
-        sessionStorage.setItem(redirectKey, 'true');
-        router.push(`/auth/signin?redirect=${encodeURIComponent(normalizedPath)}`);
-        // Limpa após navegação
-        setTimeout(() => {
-          sessionStorage.removeItem(redirectKey);
-        }, 1000);
-      }
+      router.push(`/auth/signin?redirect=${encodeURIComponent(normalizedPath)}`);
     }
   }, [authenticated, loading, router, pathname]);
 
