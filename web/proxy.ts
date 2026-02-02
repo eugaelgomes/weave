@@ -139,22 +139,11 @@ export default function proxy(request: NextRequest): NextResponse {
   const isAuthenticated = Boolean(authToken && authToken.length > 0);
 
   // 3. Rotas de autenticação (signin, signup)
-  //    Se usuário já está autenticado, redirecionar para app
+  //    Deixar o React (client-side) lidar com redirecionamentos para evitar loops
+  //    O proxy apenas garante que a rota seja acessível
   if (matchesRoute(pathname, AUTH_ROUTES)) {
-    if (isAuthenticated) {
-      const redirectUrl = request.nextUrl.searchParams.get("redirect");
-      // Normaliza o redirect removendo barras finais e validando
-      const normalizedRedirect = redirectUrl?.replace(/\/+$/, "") || DEFAULT_AUTHENTICATED_REDIRECT;
-      
-      // Validar que o redirect é uma URL interna (previne open redirect)
-      const isInternalRedirect = normalizedRedirect.startsWith("/");
-
-      return NextResponse.redirect(
-        new URL(isInternalRedirect ? normalizedRedirect : DEFAULT_AUTHENTICATED_REDIRECT, request.url)
-      );
-    }
-
-    // Usuário não autenticado acessando auth routes - permitir
+    // Permitir acesso independente do estado de autenticação
+    // O componente React fará o redirecionamento apropriado
     return addSecurityHeaders(NextResponse.next());
   }
 
