@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useAuth } from "../../contexts/AuthContext";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { FaExclamationCircle, FaEye, FaEyeSlash } from "react-icons/fa";
 import { RiArrowLeftLine } from "react-icons/ri";
 import Link from "next/link";
@@ -22,8 +22,10 @@ export default function SignIn() {
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const hasRedirected = useRef(false);
 
   const { login: loginUser, authenticated, loading } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectParam = searchParams.get("redirect");
   // Normaliza a URL removendo barras finais para evitar loops de redirecionamento
@@ -32,10 +34,12 @@ export default function SignIn() {
     : "/app/home";
 
   useEffect(() => {
-    if (!loading && authenticated && typeof window !== "undefined") {
-      window.location.href = redirectUrl;
+    // Evita múltiplos redirecionamentos
+    if (!loading && authenticated && !hasRedirected.current) {
+      hasRedirected.current = true;
+      router.replace(redirectUrl);
     }
-  }, [authenticated, loading, redirectUrl]);
+  }, [authenticated, loading, redirectUrl, router]);
 
   // Aguarda verificação de autenticação antes de renderizar
   if (loading) {
@@ -67,9 +71,8 @@ export default function SignIn() {
 
       if (result.success) {
         setStatus(result.message || "Login realizado com sucesso!");
-        setTimeout(() => {
-          window.location.href = redirectUrl;
-        }, 500);
+        // Usa router.replace para navegação client-side sem reload
+        router.replace(redirectUrl);
       } else {
         let message = result.message || "Falha no login";
         if (message.includes("Usuário ou senha inválidos")) {
