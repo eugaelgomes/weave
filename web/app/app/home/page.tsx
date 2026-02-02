@@ -114,10 +114,10 @@ export default function HomePage() {
   }, [stats?.mostUsedTags]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
+    <div className="flex min-h-screen flex-col">
       <div className="flex-1 space-y-3 overflow-y-auto sm:space-y-4">
         {/* Header */}
-        <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-950">
           <div className="flex items-center justify-between gap-2">
             <span className="sm:text-md text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
               <span className="text-yellow-500">Olá,</span> {getFirstAndLastUserName(userName)}!
@@ -125,21 +125,29 @@ export default function HomePage() {
           </div>
           <div className="flex items-center justify-between gap-3 text-xs text-neutral-600 sm:gap-4 sm:text-sm dark:text-neutral-400">
             <span className="truncate text-xs">{userCurrentDateTime}</span>
-            <div className="flex items-center gap-2 rounded border border-neutral-300 bg-neutral-100 px-2 py-1 dark:border-neutral-800/50 dark:bg-neutral-950/50">
-              {healthStatus ? (
-                <>
-                  <div
-                    className={`h-1.5 w-1.5 rounded-full ${healthStatus.status === "online" ? "bg-emerald-500" : "bg-red-500"}`}
-                  />
-                  <span className="font-mono text-[10px] font-medium tracking-wider text-neutral-700 dark:text-neutral-400">
-                    {healthStatus.status === "online" ? "System OK" : "Offline"}
-                  </span>
-                </>
-              ) : (
-                <span className="font-mono text-[10px] text-neutral-500 dark:text-neutral-600">
-                  Verificando...
-                </span>
-              )}
+            <div
+              title={
+                healthStatus
+                  ? healthStatus.status === "offline"
+                    ? "API Offline"
+                    : `${healthStatus.responseTime}ms`
+                  : "Verificando..."
+              }
+              className="flex items-center"
+            >
+              <div
+                className={`h-2 w-2 rounded-full transition-colors ${
+                  !healthStatus
+                    ? "animate-pulse bg-neutral-400"
+                    : healthStatus.status === "offline"
+                      ? "bg-red-500"
+                      : healthStatus.responseTime < 200
+                        ? "bg-emerald-500"
+                        : healthStatus.responseTime < 500
+                          ? "bg-amber-500"
+                          : "bg-red-500"
+                }`}
+              />
             </div>
           </div>
         </div>
@@ -147,7 +155,7 @@ export default function HomePage() {
         {/* Estatísticas e Mapa Mental */}
         <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-[260px_1fr]">
           {/* === CARD 1 — MÉTRICAS === */}
-          <div className="flex flex-col rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+          <div className="flex flex-col rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-950">
             <button
               onClick={() => setShowMetrics(!showMetrics)}
               className="flex w-full items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900/50"
@@ -224,7 +232,7 @@ export default function HomePage() {
             </div>
           </div>
           {/* === CARD 2 — NUVEM DE PALAVRAS === */}
-          <div className="flex flex-col rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+          <div className="flex flex-col rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-950">
             <button
               onClick={() => setShowTags(!showTags)}
               className="flex w-full items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900/30"

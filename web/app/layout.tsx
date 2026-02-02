@@ -24,7 +24,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   useEffect(() => {
-    // Configurar meta tags dinamicamente
     document.title = "Weave Notes - Organize suas ideias";
 
     const setMetaTag = (name: string, content: string, isProperty = false) => {

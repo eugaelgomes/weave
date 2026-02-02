@@ -368,13 +368,13 @@ class notesRepository {
         (SELECT COUNT(DISTINCT tag_name) FROM all_tags_unnested)::int AS unique_tags_count,
 
         -- 4. Distribuição por Status (Tratando NULL)
-        -- Exemplo de saída: {"active": 10, "archived": 2, "sem_status": 5}
+        -- Exemplo de saída: {"visible": 10, "archived": 2, "no_status": 5}
         COALESCE((
             SELECT json_object_agg(s.status_key, s.count)
             FROM (
                 SELECT 
-                    -- Transforma NULL em 'sem_status' para ser uma chave JSON válida
-                    COALESCE(status, 'sem_status') AS status_key, 
+                    -- Converte o enum para texto e trata NULL
+                    COALESCE(status::text, 'no_status') AS status_key, 
                     COUNT(*) as count
                 FROM user_scope_notes
                 GROUP BY status

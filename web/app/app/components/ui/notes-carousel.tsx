@@ -14,11 +14,6 @@ import {
 
 import { getTagColor } from "@/app/utils/tag-colors";
 
-/* // --- FALLBACKS (Descomente se não tiver os utils acima) ---
-const getCollaboratorDisplayName = (c: any) => c.name || c.username || "Usuário";
-const getCollaboratorAvatarUrl = (c: any) => c.avatar_url || null; 
-*/
-
 // =================== INTERFACES ===================
 
 // Colaboradores podem vir como strings (user_id) ou objetos expandidos
@@ -31,7 +26,7 @@ interface Note {
   preview?: string;
   tags?: string[];
   collaborators?: Collaborator[];
-  created_at?: string; // Tornando opcional para evitar quebras
+  created_at?: string;
   updated_at?: string;
 }
 
@@ -82,7 +77,7 @@ export default function NotesCarousel({
   };
 
   return (
-    <div className="rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
       {/* Header do Carrossel */}
       <div className="mb-4 flex items-center justify-between gap-2">
         <h3 className="text-base font-semibold text-yellow-500 sm:text-lg dark:text-neutral-100">

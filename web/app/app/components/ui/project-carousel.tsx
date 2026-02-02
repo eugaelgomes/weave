@@ -94,7 +94,7 @@ export default function ProjectsCarousel({
   };
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-3 shadow-sm sm:p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="rounded-lg border border-neutral-200 bg-white p-3 shadow-sm sm:p-4 dark:border-neutral-800 dark:bg-neutral-950">
       <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
         <h3 className="text-base font-semibold text-yellow-500 sm:text-lg dark:text-neutral-100">
           {title}

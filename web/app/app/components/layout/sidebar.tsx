@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/app/contexts/AuthContext";
-import { useSafeAuthenticatedData } from "@/app/hooks/useAuthenticatedData";
+import { useSafeAuthenticatedData } from "@/app/app/hooks/useAuthenticatedData";
 import { usePathname } from "next/navigation";
 import {
   FaBook,

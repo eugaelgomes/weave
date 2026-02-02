@@ -30,7 +30,7 @@ const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "sm" | "md" | "l
 
   return (
     <div
-      className={`${sizeClasses[size]} relative flex-shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 transition-all duration-300 dark:border-neutral-700 dark:bg-neutral-800`}
+      className={`${sizeClasses[size]} relative flex-shrink-0 overflow-hidden rounded-md border border-neutral-100 bg-neutral-100 transition-all duration-300 dark:border-neutral-700 dark:bg-neutral-800`}
     >
       {user?.avatar_url ? (
         <Image
@@ -55,6 +55,9 @@ interface MenuContentProps {
   theme: string;
 }
 
+// =====================================
+// Component MenuContent
+// =====================================
 const MenuContent = ({ user, logout, onClose, onToggleTheme, theme }: MenuContentProps) => (
   <div className="flex flex-col overflow-hidden">
     {/* Header do Perfil */}
@@ -117,6 +120,9 @@ const MenuContent = ({ user, logout, onClose, onToggleTheme, theme }: MenuConten
   </div>
 );
 
+// ==============================================
+// Component Navbar
+// ==============================================
 const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
   const { user, logout, authenticated, updateUser } = useAuth();
   const { theme, setTheme } = useTheme();
@@ -173,29 +179,30 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
               className="group flex items-center gap-3 outline-none"
             >
               {/* App Logo */}
-              <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-md shadow-md transition-transform group-hover:scale-105 group-active:scale-95">
-                <Image
+              <div className="h-max-content relative flex h-9 items-center justify-center overflow-hidden rounded-md shadow-md transition-transform group-hover:scale-105 group-active:scale-95">
+                {/*<Image
                   src="/weave.png"
                   alt="Weave Logo"
                   fill
                   priority
                   className="object-cover p-0.5"
-                />
+                />*/}
+                <strong className="text-xl font-bold text-yellow-500 sm:text-2xl">Weave</strong>
               </div>
 
               {/* Organização (Aparece em MD+) */}
-              {user?.org_unique_name && (
+              {user?.org_id && (
                 <div className="animate-in fade-in hidden items-center gap-3 duration-300 md:flex">
                   <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-800" />
 
                   <div className="flex items-center gap-2">
-                    {user.org_logo_url && (
+                    {/*{user.org_logo_url && (
                       <div className="relative h-9 w-9 overflow-hidden rounded-md shadow-md">
                         <Image src={user.org_logo_url} alt="Org" fill className="object-cover" />
                       </div>
-                    )}
+                    )}*/}
                     <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-                      {user.org_unique_name}
+                      {user.org_name}
                     </span>
                   </div>
                 </div>
@@ -217,7 +224,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                     <span className="text-sm leading-none font-bold text-neutral-800 dark:text-neutral-200">
                       {formatters.getDisplayName(user)}
                     </span>
-                    <span className="text-[11px] font-medium text-neutral-400">
+                    <span className="text-[9px] font-medium text-neutral-400">
                       @{formatters.getUsername(user)}
                     </span>
                   </div>

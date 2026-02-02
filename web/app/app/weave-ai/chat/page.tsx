@@ -236,21 +236,29 @@ export default function ChatPage() {
               minute: "2-digit",
             })}
           </span>
-          <div className="flex items-center gap-2 rounded border border-neutral-300 bg-neutral-100 px-2 py-1 dark:border-neutral-800/50 dark:bg-neutral-950/50">
-            {healthStatus ? (
-              <>
-                <div
-                  className={`h-1.5 w-1.5 rounded-full ${healthStatus.status === "online" ? "bg-emerald-500" : "bg-red-500"}`}
-                />
-                <span className="font-mono text-[10px] font-medium tracking-wider text-neutral-700 dark:text-neutral-400">
-                  {healthStatus.status === "online" ? "System OK" : "Offline"}
-                </span>
-              </>
-            ) : (
-              <span className="font-mono text-[10px] text-neutral-500 dark:text-neutral-600">
-                Verificando...
-              </span>
-            )}
+          <div
+            title={
+              healthStatus
+                ? healthStatus.status === "offline"
+                  ? "API Offline"
+                  : `${healthStatus.responseTime}ms`
+                : "Verificando..."
+            }
+            className="flex items-center"
+          >
+            <div
+              className={`h-2 w-2 rounded-full transition-colors ${
+                !healthStatus
+                  ? "animate-pulse bg-neutral-400"
+                  : healthStatus.status === "offline"
+                    ? "bg-red-500"
+                    : healthStatus.responseTime < 200
+                      ? "bg-emerald-500"
+                      : healthStatus.responseTime < 500
+                        ? "bg-amber-500"
+                        : "bg-red-500"
+              }`}
+            />
           </div>
         </div>
       </div>

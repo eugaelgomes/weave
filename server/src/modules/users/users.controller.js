@@ -498,7 +498,21 @@ class userController {
       }
 
       const response = {
-        user: userDataResponse(user),
+        user: {
+          user_profile: {
+            id: updatedUser.user_id,
+            user_name: updatedUser.user_name || updatedUser.name,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            avatar_url: avatarUrl,
+            birth_date: updatedUser.birth_date,
+            phone_number: updatedUser.phone_number,
+          },
+          user_settings: {
+            theme_mode: updatedUser.theme_mode,
+            private_profile: updatedUser.private_profile,
+          },
+        },
       };
 
       if (emailPendingValidation) {
