@@ -34,12 +34,22 @@ export default function SignIn() {
     : "/app/home";
 
   useEffect(() => {
-    // Evita múltiplos redirecionamentos
-    if (!loading && authenticated && !hasRedirected.current) {
-      hasRedirected.current = true;
-      router.replace(redirectUrl);
+    // Se não autenticado, reseta a flag
+    if (!authenticated) {
+      hasRedirected.current = false;
     }
-  }, [authenticated, loading, redirectUrl, router]);
+  }, [authenticated]);
+
+  useEffect(() => {
+    // Evita múltiplos redirecionamentos
+    if (!loading && authenticated && !hasRedirected.current && typeof window !== "undefined") {
+      hasRedirected.current = true;
+      // Pequeno delay para garantir que o estado foi atualizado
+      setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, 100);
+    }
+  }, [authenticated, loading, redirectUrl]);
 
   // Aguarda verificação de autenticação ou redirecionamento
   if (loading) {
@@ -78,8 +88,10 @@ export default function SignIn() {
 
       if (result.success) {
         setStatus(result.message || "Login realizado com sucesso!");
-        // Usa router.replace para navegação client-side sem reload
-        router.replace(redirectUrl);
+        // Aguarda um pouco para o estado ser atualizado, então redireciona
+        setTimeout(() => {
+          window.location.href = redirectUrl;
+        }, 300);
       } else {
         let message = result.message || "Falha no login";
         if (message.includes("Usuário ou senha inválidos")) {

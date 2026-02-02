@@ -15,6 +15,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const hasRedirected = useRef(false);
 
   useEffect(() => {
+    // Se autenticado, reseta a flag
+    if (authenticated) {
+      hasRedirected.current = false;
+    }
+  }, [authenticated]);
+
+  useEffect(() => {
     // Evita múltiplos redirecionamentos
     if (!loading && !authenticated && !hasRedirected.current) {
       hasRedirected.current = true;
