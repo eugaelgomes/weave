@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useAuth } from "../../contexts/AuthContext";
@@ -22,8 +22,6 @@ export default function SignIn() {
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
-  const hasRedirected = useRef(false);
-
   const { login: loginUser, authenticated, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,22 +32,21 @@ export default function SignIn() {
     : "/app/home";
 
   useEffect(() => {
-    // Se não autenticado, reseta a flag
-    if (!authenticated) {
-      hasRedirected.current = false;
+    if (!loading && authenticated && typeof window !== "undefined") {
+      // Usa sessionStorage para prevenir loops
+      const redirectKey = `redirecting_${redirectUrl}`;
+      const isRedirecting = sessionStorage.getItem(redirectKey);
+      
+      if (!isRedirecting) {
+        sessionStorage.setItem(redirectKey, 'true');
+        router.push(redirectUrl);
+        // Limpa após navegação
+        setTimeout(() => {
+          sessionStorage.removeItem(redirectKey);
+        }, 1000);
+      }
     }
-  }, [authenticated]);
-
-  useEffect(() => {
-    // Evita múltiplos redirecionamentos
-    if (!loading && authenticated && !hasRedirected.current && typeof window !== "undefined") {
-      hasRedirected.current = true;
-      // Pequeno delay para garantir que o estado foi atualizado
-      setTimeout(() => {
-        window.location.href = redirectUrl;
-      }, 100);
-    }
-  }, [authenticated, loading, redirectUrl]);
+  }, [authenticated, loading, redirectUrl, router]);
 
   // Aguarda verificação de autenticação ou redirecionamento
   if (loading) {
@@ -88,10 +85,9 @@ export default function SignIn() {
 
       if (result.success) {
         setStatus(result.message || "Login realizado com sucesso!");
-        // Aguarda um pouco para o estado ser atualizado, então redireciona
-        setTimeout(() => {
-          window.location.href = redirectUrl;
-        }, 300);
+        // Estado já foi atualizado, deixa o useEffect fazer o redirect
+        // ou redireciona manualmente
+        router.push(redirectUrl);
       } else {
         let message = result.message || "Falha no login";
         if (message.includes("Usuário ou senha inválidos")) {
