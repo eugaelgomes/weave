@@ -181,30 +181,13 @@ export default function SignIn() {
         </div>
       )}
 
-      <div className="relative z-10 flex h-full w-full items-stretch">
-        {/* Esquerdo: Marketing */}
-        <div className="hidden h-full flex-1 items-center justify-center p-12 lg:flex">
-          <div className="max-w-md space-y-6 rounded-md border border-white/10 bg-white/5 p-10 text-center shadow-2xl backdrop-blur-xl transition-transform hover:scale-[1.02]">
-            <h2 className="text-3xl font-bold text-white">O que você pode fazer!</h2>
-            <p className="text-lg leading-relaxed text-gray-400">
-              Criar projetos, organizar tarefas, colaborar com sua equipe e acompanhar o progresso
-              em tempo real. Tudo isso em uma plataforma intuitiva e fácil de usar.
-            </p>
-            <p className="text-lg leading-relaxed text-gray-400">
-              Junte-se a nós e transforme a maneira como você gerencia seus projetos!
-            </p>
+      <div className="relative z-10 flex h-full w-full items-center justify-center">
+        <div className="w-full max-w-md space-y-8 rounded-md border border-white/10 bg-neutral-900/50 p-8 shadow-2xl backdrop-blur-2xl">
+          <div className="text-center">
+            <h1 className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-4xl font-black tracking-tight text-transparent">
+              Weave
+            </h1>
           </div>
-        </div>
-
-        {/* Direito: Forms */}
-        <div className="flex h-full flex-1 items-center justify-center px-6">
-          <div className="w-full max-w-md space-y-8 rounded-md border border-white/10 bg-neutral-900/50 p-6 shadow-2xl backdrop-blur-2xl">
-            <div className="text-center">
-              <h1 className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-4xl font-black tracking-tight text-transparent">
-                Weave
-              </h1>
-              <p className="mt-2 text-sm text-gray-400">Gerencie seus projetos e ideias!</p>
-            </div>
 
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="space-y-1">
@@ -270,7 +253,6 @@ export default function SignIn() {
             </div>
           </div>
         </div>
-      </div>
 
       {showForgotPasswordModal && (
         <ForgotPasswordModal

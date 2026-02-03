@@ -342,7 +342,7 @@ const SettingsPage = () => {
                   )}
                 </div>
                 <p className="mt-3 text-[10px] text-neutral-400 dark:text-neutral-500">
-                  Desde: {formatDate(user?.created_at ?? "")}
+                  Desde: {formatDate(user?.created_at)}
                 </p>
               </div>
 

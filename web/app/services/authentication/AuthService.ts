@@ -407,6 +407,9 @@ export const getUserData = async (): Promise<User> => {
   throw new Error("Formato de resposta do perfil inválido.");
 };
 
+// Alias para compatibilidade
+export const getUserDataService = getUserData;
+
 // --- 5. Outros Serviços ---
 
 export const createUserService = async (

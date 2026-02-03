@@ -64,14 +64,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTheme(profileData.theme_mode as "light" | "dark");
         }
       } catch (error) {
-        // Se falhar (401/403), o usuário não está logado.
+        // Se falhar (401/403), o usuário não está logado - ignora o erro silenciosamente
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
-    checkAuth();
+    // Só verifica autenticação se não estiver em páginas públicas
+    const publicPaths = ['/auth/signin', '/auth/signup', '/auth/reset-password', '/home', '/about'];
+    const isPublicPath = publicPaths.some(path => window.location.pathname.startsWith(path));
+    
+    if (isPublicPath) {
+      // Em páginas públicas, não verifica autenticação automaticamente
+      setLoading(false);
+    } else {
+      // Em páginas privadas, verifica se há sessão válida
+      checkAuth();
+    }
   }, [setTheme]);
 
   type LoginPayload = { login: string; password: string; remember?: boolean };
@@ -96,12 +106,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await loginService({ login: loginValue, password: pwd });
 
       if (response && response.user) {
-        setUser(response.user);
-        if (
-          response.user.theme_mode &&
-          (response.user.theme_mode === "light" || response.user.theme_mode === "dark")
-        ) {
-          setTheme(response.user.theme_mode as "light" | "dark");
+        // Após login bem-sucedido, busca dados completos do usuário
+        try {
+          const fullUserData = await getUserDataService();
+          setUser(fullUserData);
+          if (
+            fullUserData.theme_mode &&
+            (fullUserData.theme_mode === "light" || fullUserData.theme_mode === "dark")
+          ) {
+            setTheme(fullUserData.theme_mode as "light" | "dark");
+          }
+        } catch {
+          // Se falhar ao buscar dados completos, usa o que veio do login
+          setUser(response.user);
+          if (
+            response.user.theme_mode &&
+            (response.user.theme_mode === "light" || response.user.theme_mode === "dark")
+          ) {
+            setTheme(response.user.theme_mode as "light" | "dark");
+          }
         }
 
         return { success: true, data: response };
