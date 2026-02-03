@@ -112,8 +112,8 @@ class PlansRepository {
           $1, 
           ((COALESCE(usage_details #>> $1, '0')::int) + $2)::text::jsonb
         ),
-        ${isNote ? "total_lifetime_notes = total_lifetime_notes + $2," : ""}
-        ${isAI ? "total_lifetime_ai_messages = total_lifetime_ai_messages + $2," : ""}
+        ${isNote ? "lifetime_stats = jsonb_set(lifetime_stats, '{total_notes_ever}', ((COALESCE(lifetime_stats->>'total_notes_ever', '0')::int) + $2)::text::jsonb)," : ""}
+        ${isAI ? "lifetime_stats = jsonb_set(lifetime_stats, '{total_ai_messages_ever}', ((COALESCE(lifetime_stats->>'total_ai_messages_ever', '0')::int) + $2)::text::jsonb)," : ""}
         updated_at = NOW()
       WHERE id = $3
       RETURNING *`;

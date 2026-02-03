@@ -220,7 +220,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       } catch (err: unknown) {
         console.error("Erro ao criar nota:", err);
         setError(err instanceof Error ? err.message : "Erro ao criar nota");
-        return null;
+        throw err; // Propaga o erro para ser tratado na UI
       } finally {
         setLoading(false);
       }

@@ -18,10 +18,9 @@ export const PROJECT_FIELDS = Object.freeze({
 
 // --- NOTES ---
 export const NOTE_STATUS = Object.freeze({
-  OPEN: "open",
-  DONE: "done",
-  CLOSED: "deleted",
-  DELETED: "deleted",
+  VISIBLE: "visible",
+  SECURE: "secure",
+  ARCHIVED: "archived",
 });
 
 export const NOTE_TYPES = Object.freeze({

@@ -77,10 +77,10 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
+    <div className="flex min-h-screen flex-col">
       <div className="flex-1 space-y-3 overflow-y-auto sm:space-y-4">
         {/* Header */}
-        <div className="flex items-start justify-between gap-2 rounded-md border border-neutral-200 bg-white p-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="flex items-start justify-between gap-2 rounded-md border border-neutral-200 bg-white p-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-950">
           <span className="sm:text-md text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
             Projetos de {userName}
           </span>
@@ -92,7 +92,7 @@ export default function ProjectsPage() {
         {/* Estatísticas e Progresso */}
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-[280px_1fr]">
           {/* Coluna Esquerda - Estatísticas */}
-          <div className="flex flex-col rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+          <div className="flex flex-col rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-950">
             {/* Cabeçalho do Painel */}
             <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-2.5 dark:border-neutral-800 dark:bg-neutral-900/50">
               <h3 className="font-mono text-[10px] font-bold tracking-widest text-neutral-600 uppercase dark:text-neutral-500">
@@ -102,7 +102,7 @@ export default function ProjectsPage() {
 
             {/* Lista de Métricas */}
             <div className="flex flex-col">
-              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <div className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-950">
                 <div className="flex items-center gap-3">
                   <div className="flex h-6 w-6 items-center justify-center rounded-md border border-yellow-400/20 bg-yellow-400/10 text-yellow-400">
                     <Folder className="h-3.5 w-3.5" />

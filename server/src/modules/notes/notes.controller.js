@@ -359,13 +359,10 @@ class NotesController {
       if (!userId) return;
 
       // 2. BUSCAR/CRIAR O REGISTRO DE USO (USANDO O MANAGER)
-      // Alteração: Chamamos o Manager em vez do Repository diretamente.
-      // O managePlanUsage garante que o registro exista (cria se for novo) e reseta o mês se necessário.
       const usageRecord = await PlanUsageManager.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
 
       // 3. BUSCAR DETALHES DO PLANO (LIMITES E NOME)
-      // Pegamos o plan_id do objeto req.user (preenchido no seu middleware de auth)
       const planDetails = await PlansRepository.getPlanById(
         getUserPlan.plan_id
       );
@@ -377,7 +374,6 @@ class NotesController {
       }
 
       // 4. VALIDAR LIMITE DE NOTAS
-      // Alteração: Passamos usageRecord.usage_details (o JSON) para a função de check
       const canCreate = PlanUsageManager.checkLimit(
         planDetails.details,
         usageRecord.usage_details,
@@ -394,7 +390,9 @@ class NotesController {
 
       // 5. Validação de dados obrigatórios
       if (!title) {
-        throw new Error("Título é obrigatório");
+        return res.status(400).json({
+          error: "Título é obrigatório"
+        });
       }
 
       const noteStatus =
@@ -417,7 +415,6 @@ class NotesController {
       );
 
       // 7. INCREMENTAR O USO
-      // Alteração: Usamos usageRecord.id (o UUID da tabela plans_usage)
       await PlanUsageManager.consumeNoteCreation(usageRecord.id);
 
       // 8. Formata e retorna a nota criada

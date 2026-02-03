@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Search, Filter, Plus, X, SortAsc, RefreshCw, Loader2, Trash2, Tag } from "lucide-react";
+import { toast } from "sonner";
 
 import { useNotes } from "../../contexts/NotesContext";
 import { deleteNotes } from "@/app/services/notes-service/NotesService";
@@ -211,9 +212,24 @@ const NotesWithPagination = () => {
         tags: [],
       });
       if (newNote) router.push(`/app/notes/view/${newNote.id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro:", error);
-      alert("Erro ao criar nova nota.");
+      
+      // Verifica se é um erro de limite de plano
+      if (error?.message?.includes("permite apenas") || error?.message?.includes("plano")) {
+        toast.error("Limite do Plano Atingido", {
+          description: error.message,
+          duration: 6000,
+          action: {
+            label: "Ver Planos",
+            onClick: () => router.push("/app/settings?tab=plan"),
+          },
+        });
+      } else {
+        toast.error("Erro ao criar nota", {
+          description: error?.message || "Ocorreu um erro ao criar a nota. Tente novamente.",
+        });
+      }
     }
   };
 
@@ -310,13 +326,13 @@ const NotesWithPagination = () => {
   }
 
   return (
-    <div className="flex h-full flex-col bg-neutral-50 dark:bg-neutral-950">
+    <div className="flex h-full flex-col">
       {/* =================== HEADER / TOOLBAR =================== */}
-      <div className="flex flex-col rounded-md border border-neutral-200 bg-white px-2 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex flex-col rounded-md border border-neutral-200 bg-white px-2 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-950">
         {/* Linha 1: Título e Ações */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <h2 className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+            <h2 className="text-lg font-semibold text-yellow-500">
               Notas
             </h2>
             <div className="hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800"></div>
@@ -578,14 +594,14 @@ const NotesWithPagination = () => {
       {/* =================== CONTEÚDO (LISTA) =================== */}
       <div
         id="notes-container"
-        className="mt-4 flex-1 overflow-y-auto bg-neutral-50 dark:bg-neutral-950"
+        className="mt-4 flex-1 overflow-y-auto"
       >
         <div className="mx-auto">
           {" "}
           {/* Container limitador para telas muito largas */}
           {/* Headers da Lista (Opcional, mas ajuda no alinhamento visual) */}
           {notes.length > 0 && !showFullSkeleton && (
-            <div className="mb-4 hidden grid-cols-12 gap-4 rounded-md border border-neutral-800 bg-white p-2 px-4 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase sm:grid dark:bg-neutral-900">
+            <div className="mb-4 hidden grid-cols-12 gap-4 rounded-md border border-neutral-800 bg-white p-2 px-4 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase sm:grid dark:bg-neutral-950">
               <div className="col-span-4">Detalhes</div>
               <div className="col-span-2">Projeto</div>
               <div className="col-span-3">Tags</div>
@@ -621,10 +637,10 @@ const NotesWithPagination = () => {
                 return (
                   <div
                     key={note.id}
-                    className={`group relative rounded-lg border transition-all ${
+                    className={`group relative rounded-md border transition-all ${
                       isSelected
                         ? "border-yellow-500 bg-yellow-50/50 ring-2 ring-yellow-500/20 dark:border-yellow-500/50 dark:bg-yellow-500/5 dark:ring-yellow-500/10"
-                        : "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
+                        : "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950"
                     }`}
                   >
                     {selectionMode && (
