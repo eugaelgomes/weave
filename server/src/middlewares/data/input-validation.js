@@ -3,6 +3,16 @@ const { body } = require("express-validator");
 const inputValidation = () => {
   return [
     body("name")
+      .optional()
+      .trim()
+      .matches(/^[\p{L}\s]+$/u)
+      .withMessage("Apenas letras e espaços são permitidos.")
+      .isLength({ min: 1, max: 100 })
+      .withMessage("O nome não pode estar vazio ou ser muito longo.")
+      .escape(),
+
+    body("user_name")
+      .optional()
       .trim()
       .matches(/^[\p{L}\s]+$/u)
       .withMessage("Apenas letras e espaços são permitidos.")

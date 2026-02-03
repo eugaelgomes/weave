@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { FaEye, FaEyeSlash, FaCamera } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaExclamationCircle } from "react-icons/fa";
 import { useAuth } from "../../contexts/AuthContext";
 
-// Interfaces para tipagem
 interface FormData {
   name: string;
   username: string;
   email: string;
   password: string;
+  confirmPassword: string;
 }
 
 interface Message {
@@ -23,29 +23,25 @@ interface Message {
 export default function SignUp() {
   const { createUser, authenticated, loading } = useAuth();
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
     username: "",
     email: "",
     password: "",
+    confirmPassword: "",
   });
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [profileImage, setProfileImage] = useState<File | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<Message>({ type: "", text: "" });
 
-  // Redireciona usuários já autenticados
   useEffect(() => {
     if (!loading && authenticated) {
       router.push("/app");
     }
   }, [authenticated, loading, router]);
 
-  // Aguarda verificação de autenticação antes de renderizar
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-neutral-950">
@@ -54,7 +50,6 @@ export default function SignUp() {
     );
   }
 
-  // Não renderiza o formulário se já estiver autenticado
   if (authenticated) return null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,79 +57,60 @@ export default function SignUp() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const validateImage = (file: File): string | null => {
-    const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-    if (!validTypes.includes(file.type)) return "Formato inválido. Use JPEG, PNG, GIF ou WebP.";
-    if (file.size > 5 * 1024 * 1024) return "Imagem deve ter até 2MB.";
-    return null;
-  };
-
-  const handleImage = (file: File) => {
-    const error = validateImage(file);
-    if (error) return setMsg({ type: "error", text: error });
-
-    setProfileImage(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === "string") {
-        setImagePreview(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) handleImage(e.target.files[0]);
-  };
-
-  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(e.type === "dragenter" || e.type === "dragover");
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files?.[0]) handleImage(e.dataTransfer.files[0]);
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMsg({ type: "", text: "" });
 
+    // Validação do nome: apenas letras e espaços, 1-100 caracteres
     if (!formData.name.trim())
       return setMsg({ type: "error", text: "Por favor, digite seu nome completo." });
+    if (!/^[\p{L}\s]+$/u.test(formData.name))
+      return setMsg({ type: "error", text: "O nome deve conter apenas letras e espaços." });
+    if (formData.name.length > 100)
+      return setMsg({ type: "error", text: "O nome não pode ter mais de 100 caracteres." });
+
+    // Validação do username: letras, números, ., - ou _, 6-18 caracteres
     if (!formData.username.trim())
       return setMsg({ type: "error", text: "Por favor, escolha um nome de usuário." });
+    if (!/^[a-zA-Z0-9._-]+$/.test(formData.username))
+      return setMsg({ type: "error", text: "O usuário pode conter apenas letras, números, ., - ou _" });
+    if (formData.username.length < 6 || formData.username.length > 18)
+      return setMsg({ type: "error", text: "O usuário deve ter entre 6 e 18 caracteres." });
+
+    // Validação do email
     if (!formData.email.trim())
       return setMsg({ type: "error", text: "Por favor, digite um email válido." });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+      return setMsg({ type: "error", text: "E-mail inválido." });
+
+    // Validação da senha: mín. 8 caracteres, maiúscula, minúscula e número
     if (!formData.password)
       return setMsg({ type: "error", text: "Por favor, crie uma senha segura." });
+    if (formData.password.length < 8)
+      return setMsg({ type: "error", text: "A senha deve ter no mínimo 8 caracteres." });
+    if (!/[a-z]/.test(formData.password))
+      return setMsg({ type: "error", text: "A senha deve conter pelo menos uma letra minúscula." });
+    if (!/[A-Z]/.test(formData.password))
+      return setMsg({ type: "error", text: "A senha deve conter pelo menos uma letra maiúscula." });
+    if (!/[0-9]/.test(formData.password))
+      return setMsg({ type: "error", text: "A senha deve conter pelo menos um número." });
+    if (formData.password !== formData.confirmPassword)
+      return setMsg({ type: "error", text: "As senhas não coincidem." });
 
     try {
       setSubmitting(true);
 
-      // Prepara FormData para enviar imagem junto com os dados do usuário
-      const formDataToSend = new FormData();
-      formDataToSend.append("name", formData.name);
-      formDataToSend.append("username", formData.username);
-      formDataToSend.append("email", formData.email);
-      formDataToSend.append("password", formData.password);
-
-      // Adiciona a imagem se existir
-      if (profileImage) {
-        formDataToSend.append("profileImage", profileImage);
-      }
-
-      const res = await createUser(formDataToSend);
+      const res = await createUser({
+        user_name: formData.name,
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
 
       if (res.success) {
         setMsg({ type: "success", text: "Conta criada com sucesso! Redirecionando..." });
-        setTimeout(() => router.push("/"), 1200);
+        setTimeout(() => router.push("/auth/signin"), 1500);
       } else {
-        // Mensagens mais amigáveis baseadas no erro do backend
         let errorMessage = res.message || "Falha ao criar conta.";
 
         if (errorMessage.includes("already exists") || errorMessage.includes("já existe")) {
@@ -150,7 +126,7 @@ export default function SignUp() {
     } catch {
       setMsg({
         type: "error",
-        text: "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
+        text: "Não foi possível conectar ao servidor. Verifique sua conexão.",
       });
     } finally {
       setSubmitting(false);
@@ -159,262 +135,194 @@ export default function SignUp() {
   };
 
   return (
-    <div className="relative flex h-screen">
-      {/* Imagem de fundo para mobile, escondida em telas grandes */}
-      <div className="absolute inset-0 lg:hidden">
+    <div className="relative flex h-screen w-full overflow-hidden bg-neutral-950 font-sans">
+      {/* Background */}
+      <div className="absolute inset-0 z-0">
         <Image
-          src="https://cwn.sfo3.cdn.digitaloceanspaces.com/medias/bg-studying_guy.webp"
-          alt="Registro visual"
+          src="/bg-auth.webp"
+          alt="Background visual"
           fill
-          className="object-cover"
-          unoptimized
           priority
+          sizes="100vw"
+          className="object-cover opacity-50"
+          quality={80}
         />
-        {/* Overlay escuro para melhorar legibilidade do formulário */}
-        <div className="absolute inset-0 bg-neutral-950/80 backdrop-blur-sm"></div>
+        <div className="absolute inset-0 bg-neutral-950/60 backdrop-blur-[2px]"></div>
       </div>
 
-      {/* Botão sobre */}
-      <div className="absolute top-10 right-10 z-50">
+      {/* Botão Sobre */}
+      <div className="absolute top-6 right-6 z-50">
         <Link
           href="/about"
-          className="flex items-center gap-2 rounded-md bg-neutral-950/50 px-3 py-2 text-sm font-medium text-gray-500 backdrop-blur-sm transition-colors hover:bg-neutral-800/70"
+          className="flex items-center gap-2 rounded-md bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all hover:bg-white/20"
         >
-          Sobre o App
+          <FaExclamationCircle />
         </Link>
       </div>
 
-      {/* Toast de Mensagens - Flutuante no topo */}
+      {/* Botão Home */}
+      <div className="absolute top-6 left-6 z-50">
+        <Link
+          href="/home/"
+          className="flex items-center gap-2 rounded-md bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all hover:bg-white/20"
+        >
+          Home
+        </Link>
+      </div>
+
+      {/* Toast de Mensagens */}
       {msg.text && (
-        <div className="fixed top-4 left-1/2 z-50 w-full max-w-md -translate-x-1/2 transform px-4">
-          <div
-            className={`animate-in slide-in-from-top-4 flex items-center gap-3 rounded-md border p-4 text-sm shadow-xl backdrop-blur-sm duration-300 ${
-              msg.type === "error"
-                ? "border-red-200 bg-red-50 text-red-800"
-                : "border-green-200 bg-green-50 text-green-800"
-            }`}
-          >
-            <div
-              className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md ${
-                msg.type === "error" ? "bg-red-100" : "bg-green-100"
-              }`}
-            >
-              <svg
-                className={`h-5 w-5 ${msg.type === "error" ? "text-red-600" : "text-green-600"}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                {msg.type === "error" ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                )}
-              </svg>
+        <div className="animate-in slide-in-from-bottom-5 fade-in fixed right-10 bottom-10 z-[60] w-full max-w-md px-4 duration-300">
+          {msg.type === "error" && (
+            <div className="flex items-center gap-3 rounded-md border border-red-500/50 bg-red-950/80 p-4 text-sm text-red-200 shadow-2xl backdrop-blur-xl">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-red-500/20">
+                <svg className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <span className="font-medium">{msg.text}</span>
             </div>
-            <span className="flex-1 font-medium">{msg.text}</span>
-          </div>
+          )}
+          {msg.type === "success" && (
+            <div className="flex items-center gap-3 rounded-md border border-green-500/50 bg-green-950/80 p-4 text-sm text-green-200 shadow-2xl backdrop-blur-xl">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-green-500/20">
+                <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span className="font-medium">{msg.text}</span>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Coluna esquerda - formulário */}
-      <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-6 sm:px-6 lg:bg-neutral-950 lg:px-8">
-        <div className="w-full max-w-xs space-y-6">
-          {/* Logo */}
+      {/* Formulário centralizado */}
+      <div className="relative z-10 flex h-full w-full items-center justify-center px-4">
+        <div className="w-full max-w-md space-y-6 rounded-md border border-white/10 bg-neutral-900/50 p-6 shadow-2xl backdrop-blur-2xl">
           <div className="text-center">
-            <div className="flex items-center justify-center">
-              <h1 className="relative w-full rounded-md bg-gradient-to-br from-yellow-500 via-yellow-500 to-yellow-500 px-8 py-3 text-3xl font-black tracking-tight text-white">
-                Weave Notes
-              </h1>
-            </div>
+            <h1 className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-4xl font-black tracking-tight text-transparent">
+              Weave
+            </h1>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Seção Superior: Identidade e Foto */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
-              {/* Coluna da Esquerda: Nome e Email (Ocupa 8 de 12 colunas) */}
-              <div className="flex flex-col justify-between gap-3 sm:col-span-8">
-                {/* Nome */}
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="mb-1 block text-sm font-semibold text-yellow-500"
-                  >
-                    Nome
-                  </label>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="Seu nome completo"
-                    value={formData.name}
-                    onChange={handleChange}
-                    disabled={submitting}
-                    className="block w-full rounded-md border border-neutral-600 bg-neutral-900 px-4 py-2.5 text-gray-400 shadow-sm transition-all placeholder:text-gray-600 hover:border-gray-500 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
-                  />
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="mb-1 block text-sm font-semibold text-yellow-500"
-                  >
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={formData.email}
-                    onChange={handleChange}
-                    disabled={submitting}
-                    autoComplete="email"
-                    className="block w-full rounded-md border border-neutral-600 bg-neutral-900 px-4 py-2.5 text-gray-400 shadow-sm transition-all placeholder:text-gray-600 hover:border-gray-500 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Coluna da Direita: Upload de Foto (Ocupa 4 de 12 colunas) */}
-              <div className="flex flex-col sm:col-span-4">
-                <label className="mb-1 block text-sm font-semibold text-yellow-500">
-                  Foto <span className="text-xs font-normal text-gray-500">(Opcional)</span>
-                </label>
-                {/* O flex-1 aqui garante que a caixa estique para igualar a altura da coluna da esquerda */}
-                <div
-                  className={`flex w-full flex-1 cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed transition-colors ${
-                    dragActive
-                      ? "border-yellow-500 bg-neutral-800"
-                      : "border-neutral-600 bg-neutral-900 hover:border-gray-500 hover:bg-neutral-800/50"
-                  } min-h-[120px]`} // min-h garante altura mínima em mobile
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragEnter={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDragOver={handleDrag}
-                  onDrop={handleDrop}
-                >
-                  {imagePreview ? (
-                    <Image
-                      src={imagePreview}
-                      width={100}
-                      height={100}
-                      className="h-24 w-24 rounded-full border-2 border-neutral-700 object-cover"
-                      alt="Preview"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center p-2 text-center">
-                      <FaCamera className="mb-1 text-2xl text-gray-500" />
-                      <p className="text-xs text-gray-500">Arraste ou clique</p>
-                    </div>
-                  )}
-                </div>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <label className="text-xs font-bold tracking-wider text-yellow-500">Nome</label>
                 <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleChange}
+                  disabled={submitting}
+                  className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white transition-all placeholder:text-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                  placeholder="Seu nome"
                 />
               </div>
-            </div>
 
-            {/* Seção Inferior: Credenciais */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* Usuário */}
-              <div>
-                <label
-                  htmlFor="username"
-                  className="mb-1 block text-sm font-semibold text-yellow-500"
-                >
-                  Usuário
-                </label>
+              <div className="space-y-1">
+                <label className="text-xs font-bold tracking-wider text-yellow-500">Usuário</label>
                 <input
-                  id="username"
                   name="username"
                   type="text"
-                  placeholder="seu_usuario"
                   value={formData.username}
                   onChange={handleChange}
                   disabled={submitting}
-                  className="block w-full rounded-md border border-neutral-600 bg-neutral-900 px-4 py-2.5 text-gray-400 shadow-sm transition-all placeholder:text-gray-600 hover:border-gray-500 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                  className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white transition-all placeholder:text-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                  placeholder="seu_usuario"
                 />
               </div>
+            </div>
 
-              {/* Senha */}
-              <div>
-                <label
-                  htmlFor="password"
-                  className="mb-1 block text-sm font-semibold text-yellow-500"
-                >
-                  Senha
-                </label>
+            <div className="space-y-1">
+              <label className="text-xs font-bold tracking-wider text-yellow-500">E-mail</label>
+              <input
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                disabled={submitting}
+                autoComplete="email"
+                className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white transition-all placeholder:text-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                placeholder="seu@email.com"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <label className="text-xs font-bold tracking-wider text-yellow-500">Senha</label>
                 <div className="relative">
                   <input
-                    id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Min. 6 caracteres"
                     value={formData.password}
                     onChange={handleChange}
                     disabled={submitting}
                     autoComplete="new-password"
-                    className="block w-full rounded-md border border-neutral-600 bg-neutral-900 px-4 py-2.5 text-gray-400 shadow-sm transition-all placeholder:text-gray-600 hover:border-gray-500 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                    className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white transition-all focus:border-yellow-500 focus:outline-none"
+                    placeholder="Mín. 8, A-z, 0-9"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 transition-colors hover:text-gray-300"
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-white"
                   >
                     {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
                   </button>
                 </div>
               </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold tracking-wider text-yellow-500">Confirmar</label>
+                <div className="relative">
+                  <input
+                    name="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    disabled={submitting}
+                    autoComplete="new-password"
+                    className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white transition-all focus:border-yellow-500 focus:outline-none"
+                    placeholder="Repita a senha"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-white"
+                  >
+                    {showConfirmPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Botões de Ação */}
             <div className="flex items-center justify-between pt-2">
-              <Link
-                href="/auth/signin"
-                className="text-sm text-gray-500 transition-colors hover:text-white"
+              <button
+                type="button"
+                onClick={() => router.push("/auth/signin")}
+                className="text-xs font-medium text-gray-400 transition-colors hover:text-yellow-500"
               >
-                Já tem conta? <span className="text-yellow-500 hover:underline">Entrar</span>
-              </Link>
-
+                Já tenho conta
+              </button>
               <button
                 type="submit"
-                className="flex items-center justify-center rounded-md bg-yellow-500 px-6 py-2.5 text-sm font-bold text-neutral-900 shadow-md transition-all hover:bg-yellow-400 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={submitting}
+                className="rounded-md bg-yellow-500 px-8 py-2.5 text-sm font-bold text-black shadow-lg shadow-yellow-500/20 transition-all hover:bg-yellow-400 active:scale-95 disabled:opacity-50"
               >
-                {submitting ? "Processando..." : "Criar Conta"}
+                {submitting ? "Criando..." : "Criar conta"}
               </button>
             </div>
           </form>
-        </div>
-      </div>
 
-      {/* Imagem lateral para desktop - escondida em mobile */}
-      <div className="relative hidden flex-1 lg:block">
-        <Image
-          src="https://cwn.sfo3.cdn.digitaloceanspaces.com/medias/bg-studying_guy.webp"
-          alt="Registro visual"
-          fill
-          className="object-cover"
-          priority
-        />
-        {/* Overlay de vidro/claridade saindo da esquerda */}
-        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950 via-neutral-950/40 to-transparent"></div>
+          <div className="border-t border-white/5 pt-4 text-center">
+            <p className="text-sm text-gray-500">
+              Já tem uma conta?{" "}
+              <Link href="/auth/signin" className="font-bold text-yellow-500 hover:underline">
+                Entrar
+              </Link>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -83,6 +83,7 @@ class userController {
     try {
       let {
         name,
+        user_name,
         username,
         email,
         password,
@@ -91,6 +92,16 @@ class userController {
         birth_date = null,
         phone_number = null,
       } = req.body;
+
+      // Usa user_name se fornecido, senão usa name
+      const userName = user_name || name;
+
+      if (!userName) {
+        return res.status(400).json({
+          status: "error",
+          message: "Nome é obrigatório.",
+        });
+      }
 
       if (timezone && !this._isValidTimezone(timezone)) {
         return res.status(400).json({
@@ -130,7 +141,7 @@ class userController {
       const hashedPassword = await bcrypt.hash(password, saltRounds);
 
       const newUser = await UserRepository.createUser({
-        name,
+        name: userName,
         username,
         email,
         password: hashedPassword,
