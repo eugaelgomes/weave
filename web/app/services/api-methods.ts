@@ -21,6 +21,7 @@ export const API_ENDPOINTS = {
   ME: "/users/me",
   REFRESH: "/auth/refresh",
   GOOGLE_AUTH: "/auth/signin/sso/google",
+  ACTIVATE_ACCOUNT: "/users/activate-account",
 
   // User Management
   UPDATE_PROFILE: "/users/me/update-profile",
