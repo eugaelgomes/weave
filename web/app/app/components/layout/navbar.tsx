@@ -159,7 +159,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
   }, [isMenuOpen]);
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b border-neutral-200 bg-white/90 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/90 print:hidden">
+    <nav className="sticky top-0 z-40 w-full border-b border-neutral-200 bg-neutral-50/90 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/90 print:hidden">
       <div className="mx-auto w-full max-w-[1920px] px-4 sm:px-2 lg:px-4">
         <div className="flex h-16 items-center justify-between">
           {/* LADO ESQUERDO: Toggle Mobile + Logo */}
@@ -234,7 +234,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                 {/* DROPDOWN (Desktop) */}
                 {isMenuOpen && (
                   <div className="animate-in fade-in slide-in-from-top-2 absolute top-full right-0 z-50 mt-2 hidden w-80 origin-top-right duration-200 sm:block">
-                    <div className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl ring-1 ring-black/5 dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-neutral-950/50">
+                    <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-2xl ring-1 ring-black/5 dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-neutral-950/50">
                       <MenuContent
                         user={user}
                         logout={logout}
@@ -261,7 +261,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
           />
 
           {/* Painel Deslizante */}
-          <div className="animate-in slide-in-from-bottom absolute inset-x-0 bottom-0 flex flex-col rounded-md bg-white pb-6 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] duration-300 dark:border-t dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="animate-in slide-in-from-bottom absolute inset-x-0 bottom-0 flex flex-col rounded-md bg-neutral-50 pb-6 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] duration-300 dark:border-t dark:border-neutral-800 dark:bg-neutral-900">
             {/* Pega-mão visual */}
             <div className="mx-auto mt-3 h-1.5 w-12 rounded-md bg-neutral-200/80 dark:bg-neutral-700/50" />
 

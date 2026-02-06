@@ -19,7 +19,7 @@ export default function ActivateAccount() {
 
   useEffect(() => {
     const tokenFromUrl = searchParams.get("token");
-    
+
     if (!tokenFromUrl) {
       setMsg({
         type: "error",

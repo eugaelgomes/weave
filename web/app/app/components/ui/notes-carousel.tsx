@@ -77,7 +77,7 @@ export default function NotesCarousel({
   };
 
   return (
-    <div className="rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
       {/* Header do Carrossel */}
       <div className="mb-4 flex items-center justify-between gap-2">
         <h3 className="text-base font-semibold text-yellow-500 sm:text-lg dark:text-neutral-100">
@@ -138,7 +138,7 @@ export default function NotesCarousel({
                   href={`/app/notes/view/${note.id}`}
                   className="block w-[85vw] max-w-[320px] flex-shrink-0 snap-center sm:w-[320px] sm:snap-start"
                 >
-                  <div className="group flex h-[280px] flex-col justify-between rounded-md border border-neutral-200 bg-white p-5 transition-all duration-200 hover:-translate-y-1 hover:border-neutral-300 hover:shadow-lg hover:shadow-neutral-200/50 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:shadow-neutral-900/50">
+                  <div className="group flex h-[280px] flex-col justify-between rounded-md border border-neutral-200 bg-neutral-50 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-neutral-300 hover:shadow-lg hover:shadow-neutral-200/50 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:shadow-neutral-900/50">
                     {/* Topo: Título e Badge */}
                     <div>
                       <div className="mb-2 flex items-start justify-between gap-2">

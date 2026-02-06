@@ -8,6 +8,7 @@ import "./globals.css";
 import AuthProviderClient from "./contexts/AuthProviderClient";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -77,8 +78,10 @@ export default function RootLayout({
         <Analytics />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProviderClient>{children}</AuthProviderClient>
-        <Toaster position="top-right" expand={true} richColors closeButton />
+        <ThemeProvider>
+          <AuthProviderClient>{children}</AuthProviderClient>
+          <Toaster position="top-right" expand={true} richColors closeButton />
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -44,8 +44,8 @@ export default function SignUp() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-neutral-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"></div>
+      <div className="flex h-screen items-center justify-center bg-neutral-50 transition-colors dark:bg-neutral-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-800 border-t-transparent dark:border-white"></div>
       </div>
     );
   }
@@ -73,7 +73,10 @@ export default function SignUp() {
     if (!formData.username.trim())
       return setMsg({ type: "error", text: "Por favor, escolha um nome de usuário." });
     if (!/^[a-zA-Z0-9._-]+$/.test(formData.username))
-      return setMsg({ type: "error", text: "O usuário pode conter apenas letras, números, ., - ou _" });
+      return setMsg({
+        type: "error",
+        text: "O usuário pode conter apenas letras, números, ., - ou _",
+      });
     if (formData.username.length < 6 || formData.username.length > 18)
       return setMsg({ type: "error", text: "O usuário deve ter entre 6 e 18 caracteres." });
 
@@ -135,7 +138,7 @@ export default function SignUp() {
   };
 
   return (
-    <div className="relative flex h-screen w-full overflow-hidden bg-neutral-950 font-sans">
+    <div className="relative flex h-screen w-full overflow-hidden bg-neutral-50 transition-colors font-sans dark:bg-neutral-950">
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -147,14 +150,14 @@ export default function SignUp() {
           className="object-cover opacity-50"
           quality={80}
         />
-        <div className="absolute inset-0 bg-neutral-950/60 backdrop-blur-[2px]"></div>
+        <div className="absolute inset-0 bg-neutral-50/80 backdrop-blur-[2px] transition-colors dark:bg-neutral-950/60"></div>
       </div>
 
       {/* Botão Sobre */}
       <div className="absolute top-6 right-6 z-50">
         <Link
           href="/about"
-          className="flex items-center gap-2 rounded-md bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all hover:bg-white/20"
+          className="flex items-center gap-2 rounded-md bg-neutral-800/10 px-4 py-2 text-sm font-medium text-neutral-800 backdrop-blur-md transition-all hover:bg-neutral-800/20 dark:bg-neutral-50/10 dark:text-white dark:hover:bg-neutral-50/20"
         >
           <FaExclamationCircle />
         </Link>
@@ -164,7 +167,7 @@ export default function SignUp() {
       <div className="absolute top-6 left-6 z-50">
         <Link
           href="/home/"
-          className="flex items-center gap-2 rounded-md bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all hover:bg-white/20"
+          className="flex items-center gap-2 rounded-md bg-neutral-800/10 px-4 py-2 text-sm font-medium text-neutral-800 backdrop-blur-md transition-all hover:bg-neutral-800/20 dark:bg-neutral-50/10 dark:text-white dark:hover:bg-neutral-50/20"
         >
           Home
         </Link>
@@ -176,8 +179,18 @@ export default function SignUp() {
           {msg.type === "error" && (
             <div className="flex items-center gap-3 rounded-md border border-red-500/50 bg-red-950/80 p-4 text-sm text-red-200 shadow-2xl backdrop-blur-xl">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-red-500/20">
-                <svg className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="h-5 w-5 text-red-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </div>
               <span className="font-medium">{msg.text}</span>
@@ -186,8 +199,18 @@ export default function SignUp() {
           {msg.type === "success" && (
             <div className="flex items-center gap-3 rounded-md border border-green-500/50 bg-green-950/80 p-4 text-sm text-green-200 shadow-2xl backdrop-blur-xl">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-green-500/20">
-                <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg
+                  className="h-5 w-5 text-green-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
               <span className="font-medium">{msg.text}</span>
@@ -198,7 +221,7 @@ export default function SignUp() {
 
       {/* Formulário centralizado */}
       <div className="relative z-10 flex h-full w-full items-center justify-center px-4">
-        <div className="w-full max-w-md space-y-6 rounded-md border border-white/10 bg-neutral-900/50 p-6 shadow-2xl backdrop-blur-2xl">
+        <div className="w-full max-w-md space-y-6 rounded-md border border-neutral-200 bg-neutral-50/90 p-6 shadow-2xl backdrop-blur-2xl transition-colors dark:border-white/10 dark:bg-neutral-900/50">
           <div className="text-center">
             <h1 className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-4xl font-black tracking-tight text-transparent">
               Weave
@@ -215,7 +238,7 @@ export default function SignUp() {
                   value={formData.name}
                   onChange={handleChange}
                   disabled={submitting}
-                  className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white transition-all placeholder:text-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                  className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-900 transition-all placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-600"
                   placeholder="Seu nome"
                 />
               </div>
@@ -228,7 +251,7 @@ export default function SignUp() {
                   value={formData.username}
                   onChange={handleChange}
                   disabled={submitting}
-                  className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white transition-all placeholder:text-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                  className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-900 transition-all placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-600"
                   placeholder="seu_usuario"
                 />
               </div>
@@ -243,7 +266,7 @@ export default function SignUp() {
                 onChange={handleChange}
                 disabled={submitting}
                 autoComplete="email"
-                className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white transition-all placeholder:text-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-900 transition-all placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-600"
                 placeholder="seu@email.com"
               />
             </div>
@@ -259,13 +282,13 @@ export default function SignUp() {
                     onChange={handleChange}
                     disabled={submitting}
                     autoComplete="new-password"
-                    className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white transition-all focus:border-yellow-500 focus:outline-none"
+                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-900 transition-all focus:border-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
                     placeholder="Mín. 8, A-z, 0-9"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-white"
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-neutral-800 dark:hover:text-white"
                   >
                     {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
                   </button>
@@ -273,7 +296,9 @@ export default function SignUp() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold tracking-wider text-yellow-500">Confirmar</label>
+                <label className="text-xs font-bold tracking-wider text-yellow-500">
+                  Confirmar
+                </label>
                 <div className="relative">
                   <input
                     name="confirmPassword"
@@ -282,13 +307,13 @@ export default function SignUp() {
                     onChange={handleChange}
                     disabled={submitting}
                     autoComplete="new-password"
-                    className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white transition-all focus:border-yellow-500 focus:outline-none"
+                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-900 transition-all focus:border-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
                     placeholder="Repita a senha"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-white"
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-neutral-800 dark:hover:text-white"
                   >
                     {showConfirmPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
                   </button>
@@ -300,7 +325,7 @@ export default function SignUp() {
               <button
                 type="button"
                 onClick={() => router.push("/auth/signin")}
-                className="text-xs font-medium text-gray-400 transition-colors hover:text-yellow-500"
+                className="text-xs font-medium text-gray-600 transition-colors hover:text-yellow-500 dark:text-gray-400"
               >
                 Já tenho conta
               </button>
@@ -314,8 +339,8 @@ export default function SignUp() {
             </div>
           </form>
 
-          <div className="border-t border-white/5 pt-4 text-center">
-            <p className="text-sm text-gray-500">
+          <div className="border-t border-neutral-200 pt-4 text-center transition-colors dark:border-white/5">
+            <p className="text-sm text-gray-600 dark:text-gray-500">
               Já tem uma conta?{" "}
               <Link href="/auth/signin" className="font-bold text-yellow-500 hover:underline">
                 Entrar

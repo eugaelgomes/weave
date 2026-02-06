@@ -13,7 +13,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const hasRedirected = useRef(false);
-  
+
   useEffect(() => {
     if (!loading && !authenticated && !hasRedirected.current) {
       hasRedirected.current = true;

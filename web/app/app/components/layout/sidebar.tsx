@@ -139,7 +139,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
   ];
 
   return (
-    <div className="flex h-full w-full flex-col bg-white text-neutral-600 dark:bg-neutral-950 dark:text-neutral-400">
+    <div className="flex h-full w-full flex-col bg-neutral-50 text-neutral-600 dark:bg-neutral-950 dark:text-neutral-400">
       {/* Header Mobile */}
       <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 p-3 lg:hidden dark:border-neutral-800">
         <div className="flex items-center gap-2">

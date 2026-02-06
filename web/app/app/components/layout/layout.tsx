@@ -40,7 +40,7 @@ const Layout = ({ children }: LayoutProps) => {
         )}
 
         <aside
-          className={`fixed top-0 left-0 z-50 h-full flex-col border-r border-neutral-200 bg-white transition-all duration-300 ease-in-out dark:border-neutral-800 dark:bg-neutral-950 ${sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} ${isCollapsed ? "lg:w-[80px]" : "lg:w-[260px]"} pt-16 lg:static lg:flex lg:translate-x-0 lg:pt-0 lg:shadow-none`}
+          className={`fixed top-0 left-0 z-50 h-full flex-col border-r border-neutral-200 bg-neutral-50 transition-all duration-300 ease-in-out dark:border-neutral-800 dark:bg-neutral-950 ${sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} ${isCollapsed ? "lg:w-[80px]" : "lg:w-[260px]"} pt-16 lg:static lg:flex lg:translate-x-0 lg:pt-0 lg:shadow-none`}
         >
           <Sidebar
             onLinkClick={closeSidebar}

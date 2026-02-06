@@ -286,7 +286,7 @@ const SettingsPage = () => {
       <div className="flex-1 space-y-3 overflow-y-auto sm:space-y-4">
         <div className="mx-auto space-y-3">
           {/* Header */}
-          <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
             <div className="flex w-full items-center justify-between gap-2">
               <h1 className="sm:text-md text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
                 Configurações da Conta
@@ -315,7 +315,7 @@ const SettingsPage = () => {
           <div className="grid grid-cols-1 gap-3 space-y-3 md:gap-4 lg:grid-cols-12">
             {/* Coluna Esquerda */}
             <div className="lg:col-span-3">
-              <div className="flex flex-col items-center rounded-md border border-neutral-200 bg-white p-3 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+              <div className="flex flex-col items-center rounded-md border border-neutral-200 bg-neutral-50 p-3 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
                 <h3 className="mb-3 w-full text-left font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
                   Foto de Perfil
                 </h3>
@@ -348,7 +348,7 @@ const SettingsPage = () => {
 
               {/* Card de Organização */}
               {user?.org_id && (
-                <div className="mt-4 flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900/50">
+                <div className="mt-4 flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-sm transition-all hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900/50">
                   {/* Header sutil com estilo "System/Dev" */}
                   <div className="border-b border-neutral-100 bg-neutral-50/50 px-4 py-2 dark:border-neutral-800 dark:bg-neutral-800/30">
                     <h3 className="font-mono text-[10px] font-bold tracking-widest text-neutral-500 uppercase">
@@ -414,7 +414,7 @@ const SettingsPage = () => {
               {/* Card de Plano */}
               {user?.plan_id &&
                 (user.org_member_role === "admin" || user.org_member_role === "super_admin") && (
-                  <div className="mt-4 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+                  <div className="mt-4 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/50">
                     {/* Header com Badge de Status */}
                     <div className="flex items-center justify-between border-b border-neutral-100 bg-neutral-50/50 px-4 py-2.5 dark:border-neutral-800 dark:bg-neutral-800/30">
                       <h3 className="font-mono text-[10px] font-bold tracking-widest text-neutral-500 uppercase">
@@ -496,7 +496,7 @@ const SettingsPage = () => {
 
                       {/* Seção Weave AI - Estilizada como "Feature" */}
                       {user.plan_details?.weave_ai?.enabled && (
-                        <div className="rounded-lg bg-neutral-900 p-3 dark:bg-white/5">
+                        <div className="rounded-lg bg-neutral-900 p-3 dark:bg-neutral-50/5">
                           <div className="mb-2 flex items-center gap-2">
                             <div className="h-2 w-2 animate-pulse rounded-full bg-blue-400" />
                             <p className="text-[10px] font-bold tracking-widest text-white uppercase">
@@ -545,7 +545,7 @@ const SettingsPage = () => {
             {/* Coluna Direita: Formulários */}
             <div className="space-y-3 sm:space-y-4 lg:col-span-9">
               {/* Seção: Informações Públicas */}
-              <section className="rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+              <section className="rounded-md border border-neutral-200 bg-neutral-50 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
                 <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900/30">
                   <h3 className="flex items-center gap-2 font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
                     <UserIcon size={12} /> Informações Pessoais
@@ -571,7 +571,7 @@ const SettingsPage = () => {
                       disabled={!editMode || isLoading}
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
+                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-neutral-50 focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
                     />
                   </div>
 
@@ -587,7 +587,7 @@ const SettingsPage = () => {
                         disabled={!editMode || isLoading}
                         value={formData.username}
                         onChange={handleInputChange}
-                        className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-2 pr-3 pl-7 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
+                        className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-2 pr-3 pl-7 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-neutral-50 focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
                       />
                     </div>
                   </div>
@@ -603,7 +603,7 @@ const SettingsPage = () => {
                         disabled={!editMode || isLoading}
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-2 pr-3 pl-9 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
+                        className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-2 pr-3 pl-9 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-neutral-50 focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
                       />
                       <Mail size={14} className="absolute top-3 left-3 text-neutral-400" />
                     </div>
@@ -620,7 +620,7 @@ const SettingsPage = () => {
                       value={formData.phone_number}
                       onChange={handleInputChange}
                       placeholder="(00) 00000-0000"
-                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
+                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-neutral-50 focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
                     />
                   </div>
 
@@ -634,14 +634,14 @@ const SettingsPage = () => {
                       disabled={!editMode || isLoading}
                       value={formData.birth_date}
                       onChange={handleInputChange}
-                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
+                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:bg-neutral-50 focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
                     />
                   </div>
                 </div>
               </section>
 
               {/* Seção: Preferências */}
-              <section className="rounded-md border border-neutral-200 bg-white backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+              <section className="rounded-md border border-neutral-200 bg-neutral-50 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
                 <div className="border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900/30">
                   <h3 className="flex items-center gap-2 font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
                     Preferências
@@ -660,7 +660,7 @@ const SettingsPage = () => {
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, theme_mode: e.target.value }))
                       }
-                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 transition-colors focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
+                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 transition-colors focus:border-neutral-400 focus:bg-neutral-50 focus:outline-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:border-neutral-600 dark:focus:bg-neutral-900"
                     >
                       <option value="light">Claro</option>
                       <option value="dark">Escuro</option>
@@ -729,7 +729,7 @@ const SettingsPage = () => {
                         name="currentPassword"
                         value={formData.currentPassword}
                         onChange={handleInputChange}
-                        className="w-full rounded-md border border-neutral-300 bg-white px-2 py-2 text-sm focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200"
+                        className="w-full rounded-md border border-neutral-300 bg-neutral-50 px-2 py-2 text-sm focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200"
                         placeholder="Senha atual"
                       />
                     </div>
@@ -740,7 +740,7 @@ const SettingsPage = () => {
                         name="newPassword"
                         value={formData.newPassword}
                         onChange={handleInputChange}
-                        className="w-full rounded-md border border-neutral-300 bg-white px-2 py-2 text-sm focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200"
+                        className="w-full rounded-md border border-neutral-300 bg-neutral-50 px-2 py-2 text-sm focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200"
                         placeholder="Nova senha (min. 6 chars)"
                       />
                     </div>
@@ -751,7 +751,7 @@ const SettingsPage = () => {
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
-                        className="w-full rounded-md border border-neutral-300 bg-white px-2 py-2 text-sm focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200"
+                        className="w-full rounded-md border border-neutral-300 bg-neutral-50 px-2 py-2 text-sm focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200"
                         placeholder="Confirme a nova senha"
                       />
                     </div>
@@ -761,7 +761,7 @@ const SettingsPage = () => {
 
               {/* Actions Bar (Fixo no modo edição) */}
               {editMode && (
-                <div className="sticky bottom-0 z-10 flex items-center justify-end gap-2 rounded-md border border-neutral-200 bg-white/95 p-3 backdrop-blur-sm sm:p-4 dark:border-neutral-800 dark:bg-neutral-900/95">
+                <div className="sticky bottom-0 z-10 flex items-center justify-end gap-2 rounded-md border border-neutral-200 bg-neutral-50/95 p-3 backdrop-blur-sm sm:p-4 dark:border-neutral-800 dark:bg-neutral-900/95">
                   <button
                     onClick={handleCancelEdit}
                     disabled={isLoading}
@@ -785,7 +785,7 @@ const SettingsPage = () => {
               )}
 
               {/* ================== DANGER ZONE ================== */}
-              <section className="rounded-md border border-red-200 bg-white backdrop-blur-sm dark:border-red-900/30 dark:bg-neutral-900/50">
+              <section className="rounded-md border border-red-200 bg-neutral-50 backdrop-blur-sm dark:border-red-900/30 dark:bg-neutral-900/50">
                 <div className="border-b border-red-200 bg-red-50 px-3 py-2 sm:px-4 dark:border-red-900/30 dark:bg-red-950/20">
                   <h3 className="flex items-center gap-2 font-mono text-[9px] font-bold tracking-widest text-red-600 uppercase sm:text-[10px] dark:text-red-500">
                     <AlertTriangle size={12} /> Zona de Perigo
@@ -806,7 +806,7 @@ const SettingsPage = () => {
                     <button
                       onClick={handleCreateBackup}
                       disabled={backupLoading}
-                      className="flex shrink-0 items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                      className="flex shrink-0 items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
                     >
                       {backupLoading ? (
                         <Loader2 size={14} className="animate-spin" />

@@ -5,9 +5,9 @@ import { FaBook, FaUsers, FaLock, FaRocket } from "react-icons/fa";
 const AboutPage = () => {
   return (
     /* Container Principal com tema light/dark igual à home */
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-white text-neutral-800 transition-colors duration-300 dark:bg-neutral-800 dark:text-white">
+    <div className="flex h-screen w-full flex-col overflow-hidden bg-neutral-50 text-neutral-800 transition-colors duration-300 dark:bg-neutral-800 dark:text-white">
       {/* Navbar */}
-      <nav className="flex-shrink-0 border-b border-neutral-200 bg-white shadow-sm transition-colors duration-300 dark:border-neutral-700 dark:bg-neutral-800">
+      <nav className="flex-shrink-0 border-b border-neutral-200 bg-neutral-50 shadow-sm transition-colors duration-300 dark:border-neutral-700 dark:bg-neutral-800">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center">
             <Link
@@ -98,11 +98,14 @@ const AboutPage = () => {
               <div className="mt-4 h-1 w-12 bg-yellow-500"></div>
             </div>
 
-            <div className="space-y-5 text-base leading-relaxed text-neutral-600 transition-colors md:w-2/3 sm:text-lg dark:text-neutral-300">
+            <div className="space-y-5 text-base leading-relaxed text-neutral-600 transition-colors sm:text-lg md:w-2/3 dark:text-neutral-300">
               <p>
-                O <span className="font-medium text-neutral-900 dark:text-neutral-100">Weave Notes</span> nasceu de uma
-                frustração comum: ferramentas de anotação tornaram-se lentas, inchadas e complexas
-                demais.
+                O{" "}
+                <span className="font-medium text-neutral-900 dark:text-neutral-100">
+                  Weave Notes
+                </span>{" "}
+                nasceu de uma frustração comum: ferramentas de anotação tornaram-se lentas, inchadas
+                e complexas demais.
               </p>
               <p>
                 Acreditamos que a ferramenta deve desaparecer para que o pensamento flua. Nossa
@@ -132,7 +135,7 @@ const AboutPage = () => {
       </div>
 
       {/* Footer */}
-      <footer className="flex flex-shrink-0 flex-col items-center justify-between gap-2 border-t border-neutral-200 bg-white px-4 py-3 text-xs text-neutral-950 transition-colors duration-300 sm:flex-row sm:gap-0 sm:px-6 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+      <footer className="flex flex-shrink-0 flex-col items-center justify-between gap-2 border-t border-neutral-200 bg-neutral-50 px-4 py-3 text-xs text-neutral-950 transition-colors duration-300 sm:flex-row sm:gap-0 sm:px-6 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
         <span className="text-[10px] sm:text-xs">
           &copy; {new Date().getFullYear()} Weave Notes.
         </span>

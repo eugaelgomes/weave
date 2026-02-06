@@ -131,7 +131,7 @@ const ActivityModal = ({
 
   return (
     <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm duration-200">
-      <div className="w-full max-w-lg rounded-md border border-neutral-200 bg-white p-5 shadow-2xl dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="w-full max-w-lg rounded-md border border-neutral-200 bg-neutral-50 p-5 shadow-2xl dark:border-neutral-800 dark:bg-neutral-900">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
@@ -241,7 +241,7 @@ const InviterModal = ({
 
   return (
     <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm duration-200">
-      <div className="w-full max-w-md rounded-md border border-neutral-200 bg-white p-5 shadow-2xl dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="w-full max-w-md rounded-md border border-neutral-200 bg-neutral-50 p-5 shadow-2xl dark:border-neutral-800 dark:bg-neutral-900">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
@@ -334,7 +334,7 @@ const AddMemberModal = ({
 
   return (
     <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm duration-200">
-      <div className="w-full max-w-md rounded-md border border-neutral-200 bg-white p-5 shadow-2xl dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="w-full max-w-md rounded-md border border-neutral-200 bg-neutral-50 p-5 shadow-2xl dark:border-neutral-800 dark:bg-neutral-900">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
@@ -508,10 +508,10 @@ const MembersPage = () => {
   });
 
   return (
-    <div className="flex h-full flex-col space-y-4 bg-white dark:bg-neutral-950">
+    <div className="flex h-full flex-col space-y-4 bg-neutral-50 dark:bg-neutral-950">
       {/* Header */}
       <div className="border-b border-neutral-200 dark:border-neutral-800">
-        <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
           <h1 className="sm:text-md text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
             Equipe
           </h1>
@@ -528,7 +528,7 @@ const MembersPage = () => {
               placeholder="Buscar por nome, email ou username..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-md border border-neutral-200 bg-white py-2.5 pr-4 pl-10 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:placeholder:text-neutral-500"
+              className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-2.5 pr-4 pl-10 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:placeholder:text-neutral-500"
             />
           </div>
 
@@ -585,7 +585,7 @@ const MembersPage = () => {
                 <th className="px-4 py-3 text-right font-medium">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-200 bg-white dark:divide-neutral-800 dark:bg-neutral-950">
+            <tbody className="divide-y divide-neutral-200 bg-neutral-50 dark:divide-neutral-800 dark:bg-neutral-950">
               {allMembers.map((member) => {
                 const isCurrentUser = member.id === user?.id;
                 // Apenas super_admin pode remover admin/member/guest, admin pode remover member/guest

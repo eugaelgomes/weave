@@ -1,9 +1,9 @@
 export const formatDate = (date: string | Date | null | undefined) => {
   if (!date) return "N/A";
-  
+
   const parsedDate = new Date(date);
   if (isNaN(parsedDate.getTime())) return "N/A";
-  
+
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",

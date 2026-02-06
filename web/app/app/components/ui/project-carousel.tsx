@@ -94,7 +94,7 @@ export default function ProjectsCarousel({
   };
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-3 shadow-sm sm:p-4 dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 shadow-sm sm:p-4 dark:border-neutral-800 dark:bg-neutral-950">
       <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
         <h3 className="text-base font-semibold text-yellow-500 sm:text-lg dark:text-neutral-100">
           {title}
@@ -152,7 +152,7 @@ export default function ProjectsCarousel({
                   href={`/app/projects/view/${project.id}`}
                   className="block w-[calc(100vw-3rem)] max-w-[280px] flex-shrink-0 snap-start sm:w-[320px] sm:max-w-[340px]"
                 >
-                  <div className="group flex h-[260px] flex-col rounded-lg border border-neutral-200 bg-white p-4 transition-all duration-200 hover:border-neutral-300 hover:shadow-lg hover:shadow-neutral-200/50 sm:h-[260px] dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:shadow-neutral-900/50">
+                  <div className="group flex h-[260px] flex-col rounded-lg border border-neutral-200 bg-neutral-50 p-4 transition-all duration-200 hover:border-neutral-300 hover:shadow-lg hover:shadow-neutral-200/50 sm:h-[260px] dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:shadow-neutral-900/50">
                     {/* Cabeçalho com ícone e prioridade */}
                     <div className="mb-2 flex flex-shrink-0 items-start justify-between gap-2">
                       <div className="flex min-w-0 flex-1 items-center gap-1">

@@ -215,7 +215,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-full w-full flex-col space-y-3">
       {/* ============================ TOP BAR ============================ */}
-      <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
         <div className="flex items-center justify-between gap-2">
           <span className="sm:text-md text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
             <span className="text-yellow-500">Weave AI</span>
@@ -264,7 +264,7 @@ export default function ChatPage() {
       </div>
 
       {/* ============================ MAIN CHAT CONTAINER ============================ */}
-      <div className="relative flex flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 bg-white text-neutral-900 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100">
+      <div className="relative flex flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 text-neutral-900 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100">
         {/* ============================ DRAWER (DIV LATERAL) ============================ */}
         {/* Backdrop */}
         <div
@@ -299,7 +299,7 @@ export default function ChatPage() {
                 createNewSession();
                 setIsDrawerOpen(false);
               }}
-              className="mb-4 flex w-full items-center justify-center gap-2 rounded-md bg-neutral-900 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+              className="mb-4 flex w-full items-center justify-center gap-2 rounded-md bg-neutral-900 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200"
             >
               <Plus className="h-4 w-4" />
               Nova Conversa
@@ -343,7 +343,7 @@ export default function ChatPage() {
         </div>
 
         {/* ============================ HEADER ============================ */}
-        <div className="flex h-12 flex-shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-3 dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="flex h-12 flex-shrink-0 items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 dark:border-neutral-800 dark:bg-neutral-950">
           <div className="flex items-center gap-2">
             <button
               className="rounded-md p-1.5 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
@@ -365,7 +365,7 @@ export default function ChatPage() {
             <div className="relative">
               <button
                 onClick={() => setIsModelMenuOpen((v) => !v)}
-                className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-xs transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+                className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
               >
                 <ModelIcon provider={selectedModel?.provider} />
                 <span className="font-medium">{selectedModel?.name || "Modelo"}</span>
@@ -375,7 +375,7 @@ export default function ChatPage() {
               {isModelMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setIsModelMenuOpen(false)} />
-                  <div className="absolute top-full left-0 z-20 mt-1 w-52 rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+                  <div className="absolute top-full left-0 z-20 mt-1 w-52 rounded border border-neutral-200 bg-neutral-50 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
                     {models.map((model) => (
                       <button
                         key={model.id}
@@ -457,8 +457,8 @@ export default function ChatPage() {
                       <div
                         className={`relative rounded-md px-4 py-2.5 pb-1.5 text-sm leading-relaxed before:absolute before:top-2 ${isUser ? "rounded-tr-sm before:left-full before:border-8 before:border-transparent before:border-l-neutral-900 dark:before:border-l-white" : "rounded-tl-sm before:right-full before:border-8 before:border-transparent before:border-r-white dark:before:border-r-neutral-900"} ${
                           isUser
-                            ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                            : "border border-neutral-200 bg-white text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200"
+                            ? "bg-neutral-900 text-white dark:bg-neutral-50 dark:text-neutral-900"
+                            : "border border-neutral-200 bg-neutral-50 text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200"
                         }`}
                       >
                         {isUser ? (
@@ -494,8 +494,12 @@ export default function ChatPage() {
                         )}
 
                         {/* Timestamp e ações dentro do balão */}
-                        <div className={`mt-2 flex items-center gap-2 border-t pt-1.5 ${isUser ? "justify-end border-neutral-800/20 dark:border-neutral-200/20" : "justify-between border-neutral-200 dark:border-neutral-700"}`}>
-                          <span className={`text-[10px] ${isUser ? "text-neutral-400 dark:text-neutral-500" : "text-neutral-400 dark:text-neutral-500"}`}>
+                        <div
+                          className={`mt-2 flex items-center gap-2 border-t pt-1.5 ${isUser ? "justify-end border-neutral-800/20 dark:border-neutral-200/20" : "justify-between border-neutral-200 dark:border-neutral-700"}`}
+                        >
+                          <span
+                            className={`text-[10px] ${isUser ? "text-neutral-400 dark:text-neutral-500" : "text-neutral-400 dark:text-neutral-500"}`}
+                          >
                             {new Date(msg.created_at || msg.timestamp).toLocaleTimeString("pt-BR", {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -520,7 +524,7 @@ export default function ChatPage() {
                   <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-emerald-500 to-teal-600 shadow-sm">
                     <Bot className="h-4 w-4 text-white" />
                   </div>
-                <div className="relative flex items-center rounded-md rounded-tl-sm border border-neutral-200 bg-white px-5 py-4 shadow-sm before:absolute before:right-full before:top-2 before:border-8 before:border-transparent before:border-r-white dark:border-neutral-800 dark:bg-neutral-900 dark:before:border-r-neutral-900">
+                  <div className="relative flex items-center rounded-md rounded-tl-sm border border-neutral-200 bg-neutral-50 px-5 py-4 shadow-sm before:absolute before:top-2 before:right-full before:border-8 before:border-transparent before:border-r-white dark:border-neutral-800 dark:bg-neutral-900 dark:before:border-r-neutral-900">
                     <div className="flex gap-1.5">
                       <span className="h-2 w-2 animate-bounce rounded-md bg-neutral-400 [animation-delay:-0.3s]"></span>
                       <span className="h-2 w-2 animate-bounce rounded-md bg-neutral-400 [animation-delay:-0.15s]"></span>
@@ -535,8 +539,8 @@ export default function ChatPage() {
         </div>
 
         {/* ============================ INPUT AREA ============================ */}
-        <div className="border-t border-neutral-200 bg-white p-3 sm:p-4 dark:border-neutral-800 dark:bg-neutral-950">
-        <div className="mx-auto max-w-5xl">
+        <div className="border-t border-neutral-200 bg-neutral-50 p-3 sm:p-4 dark:border-neutral-800 dark:bg-neutral-950">
+          <div className="mx-auto max-w-5xl">
             {/* Controles de Ações e Contexto */}
             <div className="mb-3 flex flex-wrap items-center gap-2">
               {/* Use Case */}
@@ -546,7 +550,7 @@ export default function ChatPage() {
                   title="Caso de uso"
                   value={selectedUseCase}
                   onChange={(e) => setSelectedUseCase(e.target.value)}
-                  className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium shadow-sm transition-all hover:border-neutral-300 hover:bg-neutral-50 focus:border-neutral-400 focus:ring-2 focus:ring-neutral-200 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:hover:border-neutral-600 dark:hover:bg-neutral-800 dark:focus:ring-neutral-700"
+                  className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs font-medium shadow-sm transition-all hover:border-neutral-300 hover:bg-neutral-50 focus:border-neutral-400 focus:ring-2 focus:ring-neutral-200 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:hover:border-neutral-600 dark:hover:bg-neutral-800 dark:focus:ring-neutral-700"
                 >
                   {useCases.map((uc) => (
                     <option key={uc.value} value={uc.value}>
@@ -563,7 +567,7 @@ export default function ChatPage() {
                 className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-xs font-semibold shadow-sm transition-all hover:scale-105 active:scale-95 ${
                   allowEdit
                     ? "border-green-300 bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 dark:border-green-800 dark:from-green-900/30 dark:to-green-900/20 dark:text-green-400 dark:hover:from-green-900/40 dark:hover:to-green-900/30"
-                    : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:bg-neutral-800"
+                    : "border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:bg-neutral-800"
                 }`}
               >
                 {allowEdit ? (
@@ -610,7 +614,7 @@ export default function ChatPage() {
                 <button
                   title="Adicionar contexto"
                   onClick={() => setShowContextMenu(!showContextMenu)}
-                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-white shadow-sm transition-all hover:border-neutral-400 hover:bg-neutral-50 active:scale-95 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:border-neutral-600 dark:hover:bg-neutral-800"
+                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-neutral-50 shadow-sm transition-all hover:border-neutral-400 hover:bg-neutral-50 active:scale-95 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:border-neutral-600 dark:hover:bg-neutral-800"
                 >
                   <Paperclip className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
                 </button>
@@ -619,7 +623,7 @@ export default function ChatPage() {
                 {showContextMenu && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowContextMenu(false)} />
-                    <div className="absolute bottom-full left-0 z-20 mb-2 w-64 rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+                    <div className="absolute bottom-full left-0 z-20 mb-2 w-64 rounded border border-neutral-200 bg-neutral-50 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
                       <div className="max-h-64 overflow-y-auto">
                         {/* Notas */}
                         <div className="border-b border-neutral-200 p-2 dark:border-neutral-800">
@@ -677,7 +681,7 @@ export default function ChatPage() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                 placeholder="Digite sua mensagem..."
-                className="max-h-32 min-h-[44px] flex-1 resize-none rounded-lg border border-neutral-300 bg-white px-4 py-3 text-sm shadow-sm transition-all focus:border-neutral-400 focus:ring-2 focus:ring-neutral-200 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-neutral-700"
+                className="max-h-32 min-h-[44px] flex-1 resize-none rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-3 text-sm shadow-sm transition-all focus:border-neutral-400 focus:ring-2 focus:ring-neutral-200 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-neutral-700"
               />
               <button
                 title="Enviar"

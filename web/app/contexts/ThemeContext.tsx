@@ -23,8 +23,22 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>("light");
   const [mounted, setMounted] = useState(false);
 
+  // Detectar preferência do sistema no primeiro carregamento
   useEffect(() => {
     setMounted(true);
+    
+    // Verificar preferência do sistema
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    setThemeState(prefersDark ? "dark" : "light");
+
+    // Listener para mudanças na preferência do sistema
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (e: MediaQueryListEvent) => {
+      setThemeState(e.matches ? "dark" : "light");
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
   useEffect(() => {

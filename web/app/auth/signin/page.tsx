@@ -23,13 +23,13 @@ export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const hasRedirected = useRef(false);
-  
+
   const { login: loginUser, authenticated, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectParam = searchParams.get("redirect");
   // Normaliza a URL removendo barras finais para evitar loops de redirecionamento
-  const redirectUrl = redirectParam 
+  const redirectUrl = redirectParam
     ? redirectParam.replace(/\/+$/, "") || "/app/home"
     : "/app/home";
 
@@ -43,8 +43,8 @@ export default function SignIn() {
   // Aguarda verificação de autenticação ou redirecionamento
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-neutral-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"></div>
+      <div className="flex h-screen items-center justify-center bg-neutral-50 transition-colors dark:bg-neutral-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-800 border-t-transparent dark:border-white"></div>
       </div>
     );
   }
@@ -52,8 +52,8 @@ export default function SignIn() {
   // Se autenticado, mostra loading enquanto redireciona
   if (authenticated) {
     return (
-      <div className="flex h-screen items-center justify-center bg-neutral-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"></div>
+      <div className="flex h-screen items-center justify-center bg-neutral-50 transition-colors dark:bg-neutral-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-800 border-t-transparent dark:border-white"></div>
       </div>
     );
   }
@@ -100,7 +100,7 @@ export default function SignIn() {
   };
 
   return (
-    <div className="relative flex h-screen w-full overflow-hidden bg-neutral-950 font-sans">
+    <div className="relative flex h-screen w-full overflow-hidden bg-neutral-50 transition-colors font-sans dark:bg-neutral-950">
       {/* Background Otimizado (LCP Priority) */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -112,24 +112,24 @@ export default function SignIn() {
           className="object-cover opacity-50"
           quality={80}
         />
-        <div className="absolute inset-0 bg-neutral-950/60 backdrop-blur-[2px]"></div>
+        <div className="absolute inset-0 bg-neutral-50/80 backdrop-blur-[2px] transition-colors dark:bg-neutral-950/60"></div>
       </div>
 
       {/* Botão Sobre */}
       <div className="absolute top-6 right-6 z-50">
         <Link
           href="/about"
-          className="flex items-center gap-2 rounded-md bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all hover:bg-white/20"
+          className="flex items-center gap-2 rounded-md bg-neutral-800/10 px-4 py-2 text-sm font-medium text-neutral-800 backdrop-blur-md transition-all hover:bg-neutral-800/20 dark:bg-neutral-50/10 dark:text-white dark:hover:bg-neutral-50/20"
         >
           <FaExclamationCircle />
         </Link>
       </div>
 
-      {/* Botão Sobre */}
+      {/* Botão Home */}
       <div className="absolute top-6 left-6 z-50">
         <Link
           href="/home/"
-          className="flex items-center gap-2 rounded-md bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all hover:bg-white/20"
+          className="flex items-center gap-2 rounded-md bg-neutral-800/10 px-4 py-2 text-sm font-medium text-neutral-800 backdrop-blur-md transition-all hover:bg-neutral-800/20 dark:bg-neutral-50/10 dark:text-white dark:hover:bg-neutral-50/20"
         >
           Home
         </Link>
@@ -182,77 +182,77 @@ export default function SignIn() {
       )}
 
       <div className="relative z-10 flex h-full w-full items-center justify-center">
-        <div className="w-full max-w-md space-y-8 rounded-md border border-white/10 bg-neutral-900/50 p-8 shadow-2xl backdrop-blur-2xl">
+        <div className="w-full max-w-md space-y-8 rounded-md border border-neutral-200 bg-neutral-50/90 p-8 shadow-2xl backdrop-blur-2xl transition-colors dark:border-white/10 dark:bg-neutral-900/50">
           <div className="text-center">
             <h1 className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-4xl font-black tracking-tight text-transparent">
               Weave
             </h1>
           </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-xs font-bold tracking-wider text-yellow-500">
-                  Usuário ou e-mail
-                </label>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs font-bold tracking-wider text-yellow-500">
+                Usuário ou e-mail
+              </label>
+              <input
+                type="text"
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
+                disabled={submitting}
+                className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 transition-all placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-600"
+                placeholder="Seu usuário ou e-mail"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold tracking-wider text-yellow-500">Senha</label>
+              <div className="relative">
                 <input
-                  type="text"
-                  value={login}
-                  onChange={(e) => setLogin(e.target.value)}
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   disabled={submitting}
-                  className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-sm text-white transition-all placeholder:text-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
-                  placeholder="Seu usuário ou e-mail"
+                  className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 transition-all focus:border-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
+                  placeholder="••••••••"
                 />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold tracking-wider text-yellow-500">Senha</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={submitting}
-                    className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-sm text-white transition-all focus:border-yellow-500 focus:outline-none"
-                    placeholder="••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-white"
-                  >
-                    {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowForgotPasswordModal(true)}
-                  className="text-xs font-medium text-gray-400 transition-colors hover:text-yellow-500"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-neutral-800 dark:hover:text-white"
                 >
-                  Esqueceu a senha?
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="rounded-md bg-yellow-500 px-8 py-2.5 text-sm font-bold text-black shadow-lg shadow-yellow-500/20 transition-all hover:bg-yellow-400 active:scale-95 disabled:opacity-50"
-                >
-                  {submitting ? "Entrando..." : "Entrar"}
+                  {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
                 </button>
               </div>
-            </form>
-
-            <div className="border-t border-white/5 pt-4 text-center">
-              <p className="text-sm text-gray-500">
-                Não tem uma conta?{" "}
-                <Link href="/auth/signup" className="font-bold text-yellow-500 hover:underline">
-                  Cadastre-se
-                </Link>
-              </p>
             </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => setShowForgotPasswordModal(true)}
+                className="text-xs font-medium text-gray-600 transition-colors hover:text-yellow-500 dark:text-gray-400"
+              >
+                Esqueceu a senha?
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-md bg-yellow-500 px-8 py-2.5 text-sm font-bold text-black shadow-lg shadow-yellow-500/20 transition-all hover:bg-yellow-400 active:scale-95 disabled:opacity-50"
+              >
+                {submitting ? "Entrando..." : "Entrar"}
+              </button>
+            </div>
+          </form>
+
+          <div className="border-t border-neutral-200 pt-4 text-center transition-colors dark:border-white/5">
+            <p className="text-sm text-gray-600 dark:text-gray-500">
+              Não tem uma conta?{" "}
+              <Link href="/auth/signup" className="font-bold text-yellow-500 hover:underline">
+                Cadastre-se
+              </Link>
+            </p>
           </div>
         </div>
+      </div>
 
       {showForgotPasswordModal && (
         <ForgotPasswordModal

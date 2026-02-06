@@ -391,7 +391,7 @@ class NotesController {
       // 5. Validação de dados obrigatórios
       if (!title) {
         return res.status(400).json({
-          error: "Título é obrigatório"
+          error: "Título é obrigatório",
         });
       }
 
