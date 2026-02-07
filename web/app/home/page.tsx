@@ -21,7 +21,7 @@ const IndexPage = () => {
     <div className="spaces-y-8 flex min-h-screen w-full flex-col bg-neutral-50 text-neutral-900 selection:bg-yellow-500/20 selection:text-yellow-900 dark:bg-neutral-950 dark:text-neutral-50 dark:selection:bg-yellow-500/30 dark:selection:text-yellow-200">
       {/* Navbar */}
       <nav className="sticky top-0 z-50 w-full border-b border-neutral-200/60 bg-white/80 backdrop-blur-xl transition-all dark:border-neutral-800/60 dark:bg-neutral-950/80">
-        <div className="mx-auto flex h-16 max-w-6xl justify-between px-4 sm:px-6">
+        <div className="mx-auto flex h-16  justify-between px-2 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2">
             <Image
               src="/weave.png"
@@ -33,7 +33,7 @@ const IndexPage = () => {
             <span className="text-sm font-semibold tracking-tight sm:text-base">Weave Notes</span>
           </Link>
 
-          <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-yellow-200 bg-yellow-50/80 px-3 py-1.5 text-xs font-medium text-yellow-700 backdrop-blur sm:mb-8 dark:border-yellow-500/30 dark:bg-yellow-500/10 dark:text-yellow-300">
+          <div className="hidden items-center gap-2 rounded-full border border-yellow-200 bg-yellow-50/80 px-3 py-1 text-xs font-medium text-yellow-700 backdrop-blur md:flex dark:border-yellow-500/30 dark:bg-yellow-500/10 dark:text-yellow-300">
             <HiSparkles className="h-3.5 w-3.5" />
             <span>Weave AI 2.0 — Seu assistente de escrita</span>
           </div>
