@@ -710,14 +710,14 @@ const NotesWithPagination = () => {
                               return (
                                 <span
                                   key={i}
-                                  className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
+                                  className={`inline-flex items-center rounded-md border px-1 py-1 text-[8px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
                                 >
                                   {tag}
                                 </span>
                               );
                             })}
                             {(note.tags?.length || 0) > 2 && (
-                              <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
+                              <span className="text-[8px] text-neutral-400 dark:text-neutral-500">
                                 +{note.tags!.length - 2}
                               </span>
                             )}
