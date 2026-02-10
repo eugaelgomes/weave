@@ -74,81 +74,81 @@ export default function HomePage() {
       </div>
 
       {/* Main Content - Distribuído verticalmente */}
-      <div className="-col-2 flex flex-1 items-center justify-center px-4 py-6 text-center sm:py-8 md:py-12">
+      <div className="z-10 flex min-h-0 flex-1 flex-col items-center justify-center gap-6 overflow-y-auto px-4 py-4 text-center sm:flex-row sm:gap-10 sm:py-6 lg:gap-16 lg:px-8">
         {/* Hero Section */}
-        <div className="flex w-full flex-col items-center">
+        <div className="flex w-full shrink-0 flex-col items-center sm:max-w-lg sm:items-start sm:text-left">
           {/* Badge */}
-          <div className="group mb-5 inline-flex items-center gap-2 rounded-full border border-yellow-300/50 bg-gradient-to-r from-yellow-50/80 to-orange-50/80 px-4 py-1.5 text-xs font-semibold text-yellow-800 shadow-sm backdrop-blur-sm transition-all hover:shadow-md sm:mb-6 dark:border-yellow-500/30 dark:from-yellow-500/10 dark:to-orange-500/10 dark:text-yellow-300">
+          <div className="group mb-3 inline-flex items-center gap-2 rounded-full border border-yellow-300/50 bg-gradient-to-r from-yellow-50/80 to-orange-50/80 px-4 py-1.5 text-xs font-semibold text-yellow-800 shadow-sm backdrop-blur-sm transition-all hover:shadow-md sm:mb-4 dark:border-yellow-500/30 dark:from-yellow-500/10 dark:to-orange-500/10 dark:text-yellow-300">
             <HiSparkles className="h-3.5 w-3.5 transition-transform group-hover:rotate-12" />
             <span>Potencializado por IA</span>
           </div>
 
           {/* Título */}
-          <h1 className="mb-5 max-w-3xl bg-gradient-to-b from-neutral-900 via-neutral-800 to-neutral-600 bg-clip-text text-4xl leading-tight font-extrabold tracking-tight text-transparent sm:mb-6 sm:text-5xl md:text-6xl dark:from-white dark:via-neutral-100 dark:to-neutral-400">
+          <h1 className="mb-3 max-w-3xl bg-gradient-to-b from-neutral-900 via-neutral-800 to-neutral-600 bg-clip-text text-2xl leading-tight font-extrabold tracking-tight text-transparent sm:mb-4 sm:text-3xl lg:text-4xl dark:from-white dark:via-neutral-100 dark:to-neutral-400">
             Suas melhores ideias,
             <br className="hidden sm:block" />
             organizadas e vivas
           </h1>
 
           {/* Pilares do App - Ícones inline */}
-          <div className="mb-6 flex flex-wrap items-center justify-center gap-2 gap-x-5 sm:mb-8">
-            <div className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400">
-              <FiEdit3 className="h-4 w-4 text-yellow-500" />
+          <div className="mb-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 sm:mb-4 sm:justify-start">
+            <div className="flex items-center gap-1.5 text-xs text-neutral-500 sm:text-sm dark:text-neutral-400">
+              <FiEdit3 className="h-3.5 w-3.5 text-yellow-500" />
               <span>Notas inteligentes</span>
             </div>
-            <div className="hidden h-4 w-px bg-neutral-300 sm:block dark:bg-neutral-700" />
-            <div className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400">
-              <FiFolder className="h-4 w-4 text-blue-500" />
+            <div className="hidden h-3.5 w-px bg-neutral-300 sm:block dark:bg-neutral-700" />
+            <div className="flex items-center gap-1.5 text-xs text-neutral-500 sm:text-sm dark:text-neutral-400">
+              <FiFolder className="h-3.5 w-3.5 text-blue-500" />
               <span>Projetos</span>
             </div>
-            <div className="hidden h-4 w-px bg-neutral-300 sm:block dark:bg-neutral-700" />
-            <div className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400">
-              <FiUsers className="h-4 w-4 text-green-500" />
+            <div className="hidden h-3.5 w-px bg-neutral-300 sm:block dark:bg-neutral-700" />
+            <div className="flex items-center gap-1.5 text-xs text-neutral-500 sm:text-sm dark:text-neutral-400">
+              <FiUsers className="h-3.5 w-3.5 text-green-500" />
               <span>Colaboração</span>
             </div>
-            <div className="hidden h-4 w-px bg-neutral-300 sm:block dark:bg-neutral-700" />
-            <div className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400">
-              <FiBriefcase className="h-4 w-4 text-red-500" />
+            <div className="hidden h-3.5 w-px bg-neutral-300 sm:block dark:bg-neutral-700" />
+            <div className="flex items-center gap-1.5 text-xs text-neutral-500 sm:text-sm dark:text-neutral-400">
+              <FiBriefcase className="h-3.5 w-3.5 text-red-500" />
               <span>Workspace</span>
             </div>
-            <div className="hidden h-4 w-px bg-neutral-300 sm:block dark:bg-neutral-700" />
-            <div className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400">
-              <FiMessageSquare className="h-4 w-4 text-purple-500" />
+            <div className="hidden h-3.5 w-px bg-neutral-300 sm:block dark:bg-neutral-700" />
+            <div className="flex items-center gap-1.5 text-xs text-neutral-500 sm:text-sm dark:text-neutral-400">
+              <FiMessageSquare className="h-3.5 w-3.5 text-purple-500" />
               <span>Chat IA</span>
             </div>
           </div>
 
           {/* Descrição */}
-          <p className="mb-8 max-w-xl px-4 text-base leading-relaxed text-neutral-600 sm:mb-10 sm:text-lg dark:text-neutral-400">
+          <p className="mb-4 max-w-xl text-sm leading-relaxed text-neutral-600 sm:mb-5 sm:text-base dark:text-neutral-400">
             Tudo que você precisa para capturar, organizar e compartilhar — com inteligência
             artificial integrada ao seu fluxo.
           </p>
 
           {/* CTA */}
-          <div className="mb-8 flex w-full flex-col items-center justify-center gap-3 sm:mb-12 sm:flex-row md:mb-16">
+          <div className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row sm:justify-start">
             <Link
               href="/auth/signup"
-              className="group relative flex h-12 w-full max-w-[220px] items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 px-8 font-bold text-white shadow-lg shadow-yellow-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-yellow-500/40"
+              className="group relative flex h-11 w-full max-w-[200px] items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 px-6 font-bold text-white shadow-lg shadow-yellow-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-yellow-500/40"
             >
               <span className="relative z-10">Começar agora</span>
-              <FaArrowRight className="relative z-10 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <FaArrowRight className="relative z-10 h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-600 to-orange-600 opacity-0 transition-opacity group-hover:opacity-100" />
             </Link>
           </div>
         </div>
 
-        {/* Feature Cards - Grid Moderno e "Flashy" */}
-        <div className="grid w-full max-w-2xl grid-cols-2 gap-3 px-2 sm:gap-4 md:px-0">
+        {/* Feature Cards */}
+        <div className="grid w-full max-w-sm shrink-0 grid-cols-2 gap-2.5 sm:gap-3">
           {features.map((feature, idx) => (
             <div
               key={idx}
-              className={`group relative flex flex-col items-start rounded-xl border border-neutral-200/60 bg-white/40 p-3 text-left shadow-sm backdrop-blur-md transition-all hover:-translate-y-1 hover:bg-white/60 hover:shadow-md sm:p-4 dark:border-neutral-800/60 dark:bg-neutral-900/40 dark:hover:bg-neutral-900/60 ${feature.borderColor}`}
+              className={`group relative flex flex-col items-start rounded-xl border border-neutral-200/60 bg-white/40 p-3 text-left shadow-sm backdrop-blur-md transition-all hover:-translate-y-1 hover:bg-white/60 hover:shadow-md dark:border-neutral-800/60 dark:bg-neutral-900/40 dark:hover:bg-neutral-900/60 ${feature.borderColor}`}
             >
-              <div className={`mb-2 rounded-lg p-2 sm:mb-3 ${feature.color}`}>{feature.icon}</div>
+              <div className={`mb-2 rounded-lg p-1.5 ${feature.color}`}>{feature.icon}</div>
               <h3 className="text-xs font-bold text-neutral-900 sm:text-sm dark:text-white">
                 {feature.title}
               </h3>
-              <p className="mt-1 text-[10px] text-neutral-500 sm:text-xs dark:text-neutral-400">
+              <p className="mt-0.5 text-[10px] text-neutral-500 sm:text-xs dark:text-neutral-400">
                 {feature.desc}
               </p>
             </div>
