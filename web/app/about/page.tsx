@@ -83,7 +83,10 @@ const AboutPage = () => {
       {/* Navbar */}
       <nav className="sticky top-0 z-50 w-full border-b border-neutral-200/50 bg-neutral-50/80 px-6 py-4 backdrop-blur-md dark:border-neutral-800/50 dark:bg-neutral-950/80">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <Link href="/home" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+          <Link
+            href="/home"
+            className="flex items-center gap-2 transition-opacity hover:opacity-80"
+          >
             <Image
               src="/weave.png"
               alt="Weave Logo"
@@ -119,7 +122,7 @@ const AboutPage = () => {
             <span>Conheça o Weave Notes</span>
           </div>
 
-          <h1 className="mb-6 bg-gradient-to-b from-neutral-900 via-neutral-800 to-neutral-600 bg-clip-text text-4xl font-extrabold leading-tight tracking-tight text-transparent sm:text-5xl md:text-6xl dark:from-white dark:via-neutral-100 dark:to-neutral-400">
+          <h1 className="mb-6 bg-gradient-to-b from-neutral-900 via-neutral-800 to-neutral-600 bg-clip-text text-4xl leading-tight font-extrabold tracking-tight text-transparent sm:text-5xl md:text-6xl dark:from-white dark:via-neutral-100 dark:to-neutral-400">
             O espaço digital para{" "}
             <span className="bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent">
               suas ideias
@@ -163,7 +166,9 @@ const AboutPage = () => {
                 key={idx}
                 className="group flex flex-col rounded-xl border border-neutral-200/60 bg-white/40 p-5 backdrop-blur-md transition-all hover:-translate-y-1 hover:bg-white/60 hover:shadow-lg dark:border-neutral-800/60 dark:bg-neutral-900/40 dark:hover:bg-neutral-900/60"
               >
-                <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-lg ${feature.bg} ${feature.color}`}>
+                <div
+                  className={`mb-4 flex h-10 w-10 items-center justify-center rounded-lg ${feature.bg} ${feature.color}`}
+                >
                   {feature.icon}
                 </div>
                 <h3 className="mb-1.5 text-sm font-bold text-neutral-900 dark:text-white">

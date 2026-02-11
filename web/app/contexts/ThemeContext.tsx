@@ -26,7 +26,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Detectar preferência do sistema no primeiro carregamento
   useEffect(() => {
     setMounted(true);
-    
+
     // Verificar preferência do sistema
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     setThemeState(prefersDark ? "dark" : "light");

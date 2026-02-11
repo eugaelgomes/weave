@@ -145,7 +145,10 @@ export default function SignUp() {
       {/* Navbar */}
       <nav className="z-50 w-full px-6 py-4">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <Link href="/home" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+          <Link
+            href="/home"
+            className="flex items-center gap-2 transition-opacity hover:opacity-80"
+          >
             <Image
               src="/weave.png"
               alt="Weave Logo"
@@ -153,7 +156,9 @@ export default function SignUp() {
               height={28}
               className="h-7 w-7 rounded-sm object-cover"
             />
-            <span className="text-base font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">Weave Notes</span>
+            <span className="text-base font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
+              Weave Notes
+            </span>
           </Link>
 
           <div className="flex items-center gap-4">
