@@ -83,7 +83,7 @@ export default function HomePage() {
           </div>
 
           {/* Título */}
-          <h1 className="mb-4 bg-gradient-to-b from-neutral-900 via-neutral-800 to-neutral-600 bg-clip-text text-3xl leading-tight font-extrabold tracking-tight text-transparent sm:text-4xl lg:mb-5 lg:text-5xl xl:text-6xl dark:from-white dark:via-neutral-100 dark:to-neutral-400">
+          <h1 className="mb-4 bg-gradient-to-b from-neutral-900 via-neutral-800 to-neutral-600 bg-clip-text text-xl leading-tight font-extrabold tracking-tight text-transparent sm:text-2xl lg:mb-5 lg:text-3xl xl:text-4xl dark:from-white dark:via-neutral-100 dark:to-neutral-400">
             Suas melhores ideias,
             <br className="hidden sm:block" />
             organizadas e vivas

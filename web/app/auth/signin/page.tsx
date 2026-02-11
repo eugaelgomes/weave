@@ -99,39 +99,39 @@ export default function SignIn() {
   };
 
   return (
-    <div className="relative flex h-screen w-full flex-col justify-between overflow-hidden bg-neutral-50 font-sans transition-colors dark:bg-neutral-950">
+    <div className="relative flex min-h-screen w-full flex-col justify-between bg-neutral-50 text-neutral-900 selection:bg-yellow-500/20 selection:text-yellow-900 dark:bg-neutral-950 dark:text-neutral-50 dark:selection:bg-yellow-500/30 dark:selection:text-yellow-200">
       {/* Background Pattern */}
       <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] bg-[size:24px_24px] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)]"></div>
 
       {/* Navbar */}
-      <nav className="z-50 w-full px-6 py-4">
+      <nav className="z-50 w-full px-6 py-4 lg:py-5">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <Link
             href="/home"
-            className="flex items-center gap-2 transition-opacity hover:opacity-80"
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
           >
             <Image
               src="/weave.png"
               alt="Weave Logo"
               width={28}
               height={28}
-              className="h-7 w-7 rounded-sm object-cover"
+              className="h-7 w-7 rounded-sm object-cover lg:h-8 lg:w-8"
             />
-            <span className="text-base font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
+            <span className="text-base font-semibold tracking-tight lg:text-lg">
               Weave Notes
             </span>
           </Link>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 lg:gap-6">
             <Link
               href="/about"
-              className="text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900 sm:text-sm dark:text-neutral-400 dark:hover:text-white"
+              className="text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900 sm:text-sm lg:text-base dark:text-neutral-400 dark:hover:text-white"
             >
               Sobre
             </Link>
             <Link
               href="/auth/signup"
-              className="rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white transition-transform hover:-translate-y-0.5 hover:bg-neutral-800 sm:text-sm dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+              className="rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white transition-transform hover:-translate-y-0.5 hover:bg-neutral-800 sm:text-sm lg:px-5 lg:py-2 lg:text-base dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
             >
               Criar conta
             </Link>
@@ -262,16 +262,16 @@ export default function SignIn() {
       </div>
 
       {/* Footer Minimalista */}
-      <footer className="z-10 w-full px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between text-[10px] text-neutral-400 sm:text-xs">
+      <footer className="z-10 w-full px-6 py-4 lg:py-5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between text-[10px] text-neutral-400 sm:text-xs lg:text-sm">
           <p>© {new Date().getFullYear()} Weave Notes</p>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 lg:gap-6">
             <a
               href="https://github.com/eugaelgomes"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex gap-1 transition-colors hover:text-purple-700 dark:hover:text-purple-300"
+              className="flex items-center gap-1.5 transition-colors hover:text-purple-700 dark:hover:text-purple-300"
             >
               Github
               <FaGithub className="h-4 w-4 text-purple-500" />
@@ -280,7 +280,7 @@ export default function SignIn() {
               href="https://linkedin.com/in/gael-rene-gomes"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex gap-1 transition-colors hover:text-neutral-900 dark:hover:text-blue-300"
+              className="flex items-center gap-1.5 transition-colors hover:text-neutral-900 dark:hover:text-blue-300"
             >
               Linkedin
               <FaLinkedin className="h-4 w-4 text-blue-500" />
