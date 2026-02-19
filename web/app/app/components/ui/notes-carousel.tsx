@@ -3,7 +3,7 @@
 import React, { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { FileText, ChevronLeft, ChevronRight, Calendar, Users } from "lucide-react";
+import { FileText, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 
 // Tente importar do seu projeto. Se der erro, use as funções fallback abaixo.
 import {
@@ -25,9 +25,12 @@ interface Note {
   description?: string;
   preview?: string;
   tags?: string[];
-  collaborators?: Collaborator[];
+  collaborators?: (Collaborator | unknown)[];
   created_at?: string;
   updated_at?: string;
+  lastModified?: string;
+  owner_name?: string;
+  owner_avatar_url?: string;
 }
 
 interface NotesCarouselProps {
@@ -77,7 +80,7 @@ export default function NotesCarousel({
   };
 
   return (
-    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4 shadow-md dark:border-neutral-800 dark:bg-neutral-950">
       {/* Header do Carrossel */}
       <div className="mb-4 flex items-center justify-between gap-2">
         <h3 className="text-base font-semibold text-yellow-500 sm:text-lg dark:text-neutral-100">
@@ -127,7 +130,7 @@ export default function NotesCarousel({
             className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-1"
           >
             {notes.map((note) => {
-              const validDate = formatDate(note.updated_at);
+              const validDate = formatDate(note.updated_at || note.lastModified);
               const isNew = note.created_at
                 ? new Date(note.created_at).getTime() > Date.now() - 86400000
                 : false;
@@ -188,45 +191,62 @@ export default function NotesCarousel({
                       {/* Linha divisória + Colaboradores e Data */}
                       <div className="flex items-center justify-between border-t border-neutral-100 pt-3 dark:border-neutral-900">
                         {/* Colaboradores */}
-                        {note.collaborators && note.collaborators.length > 0 ? (
-                          <div className="flex -space-x-2">
-                            {note.collaborators.slice(0, 3).map((c, i) => {
-                              const avatar = getCollaboratorAvatarUrl(c);
-                              const name = getCollaboratorDisplayName(c);
-                              return (
-                                <div
-                                  key={i}
-                                  className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-md border-2 border-white bg-neutral-100 ring-1 ring-neutral-100 dark:border-neutral-950 dark:bg-neutral-800 dark:ring-neutral-900"
-                                  title={name}
-                                >
-                                  {avatar ? (
-                                    <Image
-                                      src={avatar}
-                                      alt={name}
-                                      width={24}
-                                      height={24}
-                                      className="h-full w-full object-cover"
-                                    />
-                                  ) : (
-                                    <span className="text-[8px] font-bold text-neutral-500 dark:text-neutral-400">
-                                      {name ? name.charAt(0).toUpperCase() : "?"}
-                                    </span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                            {note.collaborators.length > 3 && (
-                              <div className="relative flex h-6 w-6 items-center justify-center rounded-md border-2 border-white bg-neutral-200 text-[8px] font-bold text-neutral-600 dark:border-neutral-950 dark:bg-neutral-800 dark:text-neutral-400">
-                                +{note.collaborators.length - 3}
-                              </div>
+                        <div className="flex -space-x-2">
+                          {/* Avatar do dono da nota */}
+                          <div
+                            className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-md border-1 border-neutral-900 bg-neutral-100 dark:border-neutral-200 dark:bg-neutral-800"
+                            title={note.owner_name || "Dono"}
+                          >
+                            {note.owner_avatar_url ? (
+                              <Image
+                                src={note.owner_avatar_url}
+                                alt={note.owner_name || "Dono"}
+                                width={24}
+                                height={24}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-[8px] font-bold text-yellow-600 dark:text-yellow-400">
+                                {note.owner_name ? note.owner_name.charAt(0).toUpperCase() : "?"}
+                              </span>
                             )}
                           </div>
-                        ) : (
-                          <div className="flex items-center gap-1.5 text-[10px] text-neutral-400 dark:text-neutral-600">
-                            <Users size={12} />
-                            <span>Sem colaboradores</span>
-                          </div>
-                        )}
+                          {/* Colaboradores */}
+                          {note.collaborators && note.collaborators.length > 0 && (
+                            <>
+                              {note.collaborators.slice(0, 3).map((c, i) => {
+                                const avatar = getCollaboratorAvatarUrl(c);
+                                const name = getCollaboratorDisplayName(c);
+                                return (
+                                  <div
+                                    key={i}
+                                    className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-md border-2 border-white bg-neutral-100 ring-1 ring-neutral-100 dark:border-neutral-950 dark:bg-neutral-800 dark:ring-neutral-900"
+                                    title={name}
+                                  >
+                                    {avatar ? (
+                                      <Image
+                                        src={avatar}
+                                        alt={name}
+                                        width={24}
+                                        height={24}
+                                        className="h-full w-full object-cover"
+                                      />
+                                    ) : (
+                                      <span className="text-[8px] font-bold text-neutral-500 dark:text-neutral-400">
+                                        {name ? name.charAt(0).toUpperCase() : "?"}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                              {note.collaborators.length > 3 && (
+                                <div className="relative flex h-6 w-6 items-center justify-center rounded-md border-2 border-white bg-neutral-200 text-[8px] font-bold text-neutral-600 dark:border-neutral-950 dark:bg-neutral-800 dark:text-neutral-400">
+                                  +{note.collaborators.length - 3}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
 
                         {/* Data e Hora */}
                         <div className="flex flex-col items-end">
@@ -237,18 +257,13 @@ export default function NotesCarousel({
                                 ? validDate.toLocaleDateString("pt-BR", {
                                     day: "2-digit",
                                     month: "short",
+                                    year: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
                                   })
                                 : "--"}
                             </span>
                           </div>
-                          <span className="text-[9px] text-neutral-400 dark:text-neutral-600">
-                            {validDate
-                              ? validDate.toLocaleTimeString("pt-BR", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              : ""}
-                          </span>
                         </div>
                       </div>
                     </div>
