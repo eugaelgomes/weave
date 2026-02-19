@@ -42,7 +42,8 @@ interface FormData {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
-  usage_preference: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  usage_preference: Record<string, any>;
 }
 
 const SettingsPage = () => {
