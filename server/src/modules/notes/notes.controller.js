@@ -9,6 +9,7 @@ const { PDFService } = require("@/services/note_export/pdf");
 
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
+const spacesService = require("@/services/storage");
 
 class NotesController {
   constructor() {
@@ -102,6 +103,7 @@ class NotesController {
       id: note.id.toString(),
       title: note.title,
       description: note.description,
+      properties: note.properties || {},
       tags: note.tags || [],
       status: note.status,
       created_at: note.created_at,
@@ -511,6 +513,7 @@ class NotesController {
         project_id: result.project_id,
         title: result.title,
         description: result.description,
+        properties: result.properties || {},
         tags: result.tags || [],
         status: result.status,
         created_at: result.note_created_at,
@@ -559,15 +562,34 @@ class NotesController {
   async updateNote(req, res, next) {
     try {
       const { id } = req.params;
-      const { title, description, tags, status, deleted, project_id } =
+
+      // Quando multipart/form-data, campos texto vêm como strings
+      // Parsear properties se vier como string JSON
+      let { title, description, tags, status, deleted, project_id, properties } =
         req.body;
+
+      if (typeof properties === "string") {
+        try {
+          properties = JSON.parse(properties);
+        } catch {
+          return res.status(400).json({ error: "properties deve ser um JSON válido" });
+        }
+      }
+
+      if (typeof tags === "string") {
+        try {
+          tags = JSON.parse(tags);
+        } catch {
+          tags = tags.split(",").map((t) => t.trim()).filter(Boolean);
+        }
+      }
 
       // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       // Validação de acesso à nota (proprietário ou colaborador pode editar)
-      const { note, isOwner } = await this._validateNoteAccess(id, userId);
+      const { note, isOwner, isCollaborator } = await this._validateNoteAccess(id, userId);
 
       // Apenas o proprietário pode marcar como deletado
       if (deleted !== undefined && !isOwner) {
@@ -590,6 +612,154 @@ class NotesController {
       if (deleted !== undefined) updateData.deleted = deleted;
       if (project_id !== undefined) updateData.project_id = project_id;
 
+      // Processar properties (campos JSON) e arquivos enviados
+      const propertiesUpdate = properties || {};
+
+      // Coletar todos os arquivos que serão enviados para validação de plano
+      const allUploadedFiles = [
+        ...(req.files?.icon || []),
+        ...(req.files?.banner || []),
+        ...(req.files?.files || []),
+      ];
+
+      // Validar limites do plano antes de fazer qualquer upload
+      let usageRecord = null;
+      let totalUploadSizeMb = 0;
+
+      if (allUploadedFiles.length > 0) {
+        usageRecord = await PlanUsageManager.managePlanUsage(userId);
+        const getUserPlan = await PlansRepository.getUserAndPlan(userId);
+        const planDetails = await PlansRepository.getPlanById(getUserPlan.plan_id);
+
+        if (!usageRecord || !planDetails) {
+          return res.status(404).json({
+            error: "Configuração de plano não encontrada para este usuário.",
+          });
+        }
+
+        const maxFileSizeMb = planDetails.details?.limits?.storage?.max_file_size_mb;
+        const totalMonthlyUploadMb = planDetails.details?.limits?.storage?.total_monthly_upload_mb;
+
+        // Validar tamanho individual de cada arquivo
+        if (maxFileSizeMb) {
+          for (const file of allUploadedFiles) {
+            const fileSizeMb = file.size / (1024 * 1024);
+            if (fileSizeMb > maxFileSizeMb) {
+              return res.status(413).json({
+                error: "Arquivo excede o tamanho máximo permitido",
+                message: `O arquivo "${file.originalname}" tem ${fileSizeMb.toFixed(2)} MB. Seu plano (${planDetails.name}) permite arquivos de até ${maxFileSizeMb} MB.`,
+              });
+            }
+          }
+        }
+
+        // Calcular total a ser enviado
+        totalUploadSizeMb = allUploadedFiles.reduce(
+          (sum, file) => sum + file.size / (1024 * 1024),
+          0
+        );
+
+        // Validar limite mensal de upload
+        if (totalMonthlyUploadMb) {
+          const currentUsageMb =
+            PlanUsageManager.getNestedValue(
+              usageRecord.usage_details,
+              "monthly_cycle.storage.total_uploaded_mb"
+            ) || 0;
+
+          if (currentUsageMb + totalUploadSizeMb > totalMonthlyUploadMb) {
+            return res.status(403).json({
+              error: "Limite de armazenamento mensal atingido",
+              message: `Seu plano (${planDetails.name}) permite ${totalMonthlyUploadMb} MB de upload por mês. Uso atual: ${currentUsageMb.toFixed(2)} MB.`,
+            });
+          }
+        }
+      }
+
+      // Processar upload de ícone
+      if (req.files?.icon?.[0]) {
+        const iconFile = req.files.icon[0];
+
+        // Deletar ícone anterior se existir
+        const currentNote = await this.notesRepository.getNoteById(id);
+        if (currentNote?.properties?.icon?.url) {
+          const oldKey = spacesService.extractKeyFromUrl(currentNote.properties.icon.url);
+          if (oldKey) await spacesService.deleteImage(oldKey);
+        }
+
+        const result = await spacesService.uploadNoteIcon(
+          iconFile.buffer,
+          iconFile.mimetype,
+          id
+        );
+
+        propertiesUpdate.icon = {
+          url: result.url,
+          name: iconFile.originalname,
+          type: iconFile.mimetype,
+        };
+      }
+
+      // Processar upload de banner
+      if (req.files?.banner?.[0]) {
+        const bannerFile = req.files.banner[0];
+
+        // Deletar banner anterior se existir
+        const currentNote = await this.notesRepository.getNoteById(id);
+        if (currentNote?.properties?.banner?.url) {
+          const oldKey = spacesService.extractKeyFromUrl(currentNote.properties.banner.url);
+          if (oldKey) await spacesService.deleteImage(oldKey);
+        }
+
+        const result = await spacesService.uploadNoteBanner(
+          bannerFile.buffer,
+          bannerFile.mimetype,
+          id
+        );
+
+        propertiesUpdate.banner = {
+          url: result.url,
+          name: bannerFile.originalname,
+          type: bannerFile.mimetype,
+        };
+      }
+
+      // Processar upload de arquivos
+      if (req.files?.files?.length > 0) {
+        const currentNote = await this.notesRepository.getNoteById(id);
+        const currentFiles = currentNote?.properties?.files || [];
+
+        const newFiles = await Promise.all(
+          req.files.files.map(async (file) => {
+            const result = await spacesService.uploadNoteFile(
+              file.buffer,
+              file.mimetype,
+              id,
+              file.originalname
+            );
+
+            return {
+              id: result.fileName,
+              url: result.url,
+              name: file.originalname,
+              type: file.mimetype,
+            };
+          })
+        );
+
+        propertiesUpdate.files = [...currentFiles, ...newFiles];
+      }
+
+      // Registrar consumo de storage no plano após uploads bem-sucedidos
+      if (usageRecord && totalUploadSizeMb > 0) {
+        await PlanUsageManager.consumeStorage(usageRecord.id, totalUploadSizeMb);
+      }
+
+      // Se há properties para atualizar
+      if (Object.keys(propertiesUpdate).length > 0) {
+        updateData.properties = propertiesUpdate;
+      }
+
       // Verifica se há algo para atualizar
       if (Object.keys(updateData).length === 0) {
         return res.status(400).json({
@@ -611,6 +781,13 @@ class NotesController {
 
       // Formata e retorna a nota atualizada
       const formattedNote = this._formatNoteResponse(updatedNote);
+      formattedNote.access = {
+        isOwner,
+        isCollaborator,
+        canEdit: isOwner || isCollaborator,
+        canDelete: isOwner,
+        canShare: isOwner,
+      };
       res.status(200).json(formattedNote);
     } catch (error) {
       this._handleError(error, res, next);
@@ -1142,5 +1319,6 @@ class NotesController {
     }
   }
 }
+
 
 module.exports = new NotesController();

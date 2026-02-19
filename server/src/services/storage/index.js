@@ -47,7 +47,7 @@ class SpacesService {
     try {
       const timestamp = Date.now();
       const uniqueFileName = fileName || `backup_${userId}_${timestamp}.csv`;
-      const key = `weave-notes/users-content/backups/${userId}/${uniqueFileName}`;
+      const key = `weave-notes/users/${userId}/backups/${uniqueFileName}`;
 
       // Converter string para Buffer se necessário
       const buffer = Buffer.isBuffer(fileContent)
@@ -194,9 +194,73 @@ class SpacesService {
       "image/png": ".png",
       "image/webp": ".webp",
       "image/gif": ".gif",
+      "image/svg+xml": ".svg",
+      "application/pdf": ".pdf",
+      "application/msword": ".doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        ".docx",
+      "application/vnd.ms-excel": ".xls",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+        ".xlsx",
+      "application/vnd.ms-powerpoint": ".ppt",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+        ".pptx",
+      "text/plain": ".txt",
+      "text/csv": ".csv",
+      "text/markdown": ".md",
+      "application/zip": ".zip",
+      "application/x-rar-compressed": ".rar",
+      "application/gzip": ".gz",
+      "application/json": ".json",
+      "application/xml": ".xml",
     };
 
-    return mimeToExt[mimeType] || ".jpg";
+    return mimeToExt[mimeType] || ".bin";
+  }
+
+  // ========================================
+  // Note Assets (icon, banner, files)
+  // ========================================
+
+  /**
+   * Faz upload do ícone de uma nota
+   * @param {Buffer} fileBuffer - Buffer do arquivo
+   * @param {string} mimeType - Tipo MIME
+   * @param {string} noteId - ID da nota
+   * @returns {Promise<Object>}
+   */
+  async uploadNoteIcon(fileBuffer, mimeType, noteId) {
+    const folder = `weave-notes/notes/${noteId}/icon`;
+    return this.uploadImage(fileBuffer, mimeType, folder);
+  }
+
+  /**
+   * Faz upload do banner de uma nota
+   * @param {Buffer} fileBuffer - Buffer do arquivo
+   * @param {string} mimeType - Tipo MIME
+   * @param {string} noteId - ID da nota
+   * @returns {Promise<Object>}
+   */
+  async uploadNoteBanner(fileBuffer, mimeType, noteId) {
+    const folder = `weave-notes/notes/${noteId}/banner`;
+    return this.uploadImage(fileBuffer, mimeType, folder);
+  }
+
+  /**
+   * Faz upload de um arquivo anexo de uma nota
+   * @param {Buffer} fileBuffer - Buffer do arquivo
+   * @param {string} mimeType - Tipo MIME
+   * @param {string} noteId - ID da nota
+   * @param {string} originalName - Nome original do arquivo
+   * @returns {Promise<Object>}
+   */
+  async uploadNoteFile(fileBuffer, mimeType, noteId, originalName = null) {
+    const ext = this.getFileExtensionFromMimeType(mimeType);
+    const fileName = originalName
+      ? `${uuidv4()}_${originalName}`
+      : `${uuidv4()}${ext}`;
+    const folder = `weave-notes/notes/${noteId}/files`;
+    return this.uploadImage(fileBuffer, mimeType, folder, fileName);
   }
 
   /**

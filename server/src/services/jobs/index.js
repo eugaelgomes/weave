@@ -187,8 +187,6 @@ class JobManager {
 
     // Executar imediatamente ao iniciar (após 5 segundos)
     setTimeout(() => this.cleanupExpiredBackups(), 5000);
-
-    console.log("Serviço de limpeza de backups iniciado (execução a cada 6h)");
   }
 
   /**
@@ -203,8 +201,6 @@ class JobManager {
     this.cleanupIsRunning = true;
 
     try {
-      console.log("Iniciando limpeza de backups expirados...");
-
       // Buscar tokens de backup expirados com seus jobs relacionados
       const expiredTokensQuery = `
         SELECT t.token, t.user_id, j.result
@@ -220,7 +216,6 @@ class JobManager {
       const expiredTokens = await executeQuery(expiredTokensQuery);
 
       if (expiredTokens.length === 0) {
-        console.log("Nenhum backup expirado encontrado.");
         return;
       }
 

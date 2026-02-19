@@ -3,6 +3,7 @@ const express = require("express");
 const notesController = require("@/modules/notes/notes.controller");
 
 const { verifyToken } = require("@/middlewares/authentication");
+const { noteUpdateUpload } = require("@/middlewares/data/note-upload");
 
 const router = express.Router();
 
@@ -32,9 +33,17 @@ router.post("/", (req, res, next) => {
   notesController.createNote(req, res, next);
 });
 
-router.put("/:id", (req, res, next) => {
-  notesController.updateNote(req, res, next);
-});
+router.put(
+  "/:id",
+  noteUpdateUpload.fields([
+    { name: "icon", maxCount: 1 },
+    { name: "banner", maxCount: 1 },
+    { name: "files", maxCount: 10 },
+  ]),
+  (req, res, next) => {
+    notesController.updateNote(req, res, next);
+  }
+);
 
 router.delete("/", (req, res, next) => {
   notesController.deleteNote(req, res, next);

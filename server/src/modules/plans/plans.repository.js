@@ -103,6 +103,10 @@ class PlansRepository {
     // Detecta se o path é de nota ou IA para atualizar a coluna de auditoria correspondente
     const isNote = jsonPath.includes("notes_total");
     const isAI = jsonPath.includes("messages_sent");
+    const isStorage = jsonPath.includes("storage");
+
+    // Usar numeric para storage (valores decimais em MB), int para o restante
+    const castType = isStorage ? "numeric" : "int";
 
     const query = `
       UPDATE plans_usage 
@@ -110,7 +114,7 @@ class PlansRepository {
         usage_details = jsonb_set(
           usage_details, 
           $1, 
-          ((COALESCE(usage_details #>> $1, '0')::int) + $2)::text::jsonb
+          ((COALESCE(usage_details #>> $1, '0')::${castType}) + $2)::text::jsonb
         ),
         ${isNote ? "lifetime_stats = jsonb_set(lifetime_stats, '{total_notes_ever}', ((COALESCE(lifetime_stats->>'total_notes_ever', '0')::int) + $2)::text::jsonb)," : ""}
         ${isAI ? "lifetime_stats = jsonb_set(lifetime_stats, '{total_ai_messages_ever}', ((COALESCE(lifetime_stats->>'total_ai_messages_ever', '0')::int) + $2)::text::jsonb)," : ""}

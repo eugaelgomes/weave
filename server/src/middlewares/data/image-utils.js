@@ -51,7 +51,7 @@ class ImageUtils {
       // Nome do arquivo simples
       const extension = this.getExtensionFromMimeType(mimeType);
       const filename = `user-${userId}-avatar${extension}`;
-      const key = `users-content/profile/${filename}`;
+      const key = `weave-notes/users/${userId}/profile/${filename}`;
 
       // Upload para Digital Ocean Spaces
       const uploadParams = {
@@ -99,7 +99,7 @@ class ImageUtils {
 
       const extension = this.getExtensionFromMimeType(mimeType);
       const filename = `org-${organizationId}-logo${extension}`;
-      const key = `organizations/${organizationId}/images/logo/${filename}`;
+      const key = `weave-notes/organizations/${organizationId}/logo/${filename}`;
 
       const uploadParams = {
         Bucket: this.bucketName,
@@ -145,7 +145,7 @@ class ImageUtils {
 
       const extension = this.getExtensionFromMimeType(mimeType);
       const filename = `org-${organizationId}-banner${extension}`;
-      const key = `organizations/${organizationId}/images/banner/${filename}`;
+      const key = `weave-notes/organizations/${organizationId}/banner/${filename}`;
 
       const uploadParams = {
         Bucket: this.bucketName,

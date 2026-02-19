@@ -1,6 +1,17 @@
 const { executeQuery, rowCount } = require("@/services/db");
 
 class notesRepository {
+  static get DEFAULT_PROPERTIES() {
+    return {
+      icon: { url: "", name: "", type: "" },
+      urls: [],
+      color: "",
+      files: [],
+      banner: { url: "", name: "", type: "" },
+      relations: [],
+    };
+  }
+
   async createNotesQuery(
     userId,
     title,
@@ -10,8 +21,8 @@ class notesRepository {
     projectId = null
   ) {
     const query = `
-      INSERT INTO notes (user_id, title, description, tags, status, project_id)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO notes (user_id, title, description, tags, status, project_id, properties)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *; 
     `;
     const results = await executeQuery(query, [
@@ -21,6 +32,7 @@ class notesRepository {
       tags,
       status,
       projectId,
+      JSON.stringify(notesRepository.DEFAULT_PROPERTIES),
     ]);
     return results[0];
   }
@@ -37,6 +49,7 @@ class notesRepository {
       n.status,
       n.created_at,
       n.updated_at,
+      n.properties,
 
       -- criador da nota
       u.name AS user_name,
@@ -95,6 +108,7 @@ class notesRepository {
         n.created_at,
         n.updated_at,
         n.deleted,
+        n.properties,
 
         -- criador da nota
         u.name as user_name,
@@ -431,6 +445,7 @@ class notesRepository {
       "status",
       "deleted",
       "project_id",
+      "properties",
     ];
 
     const updates = [];
@@ -439,8 +454,14 @@ class notesRepository {
 
     allowedFields.forEach((field) => {
       if (updateData[field] !== undefined) {
-        updates.push(`${field} = $${paramIndex}`);
-        values.push(updateData[field]);
+        if (field === "properties") {
+          // Merge parcial: atualiza apenas as chaves enviadas dentro de properties
+          updates.push(`properties = COALESCE(properties, '{}'::jsonb) || $${paramIndex}::jsonb`);
+          values.push(JSON.stringify(updateData[field]));
+        } else {
+          updates.push(`${field} = $${paramIndex}`);
+          values.push(updateData[field]);
+        }
         paramIndex++;
       }
     });
@@ -475,8 +496,8 @@ class notesRepository {
   ) {
     const query = `
       WITH new_note AS (
-        INSERT INTO notes (user_id, title, description, tags, status, project_id)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO notes (user_id, title, description, tags, status, project_id, properties)
+        VALUES ($1, $2, $3, $4, $5, $6, $8)
         RETURNING *
       ),
       new_block AS (
@@ -491,6 +512,7 @@ class notesRepository {
         new_note.project_id,
         new_note.title,
         new_note.description,
+        new_note.properties,
         new_note.tags,
         new_note.status,
         new_note.created_at AS note_created_at,
@@ -523,6 +545,7 @@ class notesRepository {
       status,
       projectId,
       initialBlockContent,
+      JSON.stringify(notesRepository.DEFAULT_PROPERTIES),
     ]);
     return results[0];
   }
