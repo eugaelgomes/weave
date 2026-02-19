@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { FaEye, FaEyeSlash, FaKey, FaCheckCircle } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaCheckCircle, FaGithub, FaLinkedin } from "react-icons/fa";
 import { useAuth } from "../../contexts/AuthContext";
 
 interface Message {
@@ -107,108 +107,127 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="relative flex h-screen">
+    <div className="relative flex min-h-screen w-full flex-col justify-between bg-neutral-50 text-neutral-900 selection:bg-yellow-500/20 selection:text-yellow-900 dark:bg-neutral-950 dark:text-neutral-50 dark:selection:bg-yellow-500/30 dark:selection:text-yellow-200">
+      {/* Background Pattern */}
+      <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] bg-[size:24px_24px] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)]"></div>
+
+      {/* Navbar */}
+      <nav className="z-50 w-full px-6 py-4 lg:py-5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <Link
+            href="/home"
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
+          >
+            <Image
+              src="/weave.png"
+              alt="Weave Logo"
+              width={28}
+              height={28}
+              className="h-7 w-7 rounded-md object-cover lg:h-8 lg:w-8"
+            />
+            <span className="text-base font-semibold tracking-tight lg:text-lg">Weave Notes</span>
+          </Link>
+
+          <div className="flex items-center gap-4 lg:gap-6">
+            <Link
+              href="/about"
+              className="text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900 sm:text-sm lg:text-base dark:text-neutral-400 dark:hover:text-white"
+            >
+              Sobre
+            </Link>
+            <Link
+              href="/auth/signin"
+              className="rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white transition-transform hover:-translate-y-0.5 hover:bg-neutral-800 sm:text-sm lg:px-5 lg:py-2 lg:text-base dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+            >
+              Entrar
+            </Link>
+          </div>
+        </div>
+      </nav>
+
       {/* Toast de Mensagens */}
       {msg.text && (
-        <div className="fixed top-4 left-1/2 z-50 w-full max-w-md -translate-x-1/2 transform px-4">
-          <div
-            className={`flex items-center gap-3 rounded-md border p-4 text-sm shadow-xl backdrop-blur-sm ${
-              msg.type === "error"
-                ? "border-red-200 bg-red-50 text-red-800"
-                : "border-green-200 bg-green-50 text-green-800"
-            }`}
-          >
-            <div
-              className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
-                msg.type === "error" ? "bg-red-100" : "bg-green-100"
-              }`}
-            >
-              <svg
-                className={`h-5 w-5 ${msg.type === "error" ? "text-red-600" : "text-green-600"}`}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                {msg.type === "error" ? (
+        <div className="animate-in slide-in-from-bottom-5 fade-in fixed right-10 bottom-10 z-[60] w-full max-w-md px-4 duration-300">
+          {msg.type === "error" && (
+            <div className="flex items-center gap-3 rounded-md border border-red-500/50 bg-red-950/80 p-4 text-sm text-red-200 shadow-2xl backdrop-blur-xl">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-red-500/20">
+                <svg
+                  className="h-5 w-5 text-red-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
-                    clipRule="evenodd"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
                   />
-                ) : (
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L7.53 10.25a.75.75 0 00-1.06 1.5l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                    clipRule="evenodd"
-                  />
-                )}
-              </svg>
+                </svg>
+              </div>
+              <span className="font-medium">{msg.text}</span>
             </div>
-            <span className="flex-1 font-medium">{msg.text}</span>
-            <button
-              onClick={() => setMsg({ type: "", text: "" })}
-              className={`transition-colors ${
-                msg.type === "error"
-                  ? "text-red-400 hover:text-red-600"
-                  : "text-green-400 hover:text-green-600"
-              }`}
-              title="Fechar mensagem"
-              aria-label="Fechar mensagem"
-            >
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-          </div>
+          )}
+          {msg.type === "success" && (
+            <div className="flex items-center gap-3 rounded-md border border-green-500/50 bg-green-950/80 p-4 text-sm text-green-200 shadow-2xl backdrop-blur-xl">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-green-500/20">
+                <svg
+                  className="h-5 w-5 text-green-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <span className="font-medium">{msg.text}</span>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Coluna esquerda - formulário */}
-      <div className="flex flex-1 items-center justify-center bg-gradient-to-br from-gray-50 via-yellow-50/30 to-gray-50 px-4 py-6 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-6">
-          {/* Logo */}
+      {/* Formulário centralizado */}
+      <div className="z-10 flex min-h-0 flex-1 items-center justify-center px-4">
+        <div className="w-full max-w-md space-y-6 rounded-md border border-neutral-200/60 bg-white/60 p-8 shadow-xl backdrop-blur-2xl transition-colors dark:border-neutral-800/60 dark:bg-neutral-900/50">
           <div className="text-center">
-            <div className="mb-4 inline-flex items-center justify-center">
-              <div className="group relative">
-                {/* Glow effect */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 opacity-20 blur-xl transition-all duration-500 group-hover:opacity-30 group-hover:blur-2xl"></div>
-
-                {/* Logo principal */}
-                <h1 className="relative rounded-2xl bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 px-8 py-3 text-3xl font-black tracking-tight text-white shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-yellow-500/50">
-                  Weave Notes
-                </h1>
-              </div>
-            </div>
+            <h1 className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-4xl font-black tracking-tight text-transparent">
+              Weave Notes
+            </h1>
 
             {!resetSuccess ? (
-              <div className="space-y-1">
-                <div className="flex items-center justify-center gap-2 text-lg font-semibold text-gray-700">
-                  <FaKey className="text-yellow-500" />
-                  <span>Redefinir Senha</span>
-                </div>
-                <p className="text-sm text-gray-500">Digite sua nova senha abaixo</p>
+              <div className="mt-3 space-y-1">
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  Digite sua nova senha abaixo para redefinir o acesso
+                </p>
               </div>
             ) : (
-              <div className="space-y-2">
-                <div className="flex items-center justify-center gap-2 text-lg font-semibold text-green-600">
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center justify-center gap-2 text-lg font-semibold text-green-500">
                   <FaCheckCircle />
                   <span>Senha Alterada!</span>
                 </div>
-                <p className="text-sm text-gray-500">Redirecionando para o login...</p>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  Redirecionando para o login...
+                </p>
               </div>
             )}
           </div>
 
           {/* Form */}
           {!resetSuccess && (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {/* Token (hidden, mas mostra se não veio na URL) */}
               {!token && (
-                <div>
-                  <label htmlFor="token" className="mb-1 block text-xs font-medium text-gray-700">
+                <div className="space-y-1">
+                  <label
+                    htmlFor="token"
+                    className="text-xs font-bold tracking-wider text-yellow-500"
+                  >
                     Token de Recuperação
                   </label>
                   <input
@@ -219,14 +238,17 @@ export default function ResetPassword() {
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
                     disabled={submitting}
-                    className="block w-full rounded-md border border-gray-300 bg-neutral-50 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 transition-all placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-600"
                   />
                 </div>
               )}
 
               {/* Nova Senha */}
-              <div>
-                <label htmlFor="password" className="mb-1 block text-xs font-medium text-gray-700">
+              <div className="space-y-1">
+                <label
+                  htmlFor="password"
+                  className="text-xs font-bold tracking-wider text-yellow-500"
+                >
                   Nova Senha
                 </label>
                 <div className="relative">
@@ -239,12 +261,12 @@ export default function ResetPassword() {
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={submitting}
                     autoComplete="new-password"
-                    className="block w-full rounded-md border border-gray-300 bg-neutral-50 px-3 py-2 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 transition-all placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-600"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-neutral-800 dark:hover:text-white"
                     tabIndex={-1}
                     title={showPassword ? "Esconder senha" : "Mostrar senha"}
                     aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
@@ -255,10 +277,10 @@ export default function ResetPassword() {
               </div>
 
               {/* Confirmar Senha */}
-              <div>
+              <div className="space-y-1">
                 <label
                   htmlFor="confirmPassword"
-                  className="mb-1 block text-xs font-medium text-gray-700"
+                  className="text-xs font-bold tracking-wider text-yellow-500"
                 >
                   Confirmar Nova Senha
                 </label>
@@ -272,12 +294,12 @@ export default function ResetPassword() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     disabled={submitting}
                     autoComplete="new-password"
-                    className="block w-full rounded-md border border-gray-300 bg-neutral-50 px-3 py-2 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 transition-all placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-600"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-neutral-800 dark:hover:text-white"
                     tabIndex={-1}
                     title={showConfirmPassword ? "Esconder senha" : "Mostrar senha"}
                     aria-label={showConfirmPassword ? "Esconder senha" : "Mostrar senha"}
@@ -288,50 +310,49 @@ export default function ResetPassword() {
               </div>
 
               {/* Botão redefinir */}
-              <button
-                type="submit"
-                className="flex w-full justify-center rounded-md bg-yellow-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <span className="flex items-center gap-2">
-                    <svg
-                      className="h-4 w-4 animate-spin text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Redefinindo...
-                  </span>
-                ) : (
-                  "Redefinir Senha"
-                )}
-              </button>
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="flex w-full justify-center rounded-md bg-yellow-500 px-4 py-2.5 text-sm font-bold text-black shadow-lg shadow-yellow-500/20 transition-all hover:bg-yellow-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <span className="flex items-center gap-2">
+                      <svg
+                        className="h-4 w-4 animate-spin text-black"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Redefinindo...
+                    </span>
+                  ) : (
+                    "Redefinir Senha"
+                  )}
+                </button>
+              </div>
             </form>
           )}
 
           {/* Link para login */}
-          <div className="text-center">
-            <p className="text-xs text-gray-600">
+          <div className="border-t border-neutral-200 pt-4 text-center transition-colors dark:border-white/5">
+            <p className="text-sm text-neutral-600 dark:text-neutral-500">
               Lembrou sua senha?{" "}
-              <Link
-                href="/auth/signin"
-                className="font-semibold text-yellow-600 transition-colors duration-200 hover:text-yellow-700"
-              >
+              <Link href="/auth/signin" className="font-bold text-yellow-500 hover:underline">
                 Fazer login
               </Link>
             </p>
@@ -339,25 +360,33 @@ export default function ResetPassword() {
         </div>
       </div>
 
-      {/* Coluna direita - imagem */}
-      <div className="relative hidden flex-1 lg:block">
-        <Image
-          src={process.env.NEXT_PUBLIC_CDN_BASE_URL ? `${process.env.NEXT_PUBLIC_CDN_BASE_URL}/medias/bg-studying_guy.webp` : "https://cwn.sfo3.cdn.digitaloceanspaces.com/medias/bg-studying_guy.webp"}
-          alt="Recuperação de senha"
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute right-0 bottom-0 left-0 p-6">
-          <div className="max-w-lg">
-            <h3 className="mb-2 text-xl font-bold text-white">Redefina sua senha com segurança</h3>
-            <p className="text-sm text-white/90">
-              Crie uma nova senha forte e volte a acessar suas anotações em instantes.
-            </p>
+      {/* Footer Minimalista */}
+      <footer className="z-10 w-full px-6 py-4 lg:py-5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between text-[10px] text-neutral-400 sm:text-xs lg:text-sm">
+          <p>© {new Date().getFullYear()} Weave Notes</p>
+
+          <div className="flex items-center gap-4 lg:gap-6">
+            <a
+              href="https://github.com/eugaelgomes"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 transition-colors hover:text-purple-700 dark:hover:text-purple-300"
+            >
+              Github
+              <FaGithub className="h-4 w-4 text-purple-500" />
+            </a>
+            <a
+              href="https://linkedin.com/in/gael-rene-gomes"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 transition-colors hover:text-neutral-900 dark:hover:text-blue-300"
+            >
+              Linkedin
+              <FaLinkedin className="h-4 w-4 text-blue-500" />
+            </a>
           </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

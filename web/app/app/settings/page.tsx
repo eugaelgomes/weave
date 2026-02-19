@@ -134,8 +134,6 @@ const SettingsPage = () => {
     }
   };
 
-
-
   const handleCancelEdit = () => {
     if (formData.avatar_url && formData.avatar_url.startsWith("blob:")) {
       URL.revokeObjectURL(formData.avatar_url);
@@ -806,9 +804,7 @@ const SettingsPage = () => {
                     <input
                       type="checkbox"
                       checked={formData.usage_preference?.editor?.[item.key] ?? true}
-                      onChange={(e) =>
-                        handlePreferenceChange("editor", item.key, e.target.checked)
-                      }
+                      onChange={(e) => handlePreferenceChange("editor", item.key, e.target.checked)}
                       className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
                     />
                     <span className="text-neutral-700 dark:text-neutral-300">{item.label}</span>
@@ -837,9 +833,7 @@ const SettingsPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-neutral-500">
-                    Posição da Sidebar
-                  </label>
+                  <label className="text-xs font-medium text-neutral-500">Posição da Sidebar</label>
                   <select
                     value={formData.usage_preference?.display?.sidebarPosition ?? "left"}
                     onChange={(e) =>
@@ -957,9 +951,7 @@ const SettingsPage = () => {
               </h4>
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-medium text-neutral-500">
-                    Permissão Padrão
-                  </label>
+                  <label className="text-xs font-medium text-neutral-500">Permissão Padrão</label>
                   <select
                     value={formData.usage_preference?.collaboration?.defaultPermission ?? "view"}
                     onChange={(e) =>
@@ -1071,7 +1063,9 @@ const SettingsPage = () => {
                   <input
                     type="checkbox"
                     checked={formData.usage_preference?.backup?.autoBackup ?? true}
-                    onChange={(e) => handlePreferenceChange("backup", "autoBackup", e.target.checked)}
+                    onChange={(e) =>
+                      handlePreferenceChange("backup", "autoBackup", e.target.checked)
+                    }
                     className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
                   />
                   <span className="text-neutral-700 dark:text-neutral-300">
