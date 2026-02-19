@@ -134,7 +134,7 @@ class ApiClient {
     return this.request(endpoint, {
       ...options,
       method: "PUT",
-      body: data ? JSON.stringify(data) : undefined,
+      body: data instanceof FormData ? data : data ? JSON.stringify(data) : undefined,
     });
   }
 

@@ -5,23 +5,32 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import {
-  FaArrowLeft,
-  FaTrash,
-  FaTag,
-  FaSpinner,
-  FaShare,
-  FaPlus,
-  FaTimes,
-  FaUserPlus,
-  FaSearch,
-  FaCode,
-  FaQuoteLeft,
-  FaListUl,
-  FaCheckSquare,
-  FaHeading,
-  FaParagraph,
-  FaGripVertical,
-} from "react-icons/fa";
+  ArrowLeft,
+  Trash2,
+  Tag,
+  Loader2,
+  Share2,
+  Plus,
+  X,
+  UserPlus,
+  Search,
+  Code,
+  Quote,
+  List,
+  CheckSquare,
+  Heading,
+  Type,
+  GripVertical,
+  Save,
+  Clock,
+  Link2,
+  FileText,
+  ImagePlus,
+  ExternalLink,
+  Download,
+  Palette,
+  Link,
+} from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -42,7 +51,12 @@ import {
 } from "@dnd-kit/sortable";
 // CSS transform utility handled manually
 import { useNotes } from "@/app/contexts/NotesContext";
-import { Note, Block, User as SearchUser } from "@/app/services/notes-service/NotesService";
+import {
+  Note,
+  Block,
+  UpdateNoteData,
+  User as SearchUser,
+} from "@/app/services/notes-service/NotesService";
 import {
   getCollaboratorDisplayName,
   getCollaboratorAvatarUrl,
@@ -108,6 +122,65 @@ interface BlockInnerProps {
   dragHandleProps?: Record<string, unknown>;
 }
 
+const useAutoResize = (text: string) => {
+  const ref = React.useRef<HTMLTextAreaElement>(null);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [text]);
+
+  return ref;
+};
+
+// =================== RENDERIZADOR DE LINKS ===================
+const URL_REGEX = /(https?:\/\/[^\s<>"'()]+(?:\([^\s<>"'()]*\))*[^\s<>"'.,;:!?)\]]*)/gi;
+
+const LinkifiedText: React.FC<{
+  text: string;
+  className?: string;
+}> = ({ text, className = "" }) => {
+  if (!text) return <span className={className}>&nbsp;</span>;
+
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  const regex = new RegExp(URL_REGEX.source, "gi");
+
+  while ((match = regex.exec(text)) !== null) {
+    // Texto antes do link
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    // O link
+    const url = match[1];
+    parts.push(
+      <a
+        key={match.index}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="text-blue-500 underline decoration-blue-500/40 transition-colors hover:text-blue-400 hover:decoration-blue-400 dark:text-blue-400 dark:decoration-blue-400/40 dark:hover:text-blue-300"
+      >
+        {url.length > 60 ? `${url.slice(0, 57)}...` : url}
+      </a>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Texto restante
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return <span className={className}>{parts}</span>;
+};
+
+const hasLinks = (text: string) => URL_REGEX.test(text);
+
 const BlockComponent: React.FC<BlockInnerProps> = ({
   block,
   noteId,
@@ -119,18 +192,35 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
 }) => {
   const [localText, setLocalText] = useState(block.text || "");
   const [isHovered, setIsHovered] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const textareaRef = useAutoResize(localText);
 
+  // Sincroniza apenas quando block.text muda externamente (ex: do servidor)
+  const prevBlockText = React.useRef(block.text);
   useEffect(() => {
-    if (block.text !== localText) {
+    if (block.text !== prevBlockText.current) {
+      prevBlockText.current = block.text;
       setLocalText(block.text || "");
     }
-  }, [block.text, localText]);
+  }, [block.text]);
 
   const handleBlur = () => {
+    setIsEditing(false);
     if (localText !== block.text) {
       onUpdate(block.id, { text: localText });
     }
   };
+
+  const handleFocus = () => {
+    setIsEditing(true);
+  };
+
+  // Foca no textarea quando entra em modo de edição
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isEditing, textareaRef]);
 
   // Auto-save com debounce
   useEffect(() => {
@@ -153,14 +243,26 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
   const renderBlockContent = () => {
     switch (block.type) {
       case "heading":
+        if (!isEditing && localText && hasLinks(localText)) {
+          return (
+            <div
+              onClick={() => setIsEditing(true)}
+              className="cursor-text text-xl font-bold break-words whitespace-pre-wrap text-neutral-900 dark:text-neutral-100"
+            >
+              <LinkifiedText text={localText} />
+            </div>
+          );
+        }
         return (
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
             value={localText}
             onChange={(e) => setLocalText(e.target.value)}
             onBlur={handleBlur}
-            className="w-full bg-transparent text-xl font-bold text-neutral-100 placeholder-neutral-500 outline-none"
+            onFocus={handleFocus}
+            className="w-full resize-none overflow-hidden bg-transparent text-xl font-bold text-neutral-900 placeholder-neutral-400 outline-none dark:text-neutral-100 dark:placeholder-neutral-500"
             placeholder="Título..."
+            rows={1}
           />
         );
 
@@ -169,72 +271,108 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
           <div className="flex items-start gap-3">
             <button
               onClick={handleToggleDone}
-              className={`mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-colors ${
+              className={`mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-all ${
                 block.done
-                  ? "border-yellow-500 bg-yellow-500 text-neutral-950"
-                  : "border-neutral-600 hover:border-yellow-500"
+                  ? "border-yellow-500 bg-yellow-500 text-white"
+                  : "border-neutral-300 hover:border-yellow-500 dark:border-neutral-600 dark:hover:border-yellow-500"
               }`}
             >
-              {block.done && <FaCheckSquare size={10} />}
+              {block.done && <CheckSquare size={10} />}
             </button>
-            <input
-              type="text"
-              value={localText}
-              onChange={(e) => setLocalText(e.target.value)}
-              onBlur={handleBlur}
-              className={`w-full bg-transparent text-neutral-200 placeholder-neutral-500 outline-none ${
-                block.done ? "text-neutral-500 line-through" : ""
-              }`}
-              placeholder="Tarefa..."
-            />
+            {!isEditing && localText && hasLinks(localText) ? (
+              <div
+                onClick={() => setIsEditing(true)}
+                className={`w-full cursor-text break-words whitespace-pre-wrap text-neutral-800 dark:text-neutral-200 ${
+                  block.done ? "text-neutral-400 line-through dark:text-neutral-500" : ""
+                }`}
+              >
+                <LinkifiedText text={localText} />
+              </div>
+            ) : (
+              <textarea
+                ref={textareaRef}
+                value={localText}
+                onChange={(e) => setLocalText(e.target.value)}
+                onBlur={handleBlur}
+                onFocus={handleFocus}
+                className={`w-full resize-none overflow-hidden bg-transparent text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500 ${
+                  block.done ? "text-neutral-400 line-through dark:text-neutral-500" : ""
+                }`}
+                placeholder="Tarefa..."
+                rows={1}
+              />
+            )}
           </div>
         );
 
       case "list":
         return (
           <div className="flex items-start gap-3">
-            <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-yellow-500" />
-            <input
-              type="text"
-              value={localText}
-              onChange={(e) => setLocalText(e.target.value)}
-              onBlur={handleBlur}
-              className="w-full bg-transparent text-neutral-200 placeholder-neutral-500 outline-none"
-              placeholder="Item da lista..."
-            />
+            <span className="mt-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-yellow-500" />
+            {!isEditing && localText && hasLinks(localText) ? (
+              <div
+                onClick={() => setIsEditing(true)}
+                className="w-full cursor-text break-words whitespace-pre-wrap text-neutral-800 dark:text-neutral-200"
+              >
+                <LinkifiedText text={localText} />
+              </div>
+            ) : (
+              <textarea
+                ref={textareaRef}
+                value={localText}
+                onChange={(e) => setLocalText(e.target.value)}
+                onBlur={handleBlur}
+                onFocus={handleFocus}
+                className="w-full resize-none overflow-hidden bg-transparent text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500"
+                placeholder="Item da lista..."
+                rows={1}
+              />
+            )}
           </div>
         );
 
       case "quote":
         return (
-          <div className="border-l-4 border-yellow-500 pl-4">
-            <textarea
-              value={localText}
-              onChange={(e) => setLocalText(e.target.value)}
-              onBlur={handleBlur}
-              className="w-full resize-none bg-transparent text-neutral-300 italic placeholder-neutral-500 outline-none"
-              placeholder="Citação..."
-              rows={2}
-            />
+          <div className="border-l-3 border-yellow-500 pl-4">
+            {!isEditing && localText && hasLinks(localText) ? (
+              <div
+                onClick={() => setIsEditing(true)}
+                className="w-full cursor-text break-words whitespace-pre-wrap text-neutral-600 italic dark:text-neutral-300"
+              >
+                <LinkifiedText text={localText} />
+              </div>
+            ) : (
+              <textarea
+                ref={textareaRef}
+                value={localText}
+                onChange={(e) => setLocalText(e.target.value)}
+                onBlur={handleBlur}
+                onFocus={handleFocus}
+                className="w-full resize-none overflow-hidden bg-transparent text-neutral-600 italic placeholder-neutral-400 outline-none dark:text-neutral-300 dark:placeholder-neutral-500"
+                placeholder="Citação..."
+                rows={1}
+              />
+            )}
           </div>
         );
 
       case "code":
         return (
-          <div className="overflow-hidden rounded-md border border-neutral-700 bg-neutral-900">
-            <div className="flex items-center justify-between border-b border-neutral-700 bg-neutral-800 px-3 py-2">
-              <span className="text-xs text-neutral-400">
+          <div className="overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900">
+            <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 dark:border-neutral-700 dark:bg-neutral-800">
+              <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                 {(block.properties as { language?: string })?.language || "código"}
               </span>
-              <FaCode size={12} className="text-neutral-500" />
+              <Code size={12} className="text-neutral-400 dark:text-neutral-500" />
             </div>
             <textarea
+              ref={textareaRef}
               value={localText}
               onChange={(e) => setLocalText(e.target.value)}
               onBlur={handleBlur}
-              className="w-full resize-none bg-neutral-900 p-3 font-mono text-sm text-green-400 placeholder-neutral-600 outline-none"
+              className="w-full resize-none overflow-hidden bg-neutral-100 p-3 font-mono text-sm text-emerald-700 placeholder-neutral-400 outline-none dark:bg-neutral-900 dark:text-green-400 dark:placeholder-neutral-600"
               placeholder="// Seu código aqui..."
-              rows={5}
+              rows={3}
             />
           </div>
         );
@@ -242,14 +380,26 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
       case "paragraph":
       case "text":
       default:
+        if (!isEditing && localText && hasLinks(localText)) {
+          return (
+            <div
+              onClick={() => setIsEditing(true)}
+              className="w-full cursor-text leading-relaxed break-words whitespace-pre-wrap text-neutral-800 dark:text-neutral-200"
+            >
+              <LinkifiedText text={localText} />
+            </div>
+          );
+        }
         return (
           <textarea
+            ref={textareaRef}
             value={localText}
             onChange={(e) => setLocalText(e.target.value)}
             onBlur={handleBlur}
-            className="w-full resize-none bg-transparent leading-relaxed text-neutral-200 placeholder-neutral-500 outline-none"
+            onFocus={handleFocus}
+            className="w-full resize-none overflow-hidden bg-transparent leading-relaxed text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500"
             placeholder="Digite seu texto..."
-            rows={Math.max(2, localText.split("\n").length)}
+            rows={1}
           />
         );
     }
@@ -263,23 +413,25 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
     >
       {/* Handle de arrastar */}
       <div
-        className={`absolute top-1 -left-8 flex flex-col gap-1 transition-opacity ${
+        className={`absolute top-1.5 -left-7 flex flex-col gap-1 transition-opacity ${
           isHovered ? "opacity-100" : "opacity-0"
         }`}
       >
         <button
           {...dragHandleProps}
-          className="cursor-grab rounded p-1 text-neutral-500 hover:bg-neutral-800 hover:text-yellow-500 active:cursor-grabbing"
+          className="cursor-grab rounded p-0.5 text-neutral-300 hover:bg-neutral-100 hover:text-yellow-500 active:cursor-grabbing dark:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-yellow-500"
           title="Arrastar para reordenar"
         >
-          <FaGripVertical size={12} />
+          <GripVertical size={14} />
         </button>
       </div>
 
       {/* Conteúdo do bloco */}
       <div
-        className={`rounded-md px-2 py-1 transition-colors hover:bg-neutral-900/50 ${
-          isDragging ? "bg-neutral-800 shadow-lg ring-2 ring-yellow-500/50" : ""
+        className={`rounded-lg px-3 py-2 transition-colors hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40 ${
+          isDragging
+            ? "bg-neutral-100 shadow-lg ring-2 ring-yellow-500/30 dark:bg-neutral-800 dark:ring-yellow-500/50"
+            : ""
         }`}
       >
         {renderBlockContent()}
@@ -289,16 +441,16 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
       {isHovered && (
         <button
           onClick={() => onDelete(block.id)}
-          className="absolute top-1 -right-2 rounded p-1 text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-400"
+          className="absolute top-1.5 -right-3 rounded-md p-1 text-neutral-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 dark:text-neutral-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
           title="Remover bloco"
         >
-          <FaTimes size={12} />
+          <X size={14} />
         </button>
       )}
 
       {/* Blocos filhos (recursivo) */}
       {block.children && block.children.length > 0 && (
-        <div className="mt-2 ml-6 border-l-2 border-neutral-800 pl-4">
+        <div className="mt-2 ml-6 border-l-2 border-neutral-200 pl-4 dark:border-neutral-800">
           {block.children.map((child) => (
             <BlockComponent
               key={child.id}
@@ -315,30 +467,38 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
   );
 };
 
-// =================== SKELETON SIMPLES ===================
+// =================== SKELETON ===================
 const NoteDetailSkeleton = () => (
-  <div className="min-h-screen bg-neutral-950">
-    <div className="sticky top-0 z-10 border-b border-neutral-800 bg-neutral-900 px-4 py-3">
+  <div className="flex h-full flex-col">
+    {/* Header skeleton */}
+    <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-950">
       <div className="mx-auto flex max-w-4xl items-center justify-between">
-        <div className="h-6 w-6 animate-pulse rounded bg-neutral-700" />
+        <div className="h-8 w-8 animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800" />
         <div className="flex items-center gap-3">
-          <div className="h-4 w-24 animate-pulse rounded bg-neutral-700" />
-          <div className="h-6 w-6 animate-pulse rounded bg-neutral-700" />
+          <div className="h-4 w-28 animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800" />
+          <div className="flex gap-1.5">
+            <div className="h-8 w-8 animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800" />
+            <div className="h-8 w-8 animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800" />
+          </div>
         </div>
       </div>
     </div>
 
-    <div className="mx-auto max-w-4xl px-4 py-6">
-      <div className="mb-6">
-        <div className="mb-3 h-8 w-1/2 animate-pulse rounded bg-neutral-700" />
+    {/* Content skeleton */}
+    <div className="mx-auto w-full max-w-4xl px-4 py-8">
+      <div className="mb-8">
+        <div className="mb-2 h-9 w-2/3 animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800" />
       </div>
-      <div className="space-y-3">
-        <div className="h-5 w-4/5 animate-pulse rounded bg-neutral-700" />
-        <div className="h-4 w-full animate-pulse rounded bg-neutral-700" />
-        <div className="h-4 w-3/4 animate-pulse rounded bg-neutral-700" />
-        <div className="h-12 w-full animate-pulse rounded-md bg-neutral-800" />
-        <div className="h-4 w-2/3 animate-pulse rounded bg-neutral-700" />
-        <div className="h-24 w-full animate-pulse rounded-md bg-neutral-800" />
+      <div className="mb-6 flex gap-3 border-b border-neutral-100 pb-5 dark:border-neutral-800">
+        <div className="h-6 w-16 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-800" />
+        <div className="h-6 w-20 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-800" />
+      </div>
+      <div className="space-y-4">
+        <div className="h-12 w-full animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-800/60" />
+        <div className="h-20 w-full animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-800/60" />
+        <div className="h-12 w-4/5 animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-800/60" />
+        <div className="h-32 w-full animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-800/60" />
+        <div className="h-12 w-3/5 animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-800/60" />
       </div>
     </div>
   </div>
@@ -352,17 +512,17 @@ interface BlockTypeSelectorProps {
 
 const BlockTypeSelector: React.FC<BlockTypeSelectorProps> = ({ onSelect, onClose }) => {
   const blockOptions = [
-    { type: "paragraph", label: "Parágrafo", icon: FaParagraph, description: "Texto simples" },
-    { type: "heading", label: "Título", icon: FaHeading, description: "Título de seção" },
-    { type: "todo", label: "Tarefa", icon: FaCheckSquare, description: "Item de checklist" },
-    { type: "list", label: "Lista", icon: FaListUl, description: "Item de lista" },
-    { type: "quote", label: "Citação", icon: FaQuoteLeft, description: "Bloco de citação" },
-    { type: "code", label: "Código", icon: FaCode, description: "Bloco de código" },
+    { type: "paragraph", label: "Parágrafo", icon: Type, description: "Texto simples" },
+    { type: "heading", label: "Título", icon: Heading, description: "Título de seção" },
+    { type: "todo", label: "Tarefa", icon: CheckSquare, description: "Item de checklist" },
+    { type: "list", label: "Lista", icon: List, description: "Item de lista" },
+    { type: "quote", label: "Citação", icon: Quote, description: "Bloco de citação" },
+    { type: "code", label: "Código", icon: Code, description: "Bloco de código" },
   ];
 
   return (
-    <div className="absolute left-0 z-20 mt-2 w-64 rounded-md border border-neutral-700 bg-neutral-900 p-2 shadow-xl">
-      <div className="mb-2 border-b border-neutral-700 px-2 pb-2 text-xs font-semibold text-neutral-400">
+    <div className="animate-in fade-in slide-in-from-top-1 absolute bottom-full left-0 z-20 mb-2 w-64 rounded-lg border border-neutral-200 bg-white p-1.5 shadow-xl duration-150 dark:border-neutral-700 dark:bg-neutral-900">
+      <div className="mb-1.5 px-2.5 pt-1 pb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
         Tipo de bloco
       </div>
       {blockOptions.map((option) => (
@@ -372,12 +532,18 @@ const BlockTypeSelector: React.FC<BlockTypeSelectorProps> = ({ onSelect, onClose
             onSelect(option.type);
             onClose();
           }}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-neutral-800"
+          className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
         >
-          <option.icon className="text-yellow-500" size={14} />
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-500">
+            <option.icon size={14} />
+          </div>
           <div>
-            <div className="text-sm font-medium text-neutral-200">{option.label}</div>
-            <div className="text-xs text-neutral-500">{option.description}</div>
+            <div className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+              {option.label}
+            </div>
+            <div className="text-[11px] text-neutral-500 dark:text-neutral-500">
+              {option.description}
+            </div>
           </div>
         </button>
       ))}
@@ -392,7 +558,6 @@ const NoteDetail = () => {
 
   // Hook para gerenciar notas
   const {
-    loading: isLoading,
     error,
     getNoteById,
     updateNote,
@@ -400,6 +565,7 @@ const NoteDetail = () => {
     shareNote,
     searchUsers,
     removeCollaborator,
+    notesOverview,
     createBlock,
     updateBlock: updateBlockService,
     deleteBlock: deleteBlockService,
@@ -410,6 +576,7 @@ const NoteDetail = () => {
   const [blocks, setBlocks] = useState<(Block & { children?: Block[] })[]>([]);
   const [editingTitle, setEditingTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // Estados para modais e funcionalidades
@@ -420,6 +587,219 @@ const NoteDetail = () => {
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [newTag, setNewTag] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [newUrl, setNewUrl] = useState("");
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showAllTags, setShowAllTags] = useState(false);
+  const [showRelationModal, setShowRelationModal] = useState(false);
+  const [relationSearchTerm, setRelationSearchTerm] = useState("");
+
+  // Refs para inputs de arquivo
+  const iconInputRef = React.useRef<HTMLInputElement>(null);
+  const bannerInputRef = React.useRef<HTMLInputElement>(null);
+  const filesInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Helper: salva no backend e retorna a nota atualizada (usado para uploads de arquivo)
+  const saveAndApply = async (data: UpdateNoteData): Promise<Note | null> => {
+    if (!note) return null;
+    setIsSaving(true);
+    try {
+      const updated = await updateNote(note.id, data);
+      if (updated) setNote(updated);
+      return updated;
+    } catch (err) {
+      console.error("Erro ao atualizar nota:", err);
+      return null;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) saveAndApply({ icon: file });
+    if (iconInputRef.current) iconInputRef.current.value = "";
+  };
+
+  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) saveAndApply({ banner: file });
+    if (bannerInputRef.current) bannerInputRef.current.value = "";
+  };
+
+  const handleFilesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files;
+    if (fileList?.length) saveAndApply({ files: Array.from(fileList) });
+    if (filesInputRef.current) filesInputRef.current.value = "";
+  };
+
+  const handleRemoveIcon = () => {
+    // Otimista: remove localmente primeiro
+    setNote((prev) =>
+      prev
+        ? {
+            ...prev,
+            properties: { ...prev.properties, icon: { url: "", name: "", type: "" } },
+          }
+        : null
+    );
+    saveAndApply({ properties: { icon: { url: "", name: "", type: "" } } });
+  };
+
+  const handleRemoveBanner = () => {
+    setNote((prev) =>
+      prev
+        ? {
+            ...prev,
+            properties: { ...prev.properties, banner: { url: "", name: "", type: "" } },
+          }
+        : null
+    );
+    saveAndApply({ properties: { banner: { url: "", name: "", type: "" } } });
+  };
+
+  const handleRemoveFile = (fileId: string) => {
+    if (!note) return;
+    const currentFiles = note.properties?.files || [];
+    const updatedFiles = currentFiles.filter((f) => f.id !== fileId);
+    // Otimista
+    setNote((prev) =>
+      prev ? { ...prev, properties: { ...prev.properties, files: updatedFiles } } : null
+    );
+    saveAndApply({ properties: { files: updatedFiles } });
+  };
+
+  // =================== FUNÇÕES PARA URLs ===================
+  const handleAddUrl = async () => {
+    if (!note || !newUrl.trim()) return;
+    const currentUrls = note.properties?.urls || [];
+    const updatedUrls = [...currentUrls, newUrl.trim()];
+    // Otimista
+    setNote((prev) =>
+      prev ? { ...prev, properties: { ...prev.properties, urls: updatedUrls } } : null
+    );
+    setNewUrl("");
+    setShowUrlInput(false);
+    try {
+      await saveAndApply({ properties: { urls: updatedUrls } });
+    } catch (error) {
+      // Reverter em caso de erro
+      setNote((prev) =>
+        prev ? { ...prev, properties: { ...prev.properties, urls: currentUrls } } : null
+      );
+      console.error("Erro ao adicionar URL:", error);
+    }
+  };
+
+  const handleRemoveUrl = async (urlToRemove: string) => {
+    if (!note) return;
+    const currentUrls = note.properties?.urls || [];
+    const updatedUrls = currentUrls.filter((u) => u !== urlToRemove);
+    // Otimista
+    setNote((prev) =>
+      prev ? { ...prev, properties: { ...prev.properties, urls: updatedUrls } } : null
+    );
+    try {
+      await saveAndApply({ properties: { urls: updatedUrls } });
+    } catch (error) {
+      setNote((prev) =>
+        prev ? { ...prev, properties: { ...prev.properties, urls: currentUrls } } : null
+      );
+      console.error("Erro ao remover URL:", error);
+    }
+  };
+
+  // =================== FUNÇÕES PARA RELAÇÕES ===================
+  const handleAddRelation = async (relatedNoteId: string) => {
+    if (!note) return;
+    const currentRelations = note.properties?.relations || [];
+    if (currentRelations.includes(relatedNoteId)) return;
+    const updatedRelations = [...currentRelations, relatedNoteId];
+    // Otimista
+    setNote((prev) =>
+      prev ? { ...prev, properties: { ...prev.properties, relations: updatedRelations } } : null
+    );
+    try {
+      await saveAndApply({ properties: { relations: updatedRelations } });
+    } catch (error) {
+      setNote((prev) =>
+        prev ? { ...prev, properties: { ...prev.properties, relations: currentRelations } } : null
+      );
+      console.error("Erro ao adicionar relação:", error);
+    }
+  };
+
+  const handleRemoveRelation = async (relatedNoteId: string) => {
+    if (!note) return;
+    const currentRelations = note.properties?.relations || [];
+    const updatedRelations = currentRelations.filter((id) => id !== relatedNoteId);
+    // Otimista
+    setNote((prev) =>
+      prev ? { ...prev, properties: { ...prev.properties, relations: updatedRelations } } : null
+    );
+    try {
+      await saveAndApply({ properties: { relations: updatedRelations } });
+    } catch (error) {
+      setNote((prev) =>
+        prev ? { ...prev, properties: { ...prev.properties, relations: currentRelations } } : null
+      );
+      console.error("Erro ao remover relação:", error);
+    }
+  };
+
+  const handleToggleRelation = (relatedNoteId: string) => {
+    const currentRelations = note?.properties?.relations || [];
+    if (currentRelations.includes(relatedNoteId)) {
+      handleRemoveRelation(relatedNoteId);
+    } else {
+      handleAddRelation(relatedNoteId);
+    }
+  };
+
+  // Notas filtradas para o modal de relações (exclui a nota atual)
+  const filteredRelationNotes = notesOverview
+    .filter((n) => n.id !== id)
+    .filter((n) =>
+      relationSearchTerm ? n.title.toLowerCase().includes(relationSearchTerm.toLowerCase()) : true
+    );
+
+  // Buscar dados das notas relacionadas pelo ID
+  const relatedNotesData = (note?.properties?.relations || [])
+    .map((relId) => notesOverview.find((n) => n.id === relId))
+    .filter(Boolean);
+
+  // =================== FUNÇÕES PARA COR ===================
+  const handleChangeColor = async (color: string) => {
+    if (!note) return;
+    const previousColor = note.properties?.color || "";
+    // Otimista
+    setNote((prev) => (prev ? { ...prev, properties: { ...prev.properties, color } } : null));
+    setShowColorPicker(false);
+    try {
+      await saveAndApply({ properties: { color } });
+    } catch (error) {
+      setNote((prev) =>
+        prev ? { ...prev, properties: { ...prev.properties, color: previousColor } } : null
+      );
+      console.error("Erro ao alterar cor:", error);
+    }
+  };
+
+  const handleRemoveColor = async () => {
+    if (!note) return;
+    const previousColor = note.properties?.color || "";
+    // Otimista
+    setNote((prev) => (prev ? { ...prev, properties: { ...prev.properties, color: "" } } : null));
+    setShowColorPicker(false);
+    try {
+      await saveAndApply({ properties: { color: "" } });
+    } catch (error) {
+      setNote((prev) =>
+        prev ? { ...prev, properties: { ...prev.properties, color: previousColor } } : null
+      );
+      console.error("Erro ao remover cor:", error);
+    }
+  };
 
   // Configuração dos sensores para drag and drop
   const sensors = useSensors(
@@ -437,14 +817,19 @@ const NoteDetail = () => {
   useEffect(() => {
     if (id) {
       const loadNote = async () => {
-        const loadedNote = await getNoteById(id);
-        if (loadedNote) {
-          setNote(loadedNote);
-          setEditingTitle(loadedNote.title);
-          // Carregar blocos da nota
-          if (loadedNote.blocks) {
-            setBlocks(loadedNote.blocks as (Block & { children?: Block[] })[]);
+        setInitialLoading(true);
+        try {
+          const loadedNote = await getNoteById(id);
+          if (loadedNote) {
+            setNote(loadedNote);
+            setEditingTitle(loadedNote.title);
+            // Carregar blocos da nota
+            if (loadedNote.blocks) {
+              setBlocks(loadedNote.blocks as (Block & { children?: Block[] })[]);
+            }
           }
+        } finally {
+          setInitialLoading(false);
         }
       };
       loadNote();
@@ -675,9 +1060,11 @@ const NoteDetail = () => {
         userId: userId,
       });
 
+      // Buscar dados atualizados dos colaboradores sem refresh bruto
       const updatedNote = await getNoteById(note.id);
       if (updatedNote) {
-        setNote(updatedNote);
+        // Só atualizar os colaboradores, sem re-renderizar tudo
+        setNote((prev) => (prev ? { ...prev, collaborators: updatedNote.collaborators } : null));
       }
 
       setShowShareModal(false);
@@ -701,16 +1088,24 @@ const NoteDetail = () => {
     }
 
     if (window.confirm(`Tem certeza que deseja remover ${collaboratorName} desta nota?`)) {
-      try {
-        const success = await removeCollaborator(note.id, collaboratorId);
+      // Otimista: remover localmente primeiro
+      const previousCollaborators = note.collaborators || [];
+      setNote((prev) =>
+        prev
+          ? {
+              ...prev,
+              collaborators: (prev.collaborators || []).filter(
+                (c) => getCollaboratorId(c) !== collaboratorId
+              ),
+            }
+          : null
+      );
 
-        if (success) {
-          const updatedNote = await getNoteById(note.id);
-          if (updatedNote) {
-            setNote(updatedNote);
-          }
-        }
+      try {
+        await removeCollaborator(note.id, collaboratorId);
       } catch (error) {
+        // Reverter em caso de erro
+        setNote((prev) => (prev ? { ...prev, collaborators: previousCollaborators } : null));
         console.error("Erro ao remover colaborador:", error);
         alert("Erro ao remover colaborador. Tente novamente.");
       }
@@ -727,18 +1122,17 @@ const NoteDetail = () => {
       return;
     }
 
-    try {
-      const updatedTags = [...currentTags, newTag.trim()];
-      const updatedNote = await updateNote(note.id, {
-        tags: updatedTags,
-      });
+    const updatedTags = [...currentTags, newTag.trim()];
+    // Otimista
+    setNote((prev) => (prev ? { ...prev, tags: updatedTags } : null));
+    setNewTag("");
+    setShowTagModal(false);
 
-      if (updatedNote) {
-        setNote((prev) => (prev ? { ...prev, tags: updatedTags } : null));
-        setNewTag("");
-        setShowTagModal(false);
-      }
+    try {
+      await updateNote(note.id, { tags: updatedTags });
     } catch (error) {
+      // Reverter
+      setNote((prev) => (prev ? { ...prev, tags: currentTags } : null));
       console.error("Erro ao adicionar tag:", error);
       alert("Erro ao adicionar tag. Tente novamente.");
     }
@@ -747,16 +1141,16 @@ const NoteDetail = () => {
   const handleRemoveTag = async (tagToRemove: string) => {
     if (!note) return;
 
-    try {
-      const updatedTags = (note.tags || []).filter((tag) => tag !== tagToRemove);
-      const updatedNote = await updateNote(note.id, {
-        tags: updatedTags,
-      });
+    const currentTags = note.tags || [];
+    const updatedTags = currentTags.filter((tag) => tag !== tagToRemove);
+    // Otimista
+    setNote((prev) => (prev ? { ...prev, tags: updatedTags } : null));
 
-      if (updatedNote) {
-        setNote((prev) => (prev ? { ...prev, tags: updatedTags } : null));
-      }
+    try {
+      await updateNote(note.id, { tags: updatedTags });
     } catch (error) {
+      // Reverter
+      setNote((prev) => (prev ? { ...prev, tags: currentTags } : null));
       console.error("Erro ao remover tag:", error);
       alert("Erro ao remover tag. Tente novamente.");
     }
@@ -787,20 +1181,26 @@ const NoteDetail = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [note, editingTitle]);
 
-  if (isLoading || !note) {
+  if (initialLoading || !note) {
     return <NoteDetailSkeleton />;
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-950 p-6">
-        <div className="max-w-md rounded-md border border-neutral-700 bg-neutral-900 p-6 text-center shadow-sm">
-          <div className="mb-4 text-lg text-neutral-300">⚠️ {error}</div>
+      <div className="flex h-full items-center justify-center p-6">
+        <div className="max-w-md rounded-lg border border-neutral-200 bg-white p-8 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/10">
+            <span className="text-xl">⚠️</span>
+          </div>
+          <p className="mb-1 font-semibold text-neutral-900 dark:text-neutral-100">
+            Erro ao carregar nota
+          </p>
+          <p className="mb-5 text-sm text-neutral-500 dark:text-neutral-400">{error}</p>
           <button
             onClick={handleBack}
-            className="mx-auto flex items-center gap-2 rounded-md bg-neutral-700 px-4 py-2 text-white transition-colors hover:bg-neutral-600"
+            className="inline-flex items-center gap-2 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
           >
-            <FaArrowLeft size={14} />
+            <ArrowLeft size={14} />
             Voltar para Notas
           </button>
         </div>
@@ -809,48 +1209,105 @@ const NoteDetail = () => {
   }
 
   return (
-    <div className="min-h-screen overflow-hidden rounded-md border border-neutral-800 bg-neutral-950 text-neutral-100 shadow-lg">
-      {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-neutral-800 bg-neutral-900 px-4 py-3 shadow-sm">
+    <div className="flex h-full flex-col overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+      {/* =================== HEADER =================== */}
+      <div className="flex-shrink-0 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5 dark:border-neutral-800 dark:bg-neutral-950">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <button
             onClick={handleBack}
-            className="rounded-md p-2 text-neutral-300 transition-all hover:bg-neutral-800 hover:text-yellow-500"
+            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-neutral-600 transition-all hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
             title="Voltar para lista de notas"
           >
-            <FaArrowLeft size={16} />
+            <ArrowLeft size={16} />
+            <span className="hidden sm:inline">Notas</span>
           </button>
 
-          <div className="flex items-center gap-3 text-sm text-neutral-400">
-            {note.updated_at && <span>Atualizada {formatDate(note.updated_at)}</span>}
-            <div className="flex items-center gap-1">
-              {note.access?.canEdit && (
-                <button
-                  onClick={() => setShowTagModal(true)}
-                  className="rounded-md p-2 text-neutral-400 transition-all hover:bg-neutral-800 hover:text-yellow-500"
-                  title="Gerenciar tags"
-                >
-                  <FaTag size={14} />
-                </button>
+          <div className="flex items-center gap-2">
+            {/* Status de salvamento */}
+            {isSaving ? (
+              <div className="flex items-center gap-1.5 rounded-md bg-yellow-50 px-2.5 py-1 dark:bg-yellow-500/10">
+                <Loader2 size={13} className="animate-spin text-yellow-600 dark:text-yellow-500" />
+                <span className="text-xs font-medium text-yellow-700 dark:text-yellow-500">
+                  Salvando...
+                </span>
+              </div>
+            ) : (
+              note.updated_at && (
+                <div className="hidden items-center gap-1.5 text-xs text-neutral-400 sm:flex dark:text-neutral-500">
+                  <Clock size={12} />
+                  <span>{formatDate(note.updated_at)}</span>
+                </div>
+              )
+            )}
+
+            <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
+
+            {/* Ações */}
+            <div className="flex items-center gap-0.5">
+              {note.access?.canEdit && !note.properties?.color && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowColorPicker(!showColorPicker)}
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-yellow-500"
+                    title="Adicionar cor"
+                  >
+                    <Palette size={15} />
+                  </button>
+                  {showColorPicker && (
+                    <div className="absolute top-full right-0 z-20 mt-1 rounded-lg border border-neutral-200 bg-white p-3 shadow-xl dark:border-neutral-700 dark:bg-neutral-900">
+                      <div className="mb-2 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                        Escolha uma cor
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[
+                          "#F6821F",
+                          "#EF4444",
+                          "#F59E0B",
+                          "#10B981",
+                          "#3B82F6",
+                          "#8B5CF6",
+                          "#EC4899",
+                          "#06B6D4",
+                          "#84CC16",
+                          "#F97316",
+                        ].map((c) => (
+                          <button
+                            key={c}
+                            onClick={() => handleChangeColor(c)}
+                            className="h-6 w-6 rounded-full border-2 border-transparent transition-all hover:scale-110 hover:border-neutral-400 dark:hover:border-neutral-500"
+                            style={{ backgroundColor: c }}
+                            title={c}
+                          />
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setShowColorPicker(false)}
+                        className="mt-2 w-full rounded-md px-2 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
 
               {note.access?.canShare && (
                 <button
                   onClick={() => setShowShareModal(true)}
-                  className="rounded-md p-2 text-neutral-400 transition-all hover:bg-neutral-800 hover:text-yellow-500"
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-yellow-500"
                   title="Compartilhar nota"
                 >
-                  <FaShare size={14} />
+                  <Share2 size={15} />
                 </button>
               )}
 
               {note.access?.canDelete && (
                 <button
                   onClick={handleDelete}
-                  className="rounded-md p-2 text-red-400 transition-all hover:bg-neutral-800 hover:text-red-300"
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-all hover:bg-red-50 hover:text-red-500 dark:text-neutral-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                   title="Deletar nota"
                 >
-                  <FaTrash size={14} />
+                  <Trash2 size={15} />
                 </button>
               )}
             </div>
@@ -858,224 +1315,685 @@ const NoteDetail = () => {
         </div>
       </div>
 
-      {/* Conteúdo principal */}
-      <div className="mx-auto max-w-4xl px-4 py-6">
-        {/* Título */}
-        <div className="mb-6">
-          <input
-            type="text"
-            value={editingTitle}
-            onChange={(e) => setEditingTitle(e.target.value)}
-            onBlur={async () => {
-              if (note && editingTitle !== note.title) {
-                setIsSaving(true);
-                try {
-                  const updated = await updateNote(note.id, { title: editingTitle });
-                  if (updated) setNote(updated);
-                } catch (error) {
-                  console.error("Erro ao salvar título:", error);
-                } finally {
-                  setIsSaving(false);
-                }
-              }
-            }}
-            placeholder="Título da nota..."
-            className="w-full border-b-2 border-transparent bg-transparent pb-1 text-2xl font-bold text-neutral-100 placeholder-neutral-500 outline-none focus:border-yellow-500"
-          />
-        </div>
+      {/* =================== CONTEÚDO PRINCIPAL =================== */}
+      <div className="no-scrollbar flex-1 overflow-y-auto">
+        {/* Hidden file inputs */}
+        <input
+          ref={iconInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleIconUpload}
+        />
+        <input
+          ref={bannerInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleBannerUpload}
+        />
+        <input
+          ref={filesInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleFilesUpload}
+        />
 
-        {/* Meta informações */}
-        <div className="mb-6 flex flex-wrap items-center gap-6 border-b border-neutral-800 pb-4 text-sm text-neutral-400">
-          {/* Tags */}
-          {note.tags && note.tags.length > 0 && (
-            <div className="flex items-center gap-2">
-              <FaTag className="text-yellow-500" size={12} />
-              <div className="flex flex-wrap gap-1">
-                {note.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="group flex items-center gap-1 rounded-md bg-neutral-800 px-2 py-1 text-xs text-yellow-500 transition-colors hover:bg-neutral-700"
+        {/* Banner */}
+        {note.properties?.banner?.url ? (
+          <div className="group relative h-52 w-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+            <Image
+              src={note.properties.banner.url}
+              alt="Banner"
+              fill
+              sizes="100vw"
+              className="object-cover"
+            />
+            {note.access?.canEdit && (
+              <div className="absolute right-3 bottom-3 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                <button
+                  onClick={() => bannerInputRef.current?.click()}
+                  className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-black/70"
+                >
+                  Trocar
+                </button>
+                <button
+                  onClick={handleRemoveBanner}
+                  className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-red-500/80"
+                >
+                  Remover
+                </button>
+              </div>
+            )}
+          </div>
+        ) : note.properties?.color ? (
+          <div className="h-28 w-full" style={{ backgroundColor: note.properties.color }} />
+        ) : null}
+
+        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8">
+          {/* Ícone e ações de propriedades */}
+          <div
+            className={`group/props mb-3 flex items-center gap-3 ${
+              note.properties?.banner?.url || note.properties?.color ? "relative z-10 -mt-12" : ""
+            }`}
+          >
+            {note.properties?.icon?.url ? (
+              <div className="group relative">
+                <div className="h-14 w-14 overflow-hidden rounded-xl border-2 border-white bg-white shadow-md dark:border-neutral-900 dark:bg-neutral-900">
+                  <Image
+                    src={note.properties.icon.url}
+                    alt="Ícone"
+                    width={56}
+                    height={56}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                {note.access?.canEdit && (
+                  <div className="absolute -top-1 -right-1 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      onClick={() => iconInputRef.current?.click()}
+                      className="rounded-full bg-neutral-800/70 p-1 text-white backdrop-blur-sm hover:bg-neutral-800"
+                      title="Trocar ícone"
+                    >
+                      <ImagePlus size={10} />
+                    </button>
+                    <button
+                      onClick={handleRemoveIcon}
+                      className="rounded-full bg-neutral-800/70 p-1 text-white backdrop-blur-sm hover:bg-red-500"
+                      title="Remover ícone"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : null}
+            {note.access?.canEdit && (
+              <div
+                className={`flex items-center gap-1 transition-opacity ${
+                  note.properties?.icon?.url && note.properties?.banner?.url
+                    ? "opacity-0 group-hover/props:opacity-100"
+                    : ""
+                }`}
+              >
+                <button
+                  onClick={() => filesInputRef.current?.click()}
+                  className="flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-yellow-500/5 dark:hover:text-yellow-500"
+                  title="Adicionar arquivos"
+                >
+                  <FileText size={12} />
+                  Arquivos
+                </button>
+                {!note.properties?.icon?.url && (
+                  <button
+                    onClick={() => iconInputRef.current?.click()}
+                    className="flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-yellow-500/5 dark:hover:text-yellow-500"
+                    title="Adicionar ícone"
                   >
-                    {tag}
+                    <ImagePlus size={12} />
+                    Ícone
+                  </button>
+                )}
+                {!note.properties?.banner?.url && (
+                  <button
+                    onClick={() => bannerInputRef.current?.click()}
+                    className="flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-yellow-500/5 dark:hover:text-yellow-500"
+                    title="Adicionar banner"
+                  >
+                    <ImagePlus size={12} />
+                    Banner
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowTagModal(true)}
+                  className="flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-yellow-500/5 dark:hover:text-yellow-500"
+                  title="Gerenciar tags"
+                >
+                  <Tag size={12} />
+                  Tags
+                </button>
+                <button
+                  onClick={() => setShowRelationModal(true)}
+                  className="flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-yellow-500/5 dark:hover:text-yellow-500"
+                  title="Gerenciar relações"
+                >
+                  <Link size={12} />
+                  Relações
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Título */}
+          <div className="mb-4">
+            <textarea
+              ref={(el) => {
+                if (el) {
+                  el.style.height = "auto";
+                  el.style.height = `${el.scrollHeight}px`;
+                }
+              }}
+              value={editingTitle}
+              onChange={(e) => {
+                setEditingTitle(e.target.value);
+                const el = e.target;
+                el.style.height = "auto";
+                el.style.height = `${el.scrollHeight}px`;
+              }}
+              onBlur={async () => {
+                if (note && editingTitle !== note.title) {
+                  setIsSaving(true);
+                  try {
+                    const updated = await updateNote(note.id, { title: editingTitle });
+                    if (updated) setNote(updated);
+                  } catch (error) {
+                    console.error("Erro ao salvar título:", error);
+                  } finally {
+                    setIsSaving(false);
+                  }
+                }
+              }}
+              placeholder="Título da nota..."
+              rows={1}
+              className="w-full resize-none overflow-hidden bg-transparent text-xl font-bold text-neutral-900 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-100 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
+            />
+          </div>
+
+          {/* Meta informações */}
+          <div className="mb-6 flex flex-col gap-3 border-b border-neutral-100 pb-4 sm:flex-row sm:flex-wrap sm:items-center dark:border-neutral-800">
+            {/* Tags */}
+            {note.tags && note.tags.length > 0 && (
+              <div className="flex items-center gap-2 overflow-x-auto">
+                <Tag className="flex-shrink-0 text-neutral-400 dark:text-neutral-500" size={13} />
+                <div className="flex flex-wrap gap-1.5">
+                  {(showAllTags ? note.tags : note.tags.slice(0, 4)).map((tag, index) => (
+                    <span
+                      key={index}
+                      className="group flex items-center gap-1 rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
+                    >
+                      {tag}
+                      {note.access?.canEdit && (
+                        <button
+                          onClick={() => handleRemoveTag(tag)}
+                          className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                          title="Remover tag"
+                        >
+                          <X size={10} />
+                        </button>
+                      )}
+                    </span>
+                  ))}
+                  {note.tags.length > 4 && (
+                    <button
+                      onClick={() => setShowAllTags(!showAllTags)}
+                      className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
+                    >
+                      {showAllTags ? "Ver menos" : `+${note.tags.length - 4}`}
+                    </button>
+                  )}
+                  {note.access?.canEdit && (
+                    <button
+                      onClick={() => setShowTagModal(true)}
+                      className="rounded-full border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
+                      title="Adicionar tag"
+                    >
+                      <Plus size={10} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Colaboradores */}
+            {note.collaborators && note.collaborators.length > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-700" />
+                <div className="flex items-center">
+                  <div className="flex -space-x-1.5">
+                    {note.collaborators.map((collab, index) => {
+                      const displayName = getCollaboratorDisplayName(collab);
+                      const avatarUrl = getCollaboratorAvatarUrl(collab);
+
+                      return (
+                        <div
+                          key={index}
+                          className="group relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-200 ring-0 transition-all hover:z-10 hover:ring-2 hover:ring-yellow-500/30 dark:border-neutral-900 dark:bg-neutral-700"
+                          title={displayName}
+                        >
+                          {avatarUrl ? (
+                            <Image
+                              width={28}
+                              height={28}
+                              src={avatarUrl}
+                              alt={displayName}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-300">
+                              {displayName.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+
+                          {note.access?.canShare && (
+                            <button
+                              onClick={() => handleRemoveCollaborator(collab)}
+                              className="absolute inset-0 flex items-center justify-center rounded-full bg-red-500/80 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                              title="Remover colaborador"
+                            >
+                              <X size={10} />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <span className="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
+                    {note.collaborators.length} colaborador
+                    {note.collaborators.length > 1 ? "es" : ""}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Cor */}
+            {note.properties?.color ? (
+              <div className="flex items-center gap-2">
+                <div className="hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-700" />
+                <div className="group relative">
+                  <div
+                    className="h-5 w-5 cursor-pointer rounded-full border border-neutral-200 shadow-inner transition-transform hover:scale-110 dark:border-neutral-600"
+                    style={{ backgroundColor: note.properties.color }}
+                    title={`Cor: ${note.properties.color}`}
+                    onClick={() => note.access?.canEdit && setShowColorPicker(!showColorPicker)}
+                  />
+                  {note.access?.canEdit && (
+                    <button
+                      onClick={handleRemoveColor}
+                      className="absolute -top-1 -right-1 rounded-full bg-neutral-800/70 p-0.5 text-white opacity-100 transition-opacity hover:bg-red-500 sm:opacity-0 sm:group-hover:opacity-100"
+                      title="Remover cor"
+                    >
+                      <X size={8} />
+                    </button>
+                  )}
+                  {showColorPicker && note.access?.canEdit && (
+                    <div className="fixed inset-x-4 bottom-4 z-30 rounded-lg border border-neutral-200 bg-white p-4 shadow-xl sm:absolute sm:inset-auto sm:top-full sm:bottom-auto sm:left-0 sm:mt-1 sm:p-3 dark:border-neutral-700 dark:bg-neutral-900">
+                      <div className="mb-2 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                        Trocar cor
+                      </div>
+                      <div className="flex flex-wrap gap-2 sm:gap-1.5">
+                        {[
+                          "#F6821F",
+                          "#EF4444",
+                          "#F59E0B",
+                          "#10B981",
+                          "#3B82F6",
+                          "#8B5CF6",
+                          "#EC4899",
+                          "#06B6D4",
+                          "#84CC16",
+                          "#F97316",
+                        ].map((c) => (
+                          <button
+                            key={c}
+                            onClick={() => handleChangeColor(c)}
+                            className={`h-8 w-8 rounded-full border-2 transition-all hover:scale-110 sm:h-6 sm:w-6 ${
+                              note.properties?.color === c
+                                ? "border-neutral-900 dark:border-white"
+                                : "border-transparent hover:border-neutral-400 dark:hover:border-neutral-500"
+                            }`}
+                            style={{ backgroundColor: c }}
+                            title={c}
+                          />
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setShowColorPicker(false)}
+                        className="mt-3 w-full rounded-md px-2 py-1.5 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 sm:mt-2 sm:py-1 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
+                      >
+                        Fechar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
+
+            {/* Relações */}
+            {relatedNotesData.length > 0 && (
+              <div className="flex w-full flex-col gap-1.5 pt-1 sm:gap-1">
+                <div className="mb-1 flex items-center gap-2">
+                  <Link
+                    className="flex-shrink-0 text-neutral-400 dark:text-neutral-500"
+                    size={13}
+                  />
+                  <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                    Relações
+                  </span>
+                </div>
+                {relatedNotesData.map((relNote) => (
+                  <div key={relNote!.id} className="group/rel flex items-center gap-1">
+                    <button
+                      onClick={() => router.push(`/app/notes/view/${relNote!.id}`)}
+                      className="inline-flex min-w-0 flex-1 items-center gap-2 truncate rounded-md px-1.5 py-1 text-xs text-neutral-600 transition-colors hover:bg-neutral-100 sm:py-0.5 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                    >
+                      {relNote!.properties?.icon?.url ? (
+                        <Image
+                          src={relNote!.properties.icon.url}
+                          alt=""
+                          width={14}
+                          height={14}
+                          className="flex-shrink-0 rounded"
+                        />
+                      ) : (
+                        <Link size={12} className="flex-shrink-0 text-yellow-500" />
+                      )}
+                      <span className="truncate">{relNote!.title || "Nota sem título"}</span>
+                      <ExternalLink
+                        size={10}
+                        className="flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover/rel:opacity-100"
+                      />
+                    </button>
                     {note.access?.canEdit && (
                       <button
-                        onClick={() => handleRemoveTag(tag)}
-                        className="ml-1 text-neutral-400 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400"
-                        title="Remover tag"
+                        onClick={() => handleRemoveRelation(relNote!.id)}
+                        className="flex-shrink-0 rounded-md p-1 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:p-0.5 sm:opacity-0 sm:group-hover/rel:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                        title="Remover relação"
                       >
-                        <FaTimes size={10} />
+                        <X size={12} />
                       </button>
                     )}
-                  </span>
+                  </div>
                 ))}
+                {note.access?.canEdit && (
+                  <button
+                    onClick={() => setShowRelationModal(true)}
+                    className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 sm:py-0.5 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-400"
+                  >
+                    <Plus size={12} />
+                    Adicionar relação
+                  </button>
+                )}
               </div>
-            </div>
-          )}
-          {/* Colaboradores */}
-          {note.collaborators && note.collaborators.length > 0 && (
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-neutral-500">Colaboradores:</span>
-              <div className="flex flex-wrap gap-2">
-                {note.collaborators.map((collab, index) => {
-                  const displayName = getCollaboratorDisplayName(collab);
-                  const avatarUrl = getCollaboratorAvatarUrl(collab);
+            )}
 
-                  return (
-                    <div
-                      key={index}
-                      className="group flex items-center gap-2 rounded-md bg-neutral-800 px-2 py-1 transition-colors hover:bg-neutral-700"
-                    >
-                      <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-neutral-700 bg-yellow-500">
-                        {avatarUrl ? (
-                          <Image
-                            width={24}
-                            height={24}
-                            src={avatarUrl}
-                            alt={displayName}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-xs font-semibold text-neutral-950">
-                            {displayName.charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-
-                      <span className="text-xs font-medium text-neutral-300">{displayName}</span>
-
-                      {note.access?.canShare && (
+            {/* URLs */}
+            <div className="flex w-full flex-col gap-1.5 pt-1 sm:gap-1">
+              {note.properties?.urls && note.properties.urls.length > 0 && (
+                <>
+                  {note.properties.urls.filter(Boolean).map((url, index) => (
+                    <div key={index} className="group/url flex items-center gap-1">
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-w-0 flex-1 items-center gap-2 truncate rounded-md px-1.5 py-1 text-xs text-blue-500 transition-colors hover:bg-blue-50 sm:py-0.5 dark:text-blue-400 dark:hover:bg-blue-500/10"
+                      >
+                        <Link2 size={12} className="flex-shrink-0" />
+                        <span className="truncate">{url}</span>
+                        <ExternalLink
+                          size={10}
+                          className="flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover/url:opacity-100"
+                        />
+                      </a>
+                      {note.access?.canEdit && (
                         <button
-                          onClick={() => handleRemoveCollaborator(collab)}
-                          className="ml-1 text-neutral-500 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400"
-                          title="Remover colaborador"
+                          onClick={() => handleRemoveUrl(url)}
+                          className="flex-shrink-0 rounded-md p-1 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:p-0.5 sm:opacity-0 sm:group-hover/url:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                          title="Remover URL"
                         >
-                          <FaTimes size={10} />
+                          <X size={12} />
                         </button>
                       )}
                     </div>
-                  );
-                })}
+                  ))}
+                </>
+              )}
+              {note.access?.canEdit && (
+                <>
+                  {showUrlInput ? (
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-1.5">
+                      <div className="flex flex-1 items-center gap-1.5">
+                        <Link2 size={12} className="flex-shrink-0 text-neutral-400" />
+                        <input
+                          type="url"
+                          value={newUrl}
+                          onChange={(e) => setNewUrl(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddUrl();
+                            }
+                            if (e.key === "Escape") {
+                              setShowUrlInput(false);
+                              setNewUrl("");
+                            }
+                          }}
+                          placeholder="https://..."
+                          className="flex-1 rounded-md border border-neutral-200 bg-transparent px-2 py-1.5 text-sm text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 sm:py-1 sm:text-xs dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5 pl-5 sm:pl-0">
+                        <button
+                          onClick={handleAddUrl}
+                          disabled={!newUrl.trim()}
+                          className="rounded-md bg-yellow-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-yellow-600 disabled:opacity-50 sm:px-2 sm:py-1 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
+                        >
+                          Adicionar
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowUrlInput(false);
+                            setNewUrl("");
+                          }}
+                          className="rounded-md p-1.5 text-neutral-400 transition-colors hover:text-neutral-600 sm:p-1 dark:hover:text-neutral-300"
+                          title="Cancelar"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowUrlInput(true)}
+                      className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 sm:py-0.5 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-400"
+                    >
+                      <Plus size={12} />
+                      Adicionar URL
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Arquivos */}
+            {note.properties?.files && note.properties.files.filter((f) => f.url).length > 0 && (
+              <div className="flex w-full flex-col gap-1.5 pt-1 sm:gap-1">
+                {note.properties.files
+                  .filter((f) => f.url)
+                  .map((file, index) => (
+                    <div key={file.id || index} className="group/file flex items-center gap-1">
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-w-0 flex-1 items-center gap-2 truncate rounded-md px-1.5 py-1 text-xs text-neutral-600 transition-colors hover:bg-neutral-100 sm:py-0.5 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                      >
+                        <FileText size={12} className="flex-shrink-0 text-yellow-500" />
+                        <span className="truncate">{file.name || "Arquivo"}</span>
+                        {file.type && (
+                          <span className="hidden flex-shrink-0 text-[10px] text-neutral-400 sm:inline dark:text-neutral-500">
+                            {file.type}
+                          </span>
+                        )}
+                        <ExternalLink
+                          size={10}
+                          className="flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover/file:opacity-100"
+                        />
+                      </a>
+                      <a
+                        href={file.url}
+                        download={file.name || "arquivo"}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-shrink-0 rounded-md p-1 text-neutral-400 opacity-100 transition-all hover:text-neutral-600 sm:p-0.5 sm:opacity-0 sm:group-hover/file:opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
+                        title="Baixar arquivo"
+                      >
+                        <Download size={12} />
+                      </a>
+                      {note.access?.canEdit && (
+                        <button
+                          onClick={() => handleRemoveFile(file.id)}
+                          className="flex-shrink-0 rounded-md p-1 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:p-0.5 sm:opacity-0 sm:group-hover/file:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                          title="Remover arquivo"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                {note.access?.canEdit && (
+                  <button
+                    onClick={() => filesInputRef.current?.click()}
+                    className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 sm:py-0.5 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-400"
+                  >
+                    <Plus size={12} />
+                    Adicionar arquivo
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* =================== BLOCOS =================== */}
+          <div className="space-y-1 pl-0 sm:pl-6">
+            {blocks.length > 0 ? (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={blocks.map((b) => b.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {blocks.map((block) => (
+                    <SortableBlockComponent
+                      key={block.id}
+                      block={block}
+                      noteId={note.id}
+                      onUpdate={handleUpdateBlock}
+                      onDelete={handleDeleteBlock}
+                      onAddBlock={() => setShowBlockTypeSelector(true)}
+                    />
+                  ))}
+                </SortableContext>
+
+                {/* Overlay para mostrar o item sendo arrastado */}
+                <DragOverlay>
+                  {activeBlock ? (
+                    <div className="rounded-lg border border-yellow-500/30 bg-white px-3 py-2 shadow-xl dark:border-yellow-500/50 dark:bg-neutral-900">
+                      <BlockComponent
+                        block={activeBlock}
+                        noteId={note.id}
+                        onUpdate={handleUpdateBlock}
+                        onDelete={handleDeleteBlock}
+                        onAddBlock={() => {}}
+                        isDragging={true}
+                      />
+                    </div>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+            ) : (
+              <div className="flex min-h-[160px] flex-col items-center justify-center rounded-lg border border-dashed border-neutral-200 px-4 py-8 sm:min-h-[240px] sm:py-10 dark:border-neutral-800">
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 sm:h-12 sm:w-12 dark:bg-neutral-800">
+                  <Type size={18} className="text-neutral-400 sm:hidden dark:text-neutral-500" />
+                  <Type
+                    size={20}
+                    className="hidden text-neutral-400 sm:block dark:text-neutral-500"
+                  />
+                </div>
+                <p className="text-center text-sm font-medium text-neutral-700 sm:text-base dark:text-neutral-300">
+                  Esta nota ainda não tem conteúdo
+                </p>
+                <p className="mt-1 text-center text-xs text-neutral-400 sm:text-sm dark:text-neutral-500">
+                  Toque em &quot;Adicionar bloco&quot; para começar
+                </p>
+              </div>
+            )}
+
+            {/* Botão para adicionar novo bloco */}
+            {note.access?.canEdit && (
+              <div className="relative pt-4">
+                <button
+                  onClick={() => setShowBlockTypeSelector(!showBlockTypeSelector)}
+                  className="flex items-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-400 transition-all hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-700 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-yellow-500/5 dark:hover:text-yellow-500"
+                >
+                  <Plus size={14} />
+                  Adicionar bloco
+                </button>
+
+                {showBlockTypeSelector && (
+                  <BlockTypeSelector
+                    onSelect={(type) => handleAddBlock(type)}
+                    onClose={() => setShowBlockTypeSelector(false)}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Atalhos de teclado - visível apenas em desktop */}
+          {note.access?.canEdit && (
+            <div className="mt-10 hidden border-t border-neutral-100 pt-4 sm:block dark:border-neutral-800">
+              <div className="flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500">
+                <Save size={12} />
+                <span>
+                  <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                    Ctrl+S
+                  </kbd>
+                  <span className="ml-1.5">para forçar salvamento</span>
+                </span>
               </div>
             </div>
           )}
         </div>
-
-        {/* Conteúdo - Blocos */}
-        <div className="space-y-2">
-          {blocks.length > 0 ? (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={blocks.map((b) => b.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {blocks.map((block) => (
-                  <SortableBlockComponent
-                    key={block.id}
-                    block={block}
-                    noteId={note.id}
-                    onUpdate={handleUpdateBlock}
-                    onDelete={handleDeleteBlock}
-                    onAddBlock={() => setShowBlockTypeSelector(true)}
-                  />
-                ))}
-              </SortableContext>
-
-              {/* Overlay para mostrar o item sendo arrastado */}
-              <DragOverlay>
-                {activeBlock ? (
-                  <div className="rounded-md border border-yellow-500/50 bg-neutral-900 px-2 py-1 shadow-xl">
-                    <BlockComponent
-                      block={activeBlock}
-                      noteId={note.id}
-                      onUpdate={handleUpdateBlock}
-                      onDelete={handleDeleteBlock}
-                      onAddBlock={() => {}}
-                      isDragging={true}
-                    />
-                  </div>
-                ) : null}
-              </DragOverlay>
-            </DndContext>
-          ) : (
-            <div className="min-h-[200px] rounded-md border-2 border-dashed border-neutral-700 py-8 text-center text-neutral-500">
-              <div className="mb-2">📝</div>
-              <p>Esta nota ainda não tem conteúdo.</p>
-              <p className="mt-1 text-sm">Clique em &quot;Adicionar bloco&quot; para começar</p>
-            </div>
-          )}
-
-          {/* Botão para adicionar novo bloco */}
-          {note.access?.canEdit && (
-            <div className="relative pt-4">
-              <button
-                onClick={() => setShowBlockTypeSelector(!showBlockTypeSelector)}
-                className="flex items-center gap-2 rounded-md border border-dashed border-neutral-700 px-4 py-2 text-sm text-neutral-500 transition-all hover:border-yellow-500 hover:text-yellow-500"
-              >
-                <FaPlus size={12} />
-                Adicionar bloco
-              </button>
-
-              {showBlockTypeSelector && (
-                <BlockTypeSelector
-                  onSelect={(type) => handleAddBlock(type)}
-                  onClose={() => setShowBlockTypeSelector(false)}
-                />
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Atalhos de teclado */}
-        {note.access?.canEdit && (
-          <div className="mt-8 border-t border-neutral-800 pt-4">
-            <div className="text-xs text-neutral-500">
-              <span className="font-semibold">Atalho:</span>
-              <span className="ml-2">Ctrl+S para forçar salvamento</span>
-            </div>
-          </div>
-        )}
-
-        {/* Indicador de salvamento */}
-        {isSaving && (
-          <div className="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 shadow-lg">
-            <FaSpinner className="animate-spin text-yellow-500" size={14} />
-            <span className="text-sm text-neutral-200">Salvando...</span>
-          </div>
-        )}
       </div>
 
-      {/* Modal de Compartilhamento */}
+      {/* =================== MODAL DE COMPARTILHAMENTO =================== */}
       {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-md border border-neutral-700 bg-neutral-900 p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="flex items-center gap-2 text-lg font-semibold text-neutral-100">
-                <FaUserPlus className="text-yellow-500" size={16} />
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+          <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-lg sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
+            {/* Handle para mobile */}
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
+
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50 dark:bg-yellow-500/10">
+                  <UserPlus size={16} className="text-yellow-600 dark:text-yellow-500" />
+                </div>
                 Compartilhar Nota
               </h3>
               <button
                 onClick={() => setShowShareModal(false)}
-                className="p-1 text-neutral-400 hover:text-neutral-200"
+                className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                 title="Fechar modal"
               >
-                <FaTimes size={16} />
+                <X size={18} />
               </button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-300">
+                <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   Buscar usuário por email
                 </label>
                 <div className="relative">
-                  <FaSearch
-                    className="absolute top-1/2 left-3 -translate-y-1/2 transform text-neutral-400"
-                    size={14}
+                  <Search
+                    className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-400"
+                    size={15}
                   />
                   <input
                     type="email"
@@ -1085,39 +2003,44 @@ const NoteDetail = () => {
                       handleSearchUsers(e.target.value);
                     }}
                     placeholder="Digite o email do usuário..."
-                    className="w-full rounded-md border border-neutral-700 bg-neutral-800 py-2 pr-4 pl-10 text-neutral-100 placeholder-neutral-500 focus:border-transparent focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-3 pr-4 pl-10 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
                   />
                   {isSearching && (
-                    <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
-                      <FaSpinner className="animate-spin text-yellow-500" size={14} />
+                    <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                      <Loader2
+                        size={15}
+                        className="animate-spin text-yellow-600 dark:text-yellow-500"
+                      />
                     </div>
                   )}
                 </div>
               </div>
 
               {searchResults.length > 0 && (
-                <div className="max-h-32 space-y-2 overflow-y-auto">
+                <div className="max-h-48 space-y-1.5 overflow-y-auto sm:max-h-36">
                   {searchResults.map((user) => (
                     <div
                       key={user.id}
-                      className="flex items-center justify-between rounded-md bg-neutral-800 p-2 transition-colors hover:bg-neutral-700"
+                      className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 p-2.5 transition-colors hover:bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                     >
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500">
-                          <span className="text-xs font-semibold text-neutral-950">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-500/20">
+                          <span className="text-xs font-bold text-yellow-700 dark:text-yellow-500">
                             {(user.name || user.username).charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        <div>
-                          <div className="text-sm font-medium text-neutral-200">
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
                             {user.name || user.username}
                           </div>
-                          <div className="text-xs text-neutral-400">{user.email}</div>
+                          <div className="truncate text-xs text-neutral-500 dark:text-neutral-400">
+                            {user.email}
+                          </div>
                         </div>
                       </div>
                       <button
                         onClick={() => handleShareNote(user.id)}
-                        className="rounded bg-yellow-500 px-3 py-1 text-xs font-medium text-neutral-950 transition-colors hover:bg-yellow-400"
+                        className="ml-2 flex-shrink-0 rounded-md bg-yellow-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
                       >
                         Adicionar
                       </button>
@@ -1126,10 +2049,10 @@ const NoteDetail = () => {
                 </div>
               )}
 
-              <div className="flex justify-end gap-2 border-t border-neutral-700 pt-4">
+              <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-neutral-800">
                 <button
                   onClick={() => setShowShareModal(false)}
-                  className="px-4 py-2 text-neutral-400 transition-colors hover:text-neutral-200"
+                  className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                 >
                   Cancelar
                 </button>
@@ -1139,34 +2062,180 @@ const NoteDetail = () => {
         </div>
       )}
 
-      {/* Modal de Tags */}
-      {showTagModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-md border border-neutral-700 bg-neutral-900 p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="flex items-center gap-2 text-lg font-semibold text-neutral-100">
-                <FaTag className="text-yellow-500" size={16} />
-                Gerenciar Tags
+      {/* =================== MODAL DE RELAÇÕES =================== */}
+      {showRelationModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+          <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-lg sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
+            {/* Handle para mobile */}
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
+
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50 dark:bg-yellow-500/10">
+                  <Link size={16} className="text-yellow-600 dark:text-yellow-500" />
+                </div>
+                Relações
               </h3>
               <button
-                onClick={() => setShowTagModal(false)}
-                className="p-1 text-neutral-400 hover:text-neutral-200"
+                onClick={() => {
+                  setShowRelationModal(false);
+                  setRelationSearchTerm("");
+                }}
+                className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                 title="Fechar modal"
               >
-                <FaTimes size={16} />
+                <X size={18} />
               </button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-300">Nova tag</label>
-                <div className="flex gap-2">
+                <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  Buscar notas
+                </label>
+                <div className="relative">
+                  <Search
+                    className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-400"
+                    size={15}
+                  />
+                  <input
+                    type="text"
+                    value={relationSearchTerm}
+                    onChange={(e) => setRelationSearchTerm(e.target.value)}
+                    placeholder="Pesquisar por título..."
+                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-3 pr-4 pl-10 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="max-h-64 space-y-1 overflow-y-auto sm:max-h-52">
+                {filteredRelationNotes.length > 0 ? (
+                  filteredRelationNotes.map((relNote) => {
+                    const isSelected = (note?.properties?.relations || []).includes(relNote.id);
+                    return (
+                      <button
+                        key={relNote.id}
+                        onClick={() => handleToggleRelation(relNote.id)}
+                        className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors sm:py-2 ${
+                          isSelected
+                            ? "bg-yellow-50 ring-1 ring-yellow-200 dark:bg-yellow-500/10 dark:ring-yellow-500/30"
+                            : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                        }`}
+                      >
+                        <div
+                          className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-all ${
+                            isSelected
+                              ? "border-yellow-500 bg-yellow-500 text-white"
+                              : "border-neutral-300 dark:border-neutral-600"
+                          }`}
+                        >
+                          {isSelected && <CheckSquare size={10} />}
+                        </div>
+                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                          {relNote.properties?.icon?.url ? (
+                            <Image
+                              src={relNote.properties.icon.url}
+                              alt=""
+                              width={20}
+                              height={20}
+                              className="flex-shrink-0 rounded"
+                            />
+                          ) : (
+                            <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded bg-neutral-100 dark:bg-neutral-800">
+                              <Type size={10} className="text-neutral-400" />
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                              {relNote.title || "Nota sem título"}
+                            </div>
+                            {relNote.tags && relNote.tags.length > 0 && (
+                              <div className="mt-0.5 flex gap-1 overflow-hidden">
+                                {relNote.tags.slice(0, 3).map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="py-6 text-center text-sm text-neutral-400 dark:text-neutral-500">
+                    {relationSearchTerm ? "Nenhuma nota encontrada" : "Nenhuma nota disponível"}
+                  </div>
+                )}
+              </div>
+
+              {/* Notas selecionadas */}
+              {(note?.properties?.relations || []).length > 0 && (
+                <div className="border-t border-neutral-100 pt-3 dark:border-neutral-800">
+                  <div className="mb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                    {(note?.properties?.relations || []).length} nota
+                    {(note?.properties?.relations || []).length !== 1 ? "s" : ""} relacionada
+                    {(note?.properties?.relations || []).length !== 1 ? "s" : ""}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                <button
+                  onClick={() => {
+                    setShowRelationModal(false);
+                    setRelationSearchTerm("");
+                  }}
+                  className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================== MODAL DE TAGS =================== */}
+      {showTagModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+          <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-lg sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
+            {/* Handle para mobile */}
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
+
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50 dark:bg-yellow-500/10">
+                  <Tag size={16} className="text-yellow-600 dark:text-yellow-500" />
+                </div>
+                Gerenciar Tags
+              </h3>
+              <button
+                onClick={() => setShowTagModal(false)}
+                className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                title="Fechar modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  Nova tag
+                </label>
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <input
                     type="text"
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
                     placeholder="Digite o nome da tag..."
-                    className="flex-1 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-100 placeholder-neutral-500 focus:border-transparent focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+                    className="flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-3 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -1177,9 +2246,9 @@ const NoteDetail = () => {
                   <button
                     onClick={handleAddTag}
                     disabled={!newTag.trim()}
-                    className="flex items-center gap-1 rounded-md bg-yellow-500 px-3 py-2 text-neutral-950 transition-colors hover:bg-yellow-400 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex items-center justify-center gap-1.5 rounded-md bg-yellow-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-50 sm:py-2.5 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
                   >
-                    <FaPlus size={12} />
+                    <Plus size={14} />
                     Adicionar
                   </button>
                 </div>
@@ -1187,22 +2256,22 @@ const NoteDetail = () => {
 
               {note && note.tags && note.tags.length > 0 && (
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-neutral-300">
+                  <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
                     Tags existentes
                   </label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex max-h-32 flex-wrap gap-2 overflow-y-auto">
                     {note.tags.map((tag, index) => (
                       <span
                         key={index}
-                        className="group flex items-center gap-2 rounded-md bg-neutral-800 px-3 py-1 text-sm text-yellow-500 transition-colors hover:bg-neutral-700"
+                        className="group flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
                       >
                         {tag}
                         <button
                           onClick={() => handleRemoveTag(tag)}
-                          className="text-neutral-400 transition-colors hover:text-red-400"
+                          className="text-neutral-400 transition-colors hover:text-red-500 dark:text-neutral-500 dark:hover:text-red-400"
                           title="Remover tag"
                         >
-                          <FaTimes size={12} />
+                          <X size={12} />
                         </button>
                       </span>
                     ))}
@@ -1210,10 +2279,10 @@ const NoteDetail = () => {
                 </div>
               )}
 
-              <div className="flex justify-end gap-2 border-t border-neutral-700 pt-4">
+              <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-neutral-800">
                 <button
                   onClick={() => setShowTagModal(false)}
-                  className="px-4 py-2 text-neutral-400 transition-colors hover:text-neutral-200"
+                  className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                 >
                   Fechar
                 </button>

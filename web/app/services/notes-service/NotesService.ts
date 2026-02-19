@@ -5,10 +5,33 @@ import { API_ENDPOINTS } from "../api-methods";
 //
 // --- Types ---
 //
+export interface NoteProperties {
+  icon?: {
+    url: string;
+    name: string;
+    type: string;
+  };
+  urls?: string[];
+  color?: string;
+  files?: Array<{
+    id: string;
+    url: string;
+    name: string;
+    type: string;
+  }>;
+  banner?: {
+    url: string;
+    name: string;
+    type: string;
+  };
+  relations?: string[];
+}
+
 export interface Note {
   id: string;
   title: string;
   description?: string;
+  properties?: NoteProperties;
   tags?: string[];
   status?: string;
   created_at: string;
@@ -25,6 +48,13 @@ export interface Note {
   blocks?: Block[];
   project_id?: string;
   project_name?: string;
+  author?: {
+    id: string;
+    name: string;
+    username: string;
+    email: string;
+    avatar_url: string | null;
+  };
   access?: {
     isOwner: boolean;
     isCollaborator: boolean;
@@ -80,6 +110,12 @@ export interface UpdateNoteData {
   title?: string;
   description?: string;
   tags?: string[];
+  status?: string;
+  project_id?: string | null;
+  properties?: Partial<NoteProperties>;
+  icon?: File;
+  banner?: File;
+  files?: File[];
 }
 
 export interface CreateBlockData {
@@ -190,10 +226,37 @@ export async function createNote(noteData: CreateNoteData): Promise<Note> {
 }
 
 export async function updateNote(noteId: string, noteData: UpdateNoteData): Promise<Note> {
+  const hasFiles = noteData.icon || noteData.banner || (noteData.files && noteData.files.length > 0);
+
+  if (hasFiles) {
+    // Enviar como multipart/form-data quando há arquivos
+    const formData = new FormData();
+
+    if (noteData.title !== undefined) formData.append("title", noteData.title);
+    if (noteData.description !== undefined) formData.append("description", noteData.description);
+    if (noteData.tags !== undefined) formData.append("tags", JSON.stringify(noteData.tags));
+    if (noteData.status !== undefined) formData.append("status", noteData.status);
+    if (noteData.project_id !== undefined) formData.append("project_id", noteData.project_id ?? "");
+    if (noteData.properties !== undefined) formData.append("properties", JSON.stringify(noteData.properties));
+
+    if (noteData.icon) formData.append("icon", noteData.icon);
+    if (noteData.banner) formData.append("banner", noteData.banner);
+    if (noteData.files) {
+      noteData.files.forEach((file) => formData.append("files", file));
+    }
+
+    const response = await apiClient.put(API_ENDPOINTS.NOTES_BY_ID(noteId), formData);
+    return await handleResponse<Note>(response);
+  }
+
+  // Enviar como JSON quando não há arquivos
   const response = await apiClient.put(API_ENDPOINTS.NOTES_BY_ID(noteId), {
     title: noteData.title,
     description: noteData.description,
     tags: noteData.tags,
+    status: noteData.status,
+    project_id: noteData.project_id,
+    properties: noteData.properties,
   });
 
   return await handleResponse<Note>(response);

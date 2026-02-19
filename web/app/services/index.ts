@@ -19,6 +19,7 @@ export {
   shareNote,
   searchUsers,
   type Note,
+  type NoteProperties,
   type Block,
   type FetchNotesParams,
   type NotesResponse,

@@ -21,6 +21,7 @@ import {
   recuseCollaboration as recuseCollaborationService,
   fetchNotesStats as fetchNotesStatsService,
   type Note,
+  type NoteProperties,
   type CreateNoteData,
   type UpdateNoteData,
   type Block,
@@ -33,11 +34,17 @@ import {
 export interface NoteOverview {
   id: string;
   title: string;
+  properties: NoteProperties;
   tags: string[];
   lastModified: string;
   preview: string;
   status: string;
   collaboratorsCount: number;
+  collaborators: unknown[];
+  created_at: string;
+  updated_at: string;
+  owner_name?: string;
+  owner_avatar_url?: string;
 }
 
 export interface NotesStats {
@@ -146,11 +153,22 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       const overview: NoteOverview[] = notes.map((note: Note) => ({
         id: note.id,
         title: note.title || "Nota sem título",
+        properties: note.properties || {},
         tags: note.tags || [],
         lastModified: note.updated_at || note.created_at,
         preview: extractPreview(note.description),
         status: note.status || "sem_status",
         collaboratorsCount: Array.isArray(note.collaborators) ? note.collaborators.length : 0,
+        collaborators: Array.isArray(note.collaborators) ? note.collaborators : [],
+        created_at: note.created_at,
+        updated_at: note.updated_at,
+        owner_name:
+          note.author?.name ||
+          note.author?.username ||
+          note.author?.email ||
+          note.name ||
+          note.email,
+        owner_avatar_url: note.author?.avatar_url || note.avatar_url,
       }));
 
       setNotesOverview(overview);
@@ -256,22 +274,46 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     async (noteId: string, noteData: UpdateNoteData): Promise<Note | null> => {
       if (!user?.id) return null;
 
-      setLoading(true);
       setError(null);
 
       try {
         const updatedNote = await updateNoteService(noteId, noteData);
-        await fetchNotes(); // Atualiza a lista para refletir a mudança
+
+        // Atualizar a lista local sem re-fetch (evita flash/refresh)
+        if (updatedNote) {
+          setNotes((prev) =>
+            prev.map((n) => (n.id === noteId ? { ...n, ...updatedNote } : n))
+          );
+          setNotesOverview((prev) =>
+            prev.map((n) =>
+              n.id === noteId
+                ? {
+                    ...n,
+                    title: updatedNote.title || n.title,
+                    tags: updatedNote.tags || n.tags,
+                    properties: updatedNote.properties || n.properties,
+                    updated_at: updatedNote.updated_at || n.updated_at,
+                    lastModified: updatedNote.updated_at || n.lastModified,
+                    collaborators: Array.isArray(updatedNote.collaborators)
+                      ? updatedNote.collaborators
+                      : n.collaborators,
+                    collaboratorsCount: Array.isArray(updatedNote.collaborators)
+                      ? updatedNote.collaborators.length
+                      : n.collaboratorsCount,
+                  }
+                : n
+            )
+          );
+        }
+
         return updatedNote;
       } catch (err: unknown) {
         console.error("Erro ao atualizar nota:", err);
         setError(err instanceof Error ? err.message : "Erro ao atualizar nota");
         return null;
-      } finally {
-        setLoading(false);
       }
     },
-    [user?.id, fetchNotes]
+    [user?.id]
   );
 
   // 4. DELETAR NOTA (DELETE)
