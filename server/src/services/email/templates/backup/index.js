@@ -8,6 +8,8 @@
  * @returns {Object} Template do email
  */
 function backupReadyTemplate({ userName, downloadUrl, expiresAt, hoursValid }) {
+  const supportEmail = process.env.SUPPORT_EMAIL || "support@gaelgomes.dev";
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
   const subject = "Seu backup está pronto para download";
 
   const text = `
@@ -111,8 +113,8 @@ support@gaelgomes.dev
     <div class="footer">
       <div class="footer-content">
         <strong>Weave Notes</strong><br>
-        <a href="mailto:support@gaelgomes.dev">support@gaelgomes.dev</a><br>
-        <a href="https://notes.gaelgomes.dev">notes.gaelgomes.dev</a>
+        <a href="mailto:${supportEmail}">${supportEmail}</a><br>
+        <a href="${frontendUrl}">${new URL(frontendUrl).hostname}</a>
       </div>
       <p class="footer-note">
         Este email foi enviado automaticamente. Por favor, não responda.

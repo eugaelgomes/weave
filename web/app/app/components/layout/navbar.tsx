@@ -179,7 +179,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
               className="group flex items-center gap-3 outline-none"
             >
               {/* App Logo */}
-              <div className="h-max-content relative flex h-9 items-center justify-center overflow-hidden rounded-md shadow-md transition-transform group-hover:scale-105 group-active:scale-95">
+              <div className="h-max-content relative flex h-9 items-center justify-center overflow-hidden rounded-md transition-transform group-hover:scale-105 group-active:scale-95">
                 {/*<Image
                   src="/weave.png"
                   alt="Weave Logo"

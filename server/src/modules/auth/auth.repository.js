@@ -3,10 +3,30 @@ const { executeQuery } = require("@/services/db");
 class AuthRepository {
   async findUserByUsername(username) {
     const query = `
+    WITH target_user AS (
+        -- Ramo 1: Busca indexada por Username (apenas ativos)
+        SELECT *
+        FROM users
+        WHERE username = $1 
+          AND deleted = false
+        --
+        UNION ALL
+        --
+        -- Ramo 2: Busca indexada por Email (apenas ativos)
+        --
+        SELECT *
+        FROM users
+        WHERE email = $1 
+          AND deleted = false
+        --
+        -- Short-circuit: Para assim que encontrar o primeiro match
+        --
+        LIMIT 1
+    )
     SELECT
-      -- User data
-      u.username,
+      -- User Data
       u.user_id,
+      u.username,
       u.name AS user_name,
       u.email,
       u.password,
@@ -21,47 +41,58 @@ class AuthRepository {
       u.email_verified,
       u.email_verified_at,
       u.plan_id,
-    
-      -- Organization membership
-      om.org_id,
-      om.role AS org_member_role,
-      om.created_at AS org_member_since,
-    
-      -- Organization data
-      o.unique_name AS org_unique_name,
-      o.org_name,
-      o.logo_url AS org_logo_url,
-    
-      -- Current plan data
+      u.user_preference,
+      --
+      -- Current Plan Data (Join 1:1 Direto)
+      --
       p.plan_id::text AS user_plan_id,
       p.name AS plan_name,
       p.details AS plan_details,
-    
-      -- Current plan usage data
-      pu.plan_id::text AS usage_plan_id,
-      p2.name AS usage_plan_name,
-      pu.client_type AS usage_client_type,
-      pu.usage_details,
-      pu.period_start,
-      pu.period_end
-    
-    FROM users u
-    LEFT JOIN organizations_members om 
-      ON om.user_id = u.user_id 
-    LEFT JOIN organizations o 
-      ON o.id = om.org_id 
-    LEFT JOIN plans p 
-      ON p.plan_id = u.plan_id   
-    LEFT JOIN plans_usage pu 
-      ON pu.user_id = u.user_id   
-    LEFT JOIN plans p2 
-      ON p2.plan_id = pu.plan_id    
-    WHERE (
-        (u.username IS NOT NULL AND u.username = $1)
-     OR (u.email IS NOT NULL AND u.email = $1)
-    )
-    AND u.deleted = false
-    LIMIT 1;
+      --
+      -- Organization Data (Via Lateral Join Determinístico)
+      --
+      om_data.org_id,
+      om_data.role AS org_member_role,
+      om_data.created_at AS org_member_since,
+      om_data.unique_name AS org_unique_name,
+      om_data.org_name,
+      om_data.logo_url AS org_logo_url,
+      --
+      -- Usage Data (Via Lateral Join - Apenas o mais recente)
+      --
+      pu_data.plan_id::text AS usage_plan_id,
+      pu_data.usage_plan_name,
+      pu_data.client_type AS usage_client_type,
+      pu_data.usage_details,
+      pu_data.period_start,
+      pu_data.period_end
+    FROM target_user u
+    LEFT JOIN plans p ON p.plan_id = u.plan_id
+    -- Otimização: Busca APENAS a organização mais recente/relevante
+    LEFT JOIN LATERAL (
+        SELECT 
+            om.org_id, om.role, om.created_at,
+            o.unique_name, o.org_name, o.logo_url
+        FROM organizations_members om
+        JOIN organizations o ON o.id = om.org_id
+        WHERE om.user_id = u.user_id
+        ORDER BY om.created_at DESC -- Garante que pegamos a entrada mais nova
+        LIMIT 1
+    ) om_data ON true
+    --
+    -- Otimização: Busca APENAS o registro de uso mais recente
+    --
+    LEFT JOIN LATERAL (
+        SELECT 
+            pu.plan_id, pu.client_type, pu.usage_details, 
+            pu.period_start, pu.period_end,
+            p2.name AS usage_plan_name
+        FROM plans_usage pu
+        LEFT JOIN plans p2 ON p2.plan_id = pu.plan_id
+        WHERE pu.user_id = u.user_id
+        ORDER BY pu.period_end DESC -- Garante que pegamos o uso atual
+        LIMIT 1
+    ) pu_data ON true;
     `;
     const results = await executeQuery(query, [username]);
     return results[0];

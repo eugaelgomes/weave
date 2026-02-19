@@ -66,6 +66,9 @@ export interface User {
   private_profile?: boolean;
   auth_with_google?: boolean;
 
+  // App preferences
+  usage_preference?: Record<string, unknown>;
+
   // Plan information
   plan_id?: string;
   plan_name?: string;
@@ -99,6 +102,7 @@ interface BackendSettings {
   theme_mode?: string;
   private_profile?: boolean;
   auth_with_google?: boolean;
+  usage_preference?: Record<string, unknown>;
 }
 
 interface BackendOrganization {
@@ -133,6 +137,7 @@ interface BackendUserData {
   organization?: BackendOrganization;
   current_plan?: BackendPlan;
   current_plan_usage?: BackendPlanUsage;
+  usage_preference?: Record<string, unknown>;
 }
 
 // Interfaces específicas para a resposta de login
@@ -218,6 +223,7 @@ interface BackendMeResponse {
       period_end: string;
       details: Record<string, unknown>;
     };
+    usage_preference?: Record<string, unknown>;
   };
 }
 
@@ -251,8 +257,9 @@ export const decodeToken = (token: string) => {
 /**
  * Single Source of Truth para converter dados do Backend para o Modelo de Usuário do Frontend.
  * Aceita estruturas parciais (ex: updateProfile pode não retornar organization).
+ * @deprecated - Mantida para referência, mas não utilizada atualmente
  */
-const mapBackendDataToUser = (data: BackendUserData): User => {
+const _mapBackendDataToUser = (data: BackendUserData): User => {
   const { profile, settings, organization, current_plan, current_plan_usage } = data;
 
   return {
@@ -293,6 +300,9 @@ const mapBackendDataToUser = (data: BackendUserData): User => {
     usage_period_start: current_plan_usage?.period_start,
     usage_period_end: current_plan_usage?.period_end,
     usage_details: current_plan_usage?.details,
+
+    // App Preferences
+    usage_preference: data.usage_preference || settings?.usage_preference || {},
   };
 };
 
@@ -370,6 +380,9 @@ const mapMeResponseToUser = (data: BackendMeResponse): User => {
     usage_period_start: user.current_plan_usage.period_start,
     usage_period_end: user.current_plan_usage.period_end,
     usage_details: user.current_plan_usage.details,
+
+    // App Preferences
+    usage_preference: user.usage_preference || {},
   };
 };
 
@@ -449,7 +462,7 @@ export const logout = async (): Promise<void> => {
 };
 
 export const initiateGoogleLogin = (): void => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
   window.location.href = `${baseUrl}${API_ENDPOINTS.GOOGLE_AUTH}`;
 };
 
@@ -457,10 +470,10 @@ export const updateUserData = async (userData: Partial<User>): Promise<Partial<U
   const response = await apiClient.put(API_ENDPOINTS.UPDATE_PROFILE, userData);
 
   interface UpdateProfileResponse {
-    user_data: {
-      profile: BackendProfile;
-      settings: BackendSettings;
-      // Note que aqui organization e plan podem não vir, e o mapper lida bem com isso
+    user: {
+      user_profile: BackendProfile;
+      user_settings: BackendSettings;
+      usage_preference?: Record<string, unknown>;
     };
     message: string;
     email_validation?: {
@@ -471,9 +484,22 @@ export const updateUserData = async (userData: Partial<User>): Promise<Partial<U
 
   const data = await handleResponse<UpdateProfileResponse>(response);
 
-  // O mapper converte o que veio. Como org e plan são undefined na resposta do update,
-  // eles serão undefined no objeto retornado, o que é compatível com Partial<User>
-  return mapBackendDataToUser(data.user_data);
+  // Mapeia a resposta do update profile
+  return {
+    id: data.user.user_profile.id,
+    user_name: data.user.user_profile.user_name,
+    username: data.user.user_profile.username,
+    email: data.user.user_profile.email,
+    avatar_url: data.user.user_profile.avatar_url,
+    birth_date: data.user.user_profile.birth_date,
+    phone_number: data.user.user_profile.phone_number,
+    created_at: data.user.user_profile.created_at,
+    updated_at: data.user.user_profile.updated_at,
+    theme_mode: data.user.user_settings.theme_mode,
+    private_profile: data.user.user_settings.private_profile,
+    auth_with_google: data.user.user_settings.auth_with_google,
+    usage_preference: data.user.usage_preference || {},
+  };
 };
 
 export const updatePassword = async (

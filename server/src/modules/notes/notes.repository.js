@@ -28,49 +28,54 @@ class notesRepository {
   async getAllNotesByUserId(userId) {
     const query = `
     SELECT 
-    n.id::text,
-    n.user_id::text,
-    n.project_id::text,
-    n.title,
-    n.description,
-    n.tags,
-    n.status,
-    n.created_at,
-    n.updated_at,
+      n.id::text,
+      n.user_id::text,
+      n.project_id::text,
+      n.title,
+      n.description,
+      n.tags,
+      n.status,
+      n.created_at,
+      n.updated_at,
 
-    -- criador da nota
-    u.name AS user_name,
-    u.username AS user_username,
-    u.email AS user_email,
-    u.avatar_url AS user_avatar_url,
+      -- criador da nota
+      u.name AS user_name,
+      u.username AS user_username,
+      u.email AS user_email,
+      u.avatar_url AS user_avatar_url,
 
-    -- projeto associado
-    p.title AS project_name,
+      -- projeto associado
+      p.title AS project_name,
 
-    -- colaboradores em JSON
-    COALESCE(
-        json_agg(
-            json_build_object(
-                'id', c.user_id,
-                'name', c.name,
-                'username', c.username,
-                'email', c.email,
-                'avatar_url', c.avatar_url,
-                'added_at', nc.added_at
-            )
-        ) FILTER (WHERE c.user_id IS NOT NULL), '[]'
-    ) AS collaborators
+      -- colaboradores em JSON (agregados via LATERAL, sem multiplicar linhas)
+      COALESCE(collab.data, '[]'::json) AS collaborators
+
     FROM notes n
     INNER JOIN users u ON n.user_id = u.user_id
     LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
-    LEFT JOIN note_collaborators nc ON n.id = nc.note_id
-    LEFT JOIN users c ON nc.user_id = c.user_id
-    WHERE (n.user_id = $1 OR EXISTS (
-        SELECT 1 FROM note_collaborators nc2 
-        WHERE nc2.note_id = n.id AND nc2.user_id = $1
-    ))
-      AND n.deleted = false
-    GROUP BY n.id, u.user_id, p.title
+    LEFT JOIN LATERAL (
+      SELECT json_agg(
+        json_build_object(
+          'id', c.user_id,
+          'name', c.name,
+          'username', c.username,
+          'email', c.email,
+          'avatar_url', c.avatar_url,
+          'added_at', nc.added_at
+        )
+      ) AS data
+      FROM note_collaborators nc
+      INNER JOIN users c ON nc.user_id = c.user_id
+      WHERE nc.note_id = n.id
+    ) collab ON true
+    WHERE n.deleted = false
+      AND (
+        n.user_id = $1
+        OR EXISTS (
+          SELECT 1 FROM note_collaborators nc2
+          WHERE nc2.note_id = n.id AND nc2.user_id = $1
+        )
+      )
     ORDER BY n.updated_at DESC;
     `;
     const results = await executeQuery(query, [userId]);

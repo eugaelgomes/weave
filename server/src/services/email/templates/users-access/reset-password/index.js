@@ -1,5 +1,7 @@
 const { MailService } = require("@/services/email/config/index");
 
+const contactEmail = process.env.CONTACT_EMAIL || "contact@gaelgomes.dev";
+
 async function sendEmailChangeValidation(currentEmail, newEmail, token) {
   const env = process.env.NODE_ENV || "development";
   const validationLink =
@@ -9,7 +11,7 @@ async function sendEmailChangeValidation(currentEmail, newEmail, token) {
 
   try {
     const mailOptions = {
-      from: "Weave Notes <hello@gaelgomes.dev>",
+      from: process.env.EMAIL_FROM,
       to: newEmail,
       subject: "Validação de mudança de email - Weave Notes",
       text: `Prezado(a),\n\nRecebemos uma solicitação para alterar o email da sua conta.\n\nEmail atual: ${currentEmail}\nNovo email: ${newEmail}\n\nToken de validação: ${token}\n\nLink para validação: ${validationLink}\n\nEste link expira em 1 hora.\n\nCaso não tenha feito esta solicitação, ignore este email.\n\nAtenciosamente,\nEquipe Weave Notes`,
@@ -203,7 +205,7 @@ async function sendEmailChangeValidation(currentEmail, newEmail, token) {
 
       <div class="footer">
         <p><strong>Weave Notes</strong></p>
-        <p><a href="mailto:contact@gaelgomes.dev">contact@gaelgomes.dev</a></p>
+        <p><a href="mailto:${contactEmail}">${contactEmail}</a></p>
         <p class="footer-note">Este email foi enviado automaticamente. Por favor, não responda.</p>
       </div>
     </div>

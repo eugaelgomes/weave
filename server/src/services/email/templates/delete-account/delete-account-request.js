@@ -1,11 +1,13 @@
 const { MailService } = require("@/services/email/config/index");
 
+const contactEmail = process.env.CONTACT_EMAIL || "contact@gaelgomes.dev";
+
 async function delete_account_request(nome, email, username, token) {
   try {
     const confirmationLink = `${process.env.FRONTEND_URL}/auth/confirm-delete-account?token=${token}`;
 
     let mailOptions = {
-      from: "Weave Notes <hello@gaelgomes.dev>",
+      from: process.env.EMAIL_FROM,
       to: email,
       subject: "Confirmação de exclusão de conta - Weave Notes",
       html: `<!DOCTYPE html>
@@ -201,7 +203,7 @@ async function delete_account_request(nome, email, username, token) {
     
           <div class="footer">
             <p><strong>Weave Notes</strong></p>
-            <p><a href="mailto:contact@gaelgomes.dev">contact@gaelgomes.dev</a></p>
+            <p><a href="mailto:${contactEmail}">${contactEmail}</a></p>
             <p class="footer-note">Você recebeu este email porque uma solicitação de exclusão de conta foi feita para este endereço.</p>
           </div>
         </div>

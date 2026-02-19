@@ -1,5 +1,7 @@
 const { MailService } = require("@/services/email/config/index");
 
+const contactEmail = process.env.CONTACT_EMAIL || "contact@gaelgomes.dev";
+
 async function welcome_message(nome, email, username, activationToken) {
   const env = process.env.NODE_ENV || "development";
   const activationLink =
@@ -9,7 +11,7 @@ async function welcome_message(nome, email, username, activationToken) {
 
   try {
     let mailOptions = {
-      from: "Weave Notes <hello@gaelgomes.dev>",
+      from: process.env.EMAIL_FROM,
       to: email,
       subject: "Bem-vindo ao Weave Notes - Ative sua conta",
       html: `<!DOCTYPE html>
@@ -181,7 +183,7 @@ async function welcome_message(nome, email, username, activationToken) {
 
       <div class="footer">
         <p><strong>Weave Notes</strong></p>
-        <p><a href="mailto:contact@gaelgomes.dev">contact@gaelgomes.dev</a></p>
+        <p><a href="mailto:${contactEmail}">${contactEmail}</a></p>
         <p class="footer-note">Você recebeu este email porque se cadastrou em nossa plataforma.</p>
       </div>
     </div>

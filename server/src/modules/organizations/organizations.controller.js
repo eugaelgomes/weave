@@ -880,7 +880,7 @@ class OrganizationsController {
 
       // Hash da senha
       const bcrypt = require("bcrypt");
-      const saltRounds = 12;
+      const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
       const createdAt = new Date().toISOString().slice(0, 19).replace("T", " ");
 

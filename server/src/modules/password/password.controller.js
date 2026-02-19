@@ -94,7 +94,7 @@ class PasswordController {
         });
       }
 
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const hashedPassword = await bcrypt.hash(newPassword, parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12);
 
       await PasswordRepository.updateUserPassword(
         userExists.user_id,

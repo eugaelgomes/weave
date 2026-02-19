@@ -342,7 +342,7 @@ export default function ResetPassword() {
       {/* Coluna direita - imagem */}
       <div className="relative hidden flex-1 lg:block">
         <Image
-          src="https://cwn.sfo3.cdn.digitaloceanspaces.com/medias/bg-studying_guy.webp"
+          src={process.env.NEXT_PUBLIC_CDN_BASE_URL ? `${process.env.NEXT_PUBLIC_CDN_BASE_URL}/medias/bg-studying_guy.webp` : "https://cwn.sfo3.cdn.digitaloceanspaces.com/medias/bg-studying_guy.webp"}
           alt="Recuperação de senha"
           fill
           className="object-cover"

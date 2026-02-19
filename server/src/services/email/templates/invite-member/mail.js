@@ -1,5 +1,7 @@
 const { MailService } = require("@/services/email/config/index");
 
+const contactEmail = process.env.CONTACT_EMAIL || "contact@gaelgomes.dev";
+
 /**
  * Envia convite para participar de uma organização
  */
@@ -24,7 +26,7 @@ async function send_organization_invite(
 
   try {
     const mailOptions = {
-      from: "Weave Notes <hello@gaelgomes.dev>",
+      from: process.env.EMAIL_FROM,
       to: invitedEmail,
       subject: `Convite para ${organizationName} - Weave Notes`,
       html: `<!DOCTYPE html>
@@ -69,7 +71,7 @@ async function send_organization_invite(
     </div>
     <div class="footer">
       <p><strong>Weave Notes</strong></p>
-      <p>contact@gaelgomes.dev</p>
+      <p>${contactEmail}</p>
     </div>
   </div>
 </body>
@@ -92,7 +94,7 @@ async function welcome_message(nome, email, activationToken, username) {
 
   try {
     const mailOptions = {
-      from: "Weave Notes <hello@gaelgomes.dev>",
+      from: process.env.EMAIL_FROM,
       to: email,
       subject: `Bem-vindo(a) ao Weave Notes`,
       html: `<!DOCTYPE html>

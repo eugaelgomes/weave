@@ -127,7 +127,7 @@ export default function ActivateAccount() {
         {/* Footer */}
         <p className="mt-6 text-center text-xs text-gray-500">
           Problemas com a ativação?{" "}
-          <a href="mailto:contact@gaelgomes.dev" className="text-yellow-500 hover:underline">
+          <a href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL || "contact@gaelgomes.dev"}`} className="text-yellow-500 hover:underline">
             Entre em contato
           </a>
         </p>

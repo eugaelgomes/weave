@@ -1,5 +1,8 @@
 const { MailService } = require("@/services/email/config/index");
 
+const contactEmail = process.env.CONTACT_EMAIL || "contact@gaelgomes.dev";
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
 async function inviteProjectMember(
   nome,
   email,
@@ -22,9 +25,10 @@ async function inviteProjectMember(
 
   try {
     let mailOptions = {
-      from: "Weave Notes <hello@gaelgomes.dev>",
+      from: process.env.EMAIL_FROM,
       to: email,
       subject: `${personFirstName(nome) || "Olá"}, você foi adicionado ao projeto "${projectName || null}"`,
+
       html: `<!DOCTYPE html>
   <html lang="pt-BR">
   <head>
@@ -199,7 +203,7 @@ async function inviteProjectMember(
         <p>Agora você pode visualizar e colaborar neste projeto. Acesse a plataforma para começar:</p>
 
         <center>
-          <a href="https://weavenotes.app/app/home/projects/${projectId}" class="button">
+          <a href="${frontendUrl}/app/home/projects/${projectId}" class="button">
             Acessar Projeto
           </a>
         </center>
@@ -213,7 +217,7 @@ async function inviteProjectMember(
 
       <div class="footer">
         <p><strong>Weave Notes</strong></p>
-        <p><a href="mailto:contact@gaelgomes.dev">contact@gaelgomes.dev</a></p>
+        <p><a href="mailto:${contactEmail}">${contactEmail}</a></p>
         <p class="footer-note">Você recebeu este email porque foi adicionado a um projeto na plataforma.</p>
       </div>
     </div>

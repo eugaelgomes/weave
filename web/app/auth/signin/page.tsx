@@ -117,9 +117,7 @@ export default function SignIn() {
               height={28}
               className="h-7 w-7 rounded-sm object-cover lg:h-8 lg:w-8"
             />
-            <span className="text-base font-semibold tracking-tight lg:text-lg">
-              Weave Notes
-            </span>
+            <span className="text-base font-semibold tracking-tight lg:text-lg">Weave Notes</span>
           </Link>
 
           <div className="flex items-center gap-4 lg:gap-6">

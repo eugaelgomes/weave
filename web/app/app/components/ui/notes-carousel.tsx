@@ -127,7 +127,7 @@ export default function NotesCarousel({
             className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-1"
           >
             {notes.map((note) => {
-              const validDate = formatDate(note.updated_at || note.created_at);
+              const validDate = formatDate(note.updated_at);
               const isNew = note.created_at
                 ? new Date(note.created_at).getTime() > Date.now() - 86400000
                 : false;

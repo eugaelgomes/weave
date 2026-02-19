@@ -115,7 +115,7 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="flex-1 space-y-3 overflow-y-auto sm:space-y-4">
+      <div className="flex-1 space-y-3 overflow-y-auto">
         {/* Header */}
         <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-950">
           <div className="flex items-center justify-between gap-2">
@@ -135,19 +135,30 @@ export default function HomePage() {
               }
               className="flex items-center"
             >
-              <div
-                className={`h-2 w-2 rounded-full transition-colors ${
-                  !healthStatus
-                    ? "animate-pulse bg-neutral-400"
-                    : healthStatus.status === "offline"
-                      ? "bg-red-500"
-                      : healthStatus.responseTime < 200
-                        ? "bg-emerald-500"
-                        : healthStatus.responseTime < 500
-                          ? "bg-amber-500"
-                          : "bg-red-500"
-                }`}
-              />
+              <div className="relative flex h-2 w-2">
+                {healthStatus && healthStatus.status !== "offline" && (
+                  <span
+                    className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
+                      healthStatus.responseTime < 200 ? "bg-emerald-400" : "bg-amber-400"
+                    }`}
+                  ></span>
+                )}
+
+                {/* Bolinha Principal */}
+                <div
+                  className={`relative h-2 w-2 rounded-full transition-colors ${
+                    !healthStatus
+                      ? "animate-pulse bg-neutral-400"
+                      : healthStatus.status === "offline"
+                        ? "bg-red-500"
+                        : healthStatus.responseTime < 200
+                          ? "bg-emerald-500"
+                          : healthStatus.responseTime < 500
+                            ? "bg-amber-500"
+                            : "bg-red-500"
+                  }`}
+                />
+              </div>
             </div>
           </div>
         </div>

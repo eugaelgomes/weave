@@ -1,11 +1,14 @@
 const { MailService } = require("@/services/email/config/index");
 
+const contactEmail = process.env.CONTACT_EMAIL || "contact@gaelgomes.dev";
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
 // adaptar para convite para organização
 
 async function welcome_message(email, organization_name) {
   try {
     let mailOptions = {
-      from: "Weave Notes <hello@gaelgomes.dev>",
+      from: process.env.EMAIL_FROM,
       to: email,
       subject: `Olá, você foi convidade para o Weave Notes pela ${organization_name}`,
       html: `<!DOCTYPE html>
@@ -161,7 +164,7 @@ async function welcome_message(email, organization_name) {
         </div>
 
         <div style="text-align: center;">
-          <a href="https://notes.gaelgomes.dev" class="button">Acessar Conta</a>
+          <a href="${frontendUrl}" class="button">Acessar Conta</a>
         </div>
 
         <p style="font-size: 14px; color: #737373;">Caso tenha dúvidas, entre em contato com nossa equipe de suporte.</p>
@@ -169,7 +172,7 @@ async function welcome_message(email, organization_name) {
 
       <div class="footer">
         <p><strong>Weave Notes</strong></p>
-        <p><a href="mailto:contact@gaelgomes.dev">contact@gaelgomes.dev</a></p>
+        <p><a href="mailto:${contactEmail}">${contactEmail}</a></p>
         <p class="footer-note">Você recebeu este email porque se cadastrou em nossa plataforma.</p>
       </div>
     </div>

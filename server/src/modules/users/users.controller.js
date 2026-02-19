@@ -315,6 +315,7 @@ class userController {
             period_end: user.period_end,
             details: user.usage_details || {},
           },
+          usage_preference: user.usage_preference || {},
         },
       });
     } catch (error) {
@@ -336,6 +337,7 @@ class userController {
       birth_date,
       phone_number,
       private_profile,
+      user_preference,
     } = req.body;
 
     const auditChanges = {};
@@ -437,6 +439,8 @@ class userController {
       if (phone_number !== undefined) updates.phone_number = phone_number;
       if (private_profile !== undefined)
         updates.private_profile = private_profile;
+      if (user_preference !== undefined)
+        updates.user_preference = user_preference;
 
       if (username !== undefined && username !== currentUser.username) {
         const usernameExists = await UserRepository.findByUsernameOrEmail(
@@ -523,6 +527,7 @@ class userController {
             theme_mode: updatedUser.theme_mode,
             private_profile: updatedUser.private_profile,
           },
+          usage_preference: updatedUser.usage_preference || {},
         },
       };
 

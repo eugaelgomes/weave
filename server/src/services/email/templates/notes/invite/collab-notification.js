@@ -33,7 +33,7 @@ async function collabMail(
     });
 
     const mailOptions = {
-      from: "Weave Notes <hello@gaelgomes.dev>",
+      from: process.env.EMAIL_FROM,
       to: collaboratorEmail,
       subject: emailTemplate.subject,
       text: emailTemplate.text,

@@ -25,7 +25,7 @@ async function sendBackupEmail(userEmail, userName, downloadUrl, expiresAt) {
     });
 
     const mailOptions = {
-      from: "Weave Notes <hello@gaelgomes.dev>",
+      from: process.env.EMAIL_FROM,
       to: userEmail,
       subject: emailTemplate.subject,
       text: emailTemplate.text,

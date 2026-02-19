@@ -1,6 +1,7 @@
 module.exports = ({ noteName, ownerName, noteUrl }) => {
   const env = process.env.NODE_ENV || "development";
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+  const contactEmail = process.env.CONTACT_EMAIL || "contact@gaelgomes.dev";
   const viewNoteLink = noteUrl || `${frontendUrl}/notes`;
 
   return {
@@ -237,7 +238,7 @@ module.exports = ({ noteName, ownerName, noteUrl }) => {
 
       <div class="footer">
         <p><strong>Weave Notes</strong></p>
-        <p><a href="mailto:contact@gaelgomes.dev">contact@gaelgomes.dev</a></p>
+        <p><a href="mailto:${contactEmail}">${contactEmail}</a></p>
         <p class="footer-note">Este email foi enviado automaticamente. Por favor, não responda.</p>
       </div>
     </div>
@@ -267,7 +268,7 @@ Caso não conheça ${ownerName} ou não esperava este convite, você pode ignora
 
 Atenciosamente,
 Equipe Weave Notes
-contact@gaelgomes.dev
+${contactEmail}
         `.trim(),
   };
 };

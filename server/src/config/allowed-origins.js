@@ -1,11 +1,11 @@
-const allowedOrigins = [
+const DEFAULT_ORIGINS = [
   "http://localhost:3000",
   "http://localhost:5173",
-  "https://notes.codaweb.com.br",
-  "https://notes.gaelgomes.dev",
-  "https://weavenotes.app",
-  "https://www.weavenotes.app",
 ];
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : DEFAULT_ORIGINS;
 
 const ALLOWED_HOSTNAMES = allowedOrigins
   .map((url) => {
@@ -17,13 +17,20 @@ const ALLOWED_HOSTNAMES = allowedOrigins
   })
   .filter(Boolean);
 
+const cookieDomain = process.env.COOKIE_DOMAIN || undefined;
+
 const getCookieDomain = (hostname) => {
   if (process.env.NODE_ENV !== "production") return undefined;
 
+  // Se COOKIE_DOMAIN estiver definido na env, usa diretamente
+  if (cookieDomain) return cookieDomain;
+
+  // Fallback: extrai o domínio raiz do hostname
   if (ALLOWED_HOSTNAMES.includes(hostname)) {
-    if (hostname.endsWith("weavenotes.app")) return "weavenotes.app";
-    if (hostname.endsWith("codaweb.com.br")) return "codaweb.com.br";
-    if (hostname.endsWith("gaelgomes.dev")) return "gaelgomes.dev";
+    const parts = hostname.split(".");
+    if (parts.length >= 2) {
+      return parts.slice(-2).join(".");
+    }
     return hostname;
   }
 

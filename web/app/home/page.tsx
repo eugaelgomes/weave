@@ -143,7 +143,11 @@ export default function HomePage() {
               key={idx}
               className={`group relative flex flex-col items-start rounded-md border border-neutral-200/60 bg-white/40 p-3 text-left shadow-sm backdrop-blur-md transition-all hover:-translate-y-1 hover:bg-white/60 hover:shadow-md lg:rounded-md lg:p-5 dark:border-neutral-800/60 dark:bg-neutral-900/40 dark:hover:bg-neutral-900/60 ${feature.borderColor}`}
             >
-              <div className={`mb-2 rounded-md p-1.5 lg:mb-3 lg:rounded-md lg:p-2.5 ${feature.color}`}>{feature.icon}</div>
+              <div
+                className={`mb-2 rounded-md p-1.5 lg:mb-3 lg:rounded-md lg:p-2.5 ${feature.color}`}
+              >
+                {feature.icon}
+              </div>
               <h3 className="text-xs font-bold text-neutral-900 sm:text-sm lg:text-base dark:text-white">
                 {feature.title}
               </h3>

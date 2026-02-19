@@ -1,6 +1,7 @@
 /* eslint-disable quotes */
 const { executeQuery } = require("@/services/db");
 const imageUtils = require("@/middlewares/data/image-utils");
+const { defaultAppPreferences } = require("@/modules/users/normalize");
 
 class UserRepository {
   async createUser(userData) {
@@ -26,9 +27,10 @@ class UserRepository {
       private_profile, 
       birth_date, 
       phone_number, 
-      avatar_url
+      avatar_url,
+      user_preference
     ) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING user_id, email, name, avatar_url, created_at;
   `;
 
@@ -42,6 +44,7 @@ class UserRepository {
       birth_date,
       phone_number,
       avatar_url,
+      defaultAppPreferences,
     ]);
   }
 
@@ -227,10 +230,14 @@ class UserRepository {
       fields.push(`private_profile = $${paramIndex++}`);
       values.push(updates.private_profile);
     }
+    if (updates.user_preference !== undefined) {
+      fields.push(`user_preference = $${paramIndex++}`);
+      values.push(updates.user_preference);
+    }
 
     if (fields.length === 0) {
       const query = `
-        SELECT user_id, username, name, email, avatar_url, theme_mode, birth_date, phone_number, private_profile, created_at
+        SELECT user_id, username, name, email, avatar_url, theme_mode, birth_date, phone_number, private_profile, user_preference, created_at
         FROM users
         WHERE user_id = $1 AND deleted = false
       `;
@@ -243,7 +250,7 @@ class UserRepository {
       UPDATE users
       SET ${fields.join(", ")}
       WHERE user_id = $${paramIndex} AND deleted = false
-      RETURNING user_id, username, name, email, avatar_url, theme_mode, birth_date, phone_number, private_profile, created_at;
+      RETURNING user_id, username, name, email, avatar_url, theme_mode, birth_date, phone_number, private_profile, user_preference, created_at;
     `;
     const results = await executeQuery(query, values);
     return results[0];
@@ -298,9 +305,10 @@ class UserRepository {
       WHERE user_id = $1
       RETURNING user_id
     `;
+    const deletedUserDomain = process.env.APP_DOMAIN || "weavenotes.app";
     return await executeQuery(query, [
       userId,
-      `deleted_user_${randomSuffix}@weavenotes.app`,
+      `deleted_user_${randomSuffix}@${deletedUserDomain}`,
       `deleted_user_${randomSuffix}`,
     ]);
   }
@@ -401,6 +409,41 @@ class UserRepository {
     `;
     const results = await executeQuery(query, [userId]);
     return results[0];
+  }
+
+  async setDefaultAppPreferences(userId) {
+    const query = `
+      UPDATE users
+      SET user_preference = $1
+      WHERE user_id = $2
+      RETURNING user_id, user_preference
+    `;
+    const results = await executeQuery(query, [
+      defaultAppPreferences,
+      userId,
+    ]);
+    return results[0];
+  }
+
+  async updateUserPreferences(userId, preferences) {
+    const query = `
+      UPDATE users
+      SET user_preference = $1, updated_at = NOW()
+      WHERE user_id = $2
+      RETURNING user_id, user_preference, updated_at
+    `;
+    const results = await executeQuery(query, [preferences, userId]);
+    return results[0];
+  }
+
+  async getUserPreferences(userId) {
+    const query = `
+      SELECT user_preference
+      FROM users
+      WHERE user_id = $1
+    `;
+    const results = await executeQuery(query, [userId]);
+    return results[0]?.user_preference || defaultAppPreferences;
   }
 }
 
