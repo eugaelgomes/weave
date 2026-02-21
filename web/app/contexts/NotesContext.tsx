@@ -281,9 +281,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
 
         // Atualizar a lista local sem re-fetch (evita flash/refresh)
         if (updatedNote) {
-          setNotes((prev) =>
-            prev.map((n) => (n.id === noteId ? { ...n, ...updatedNote } : n))
-          );
+          setNotes((prev) => prev.map((n) => (n.id === noteId ? { ...n, ...updatedNote } : n)));
           setNotesOverview((prev) =>
             prev.map((n) =>
               n.id === noteId

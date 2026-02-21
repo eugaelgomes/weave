@@ -226,7 +226,8 @@ export async function createNote(noteData: CreateNoteData): Promise<Note> {
 }
 
 export async function updateNote(noteId: string, noteData: UpdateNoteData): Promise<Note> {
-  const hasFiles = noteData.icon || noteData.banner || (noteData.files && noteData.files.length > 0);
+  const hasFiles =
+    noteData.icon || noteData.banner || (noteData.files && noteData.files.length > 0);
 
   if (hasFiles) {
     // Enviar como multipart/form-data quando há arquivos
@@ -237,7 +238,8 @@ export async function updateNote(noteId: string, noteData: UpdateNoteData): Prom
     if (noteData.tags !== undefined) formData.append("tags", JSON.stringify(noteData.tags));
     if (noteData.status !== undefined) formData.append("status", noteData.status);
     if (noteData.project_id !== undefined) formData.append("project_id", noteData.project_id ?? "");
-    if (noteData.properties !== undefined) formData.append("properties", JSON.stringify(noteData.properties));
+    if (noteData.properties !== undefined)
+      formData.append("properties", JSON.stringify(noteData.properties));
 
     if (noteData.icon) formData.append("icon", noteData.icon);
     if (noteData.banner) formData.append("banner", noteData.banner);
@@ -343,15 +345,21 @@ export async function shareNote(noteId: string, shareData: ShareNoteData): Promi
 }
 
 export async function searchUsers(searchTerm: string): Promise<User[]> {
-  const url = `/users/search?q=${encodeURIComponent(searchTerm)}`;
+  if (!searchTerm || searchTerm.trim().length < 3) {
+    return [];
+  }
+
+  const url = `/users/search?q=${encodeURIComponent(searchTerm.trim())}`;
   const response = await apiClient.get(url);
-  const data = await handleResponse<{ users?: User[]; data?: User[] } | User[]>(response);
+  const data = await handleResponse<
+    { search_users?: User[]; users?: User[]; data?: User[] } | User[]
+  >(response);
 
   if (Array.isArray(data)) {
     return data;
   }
 
-  return data.users || data.data || [];
+  return data.search_users || data.users || data.data || [];
 }
 
 // ========================================

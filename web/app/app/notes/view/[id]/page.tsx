@@ -26,10 +26,10 @@ import {
   Link2,
   FileText,
   ImagePlus,
-  ExternalLink,
   Download,
   Palette,
   Link,
+  Users,
 } from "lucide-react";
 import {
   DndContext,
@@ -62,6 +62,7 @@ import {
   getCollaboratorAvatarUrl,
   getCollaboratorId,
 } from "@/app/utils/collaborators";
+import { getTagColor } from "@/app/utils/tag-colors";
 
 // =================== COMPONENTE DE BLOCO SORTABLE ===================
 interface BlockComponentProps {
@@ -70,6 +71,10 @@ interface BlockComponentProps {
   onUpdate: (blockId: string, data: Partial<Block>) => Promise<void>;
   onDelete: (blockId: string) => Promise<void>;
   onAddBlock: (parentId?: string) => void;
+  onAddBlockAfter: (afterBlockId: string) => void;
+  onBackspaceEmpty?: (blockId: string) => void;
+  focusBlockId?: string | null;
+  onFocused?: () => void;
   isDragging?: boolean;
 }
 
@@ -79,6 +84,10 @@ const SortableBlockComponent: React.FC<BlockComponentProps> = ({
   onUpdate,
   onDelete,
   onAddBlock,
+  onAddBlockAfter,
+  onBackspaceEmpty,
+  focusBlockId,
+  onFocused,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
@@ -104,6 +113,10 @@ const SortableBlockComponent: React.FC<BlockComponentProps> = ({
         onUpdate={onUpdate}
         onDelete={onDelete}
         onAddBlock={onAddBlock}
+        onAddBlockAfter={onAddBlockAfter}
+        onBackspaceEmpty={onBackspaceEmpty}
+        focusBlockId={focusBlockId}
+        onFocused={onFocused}
         isDragging={isDragging}
         dragHandleProps={{ ...attributes, ...listeners }}
       />
@@ -118,6 +131,10 @@ interface BlockInnerProps {
   onUpdate: (blockId: string, data: Partial<Block>) => Promise<void>;
   onDelete: (blockId: string) => Promise<void>;
   onAddBlock: (parentId?: string) => void;
+  onAddBlockAfter: (afterBlockId: string) => void;
+  onBackspaceEmpty?: (blockId: string) => void;
+  focusBlockId?: string | null;
+  onFocused?: () => void;
   isDragging?: boolean;
   dragHandleProps?: Record<string, unknown>;
 }
@@ -187,13 +204,69 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
   onUpdate,
   onDelete,
   onAddBlock,
+  onAddBlockAfter,
+  onBackspaceEmpty,
+  focusBlockId,
+  onFocused,
   isDragging,
   dragHandleProps,
 }) => {
   const [localText, setLocalText] = useState(block.text || "");
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showInlineTypeSelector, setShowInlineTypeSelector] = useState(false);
   const textareaRef = useAutoResize(localText);
+
+  // Auto-focus quando este bloco é o focusBlockId
+  useEffect(() => {
+    if (focusBlockId === block.id && textareaRef.current) {
+      textareaRef.current.focus();
+      setIsEditing(true);
+      onFocused?.();
+    }
+  }, [focusBlockId, block.id, onFocused, textareaRef]);
+
+  // Fechar seletor ao clicar fora
+  useEffect(() => {
+    if (!showInlineTypeSelector) return;
+    const handleClickOutside = () => setShowInlineTypeSelector(false);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [showInlineTypeSelector]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Em blocos de código, Enter funciona normalmente
+    if (block.type === "code") return;
+
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      onAddBlockAfter(block.id);
+    }
+
+    if ((e.key === " " || e.key === "/") && localText === "") {
+      e.preventDefault();
+      setShowInlineTypeSelector(true);
+    }
+
+    if (e.key === "Backspace" && localText === "" && onBackspaceEmpty) {
+      e.preventDefault();
+      onBackspaceEmpty(block.id);
+    }
+
+    if (e.key === "Escape" && showInlineTypeSelector) {
+      e.preventDefault();
+      setShowInlineTypeSelector(false);
+    }
+  };
+
+  const inlineBlockOptions = [
+    { type: "paragraph", label: "Parágrafo", icon: Type, description: "Texto simples" },
+    { type: "heading", label: "Título", icon: Heading, description: "Título de seção" },
+    { type: "todo", label: "Tarefa", icon: CheckSquare, description: "Item de checklist" },
+    { type: "list", label: "Lista", icon: List, description: "Item de lista" },
+    { type: "quote", label: "Citação", icon: Quote, description: "Bloco de citação" },
+    { type: "code", label: "Código", icon: Code, description: "Bloco de código" },
+  ];
 
   // Sincroniza apenas quando block.text muda externamente (ex: do servidor)
   const prevBlockText = React.useRef(block.text);
@@ -260,6 +333,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
             onChange={(e) => setLocalText(e.target.value)}
             onBlur={handleBlur}
             onFocus={handleFocus}
+            onKeyDown={handleKeyDown}
             className="w-full resize-none overflow-hidden bg-transparent text-xl font-bold text-neutral-900 placeholder-neutral-400 outline-none dark:text-neutral-100 dark:placeholder-neutral-500"
             placeholder="Título..."
             rows={1}
@@ -295,6 +369,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
                 onChange={(e) => setLocalText(e.target.value)}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
+                onKeyDown={handleKeyDown}
                 className={`w-full resize-none overflow-hidden bg-transparent text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500 ${
                   block.done ? "text-neutral-400 line-through dark:text-neutral-500" : ""
                 }`}
@@ -323,6 +398,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
                 onChange={(e) => setLocalText(e.target.value)}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
+                onKeyDown={handleKeyDown}
                 className="w-full resize-none overflow-hidden bg-transparent text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500"
                 placeholder="Item da lista..."
                 rows={1}
@@ -348,6 +424,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
                 onChange={(e) => setLocalText(e.target.value)}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
+                onKeyDown={handleKeyDown}
                 className="w-full resize-none overflow-hidden bg-transparent text-neutral-600 italic placeholder-neutral-400 outline-none dark:text-neutral-300 dark:placeholder-neutral-500"
                 placeholder="Citação..."
                 rows={1}
@@ -358,7 +435,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
 
       case "code":
         return (
-          <div className="overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900">
+          <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900">
             <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 dark:border-neutral-700 dark:bg-neutral-800">
               <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                 {(block.properties as { language?: string })?.language || "código"}
@@ -397,6 +474,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
             onChange={(e) => setLocalText(e.target.value)}
             onBlur={handleBlur}
             onFocus={handleFocus}
+            onKeyDown={handleKeyDown}
             className="w-full resize-none overflow-hidden bg-transparent leading-relaxed text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500"
             placeholder="Digite seu texto..."
             rows={1}
@@ -428,7 +506,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
 
       {/* Conteúdo do bloco */}
       <div
-        className={`rounded-lg px-3 py-2 transition-colors hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40 ${
+        className={`rounded-md px-3 py-2 transition-colors hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40 ${
           isDragging
             ? "bg-neutral-100 shadow-lg ring-2 ring-yellow-500/30 dark:bg-neutral-800 dark:ring-yellow-500/50"
             : ""
@@ -448,6 +526,40 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
         </button>
       )}
 
+      {/* Seletor de tipo de bloco inline */}
+      {showInlineTypeSelector && (
+        <div
+          className="animate-in fade-in slide-in-from-top-1 absolute left-0 z-30 mt-1 w-64 rounded-md border border-neutral-200 bg-white p-1.5 shadow-xl duration-150 dark:border-neutral-700 dark:bg-neutral-900"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="mb-1.5 px-2.5 pt-1 pb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+            Tipo de bloco
+          </div>
+          {inlineBlockOptions.map((option) => (
+            <button
+              key={option.type}
+              onClick={() => {
+                onUpdate(block.id, { type: option.type as Block["type"] });
+                setShowInlineTypeSelector(false);
+              }}
+              className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-500">
+                <option.icon size={14} />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                  {option.label}
+                </div>
+                <div className="text-[11px] text-neutral-500 dark:text-neutral-500">
+                  {option.description}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Blocos filhos (recursivo) */}
       {block.children && block.children.length > 0 && (
         <div className="mt-2 ml-6 border-l-2 border-neutral-200 pl-4 dark:border-neutral-800">
@@ -459,6 +571,10 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
               onUpdate={onUpdate}
               onDelete={onDelete}
               onAddBlock={onAddBlock}
+              onAddBlockAfter={onAddBlockAfter}
+              onBackspaceEmpty={onBackspaceEmpty}
+              focusBlockId={focusBlockId}
+              onFocused={onFocused}
             />
           ))}
         </div>
@@ -494,11 +610,11 @@ const NoteDetailSkeleton = () => (
         <div className="h-6 w-20 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-800" />
       </div>
       <div className="space-y-4">
-        <div className="h-12 w-full animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-800/60" />
-        <div className="h-20 w-full animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-800/60" />
-        <div className="h-12 w-4/5 animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-800/60" />
-        <div className="h-32 w-full animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-800/60" />
-        <div className="h-12 w-3/5 animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-800/60" />
+        <div className="h-12 w-full animate-pulse rounded-md bg-neutral-100 dark:bg-neutral-800/60" />
+        <div className="h-20 w-full animate-pulse rounded-md bg-neutral-100 dark:bg-neutral-800/60" />
+        <div className="h-12 w-4/5 animate-pulse rounded-md bg-neutral-100 dark:bg-neutral-800/60" />
+        <div className="h-32 w-full animate-pulse rounded-md bg-neutral-100 dark:bg-neutral-800/60" />
+        <div className="h-12 w-3/5 animate-pulse rounded-md bg-neutral-100 dark:bg-neutral-800/60" />
       </div>
     </div>
   </div>
@@ -521,7 +637,7 @@ const BlockTypeSelector: React.FC<BlockTypeSelectorProps> = ({ onSelect, onClose
   ];
 
   return (
-    <div className="animate-in fade-in slide-in-from-top-1 absolute bottom-full left-0 z-20 mb-2 w-64 rounded-lg border border-neutral-200 bg-white p-1.5 shadow-xl duration-150 dark:border-neutral-700 dark:bg-neutral-900">
+    <div className="animate-in fade-in slide-in-from-top-1 absolute bottom-full left-0 z-20 mb-2 w-64 rounded-md border border-neutral-200 bg-white p-1.5 shadow-xl duration-150 dark:border-neutral-700 dark:bg-neutral-900">
       <div className="mb-1.5 px-2.5 pt-1 pb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
         Tipo de bloco
       </div>
@@ -575,9 +691,12 @@ const NoteDetail = () => {
   const [note, setNote] = useState<Note | null>(null);
   const [blocks, setBlocks] = useState<(Block & { children?: Block[] })[]>([]);
   const [editingTitle, setEditingTitle] = useState("");
+  const [editingDescription, setEditingDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [focusBlockId, setFocusBlockId] = useState<string | null>(null);
+  const initialBlockCreated = React.useRef(false);
 
   // Estados para modais e funcionalidades
   const [showShareModal, setShowShareModal] = useState(false);
@@ -591,6 +710,10 @@ const NoteDetail = () => {
   const [newUrl, setNewUrl] = useState("");
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);
+  const [showAllCollabs, setShowAllCollabs] = useState(false);
+  const [showAllRelations, setShowAllRelations] = useState(false);
+  const [showAllUrls, setShowAllUrls] = useState(false);
+  const [showAllFiles, setShowAllFiles] = useState(false);
   const [showRelationModal, setShowRelationModal] = useState(false);
   const [relationSearchTerm, setRelationSearchTerm] = useState("");
 
@@ -823,6 +946,7 @@ const NoteDetail = () => {
           if (loadedNote) {
             setNote(loadedNote);
             setEditingTitle(loadedNote.title);
+            setEditingDescription(loadedNote.description || "");
             // Carregar blocos da nota
             if (loadedNote.blocks) {
               setBlocks(loadedNote.blocks as (Block & { children?: Block[] })[]);
@@ -836,11 +960,41 @@ const NoteDetail = () => {
     }
   }, [id, getNoteById]);
 
+  // Auto-criar bloco parágrafo quando a nota não tem blocos
+  useEffect(() => {
+    if (
+      !initialLoading &&
+      note &&
+      blocks.length === 0 &&
+      note.access?.canEdit &&
+      !initialBlockCreated.current
+    ) {
+      initialBlockCreated.current = true;
+      const createInitialBlock = async () => {
+        try {
+          const newBlock = await createBlock(note.id, {
+            type: "paragraph",
+            text: "",
+            position: 0,
+          });
+          if (newBlock) {
+            setBlocks([{ ...newBlock, children: [] }]);
+            setFocusBlockId(newBlock.id);
+          }
+        } catch (error) {
+          console.error("Erro ao criar bloco inicial:", error);
+        }
+      };
+      createInitialBlock();
+    }
+  }, [initialLoading, note, blocks.length, createBlock]);
+
   // Auto-salvar título quando houver mudanças
   useEffect(() => {
     if (!note) return;
 
-    const hasChanges = editingTitle !== note.title;
+    const hasChanges =
+      editingTitle !== note.title || editingDescription !== (note.description || "");
     if (!hasChanges) return;
 
     const timeoutId = setTimeout(async () => {
@@ -848,10 +1002,13 @@ const NoteDetail = () => {
       try {
         const updatedNote = await updateNote(note.id, {
           title: editingTitle,
+          description: editingDescription,
         });
 
         if (updatedNote) {
-          setNote((prev) => (prev ? { ...prev, title: editingTitle } : null));
+          setNote((prev) =>
+            prev ? { ...prev, title: editingTitle, description: editingDescription } : null
+          );
         }
       } catch (error) {
         console.error("Erro ao salvar:", error);
@@ -861,7 +1018,7 @@ const NoteDetail = () => {
     }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [editingTitle, note, updateNote]);
+  }, [editingTitle, editingDescription, note, updateNote]);
 
   // =================== FUNÇÕES PARA DRAG AND DROP ===================
   const handleDragStart = (event: DragStartEvent) => {
@@ -993,10 +1150,59 @@ const NoteDetail = () => {
       if (newBlock) {
         setBlocks((prev) => [...prev, { ...newBlock, children: [] }]);
         setShowBlockTypeSelector(false);
+        setFocusBlockId(newBlock.id);
       }
     } catch (error) {
       console.error("Erro ao criar bloco:", error);
       alert("Erro ao criar bloco. Tente novamente.");
+    }
+  };
+
+  // Cria um bloco parágrafo após o bloco especificado
+  const handleAddBlockAfter = async (afterBlockId: string) => {
+    if (!note) return;
+
+    const afterIndex = blocks.findIndex((b) => b.id === afterBlockId);
+    const position = afterIndex !== -1 ? afterIndex + 1 : blocks.length;
+
+    try {
+      const newBlock = await createBlock(note.id, {
+        type: "paragraph",
+        text: "",
+        position,
+      });
+
+      if (newBlock) {
+        setBlocks((prev) => {
+          const newBlocks = [...prev];
+          newBlocks.splice(position, 0, { ...newBlock, children: [] });
+          return newBlocks;
+        });
+        setFocusBlockId(newBlock.id);
+      }
+    } catch (error) {
+      console.error("Erro ao criar bloco:", error);
+    }
+  };
+
+  // Deleta bloco vazio silenciosamente (Backspace) e foca no anterior
+  const handleBackspaceEmpty = async (blockId: string) => {
+    if (!note) return;
+
+    const blockIndex = blocks.findIndex((b) => b.id === blockId);
+    // Não deletar se for o único bloco
+    if (blocks.length <= 1) return;
+
+    const previousBlockId = blockIndex > 0 ? blocks[blockIndex - 1].id : null;
+
+    try {
+      await deleteBlockService(note.id, blockId);
+      setBlocks((prev) => prev.filter((b) => b.id !== blockId));
+      if (previousBlockId) {
+        setFocusBlockId(previousBlockId);
+      }
+    } catch (error) {
+      console.error("Erro ao deletar bloco:", error);
     }
   };
 
@@ -1166,6 +1372,7 @@ const NoteDetail = () => {
           try {
             await updateNote(note.id, {
               title: editingTitle,
+              description: editingDescription,
             });
           } catch (error) {
             console.error("Erro ao salvar:", error);
@@ -1179,7 +1386,7 @@ const NoteDetail = () => {
     document.addEventListener("keydown", handleDocumentKeyDown);
     return () => document.removeEventListener("keydown", handleDocumentKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [note, editingTitle]);
+  }, [note, editingTitle, editingDescription]);
 
   if (initialLoading || !note) {
     return <NoteDetailSkeleton />;
@@ -1188,7 +1395,7 @@ const NoteDetail = () => {
   if (error) {
     return (
       <div className="flex h-full items-center justify-center p-6">
-        <div className="max-w-md rounded-lg border border-neutral-200 bg-white p-8 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="max-w-md rounded-md border border-neutral-200 bg-white p-8 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/10">
             <span className="text-xl">⚠️</span>
           </div>
@@ -1212,85 +1419,45 @@ const NoteDetail = () => {
     <div className="flex h-full flex-col overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
       {/* =================== HEADER =================== */}
       <div className="flex-shrink-0 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5 dark:border-neutral-800 dark:bg-neutral-950">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
+        <div className="mx-auto flex w-full items-center justify-between">
           <button
             onClick={handleBack}
             className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-neutral-600 transition-all hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-            title="Voltar para lista de notas"
+            title="Go back to notes list"
           >
             <ArrowLeft size={16} />
-            <span className="hidden sm:inline">Notas</span>
           </button>
 
           <div className="flex items-center gap-2">
             {/* Status de salvamento */}
-            {isSaving ? (
-              <div className="flex items-center gap-1.5 rounded-md bg-yellow-50 px-2.5 py-1 dark:bg-yellow-500/10">
-                <Loader2 size={13} className="animate-spin text-yellow-600 dark:text-yellow-500" />
-                <span className="text-xs font-medium text-yellow-700 dark:text-yellow-500">
-                  Salvando...
-                </span>
-              </div>
-            ) : (
-              note.updated_at && (
-                <div className="hidden items-center gap-1.5 text-xs text-neutral-400 sm:flex dark:text-neutral-500">
-                  <Clock size={12} />
-                  <span>{formatDate(note.updated_at)}</span>
+
+            <div className="flex items-center gap-3">
+              {isSaving ? (
+                /* Indicador de Salvamento Ativo */
+                <div className="flex animate-pulse items-center gap-1.5 rounded-full border border-yellow-500/20 bg-yellow-500/10 px-3 py-1">
+                  <Loader2
+                    size={13}
+                    className="animate-spin text-yellow-600 dark:text-yellow-500"
+                  />
+                  <span className="text-[11px] font-semibold tracking-wider text-yellow-700 uppercase dark:text-yellow-500">
+                    Sincronizando
+                  </span>
                 </div>
-              )
-            )}
+              ) : (
+                /* Data da última atualização - Só aparece quando não está salvando */
+                note.updated_at && (
+                  <div className="flex items-center gap-1.5 text-xs text-neutral-500 transition-opacity duration-300 ease-in-out">
+                    <Clock size={12} className="text-neutral-400" />
+                    <span className="font-medium">Editado em {formatDate(note.updated_at)}</span>
+                  </div>
+                )
+              )}
+            </div>
 
             <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
 
             {/* Ações */}
             <div className="flex items-center gap-0.5">
-              {note.access?.canEdit && !note.properties?.color && (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowColorPicker(!showColorPicker)}
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-yellow-500"
-                    title="Adicionar cor"
-                  >
-                    <Palette size={15} />
-                  </button>
-                  {showColorPicker && (
-                    <div className="absolute top-full right-0 z-20 mt-1 rounded-lg border border-neutral-200 bg-white p-3 shadow-xl dark:border-neutral-700 dark:bg-neutral-900">
-                      <div className="mb-2 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                        Escolha uma cor
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {[
-                          "#F6821F",
-                          "#EF4444",
-                          "#F59E0B",
-                          "#10B981",
-                          "#3B82F6",
-                          "#8B5CF6",
-                          "#EC4899",
-                          "#06B6D4",
-                          "#84CC16",
-                          "#F97316",
-                        ].map((c) => (
-                          <button
-                            key={c}
-                            onClick={() => handleChangeColor(c)}
-                            className="h-6 w-6 rounded-full border-2 border-transparent transition-all hover:scale-110 hover:border-neutral-400 dark:hover:border-neutral-500"
-                            style={{ backgroundColor: c }}
-                            title={c}
-                          />
-                        ))}
-                      </div>
-                      <button
-                        onClick={() => setShowColorPicker(false)}
-                        className="mt-2 w-full rounded-md px-2 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
               {note.access?.canShare && (
                 <button
                   onClick={() => setShowShareModal(true)}
@@ -1309,6 +1476,98 @@ const NoteDetail = () => {
                 >
                   <Trash2 size={15} />
                 </button>
+              )}
+            </div>
+
+            <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
+
+            {/*Botão de paleta de cores*/}
+            <div className="relative">
+              <button
+                onClick={() => setShowColorPicker(!showColorPicker)}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-yellow-500"
+                title="Adicionar cor"
+              >
+                <Palette size={15} />
+              </button>
+              {showColorPicker && (
+                <div className="absolute top-full right-0 z-20 mt-1 w-56 rounded-md border border-neutral-200 bg-white p-3 shadow-xl dark:border-neutral-700 dark:bg-neutral-900">
+                  <div className="mb-2 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                    Escolha uma cor
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      "#F6821F",
+                      "#EF4444",
+                      "#F59E0B",
+                      "#10B981",
+                      "#3B82F6",
+                      "#8B5CF6",
+                      "#EC4899",
+                      "#06B6D4",
+                      "#84CC16",
+                      "#F97316",
+                    ].map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => handleChangeColor(c)}
+                        className={`h-6 w-6 rounded-full border-2 transition-all hover:scale-110 ${
+                          note.properties?.color === c
+                            ? "border-neutral-900 dark:border-white"
+                            : "border-transparent hover:border-neutral-400 dark:hover:border-neutral-500"
+                        }`}
+                        style={{ backgroundColor: c }}
+                        title={c}
+                      />
+                    ))}
+                  </div>
+                  <div className="mt-2.5 border-t border-neutral-100 pt-2.5 dark:border-neutral-800">
+                    <div className="mb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                      Cor personalizada
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={note.properties?.color || "#F6821F"}
+                        onChange={(e) => handleChangeColor(e.target.value)}
+                        className="h-8 w-8 cursor-pointer rounded border border-neutral-200 bg-transparent p-0.5 dark:border-neutral-700"
+                        title="Escolher cor"
+                      />
+                      <div className="relative flex-1">
+                        <span className="absolute top-1/2 left-2 -translate-y-1/2 text-xs font-medium text-neutral-400 dark:text-neutral-500">
+                          #
+                        </span>
+                        <input
+                          type="text"
+                          maxLength={6}
+                          placeholder="HEX"
+                          defaultValue={(note.properties?.color || "").replace("#", "")}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              const val = (e.target as HTMLInputElement).value.trim();
+                              if (/^[0-9A-Fa-f]{3,6}$/.test(val)) {
+                                handleChangeColor(`#${val}`);
+                              }
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const val = e.target.value.trim();
+                            if (/^[0-9A-Fa-f]{3,6}$/.test(val)) {
+                              handleChangeColor(`#${val}`);
+                            }
+                          }}
+                          className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-1.5 pr-2 pl-5 font-mono text-xs text-neutral-700 uppercase placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowColorPicker(false)}
+                    className="mt-2 w-full rounded-md px-2 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
+                  >
+                    Fechar
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -1380,7 +1639,7 @@ const NoteDetail = () => {
           >
             {note.properties?.icon?.url ? (
               <div className="group relative">
-                <div className="h-14 w-14 overflow-hidden rounded-xl border-2 border-white bg-white shadow-md dark:border-neutral-900 dark:bg-neutral-900">
+                <div className="h-14 w-14 overflow-hidden rounded-md border-2 border-white bg-white shadow-md dark:border-neutral-900 dark:bg-neutral-900">
                   <Image
                     src={note.properties.icon.url}
                     alt="Ícone"
@@ -1498,263 +1757,271 @@ const NoteDetail = () => {
               rows={1}
               className="w-full resize-none overflow-hidden bg-transparent text-xl font-bold text-neutral-900 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-100 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
             />
+            <textarea
+              ref={(el) => {
+                if (el) {
+                  el.style.height = "auto";
+                  el.style.height = `${el.scrollHeight}px`;
+                }
+              }}
+              value={editingDescription}
+              onChange={(e) => {
+                setEditingDescription(e.target.value);
+                const el = e.target;
+                el.style.height = "auto";
+                el.style.height = `${el.scrollHeight}px`;
+              }}
+              onBlur={async () => {
+                if (note && editingDescription !== (note.description || "")) {
+                  setIsSaving(true);
+                  try {
+                    const updated = await updateNote(note.id, { description: editingDescription });
+                    if (updated) setNote(updated);
+                  } catch (error) {
+                    console.error("Erro ao salvar descrição:", error);
+                  } finally {
+                    setIsSaving(false);
+                  }
+                }
+              }}
+              placeholder="Adicionar descrição..."
+              rows={1}
+              className="w-full resize-none overflow-hidden bg-transparent text-sm text-neutral-600 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-400 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
+            />
           </div>
 
           {/* Meta informações */}
-          <div className="mb-6 flex flex-col gap-3 border-b border-neutral-100 pb-4 sm:flex-row sm:flex-wrap sm:items-center dark:border-neutral-800">
+          <div className="mb-6 flex flex-col gap-3 border-b border-neutral-100 pb-4 dark:border-neutral-800">
             {/* Tags */}
-            {note.tags && note.tags.length > 0 && (
-              <div className="flex items-center gap-2 overflow-x-auto">
-                <Tag className="flex-shrink-0 text-neutral-400 dark:text-neutral-500" size={13} />
-                <div className="flex flex-wrap gap-1.5">
-                  {(showAllTags ? note.tags : note.tags.slice(0, 4)).map((tag, index) => (
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <Tag className="flex-shrink-0 text-yellow-400 dark:text-yellow-500" size={13} />
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">Tags</span>
+              <div className="flex flex-wrap gap-1.5">
+                {note.tags && note.tags.length > 0 && (
+                  <>
+                    {(showAllTags ? note.tags : note.tags.slice(0, 3)).map((tag, index) => {
+                      const colors = getTagColor(tag);
+                      return (
+                        <span
+                          key={index}
+                          className={`group flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-xs font-medium transition-colors ${colors.bg} ${colors.text} ${colors.border}`}
+                        >
+                          {tag}
+                          {note.access?.canEdit && (
+                            <button
+                              onClick={() => handleRemoveTag(tag)}
+                              className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                              title="Remover tag"
+                            >
+                              <X size={10} />
+                            </button>
+                          )}
+                        </span>
+                      );
+                    })}
+                    {note.tags.length > 3 && (
+                      <button
+                        onClick={() => setShowAllTags(!showAllTags)}
+                        className="rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
+                      >
+                        {showAllTags ? "Ver menos" : `+${note.tags.length - 3}`}
+                      </button>
+                    )}
+                  </>
+                )}
+                {note.access?.canEdit && (
+                  <button
+                    onClick={() => setShowTagModal(true)}
+                    className="rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
+                    title="Adicionar tag"
+                  >
+                    <Plus size={10} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Colaboradores */}
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <Users className="flex-shrink-0 text-yellow-400 dark:text-yellow-500" size={13} />
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">Collabs</span>
+              <div className="flex items-center gap-1.5">
+                {note.collaborators && note.collaborators.length > 0 && (
+                  <>
+                    <div className="flex -space-x-1.5">
+                      {(showAllCollabs ? note.collaborators : note.collaborators.slice(0, 3)).map(
+                        (collab, index) => {
+                          const displayName = getCollaboratorDisplayName(collab);
+                          const avatarUrl = getCollaboratorAvatarUrl(collab);
+
+                          return (
+                            <div
+                              key={index}
+                              className="group relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-200 ring-0 transition-all hover:z-10 hover:ring-2 hover:ring-yellow-500/30 dark:border-neutral-900 dark:bg-neutral-700"
+                              title={displayName}
+                            >
+                              {avatarUrl ? (
+                                <Image
+                                  width={28}
+                                  height={28}
+                                  src={avatarUrl}
+                                  alt={displayName}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-300">
+                                  {displayName.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+
+                              {note.access?.canShare && (
+                                <button
+                                  onClick={() => handleRemoveCollaborator(collab)}
+                                  className="absolute inset-0 flex items-center justify-center rounded-full bg-red-500/80 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                  title="Remover colaborador"
+                                >
+                                  <X size={10} />
+                                </button>
+                              )}
+                            </div>
+                          );
+                        }
+                      )}
+                    </div>
+                    {note.collaborators.length > 3 && (
+                      <button
+                        onClick={() => setShowAllCollabs(!showAllCollabs)}
+                        className="rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
+                      >
+                        {showAllCollabs ? "Ver menos" : `+${note.collaborators.length - 3}`}
+                      </button>
+                    )}
+                  </>
+                )}
+                {note.access?.canShare && (
+                  <button
+                    onClick={() => setShowShareModal(true)}
+                    className="rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
+                    title="Adicionar colaborador"
+                  >
+                    <Plus size={10} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Relações */}
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <Link className="flex-shrink-0 text-yellow-400 dark:text-yellow-500" size={13} />
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                Notas relacionadas
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {(showAllRelations ? relatedNotesData : relatedNotesData.slice(0, 3)).map(
+                  (relNote) => (
                     <span
-                      key={index}
-                      className="group flex items-center gap-1 rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
+                      key={relNote!.id}
+                      className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
                     >
-                      {tag}
+                      <button
+                        onClick={() => router.push(`/app/notes/view/${relNote!.id}`)}
+                        className="inline-flex items-center gap-1.5 truncate"
+                      >
+                        {relNote!.properties?.icon?.url ? (
+                          <Image
+                            src={relNote!.properties.icon.url}
+                            alt=""
+                            width={12}
+                            height={12}
+                            className="flex-shrink-0 rounded"
+                          />
+                        ) : null}
+                        <span className="max-w-[120px] truncate">
+                          {relNote!.title || "Nota sem título"}
+                        </span>
+                      </button>
                       {note.access?.canEdit && (
                         <button
-                          onClick={() => handleRemoveTag(tag)}
+                          onClick={() => handleRemoveRelation(relNote!.id)}
                           className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
-                          title="Remover tag"
+                          title="Remover relação"
                         >
                           <X size={10} />
                         </button>
                       )}
                     </span>
-                  ))}
-                  {note.tags.length > 4 && (
-                    <button
-                      onClick={() => setShowAllTags(!showAllTags)}
-                      className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
-                    >
-                      {showAllTags ? "Ver menos" : `+${note.tags.length - 4}`}
-                    </button>
-                  )}
-                  {note.access?.canEdit && (
-                    <button
-                      onClick={() => setShowTagModal(true)}
-                      className="rounded-full border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
-                      title="Adicionar tag"
-                    >
-                      <Plus size={10} />
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Colaboradores */}
-            {note.collaborators && note.collaborators.length > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-700" />
-                <div className="flex items-center">
-                  <div className="flex -space-x-1.5">
-                    {note.collaborators.map((collab, index) => {
-                      const displayName = getCollaboratorDisplayName(collab);
-                      const avatarUrl = getCollaboratorAvatarUrl(collab);
-
-                      return (
-                        <div
-                          key={index}
-                          className="group relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-200 ring-0 transition-all hover:z-10 hover:ring-2 hover:ring-yellow-500/30 dark:border-neutral-900 dark:bg-neutral-700"
-                          title={displayName}
-                        >
-                          {avatarUrl ? (
-                            <Image
-                              width={28}
-                              height={28}
-                              src={avatarUrl}
-                              alt={displayName}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-300">
-                              {displayName.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-
-                          {note.access?.canShare && (
-                            <button
-                              onClick={() => handleRemoveCollaborator(collab)}
-                              className="absolute inset-0 flex items-center justify-center rounded-full bg-red-500/80 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                              title="Remover colaborador"
-                            >
-                              <X size={10} />
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <span className="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
-                    {note.collaborators.length} colaborador
-                    {note.collaborators.length > 1 ? "es" : ""}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Cor */}
-            {note.properties?.color ? (
-              <div className="flex items-center gap-2">
-                <div className="hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-700" />
-                <div className="group relative">
-                  <div
-                    className="h-5 w-5 cursor-pointer rounded-full border border-neutral-200 shadow-inner transition-transform hover:scale-110 dark:border-neutral-600"
-                    style={{ backgroundColor: note.properties.color }}
-                    title={`Cor: ${note.properties.color}`}
-                    onClick={() => note.access?.canEdit && setShowColorPicker(!showColorPicker)}
-                  />
-                  {note.access?.canEdit && (
-                    <button
-                      onClick={handleRemoveColor}
-                      className="absolute -top-1 -right-1 rounded-full bg-neutral-800/70 p-0.5 text-white opacity-100 transition-opacity hover:bg-red-500 sm:opacity-0 sm:group-hover:opacity-100"
-                      title="Remover cor"
-                    >
-                      <X size={8} />
-                    </button>
-                  )}
-                  {showColorPicker && note.access?.canEdit && (
-                    <div className="fixed inset-x-4 bottom-4 z-30 rounded-lg border border-neutral-200 bg-white p-4 shadow-xl sm:absolute sm:inset-auto sm:top-full sm:bottom-auto sm:left-0 sm:mt-1 sm:p-3 dark:border-neutral-700 dark:bg-neutral-900">
-                      <div className="mb-2 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                        Trocar cor
-                      </div>
-                      <div className="flex flex-wrap gap-2 sm:gap-1.5">
-                        {[
-                          "#F6821F",
-                          "#EF4444",
-                          "#F59E0B",
-                          "#10B981",
-                          "#3B82F6",
-                          "#8B5CF6",
-                          "#EC4899",
-                          "#06B6D4",
-                          "#84CC16",
-                          "#F97316",
-                        ].map((c) => (
-                          <button
-                            key={c}
-                            onClick={() => handleChangeColor(c)}
-                            className={`h-8 w-8 rounded-full border-2 transition-all hover:scale-110 sm:h-6 sm:w-6 ${
-                              note.properties?.color === c
-                                ? "border-neutral-900 dark:border-white"
-                                : "border-transparent hover:border-neutral-400 dark:hover:border-neutral-500"
-                            }`}
-                            style={{ backgroundColor: c }}
-                            title={c}
-                          />
-                        ))}
-                      </div>
-                      <button
-                        onClick={() => setShowColorPicker(false)}
-                        className="mt-3 w-full rounded-md px-2 py-1.5 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 sm:mt-2 sm:py-1 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
-                      >
-                        Fechar
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : null}
-
-            {/* Relações */}
-            {relatedNotesData.length > 0 && (
-              <div className="flex w-full flex-col gap-1.5 pt-1 sm:gap-1">
-                <div className="mb-1 flex items-center gap-2">
-                  <Link
-                    className="flex-shrink-0 text-neutral-400 dark:text-neutral-500"
-                    size={13}
-                  />
-                  <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                    Relações
-                  </span>
-                </div>
-                {relatedNotesData.map((relNote) => (
-                  <div key={relNote!.id} className="group/rel flex items-center gap-1">
-                    <button
-                      onClick={() => router.push(`/app/notes/view/${relNote!.id}`)}
-                      className="inline-flex min-w-0 flex-1 items-center gap-2 truncate rounded-md px-1.5 py-1 text-xs text-neutral-600 transition-colors hover:bg-neutral-100 sm:py-0.5 dark:text-neutral-400 dark:hover:bg-neutral-800"
-                    >
-                      {relNote!.properties?.icon?.url ? (
-                        <Image
-                          src={relNote!.properties.icon.url}
-                          alt=""
-                          width={14}
-                          height={14}
-                          className="flex-shrink-0 rounded"
-                        />
-                      ) : (
-                        <Link size={12} className="flex-shrink-0 text-yellow-500" />
-                      )}
-                      <span className="truncate">{relNote!.title || "Nota sem título"}</span>
-                      <ExternalLink
-                        size={10}
-                        className="flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover/rel:opacity-100"
-                      />
-                    </button>
-                    {note.access?.canEdit && (
-                      <button
-                        onClick={() => handleRemoveRelation(relNote!.id)}
-                        className="flex-shrink-0 rounded-md p-1 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:p-0.5 sm:opacity-0 sm:group-hover/rel:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
-                        title="Remover relação"
-                      >
-                        <X size={12} />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  )
+                )}
+                {relatedNotesData.length > 3 && (
+                  <button
+                    onClick={() => setShowAllRelations(!showAllRelations)}
+                    className="rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
+                  >
+                    {showAllRelations ? "Ver menos" : `+${relatedNotesData.length - 3}`}
+                  </button>
+                )}
                 {note.access?.canEdit && (
                   <button
                     onClick={() => setShowRelationModal(true)}
-                    className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 sm:py-0.5 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-400"
+                    className="rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
+                    title="Adicionar relação"
                   >
-                    <Plus size={12} />
-                    Adicionar relação
+                    <Plus size={10} />
                   </button>
                 )}
               </div>
-            )}
+            </div>
 
             {/* URLs */}
-            <div className="flex w-full flex-col gap-1.5 pt-1 sm:gap-1">
-              {note.properties?.urls && note.properties.urls.length > 0 && (
-                <>
-                  {note.properties.urls.filter(Boolean).map((url, index) => (
-                    <div key={index} className="group/url flex items-center gap-1">
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-w-0 flex-1 items-center gap-2 truncate rounded-md px-1.5 py-1 text-xs text-blue-500 transition-colors hover:bg-blue-50 sm:py-0.5 dark:text-blue-400 dark:hover:bg-blue-500/10"
-                      >
-                        <Link2 size={12} className="flex-shrink-0" />
-                        <span className="truncate">{url}</span>
-                        <ExternalLink
-                          size={10}
-                          className="flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover/url:opacity-100"
-                        />
-                      </a>
-                      {note.access?.canEdit && (
-                        <button
-                          onClick={() => handleRemoveUrl(url)}
-                          className="flex-shrink-0 rounded-md p-1 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:p-0.5 sm:opacity-0 sm:group-hover/url:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
-                          title="Remover URL"
-                        >
-                          <X size={12} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </>
-              )}
-              {note.access?.canEdit && (
-                <>
-                  {showUrlInput ? (
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-1.5">
-                      <div className="flex flex-1 items-center gap-1.5">
-                        <Link2 size={12} className="flex-shrink-0 text-neutral-400" />
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <Link2 className="flex-shrink-0 text-yellow-400 dark:text-yellow-500" size={13} />
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">URLs</span>
+              <div className="flex flex-wrap gap-1.5">
+                {note.properties?.urls &&
+                  (() => {
+                    const filteredUrls = note.properties.urls.filter(Boolean);
+                    const visibleUrls = showAllUrls ? filteredUrls : filteredUrls.slice(0, 3);
+                    return (
+                      <>
+                        {visibleUrls.map((url, index) => (
+                          <span
+                            key={index}
+                            className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
+                          >
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex max-w-[150px] items-center gap-1.5 truncate text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                            >
+                              <span className="truncate">{url.replace(/^https?:\/\//, "")}</span>
+                            </a>
+                            {note.access?.canEdit && (
+                              <button
+                                onClick={() => handleRemoveUrl(url)}
+                                className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                                title="Remover URL"
+                              >
+                                <X size={10} />
+                              </button>
+                            )}
+                          </span>
+                        ))}
+                        {filteredUrls.length > 3 && (
+                          <button
+                            onClick={() => setShowAllUrls(!showAllUrls)}
+                            className="rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
+                          >
+                            {showAllUrls ? "Ver menos" : `+${filteredUrls.length - 3}`}
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
+                {note.access?.canEdit && (
+                  <>
+                    {showUrlInput ? (
+                      <div className="flex items-center gap-1.5">
                         <input
                           type="url"
                           value={newUrl}
@@ -1770,99 +2037,107 @@ const NoteDetail = () => {
                             }
                           }}
                           placeholder="https://..."
-                          className="flex-1 rounded-md border border-neutral-200 bg-transparent px-2 py-1.5 text-sm text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 sm:py-1 sm:text-xs dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                          className="w-40 rounded-md border border-neutral-200 bg-transparent px-2 py-0.5 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
                           autoFocus
                         />
-                      </div>
-                      <div className="flex items-center gap-1.5 pl-5 sm:pl-0">
                         <button
                           onClick={handleAddUrl}
                           disabled={!newUrl.trim()}
-                          className="rounded-md bg-yellow-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-yellow-600 disabled:opacity-50 sm:px-2 sm:py-1 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
+                          className="rounded-md bg-yellow-500 px-2 py-0.5 text-xs font-medium text-white transition-colors hover:bg-yellow-600 disabled:opacity-50 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
                         >
-                          Adicionar
+                          OK
                         </button>
                         <button
                           onClick={() => {
                             setShowUrlInput(false);
                             setNewUrl("");
                           }}
-                          className="rounded-md p-1.5 text-neutral-400 transition-colors hover:text-neutral-600 sm:p-1 dark:hover:text-neutral-300"
+                          className="text-neutral-400 transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"
                           title="Cancelar"
                         >
-                          <X size={12} />
+                          <X size={10} />
                         </button>
                       </div>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setShowUrlInput(true)}
-                      className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 sm:py-0.5 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-400"
-                    >
-                      <Plus size={12} />
-                      Adicionar URL
-                    </button>
-                  )}
-                </>
-              )}
+                    ) : (
+                      <button
+                        onClick={() => setShowUrlInput(true)}
+                        className="rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
+                        title="Adicionar URL"
+                      >
+                        <Plus size={10} />
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Arquivos */}
-            {note.properties?.files && note.properties.files.filter((f) => f.url).length > 0 && (
-              <div className="flex w-full flex-col gap-1.5 pt-1 sm:gap-1">
-                {note.properties.files
-                  .filter((f) => f.url)
-                  .map((file, index) => (
-                    <div key={file.id || index} className="group/file flex items-center gap-1">
-                      <a
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-w-0 flex-1 items-center gap-2 truncate rounded-md px-1.5 py-1 text-xs text-neutral-600 transition-colors hover:bg-neutral-100 sm:py-0.5 dark:text-neutral-400 dark:hover:bg-neutral-800"
-                      >
-                        <FileText size={12} className="flex-shrink-0 text-yellow-500" />
-                        <span className="truncate">{file.name || "Arquivo"}</span>
-                        {file.type && (
-                          <span className="hidden flex-shrink-0 text-[10px] text-neutral-400 sm:inline dark:text-neutral-500">
-                            {file.type}
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <FileText className="flex-shrink-0 text-yellow-400 dark:text-yellow-500" size={13} />
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">Arquivos</span>
+              <div className="flex flex-wrap gap-1.5">
+                {note.properties?.files &&
+                  (() => {
+                    const filteredFiles = note.properties.files.filter((f) => f.url);
+                    const visibleFiles = showAllFiles ? filteredFiles : filteredFiles.slice(0, 3);
+                    return (
+                      <>
+                        {visibleFiles.map((file, index) => (
+                          <span
+                            key={file.id || index}
+                            className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
+                          >
+                            <a
+                              href={file.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex max-w-[120px] items-center gap-1.5 truncate hover:text-neutral-900 dark:hover:text-neutral-100"
+                            >
+                              <span className="truncate">{file.name || "Arquivo"}</span>
+                            </a>
+                            <a
+                              href={file.url}
+                              download={file.name || "arquivo"}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-neutral-400 opacity-100 transition-all hover:text-neutral-600 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
+                              title="Baixar arquivo"
+                            >
+                              <Download size={10} />
+                            </a>
+                            {note.access?.canEdit && (
+                              <button
+                                onClick={() => handleRemoveFile(file.id)}
+                                className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                                title="Remover arquivo"
+                              >
+                                <X size={10} />
+                              </button>
+                            )}
                           </span>
+                        ))}
+                        {filteredFiles.length > 3 && (
+                          <button
+                            onClick={() => setShowAllFiles(!showAllFiles)}
+                            className="rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
+                          >
+                            {showAllFiles ? "Ver menos" : `+${filteredFiles.length - 3}`}
+                          </button>
                         )}
-                        <ExternalLink
-                          size={10}
-                          className="flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover/file:opacity-100"
-                        />
-                      </a>
-                      <a
-                        href={file.url}
-                        download={file.name || "arquivo"}
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex-shrink-0 rounded-md p-1 text-neutral-400 opacity-100 transition-all hover:text-neutral-600 sm:p-0.5 sm:opacity-0 sm:group-hover/file:opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
-                        title="Baixar arquivo"
-                      >
-                        <Download size={12} />
-                      </a>
-                      {note.access?.canEdit && (
-                        <button
-                          onClick={() => handleRemoveFile(file.id)}
-                          className="flex-shrink-0 rounded-md p-1 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:p-0.5 sm:opacity-0 sm:group-hover/file:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
-                          title="Remover arquivo"
-                        >
-                          <X size={12} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                      </>
+                    );
+                  })()}
                 {note.access?.canEdit && (
                   <button
                     onClick={() => filesInputRef.current?.click()}
-                    className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 sm:py-0.5 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-400"
+                    className="rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:text-yellow-500"
+                    title="Adicionar arquivo"
                   >
-                    <Plus size={12} />
-                    Adicionar arquivo
+                    <Plus size={10} />
                   </button>
                 )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* =================== BLOCOS =================== */}
@@ -1886,6 +2161,10 @@ const NoteDetail = () => {
                       onUpdate={handleUpdateBlock}
                       onDelete={handleDeleteBlock}
                       onAddBlock={() => setShowBlockTypeSelector(true)}
+                      onAddBlockAfter={handleAddBlockAfter}
+                      onBackspaceEmpty={handleBackspaceEmpty}
+                      focusBlockId={focusBlockId}
+                      onFocused={() => setFocusBlockId(null)}
                     />
                   ))}
                 </SortableContext>
@@ -1893,13 +2172,14 @@ const NoteDetail = () => {
                 {/* Overlay para mostrar o item sendo arrastado */}
                 <DragOverlay>
                   {activeBlock ? (
-                    <div className="rounded-lg border border-yellow-500/30 bg-white px-3 py-2 shadow-xl dark:border-yellow-500/50 dark:bg-neutral-900">
+                    <div className="rounded-md border border-yellow-500/30 bg-white px-3 py-2 shadow-xl dark:border-yellow-500/50 dark:bg-neutral-900">
                       <BlockComponent
                         block={activeBlock}
                         noteId={note.id}
                         onUpdate={handleUpdateBlock}
                         onDelete={handleDeleteBlock}
                         onAddBlock={() => {}}
+                        onAddBlockAfter={() => {}}
                         isDragging={true}
                       />
                     </div>
@@ -1907,20 +2187,11 @@ const NoteDetail = () => {
                 </DragOverlay>
               </DndContext>
             ) : (
-              <div className="flex min-h-[160px] flex-col items-center justify-center rounded-lg border border-dashed border-neutral-200 px-4 py-8 sm:min-h-[240px] sm:py-10 dark:border-neutral-800">
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 sm:h-12 sm:w-12 dark:bg-neutral-800">
-                  <Type size={18} className="text-neutral-400 sm:hidden dark:text-neutral-500" />
-                  <Type
-                    size={20}
-                    className="hidden text-neutral-400 sm:block dark:text-neutral-500"
-                  />
+              <div className="flex min-h-[80px] flex-col items-center justify-center rounded-md px-4 py-4">
+                <div className="flex items-center gap-2 text-sm text-neutral-400 dark:text-neutral-500">
+                  <Loader2 size={14} className="animate-spin" />
+                  <span>Criando bloco...</span>
                 </div>
-                <p className="text-center text-sm font-medium text-neutral-700 sm:text-base dark:text-neutral-300">
-                  Esta nota ainda não tem conteúdo
-                </p>
-                <p className="mt-1 text-center text-xs text-neutral-400 sm:text-sm dark:text-neutral-500">
-                  Toque em &quot;Adicionar bloco&quot; para começar
-                </p>
               </div>
             )}
 
@@ -1952,9 +2223,23 @@ const NoteDetail = () => {
                 <Save size={12} />
                 <span>
                   <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-                    Ctrl+S
+                    Enter
                   </kbd>
-                  <span className="ml-1.5">para forçar salvamento</span>
+                  <span className="ml-1.5">novo bloco</span>
+                  <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
+                  <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                    Espaço
+                  </kbd>
+                  <span className="ml-1.5">ou</span>
+                  <kbd className="ml-1.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                    /
+                  </kbd>
+                  <span className="ml-1.5">em linha vazia para tipo de bloco</span>
+                  <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
+                  <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                    Shift+Enter
+                  </kbd>
+                  <span className="ml-1.5">nova linha</span>
                 </span>
               </div>
             </div>
@@ -1965,7 +2250,7 @@ const NoteDetail = () => {
       {/* =================== MODAL DE COMPARTILHAMENTO =================== */}
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-          <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-lg sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
+          <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
             {/* Handle para mobile */}
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
 
@@ -2065,7 +2350,7 @@ const NoteDetail = () => {
       {/* =================== MODAL DE RELAÇÕES =================== */}
       {showRelationModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-          <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-lg sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
+          <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
             {/* Handle para mobile */}
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
 
@@ -2152,14 +2437,17 @@ const NoteDetail = () => {
                             </div>
                             {relNote.tags && relNote.tags.length > 0 && (
                               <div className="mt-0.5 flex gap-1 overflow-hidden">
-                                {relNote.tags.slice(0, 3).map((tag) => (
-                                  <span
-                                    key={tag}
-                                    className="rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
+                                {relNote.tags.slice(0, 3).map((tag) => {
+                                  const colors = getTagColor(tag);
+                                  return (
+                                    <span
+                                      key={tag}
+                                      className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
+                                    >
+                                      {tag}
+                                    </span>
+                                  );
+                                })}
                               </div>
                             )}
                           </div>
@@ -2204,7 +2492,7 @@ const NoteDetail = () => {
       {/* =================== MODAL DE TAGS =================== */}
       {showTagModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-          <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-lg sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
+          <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
             {/* Handle para mobile */}
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
 
@@ -2260,21 +2548,24 @@ const NoteDetail = () => {
                     Tags existentes
                   </label>
                   <div className="flex max-h-32 flex-wrap gap-2 overflow-y-auto">
-                    {note.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="group flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
-                      >
-                        {tag}
-                        <button
-                          onClick={() => handleRemoveTag(tag)}
-                          className="text-neutral-400 transition-colors hover:text-red-500 dark:text-neutral-500 dark:hover:text-red-400"
-                          title="Remover tag"
+                    {note.tags.map((tag, index) => {
+                      const colors = getTagColor(tag);
+                      return (
+                        <span
+                          key={index}
+                          className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${colors.bg} ${colors.text} ${colors.border}`}
                         >
-                          <X size={12} />
-                        </button>
-                      </span>
-                    ))}
+                          {tag}
+                          <button
+                            onClick={() => handleRemoveTag(tag)}
+                            className="text-neutral-400 transition-colors hover:text-red-500 dark:text-neutral-500 dark:hover:text-red-400"
+                            title="Remover tag"
+                          >
+                            <X size={12} />
+                          </button>
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
               )}
