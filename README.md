@@ -2,14 +2,14 @@
 
 <div align="center">
 
-[![Deploy Status](https://img.shields.io/badge/deploy-ativo-brightgreen)](https://notes.gaelgomes.dev/)
+[![Deploy Status](https://img.shields.io/badge/deploy-ativo-brightgreen)](https://weavenotes.app/)
 [![Docker](https://img.shields.io/badge/Docker-100%25-blue?logo=docker)](https://docker.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-v22+-green?logo=nodedotjs)](https://nodejs.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-15+-000000?logo=express&logoColor=white)](https://expressjs.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-316192?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 
-Live deploy **[https://notes.gaelgomes.dev](https://notes.gaelgomes.dev/)**
+Live deploy **[https://weavenotes.app](https://weavenotes.app/)**
 
 Web app full stack para gerenciamento de notas e anotações de usuários, com criação e edição de conteúdos em diferentes formatos, incluindo texto, código, parágrafos e listas. Além disso o app conta com função de compartilhamento de notas com outros usuários e mapeamento de tags/palavras chaves.
 
@@ -236,6 +236,6 @@ Sim, utilizei IA durante o desenvolvimento deste projeto — e sem medo! Ferrame
 
 **Feito em algumas madrugadas por [Gael Gomes](https://github.com/eugaelgomes)**
 
-[https://notes.gaelgomes.dev](https://notes.gaelgomes.dev/) • [hello@gaelgomes.dev](mailto:hello@gaelgomes.dev) • [in/gael-rene-gomes](https://linkedin.com/in/gael-rene-gomes)
+[https://weavenotes.app](https://weavenotes.app/) • [hello@gaelgomes.dev](mailto:hello@gaelgomes.dev) • [in/gael-rene-gomes](https://linkedin.com/in/gael-rene-gomes)
 
 </div>
