@@ -557,14 +557,17 @@ DEBUG=* npm run dev
 
 ## 📄 Licença
 
-Este projeto está sob a licença ISC. Veja o arquivo [LICENSE](LICENSE) para detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+© 2025-2026 Gael Renê Gomes. Todos os direitos reservados sob os termos da licença MIT.
 
 ## 👨‍💻 Autor
 
-**Gael Gomes**
+**Gael Renê Gomes**
 
+- 📧 Email: [hello@gaelgomes.dev](mailto:hello@gaelgomes.dev)
+- 🌐 Website: [gaelgomes.dev](https://gaelgomes.dev)
 - GitHub: [@eugaelgomes](https://github.com/eugaelgomes)
-- Aceito uma estrelinha nesse projeto hahaha!
 
 ---
 

@@ -23,7 +23,7 @@
     "typescript",
     "weave-notes-api"
   ],
-  "author": "Gael Renê Gomes",
+  "author": { "name": "Gael Renê Gomes", "email": "hello@gaelgomes.dev", "url": "https://gaelgomes.dev" },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/eugaelgomes/notes-web-app.git"

@@ -11,7 +11,8 @@
 
 Live deploy **[https://notes.gaelgomes.dev](https://notes.gaelgomes.dev/)**
 
-Web app full stack para gerenciamento de notas e anotações de usuários, com criação e edição de conteúdos em diferentes formatos, incluindo texto, código, parágrafos e listas. Além disso o app conta com função de compartilhamento de notas com outros usuários e mapeamento de tags/palavras chaves. 
+Web app full stack para gerenciamento de notas e anotações de usuários, com criação e edição de conteúdos em diferentes formatos, incluindo texto, código, parágrafos e listas. Além disso o app conta com função de compartilhamento de notas com outros usuários e mapeamento de tags/palavras chaves.
+
 </div>
 
 ---
@@ -114,63 +115,97 @@ docker compose -f docker-compose.yml up -d
 
 ---
 
-## 📂 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 notes-web-app/
-├── 🖥️  web/                    # Frontend Next.js
+├── 🖥️  web/                          # Frontend Next.js 15
 │   ├── app/
-│   │   ├── components/        # Componentes reutilizáveis
-│   │   │   ├── layout/       # Componentes de layout
-│   │   │   └── ui/           # Componentes de UI
-│   │   ├── contexts/         # Context API (Auth, Notes)
-│   │   ├── services/         # Serviços e API clients
-│   │   │   ├── auth-service/
-│   │   │   ├── backup-service/
-│   │   │   └── notes-service/
-│   │   ├── utils/            # Utilitários
-│   │   ├── auth/             # Páginas de autenticação
-│   │   ├── app/              # Páginas da aplicação
-│   │   │   ├── home/
-│   │   │   ├── notes/
-│   │   │   ├── organization/
-│   │   │   └── settings/
-│   │   └── about/            # Página sobre
+│   │   ├── about/                   # Página institucional
+│   │   ├── app/                     # Páginas protegidas da aplicação
+│   │   │   ├── components/          # Componentes internos do app
+│   │   │   │   ├── auth/           # Componentes de autenticação
+│   │   │   │   ├── layout/         # Componentes de layout
+│   │   │   │   └── ui/             # Componentes de UI
+│   │   │   ├── home/               # Dashboard / Home
+│   │   │   ├── hooks/              # Custom hooks
+│   │   │   ├── notes/              # Gerenciamento de notas
+│   │   │   ├── notifications/      # Sistema de notificações
+│   │   │   ├── organization/       # Organizações
+│   │   │   ├── projects/           # Projetos
+│   │   │   ├── settings/           # Configurações do usuário
+│   │   │   └── weave-ai/           # Chat com IA (Weave AI)
+│   │   ├── auth/                    # Páginas de autenticação
+│   │   │   ├── activate/           # Ativação de conta
+│   │   │   ├── modals/             # Modais de autenticação
+│   │   │   ├── reset-password/     # Recuperação de senha
+│   │   │   ├── signin/             # Login
+│   │   │   └── signup/             # Cadastro
+│   │   ├── contexts/                # Context API (providers)
+│   │   │   ├── AuthContext          # Autenticação
+│   │   │   ├── ChatContext          # Chat com IA
+│   │   │   ├── NotesContext         # Notas
+│   │   │   ├── OrganizationContext  # Organizações
+│   │   │   ├── ProjectsContext      # Projetos
+│   │   │   └── ThemeContext         # Tema claro/escuro
+│   │   ├── home/                    # Landing page
+│   │   ├── services/                # Serviços e API clients
+│   │   │   ├── ai-agent-service/   # Serviço de IA
+│   │   │   ├── authentication/     # Serviço de autenticação
+│   │   │   ├── backup-service/     # Serviço de backup
+│   │   │   ├── health-service/     # Health check
+│   │   │   ├── notes-service/      # Serviço de notas
+│   │   │   ├── organization/       # Serviço de organizações
+│   │   │   └── projects-service/   # Serviço de projetos
+│   │   └── utils/                   # Utilitários (format, tags, etc.)
+│   ├── components/ui/               # Componentes UI compartilhados
 │   ├── config/
-│   │   └── nginx.conf        # Configuração Nginx
-│   ├── public/               # Arquivos estáticos
-│   ├── types/                # Definições TypeScript
-│   ├── Dockerfile            # Container frontend
+│   │   └── nginx.conf               # Configuração Nginx
+│   ├── lib/                         # Funções utilitárias
+│   ├── public/                      # Arquivos estáticos
+│   ├── types/                       # Definições TypeScript
+│   ├── Dockerfile                   # Container frontend
 │   └── package.json
 │
-├── ⚙️  server/                 # Backend Node.js
+├── ⚙️  server/                       # Backend Node.js/Express
 │   ├── src/
-│   │   ├── controllers/      # Controladores das rotas
-│   │   │   ├── auth/
-│   │   │   ├── backup/
-│   │   │   ├── notes/
-│   │   │   ├── password/
-│   │   │   └── user/
-│   │   ├── middlewares/      # Middlewares personalizados
-│   │   │   ├── auth/
-│   │   │   ├── data/
-│   │   │   └── security/
-│   │   ├── repositories/     # Camada de dados
-│   │   ├── routes/           # Definição das rotas
-│   │   ├── services/         # Serviços (DB, Email, Storage)
-│   │   │   ├── db/
-│   │   │   ├── email/
-│   │   │   ├── jobs/
-│   │   │   └── storage/
-│   │   └── config/           # Configurações
-│   ├── docs/                 # Documentação da API
-│   ├── temp/                 # Arquivos temporários
-│   ├── Dockerfile            # Container backend
+│   │   ├── app.js                   # Configuração do Express
+│   │   ├── index.js                 # Entry point
+│   │   ├── routes.js                # Registro de rotas
+│   │   ├── config/                  # Configurações (CORS, aliases)
+│   │   ├── middlewares/             # Middlewares personalizados
+│   │   │   ├── authentication/     # Validação JWT
+│   │   │   ├── data/               # Validação e upload de dados
+│   │   │   └── security/           # Rate limiting, sessão, IP
+│   │   ├── modules/                 # Módulos da aplicação
+│   │   │   ├── auth/               # Autenticação (controller, repository, routes)
+│   │   │   ├── backup/             # Backup de dados
+│   │   │   ├── notes/              # Notas e blocos
+│   │   │   ├── organizations/      # Organizações
+│   │   │   ├── password/           # Recuperação de senha
+│   │   │   ├── plans/              # Planos de assinatura
+│   │   │   ├── projects/           # Projetos
+│   │   │   ├── users/              # Gerenciamento de usuários
+│   │   │   └── weave-ai/           # Chat com IA
+│   │   ├── services/                # Serviços externos
+│   │   │   ├── db/                 # Pool PostgreSQL
+│   │   │   ├── email/              # Nodemailer (templates)
+│   │   │   ├── jobs/               # Tarefas agendadas
+│   │   │   ├── note_export/        # Exportação de notas (PDF)
+│   │   │   ├── patterns/           # Padrões de produto
+│   │   │   ├── plans/              # Gerenciamento de planos
+│   │   │   ├── secrets/            # Gerenciamento de segredos
+│   │   │   ├── storage/            # AWS S3 / DigitalOcean Spaces
+│   │   │   └── weave-ai/           # Google Gemini AI
+│   │   └── utils/                   # Utilitários e logs
+│   ├── db_docs/                     # Documentação do banco de dados
+│   ├── docs/                        # Documentação da API
+│   ├── Dockerfile                   # Container backend
 │   └── package.json
 │
-├── 🐳 docker-compose.yml       # Orquestração principal
-├── 🔧 docker-compose.override.yml # Configurações locais
-└── 📋 PRODUCTION_SETUP.md     # Guia de produção
+├── 🐳 docker-compose.yml            # Orquestração principal
+├── 🔧 docker-compose.override.yml   # Configurações locais
+└── 📄 README.md
 ```
 
 ---
@@ -188,6 +223,13 @@ develop:
     - action: rebuild       # Rebuild em mudanças críticas
       path: ./package.json
 ```
+
+---
+
+## Uso de IA
+
+Sim, utilizei IA durante o desenvolvimento deste projeto — e sem medo! Ferramentas de IA foram usadas como apoio para acelerar a escrita de código, gerar ideias e resolver problemas. Porém é ***importante estudo, contexto e método***. IA é uma ferramenta poderosa e rápida, mas o entendimento e a responsabilidade sobre o que é construído continuam sendo meu.
+
 ---
 
 <div align="center">
