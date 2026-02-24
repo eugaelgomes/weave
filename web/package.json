@@ -2,7 +2,11 @@
   "name": "weave-notes",
   "version": "0.1.0",
   "private": true,
-  "author": { "name": "Gael Renê Gomes", "email": "hello@gaelgomes.dev", "url": "https://gaelgomes.dev" },
+  "author": {
+    "name": "Gael Renê Gomes",
+    "email": "hello@gaelgomes.dev",
+    "url": "https://gaelgomes.dev"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",

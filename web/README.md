@@ -14,17 +14,17 @@ Frontend do **Weave Notes** — um web app full-stack para gerenciamento de nota
 
 ## Tecnologias
 
-| Tecnologia               | Versão | Uso                            |
-| ------------------------ | ------- | ------------------------------ |
-| **Next.js**        | 16+     | Framework React com App Router |
-| **React**          | 19      | Biblioteca UI                  |
-| **TypeScript**     | 5+      | Tipagem estática              |
-| **TailwindCSS**    | 4+      | Estilização utility-first    |
-| **@dnd-kit**       | 6+      | Drag and drop                  |
-| **react-markdown** | 10+     | Renderização Markdown        |
-| **lucide-react**   | -       | Ícones                        |
-| **sonner**         | 2+      | Notificações toast           |
-| **next-themes**    | -       | Tema claro/escuro              |
+| Tecnologia         | Versão | Uso                            |
+| ------------------ | ------ | ------------------------------ |
+| **Next.js**        | 16+    | Framework React com App Router |
+| **React**          | 19     | Biblioteca UI                  |
+| **TypeScript**     | 5+     | Tipagem estática               |
+| **TailwindCSS**    | 4+     | Estilização utility-first      |
+| **@dnd-kit**       | 6+     | Drag and drop                  |
+| **react-markdown** | 10+    | Renderização Markdown          |
+| **lucide-react**   | -      | Ícones                         |
+| **sonner**         | 2+     | Notificações toast             |
+| **next-themes**    | -      | Tema claro/escuro              |
 
 ## Estrutura de diretórios
 
@@ -112,17 +112,17 @@ Cliente centralizado em `services/api-methods.ts`:
 
 ### Rotas
 
-| Rota                   | Tipo      | Descrição                 |
-| ---------------------- | --------- | --------------------------- |
-| `/`                  | Pública  | Landing page                |
-| `/about`             | Pública  | Página institucional       |
-| `/auth/*`            | Pública  | Login, cadastro, ativação |
-| `/app`               | Protegida | Dashboard                   |
-| `/app/notes`         | Protegida | Gerenciamento de notas      |
-| `/app/projects`      | Protegida | Projetos                    |
+| Rota                 | Tipo      | Descrição                 |
+| -------------------- | --------- | ------------------------- |
+| `/`                  | Pública   | Landing page              |
+| `/about`             | Pública   | Página institucional      |
+| `/auth/*`            | Pública   | Login, cadastro, ativação |
+| `/app`               | Protegida | Dashboard                 |
+| `/app/notes`         | Protegida | Gerenciamento de notas    |
+| `/app/projects`      | Protegida | Projetos                  |
 | `/app/organization`  | Protegida | Organizações              |
 | `/app/settings`      | Protegida | Configurações             |
-| `/app/weave-ai`      | Protegida | Chat com IA                 |
+| `/app/weave-ai`      | Protegida | Chat com IA               |
 | `/app/notifications` | Protegida | Notificações              |
 
 ## Iniciação do projeto
@@ -166,15 +166,15 @@ docker compose up --build
 
 ## 📜 Scripts
 
-| Script                   | Descrição                                |
-| ------------------------ | ------------------------------------------ |
+| Script                 | Descrição                                  |
+| ---------------------- | ------------------------------------------ |
 | `npm run dev`          | Servidor de desenvolvimento com hot-reload |
-| `npm run build`        | Build de produção                        |
-| `npm start`            | Servidor de produção                     |
-| `npm run lint`         | Verificação de lint                      |
-| `npm run lint:fix`     | Correção automática de lint             |
-| `npm run format`       | Formatação com Prettier                  |
-| `npm run format:check` | Verificação de formatação              |
+| `npm run build`        | Build de produção                          |
+| `npm start`            | Servidor de produção                       |
+| `npm run lint`         | Verificação de lint                        |
+| `npm run lint:fix`     | Correção automática de lint                |
+| `npm run format`       | Formatação com Prettier                    |
+| `npm run format:check` | Verificação de formatação                  |
 
 ---
 
