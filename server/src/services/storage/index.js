@@ -7,12 +7,30 @@ const {
 const { v4: uuidv4 } = require("uuid");
 
 class SpacesService {
+  /**
+   * Estrutura de pastas do bucket.
+   * Centraliza todos os paths para facilitar manutenção e evitar strings soltas.
+   * Para alterar a organização do bucket, basta editar este objeto.
+   */
+  static FOLDER_PATHS = {
+    BACKUPS: "backups",
+    IMAGES: "images",
+    NOTES: {
+      ROOT: "notes",
+      ICONS: "icons",
+      BANNERS: "banners",
+      FILES: "files",
+    },
+    AVATARS: "avatars",
+  };
+
   constructor() {
     this.spacesEndpoint = process.env.DO_SPACES_ENDPOINT;
     this.accessKeyId = process.env.DO_SPACES_ACCESS_KEY;
     this.secretAccessKey = process.env.DO_SPACES_SECRET_KEY;
-    this.bucketName = process.env.DO_SPACES_BUCKET_NAME;
-    this.region = process.env.DO_SPACES_REGION || "nyc3";
+    // Forçando o bucket central para wn-storage (com fallback para env caso precise flexibilizar no futuro)
+    this.bucketName = process.env.DO_SPACES_BUCKET_NAME || "wn-storage";
+    this.region = process.env.DO_SPACES_REGION || "sfo3";
 
     if (
       !this.spacesEndpoint ||
@@ -37,7 +55,21 @@ class SpacesService {
   }
 
   /**
-   * Faz upload de um arquivo de backup para o Digital Ocean Spaces
+   * Constrói a key (path) do arquivo no bucket unindo os segmentos com "/".
+   * Filtra segmentos vazios/nulos automaticamente.
+   * @param {...string} segments - Segmentos do path (pasta, subpasta, nome do arquivo)
+   * @returns {string} Key final para uso no S3
+   *
+   * @example
+   * buildKey('notes', '42', 'icons', 'icon_abc.png')
+   * // => 'notes/42/icons/icon_abc.png'
+   */
+  buildKey(...segments) {
+    return segments.filter(Boolean).join("/");
+  }
+
+  /**
+   * Faz upload de um arquivo de backup para o Digital Ocean Spaces na raiz do bucket
    * @param {Buffer|string} fileContent - Conteúdo do arquivo (Buffer ou string)
    * @param {string} userId - ID do usuário
    * @param {string} fileName - Nome do arquivo (opcional)
@@ -45,11 +77,11 @@ class SpacesService {
    */
   async uploadBackup(fileContent, userId, fileName = null) {
     try {
+      const { BACKUPS } = SpacesService.FOLDER_PATHS;
       const timestamp = Date.now();
       const uniqueFileName = fileName || `backup_${userId}_${timestamp}.csv`;
-      const key = `weave-notes/users/${userId}/backups/${uniqueFileName}`;
+      const key = this.buildKey(BACKUPS, String(userId), uniqueFileName);
 
-      // Converter string para Buffer se necessário
       const buffer = Buffer.isBuffer(fileContent)
         ? fileContent
         : Buffer.from(fileContent, "utf-8");
@@ -59,7 +91,7 @@ class SpacesService {
         Key: key,
         Body: buffer,
         ContentType: "text/csv",
-        ACL: "private", // Backup privado, só acessível via token
+        ACL: "private", // Backup privado, só acessível via token/assinatura
         CacheControl: "no-cache, no-store, must-revalidate",
         Expires: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 horas
       };
@@ -81,42 +113,40 @@ class SpacesService {
   }
 
   /**
-   * Faz upload de uma imagem para o Digital Ocean Spaces
+   * Faz upload de uma imagem genérica
    * @param {Buffer} imageBuffer - Buffer da imagem
    * @param {string} mimeType - Tipo MIME da imagem
-   * @param {string} folder - Pasta onde salvar (ex: 'profile-images')
+   * @param {string} userId - ID do usuário dono do arquivo
    * @param {string} fileName - Nome personalizado do arquivo (opcional)
+   * @param {string} folderPath - Path completo da pasta no bucket (opcional)
    * @returns {Promise<Object>} - Objeto com URL e key do arquivo
    */
-  async uploadImage(imageBuffer, mimeType, folder = "images", fileName = null) {
+  async uploadImage(imageBuffer, mimeType, userId, fileName = null, folderPath = null) {
     try {
-      // Gerar nome único para o arquivo se não fornecido
       const fileExtension = this.getFileExtensionFromMimeType(mimeType);
-      const uniqueFileName = fileName || `${uuidv4()}${fileExtension}`;
-      const key = `${folder}/${uniqueFileName}`;
+      const uniqueFileName = fileName || `image_${uuidv4()}${fileExtension}`;
+      const key = folderPath
+        ? this.buildKey(folderPath, uniqueFileName)
+        : this.buildKey(SpacesService.FOLDER_PATHS.IMAGES, String(userId), uniqueFileName);
 
       const uploadParams = {
         Bucket: this.bucketName,
         Key: key,
         Body: imageBuffer,
         ContentType: mimeType,
-        ACL: "public-read", // Garante que o arquivo seja público (opcional, dependendo da config do bucket)
+        ACL: "public-read", 
         CacheControl: "max-age=31536000", // Cache por 1 ano
       };
 
       const command = new PutObjectCommand(uploadParams);
       await this.s3Client.send(command);
 
-      // Construir URL pública direta
-      // Nota: Certifique-se de que o bucket permite acesso público ou use CDN
       const publicUrl =
         `${this.spacesEndpoint}/${this.bucketName}/${key}`.replace(
           "digitaloceanspaces.com",
           `${this.region}.digitaloceanspaces.com`
         );
-      // OBS: A construção da URL acima pode variar dependendo se o endpoint já inclui a região ou não.
-      // Geralmente em DO Spaces: https://bucket.region.digitaloceanspaces.com/key
-      // Mas mantendo a lógica simples baseada no seu código original:
+
       const simpleUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
 
       return {
@@ -133,9 +163,7 @@ class SpacesService {
   }
 
   /**
-   * Deleta uma imagem do Digital Ocean Spaces
-   * @param {string} key - Chave do arquivo no Spaces
-   * @returns {Promise<boolean>} - True se deletado com sucesso
+   * Deleta um arquivo do Digital Ocean Spaces
    */
   async deleteImage(key) {
     try {
@@ -155,9 +183,7 @@ class SpacesService {
   }
 
   /**
-   * Faz download de um arquivo do Digital Ocean Spaces
-   * @param {string} key - Chave do arquivo no Spaces
-   * @returns {Promise<Buffer>} - Buffer com conteúdo do arquivo
+   * Faz download de um arquivo
    */
   async downloadFile(key) {
     try {
@@ -169,7 +195,6 @@ class SpacesService {
       const command = new GetObjectCommand(getParams);
       const response = await this.s3Client.send(command);
 
-      // Converter stream para buffer
       const chunks = [];
       for await (const chunk of response.Body) {
         chunks.push(chunk);
@@ -184,8 +209,6 @@ class SpacesService {
 
   /**
    * Extrai extensão do arquivo baseada no MIME type
-   * @param {string} mimeType - Tipo MIME
-   * @returns {string} - Extensão do arquivo com ponto
    */
   getFileExtensionFromMimeType(mimeType) {
     const mimeToExt = {
@@ -220,60 +243,45 @@ class SpacesService {
 
   // ========================================
   // Note Assets (icon, banner, files)
+  // Estrutura: notes/{userId}/{noteId}/{icons|banners|files}/{arquivo}
   // ========================================
 
-  /**
-   * Faz upload do ícone de uma nota
-   * @param {Buffer} fileBuffer - Buffer do arquivo
-   * @param {string} mimeType - Tipo MIME
-   * @param {string} noteId - ID da nota
-   * @returns {Promise<Object>}
-   */
-  async uploadNoteIcon(fileBuffer, mimeType, noteId) {
-    const folder = `weave-notes/notes/${noteId}/icon`;
-    return this.uploadImage(fileBuffer, mimeType, folder);
-  }
-
-  /**
-   * Faz upload do banner de uma nota
-   * @param {Buffer} fileBuffer - Buffer do arquivo
-   * @param {string} mimeType - Tipo MIME
-   * @param {string} noteId - ID da nota
-   * @returns {Promise<Object>}
-   */
-  async uploadNoteBanner(fileBuffer, mimeType, noteId) {
-    const folder = `weave-notes/notes/${noteId}/banner`;
-    return this.uploadImage(fileBuffer, mimeType, folder);
-  }
-
-  /**
-   * Faz upload de um arquivo anexo de uma nota
-   * @param {Buffer} fileBuffer - Buffer do arquivo
-   * @param {string} mimeType - Tipo MIME
-   * @param {string} noteId - ID da nota
-   * @param {string} originalName - Nome original do arquivo
-   * @returns {Promise<Object>}
-   */
-  async uploadNoteFile(fileBuffer, mimeType, noteId, originalName = null) {
+  async uploadNoteIcon(fileBuffer, mimeType, noteId, userId) {
+    const { NOTES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
-    const fileName = originalName
-      ? `${uuidv4()}_${originalName}`
-      : `${uuidv4()}${ext}`;
-    const folder = `weave-notes/notes/${noteId}/files`;
-    return this.uploadImage(fileBuffer, mimeType, folder, fileName);
+    const fileName = `${uuidv4()}${ext}`;
+    const folderPath = this.buildKey(NOTES.ROOT, String(userId), String(noteId), NOTES.ICONS);
+    return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
+  }
+
+  async uploadNoteBanner(fileBuffer, mimeType, noteId, userId) {
+    const { NOTES } = SpacesService.FOLDER_PATHS;
+    const ext = this.getFileExtensionFromMimeType(mimeType);
+    const fileName = `${uuidv4()}${ext}`;
+    const folderPath = this.buildKey(NOTES.ROOT, String(userId), String(noteId), NOTES.BANNERS);
+    return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
+  }
+
+  async uploadNoteFile(fileBuffer, mimeType, noteId, userId, originalName = null) {
+    const { NOTES } = SpacesService.FOLDER_PATHS;
+    const ext = this.getFileExtensionFromMimeType(mimeType);
+    const safeOriginalName = originalName 
+      ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_") 
+      : `file${ext}`;
+
+    const fileName = `${uuidv4()}_${safeOriginalName}`;
+    const folderPath = this.buildKey(NOTES.ROOT, String(userId), String(noteId), NOTES.FILES);
+    return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
   /**
-   * Extrai a key do arquivo a partir da URL
-   * @param {string} url - URL completa do arquivo
-   * @returns {string} - Key do arquivo
+   * Extrai a key (nome do arquivo) da URL
    */
   extractKeyFromUrl(url) {
     if (!url) return null;
 
     try {
       const urlObj = new URL(url);
-      // Remove a primeira barra e o nome do bucket
       const pathWithoutBucket = urlObj.pathname.substring(1);
       const bucketPrefixLength = this.bucketName.length + 1;
       return pathWithoutBucket.substring(bucketPrefixLength);
@@ -283,10 +291,6 @@ class SpacesService {
     }
   }
 
-  /**
-   * Valida se as configurações estão corretas
-   * @returns {Object} - Status da configuração
-   */
   validateConfiguration() {
     const config = {
       endpoint: !!this.spacesEndpoint,

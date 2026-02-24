@@ -13,7 +13,6 @@ class ProjectsRepository {
         p.created_at,
         p.updated_at,
         p.deleted,
-        p.associated_notes,
         u.username AS owner_username,
         u.email AS owner_email,
         u.name AS owner_name,
@@ -37,7 +36,27 @@ class ProjectsRepository {
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
-        ) AS collaborators
+        ) AS collaborators,
+        COALESCE(
+          (SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', n.id::text,
+              'title', n.title,
+              'description', n.description,
+              'tags', n.tags,
+              'status', n.status,
+              'created_at', n.created_at,
+              'updated_at', n.updated_at,
+              'created_by', jsonb_build_object(
+                'user_id', n.user_id::text,
+                'username', nu.username
+              )
+            )
+          ) FROM notes n
+          JOIN users nu ON nu.user_id = n.user_id
+          WHERE n.project_id = p.id AND n.deleted = false),
+          '[]'::jsonb
+        ) AS associated_notes
       FROM projects p
       JOIN users u ON u.user_id = p.user_id
       LEFT JOIN organizations o ON o.id = p.org_id
@@ -93,7 +112,6 @@ class ProjectsRepository {
         p.created_at,
         p.updated_at,
         p.deleted,
-        p.associated_notes,
         u.username AS owner_username,
         u.email AS owner_email,
         u.name AS owner_name,
@@ -117,7 +135,27 @@ class ProjectsRepository {
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
-        ) AS collaborators
+        ) AS collaborators,
+        COALESCE(
+          (SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', n.id::text,
+              'title', n.title,
+              'description', n.description,
+              'tags', n.tags,
+              'status', n.status,
+              'created_at', n.created_at,
+              'updated_at', n.updated_at,
+              'created_by', jsonb_build_object(
+                'user_id', n.user_id::text,
+                'username', nu.username
+              )
+            )
+          ) FROM notes n
+          JOIN users nu ON nu.user_id = n.user_id
+          WHERE n.project_id = p.id AND n.deleted = false),
+          '[]'::jsonb
+        ) AS associated_notes
       FROM projects p
       JOIN users u ON u.user_id = p.user_id
       LEFT JOIN organizations o ON o.id = p.org_id
@@ -182,10 +220,11 @@ class ProjectsRepository {
               COALESCE(
                 (
                   SELECT ROUND(
-                    (COUNT(*) FILTER (WHERE (note->>'status') = 'done')::numeric / 
+                    (COUNT(*) FILTER (WHERE status = 'done')::numeric / 
                     NULLIF(COUNT(*), 0)) * 100
                   )::integer
-                  FROM jsonb_array_elements(COALESCE(associated_notes, '[]'::jsonb)) AS note
+                  FROM notes
+                  WHERE project_id = projects.id AND deleted = false
                 ),
                 0
               )
@@ -539,66 +578,26 @@ class ProjectsRepository {
         UPDATE notes
         SET project_id = $1::uuid, updated_at = NOW()
         WHERE id = $2::uuid
+          AND project_id IS DISTINCT FROM $1::uuid
           AND (user_id = $3::uuid OR EXISTS (
             SELECT 1 FROM note_collaborators nc 
             WHERE nc.note_id = $2::uuid AND nc.user_id = $3::uuid AND nc.removed = false
           ))
-        RETURNING id::text, title, description, tags, status, created_at, updated_at, user_id
-      ),
-      project_collaborators AS (
-        SELECT COALESCE(
-          jsonb_agg(
-            jsonb_build_object(
-              'user_id', pm.user_id::text,
-              'name', u.name,
-              'username', u.username,
-              'email', u.email,
-              'avatar_url', u.avatar_url,
-              'role', pm.role
-            )
-          ) FILTER (WHERE pm.id IS NOT NULL),
-          '[]'::jsonb
-        ) AS collaborators
-        FROM projects_members pm
-        LEFT JOIN users u ON u.user_id = pm.user_id
-        WHERE pm.project_id = $1::uuid AND pm.deleted = false
+        RETURNING id::text
       ),
       updated_project AS (
         UPDATE projects
         SET 
-          associated_notes = COALESCE(associated_notes, '[]'::jsonb) || 
-          jsonb_build_array(
-            jsonb_build_object(
-              'id', (SELECT id FROM updated_note),
-              'title', (SELECT title FROM updated_note),
-              'description', (SELECT description FROM updated_note),
-              'tags', (SELECT tags FROM updated_note),
-              'created_by', jsonb_build_object(
-                'user_id', (SELECT user_id::text FROM updated_note),
-                'username', (SELECT u.username FROM updated_note un JOIN users u ON u.user_id = un.user_id)
-              ),
-              'collaborators', (SELECT collaborators FROM project_collaborators),
-              'status', (SELECT status FROM updated_note),
-              'created_at', (SELECT created_at FROM updated_note),
-              'updated_at', (SELECT updated_at FROM updated_note)
-            )
-          ),
           properties = COALESCE(properties, '{}'::jsonb) || jsonb_build_object(
             'progress',
-            (
-              SELECT ROUND(
-                (COUNT(*) FILTER (WHERE (note->>'status') = 'done')::numeric / 
+            COALESCE(
+              (SELECT ROUND(
+                (COUNT(*) FILTER (WHERE status = 'done')::numeric / 
                 NULLIF(COUNT(*), 0)) * 100
               )::integer
-              FROM jsonb_array_elements(
-                COALESCE(associated_notes, '[]'::jsonb) || 
-                jsonb_build_array(
-                  jsonb_build_object(
-                    'id', (SELECT id FROM updated_note),
-                    'status', (SELECT status FROM updated_note)
-                  )
-                )
-              ) AS note
+              FROM notes
+              WHERE project_id = $1::uuid AND deleted = false),
+              0
             )
           ),
           updated_at = NOW()
@@ -611,14 +610,31 @@ class ProjectsRepository {
               AND pm.suspended = false
           ))
           AND deleted = false
-          AND NOT EXISTS (
-            SELECT 1 
-            FROM jsonb_array_elements(COALESCE(associated_notes, '[]'::jsonb)) AS note
-            WHERE note->>'id' = $2::text
-          )
-        RETURNING id::text, associated_notes
+          AND EXISTS (SELECT 1 FROM updated_note)
+        RETURNING id::text
       )
-      SELECT * FROM updated_project;
+      SELECT up.id,
+        COALESCE(
+          (SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', n.id::text,
+              'title', n.title,
+              'description', n.description,
+              'tags', n.tags,
+              'status', n.status,
+              'created_at', n.created_at,
+              'updated_at', n.updated_at,
+              'created_by', jsonb_build_object(
+                'user_id', n.user_id::text,
+                'username', nu.username
+              )
+            )
+          ) FROM notes n
+          JOIN users nu ON nu.user_id = n.user_id
+          WHERE n.project_id = $1::uuid AND n.deleted = false),
+          '[]'::jsonb
+        ) AS associated_notes
+      FROM updated_project up;
     `;
 
     return executeQuery(query, [projectId, noteId, userId]);
@@ -632,29 +648,19 @@ class ProjectsRepository {
         WHERE id = $2::uuid AND project_id = $1::uuid
         RETURNING id
       ),
-      filtered_notes AS (
-        SELECT COALESCE(jsonb_agg(elem), '[]'::jsonb) AS notes
-        FROM jsonb_array_elements(COALESCE(
-          (SELECT associated_notes FROM projects WHERE id = $1::uuid), 
-          '[]'::jsonb
-        )) AS elem
-        WHERE elem->>'id' != $2::text
-      ),
       updated_project AS (
         UPDATE projects
         SET 
-          associated_notes = (SELECT notes FROM filtered_notes),
           properties = COALESCE(properties, '{}'::jsonb) || jsonb_build_object(
             'progress',
-            (
-              SELECT COALESCE(
-                ROUND(
-                  (COUNT(*) FILTER (WHERE (note->>'status') = 'done')::numeric / 
-                  NULLIF(COUNT(*), 0)) * 100
-                )::integer,
-                0
-              )
-              FROM jsonb_array_elements((SELECT notes FROM filtered_notes)) AS note
+            COALESCE(
+              (SELECT ROUND(
+                (COUNT(*) FILTER (WHERE status = 'done')::numeric / 
+                NULLIF(COUNT(*), 0)) * 100
+              )::integer
+              FROM notes
+              WHERE project_id = $1::uuid AND deleted = false AND id != $2::uuid),
+              0
             )
           ),
           updated_at = NOW()
@@ -668,7 +674,8 @@ class ProjectsRepository {
               AND pm.role = 'admin'
           ))
           AND deleted = false
-        RETURNING id::text, associated_notes
+          AND EXISTS (SELECT 1 FROM updated_note)
+        RETURNING id::text
       )
       SELECT * FROM updated_project;
     `;
@@ -679,88 +686,63 @@ class ProjectsRepository {
   async getAssociatedNotes(projectId, userId) {
     const query = `
       SELECT 
-        id::text,
-        user_id::text,
-        associated_notes
-      FROM projects
-      WHERE id = $1::uuid
-        AND (user_id = $2::uuid OR EXISTS (
-          SELECT 1 FROM projects_members pm
-          WHERE pm.project_id = $1::uuid
-            AND pm.user_id = $2::uuid
-            AND pm.deleted = false
-            AND pm.suspended = false
-        ))
-        AND deleted = false;
+        n.id::text,
+        n.user_id::text,
+        n.title,
+        n.description,
+        n.tags,
+        n.status,
+        n.created_at,
+        n.updated_at,
+        nu.username AS created_by_username
+      FROM notes n
+      JOIN users nu ON nu.user_id = n.user_id
+      WHERE n.project_id = $1::uuid
+        AND n.deleted = false
+        AND EXISTS (
+          SELECT 1 FROM projects p
+          WHERE p.id = $1::uuid
+            AND p.deleted = false
+            AND (
+              p.user_id = $2::uuid
+              OR EXISTS (
+                SELECT 1 FROM projects_members pm
+                WHERE pm.project_id = $1::uuid
+                  AND pm.user_id = $2::uuid
+                  AND pm.deleted = false
+                  AND pm.suspended = false
+              )
+            )
+        )
+      ORDER BY n.updated_at DESC;
     `;
 
     return executeQuery(query, [projectId, userId]);
   }
 
   async updateNoteInProject(projectId, noteId, userId) {
+    // Since notes are now fetched directly from the notes table via project_id,
+    // "syncing" just means recalculating progress and returning current notes
     const query = `
-      WITH project_collaborators AS (
-        SELECT COALESCE(
-          jsonb_agg(
-            jsonb_build_object(
-              'user_id', pm.user_id::text,
-              'name', u.name,
-              'username', u.username,
-              'email', u.email,
-              'avatar_url', u.avatar_url,
-              'role', pm.role
-            )
-          ) FILTER (WHERE pm.id IS NOT NULL),
-          '[]'::jsonb
-        ) AS collaborators
-        FROM projects_members pm
-        LEFT JOIN users u ON u.user_id = pm.user_id
-        WHERE pm.project_id = $1::uuid AND pm.deleted = false
-      ),
-      updated_notes AS (
-        SELECT jsonb_agg(
-          CASE 
-            WHEN elem->>'id' = $2::text 
-            THEN jsonb_build_object(
-              'id', (SELECT id::text FROM notes WHERE id = $2::uuid),
-              'title', (SELECT title FROM notes WHERE id = $2::uuid),
-              'description', (SELECT description FROM notes WHERE id = $2::uuid),
-              'tags', (SELECT tags FROM notes WHERE id = $2::uuid),
-              'created_by', jsonb_build_object(
-                'user_id', (SELECT n.user_id::text FROM notes n WHERE n.id = $2::uuid),
-                'username', (SELECT u.username FROM notes n JOIN users u ON u.user_id = n.user_id WHERE n.id = $2::uuid)
-              ),
-              'collaborators', (SELECT collaborators FROM project_collaborators),
-              'status', (SELECT status FROM notes WHERE id = $2::uuid),
-              'created_at', (SELECT created_at FROM notes WHERE id = $2::uuid),
-              'updated_at', (SELECT updated_at FROM notes WHERE id = $2::uuid)
-            )
-            ELSE elem
-          END
-        ) AS notes
-        FROM jsonb_array_elements(COALESCE(
-          (SELECT associated_notes FROM projects WHERE id = $1::uuid),
-          '[]'::jsonb
-        )) AS elem
-      )
       UPDATE projects
       SET 
-        associated_notes = (SELECT notes FROM updated_notes),
         properties = COALESCE(properties, '{}'::jsonb) || jsonb_build_object(
           'progress',
-          (
-            SELECT COALESCE(
-              ROUND(
-                (COUNT(*) FILTER (WHERE (note->>'status') = 'done')::numeric / 
-                NULLIF(COUNT(*), 0)) * 100
-              )::integer,
-              0
-            )
-            FROM jsonb_array_elements((SELECT notes FROM updated_notes)) AS note
+          COALESCE(
+            (SELECT ROUND(
+              (COUNT(*) FILTER (WHERE status = 'done')::numeric / 
+              NULLIF(COUNT(*), 0)) * 100
+            )::integer
+            FROM notes
+            WHERE project_id = $1::uuid AND deleted = false),
+            0
           )
         ),
         updated_at = NOW()
       WHERE id = $1::uuid
+        AND EXISTS (
+          SELECT 1 FROM notes WHERE id = $2::uuid AND project_id = $1::uuid AND deleted = false
+        )
         AND (user_id = $3::uuid OR EXISTS (
           SELECT 1 FROM projects_members pm
           WHERE pm.project_id = $1::uuid
@@ -771,7 +753,26 @@ class ProjectsRepository {
         AND deleted = false
       RETURNING 
         id::text,
-        associated_notes;
+        COALESCE(
+          (SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', n.id::text,
+              'title', n.title,
+              'description', n.description,
+              'tags', n.tags,
+              'status', n.status,
+              'created_at', n.created_at,
+              'updated_at', n.updated_at,
+              'created_by', jsonb_build_object(
+                'user_id', n.user_id::text,
+                'username', nu.username
+              )
+            )
+          ) FROM notes n
+          JOIN users nu ON nu.user_id = n.user_id
+          WHERE n.project_id = $1::uuid AND n.deleted = false),
+          '[]'::jsonb
+        ) AS associated_notes;
     `;
 
     return executeQuery(query, [projectId, noteId, userId]);

@@ -1257,7 +1257,8 @@ class ProjectsController {
       // Verificar acesso ao projeto (dono ou colaborador)
       const project = await this._validateProjectAccess(projectId, userId);
 
-      const notes = project.associated_notes || [];
+      // Buscar notas diretamente da tabela notes via project_id
+      const notes = await this.projectsRepository.getAssociatedNotes(projectId, userId);
 
       res.status(200).json({
         notes: notes,

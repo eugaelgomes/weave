@@ -690,7 +690,8 @@ class NotesController {
         const result = await spacesService.uploadNoteIcon(
           iconFile.buffer,
           iconFile.mimetype,
-          id
+          id,
+          userId
         );
 
         propertiesUpdate.icon = {
@@ -714,7 +715,8 @@ class NotesController {
         const result = await spacesService.uploadNoteBanner(
           bannerFile.buffer,
           bannerFile.mimetype,
-          id
+          id,
+          userId
         );
 
         propertiesUpdate.banner = {
@@ -735,6 +737,7 @@ class NotesController {
               file.buffer,
               file.mimetype,
               id,
+              userId,
               file.originalname
             );
 
