@@ -161,7 +161,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
   return (
     <nav className="sticky top-0 z-40 w-full border-b border-neutral-200 bg-neutral-50/90 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/90 print:hidden">
       <div className="mx-auto w-full max-w-[1920px] px-4 sm:px-2 lg:px-4">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-14 items-center justify-between">
           {/* LADO ESQUERDO: Toggle Mobile + Logo */}
           <div className="flex items-center gap-3 sm:gap-5">
             {authenticated && (
@@ -187,7 +187,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                   priority
                   className="object-cover p-0.5"
                 />*/}
-                <strong className="text-xl font-bold text-yellow-500 sm:text-2xl">Weave</strong>
+                <strong className="text-md sm:text-md font-bold text-yellow-500">Weave</strong>
               </div>
 
               {/* Organização (Aparece em MD+) */}
@@ -201,7 +201,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                         <Image src={user.org_logo_url} alt="Org" fill className="object-cover" />
                       </div>
                     )}*/}
-                    <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+                    <span className="text-sm text-neutral-700 dark:text-neutral-300">
                       {user.org_name}
                     </span>
                   </div>

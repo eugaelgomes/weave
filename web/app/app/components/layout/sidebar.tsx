@@ -19,6 +19,7 @@ import {
   FaUserFriends,
   FaAngleDoubleLeft,
   FaAngleDoubleRight,
+  FaCalendar,
 } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
 import { HiSparkles } from "react-icons/hi2";
@@ -71,8 +72,8 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
     if (path === "/app/projects" && pathname.startsWith("/app/projects/")) return true;
     if (path === "/app/weave-ai/chat" && pathname === "/app/weave-ai/chat") return true;
     if (path === "/app/organization" && pathname.startsWith("/app/organization/")) return true;
-    if (path === "/app/notifications" && pathname.startsWith("/app/organization/notifications/"))
-      return true;
+    if (path === "/app/notifications" && pathname.startsWith("/app/notifications/")) return true;
+    if (path === "/app/calendar" && pathname.startsWith("/app/calendar/")) return true;
     if (path === "/app/settings" && pathname.startsWith("/app/settings/")) return true;
     return pathname === path;
   };
@@ -101,6 +102,16 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
       ],
     },
     {
+      path: "/app/notifications",
+      icon: FaComments,
+      label: "Notificações",
+    },
+    {
+      path: "/app/calendar",
+      icon: FaCalendar,
+      label: "Calendário",
+    },
+    {
       path: "/app/organization",
       icon: FaUsers,
       label: "Organização",
@@ -109,11 +120,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
         { path: "/app/organization/members", icon: FaUserFriends, label: "Membros" },
         { path: "/app/organization/projects", icon: FaProjectDiagram, label: "Projetos" },
       ],
-    },
-    {
-      path: "/app/notifications",
-      icon: FaComments,
-      label: "Notificações",
     },
     { path: "/app/settings", icon: IoMdSettings, label: "Configurações" },
   ];
@@ -156,10 +162,10 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto px-2 py-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-200 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-800 [&::-webkit-scrollbar-track]:bg-transparent">
+      <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto px-2 py-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-200 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-800 [&::-webkit-scrollbar-track]:bg-transparent">
         {/* Menu Desktop */}
         <div
-          className={`mb-4 flex items-center ${isCollapsed ? "justify-center" : "justify-between px-2"}`}
+          className={`mb-2 flex items-center ${isCollapsed ? "justify-center" : "justify-between px-2"}`}
         >
           {!isCollapsed && (
             <h2 className="text-[10px] font-bold tracking-wider text-yellow-500 uppercase">Menu</h2>
