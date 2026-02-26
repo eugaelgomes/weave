@@ -5,33 +5,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { FileText, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 
-// Tente importar do seu projeto. Se der erro, use as funções fallback abaixo.
-import {
-  getCollaboratorDisplayName,
-  getCollaboratorAvatarUrl,
-  type CollaboratorObject,
-} from "@/app/utils/collaborators";
+import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/utils/collaborators";
 
 import { getTagColor } from "@/app/utils/tag-colors";
+import getStorageUrl from "@/app/utils/get-storage-url";
+
+// IMPORTANDO A INTERFACE CENTRALIZADA DO SERVICE
+import type { Note } from "@/app/services/notes-service/NotesService";
 
 // =================== INTERFACES ===================
-
-// Colaboradores podem vir como strings (user_id) ou objetos expandidos
-type Collaborator = string | CollaboratorObject;
-
-interface Note {
-  id: string;
-  title: string;
-  description?: string;
-  preview?: string;
-  tags?: string[];
-  collaborators?: (Collaborator | unknown)[];
-  created_at?: string;
-  updated_at?: string;
-  lastModified?: string;
-  owner_name?: string;
-  owner_avatar_url?: string;
-}
 
 interface NotesCarouselProps {
   notes: Note[];
@@ -135,19 +117,48 @@ export default function NotesCarousel({
                 ? new Date(note.created_at).getTime() > Date.now() - 86400000
                 : false;
 
+              // Verificação segura se a nota possui ícone e cor válidos
+              const hasIcon = Boolean(note.properties?.icon?.path);
+              const hasColor = Boolean(note.properties?.color);
+              const baseColor =
+                hasColor && note.properties?.color?.startsWith("#") ? note.properties.color : null;
+
               return (
                 <Link
                   key={note.id}
                   href={`/app/notes/view/${note.id}`}
                   className="block w-[85vw] max-w-[320px] flex-shrink-0 snap-center sm:w-[320px] sm:snap-start"
                 >
-                  <div className="group flex h-[280px] flex-col justify-between rounded-md border border-neutral-200 bg-neutral-50 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-neutral-300 hover:shadow-lg hover:shadow-neutral-200/50 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:shadow-neutral-900/50">
-                    {/* Topo: Título e Badge */}
+                  <div
+                    // As classes do Tailwind continuam sempre no className
+                    className="group flex h-[280px] flex-col justify-between rounded-md border border-neutral-200 bg-neutral-50 p-3 transition-all duration-200 hover:-translate-y-1 hover:border-neutral-300 hover:shadow-lg hover:shadow-neutral-200/50 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:shadow-neutral-900/50"
+                    // O style recebe as propriedades dinâmicas ou 'undefined' para fallback limpo
+                    style={{
+                      // Se tiver cor, aplica as variações. Se não, usa o padrão do Tailwind
+                      backgroundColor: baseColor ? `${baseColor}40` : undefined,
+                      boxShadow: baseColor ? `0 4px 14px 0 ${baseColor}15` : undefined,
+                    }}
+                  >
+                    {/* Topo: Ícone, Título e Badge */}
                     <div>
                       <div className="mb-2 flex items-start justify-between gap-2">
-                        <h3 className="line-clamp-2 text-base leading-tight font-semibold text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-100 dark:group-hover:text-yellow-500">
-                          {note.title || "Nota sem título"}
-                        </h3>
+                        <div className="flex items-center gap-2">
+                          {hasIcon && (
+                            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded-sm">
+                              <Image
+                                src={getStorageUrl(note.properties!.icon!.path)}
+                                alt={`Ícone de ${note.title}`}
+                                width={32}
+                                height={32}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <h2 className="line-clamp-2 text-base leading-tight text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-100 dark:group-hover:text-yellow-500">
+                            {note.title || "Nota sem título"}
+                          </h2>
+                        </div>
+
                         {isNew && (
                           <span
                             className="flex h-2 w-2 flex-shrink-0 rounded-md bg-yellow-500 shadow-sm"
@@ -157,7 +168,7 @@ export default function NotesCarousel({
                       </div>
 
                       {/* Descrição */}
-                      <div className="mb-4">
+                      <div className="mt-3 mb-4">
                         <p className="line-clamp-3 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
                           {note.preview || note.description || "Sem descrição..."}
                         </p>
@@ -194,7 +205,7 @@ export default function NotesCarousel({
                         <div className="flex -space-x-2">
                           {/* Avatar do dono da nota */}
                           <div
-                            className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-md border-1 border-neutral-900 bg-neutral-100 dark:border-neutral-200 dark:bg-neutral-800"
+                            className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-1 border-neutral-900 bg-neutral-100 dark:border-neutral-200 dark:bg-neutral-800"
                             title={note.owner_name || "Dono"}
                           >
                             {note.owner_avatar_url ? (
@@ -211,7 +222,7 @@ export default function NotesCarousel({
                               </span>
                             )}
                           </div>
-                          {/* Colaboradores */}
+                          {/* Colaboradores adicionais */}
                           {note.collaborators && note.collaborators.length > 0 && (
                             <>
                               {note.collaborators.slice(0, 3).map((c, i) => {
@@ -220,7 +231,7 @@ export default function NotesCarousel({
                                 return (
                                   <div
                                     key={i}
-                                    className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-md border-2 border-white bg-neutral-100 ring-1 ring-neutral-100 dark:border-neutral-950 dark:bg-neutral-800 dark:ring-neutral-900"
+                                    className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-1 border-neutral-900 bg-neutral-100 dark:border-neutral-950 dark:bg-neutral-800 dark:ring-neutral-900"
                                     title={name}
                                   >
                                     {avatar ? (

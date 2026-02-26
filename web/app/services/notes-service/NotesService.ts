@@ -1,10 +1,11 @@
-// services/notes-service/NotesService.ts
 import { apiClient, handleResponse } from "../api-methods";
 import { API_ENDPOINTS } from "../api-methods";
+import { type CollaboratorObject } from "@/app/utils/collaborators";
 
-//
-// --- Types ---
-//
+// =================== TYPES / INTERFACES ===================
+
+export type Collaborator = string | CollaboratorObject;
+
 export interface NoteProperties {
   icon?: {
     path: string;
@@ -40,7 +41,7 @@ export interface Note {
   preview?: string;
   done?: boolean;
   user_id?: string;
-  collaborators?: unknown[];
+  collaborators?: (Collaborator | unknown)[]; // Atualizado com o tipo correto
   created_by?: string;
   email?: string;
   avatar_url?: string;
@@ -62,6 +63,9 @@ export interface Note {
     canDelete: boolean;
     canShare: boolean;
   };
+  // Propriedades unificadas do componente de UI
+  owner_name?: string;
+  owner_avatar_url?: string;
 }
 
 export interface Block {
@@ -139,43 +143,22 @@ export interface User {
   avatar_url?: string;
 }
 
-//
-// --- Notes API ---
-//
+// =================== NOTES API ===================
 
-// =================== BUSCAR NOTAS ===================
-// Função ORIGINAL (sem parâmetros) - mantida para compatibilidade
 export async function fetchNotes(params: FetchNotesParams = {}): Promise<NotesResponse | Note[]> {
-  // CONSTRUÇÃO DA URL COM QUERY PARAMETERS
   let url = API_ENDPOINTS.NOTES;
   const searchParams = new URLSearchParams();
 
-  // PARÂMETROS DE PAGINAÇÃO
-  if (params.page) {
-    searchParams.append("page", params.page.toString());
-  }
-  if (params.limit) {
-    searchParams.append("limit", params.limit.toString());
-  }
-
-  // PARÂMETROS DE BUSCA E FILTROS
-  if (params.search) {
-    searchParams.append("search", params.search);
-  }
+  if (params.page) searchParams.append("page", params.page.toString());
+  if (params.limit) searchParams.append("limit", params.limit.toString());
+  if (params.search) searchParams.append("search", params.search);
   if (params.tags) {
     const tagsStr = Array.isArray(params.tags) ? params.tags.join(",") : params.tags;
     searchParams.append("tags", tagsStr);
   }
+  if (params.sortBy) searchParams.append("sortBy", params.sortBy);
+  if (params.sortOrder) searchParams.append("sortOrder", params.sortOrder);
 
-  // PARÂMETROS DE ORDENAÇÃO
-  if (params.sortBy) {
-    searchParams.append("sortBy", params.sortBy);
-  }
-  if (params.sortOrder) {
-    searchParams.append("sortOrder", params.sortOrder);
-  }
-
-  // MONTA A URL FINAL: /notes?page=1&limit=10&search=teste...
   if (searchParams.toString()) {
     url += `?${searchParams.toString()}`;
   }
@@ -183,13 +166,10 @@ export async function fetchNotes(params: FetchNotesParams = {}): Promise<NotesRe
   const response = await apiClient.get(url);
   const data = await handleResponse<NotesResponse | { notes: Note[] }>(response);
 
-  // RETORNO PADRONIZADO para suportar paginação
-  // Se o backend já retorna com paginação, use isso:
   if ("notes" in data && "pagination" in data) {
     return data as NotesResponse;
   }
 
-  // Se o backend ainda não tem paginação, simula localmente:
   if (params.page || params.limit) {
     const notes = "notes" in data ? data.notes : (data as Note[]);
     return {
@@ -199,19 +179,17 @@ export async function fetchNotes(params: FetchNotesParams = {}): Promise<NotesRe
         limit: Number(params.limit) || notes.length,
         total: notes.length,
         totalPages: Math.ceil(notes.length / (Number(params.limit) || notes.length)),
-        hasMore: false, // Como não há paginação real ainda, sempre false
+        hasMore: false,
       },
     };
   }
 
-  // Retorno original para compatibilidade
   return "notes" in data ? data.notes : (data as Note[]);
 }
 
 export async function fetchNoteById(noteId: string): Promise<Note> {
   const response = await apiClient.get(API_ENDPOINTS.NOTES_BY_ID(noteId));
   const data = await handleResponse<{ data?: Note } | Note>(response);
-
   return "data" in data ? data.data! : (data as Note);
 }
 

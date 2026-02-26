@@ -2,13 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 
-// Utilitário para montar a URL do arquivo a partir do path salvo
-function getFileUrl(path: string) {
-  if (!path) return "";
-  // Ajuste conforme sua configuração de CDN ou endpoint
-  // Exemplo: return `https://YOUR_CDN_ENDPOINT/${path}`;
-  return `${process.env.NEXT_PUBLIC_FILE_STORAGE_URL}/${encodeURIComponent(path)}`;
-}
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
@@ -71,6 +64,7 @@ import {
   getCollaboratorId,
 } from "@/app/utils/collaborators";
 import { getTagColor } from "@/app/utils/tag-colors";
+import getStorageUrl from "@/app/utils/get-storage-url";
 
 // =================== COMPONENTE DE BLOCO SORTABLE ===================
 interface BlockComponentProps {
@@ -1610,7 +1604,7 @@ const NoteDetail = () => {
         {note.properties?.banner?.path ? (
           <div className="group relative h-52 w-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
             <Image
-              src={getFileUrl(note.properties.banner.path)}
+              src={getStorageUrl(note.properties.banner.path)}
               alt="Banner"
               fill
               sizes="100vw"
@@ -1648,7 +1642,7 @@ const NoteDetail = () => {
               <div className="group relative">
                 <div className="h-14 w-14 overflow-hidden rounded-md border-2 border-white bg-white shadow-md dark:border-neutral-900 dark:bg-neutral-900">
                   <Image
-                    src={getFileUrl(note.properties.icon.path)}
+                    src={getStorageUrl(note.properties.icon.path)}
                     alt="Ícone"
                     width={56}
                     height={56}
@@ -1934,7 +1928,7 @@ const NoteDetail = () => {
                       >
                         {relNote!.properties?.icon?.path ? (
                           <Image
-                            src={getFileUrl(relNote!.properties.icon.path)}
+                            src={getStorageUrl(relNote!.properties.icon.path)}
                             alt=""
                             width={12}
                             height={12}
@@ -2094,7 +2088,7 @@ const NoteDetail = () => {
                             className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
                           >
                             <a
-                              href={getFileUrl(file.path)}
+                              href={getStorageUrl(file.path)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex max-w-[120px] items-center gap-1.5 truncate hover:text-neutral-900 dark:hover:text-neutral-100"
@@ -2102,7 +2096,7 @@ const NoteDetail = () => {
                               <span className="truncate">{file.name || "Arquivo"}</span>
                             </a>
                             <a
-                              href={getFileUrl(file.path)}
+                              href={getStorageUrl(file.path)}
                               download={file.name || "arquivo"}
                               onClick={(e) => e.stopPropagation()}
                               className="text-neutral-400 opacity-100 transition-all hover:text-neutral-600 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
@@ -2425,7 +2419,7 @@ const NoteDetail = () => {
                         <div className="flex min-w-0 flex-1 items-center gap-2">
                           {relNote.properties?.icon?.path ? (
                             <Image
-                              src={getFileUrl(relNote.properties.icon.path)}
+                              src={getStorageUrl(relNote.properties.icon.path)}
                               alt=""
                               width={20}
                               height={20}
