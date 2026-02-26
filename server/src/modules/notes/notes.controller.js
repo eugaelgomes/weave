@@ -676,26 +676,24 @@ class NotesController {
         }
       }
 
+
       // Processar upload de ícone
       if (req.files?.icon?.[0]) {
         const iconFile = req.files.icon[0];
-
         // Deletar ícone anterior se existir
         const currentNote = await this.notesRepository.getNoteById(id);
-        if (currentNote?.properties?.icon?.url) {
-          const oldKey = spacesService.extractKeyFromUrl(currentNote.properties.icon.url);
+        if (currentNote?.properties?.icon?.path) {
+          const oldKey = currentNote.properties.icon.path;
           if (oldKey) await spacesService.deleteImage(oldKey);
         }
-
         const result = await spacesService.uploadNoteIcon(
           iconFile.buffer,
           iconFile.mimetype,
           id,
           userId
         );
-
         propertiesUpdate.icon = {
-          url: result.url,
+          path: result.path || result.key || '',
           name: iconFile.originalname,
           type: iconFile.mimetype,
         };
@@ -704,23 +702,20 @@ class NotesController {
       // Processar upload de banner
       if (req.files?.banner?.[0]) {
         const bannerFile = req.files.banner[0];
-
         // Deletar banner anterior se existir
         const currentNote = await this.notesRepository.getNoteById(id);
-        if (currentNote?.properties?.banner?.url) {
-          const oldKey = spacesService.extractKeyFromUrl(currentNote.properties.banner.url);
+        if (currentNote?.properties?.banner?.path) {
+          const oldKey = currentNote.properties.banner.path;
           if (oldKey) await spacesService.deleteImage(oldKey);
         }
-
         const result = await spacesService.uploadNoteBanner(
           bannerFile.buffer,
           bannerFile.mimetype,
           id,
           userId
         );
-
         propertiesUpdate.banner = {
-          url: result.url,
+          path: result.path || result.key || '',
           name: bannerFile.originalname,
           type: bannerFile.mimetype,
         };
@@ -730,7 +725,6 @@ class NotesController {
       if (req.files?.files?.length > 0) {
         const currentNote = await this.notesRepository.getNoteById(id);
         const currentFiles = currentNote?.properties?.files || [];
-
         const newFiles = await Promise.all(
           req.files.files.map(async (file) => {
             const result = await spacesService.uploadNoteFile(
@@ -740,17 +734,45 @@ class NotesController {
               userId,
               file.originalname
             );
-
             return {
               id: result.fileName,
-              url: result.url,
+              path: result.key || result.path || '',
               name: file.originalname,
               type: file.mimetype,
             };
           })
         );
-
         propertiesUpdate.files = [...currentFiles, ...newFiles];
+      }
+
+      // Remover arquivos do storage ao remover icon, banner ou files
+      // Remover ícone
+      if (propertiesUpdate.icon && propertiesUpdate.icon.path === "") {
+        const currentNote = await this.notesRepository.getNoteById(id);
+        if (currentNote?.properties?.icon?.path) {
+          const oldKey = currentNote.properties.icon.path;
+          if (oldKey) await spacesService.deleteImage(oldKey);
+        }
+      }
+      // Remover banner
+      if (propertiesUpdate.banner && propertiesUpdate.banner.path === "") {
+        const currentNote = await this.notesRepository.getNoteById(id);
+        if (currentNote?.properties?.banner?.path) {
+          const oldKey = currentNote.properties.banner.path;
+          if (oldKey) await spacesService.deleteImage(oldKey);
+        }
+      }
+      // Remover arquivos
+      if (propertiesUpdate.files && Array.isArray(propertiesUpdate.files)) {
+        const currentNote = await this.notesRepository.getNoteById(id);
+        const currentFiles = currentNote?.properties?.files || [];
+        // Descobrir quais arquivos foram removidos
+        const removedFiles = currentFiles.filter(
+          (f) => !propertiesUpdate.files.find((nf) => nf.id === f.id)
+        );
+        for (const file of removedFiles) {
+          if (file.path) await spacesService.deleteImage(file.path);
+        }
       }
 
       // Registrar consumo de storage no plano após uploads bem-sucedidos

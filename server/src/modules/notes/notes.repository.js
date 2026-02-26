@@ -3,11 +3,11 @@ const { executeQuery, rowCount } = require("@/services/db");
 class notesRepository {
   static get DEFAULT_PROPERTIES() {
     return {
-      icon: { url: "", name: "", type: "" },
+      icon: { path: "", name: "", type: "" },
       urls: [],
       color: "",
       files: [],
-      banner: { url: "", name: "", type: "" },
+      banner: { path: "", name: "", type: "" },
       relations: [],
     };
   }

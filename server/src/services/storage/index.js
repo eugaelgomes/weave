@@ -250,7 +250,9 @@ class SpacesService {
     const { NOTES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const fileName = `${uuidv4()}${ext}`;
-    const folderPath = this.buildKey(NOTES.ROOT, String(userId), String(noteId), NOTES.ICONS);
+    const userFolder = `userId_${userId}`;
+    const noteFolder = `noteId_${noteId}`;
+    const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.ICONS);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
@@ -258,7 +260,9 @@ class SpacesService {
     const { NOTES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const fileName = `${uuidv4()}${ext}`;
-    const folderPath = this.buildKey(NOTES.ROOT, String(userId), String(noteId), NOTES.BANNERS);
+    const userFolder = `userId_${userId}`;
+    const noteFolder = `noteId_${noteId}`;
+    const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.BANNERS);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
@@ -270,7 +274,9 @@ class SpacesService {
       : `file${ext}`;
 
     const fileName = `${uuidv4()}_${safeOriginalName}`;
-    const folderPath = this.buildKey(NOTES.ROOT, String(userId), String(noteId), NOTES.FILES);
+    const userFolder = `userId_${userId}`;
+    const noteFolder = `noteId_${noteId}`;
+    const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.FILES);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
