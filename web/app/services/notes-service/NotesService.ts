@@ -7,7 +7,7 @@ import { API_ENDPOINTS } from "../api-methods";
 //
 export interface NoteProperties {
   icon?: {
-    url: string;
+    path: string;
     name: string;
     type: string;
   };
@@ -15,12 +15,12 @@ export interface NoteProperties {
   color?: string;
   files?: Array<{
     id: string;
-    url: string;
+    path: string;
     name: string;
     type: string;
   }>;
   banner?: {
-    url: string;
+    path: string;
     name: string;
     type: string;
   };

@@ -1,6 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+
+// Utilitário para montar a URL do arquivo a partir do path salvo
+function getFileUrl(path: string) {
+  if (!path) return "";
+  // Ajuste conforme sua configuração de CDN ou endpoint
+  // Exemplo: return `https://YOUR_CDN_ENDPOINT/${path}`;
+  return `${process.env.NEXT_PUBLIC_FILE_STORAGE_URL}/${encodeURIComponent(path)}`;
+}
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
@@ -1294,7 +1302,6 @@ const NoteDetail = () => {
     }
 
     if (window.confirm(`Tem certeza que deseja remover ${collaboratorName} desta nota?`)) {
-      // Otimista: remover localmente primeiro
       const previousCollaborators = note.collaborators || [];
       setNote((prev) =>
         prev
@@ -1600,10 +1607,10 @@ const NoteDetail = () => {
         />
 
         {/* Banner */}
-        {note.properties?.banner?.url ? (
+        {note.properties?.banner?.path ? (
           <div className="group relative h-52 w-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
             <Image
-              src={note.properties.banner.url}
+              src={getFileUrl(note.properties.banner.path)}
               alt="Banner"
               fill
               sizes="100vw"
@@ -1634,14 +1641,14 @@ const NoteDetail = () => {
           {/* Ícone e ações de propriedades */}
           <div
             className={`group/props mb-3 flex items-center gap-3 ${
-              note.properties?.banner?.url || note.properties?.color ? "relative z-10 -mt-12" : ""
+              note.properties?.banner?.path || note.properties?.color ? "relative z-10 -mt-12" : ""
             }`}
           >
-            {note.properties?.icon?.url ? (
+            {note.properties?.icon?.path ? (
               <div className="group relative">
                 <div className="h-14 w-14 overflow-hidden rounded-md border-2 border-white bg-white shadow-md dark:border-neutral-900 dark:bg-neutral-900">
                   <Image
-                    src={note.properties.icon.url}
+                    src={getFileUrl(note.properties.icon.path)}
                     alt="Ícone"
                     width={56}
                     height={56}
@@ -1671,7 +1678,7 @@ const NoteDetail = () => {
             {note.access?.canEdit && (
               <div
                 className={`flex items-center gap-1 transition-opacity ${
-                  note.properties?.icon?.url && note.properties?.banner?.url
+                  note.properties?.icon?.path && note.properties?.banner?.path
                     ? "opacity-0 group-hover/props:opacity-100"
                     : ""
                 }`}
@@ -1684,7 +1691,7 @@ const NoteDetail = () => {
                   <FileText size={12} />
                   Arquivos
                 </button>
-                {!note.properties?.icon?.url && (
+                {!note.properties?.icon?.path && (
                   <button
                     onClick={() => iconInputRef.current?.click()}
                     className="flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-yellow-500/5 dark:hover:text-yellow-500"
@@ -1694,7 +1701,7 @@ const NoteDetail = () => {
                     Ícone
                   </button>
                 )}
-                {!note.properties?.banner?.url && (
+                {!note.properties?.banner?.path && (
                   <button
                     onClick={() => bannerInputRef.current?.click()}
                     className="flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-yellow-500/5 dark:hover:text-yellow-500"
@@ -1913,9 +1920,7 @@ const NoteDetail = () => {
             {/* Relações */}
             <div className="flex items-center gap-2 overflow-x-auto">
               <Link className="flex-shrink-0 text-yellow-400 dark:text-yellow-500" size={13} />
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                Notas relacionadas
-              </span>
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">Relações</span>
               <div className="flex flex-wrap gap-1.5">
                 {(showAllRelations ? relatedNotesData : relatedNotesData.slice(0, 3)).map(
                   (relNote) => (
@@ -1927,9 +1932,9 @@ const NoteDetail = () => {
                         onClick={() => router.push(`/app/notes/view/${relNote!.id}`)}
                         className="inline-flex items-center gap-1.5 truncate"
                       >
-                        {relNote!.properties?.icon?.url ? (
+                        {relNote!.properties?.icon?.path ? (
                           <Image
-                            src={relNote!.properties.icon.url}
+                            src={getFileUrl(relNote!.properties.icon.path)}
                             alt=""
                             width={12}
                             height={12}
@@ -2079,7 +2084,7 @@ const NoteDetail = () => {
               <div className="flex flex-wrap gap-1.5">
                 {note.properties?.files &&
                   (() => {
-                    const filteredFiles = note.properties.files.filter((f) => f.url);
+                    const filteredFiles = note.properties.files.filter((f) => f.path);
                     const visibleFiles = showAllFiles ? filteredFiles : filteredFiles.slice(0, 3);
                     return (
                       <>
@@ -2089,7 +2094,7 @@ const NoteDetail = () => {
                             className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
                           >
                             <a
-                              href={file.url}
+                              href={getFileUrl(file.path)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex max-w-[120px] items-center gap-1.5 truncate hover:text-neutral-900 dark:hover:text-neutral-100"
@@ -2097,7 +2102,7 @@ const NoteDetail = () => {
                               <span className="truncate">{file.name || "Arquivo"}</span>
                             </a>
                             <a
-                              href={file.url}
+                              href={getFileUrl(file.path)}
                               download={file.name || "arquivo"}
                               onClick={(e) => e.stopPropagation()}
                               className="text-neutral-400 opacity-100 transition-all hover:text-neutral-600 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
@@ -2418,9 +2423,9 @@ const NoteDetail = () => {
                           {isSelected && <CheckSquare size={10} />}
                         </div>
                         <div className="flex min-w-0 flex-1 items-center gap-2">
-                          {relNote.properties?.icon?.url ? (
+                          {relNote.properties?.icon?.path ? (
                             <Image
-                              src={relNote.properties.icon.url}
+                              src={getFileUrl(relNote.properties.icon.path)}
                               alt=""
                               width={20}
                               height={20}
