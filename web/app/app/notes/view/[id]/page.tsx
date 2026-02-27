@@ -760,15 +760,15 @@ const NoteDetail = () => {
 
   const handleRemoveIcon = () => {
     // Otimista: remove localmente primeiro
-    setNote((prev) =>
+    setNote((prev: Note | null): Note | null =>
       prev
         ? {
             ...prev,
-            properties: { ...prev.properties, icon: { url: "", name: "", type: "" } },
+            properties: { ...prev.properties, icon: { path: "", name: "", type: "" } },
           }
         : null
     );
-    saveAndApply({ properties: { icon: { url: "", name: "", type: "" } } });
+    saveAndApply({ properties: { icon: { path: "", name: "", type: "" } } });
   };
 
   const handleRemoveBanner = () => {
@@ -776,11 +776,11 @@ const NoteDetail = () => {
       prev
         ? {
             ...prev,
-            properties: { ...prev.properties, banner: { url: "", name: "", type: "" } },
+            properties: { ...prev.properties, banner: { path: "", name: "", type: "" } },
           }
         : null
     );
-    saveAndApply({ properties: { banner: { url: "", name: "", type: "" } } });
+    saveAndApply({ properties: { banner: { path: "", name: "", type: "" } } });
   };
 
   const handleRemoveFile = (fileId: string) => {
