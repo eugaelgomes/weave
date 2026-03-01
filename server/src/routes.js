@@ -12,27 +12,6 @@ const plansRoutes = require("@/modules/plans/plans.routes");
 
 const router = express.Router();
 
-// Health Check
-router.get("/health", (req, res) => {
-  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-  res.setHeader("Pragma", "no-cache");
-
-  const healthcheck = {
-    status: "online",
-    uptime: process.uptime(),
-    message: "All systems operational",
-    timestamp: new Date().toISOString(),
-    service: "weave-notes-api",
-  };
-
-  try {
-    res.send(healthcheck);
-  } catch (error) {
-    healthcheck.message = error;
-    res.status(503).send();
-  }
-});
-
 const routeMap = [
   { path: "/auth", handler: authRoutes },
   { path: "/users", handler: userRoutes },
