@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "@/app/app/components/layout/navbar";
 import Sidebar from "@/app/app/components/layout/sidebar";
+import PagesFooter from "./pages-footer";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -31,16 +32,9 @@ const Layout = ({ children }: LayoutProps) => {
       <Navbar onToggleSidebar={toggleSidebar} />
 
       <div className="relative flex flex-1 overflow-hidden">
-        {/* Mobile Overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-neutral-950/40 backdrop-blur-sm transition-opacity duration-300 lg:hidden"
-            onClick={closeSidebar}
-          />
-        )}
-
+        {/* Desktop Sidebar */}
         <aside
-          className={`fixed top-0 left-0 z-50 h-full flex-col border-r border-neutral-200 bg-neutral-50 transition-all duration-300 ease-in-out dark:border-neutral-800 dark:bg-neutral-950 ${sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} ${isCollapsed ? "lg:w-[80px]" : "lg:w-[260px]"} pt-16 lg:static lg:flex lg:translate-x-0 lg:pt-0 lg:shadow-none`}
+          className={`hidden ${isCollapsed ? "lg:w-[80px]" : "lg:w-[260px]"} flex-col border-r border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950 lg:flex`}
         >
           <Sidebar
             onLinkClick={closeSidebar}
@@ -49,11 +43,32 @@ const Layout = ({ children }: LayoutProps) => {
           />
         </aside>
 
+        {/* Mobile Modal Sidebar */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 lg:hidden">
+            {/* Overlay */}
+            <div
+              className="animate-in fade-in absolute inset-0 bg-neutral-950/50 backdrop-blur-sm transition-opacity duration-300"
+              onClick={closeSidebar}
+            />
+
+            {/* Modal Container */}
+            <div className="animate-in fade-in zoom-in-95 relative z-10 flex h-[85vh] w-full max-w-[90%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-[0_8px_32px_rgba(0,0,0,0.15)] backdrop-blur-xl duration-300 dark:border-neutral-800 dark:bg-neutral-900/70">
+              <Sidebar
+                onLinkClick={closeSidebar}
+                isCollapsed={false}
+                toggleCollapse={toggleCollapse}
+              />
+            </div>
+          </div>
+        )}
+
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <div className="no-scrollbar flex-1 overflow-y-auto scroll-smooth">
             <div className="mx-auto min-h-full w-full bg-neutral-100 px-2 py-2 sm:px-2 sm:py-2 lg:px-2 lg:py-2 dark:bg-neutral-900">
-              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <div className="animate-in fade-in slide-in-from-bottom-2 space-y-2 duration-500">
                 {children}
+                <PagesFooter />
               </div>
             </div>
           </div>

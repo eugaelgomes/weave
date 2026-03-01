@@ -60,8 +60,8 @@ interface MenuContentProps {
 // =====================================
 const MenuContent = ({ user, logout, onClose, onToggleTheme, theme }: MenuContentProps) => (
   <div className="flex flex-col overflow-hidden">
-    {/* Header do Perfil */}
-    <header className="flex items-center gap-4 border-b border-neutral-100 bg-neutral-50/80 px-6 py-5 dark:border-neutral-800 dark:bg-neutral-900/80">
+    {/* Header do Perfil (Com fundo mais transparente para herdar o glassmorphism no mobile) */}
+    <div className="flex items-center gap-4 border-b border-neutral-200 bg-transparent px-4 py-4 dark:border-neutral-800">
       <UserAvatar user={user} size="md" />
       <div className="min-w-0 flex-1">
         <p className="truncate font-bold text-neutral-900 dark:text-neutral-100">
@@ -71,28 +71,28 @@ const MenuContent = ({ user, logout, onClose, onToggleTheme, theme }: MenuConten
           @{formatters.getUsername(user)}
         </p>
       </div>
-    </header>
+    </div>
 
     {/* Links de Navegação */}
-    <nav className="flex flex-col gap-1 p-2">
+    <nav className="flex flex-col gap-1">
       <Link
         href="/app/settings"
         onClick={onClose}
-        className="flex items-center rounded-md px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+        className="flex items-center rounded-md px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/5"
       >
         Configurações da Conta
       </Link>
 
       <button
         onClick={onToggleTheme}
-        className="flex w-full items-center justify-between rounded-md px-4 py-2.5 text-left text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+        className="flex w-full items-center justify-between rounded-md px-4 py-2.5 text-left text-sm font-medium text-neutral-700 transition-colors hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/5"
         type="button"
       >
         <div className="flex items-center gap-2">
           {theme === "light" ? <FiMoon className="h-4 w-4" /> : <FiSun className="h-4 w-4" />}
-          <span>Aparência</span>
+          <span>Tema</span>
         </div>
-        <span className="rounded-md bg-neutral-200 px-2 py-0.5 text-xs font-bold tracking-wider text-neutral-500 uppercase dark:bg-neutral-700 dark:text-neutral-400">
+        <span className="rounded-md bg-black/5 px-2 py-0.5 text-xs font-bold tracking-wider text-neutral-500 uppercase dark:bg-white/10 dark:text-neutral-300">
           {theme === "light" ? "Claro" : "Escuro"}
         </span>
       </button>
@@ -100,21 +100,21 @@ const MenuContent = ({ user, logout, onClose, onToggleTheme, theme }: MenuConten
       <Link
         href="/about"
         onClick={onClose}
-        className="flex items-center rounded-md px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+        className="flex items-center rounded-md px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/5"
       >
         Sobre o Sistema
       </Link>
 
-      <div className="my-1 h-px bg-neutral-100 dark:bg-neutral-800" />
+      <div className="my-1 h-px bg-black/5 dark:bg-white/5" />
 
       <button
         onClick={() => {
           logout();
           onClose();
         }}
-        className="flex w-full items-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+        className="flex w-full items-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
       >
-        Sair da Conta
+        Sair
       </button>
     </nav>
   </div>
@@ -159,113 +159,99 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
   }, [isMenuOpen]);
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b border-neutral-200 bg-neutral-50/90 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/90 print:hidden">
-      <div className="mx-auto w-full max-w-[1920px] px-4 sm:px-2 lg:px-4">
-        <div className="flex h-14 items-center justify-between">
-          {/* LADO ESQUERDO: Toggle Mobile + Logo */}
-          <div className="flex items-center gap-3 sm:gap-5">
-            {authenticated && (
-              <button
-                onClick={onToggleSidebar}
-                className="flex h-10 w-10 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 lg:hidden dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
-                aria-label="Abrir menu lateral"
-              >
-                <FaBars className="h-5 w-5" />
-              </button>
-            )}
-
-            <Link
-              href={authenticated ? "/app/home" : "/"}
-              className="group flex items-center gap-3 outline-none"
-            >
-              {/* App Logo */}
-              <div className="h-max-content relative flex h-9 items-center justify-center overflow-hidden rounded-md transition-transform group-hover:scale-105 group-active:scale-95">
-                {/*<Image
-                  src="/weave.png"
-                  alt="Weave Logo"
-                  fill
-                  priority
-                  className="object-cover p-0.5"
-                />*/}
-                <strong className="text-md sm:text-md font-bold text-yellow-500">Weave</strong>
-              </div>
-
-              {/* Organização (Aparece em MD+) */}
-              {user?.org_id && (
-                <div className="animate-in fade-in hidden items-center gap-3 duration-300 md:flex">
-                  <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-800" />
-
-                  <div className="flex items-center gap-2">
-                    {/*{user.org_logo_url && (
-                      <div className="relative h-9 w-9 overflow-hidden rounded-md shadow-md">
-                        <Image src={user.org_logo_url} alt="Org" fill className="object-cover" />
-                      </div>
-                    )}*/}
-                    <span className="text-sm text-neutral-700 dark:text-neutral-300">
-                      {user.org_name}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </Link>
-          </div>
-
-          {/* LADO DIREITO: User Actions */}
-          <div className="flex items-center gap-3">
-            {authenticated && user && (
-              <div className="relative" ref={menuRef}>
+    <>
+      <nav className="sticky top-0 z-40 w-full border-b border-neutral-200 bg-neutral-50/90 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/90 print:hidden">
+        <div className="mx-auto w-full max-w-[1920px] px-2 sm:px-2 lg:px-4">
+          <div className="flex h-14 items-center justify-between">
+            {/* LADO ESQUERDO: Toggle Mobile + Logo */}
+            <div className="flex items-center gap-3 sm:gap-5">
+              {authenticated && (
                 <button
-                  type="button"
-                  onClick={() => setMenuOpen(!isMenuOpen)}
-                  aria-expanded={isMenuOpen}
-                  className={`group flex items-center gap-3 rounded-md border border-transparent p-1 pl-3 transition-all duration-200 ${isMenuOpen ? "bg-neutral-100 dark:bg-neutral-800" : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50"} `}
+                  onClick={onToggleSidebar}
+                  className="flex h-10 w-10 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 lg:hidden dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
+                  aria-label="Abrir menu lateral"
                 >
-                  <div className="hidden flex-col items-end text-right sm:flex">
-                    <span className="text-sm leading-none font-bold text-neutral-800 dark:text-neutral-200">
-                      {formatters.getDisplayName(user)}
-                    </span>
-                    <span className="text-[9px] font-medium text-neutral-400">
-                      @{formatters.getUsername(user)}
-                    </span>
-                  </div>
-                  <UserAvatar user={user} size="sm" />
+                  <FaBars className="h-5 w-5" />
                 </button>
+              )}
 
-                {/* DROPDOWN (Desktop) */}
-                {isMenuOpen && (
-                  <div className="animate-in fade-in slide-in-from-top-2 absolute top-full right-0 z-50 mt-2 hidden w-80 origin-top-right duration-200 sm:block">
-                    <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-2xl ring-1 ring-black/5 dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-neutral-950/50">
-                      <MenuContent
-                        user={user}
-                        logout={logout}
-                        onClose={() => setMenuOpen(false)}
-                        onToggleTheme={handleThemeToggle}
-                        theme={theme}
-                      />
+              <Link
+                href={authenticated ? "/app/home" : "/"}
+                className="group flex items-center gap-3 outline-none"
+              >
+                {/* App Logo */}
+                <div className="h-max-content relative flex h-9 items-center justify-center overflow-hidden rounded-md transition-transform group-hover:scale-105 group-active:scale-95">
+                  <strong className="text-md sm:text-md font-bold text-yellow-500">Weave</strong>
+                </div>
+
+                {/* Organização (Aparece em MD+) */}
+                {user?.org_id && (
+                  <div className="animate-in fade-in hidden items-center gap-3 duration-300 md:flex">
+                    <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-800" />
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-neutral-700 dark:text-neutral-300">
+                        {user.org_name}
+                      </span>
                     </div>
                   </div>
                 )}
-              </div>
-            )}
+              </Link>
+            </div>
+
+            {/* LADO DIREITO: User Actions */}
+            <div className="flex items-center gap-3">
+              {authenticated && user && (
+                <div className="relative" ref={menuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen(!isMenuOpen)}
+                    aria-expanded={isMenuOpen}
+                    className={`group flex items-center gap-3 rounded-md border border-transparent pl-3 transition-all duration-200 ${isMenuOpen ? "bg-neutral-100 dark:bg-neutral-800" : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50"} `}
+                  >
+                    <div className="hidden flex-col items-end text-right sm:flex">
+                      <span className="text-sm leading-none font-bold text-neutral-800 dark:text-neutral-200">
+                        {formatters.getDisplayName(user)}
+                      </span>
+                      <span className="text-[9px] font-medium text-neutral-400">
+                        @{formatters.getUsername(user)}
+                      </span>
+                    </div>
+                    <UserAvatar user={user} size="sm" />
+                  </button>
+
+                  {/* DROPDOWN (Desktop) */}
+                  {isMenuOpen && (
+                    <div className="animate-in fade-in slide-in-from-top-2 absolute top-full right-0 z-50 mt-2 hidden w-80 origin-top-right duration-200 sm:block">
+                      <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-2xl ring-1 ring-black/5 dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-neutral-950/50">
+                        <MenuContent
+                          user={user}
+                          logout={logout}
+                          onClose={() => setMenuOpen(false)}
+                          onToggleTheme={handleThemeToggle}
+                          theme={theme}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* MOBILE BOTTOM SHEET (Sobrepõe tudo) */}
+      {/* MOBILE CENTERED MODAL COM GLASSMORPHISM (Substitui o Bottom Sheet) */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[60] sm:hidden">
-          {/* Overlay Escuro com Blur */}
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:hidden">
+          {/* Overlay Escuro para destacar o modal */}
           <div
-            className="animate-in fade-in absolute inset-0 bg-neutral-950/60 backdrop-blur-sm transition-opacity duration-300"
+            className="animate-in fade-in absolute inset-0 bg-neutral-950/50 backdrop-blur-sm transition-opacity duration-300"
             onClick={() => setMenuOpen(false)}
           />
 
-          {/* Painel Deslizante */}
-          <div className="animate-in slide-in-from-bottom absolute inset-x-0 bottom-0 flex flex-col rounded-md bg-neutral-50 pb-6 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] duration-300 dark:border-t dark:border-neutral-800 dark:bg-neutral-900">
-            {/* Pega-mão visual */}
-            <div className="mx-auto mt-3 h-1.5 w-12 rounded-md bg-neutral-200/80 dark:bg-neutral-700/50" />
-
-            <div className="mt-2">
+          {/* Container do Modal com Efeito de Vidro */}
+          <div className="animate-in fade-in zoom-in-95 relative z-10 flex w-full max-w-[90%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-[0_8px_32px_rgba(0,0,0,0.15)] backdrop-blur-xl duration-300 dark:border-neutral-800 dark:bg-neutral-900/70">
+            <div className="mt-0">
               <MenuContent
                 user={user!}
                 logout={logout}
@@ -275,10 +261,10 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
               />
             </div>
 
-            <div className="mt-4 px-6">
+            <div className="mt-2 px-2 pb-2">
               <button
                 onClick={() => setMenuOpen(false)}
-                className="transition-active flex w-full items-center justify-center gap-2 rounded-md bg-neutral-100 py-3.5 text-sm font-bold text-neutral-600 active:scale-95 dark:bg-neutral-800 dark:text-neutral-300"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-black/5 py-3.5 text-sm font-bold text-neutral-700 transition-transform active:scale-95 dark:bg-white/10 dark:text-neutral-200"
               >
                 <FaTimes /> Fechar Menu
               </button>
@@ -286,7 +272,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
           </div>
         </div>
       )}
-    </nav>
+    </>
   );
 };
 

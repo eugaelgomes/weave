@@ -145,18 +145,18 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
   ];
 
   return (
-    <div className="flex h-full w-full flex-col bg-neutral-50 text-neutral-600 dark:bg-neutral-950 dark:text-neutral-400">
+    <div className="flex h-full w-full flex-col bg-transparent text-neutral-600 lg:bg-neutral-50 dark:text-neutral-400 dark:lg:bg-neutral-950">
       {/* Header Mobile */}
       <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 p-3 lg:hidden dark:border-neutral-800">
         <div className="flex items-center gap-2">
           <FaBook className="h-4 w-4 text-yellow-500" />
-          <h2 className="text-xs font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-200">
+          <h2 className="text-xs font-bold tracking-wider text-neutral-700 uppercase dark:text-neutral-200">
             Menu
           </h2>
         </div>
         <button
           onClick={handleLinkClick}
-          className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+          className="text-neutral-700 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100"
         >
           <FaTimes size={16} />
         </button>
