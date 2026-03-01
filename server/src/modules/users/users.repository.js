@@ -154,7 +154,6 @@ class UserRepository {
       WHERE 
         (LOWER(username) LIKE LOWER($1) 
         OR LOWER(email) LIKE LOWER($1))
-        OR LOWER(name) LIKE LOWER($1)
         AND deleted = false
         AND private_profile = false
       ORDER BY 
