@@ -14,10 +14,16 @@ function getAuthCookieOptions(req, options = {}) {
   // Obter domínio do cookie
   const domain = getCookieDomain(req.hostname);
 
+  // Usar sameSite 'lax' por padrão (funciona para subdomínios)
+  // Só usar 'none' se COOKIE_SAME_SITE estiver explicitamente definido como 'none'
+  const sameSite = isProduction 
+    ? (process.env.COOKIE_SAME_SITE || "lax")
+    : "lax";
+
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
+    sameSite: sameSite,
     maxAge: maxAge,
     path: "/",
   };
@@ -34,6 +40,7 @@ function getAuthCookieOptions(req, options = {}) {
       domain: domain || "undefined",
       secure: cookieOptions.secure,
       sameSite: cookieOptions.sameSite,
+      origin: req.headers.origin,
     });
   }
 
@@ -58,11 +65,16 @@ function setAuthCookie(res, req, token, options = {}) {
  * @param {Object} req - Request do Express
  */
 function clearAuthCookie(res, req) {
+  const isProduction = process.env.NODE_ENV === "production";
   const domain = getCookieDomain(req.hostname);
+  const sameSite = isProduction 
+    ? (process.env.COOKIE_SAME_SITE || "lax")
+    : "lax";
+  
   const clearOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: isProduction,
+    sameSite: sameSite,
     path: "/",
   };
 

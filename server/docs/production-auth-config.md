@@ -20,10 +20,21 @@ ALLOWED_ORIGINS=https://seu-dominio.com,https://www.seu-dominio.com
 COOKIE_DOMAIN=.seu-dominio.com
 ```
 
+#### Opcional (para cross-domain):
+```env
+# Só use 'none' se frontend e backend estiverem em domínios completamente diferentes
+# Padrão: 'lax' (funciona para mesmo domínio e subdomínios)
+COOKIE_SAME_SITE=none
+```
+
 **Importante sobre COOKIE_DOMAIN:**
 - Se frontend e backend estão no mesmo domínio: deixe vazio
 - Se estão em subdomínios diferentes (ex: `app.example.com` e `api.example.com`): use `.example.com` (com ponto inicial)
 - Se estão em domínios completamente diferentes: não use (cookies cross-domain têm limitações)
+
+**Importante sobre COOKIE_SAME_SITE:**
+- **lax** (padrão): Funciona para mesmo domínio e subdomínios. Mais seguro e compatível.
+- **none**: Necessário apenas para domínios completamente diferentes (ex: app.com e api.outro.com). Requer HTTPS obrigatório.
 
 ### 2. HTTPS Obrigatório
 
@@ -109,7 +120,8 @@ O código agora inclui logs detalhados quando há falha de autenticação:
   hostname: "api.example.com",
   domain: ".example.com",
   secure: true,
-  sameSite: "none"
+  sameSite: "lax",
+  origin: "https://app.example.com"
 }
 ```
 
@@ -133,7 +145,7 @@ Após fazer login, verifique nos DevTools do navegador:
 3. Procure pelo cookie `token`
 4. Verifique os atributos:
    - `HttpOnly`: ✅
-   - `Secure`: ✅ (em HTTPS)
+   - `Secure`: ✅ Lax (ou None se configurado)HTTPS)
    - `SameSite`: None
    - `Domain`: deve corresponder ao seu domínio
 
