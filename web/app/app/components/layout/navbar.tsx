@@ -177,19 +177,19 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
 
               <Link
                 href={authenticated ? "/app/home" : "/"}
-                className="group flex items-center gap-3 outline-none"
+                className="group flex items-center gap-2 outline-none sm:gap-3"
               >
                 {/* App Logo */}
                 <div className="h-max-content relative flex h-9 items-center justify-center overflow-hidden rounded-md transition-transform group-hover:scale-105 group-active:scale-95">
                   <strong className="text-md sm:text-md font-bold text-yellow-500">Weave</strong>
                 </div>
 
-                {/* Organização (Aparece em MD+) */}
+                {/* Organização (Aparece em todas as telas) */}
                 {user?.org_id && (
-                  <div className="animate-in fade-in hidden items-center gap-3 duration-300 md:flex">
-                    <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-800" />
+                  <div className="animate-in fade-in flex items-center gap-2 duration-300 sm:gap-3">
+                    <div className="h-4 w-px bg-neutral-200 sm:h-5 dark:bg-neutral-800" />
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-neutral-700 dark:text-neutral-300">
+                      <span className="max-w-[80px] truncate text-xs text-neutral-700 sm:max-w-[150px] sm:text-sm md:max-w-none dark:text-neutral-300">
                         {user.org_name}
                       </span>
                     </div>

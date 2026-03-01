@@ -34,7 +34,7 @@ const Layout = ({ children }: LayoutProps) => {
       <div className="relative flex flex-1 overflow-hidden">
         {/* Desktop Sidebar */}
         <aside
-          className={`hidden ${isCollapsed ? "lg:w-[80px]" : "lg:w-[260px]"} flex-col border-r border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950 lg:flex`}
+          className={`hidden ${isCollapsed ? "lg:w-[80px]" : "lg:w-[260px]"} flex-col border-r border-neutral-200 bg-neutral-50 lg:flex dark:border-neutral-800 dark:bg-neutral-950`}
         >
           <Sidebar
             onLinkClick={closeSidebar}
