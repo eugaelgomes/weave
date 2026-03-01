@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const { validationResult } = require("express-validator");
 const AuthRepository = require("@/modules/auth/auth.repository");
-const { getCookieDomain } = require("@/config/allowed-origins");
+const { setAuthCookie, clearAuthCookie } = require("@/utils/cookie-helper");
 
 const authLogs = require("@/utils/system_logs/auth-logs");
 const { secretsManager } = require("@/services/secrets");
@@ -72,16 +72,9 @@ class AuthController {
 
       authLogs.createLog(user.user_id, "auth_login", req, "success");
 
-      const domain = getCookieDomain(req.hostname);
-
       // Token https only
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      setAuthCookie(res, req, token, {
         maxAge: 12 * 60 * 60 * 1000,
-        path: "/",
-        domain: domain,
       });
 
       // Res de login com token para login via Request Postman/Curl
@@ -236,12 +229,8 @@ class AuthController {
       });
 
       // Definir cookie com token
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      setAuthCookie(res, req, token, {
         maxAge: 24 * 60 * 60 * 1000,
-        path: "/",
       });
 
       // Redirecionar para o frontend
@@ -265,19 +254,11 @@ class AuthController {
 
   async logout(req, res) {
     try {
-      const domain = getCookieDomain(req.hostname);
-
       console.log(
-        `[Logout] Clearing cookie domain: ${domain} (Request hostname: ${req.hostname})`
+        `[Logout] Clearing cookie (Request hostname: ${req.hostname})`
       );
 
-      res.clearCookie("token", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        path: "/",
-        domain: domain,
-      });
+      clearAuthCookie(res, req);
 
       if (req.session) {
         req.session.destroy((err) => {
