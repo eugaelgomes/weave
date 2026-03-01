@@ -117,13 +117,13 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col">
       <div className="flex-1 space-y-3 overflow-y-auto">
         {/* Header */}
-        <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-2 shadow shadow-md sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-950">
-          <div className="flex items-center justify-between gap-2">
-            <span className="sm:text-md text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
+        <div className="flex flex-row items-center justify-between gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-2 shadow shadow-md sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-950">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium tracking-tight text-neutral-900 sm:text-base dark:text-neutral-100">
               <span className="text-yellow-500">Olá,</span> {getFirstAndLastUserName(userName)}!
             </span>
           </div>
-          <div className="flex items-center justify-between gap-3 text-xs text-neutral-600 sm:gap-4 sm:text-sm dark:text-neutral-400">
+          <div className="flex items-center gap-3 text-xs text-neutral-600 sm:gap-4 sm:text-sm dark:text-neutral-400">
             <span className="truncate text-xs">{userCurrentDateTime}</span>
             <div
               title={
@@ -164,7 +164,7 @@ export default function HomePage() {
         </div>
 
         {/* Estatísticas e Mapa Mental */}
-        <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-[260px_1fr]">
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-[260px_1fr]">
           {/* === CARD 1 — MÉTRICAS === */}
           <div className="flex flex-col rounded-md border border-neutral-200 bg-neutral-50 shadow-md backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-950">
             <button

@@ -10,7 +10,6 @@ import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/util
 import { getTagColor } from "@/app/utils/tag-colors";
 import getStorageUrl from "@/app/utils/get-storage-url";
 
-// IMPORTANDO A INTERFACE CENTRALIZADA DO SERVICE
 import type { Note } from "@/app/services/notes-service/NotesService";
 
 // =================== INTERFACES ===================
@@ -65,7 +64,7 @@ export default function NotesCarousel({
     <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4 shadow-md dark:border-neutral-800 dark:bg-neutral-950">
       {/* Header do Carrossel */}
       <div className="mb-4 flex items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-yellow-500 sm:text-lg dark:text-neutral-100">
+        <h3 className="sm:text-md text-base font-semibold text-neutral-500 dark:text-neutral-100">
           {title}
         </h3>
         {notes.length > 1 && (

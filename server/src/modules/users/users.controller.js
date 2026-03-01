@@ -20,6 +20,7 @@ const {
 } = require("@/services/email/templates/delete-account/delete-account-request");
 const updateProfileLogs = require("@/utils/system_logs/update_profile-logs");
 const PlansManager = require("@/services/plans/manager");
+const { normalizeAppPreferences } = require("@/modules/users/normalize");
 const { stat } = require("fs");
 
 const { welcome_message } = welcomeMailModule;
@@ -315,7 +316,7 @@ class userController {
             period_end: user.period_end,
             details: user.usage_details || {},
           },
-          usage_preference: user.usage_preference || {},
+          usage_preference: user.user_preference || {},
         },
       });
     } catch (error) {
@@ -337,6 +338,7 @@ class userController {
       birth_date,
       phone_number,
       private_profile,
+      usage_preference,
       user_preference,
     } = req.body;
 
@@ -439,8 +441,13 @@ class userController {
       if (phone_number !== undefined) updates.phone_number = phone_number;
       if (private_profile !== undefined)
         updates.private_profile = private_profile;
-      if (user_preference !== undefined)
-        updates.user_preference = user_preference;
+      const resolvedPreference = usage_preference ?? user_preference;
+      if (resolvedPreference !== undefined) {
+        const parsed = typeof resolvedPreference === 'string'
+          ? JSON.parse(resolvedPreference)
+          : resolvedPreference;
+        updates.user_preference = normalizeAppPreferences(parsed);
+      }
 
       if (username !== undefined && username !== currentUser.username) {
         const usernameExists = await UserRepository.findByUsernameOrEmail(
@@ -527,7 +534,7 @@ class userController {
             theme_mode: updatedUser.theme_mode,
             private_profile: updatedUser.private_profile,
           },
-          usage_preference: updatedUser.usage_preference || {},
+          usage_preference: updatedUser.user_preference || {},
         },
       };
 

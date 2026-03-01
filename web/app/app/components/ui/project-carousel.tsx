@@ -96,7 +96,7 @@ export default function ProjectsCarousel({
   return (
     <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 shadow-md sm:p-4 dark:border-neutral-800 dark:bg-neutral-950">
       <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
-        <h3 className="text-base font-semibold text-yellow-500 sm:text-lg dark:text-neutral-100">
+        <h3 className="sm:text-md text-base font-semibold text-neutral-500 dark:text-neutral-100">
           {title}
         </h3>
         {projects.length > 1 && (

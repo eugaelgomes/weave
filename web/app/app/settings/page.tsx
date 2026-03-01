@@ -46,6 +46,14 @@ interface FormData {
   usage_preference: Record<string, any>;
 }
 
+interface UsageDetails {
+  usage_summary?: {
+    notes_total?: number;
+    projects_total?: number;
+    team_members_total?: number;
+  };
+}
+
 const SettingsPage = () => {
   const { user, updateUser, deleteUserPermanently } = useAuth();
   const [userData, setUserData] = useState<User | null>(null);
@@ -320,14 +328,14 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col py-2">
+    <div className="flex min-h-screen flex-col">
       <div className="mx-auto w-full space-y-2">
         {/* Header da Página */}
         <div className="flex items-center justify-between rounded-md border-b border-neutral-200 bg-white p-2 pb-2 shadow-md dark:border-neutral-800 dark:bg-neutral-950">
-          <h1 className="text-md font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+          <h1 className="text-md tracking-tight text-neutral-900 dark:text-neutral-100">
             Configurações da Conta
           </h1>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
             Gerencie seus dados pessoais, organização e preferências de segurança.
           </p>
         </div>
@@ -617,9 +625,9 @@ const SettingsPage = () => {
         {/* ========================================================================================= */}
         {/* DIV 2: DADOS DA ORGANIZATION + PLANO                                                      */}
         {/* ========================================================================================= */}
-        {user?.org_id && (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Card de Organização */}
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+          {/* Card de Organização */}
+          {user?.org_id && (
             <div className="flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900/50">
               <div className="border-b border-neutral-100 bg-neutral-50/50 px-6 py-4 dark:border-neutral-800 dark:bg-neutral-800/20">
                 <h3 className="flex items-center gap-2 text-sm font-bold tracking-wide text-neutral-600 uppercase dark:text-neutral-400">
@@ -671,53 +679,122 @@ const SettingsPage = () => {
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Card de Plano */}
-            {user?.plan_id &&
-              (user.org_member_role === "admin" || user.org_member_role === "super_admin") && (
-                <div className="flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900/50">
-                  <div className="flex items-center justify-between border-b border-neutral-100 bg-neutral-50/50 px-6 py-4 dark:border-neutral-800 dark:bg-neutral-800/20">
-                    <h3 className="flex items-center gap-2 text-sm font-bold tracking-wide text-neutral-600 uppercase dark:text-neutral-400">
-                      <CreditCard className="h-4 w-4" /> Assinatura
-                    </h3>
-                    <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-600/20 ring-inset dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20">
-                      Ativo
+          {/* Card de Plano */}
+          {user?.plan_id &&
+            (user.org_member_role === "admin" || user.org_member_role === "super_admin") && (
+              <div className="flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+                <div className="flex items-center justify-between border-b border-neutral-100 bg-neutral-50/50 px-6 py-4 dark:border-neutral-800 dark:bg-neutral-800/20">
+                  <h3 className="flex items-center gap-2 text-sm font-bold tracking-wide text-neutral-600 uppercase dark:text-neutral-400">
+                    <CreditCard className="h-4 w-4" /> Assinatura
+                  </h3>
+                  <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-600/20 ring-inset dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20">
+                    Ativo
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col gap-4 p-6">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-sm text-neutral-500">Plano Atual</span>
+                    <span className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+                      {user.plan_name}
                     </span>
                   </div>
-                  <div className="flex flex-1 flex-col gap-4 p-6">
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-sm text-neutral-500">Plano Atual</span>
-                      <span className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-                        {user.plan_name}
-                      </span>
+
+                  {/* Limites e Consumo */}
+                  <div className="mt-auto space-y-3 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                    {/* Notas */}
+                    <div>
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-[10px] font-medium text-neutral-400 uppercase">
+                          Notas
+                        </span>
+                        <span className="font-mono text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                          {(user.usage_details as UsageDetails)?.usage_summary?.notes_total ?? 0} /{" "}
+                          {user.plan_details?.limits?.max_notes ?? "∞"}
+                        </span>
+                      </div>
+                      {user.plan_details?.limits?.max_notes && (
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
+                          <div
+                            className="h-full rounded-full bg-blue-500 transition-all"
+                            style={{
+                              width: `${Math.min(
+                                (((user.usage_details as UsageDetails)?.usage_summary
+                                  ?.notes_total ?? 0) /
+                                  user.plan_details.limits.max_notes) *
+                                  100,
+                                100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
 
-                    {/* Limites Rápidos */}
-                    <div className="mt-auto grid grid-cols-3 gap-2 border-t border-neutral-100 pt-4 dark:border-neutral-800">
-                      <div className="text-center">
-                        <p className="text-[10px] text-neutral-400 uppercase">Notas</p>
-                        <p className="font-mono font-bold text-neutral-700 dark:text-neutral-300">
-                          {user.plan_details?.limits?.max_notes ?? "∞"}
-                        </p>
+                    {/* Projetos */}
+                    <div>
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-[10px] font-medium text-neutral-400 uppercase">
+                          Projetos
+                        </span>
+                        <span className="font-mono text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                          {(user.usage_details as UsageDetails)?.usage_summary?.projects_total ?? 0}{" "}
+                          / {user.plan_details?.limits?.max_projects ?? "∞"}
+                        </span>
                       </div>
-                      <div className="border-l border-neutral-100 text-center dark:border-neutral-800">
-                        <p className="text-[10px] text-neutral-400 uppercase">Projetos</p>
-                        <p className="font-mono font-bold text-neutral-700 dark:text-neutral-300">
-                          {user.plan_details?.limits?.max_projects ?? "∞"}
-                        </p>
+                      {user.plan_details?.limits?.max_projects && (
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
+                          <div
+                            className="h-full rounded-full bg-purple-500 transition-all"
+                            style={{
+                              width: `${Math.min(
+                                (((user.usage_details as UsageDetails)?.usage_summary
+                                  ?.projects_total ?? 0) /
+                                  user.plan_details.limits.max_projects) *
+                                  100,
+                                100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Membros */}
+                    <div>
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-[10px] font-medium text-neutral-400 uppercase">
+                          Membros
+                        </span>
+                        <span className="font-mono text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                          {(user.usage_details as UsageDetails)?.usage_summary
+                            ?.team_members_total ?? 0}{" "}
+                          / {user.plan_details?.limits?.max_team_members ?? "∞"}
+                        </span>
                       </div>
-                      <div className="border-l border-neutral-100 text-center dark:border-neutral-800">
-                        <p className="text-[10px] text-neutral-400 uppercase">Membros</p>
-                        <p className="font-mono font-bold text-neutral-700 dark:text-neutral-300">
-                          {user.plan_details?.limits?.max_team_members ?? "∞"}
-                        </p>
-                      </div>
+                      {user.plan_details?.limits?.max_team_members && (
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
+                          <div
+                            className="h-full rounded-full bg-emerald-500 transition-all"
+                            style={{
+                              width: `${Math.min(
+                                (((user.usage_details as UsageDetails)?.usage_summary
+                                  ?.team_members_total ?? 0) /
+                                  user.plan_details.limits.max_team_members) *
+                                  100,
+                                100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              )}
-          </div>
-        )}
+              </div>
+            )}
+        </div>
 
         {/* ========================================================================================= */}
         {/* DIV 2.5: PREFERÊNCIAS DO APP                                                              */}
@@ -730,14 +807,14 @@ const SettingsPage = () => {
             </h3>
           </div>
 
-          <div className="grid gap-6 p-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* Notificações */}
-            <div className="space-y-3 rounded-md border border-neutral-100 p-4 dark:border-neutral-800">
-              <h4 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                <Bell className="h-4 w-4 text-blue-500" />
+            <div className="space-y-2 rounded-md bg-neutral-50 p-3 dark:bg-neutral-800/30">
+              <h4 className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
+                <Bell className="h-3.5 w-3.5 text-blue-500" />
                 Notificações
               </h4>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {[
                   { key: "email", label: "Email" },
                   { key: "push", label: "Push" },
@@ -747,218 +824,246 @@ const SettingsPage = () => {
                   { key: "projectUpdates", label: "Atualizações de Projetos" },
                   { key: "mentionsAndComments", label: "Menções e Comentários" },
                 ].map((item) => (
-                  <label key={item.key} className="flex items-center gap-2 text-sm">
+                  <label
+                    key={item.key}
+                    className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700/40"
+                  >
                     <input
                       type="checkbox"
                       checked={formData.usage_preference?.notifications?.[item.key] ?? true}
                       onChange={(e) =>
                         handlePreferenceChange("notifications", item.key, e.target.checked)
                       }
-                      className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
+                      className="h-3.5 w-3.5 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
                     />
-                    <span className="text-neutral-700 dark:text-neutral-300">{item.label}</span>
+                    <span className="text-xs text-neutral-700 dark:text-neutral-300">
+                      {item.label}
+                    </span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* Editor */}
-            <div className="space-y-3 rounded-md border border-neutral-100 p-4 dark:border-neutral-800">
-              <h4 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                <Type className="h-4 w-4 text-purple-500" />
+            <div className="space-y-2 rounded-md bg-neutral-50 p-3 dark:bg-neutral-800/30">
+              <h4 className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
+                <Type className="h-3.5 w-3.5 text-purple-500" />
                 Editor
               </h4>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-neutral-500">Tamanho da Fonte</label>
-                  <input
-                    type="number"
-                    min="10"
-                    max="24"
-                    value={formData.usage_preference?.editor?.fontSize ?? 14}
-                    onChange={(e) =>
-                      handlePreferenceChange("editor", "fontSize", parseInt(e.target.value))
-                    }
-                    className="mt-1 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-neutral-500">Altura da Linha</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="1"
-                    max="3"
-                    value={formData.usage_preference?.editor?.lineHeight ?? 1.6}
-                    onChange={(e) =>
-                      handlePreferenceChange("editor", "lineHeight", parseFloat(e.target.value))
-                    }
-                    className="mt-1 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                  />
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[11px] font-medium text-neutral-400">Fonte</label>
+                    <input
+                      type="number"
+                      min="10"
+                      max="24"
+                      value={formData.usage_preference?.editor?.fontSize ?? 14}
+                      onChange={(e) =>
+                        handlePreferenceChange("editor", "fontSize", parseInt(e.target.value))
+                      }
+                      className="mt-0.5 w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-neutral-400">Linha</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="1"
+                      max="3"
+                      value={formData.usage_preference?.editor?.lineHeight ?? 1.6}
+                      onChange={(e) =>
+                        handlePreferenceChange("editor", "lineHeight", parseFloat(e.target.value))
+                      }
+                      className="mt-0.5 w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                    />
+                  </div>
                 </div>
                 {[
                   { key: "autoSave", label: "Auto Salvar" },
                   { key: "spellCheck", label: "Corretor Ortográfico" },
                   { key: "syntaxHighlighting", label: "Destaque de Sintaxe" },
                 ].map((item) => (
-                  <label key={item.key} className="flex items-center gap-2 text-sm">
+                  <label
+                    key={item.key}
+                    className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700/40"
+                  >
                     <input
                       type="checkbox"
                       checked={formData.usage_preference?.editor?.[item.key] ?? true}
                       onChange={(e) => handlePreferenceChange("editor", item.key, e.target.checked)}
-                      className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
+                      className="h-3.5 w-3.5 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
                     />
-                    <span className="text-neutral-700 dark:text-neutral-300">{item.label}</span>
+                    <span className="text-xs text-neutral-700 dark:text-neutral-300">
+                      {item.label}
+                    </span>
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Display */}
-            <div className="space-y-3 rounded-md border border-neutral-100 p-4 dark:border-neutral-800">
-              <h4 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                <Layout className="h-4 w-4 text-green-500" />
+            {/* Exibição */}
+            <div className="space-y-2 rounded-md bg-neutral-50 p-3 dark:bg-neutral-800/30">
+              <h4 className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
+                <Layout className="h-3.5 w-3.5 text-green-500" />
                 Exibição
               </h4>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-neutral-500">Densidade</label>
-                  <select
-                    value={formData.usage_preference?.display?.density ?? "comfortable"}
-                    onChange={(e) => handlePreferenceChange("display", "density", e.target.value)}
-                    className="mt-1 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                  >
-                    <option value="compact">Compacto</option>
-                    <option value="comfortable">Confortável</option>
-                    <option value="spacious">Espaçoso</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-neutral-500">Posição da Sidebar</label>
-                  <select
-                    value={formData.usage_preference?.display?.sidebarPosition ?? "left"}
-                    onChange={(e) =>
-                      handlePreferenceChange("display", "sidebarPosition", e.target.value)
-                    }
-                    className="mt-1 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                  >
-                    <option value="left">Esquerda</option>
-                    <option value="right">Direita</option>
-                  </select>
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[11px] font-medium text-neutral-400">Densidade</label>
+                    <select
+                      value={formData.usage_preference?.display?.density ?? "comfortable"}
+                      onChange={(e) => handlePreferenceChange("display", "density", e.target.value)}
+                      className="mt-0.5 w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                    >
+                      <option value="compact">Compacto</option>
+                      <option value="comfortable">Confortável</option>
+                      <option value="spacious">Espaçoso</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-neutral-400">Sidebar</label>
+                    <select
+                      value={formData.usage_preference?.display?.sidebarPosition ?? "left"}
+                      onChange={(e) =>
+                        handlePreferenceChange("display", "sidebarPosition", e.target.value)
+                      }
+                      className="mt-0.5 w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                    >
+                      <option value="left">Esquerda</option>
+                      <option value="right">Direita</option>
+                    </select>
+                  </div>
                 </div>
                 {[
-                  { key: "showLineNumbers", label: "Mostrar Números de Linha" },
-                  { key: "showWordCount", label: "Mostrar Contagem de Palavras" },
+                  { key: "showLineNumbers", label: "Números de Linha" },
+                  { key: "showWordCount", label: "Contagem de Palavras" },
                   { key: "compactMode", label: "Modo Compacto" },
                 ].map((item) => (
-                  <label key={item.key} className="flex items-center gap-2 text-sm">
+                  <label
+                    key={item.key}
+                    className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700/40"
+                  >
                     <input
                       type="checkbox"
                       checked={formData.usage_preference?.display?.[item.key] ?? false}
                       onChange={(e) =>
                         handlePreferenceChange("display", item.key, e.target.checked)
                       }
-                      className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
+                      className="h-3.5 w-3.5 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
                     />
-                    <span className="text-neutral-700 dark:text-neutral-300">{item.label}</span>
+                    <span className="text-xs text-neutral-700 dark:text-neutral-300">
+                      {item.label}
+                    </span>
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Idioma */}
-            <div className="space-y-3 rounded-md border border-neutral-100 p-4 dark:border-neutral-800">
-              <h4 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                <Globe className="h-4 w-4 text-orange-500" />
+            {/* Idioma e Região */}
+            <div className="space-y-2 rounded-md bg-neutral-50 p-3 dark:bg-neutral-800/30">
+              <h4 className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
+                <Globe className="h-3.5 w-3.5 text-orange-500" />
                 Idioma e Região
               </h4>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <div>
-                  <label className="text-xs font-medium text-neutral-500">Interface</label>
+                  <label className="text-[11px] font-medium text-neutral-400">Interface</label>
                   <select
                     value={formData.usage_preference?.language?.interface ?? "pt-BR"}
                     onChange={(e) =>
                       handlePreferenceChange("language", "interface", e.target.value)
                     }
-                    className="mt-1 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                    className="mt-0.5 w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
                   >
                     <option value="pt-BR">Português (BR)</option>
                     <option value="en-US">English (US)</option>
                     <option value="es-ES">Español</option>
                   </select>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-neutral-500">Formato de Data</label>
-                  <select
-                    value={formData.usage_preference?.language?.dateFormat ?? "DD/MM/YYYY"}
-                    onChange={(e) =>
-                      handlePreferenceChange("language", "dateFormat", e.target.value)
-                    }
-                    className="mt-1 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                  >
-                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-neutral-500">Formato de Hora</label>
-                  <select
-                    value={formData.usage_preference?.language?.timeFormat ?? "24h"}
-                    onChange={(e) =>
-                      handlePreferenceChange("language", "timeFormat", e.target.value)
-                    }
-                    className="mt-1 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                  >
-                    <option value="24h">24 horas</option>
-                    <option value="12h">12 horas (AM/PM)</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[11px] font-medium text-neutral-400">Data</label>
+                    <select
+                      value={formData.usage_preference?.language?.dateFormat ?? "DD/MM/YYYY"}
+                      onChange={(e) =>
+                        handlePreferenceChange("language", "dateFormat", e.target.value)
+                      }
+                      className="mt-0.5 w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                    >
+                      <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                      <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                      <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-neutral-400">Hora</label>
+                    <select
+                      value={formData.usage_preference?.language?.timeFormat ?? "24h"}
+                      onChange={(e) =>
+                        handlePreferenceChange("language", "timeFormat", e.target.value)
+                      }
+                      className="mt-0.5 w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                    >
+                      <option value="24h">24h</option>
+                      <option value="12h">12h (AM/PM)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Privacidade */}
-            <div className="space-y-3 rounded-md border border-neutral-100 p-4 dark:border-neutral-800">
-              <h4 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                <Lock className="h-4 w-4 text-red-500" />
+            <div className="space-y-2 rounded-md bg-neutral-50 p-3 dark:bg-neutral-800/30">
+              <h4 className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
+                <Lock className="h-3.5 w-3.5 text-red-500" />
                 Privacidade
               </h4>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {[
                   { key: "shareUsageData", label: "Compartilhar Dados de Uso" },
                   { key: "showOnlineStatus", label: "Mostrar Status Online" },
                   { key: "allowAnalytics", label: "Permitir Analytics" },
                 ].map((item) => (
-                  <label key={item.key} className="flex items-center gap-2 text-sm">
+                  <label
+                    key={item.key}
+                    className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700/40"
+                  >
                     <input
                       type="checkbox"
                       checked={formData.usage_preference?.privacy?.[item.key] ?? false}
                       onChange={(e) =>
                         handlePreferenceChange("privacy", item.key, e.target.checked)
                       }
-                      className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
+                      className="h-3.5 w-3.5 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
                     />
-                    <span className="text-neutral-700 dark:text-neutral-300">{item.label}</span>
+                    <span className="text-xs text-neutral-700 dark:text-neutral-300">
+                      {item.label}
+                    </span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* Colaboração */}
-            <div className="space-y-3 rounded-md border border-neutral-100 p-4 dark:border-neutral-800">
-              <h4 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                <Users className="h-4 w-4 text-cyan-500" />
+            <div className="space-y-2 rounded-md bg-neutral-50 p-3 dark:bg-neutral-800/30">
+              <h4 className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
+                <Users className="h-3.5 w-3.5 text-cyan-500" />
                 Colaboração
               </h4>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <div>
-                  <label className="text-xs font-medium text-neutral-500">Permissão Padrão</label>
+                  <label className="text-[11px] font-medium text-neutral-400">
+                    Permissão Padrão
+                  </label>
                   <select
                     value={formData.usage_preference?.collaboration?.defaultPermission ?? "view"}
                     onChange={(e) =>
                       handlePreferenceChange("collaboration", "defaultPermission", e.target.value)
                     }
-                    className="mt-1 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                    className="mt-0.5 w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
                   >
                     <option value="view">Visualizar</option>
                     <option value="edit">Editar</option>
@@ -966,33 +1071,38 @@ const SettingsPage = () => {
                 </div>
                 {[
                   { key: "autoAcceptInvites", label: "Auto-aceitar Convites" },
-                  { key: "showCollaboratorCursors", label: "Mostrar Cursores de Colaboradores" },
+                  { key: "showCollaboratorCursors", label: "Cursores de Colaboradores" },
                 ].map((item) => (
-                  <label key={item.key} className="flex items-center gap-2 text-sm">
+                  <label
+                    key={item.key}
+                    className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700/40"
+                  >
                     <input
                       type="checkbox"
                       checked={formData.usage_preference?.collaboration?.[item.key] ?? false}
                       onChange={(e) =>
                         handlePreferenceChange("collaboration", item.key, e.target.checked)
                       }
-                      className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
+                      className="h-3.5 w-3.5 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
                     />
-                    <span className="text-neutral-700 dark:text-neutral-300">{item.label}</span>
+                    <span className="text-xs text-neutral-700 dark:text-neutral-300">
+                      {item.label}
+                    </span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* IA */}
-            <div className="space-y-3 rounded-md border border-neutral-100 p-4 dark:border-neutral-800">
-              <h4 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                <Sparkles className="h-4 w-4 text-yellow-500" />
+            <div className="space-y-2 rounded-md bg-neutral-50 p-3 dark:bg-neutral-800/30">
+              <h4 className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
+                <Sparkles className="h-3.5 w-3.5 text-yellow-500" />
                 Inteligência Artificial
               </h4>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <div>
-                  <label className="text-xs font-medium text-neutral-500">
-                    Retenção de Histórico (dias)
+                  <label className="text-[11px] font-medium text-neutral-400">
+                    Retenção do Histórico (dias)
                   </label>
                   <input
                     type="number"
@@ -1002,7 +1112,7 @@ const SettingsPage = () => {
                     onChange={(e) =>
                       handlePreferenceChange("ai", "historyRetention", parseInt(e.target.value))
                     }
-                    className="mt-1 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                    className="mt-0.5 w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
                   />
                 </div>
                 {[
@@ -1010,66 +1120,77 @@ const SettingsPage = () => {
                   { key: "autoSuggestions", label: "Sugestões Automáticas" },
                   { key: "contextAwareAssistance", label: "Assistência Contextual" },
                 ].map((item) => (
-                  <label key={item.key} className="flex items-center gap-2 text-sm">
+                  <label
+                    key={item.key}
+                    className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700/40"
+                  >
                     <input
                       type="checkbox"
                       checked={formData.usage_preference?.ai?.[item.key] ?? true}
                       onChange={(e) => handlePreferenceChange("ai", item.key, e.target.checked)}
-                      className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
+                      className="h-3.5 w-3.5 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
                     />
-                    <span className="text-neutral-700 dark:text-neutral-300">{item.label}</span>
+                    <span className="text-xs text-neutral-700 dark:text-neutral-300">
+                      {item.label}
+                    </span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* Backup */}
-            <div className="space-y-3 rounded-md border border-neutral-100 p-4 dark:border-neutral-800">
-              <h4 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                <Database className="h-4 w-4 text-indigo-500" />
+            <div className="space-y-2 rounded-md bg-neutral-50 p-3 dark:bg-neutral-800/30">
+              <h4 className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
+                <Database className="h-3.5 w-3.5 text-indigo-500" />
                 Backup Automático
               </h4>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-neutral-500">Frequência</label>
-                  <select
-                    value={formData.usage_preference?.backup?.backupFrequency ?? "daily"}
-                    onChange={(e) =>
-                      handlePreferenceChange("backup", "backupFrequency", e.target.value)
-                    }
-                    className="mt-1 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                  >
-                    <option value="realtime">Tempo Real</option>
-                    <option value="daily">Diário</option>
-                    <option value="weekly">Semanal</option>
-                    <option value="manual">Manual</option>
-                  </select>
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[11px] font-medium text-neutral-400">Frequência</label>
+                    <select
+                      value={formData.usage_preference?.backup?.backupFrequency ?? "daily"}
+                      onChange={(e) =>
+                        handlePreferenceChange("backup", "backupFrequency", e.target.value)
+                      }
+                      className="mt-0.5 w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                    >
+                      <option value="realtime">Tempo Real</option>
+                      <option value="daily">Diário</option>
+                      <option value="weekly">Semanal</option>
+                      <option value="manual">Manual</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-neutral-400">
+                      Retenção (dias)
+                    </label>
+                    <input
+                      type="number"
+                      min="7"
+                      max="365"
+                      value={formData.usage_preference?.backup?.retentionPeriod ?? 30}
+                      onChange={(e) =>
+                        handlePreferenceChange(
+                          "backup",
+                          "retentionPeriod",
+                          parseInt(e.target.value)
+                        )
+                      }
+                      className="mt-0.5 w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-neutral-500">
-                    Período de Retenção (dias)
-                  </label>
-                  <input
-                    type="number"
-                    min="7"
-                    max="365"
-                    value={formData.usage_preference?.backup?.retentionPeriod ?? 30}
-                    onChange={(e) =>
-                      handlePreferenceChange("backup", "retentionPeriod", parseInt(e.target.value))
-                    }
-                    className="mt-1 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                  />
-                </div>
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700/40">
                   <input
                     type="checkbox"
                     checked={formData.usage_preference?.backup?.autoBackup ?? true}
                     onChange={(e) =>
                       handlePreferenceChange("backup", "autoBackup", e.target.checked)
                     }
-                    className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
+                    className="h-3.5 w-3.5 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
                   />
-                  <span className="text-neutral-700 dark:text-neutral-300">
+                  <span className="text-xs text-neutral-700 dark:text-neutral-300">
                     Backup Automático Ativado
                   </span>
                 </label>
@@ -1077,27 +1198,27 @@ const SettingsPage = () => {
             </div>
 
             {/* Atalhos */}
-            <div className="space-y-3 rounded-md border border-neutral-100 p-4 dark:border-neutral-800">
-              <h4 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                <Keyboard className="h-4 w-4 text-pink-500" />
+            <div className="space-y-2 rounded-md bg-neutral-50 p-3 dark:bg-neutral-800/30">
+              <h4 className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
+                <Keyboard className="h-3.5 w-3.5 text-pink-500" />
                 Atalhos de Teclado
               </h4>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm">
+              <div className="space-y-1">
+                <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700/40">
                   <input
                     type="checkbox"
                     checked={formData.usage_preference?.shortcuts?.enabled ?? true}
                     onChange={(e) =>
                       handlePreferenceChange("shortcuts", "enabled", e.target.checked)
                     }
-                    className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
+                    className="h-3.5 w-3.5 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
                   />
-                  <span className="text-neutral-700 dark:text-neutral-300">
+                  <span className="text-xs text-neutral-700 dark:text-neutral-300">
                     Atalhos Habilitados
                   </span>
                 </label>
-                <p className="text-xs text-neutral-500">
-                  Atalhos personalizados podem ser configurados na seção de teclado.
+                <p className="px-1.5 text-[11px] text-neutral-400">
+                  Personalize na seção de teclado.
                 </p>
               </div>
             </div>
@@ -1105,23 +1226,23 @@ const SettingsPage = () => {
 
           {/* Footer de Ações para Preferências */}
           {editMode && (
-            <div className="flex items-center justify-end gap-3 border-t border-neutral-100 px-6 py-4 dark:border-neutral-800">
+            <div className="flex items-center justify-end gap-3 border-t border-neutral-100 px-4 py-3 dark:border-neutral-800">
               <button
                 onClick={handleCancelEdit}
                 disabled={isLoading}
-                className="rounded-md px-4 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSaveChanges}
                 disabled={isLoading}
-                className="flex items-center gap-2 rounded-md bg-neutral-900 px-6 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-neutral-800 disabled:opacity-70 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+                className="flex items-center gap-1.5 rounded-md bg-neutral-900 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-neutral-800 disabled:opacity-70 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
               >
                 {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Save className="h-4 w-4" />
+                  <Save className="h-3.5 w-3.5" />
                 )}
                 Salvar Preferências
               </button>
@@ -1132,60 +1253,60 @@ const SettingsPage = () => {
         {/* ========================================================================================= */}
         {/* DIV 3: EXPORT DE DADOS / EXCLUSÃO                                                         */}
         {/* ========================================================================================= */}
-        <div className="rounded-md border border-red-100 bg-red-50/30 p-1 dark:border-red-900/20 dark:bg-red-950/10">
-          <div className="rounded-md border border-dashed border-red-200 p-6 dark:border-red-800/30">
-            <h3 className="mb-6 flex items-center gap-2 text-sm font-bold tracking-wide text-red-600 uppercase dark:text-red-500">
-              <AlertTriangle className="h-4 w-4" /> Zona de Perigo
+        <div className="rounded-md border border-red-100 bg-white dark:border-red-900/20 dark:bg-neutral-900/50">
+          <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3 dark:border-neutral-800">
+            <h3 className="dark:text-neutral-1000 flex items-center gap-2 text-sm font-semibold text-neutral-900">
+              <AlertTriangle className="h-4 w-4 text-neutral-500" /> Zona de Perigo
             </h3>
+          </div>
 
-            <div className="space-y-6">
-              {/* Item Backup */}
-              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                <div>
-                  <h4 className="font-medium text-neutral-900 dark:text-neutral-100">
-                    Exportar Dados
-                  </h4>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                    Baixe uma cópia completa de suas notas e projetos em formato JSON/Zip.
+          <div className="space-y-6 px-4 py-3">
+            {/* Item Backup */}
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div>
+                <h4 className="font-medium text-neutral-900 dark:text-neutral-100">
+                  Exportar Dados
+                </h4>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                  Baixe uma cópia completa de suas notas e projetos em formato JSON/Zip.
+                </p>
+                {(backupMessage || backupError) && (
+                  <p className={`mt-2 text-xs ${backupError ? "text-red-600" : "text-blue-600"}`}>
+                    {backupError || backupMessage}
                   </p>
-                  {(backupMessage || backupError) && (
-                    <p className={`mt-2 text-xs ${backupError ? "text-red-600" : "text-blue-600"}`}>
-                      {backupError || backupMessage}
-                    </p>
-                  )}
-                </div>
-                <button
-                  onClick={handleCreateBackup}
-                  disabled={backupLoading}
-                  className="flex shrink-0 items-center gap-2 rounded-md border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
-                >
-                  {backupLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                  Solicitar Backup
-                </button>
+                )}
               </div>
+              <button
+                onClick={handleCreateBackup}
+                disabled={backupLoading}
+                className="flex shrink-0 items-center gap-2 rounded-md border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+              >
+                {backupLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                Fazer Backup
+              </button>
+            </div>
 
-              <div className="h-px bg-red-200/50 dark:bg-red-900/30" />
+            <div className="h-px bg-red-200/50 dark:bg-red-900/30" />
 
-              {/* Item Delete */}
-              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                <div>
-                  <h4 className="font-medium text-red-700 dark:text-red-400">Excluir Conta</h4>
-                  <p className="text-sm text-red-600/70 dark:text-red-400/70">
-                    Esta ação é permanente e removerá todos os seus dados.
-                  </p>
-                </div>
-                <button
-                  onClick={handleDeleteAccount}
-                  className="flex shrink-0 items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Excluir Permanentemente
-                </button>
+            {/* Item Delete */}
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div>
+                <h4 className="font-medium text-red-700 dark:text-red-400">Excluir Conta</h4>
+                <p className="text-sm text-red-600/70 dark:text-red-400/70">
+                  Esta ação é permanente e removerá todos os seus dados.
+                </p>
               </div>
+              <button
+                onClick={handleDeleteAccount}
+                className="flex shrink-0 items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700"
+              >
+                <Trash2 className="h-4 w-4" />
+                Excluir Permanentemente
+              </button>
             </div>
           </div>
         </div>

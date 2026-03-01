@@ -25,7 +25,8 @@ NEXT_PUBLIC_APP_URL=https://seu-dominio.com
 NEXT_PUBLIC_CDN_BASE_URL=https://seu-cdn.com
 ```
 
-⚠️ **IMPORTANTE**: 
+⚠️ **IMPORTANTE**:
+
 - A URL deve ser completa com `https://`
 - Não coloque barra `/` no final
 - `NEXT_PUBLIC_` é necessário para variáveis acessíveis no browser
@@ -42,6 +43,7 @@ ALLOWED_ORIGINS=https://seu-dominio.com,https://www.seu-dominio.com
 ### 3. HTTPS Obrigatório
 
 Em produção, **você DEVE usar HTTPS** em:
+
 - ✅ Frontend
 - ✅ Backend
 - ✅ Certificado SSL válido
@@ -65,6 +67,7 @@ docker compose -f docker-compose.yml up --build
 ## 🔍 Cenários de Deploy
 
 ### Cenário 1: Mesmo Domínio
+
 **Frontend**: `https://exemplo.com`  
 **Backend**: `https://exemplo.com/api`
 
@@ -78,6 +81,7 @@ COOKIE_DOMAIN= # deixe vazio ou remova
 ```
 
 ### Cenário 2: Subdomínios
+
 **Frontend**: `https://app.exemplo.com`  
 **Backend**: `https://api.exemplo.com`
 
@@ -91,6 +95,7 @@ COOKIE_DOMAIN=.exemplo.com # note o ponto inicial!
 ```
 
 ### Cenário 3: Domínios Diferentes (❌ Limitado)
+
 **Frontend**: `https://frontend.com`  
 **Backend**: `https://backend.com`
 
@@ -104,7 +109,7 @@ const config: RequestInit = {
   ...options,
   headers: {
     ...this.defaultHeaders,
-    'Authorization': `Bearer ${getTokenFromLocalStorage()}`,
+    Authorization: `Bearer ${getTokenFromLocalStorage()}`,
     ...options.headers,
   },
 };
@@ -135,12 +140,12 @@ const config: RequestInit = {
 
 ```javascript
 // No console do navegador
-fetch('https://api.seu-dominio.com/api/v1/users/me', {
-  credentials: 'include'
+fetch("https://api.seu-dominio.com/api/v1/users/me", {
+  credentials: "include",
 })
-  .then(r => r.json())
+  .then((r) => r.json())
   .then(console.log)
-  .catch(console.error)
+  .catch(console.error);
 ```
 
 ## ❌ Problemas Comuns
@@ -149,6 +154,7 @@ fetch('https://api.seu-dominio.com/api/v1/users/me', {
 
 **Causa**: Cookie não está sendo enviado  
 **Soluções**:
+
 1. ✅ Verifique se está usando HTTPS
 2. ✅ Confirme `NEXT_PUBLIC_API_BASE_URL` correto
 3. ✅ Verifique `ALLOWED_ORIGINS` no backend
@@ -179,13 +185,13 @@ ALLOWED_ORIGINS=https://front.com,https://www.front.com
 
 ## 📝 Diferenças Dev vs Produção
 
-| Configuração | Desenvolvimento | Produção |
-|--------------|----------------|----------|
-| API URL | `http://localhost:8080/api/v1` | `https://api.dominio.com/api/v1` |
-| Cookie Secure | `false` | `true` |
-| Cookie SameSite | `lax` | `none` |
-| HTTPS | Opcional | Obrigatório |
-| CORS Origin | Permite localhost | Apenas domínios listados |
+| Configuração    | Desenvolvimento                | Produção                         |
+| --------------- | ------------------------------ | -------------------------------- |
+| API URL         | `http://localhost:8080/api/v1` | `https://api.dominio.com/api/v1` |
+| Cookie Secure   | `false`                        | `true`                           |
+| Cookie SameSite | `lax`                          | `none`                           |
+| HTTPS           | Opcional                       | Obrigatório                      |
+| CORS Origin     | Permite localhost              | Apenas domínios listados         |
 
 ## 🚀 Deploy Rápido
 
