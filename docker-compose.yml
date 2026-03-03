@@ -75,6 +75,33 @@ services:
         - action: rebuild
           path: ./blog/package.json
 
+  # Console Admin
+  console:
+    build:
+      context: ./console
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./console:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://server:8080/api/v1
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+    depends_on:
+      - server
+    networks:
+      - app-network
+    command: npm run dev
+    develop:
+      watch:
+        - action: sync
+          path: ./console/app
+          target: /app/app
+        - action: rebuild
+          path: ./console/package.json
+
 networks:
   app-network:
     driver: bridge
