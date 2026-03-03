@@ -145,8 +145,8 @@ export default function SignUp() {
       {/* Navbar */}
       <nav className="z-50 w-full px-6 py-4">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <Link
-            href="/home"
+          <a
+            href={process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app"}
             className="flex items-center gap-2 transition-opacity hover:opacity-80"
           >
             <Image
@@ -159,15 +159,15 @@ export default function SignUp() {
             <span className="text-base font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
               Weave Notes
             </span>
-          </Link>
+          </a>
 
           <div className="flex items-center gap-4">
-            <Link
-              href="/about"
+            <a
+              href={`${process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app"}/about`}
               className="text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900 sm:text-sm dark:text-neutral-400 dark:hover:text-white"
             >
               Sobre
-            </Link>
+            </a>
             <Link
               href="/auth/signin"
               className="rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white transition-transform hover:-translate-y-0.5 hover:bg-neutral-800 sm:text-sm dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"

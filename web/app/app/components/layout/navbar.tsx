@@ -97,13 +97,15 @@ const MenuContent = ({ user, logout, onClose, onToggleTheme, theme }: MenuConten
         </span>
       </button>
 
-      <Link
-        href="/about"
+      <a
+        href={process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app/about"}
+        target="_blank"
+        rel="noopener noreferrer"
         onClick={onClose}
         className="flex items-center rounded-md px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/5"
       >
         Sobre o Sistema
-      </Link>
+      </a>
 
       <div className="my-1 h-px bg-black/5 dark:bg-white/5" />
 

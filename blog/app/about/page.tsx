@@ -1,6 +1,6 @@
-import Image from "next/image";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { FaGithub, FaLinkedin, FaArrowRight, FaLock, FaBolt } from "react-icons/fa";
+import { FaArrowRight } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi2";
 import {
   FiEdit3,
@@ -14,62 +14,79 @@ import {
   FiZap,
   FiLayers,
 } from "react-icons/fi";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import BackgroundPattern from "../components/BackgroundPattern";
+import { APP_URL } from "../config/urls";
 
-const AboutPage = () => {
+export const metadata: Metadata = {
+  title: "Sobre",
+  description: "Conheça o Weave Notes — o espaço digital para suas ideias.",
+};
+
+export default function AboutPage() {
   const features = [
     {
       icon: <FiEdit3 className="h-5 w-5" />,
       title: "Notas Inteligentes",
-      description: "Editor rico com markdown, formatação avançada e salvamento automático.",
+      description:
+        "Editor rico com markdown, formatação avançada e salvamento automático.",
       color: "text-yellow-500",
       bg: "bg-yellow-100 dark:bg-yellow-500/10",
     },
     {
       icon: <FiFolder className="h-5 w-5" />,
       title: "Projetos",
-      description: "Organize notas em projetos com membros e permissões granulares.",
+      description:
+        "Organize notas em projetos com membros e permissões granulares.",
       color: "text-blue-500",
       bg: "bg-blue-100 dark:bg-blue-500/10",
     },
     {
       icon: <FiUsers className="h-5 w-5" />,
       title: "Colaboração",
-      description: "Convide colaboradores para editar notas juntos em tempo real.",
+      description:
+        "Convide colaboradores para editar notas juntos em tempo real.",
       color: "text-green-500",
       bg: "bg-green-100 dark:bg-green-500/10",
     },
     {
       icon: <FiMessageSquare className="h-5 w-5" />,
       title: "Chat com IA",
-      description: "Converse com a IA integrada para resumir, expandir e gerar conteúdo.",
+      description:
+        "Converse com a IA integrada para resumir, expandir e gerar conteúdo.",
       color: "text-purple-500",
       bg: "bg-purple-100 dark:bg-purple-500/10",
     },
     {
       icon: <FiBriefcase className="h-5 w-5" />,
       title: "Workspaces",
-      description: "Crie organizações e gerencie equipes com espaços de trabalho dedicados.",
+      description:
+        "Crie organizações e gerencie equipes com espaços de trabalho dedicados.",
       color: "text-red-500",
       bg: "bg-red-100 dark:bg-red-500/10",
     },
     {
       icon: <FiTag className="h-5 w-5" />,
       title: "Tags & Filtros",
-      description: "Categorize e encontre qualquer nota instantaneamente com tags.",
+      description:
+        "Categorize e encontre qualquer nota instantaneamente com tags.",
       color: "text-orange-500",
       bg: "bg-orange-100 dark:bg-orange-500/10",
     },
     {
       icon: <FiDownload className="h-5 w-5" />,
       title: "Backup & Exportação",
-      description: "Exporte suas notas e faça backup dos seus dados com segurança.",
+      description:
+        "Exporte suas notas e faça backup dos seus dados com segurança.",
       color: "text-cyan-500",
       bg: "bg-cyan-100 dark:bg-cyan-500/10",
     },
     {
       icon: <FiShield className="h-5 w-5" />,
       title: "Privacidade",
-      description: "Seus dados são seus. Autenticação segura com JWT e cookies HttpOnly.",
+      description:
+        "Seus dados são seus. Autenticação segura com JWT e cookies HttpOnly.",
       color: "text-emerald-500",
       bg: "bg-emerald-100 dark:bg-emerald-500/10",
     },
@@ -77,42 +94,9 @@ const AboutPage = () => {
 
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-neutral-50 text-neutral-900 selection:bg-yellow-500/20 selection:text-yellow-900 dark:bg-neutral-950 dark:text-neutral-50 dark:selection:bg-yellow-500/30 dark:selection:text-yellow-200">
-      {/* Background Pattern */}
-      <div className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] bg-[size:24px_24px] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)]"></div>
+      <BackgroundPattern />
 
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 w-full border-b border-neutral-200/50 bg-neutral-50/80 px-6 py-4 backdrop-blur-md dark:border-neutral-800/50 dark:bg-neutral-950/80">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <Link
-            href="/home"
-            className="flex items-center gap-2 transition-opacity hover:opacity-80"
-          >
-            <Image
-              src="/weave.png"
-              alt="Weave Logo"
-              width={28}
-              height={28}
-              className="h-7 w-7 rounded-sm object-cover"
-            />
-            <span className="text-base font-semibold tracking-tight">Weave Notes</span>
-          </Link>
-
-          <div className="flex items-center gap-4">
-            <Link
-              href="/auth/signin"
-              className="text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900 sm:text-sm dark:text-neutral-400 dark:hover:text-white"
-            >
-              Entrar
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white transition-transform hover:-translate-y-0.5 hover:bg-neutral-800 sm:text-sm dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-            >
-              Criar conta
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar ctaLabel="Criar conta" ctaHref="/auth/signup" />
 
       {/* Hero Section */}
       <section className="relative z-10 px-4 py-16 text-center sm:py-20 md:py-24">
@@ -130,20 +114,21 @@ const AboutPage = () => {
           </h1>
 
           <p className="mx-auto mb-8 max-w-2xl text-base leading-relaxed text-neutral-600 sm:text-lg dark:text-neutral-400">
-            Weave Notes nasceu de uma frustração: ferramentas de anotação tornaram-se lentas e
-            complexas demais. Criamos algo simples, rápido e inteligente — a ferramenta que nós
-            mesmos queríamos usar todos os dias.
+            Weave Notes nasceu de uma frustração: ferramentas de anotação
+            tornaram-se lentas e complexas demais. Criamos algo simples, rápido
+            e inteligente — a ferramenta que nós mesmos queríamos usar todos os
+            dias.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href="/auth/signup"
+            <a
+              href={`${APP_URL}/auth/signup`}
               className="group relative flex h-11 items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 px-6 font-bold text-white shadow-lg shadow-yellow-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-yellow-500/40"
             >
               <span className="relative z-10">Começar agora</span>
               <FaArrowRight className="relative z-10 h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-600 to-orange-600 opacity-0 transition-opacity group-hover:opacity-100" />
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -156,7 +141,8 @@ const AboutPage = () => {
               Tudo que você precisa
             </h2>
             <p className="mx-auto max-w-lg text-sm text-neutral-500 sm:text-base dark:text-neutral-400">
-              Ferramentas poderosas para capturar, organizar e compartilhar conhecimento.
+              Ferramentas poderosas para capturar, organizar e compartilhar
+              conhecimento.
             </p>
           </div>
 
@@ -195,16 +181,19 @@ const AboutPage = () => {
           <div className="space-y-5 text-base leading-relaxed text-neutral-600 md:w-2/3 dark:text-neutral-400">
             <p>
               Acreditamos que a ferramenta deve{" "}
-              <span className="font-semibold text-neutral-900 dark:text-white">desaparecer</span>{" "}
-              para que o pensamento flua. Nossa missão é remover o atrito entre o momento que você
-              tem uma ideia e o momento que ela é capturada.
+              <span className="font-semibold text-neutral-900 dark:text-white">
+                desaparecer
+              </span>{" "}
+              para que o pensamento flua. Nossa missão é remover o atrito entre
+              o momento que você tem uma ideia e o momento que ela é capturada.
             </p>
             <p>
               Combinamos a{" "}
               <span className="font-semibold text-yellow-600 dark:text-yellow-400">
                 inteligência artificial
               </span>{" "}
-              com uma interface limpa para que você escreva, organize e colabore — sem distrações.
+              com uma interface limpa para que você escreva, organize e colabore
+              — sem distrações.
             </p>
 
             <div className="flex flex-wrap gap-3 pt-2">
@@ -238,46 +227,18 @@ const AboutPage = () => {
           <p className="mb-8 text-sm text-neutral-500 sm:text-base dark:text-neutral-400">
             Comece grátis e descubra uma nova forma de trabalhar com notas.
           </p>
-          <Link
-            href="/auth/signup"
+          <a
+            href={`${APP_URL}/auth/signup`}
             className="group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 px-8 font-bold text-white shadow-lg shadow-yellow-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-yellow-500/40"
           >
             <span className="relative z-10">Criar Conta Grátis</span>
             <FaArrowRight className="relative z-10 h-4 w-4 transition-transform group-hover:translate-x-1" />
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-600 to-orange-600 opacity-0 transition-opacity group-hover:opacity-100" />
-          </Link>
+          </a>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="relative z-10 w-full px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between text-[10px] text-neutral-400 sm:text-xs">
-          <p>&copy; {new Date().getFullYear()} Weave Notes</p>
-
-          <div className="flex items-center gap-4">
-            <a
-              href="https://github.com/eugaelgomes"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex gap-1 transition-colors hover:text-purple-700 dark:hover:text-purple-300"
-            >
-              Github
-              <FaGithub className="h-4 w-4 text-purple-500" />
-            </a>
-            <a
-              href="https://linkedin.com/in/gael-rene-gomes"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex gap-1 transition-colors hover:text-neutral-900 dark:hover:text-blue-300"
-            >
-              Linkedin
-              <FaLinkedin className="h-4 w-4 text-blue-500" />
-            </a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
-};
-
-export default AboutPage;
+}

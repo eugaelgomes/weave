@@ -72,6 +72,34 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   trailingSlash: true,
 
+  // Redirects de rotas públicas removidas (agora no blog subdomain)
+  async redirects() {
+    return [
+      { source: "/home", destination: "/app/home", permanent: true },
+      {
+        source: "/about",
+        destination: process.env.NEXT_PUBLIC_BLOG_URL
+          ? `${process.env.NEXT_PUBLIC_BLOG_URL}/about`
+          : "https://blog.weavenotes.app/about",
+        permanent: true,
+      },
+      {
+        source: "/privacy",
+        destination: process.env.NEXT_PUBLIC_BLOG_URL
+          ? `${process.env.NEXT_PUBLIC_BLOG_URL}/privacy`
+          : "https://blog.weavenotes.app/privacy",
+        permanent: true,
+      },
+      {
+        source: "/terms",
+        destination: process.env.NEXT_PUBLIC_BLOG_URL
+          ? `${process.env.NEXT_PUBLIC_BLOG_URL}/terms`
+          : "https://blog.weavenotes.app/terms",
+        permanent: true,
+      },
+    ];
+  },
+
   // Headers de segurança globais
   async headers() {
     return [

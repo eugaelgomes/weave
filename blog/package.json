@@ -1,0 +1,36 @@
+{
+  "name": "weave-notes-blog",
+  "version": "0.1.0",
+  "private": true,
+  "author": {
+    "name": "Gael Renê Gomes",
+    "email": "hello@gaelgomes.dev",
+    "url": "https://gaelgomes.dev"
+  },
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "start": "next start --port 3001",
+    "lint": "next lint",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\""
+  },
+  "dependencies": {
+    "next": "^16.0.7",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-icons": "^5.5.0",
+    "tailwind-merge": "^3.4.0",
+    "clsx": "^2.1.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20.19.23",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "prettier": "^3.4.2"
+  }
+}

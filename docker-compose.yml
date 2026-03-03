@@ -50,6 +50,31 @@ services:
         - action: rebuild
           path: ./web/package.json
 
+  # Blog / Landing (subdomínio)
+  blog:
+    build:
+      context: ./blog
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./blog:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - NEXT_PUBLIC_BLOG_URL=http://localhost:3001
+    networks:
+      - app-network
+    command: npm run dev
+    develop:
+      watch:
+        - action: sync
+          path: ./blog/app
+          target: /app/app
+        - action: rebuild
+          path: ./blog/package.json
+
 networks:
   app-network:
     driver: bridge

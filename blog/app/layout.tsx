@@ -1,0 +1,69 @@
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import { ThemeProvider } from "./contexts/ThemeContext";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: {
+    default: "Weave Notes - Organize suas ideias",
+    template: "%s | Weave Notes",
+  },
+  description:
+    "Organize suas ideias e notas de forma simples e eficiente. Crie, edite e compartilhe suas anotações com segurança e praticidade.",
+  keywords: [
+    "notas",
+    "anotações",
+    "organização",
+    "produtividade",
+    "notes",
+    "notepad",
+    "editor de texto",
+    "colaboração",
+  ],
+  authors: [{ name: "Weave" }],
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    title: "Weave Notes - Organize suas ideias",
+    description:
+      "Organize suas ideias e notas de forma simples e eficiente. Crie, edite e compartilhe suas anotações com segurança e praticidade.",
+    siteName: "Weave Notes",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Weave Notes - Organize suas ideias",
+    description:
+      "Organize suas ideias e notas de forma simples e eficiente. Crie, edite e compartilhe suas anotações com segurança e praticidade.",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="pt-BR">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
+    </html>
+  );
+}

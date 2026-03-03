@@ -67,10 +67,10 @@ export default function Error({ error, reset }: ErrorProps) {
               Notas
             </Link>
             <Link
-              href="/about"
+              href="/app/settings"
               className="text-neutral-400 transition-colors hover:text-yellow-500"
             >
-              Sobre
+              Configurações
             </Link>
           </div>
         </div>

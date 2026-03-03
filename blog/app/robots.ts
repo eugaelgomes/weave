@@ -1,14 +1,15 @@
 import type { MetadataRoute } from "next";
 
-const NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://weavenotes.app";
+const BLOG_URL =
+  process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: "*",
-        allow: ["/"],
-        disallow: ["/app/", "/api/", "/_next/"],
+        allow: ["/", "/about", "/privacy", "/terms"],
+        disallow: ["/_next/", "/api/"],
       },
       {
         userAgent: "GPTBot",
@@ -19,7 +20,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/"],
       },
     ],
-    sitemap: `${NEXT_PUBLIC_APP_URL}/sitemap.xml`,
-    host: NEXT_PUBLIC_APP_URL,
+    sitemap: `${BLOG_URL}/sitemap.xml`,
   };
 }

@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     // Só verifica autenticação se não estiver em páginas públicas
-    const publicPaths = ["/auth/signin", "/auth/signup", "/auth/reset-password", "/home", "/about"];
+    const publicPaths = ["/auth/signin", "/auth/signup", "/auth/reset-password"];
     const isPublicPath = publicPaths.some((path) => window.location.pathname.startsWith(path));
 
     if (isPublicPath) {
