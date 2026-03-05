@@ -8,10 +8,40 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash, FaGithub, FaLinkedin } from "react-icons/fa";
 import Link from "next/link";
 
-// Lazy loading para performance
 const ForgotPasswordModal = dynamic(() => import("../modals/forgot-password"), {
   ssr: false,
 });
+
+const BackgroundSinuous = () => (
+  <div className="absolute inset-0 -z-10 h-full w-full overflow-hidden bg-white">
+    <svg
+      className="absolute top-0 left-0 h-full w-full text-yellow-500 opacity-35"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 1440 800"
+      fill="none"
+      preserveAspectRatio="xMidYMid slice"
+    >
+      <g stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+        <circle cx="1250" cy="150" r="150" strokeDasharray="4 8" />
+        <circle cx="1250" cy="150" r="220" />
+        <circle cx="1250" cy="150" r="290" />
+        <circle cx="1250" cy="150" r="360" />
+        <path d="M-100,500 C200,300 400,700 800,400 C1100,175 1300,500 1550,300" />
+        <path d="M-100,540 C200,340 400,740 800,440 C1100,215 1300,540 1550,340" />
+        <path d="M-100,580 C200,380 400,780 800,480 C1100,255 1300,580 1550,380" />
+        <path d="M-100,620 C200,420 400,820 800,520 C1100,295 1300,620 1550,420" />
+        <path d="M-50,-50 C150,150 350,-100 650,100" />
+        <path d="M-50,0 C150,200 350,-50 650,150" />
+        <path d="M-50,50 C150,250 350,0 650,200" />
+        <circle cx="50" cy="900" r="300" />
+        <circle cx="50" cy="900" r="350" />
+        <circle cx="50" cy="900" r="400" />
+      </g>
+    </svg>
+    <div className="absolute top-1/4 left-1/4 -z-10 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-400 opacity-20 blur-[120px]" />
+    <div className="absolute right-1/4 bottom-1/4 -z-10 h-[300px] w-[300px] rounded-full bg-yellow-500 opacity-15 blur-[100px]" />
+  </div>
+);
 
 export default function SignIn() {
   const [login, setLogin] = useState("");
@@ -27,7 +57,6 @@ export default function SignIn() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectParam = searchParams.get("redirect");
-  // Normaliza a URL removendo barras finais para evitar loops de redirecionamento
   const redirectUrl = redirectParam
     ? redirectParam.replace(/\/+$/, "") || "/app/home"
     : "/app/home";
@@ -39,20 +68,10 @@ export default function SignIn() {
     }
   }, [authenticated, loading, redirectUrl, router]);
 
-  // Aguarda verificação de autenticação ou redirecionamento
-  if (loading) {
+  if (loading || authenticated) {
     return (
-      <div className="flex h-screen items-center justify-center bg-neutral-50 transition-colors dark:bg-neutral-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-800 border-t-transparent dark:border-white"></div>
-      </div>
-    );
-  }
-
-  // Se autenticado, mostra loading enquanto redireciona
-  if (authenticated) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-neutral-50 transition-colors dark:bg-neutral-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-800 border-t-transparent dark:border-white"></div>
+      <div className="flex h-screen items-center justify-center bg-white">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-yellow-500 border-t-transparent"></div>
       </div>
     );
   }
@@ -76,8 +95,6 @@ export default function SignIn() {
 
       if (result.success) {
         setStatus(result.message || "Login realizado com sucesso!");
-        // Estado já foi atualizado, deixa o useEffect fazer o redirect
-        // ou redireciona manualmente
         router.push(redirectUrl);
       } else {
         let message = result.message || "Falha no login";
@@ -90,7 +107,6 @@ export default function SignIn() {
       setErro("Não foi possível conectar ao servidor. Verifique sua conexão.");
     } finally {
       setSubmitting(false);
-      // Auto-hide das mensagens após 5 segundos
       setTimeout(() => {
         setErro("");
         setStatus("");
@@ -99,13 +115,12 @@ export default function SignIn() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col justify-between bg-neutral-50 text-neutral-900 selection:bg-yellow-500/20 selection:text-yellow-900 dark:bg-neutral-950 dark:text-neutral-50 dark:selection:bg-yellow-500/30 dark:selection:text-yellow-200">
-      {/* Background Pattern */}
-      <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] bg-[size:24px_24px] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)]"></div>
+    <div className="relative flex min-h-screen w-full flex-col justify-between overflow-hidden font-sans text-neutral-900 selection:bg-yellow-500/30 selection:text-yellow-900">
+      <BackgroundSinuous />
 
       {/* Navbar */}
-      <nav className="z-50 w-full px-6 py-4 lg:py-5">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
+      <nav className="z-50 w-full px-4 py-4 sm:px-6 lg:py-5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between rounded-md bg-white p-2 shadow shadow-sm">
           <a
             href={process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app"}
             className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
@@ -123,13 +138,13 @@ export default function SignIn() {
           <div className="flex items-center gap-4 lg:gap-6">
             <a
               href={`${process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app"}/about`}
-              className="text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900 sm:text-sm lg:text-base dark:text-neutral-400 dark:hover:text-white"
+              className="text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900 sm:text-sm lg:text-base"
             >
               Sobre
             </a>
             <Link
               href="/auth/signup"
-              className="rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white transition-transform hover:-translate-y-0.5 hover:bg-neutral-800 sm:text-sm lg:px-5 lg:py-2 lg:text-base dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+              className="rounded-md bg-yellow-500 px-3 py-1.5 text-xs font-bold text-white transition-all hover:bg-yellow-600 hover:shadow-lg sm:text-sm lg:px-5 lg:py-2 lg:text-base"
             >
               Criar conta
             </Link>
@@ -137,14 +152,14 @@ export default function SignIn() {
         </div>
       </nav>
 
-      {/* BLOCO DE MENSAGENS (RESTAURADO) */}
+      {/* Toast de mensagens */}
       {(erro || status) && (
-        <div className="animate-in slide-in-from-bottom-5 fade-in fixed right-10 bottom-10 z-[60] w-full max-w-md px-4 duration-300">
+        <div className="animate-in slide-in-from-bottom-5 fade-in fixed right-6 bottom-6 z-[60] w-full max-w-sm duration-300 sm:right-10 sm:bottom-10">
           {erro && (
-            <div className="flex items-center gap-3 rounded-md border border-red-500/50 bg-red-950/80 p-4 text-sm text-red-200 shadow-2xl backdrop-blur-xl">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-red-500/20">
+            <div className="flex items-center gap-3 rounded-md border border-red-200 bg-white/90 p-4 text-sm text-red-700 shadow-xl backdrop-blur-xl">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-red-100">
                 <svg
-                  className="h-5 w-5 text-red-500"
+                  className="h-4 w-4 text-red-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -161,10 +176,10 @@ export default function SignIn() {
             </div>
           )}
           {status && (
-            <div className="flex items-center gap-3 rounded-md border border-green-500/50 bg-green-950/80 p-4 text-sm text-green-200 shadow-2xl backdrop-blur-xl">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-green-500/20">
+            <div className="flex items-center gap-3 rounded-md border border-green-200 bg-white/90 p-4 text-sm text-green-700 shadow-xl backdrop-blur-xl">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-green-100">
                 <svg
-                  className="h-5 w-5 text-green-500"
+                  className="h-4 w-4 text-green-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -183,93 +198,99 @@ export default function SignIn() {
         </div>
       )}
 
-      <div className="z-10 flex min-h-0 flex-1 items-center justify-center px-4">
-        <div className="w-full max-w-md space-y-8 rounded-xl border border-neutral-200/60 bg-white/60 p-8 shadow-xl backdrop-blur-2xl transition-colors dark:border-neutral-800/60 dark:bg-neutral-900/50">
-          <div className="text-center">
-            <h1 className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-4xl font-black tracking-tight text-transparent">
-              Weave Notes
-            </h1>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-              Entre ou cadastre-se para orgnanizar suas ideias
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="space-y-1">
-              <label className="text-xs font-bold tracking-wider text-yellow-500">
-                Usuário ou e-mail
-              </label>
-              <input
-                type="text"
-                value={login}
-                onChange={(e) => setLogin(e.target.value)}
-                disabled={submitting}
-                className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 transition-all placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-600"
-                placeholder="Seu usuário ou e-mail"
-              />
+      {/* Formulário de Login */}
+      <main className="z-10 flex w-full flex-1 items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          <div className="rounded-md border-2 border-neutral-100 bg-white/55 p-8 shadow shadow-md backdrop-blur-md">
+            {/* Header */}
+            <div className="mb-6 text-center">
+              <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-3xl">
+                Bem-vindo de volta
+              </h1>
+              <p className="mt-2 text-sm text-neutral-600">Entre para organizar suas ideias</p>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold tracking-wider text-yellow-500">Senha</label>
-              <div className="relative">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold tracking-widest text-yellow-500">
+                  Usuário ou e-mail
+                </label>
                 <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  type="text"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
                   disabled={submitting}
-                  className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 transition-all focus:border-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
-                  placeholder="••••••••"
+                  className="w-full rounded-md border border-neutral-300 bg-white/40 px-4 py-2.5 text-sm text-neutral-900 backdrop-blur-md transition-all placeholder:text-neutral-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                  placeholder="Seu usuário ou e-mail"
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold tracking-widest text-yellow-500">
+                  Senha
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={submitting}
+                    className="w-full rounded-md border border-neutral-300 bg-white/40 px-4 py-2.5 text-sm text-neutral-900 backdrop-blur-md transition-all placeholder:text-neutral-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-neutral-400 transition-colors hover:text-neutral-700"
+                  >
+                    {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-1">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-neutral-800 dark:hover:text-white"
+                  onClick={() => setShowForgotPasswordModal(true)}
+                  className="text-xs font-medium text-neutral-500 transition-colors hover:text-yellow-500"
                 >
-                  {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                  Esqueceu a senha?
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="rounded-md bg-yellow-500 px-7 py-2.5 text-sm font-bold text-white transition-all hover:bg-yellow-600 hover:shadow-lg active:scale-95 disabled:opacity-50"
+                >
+                  {submitting ? "Entrando..." : "Entrar"}
                 </button>
               </div>
-            </div>
+            </form>
 
-            <div className="flex items-center justify-between pt-2">
-              <button
-                type="button"
-                onClick={() => setShowForgotPasswordModal(true)}
-                className="text-xs font-medium text-gray-600 transition-colors hover:text-yellow-500 dark:text-gray-400"
-              >
-                Esqueceu a senha?
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="rounded-md bg-yellow-500 px-8 py-2.5 text-sm font-bold text-black shadow-lg shadow-yellow-500/20 transition-all hover:bg-yellow-400 active:scale-95 disabled:opacity-50"
-              >
-                {submitting ? "Entrando..." : "Entrar"}
-              </button>
+            <div className="mt-6 border-t border-neutral-200/70 pt-4 text-center">
+              <p className="text-sm text-neutral-500">
+                Não tem uma conta?{" "}
+                <Link
+                  href="/auth/signup"
+                  className="font-bold text-yellow-500 transition-colors hover:text-yellow-600 hover:underline"
+                >
+                  Cadastre-se
+                </Link>
+              </p>
             </div>
-          </form>
-
-          <div className="border-t border-neutral-200 pt-4 text-center transition-colors dark:border-white/5">
-            <p className="text-sm text-gray-600 dark:text-gray-500">
-              Não tem uma conta?{" "}
-              <Link href="/auth/signup" className="font-bold text-yellow-500 hover:underline">
-                Cadastre-se
-              </Link>
-            </p>
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Footer Minimalista */}
-      <footer className="z-10 w-full px-6 py-4 lg:py-5">
+      {/* Footer */}
+      <footer className="z-10 w-full px-4 py-4 sm:px-6 lg:py-5">
         <div className="mx-auto flex max-w-7xl items-center justify-between text-[10px] text-neutral-400 sm:text-xs lg:text-sm">
           <p>© {new Date().getFullYear()} Weave Notes</p>
-
           <div className="flex items-center gap-4 lg:gap-6">
             <a
               href="https://github.com/eugaelgomes"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 transition-colors hover:text-purple-700 dark:hover:text-purple-300"
+              className="flex items-center gap-1.5 transition-colors hover:text-purple-700"
             >
               Github
               <FaGithub className="h-4 w-4 text-purple-500" />
@@ -278,7 +299,7 @@ export default function SignIn() {
               href="https://linkedin.com/in/gael-rene-gomes"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 transition-colors hover:text-neutral-900 dark:hover:text-blue-300"
+              className="flex items-center gap-1.5 transition-colors hover:text-neutral-900"
             >
               Linkedin
               <FaLinkedin className="h-4 w-4 text-blue-500" />
