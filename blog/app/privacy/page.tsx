@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import BackgroundPattern from "../components/BackgroundPattern";
+import Navbar from "../components/navbar";
+import Footer from "../components/footer";
 
 export const metadata: Metadata = {
   title: "Privacidade",
@@ -11,7 +10,6 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
-      <BackgroundPattern />
       <Navbar />
 
       <main className="relative z-10 mx-auto w-full max-w-3xl flex-1 px-4 py-16">
