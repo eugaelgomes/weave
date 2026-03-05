@@ -13,8 +13,9 @@ import {
 } from "react-icons/fa";
 import { HiDocumentText, HiFolder } from "react-icons/hi2";
 import { FiPlay } from "react-icons/fi";
-import Navbar from "./components/navbar";
-import Footer from "./components/footer";
+// lower case file name
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import { APP_URL } from "./config/urls";
 
 const BackgroundSinuous = () => (

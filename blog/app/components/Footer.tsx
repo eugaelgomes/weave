@@ -1,6 +1,7 @@
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import Link from "next/link";
 
+// footer component
 export default function Footer() {
   return (
     <footer className="z-10 w-full px-6 py-4">
