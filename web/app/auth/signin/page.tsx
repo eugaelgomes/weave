@@ -7,6 +7,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useSearchParams, useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash, FaGithub, FaLinkedin } from "react-icons/fa";
 import Link from "next/link";
+import Navbar from "@/app/auth/components/Navbar";
+import Footer from "@/app/auth/components/Footer";
 
 const ForgotPasswordModal = dynamic(() => import("../modals/forgot-password"), {
   ssr: false,
@@ -15,7 +17,7 @@ const ForgotPasswordModal = dynamic(() => import("../modals/forgot-password"), {
 const BackgroundSinuous = () => (
   <div className="absolute inset-0 -z-10 h-full w-full overflow-hidden bg-white">
     <svg
-      className="absolute top-0 left-0 h-full w-full text-yellow-500 opacity-35"
+      className="absolute top-0 left-0 h-full w-full text-yellow-500 opacity-20"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 1440 800"
       fill="none"
@@ -119,38 +121,7 @@ export default function SignIn() {
       <BackgroundSinuous />
 
       {/* Navbar */}
-      <nav className="z-50 w-full px-4 py-4 sm:px-6 lg:py-5">
-        <div className="mx-auto flex max-w-7xl items-center justify-between rounded-md bg-white p-2 shadow shadow-sm">
-          <a
-            href={process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app"}
-            className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
-          >
-            <Image
-              src="/weave.png"
-              alt="Weave Logo"
-              width={28}
-              height={28}
-              className="h-7 w-7 rounded-sm object-cover lg:h-8 lg:w-8"
-            />
-            <span className="text-base font-semibold tracking-tight lg:text-lg">Weave Notes</span>
-          </a>
-
-          <div className="flex items-center gap-4 lg:gap-6">
-            <a
-              href={`${process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app"}/about`}
-              className="text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900 sm:text-sm lg:text-base"
-            >
-              Sobre
-            </a>
-            <Link
-              href="/auth/signup"
-              className="rounded-md bg-yellow-500 px-3 py-1.5 text-xs font-bold text-white transition-all hover:bg-yellow-600 hover:shadow-lg sm:text-sm lg:px-5 lg:py-2 lg:text-base"
-            >
-              Criar conta
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Toast de mensagens */}
       {(erro || status) && (
@@ -282,31 +253,7 @@ export default function SignIn() {
       </main>
 
       {/* Footer */}
-      <footer className="z-10 w-full px-4 py-4 sm:px-6 lg:py-5">
-        <div className="mx-auto flex max-w-7xl items-center justify-between text-[10px] text-neutral-400 sm:text-xs lg:text-sm">
-          <p>© {new Date().getFullYear()} Weave Notes</p>
-          <div className="flex items-center gap-4 lg:gap-6">
-            <a
-              href="https://github.com/eugaelgomes"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 transition-colors hover:text-purple-700"
-            >
-              Github
-              <FaGithub className="h-4 w-4 text-purple-500" />
-            </a>
-            <a
-              href="https://linkedin.com/in/gael-rene-gomes"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 transition-colors hover:text-neutral-900"
-            >
-              Linkedin
-              <FaLinkedin className="h-4 w-4 text-blue-500" />
-            </a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {showForgotPasswordModal && (
         <ForgotPasswordModal
