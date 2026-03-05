@@ -14,9 +14,8 @@ import {
   FiZap,
   FiLayers,
 } from "react-icons/fi";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import BackgroundPattern from "../components/BackgroundPattern";
+import Navbar from "../components/navbar";
+import Footer from "../components/footer";
 import { APP_URL } from "../config/urls";
 
 export const metadata: Metadata = {
@@ -94,8 +93,6 @@ export default function AboutPage() {
 
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-neutral-50 text-neutral-900 selection:bg-yellow-500/20 selection:text-yellow-900 dark:bg-neutral-950 dark:text-neutral-50 dark:selection:bg-yellow-500/30 dark:selection:text-yellow-200">
-      <BackgroundPattern />
-
       <Navbar ctaLabel="Criar conta" ctaHref="/auth/signup" />
 
       {/* Hero Section */}
