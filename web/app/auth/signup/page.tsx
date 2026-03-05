@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaRobot, FaLock, FaUsers, FaBuilding, FaSearch, FaFileExport } from "react-icons/fa";
+import { HiDocumentText, HiFolder } from "react-icons/hi2";
+import type { IconType } from "react-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import Navbar from "@/app/auth/components/Navbar";
 import Footer from "@/app/auth/components/Footer";
@@ -51,6 +53,71 @@ interface Message {
   type: "error" | "success" | "";
   text: string;
 }
+
+const SIGNUP_FEATURES: Array<{
+  title: string;
+  description: string;
+  accent: string;
+  badge: string;
+  icon: IconType;
+}> = [
+  {
+    title: "Weave AI",
+    description: "Chat, resumos e edição inteligente.",
+    accent: "text-purple-600",
+    badge: "border-purple-100 bg-purple-50/70",
+    icon: FaRobot,
+  },
+  {
+    title: "Notas em Blocos",
+    description: "Hierarquia flexível e exportação PDF.",
+    accent: "text-blue-600",
+    badge: "border-blue-100 bg-blue-50/70",
+    icon: HiDocumentText,
+  },
+  {
+    title: "Projetos",
+    description: "Gerencie tarefas e acompanhe progresso.",
+    accent: "text-amber-600",
+    badge: "border-amber-100 bg-amber-50/70",
+    icon: HiFolder,
+  },
+  {
+    title: "Organizações",
+    description: "Times, roles e branding próprio.",
+    accent: "text-emerald-600",
+    badge: "border-emerald-100 bg-emerald-50/70",
+    icon: FaBuilding,
+  },
+  {
+    title: "Colaboração",
+    description: "Convites, permissões e edição conjunta.",
+    accent: "text-indigo-600",
+    badge: "border-indigo-100 bg-indigo-50/70",
+    icon: FaUsers,
+  },
+  {
+    title: "Busca Web",
+    description: "IA pesquisa e traz contexto para você.",
+    accent: "text-cyan-600",
+    badge: "border-cyan-100 bg-cyan-50/70",
+    icon: FaSearch,
+  },
+  {
+    title: "Backup & Export",
+    description: "Exportação de dados e backups.",
+    accent: "text-orange-600",
+    badge: "border-orange-100 bg-orange-50/70",
+    icon: FaFileExport,
+  },
+  {
+    title: "Segurança",
+    description: "Autenticação JWT e controle de acesso.",
+    accent: "text-rose-600",
+    badge: "border-rose-100 bg-rose-50/70",
+    icon: FaLock,
+  },
+];
 
 export default function SignUp() {
   const { createUser, authenticated, loading } = useAuth();
@@ -222,10 +289,11 @@ export default function SignUp() {
         </div>
       )}
 
-      {/* Formulário centralizado */}
-      <main className="z-10 flex w-full flex-1 items-center justify-center px-4">
-        <div className="w-full max-w-md">
-          <div className="rounded-md border-2 border-neutral-100 bg-white/55 p-8 shadow shadow-md backdrop-blur-md">
+      {/* Conteúdo principal */}
+      <div className="z-10 flex w-full flex-1 items-center px-3 py-6 sm:px-6">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 lg:flex-row-reverse">
+          <div className="w-full lg:max-w-md">
+            <div className="rounded-2xl border border-neutral-100/80 bg-white/70 p-6 shadow-sm backdrop-blur-md sm:p-7">
             {/* Header */}
             <div className="mb-6 text-center">
               <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-3xl">
@@ -364,9 +432,53 @@ export default function SignUp() {
                 </Link>
               </p>
             </div>
+            </div>
+          </div>
+
+          <div className="w-full rounded-2xl border border-neutral-100/70 bg-white/60 p-5 shadow-lg shadow-yellow-100/40 backdrop-blur-xl sm:p-6">
+            <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-yellow-500">
+              Features do Weave
+            </p>
+            <h2 className="mt-2 text-xl font-extrabold text-neutral-900 sm:text-2xl">
+              Tudo o que você precisa em um só workspace.
+            </h2>
+            <p className="mt-1 text-xs text-neutral-600 sm:text-sm">
+              Notas, projetos e times conectados com o mesmo pacote inteligente apresentado no blog.
+            </p>
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {SIGNUP_FEATURES.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <div
+                    key={feature.title}
+                    className="group flex items-center gap-3 rounded-xl border border-neutral-100/70 bg-white/85 p-2.5 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-yellow-200/80"
+                  >
+                    <div
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg border ${feature.badge}`}
+                    >
+                      <Icon className={`h-4 w-4 ${feature.accent}`} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-neutral-900">{feature.title}</p>
+                      <p className="text-[11px] text-neutral-500">{feature.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-[11px] text-neutral-500 sm:text-xs">
+              <div className="rounded-xl border border-neutral-100 bg-white/75 p-3">
+                <p className="text-base font-extrabold text-yellow-500">IA integrada</p>
+                <p className="font-medium">Assistente ativo</p>
+              </div>
+              <div className="rounded-xl border border-neutral-100 bg-white/75 p-3">
+                <p className="text-base font-extrabold text-yellow-500">Backup rápido</p>
+                <p className="font-medium">Exportações seguras</p>
+              </div>
+            </div>
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Footer */}
       <Footer />

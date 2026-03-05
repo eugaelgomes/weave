@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { APP_URL } from "@/app/auth/components/urls";
 
 interface NavbarProps {
@@ -12,18 +15,27 @@ interface NavbarProps {
 }
 
 export default function Navbar({
-  ctaLabel = "Criar conta",
-  ctaHref = "/auth/signup",
+  ctaLabel,
+  ctaHref,
   showAbout = true,
 }: NavbarProps) {
-  const isExternal = ctaHref.startsWith("http");
-  const fullCtaHref = isExternal ? ctaHref : `${APP_URL}${ctaHref}`;
+  const pathname = usePathname();
+  const isSignupRoute = pathname?.startsWith("/auth/signup");
+  const defaultCta = isSignupRoute
+    ? { label: "Entrar", href: "/auth/signin" }
+    : { label: "Criar conta", href: "/auth/signup" };
+
+  const resolvedLabel = ctaLabel ?? defaultCta.label;
+  const resolvedHref = ctaHref ?? defaultCta.href;
+
+  const isExternal = resolvedHref.startsWith("http");
+  const fullCtaHref = isExternal ? resolvedHref : `${APP_URL}${resolvedHref}`;
 
   return (
     // Padding lateral externo reduzido
     <nav className="sticky top-4 z-50 flex w-full justify-center px-3 sm:px-10">
       {/* Container Principal: Formato 'Pílula', mais fino (py-1.5) e com bordas/fundo mais suaves */}
-      <div className="flex w-full items-center justify-between rounded-md border border-neutral-200/10 bg-white/60 px-8 py-1.5 shadow shadow-sm shadow-neutral-300/50 backdrop-blur-md transition-all sm:px-4 sm:py-2 dark:border-neutral-800/50 dark:bg-neutral-900/60">
+      <div className="flex w-full items-center  justify-between rounded-md border border-neutral-200/10 bg-white px-4 py-1.5 shadow shadow-sm shadow-neutral-300/50 backdrop-blur-md transition-all sm:px-8 sm:py-2">
         {/* Logo Section */}
         <Link
           href={process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app"}
@@ -37,7 +49,7 @@ export default function Navbar({
             // Logo levemente menor para acompanhar a nova altura
             className="h-6 w-6 rounded-md object-cover transition-transform duration-300 group-hover:scale-105"
           />
-          <span className="text-sm font-semibold tracking-tight text-neutral-900 transition-colors sm:text-base dark:text-white">
+          <span className="text-sm font-semibold tracking-tight text-neutral-900 transition-colors sm:text-base">
             Weave Notes
           </span>
         </Link>
@@ -65,7 +77,7 @@ export default function Navbar({
             // Botão também adaptado para formato pílula e padding menor
             className="inline-flex items-center justify-center rounded-md bg-yellow-500 px-4 py-1.5 text-xs font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-yellow-600 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 sm:text-sm dark:bg-yellow-400 dark:text-neutral-900 dark:hover:bg-yellow-500 dark:focus-visible:ring-offset-neutral-900"
           >
-            {ctaLabel}
+            {resolvedLabel}
           </a>
         </div>
       </div>

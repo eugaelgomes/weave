@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+const isProd = process.env.NODE_ENV === "production";
 /**
  * Headers
  */
@@ -56,6 +57,11 @@ const securityHeaders = [
   },
 ];
 
+const staticCacheHeader = {
+  key: "Cache-Control",
+  value: "public, max-age=31536000, immutable",
+};
+
 const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
@@ -102,31 +108,27 @@ const nextConfig: NextConfig = {
 
   // Headers de segurança globais
   async headers() {
-    return [
+    const baseHeaders = [
       {
         source: "/:path*",
         headers: securityHeaders,
       },
-      {
-        source: "/static/:path*",
-        headers: [
-          ...securityHeaders,
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-      {
-        source: "/_next/static/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
     ];
+
+    if (isProd) {
+      baseHeaders.push(
+        {
+          source: "/static/:path*",
+          headers: [...securityHeaders, staticCacheHeader],
+        },
+        {
+          source: "/_next/static/:path*",
+          headers: [staticCacheHeader],
+        },
+      );
+    }
+
+    return baseHeaders;
   },
   poweredByHeader: false,
 };
