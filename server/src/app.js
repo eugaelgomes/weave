@@ -5,13 +5,19 @@ const {
 const { errorHandler } = require("@/middlewares/error-handler");
 const routes = require("@/routes");
 
-// Inicializar JobManager (que já inicia o serviço de limpeza automaticamente)
 require("@/services/jobs/index");
 
 const app = express();
 
-// Health check (ANTES dos middlewares CORS para permitir acesso sem Origin header)
 app.get("/health", (req, res) => {
+  const origin = req.headers.origin;
+  const isDev = process.env.NODE_ENV !== "production";
+  
+  if (isDev && origin && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+  
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.setHeader("Pragma", "no-cache");
 
@@ -26,7 +32,6 @@ app.get("/health", (req, res) => {
   res.send(healthcheck);
 });
 
-// Middlewares globais
 configureGlobalMiddlewares(app);
 
 // api v1

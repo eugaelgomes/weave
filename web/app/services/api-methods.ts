@@ -3,7 +3,7 @@ import { ApiError } from "./api-error";
 export { ApiError };
 
 // Configurações da API
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
+export const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:8080/api/v1";
 
 export const API_CONFIG = {
   timeout: 30000,
@@ -53,9 +53,6 @@ export const API_ENDPOINTS = {
   BACKUP_JOBS: "/backup/jobs",
   BACKUP_SUMMARY: "/backup/summary",
 
-  // Health
-  HEALTH: "/health",
-
   // Organizations
   ORGANIZATIONS: "/organizations",
   ORGANIZATIONS_PROPERTIES: "/organizations/properties",
@@ -77,6 +74,11 @@ export const API_ENDPOINTS = {
   AI_USE_CASES: "/weave-ai/use-cases",
 };
 
+// Interface estendida para suportar override da base URL
+export interface ApiRequestOptions extends RequestInit {
+  overrideBaseURL?: string;
+}
+
 // Cliente da API
 class ApiClient {
   private baseURL: string;
@@ -87,8 +89,13 @@ class ApiClient {
     this.defaultHeaders = API_CONFIG.headers;
   }
 
-  private async request(endpoint: string, options: RequestInit = {}): Promise<Response> {
-    const url = `${this.baseURL}${endpoint}`;
+  private async request(endpoint: string, options: ApiRequestOptions = {}): Promise<Response> {
+    // Verifica se é uma URL absoluta ou se precisa usar a base URL (com ou sem override)
+    let url = endpoint;
+    if (!endpoint.startsWith("http")) {
+      const base = options.overrideBaseURL ?? this.baseURL;
+      url = `${base}${endpoint}`;
+    }
 
     const config: RequestInit = {
       ...options,
@@ -115,14 +122,14 @@ class ApiClient {
     }
   }
 
-  async get(endpoint: string, options: RequestInit = {}): Promise<Response> {
+  async get(endpoint: string, options: ApiRequestOptions = {}): Promise<Response> {
     return this.request(endpoint, {
       ...options,
       method: "GET",
     });
   }
 
-  async post(endpoint: string, data?: unknown, options: RequestInit = {}): Promise<Response> {
+  async post(endpoint: string, data?: unknown, options: ApiRequestOptions = {}): Promise<Response> {
     return this.request(endpoint, {
       ...options,
       method: "POST",
@@ -130,7 +137,7 @@ class ApiClient {
     });
   }
 
-  async put(endpoint: string, data?: unknown, options: RequestInit = {}): Promise<Response> {
+  async put(endpoint: string, data?: unknown, options: ApiRequestOptions = {}): Promise<Response> {
     return this.request(endpoint, {
       ...options,
       method: "PUT",
@@ -138,7 +145,7 @@ class ApiClient {
     });
   }
 
-  async patch(endpoint: string, data?: unknown, options: RequestInit = {}): Promise<Response> {
+  async patch(endpoint: string, data?: unknown, options: ApiRequestOptions = {}): Promise<Response> {
     return this.request(endpoint, {
       ...options,
       method: "PATCH",
@@ -146,7 +153,7 @@ class ApiClient {
     });
   }
 
-  async delete(endpoint: string, options: RequestInit = {}): Promise<Response> {
+  async delete(endpoint: string, options: ApiRequestOptions = {}): Promise<Response> {
     return this.request(endpoint, {
       ...options,
       method: "DELETE",

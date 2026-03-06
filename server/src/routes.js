@@ -30,7 +30,6 @@ const routeMap = [
   { path: "/system-admins", handler: systemAdminsRoutes },
 ];
 
-// Router mapping
 routeMap.forEach(({ path, handler }) => router.use(path, handler));
 
 module.exports = router;
