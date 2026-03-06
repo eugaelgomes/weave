@@ -32,10 +32,8 @@ export default function Navbar({
   const fullCtaHref = isExternal ? resolvedHref : `${APP_URL}${resolvedHref}`;
 
   return (
-    // Padding lateral externo reduzido
-    <nav className="sticky top-4 z-50 flex w-full justify-center px-3 sm:px-10">
-      {/* Container Principal: Formato 'Pílula', mais fino (py-1.5) e com bordas/fundo mais suaves */}
-      <div className="flex w-full items-center  justify-between rounded-md border border-neutral-200/10 bg-white px-4 py-1.5 shadow shadow-sm shadow-neutral-300/50 backdrop-blur-md transition-all sm:px-8 sm:py-2">
+    <nav className="relative top-0 flex w-full justify-center py-4 px-4 sm:px-8">
+      <div className="flex w-full items-center justify-between rounded-md border-1 border-neutral-100 bg-white px-2 py-1.5 shadow shadow-md shadow-neutral-300/50 backdrop-blur-md transition-all sm:px-6 sm:py-2">
         {/* Logo Section */}
         <Link
           href={process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app"}

@@ -72,12 +72,12 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md space-y-5 rounded-md border border-neutral-200/60 bg-white/60 p-6 shadow-xl backdrop-blur-2xl transition-colors dark:border-neutral-800/60 dark:bg-neutral-900/50">
+      <div className="w-full max-w-md space-y-5 rounded-md border border-neutral-200/60 bg-white p-6 shadow-xl backdrop-blur-2xl transition-colors">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-xl font-bold text-neutral-900 dark:text-neutral-50">
+          <h3 className="flex items-center gap-2 text-xl font-bold text-neutral-900">
             {/*<FaEnvelope className="text-yellow-500" size={20} />*/}
-            Recuperar Senha
+            Recuperar acesso
           </h3>
           <button
             onClick={handleClose}
@@ -113,7 +113,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
           <div className="space-y-1">
             <label
               htmlFor="recovery-email"
-              className="text-xs font-bold tracking-wider text-neutral-700 dark:text-neutral-300"
+              className="text-xs font-bold tracking-wider text-neutral-700"
             >
               Email
             </label>
@@ -135,14 +135,14 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
               type="button"
               onClick={handleClose}
               disabled={loading}
-              className="flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-black/20 dark:text-neutral-300 dark:hover:bg-neutral-800"
+              className="flex-1 rounded-md border border-white bg-neutral-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-300 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex flex-1 items-center justify-center gap-2 rounded-md bg-yellow-500 px-4 py-2.5 text-sm font-bold text-black shadow-lg shadow-yellow-500/20 transition-all hover:bg-yellow-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-md bg-yellow-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-yellow-500/20 transition-all hover:bg-yellow-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <>
