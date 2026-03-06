@@ -72,19 +72,19 @@ services:
           path: ./blog/package.json
 
   # Console Admin
-  console:
+  admin-console:
     build:
-      context: ./console
+      context: ./admin-console
       dockerfile: Dockerfile
     ports:
-      - "3002:3002"
+      - "3003:3003"
     volumes:
-      - ./console:/app
+      - ./admin-console:/app
       - /app/node_modules
       - /app/.next
     environment:
-      - NEXT_PUBLIC_API_URL=http://server:8080/api/v1
-      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+      - NEXT_PUBLIC_APP_URL=http://localhost:3003
     depends_on:
       - server
     networks:
@@ -93,10 +93,10 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./console/app
+          path: ./admin-console/app
           target: /app/app
         - action: rebuild
-          path: ./console/package.json
+          path: ./admin-console/package.json
 
 networks:
   app-network:

@@ -321,8 +321,8 @@ class AdminRepository {
   async listPlans() {
     const query = `
       SELECT
-        plan_id, name, description, plan_value, currency,
-        billing_cycle, is_active, created_at,
+        plan_id, name, description, details, plan_value, currency,
+        billing_cycle, is_active, created_at, updated_at, personalized_for_client, personalized_client,
         (SELECT COUNT(*) FROM users WHERE plan_id = plans.plan_id) AS user_count,
         (SELECT COUNT(*) FROM organizations WHERE plan_id = plans.plan_id) AS org_count
       FROM plans

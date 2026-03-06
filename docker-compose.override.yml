@@ -3,6 +3,11 @@
 # Para desenvolvimento local.
 services:
   server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:8080"
     environment:
       - NODE_ENV=development
     command: npm run dev
@@ -17,8 +22,7 @@ services:
   web:
     build:
       context: ./web
-      dockerfile: Dockerfile
-      target: builder
+      dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
     environment:
@@ -33,7 +37,35 @@ services:
             - node_modules/
 
   blog:
+    build:
+      context: ./blog
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
     command: npm run dev
+    develop:
+      watch:
+        - action: sync
+          path: ./blog
+          target: /app
+          ignore:
+            - node_modules/
 
-  console:
+  admin-console:
+    build:
+      context: ./admin-console
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
     command: npm run dev
+    develop:
+      watch:
+        - action: sync
+          path: ./admin-console
+          target: /app
+          ignore:
+            - node_modules/
