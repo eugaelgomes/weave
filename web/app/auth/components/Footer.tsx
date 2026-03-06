@@ -9,10 +9,7 @@ export default function Footer() {
         <div className="text-xs text-neutral-500">
           {new Date().getFullYear()} &copy;{" "}
           <a
-            href={
-              process.env.NEXT_PUBLIC_BLOG_URL ||
-              "https://blog.weavenotes.app/about"
-            }
+            href={process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app/about"}
             target="_blank"
             rel="noopener noreferrer"
             className="text-yellow-500 hover:underline"
@@ -20,12 +17,10 @@ export default function Footer() {
             Weave Notes
           </a>
           <span className="mx-2">-</span>
-          <span className="hidden sm:inline">
-            Todos os direitos reservados.
-          </span>
+          <span className="hidden sm:inline">Todos os direitos reservados.</span>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 sm:text-xs lg:text-sm">
+        <div className="flex items-center gap-3 sm:gap-4 sm:text-xs lg:gap-6 lg:text-sm">
           <Link
             href="/privacy"
             className="transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"

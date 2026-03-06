@@ -3,9 +3,43 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { FaEye, FaEyeSlash, FaExclamationCircle, FaGithub, FaLinkedin } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaRobot, FaLock, FaUsers, FaBuilding, FaSearch, FaFileExport } from "react-icons/fa";
+import { HiDocumentText, HiFolder } from "react-icons/hi2";
+import type { IconType } from "react-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import Navbar from "@/app/auth/components/Navbar";
+import Footer from "@/app/auth/components/Footer";
+
+const BackgroundSinuous = () => (
+  <div className="absolute inset-0 -z-10 h-full w-full overflow-hidden bg-white">
+    <svg
+      className="absolute top-0 left-0 h-full w-full text-yellow-500 opacity-20"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 1440 800"
+      fill="none"
+      preserveAspectRatio="xMidYMid slice"
+    >
+      <g stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+        <circle cx="1250" cy="150" r="150" strokeDasharray="4 8" />
+        <circle cx="1250" cy="150" r="220" />
+        <circle cx="1250" cy="150" r="290" />
+        <circle cx="1250" cy="150" r="360" />
+        <path d="M-100,500 C200,300 400,700 800,400 C1100,175 1300,500 1550,300" />
+        <path d="M-100,540 C200,340 400,740 800,440 C1100,215 1300,540 1550,340" />
+        <path d="M-100,580 C200,380 400,780 800,480 C1100,255 1300,580 1550,380" />
+        <path d="M-100,620 C200,420 400,820 800,520 C1100,295 1300,620 1550,420" />
+        <path d="M-50,-50 C150,150 350,-100 650,100" />
+        <path d="M-50,0 C150,200 350,-50 650,150" />
+        <path d="M-50,50 C150,250 350,0 650,200" />
+        <circle cx="50" cy="900" r="300" />
+        <circle cx="50" cy="900" r="350" />
+        <circle cx="50" cy="900" r="400" />
+      </g>
+    </svg>
+    <div className="absolute top-1/4 left-1/4 -z-10 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-400 opacity-20 blur-[120px]" />
+    <div className="absolute right-1/4 bottom-1/4 -z-10 h-[300px] w-[300px] rounded-full bg-yellow-500 opacity-15 blur-[100px]" />
+  </div>
+);
 
 interface FormData {
   name: string;
@@ -19,6 +53,71 @@ interface Message {
   type: "error" | "success" | "";
   text: string;
 }
+
+const SIGNUP_FEATURES: Array<{
+  title: string;
+  description: string;
+  accent: string;
+  badge: string;
+  icon: IconType;
+}> = [
+  {
+    title: "Weave AI",
+    description: "Chat, resumos e edição inteligente.",
+    accent: "text-purple-600",
+    badge: "border-purple-100 bg-purple-50/70",
+    icon: FaRobot,
+  },
+  {
+    title: "Notas em Blocos",
+    description: "Hierarquia flexível e exportação PDF.",
+    accent: "text-blue-600",
+    badge: "border-blue-100 bg-blue-50/70",
+    icon: HiDocumentText,
+  },
+  {
+    title: "Projetos",
+    description: "Gerencie tarefas e acompanhe progresso.",
+    accent: "text-amber-600",
+    badge: "border-amber-100 bg-amber-50/70",
+    icon: HiFolder,
+  },
+  {
+    title: "Organizações",
+    description: "Times, roles e branding próprio.",
+    accent: "text-emerald-600",
+    badge: "border-emerald-100 bg-emerald-50/70",
+    icon: FaBuilding,
+  },
+  {
+    title: "Colaboração",
+    description: "Convites, permissões e edição conjunta.",
+    accent: "text-indigo-600",
+    badge: "border-indigo-100 bg-indigo-50/70",
+    icon: FaUsers,
+  },
+  {
+    title: "Busca Web",
+    description: "IA pesquisa e traz contexto para você.",
+    accent: "text-cyan-600",
+    badge: "border-cyan-100 bg-cyan-50/70",
+    icon: FaSearch,
+  },
+  {
+    title: "Backup & Export",
+    description: "Exportação de dados e backups.",
+    accent: "text-orange-600",
+    badge: "border-orange-100 bg-orange-50/70",
+    icon: FaFileExport,
+  },
+  {
+    title: "Segurança",
+    description: "Autenticação JWT e controle de acesso.",
+    accent: "text-rose-600",
+    badge: "border-rose-100 bg-rose-50/70",
+    icon: FaLock,
+  },
+];
 
 export default function SignUp() {
   const { createUser, authenticated, loading } = useAuth();
@@ -44,8 +143,8 @@ export default function SignUp() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-neutral-50 transition-colors dark:bg-neutral-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-800 border-t-transparent dark:border-white"></div>
+      <div className="flex h-screen items-center justify-center bg-white">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-yellow-500 border-t-transparent"></div>
       </div>
     );
   }
@@ -138,54 +237,20 @@ export default function SignUp() {
   };
 
   return (
-    <div className="relative flex h-screen w-full flex-col justify-between overflow-hidden bg-neutral-50 font-sans transition-colors dark:bg-neutral-950">
-      {/* Background Pattern */}
-      <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] bg-[size:24px_24px] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)]"></div>
+    <div className="relative flex min-h-screen w-full flex-col justify-between overflow-hidden font-sans text-neutral-900 selection:bg-yellow-500/30 selection:text-yellow-900">
+      <BackgroundSinuous />
 
       {/* Navbar */}
-      <nav className="z-50 w-full px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <a
-            href={process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app"}
-            className="flex items-center gap-2 transition-opacity hover:opacity-80"
-          >
-            <Image
-              src="/weave.png"
-              alt="Weave Logo"
-              width={28}
-              height={28}
-              className="h-7 w-7 rounded-sm object-cover"
-            />
-            <span className="text-base font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
-              Weave Notes
-            </span>
-          </a>
-
-          <div className="flex items-center gap-4">
-            <a
-              href={`${process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app"}/about`}
-              className="text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900 sm:text-sm dark:text-neutral-400 dark:hover:text-white"
-            >
-              Sobre
-            </a>
-            <Link
-              href="/auth/signin"
-              className="rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white transition-transform hover:-translate-y-0.5 hover:bg-neutral-800 sm:text-sm dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-            >
-              Entrar
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar ctaLabel="Entrar" ctaHref="/auth/signin" />
 
       {/* Toast de Mensagens */}
       {msg.text && (
-        <div className="animate-in slide-in-from-bottom-5 fade-in fixed right-10 bottom-10 z-[60] w-full max-w-md px-4 duration-300">
+        <div className="animate-in slide-in-from-bottom-5 fade-in fixed right-6 bottom-6 z-[60] w-full max-w-sm duration-300 sm:right-10 sm:bottom-10">
           {msg.type === "error" && (
-            <div className="flex items-center gap-3 rounded-md border border-red-500/50 bg-red-950/80 p-4 text-sm text-red-200 shadow-2xl backdrop-blur-xl">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-red-500/20">
+            <div className="flex items-center gap-3 rounded-md border border-red-200 bg-white/90 p-4 text-sm text-red-700 shadow-xl backdrop-blur-xl">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-red-100">
                 <svg
-                  className="h-5 w-5 text-red-500"
+                  className="h-4 w-4 text-red-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -202,10 +267,10 @@ export default function SignUp() {
             </div>
           )}
           {msg.type === "success" && (
-            <div className="flex items-center gap-3 rounded-md border border-green-500/50 bg-green-950/80 p-4 text-sm text-green-200 shadow-2xl backdrop-blur-xl">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-green-500/20">
+            <div className="flex items-center gap-3 rounded-md border border-green-200 bg-white/90 p-4 text-sm text-green-700 shadow-xl backdrop-blur-xl">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-green-100">
                 <svg
-                  className="h-5 w-5 text-green-500"
+                  className="h-4 w-4 text-green-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -224,164 +289,199 @@ export default function SignUp() {
         </div>
       )}
 
-      {/* Formulário centralizado */}
-      <div className="z-10 flex min-h-0 flex-1 items-center justify-center px-4">
-        <div className="w-full max-w-md space-y-6 rounded-xl border border-neutral-200/60 bg-white/60 p-6 shadow-xl backdrop-blur-2xl transition-colors dark:border-neutral-800/60 dark:bg-neutral-900/50">
-          <div className="text-center">
-            <h1 className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-4xl font-black tracking-tight text-transparent">
-              Weave
-            </h1>
+      {/* Conteúdo principal */}
+      <div className="z-10 flex w-full flex-1 items-center px-3 py-6 sm:px-6">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 lg:flex-row-reverse">
+          <div className="w-full lg:max-w-md">
+            <div className="rounded-2xl border border-neutral-100/80 bg-white/70 p-6 shadow-sm backdrop-blur-md sm:p-7">
+            {/* Header */}
+            <div className="mb-6 text-center">
+              <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-3xl">
+                Crie sua conta
+              </h1>
+              <p className="mt-2 text-sm text-neutral-600">Comece a organizar suas ideias</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold tracking-widest text-yellow-500">
+                    Nome
+                  </label>
+                  <input
+                    name="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleChange}
+                    disabled={submitting}
+                    className="w-full rounded-md border border-neutral-300 bg-white/40 px-4 py-2.5 text-sm text-neutral-900 backdrop-blur-md transition-all placeholder:text-neutral-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                    placeholder="Seu nome"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold tracking-widest text-yellow-500">
+                    Usuário
+                  </label>
+                  <input
+                    name="username"
+                    type="text"
+                    value={formData.username}
+                    onChange={handleChange}
+                    disabled={submitting}
+                    className="w-full rounded-md border border-neutral-300 bg-white/40 px-4 py-2.5 text-sm text-neutral-900 backdrop-blur-md transition-all placeholder:text-neutral-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                    placeholder="seu_usuario"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold tracking-widest text-yellow-500">
+                  E-mail
+                </label>
+                <input
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={submitting}
+                  autoComplete="email"
+                  className="w-full rounded-md border border-neutral-300 bg-white/40 px-4 py-2.5 text-sm text-neutral-900 backdrop-blur-md transition-all placeholder:text-neutral-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                  placeholder="seu@email.com"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold tracking-widest text-yellow-500">
+                    Senha
+                  </label>
+                  <div className="relative">
+                    <input
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={handleChange}
+                      disabled={submitting}
+                      autoComplete="new-password"
+                      className="w-full rounded-md border border-neutral-300 bg-white/40 px-4 py-2.5 text-sm text-neutral-900 backdrop-blur-md transition-all placeholder:text-neutral-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                      placeholder="Mín. 8, A-z, 0-9"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute top-1/2 right-3 -translate-y-1/2 text-neutral-400 transition-colors hover:text-neutral-700"
+                    >
+                      {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold tracking-widest text-yellow-500">
+                    Confirmar
+                  </label>
+                  <div className="relative">
+                    <input
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      disabled={submitting}
+                      autoComplete="new-password"
+                      className="w-full rounded-md border border-neutral-300 bg-white/40 px-4 py-2.5 text-sm text-neutral-900 backdrop-blur-md transition-all placeholder:text-neutral-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none"
+                      placeholder="Repita a senha"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute top-1/2 right-3 -translate-y-1/2 text-neutral-400 transition-colors hover:text-neutral-700"
+                    >
+                      {showConfirmPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  type="button"
+                  onClick={() => router.push("/auth/signin")}
+                  className="text-xs font-medium text-neutral-500 transition-colors hover:text-yellow-500"
+                >
+                  Já tenho conta
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="rounded-md bg-yellow-500 px-7 py-2.5 text-sm font-bold text-white transition-all hover:bg-yellow-600 hover:shadow-lg active:scale-95 disabled:opacity-50"
+                >
+                  {submitting ? "Criando..." : "Criar conta"}
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-6 border-t border-neutral-200/70 pt-4 text-center">
+              <p className="text-sm text-neutral-500">
+                Já tem uma conta?{" "}
+                <Link
+                  href="/auth/signin"
+                  className="font-bold text-yellow-500 transition-colors hover:text-yellow-600 hover:underline"
+                >
+                  Entrar
+                </Link>
+              </p>
+            </div>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
-                <label className="text-xs font-bold tracking-wider text-yellow-500">Nome</label>
-                <input
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleChange}
-                  disabled={submitting}
-                  className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-900 transition-all placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-600"
-                  placeholder="Seu nome"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold tracking-wider text-yellow-500">Usuário</label>
-                <input
-                  name="username"
-                  type="text"
-                  value={formData.username}
-                  onChange={handleChange}
-                  disabled={submitting}
-                  className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-900 transition-all placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-600"
-                  placeholder="seu_usuario"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-bold tracking-wider text-yellow-500">E-mail</label>
-              <input
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                disabled={submitting}
-                autoComplete="email"
-                className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-900 transition-all placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-600"
-                placeholder="seu@email.com"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
-                <label className="text-xs font-bold tracking-wider text-yellow-500">Senha</label>
-                <div className="relative">
-                  <input
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={handleChange}
-                    disabled={submitting}
-                    autoComplete="new-password"
-                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-900 transition-all focus:border-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
-                    placeholder="Mín. 8, A-z, 0-9"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-neutral-800 dark:hover:text-white"
-                  >
-                    {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold tracking-wider text-yellow-500">
-                  Confirmar
-                </label>
-                <div className="relative">
-                  <input
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    disabled={submitting}
-                    autoComplete="new-password"
-                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-900 transition-all focus:border-yellow-500 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
-                    placeholder="Repita a senha"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-neutral-800 dark:hover:text-white"
-                  >
-                    {showConfirmPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2">
-              <button
-                type="button"
-                onClick={() => router.push("/auth/signin")}
-                className="text-xs font-medium text-gray-600 transition-colors hover:text-yellow-500 dark:text-gray-400"
-              >
-                Já tenho conta
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="rounded-md bg-yellow-500 px-8 py-2.5 text-sm font-bold text-black shadow-lg shadow-yellow-500/20 transition-all hover:bg-yellow-400 active:scale-95 disabled:opacity-50"
-              >
-                {submitting ? "Criando..." : "Criar conta"}
-              </button>
-            </div>
-          </form>
-
-          <div className="border-t border-neutral-200 pt-4 text-center transition-colors dark:border-white/5">
-            <p className="text-sm text-gray-600 dark:text-gray-500">
-              Já tem uma conta?{" "}
-              <Link href="/auth/signin" className="font-bold text-yellow-500 hover:underline">
-                Entrar
-              </Link>
+          <div className="w-full rounded-2xl border border-neutral-100/70 bg-white/60 p-5 shadow-lg shadow-yellow-100/40 backdrop-blur-xl sm:p-6">
+            <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-yellow-500">
+              Features do Weave
             </p>
+            <h2 className="mt-2 text-xl font-extrabold text-neutral-900 sm:text-2xl">
+              Tudo o que você precisa em um só workspace.
+            </h2>
+            <p className="mt-1 text-xs text-neutral-600 sm:text-sm">
+              Notas, projetos e times conectados com o mesmo pacote inteligente apresentado no blog.
+            </p>
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {SIGNUP_FEATURES.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <div
+                    key={feature.title}
+                    className="group flex items-center gap-3 rounded-xl border border-neutral-100/70 bg-white/85 p-2.5 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-yellow-200/80"
+                  >
+                    <div
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg border ${feature.badge}`}
+                    >
+                      <Icon className={`h-4 w-4 ${feature.accent}`} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-neutral-900">{feature.title}</p>
+                      <p className="text-[11px] text-neutral-500">{feature.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-[11px] text-neutral-500 sm:text-xs">
+              <div className="rounded-xl border border-neutral-100 bg-white/75 p-3">
+                <p className="text-base font-extrabold text-yellow-500">IA integrada</p>
+                <p className="font-medium">Assistente ativo</p>
+              </div>
+              <div className="rounded-xl border border-neutral-100 bg-white/75 p-3">
+                <p className="text-base font-extrabold text-yellow-500">Backup rápido</p>
+                <p className="font-medium">Exportações seguras</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Footer Minimalista */}
-      <footer className="z-10 w-full px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between text-[10px] text-neutral-400 sm:text-xs">
-          <p>© {new Date().getFullYear()} Weave Notes</p>
-
-          <div className="flex items-center gap-4">
-            <a
-              href="https://github.com/eugaelgomes"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex gap-1 transition-colors hover:text-purple-700 dark:hover:text-purple-300"
-            >
-              Github
-              <FaGithub className="h-4 w-4 text-purple-500" />
-            </a>
-            <a
-              href="https://linkedin.com/in/gael-rene-gomes"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex gap-1 transition-colors hover:text-neutral-900 dark:hover:text-blue-300"
-            >
-              Linkedin
-              <FaLinkedin className="h-4 w-4 text-blue-500" />
-            </a>
-          </div>
-        </div>
-      </footer>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
