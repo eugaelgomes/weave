@@ -155,7 +155,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
 
   return (
     <>
-      <nav className="sticky top-0 z-40 w-full border-b border-neutral-200 bg-neutral-50/90 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/90 print:hidden">
+      <nav className="sticky top-0 z-40 w-full bg-neutral-50/90 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/90 print:hidden">
         <div className="mx-auto w-full max-w-[1920px] px-2 sm:px-2 lg:px-4">
           <div className="flex h-14 items-center justify-between">
             {/* Esquerdo */}
