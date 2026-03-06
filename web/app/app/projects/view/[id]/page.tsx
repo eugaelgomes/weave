@@ -74,8 +74,14 @@ export default function ProjectViewPage() {
   const [editedTitle, setEditedTitle] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
   const [editedStatus, setEditedStatus] = useState<
-    "open" | "running" | "completed" | "on-hold" | "archived"
+    "open" | "in_progress" | "paused" | "completed" | "archived"
   >("open");
+  const [editedMethodology, setEditedMethodology] = useState<
+    "scrum" | "kanban" | "waterfall" | "custom"
+  >("kanban");
+  const [editedDefaultView, setEditedDefaultView] = useState<
+    "board" | "list" | "calendar" | "timeline" | "gantt"
+  >("board");
   const [editedPriority, setEditedPriority] = useState<"alta" | "media" | "baixa">("media");
   const [editedComplexity, setEditedComplexity] = useState<"alta" | "media" | "baixa">("media");
   const [editedColor, setEditedColor] = useState("#3f51b5");
@@ -111,6 +117,8 @@ export default function ProjectViewPage() {
           setEditedTitle(projectData.title);
           setEditedDescription(projectData.description || "");
           setEditedStatus(projectData.status);
+          setEditedMethodology(projectData.methodology || "kanban");
+          setEditedDefaultView(projectData.default_view || "board");
           setEditedPriority(projectData.properties?.priority || "media");
           setEditedComplexity(projectData.properties?.complexity || "media");
           setEditedColor(projectData.properties?.color || "#3f51b5");
@@ -149,7 +157,9 @@ export default function ProjectViewPage() {
         const results = await searchUsers(collaboratorSearch);
         // Filtrar usuários já colaboradores
         const filtered = results.filter(
-          (u) => !collaborators.some((c) => c.user_id === u.id) && u.id !== project?.user_id
+          (u) =>
+            !collaborators.some((c: ProjectCollaborator) => c.user_id === u.id) &&
+            u.id !== project?.user_id
         );
         setSearchResults(filtered);
       } catch (error) {
@@ -166,7 +176,7 @@ export default function ProjectViewPage() {
   useEffect(() => {
     if (showAddNote) {
       const available = notes
-        .filter((note) => !projectNotes.some((pn) => pn.id === note.id))
+        .filter((note) => !projectNotes.some((pn: ProjectNote) => pn.id === note.id))
         .map((note) => ({
           id: note.id,
           title: note.title,
@@ -185,6 +195,8 @@ export default function ProjectViewPage() {
         title: editedTitle,
         description: editedDescription,
         status: editedStatus,
+        methodology: editedMethodology,
+        default_view: editedDefaultView,
         properties: {
           priority: editedPriority,
           complexity: editedComplexity,
@@ -310,7 +322,10 @@ export default function ProjectViewPage() {
 
   const isOwner = project.user_id === user?.id;
   const canEdit =
-    isOwner || collaborators.some((c) => c.user_id === user?.id && c.permission === "admin");
+    isOwner ||
+    collaborators.some(
+      (c: ProjectCollaborator) => c.user_id === user?.id && c.permission === "admin"
+    );
 
   return (
     <div className="min-h-screen bg-neutral-950">
@@ -410,22 +425,22 @@ export default function ProjectViewPage() {
                           className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold uppercase ${
                             project.status === "open"
                               ? "bg-cyan-500/20 text-cyan-400"
-                              : project.status === "running"
+                              : project.status === "in_progress"
                                 ? "bg-blue-500/20 text-blue-400"
                                 : project.status === "completed"
                                   ? "bg-green-500/20 text-green-400"
-                                  : project.status === "on-hold"
+                                  : project.status === "paused"
                                     ? "bg-yellow-500/20 text-yellow-400"
                                     : "bg-neutral-700/20 text-neutral-400"
                           }`}
                         >
                           {project.status === "open"
                             ? "Aberto"
-                            : project.status === "running"
+                            : project.status === "in_progress"
                               ? "Em Andamento"
                               : project.status === "completed"
                                 ? "Concluído"
-                                : project.status === "on-hold"
+                                : project.status === "paused"
                                   ? "Pausado"
                                   : "Arquivado"}
                         </span>
@@ -482,6 +497,36 @@ export default function ProjectViewPage() {
                             </span>
                           </div>
                         )}
+
+                        {/* Metodologia */}
+                        <div className="flex items-center gap-1.5 rounded-md bg-purple-500/20 px-3 py-1.5">
+                          <Activity className="h-3.5 w-3.5 text-purple-400" />
+                          <span className="text-xs font-semibold text-purple-400">
+                            {project.methodology === "scrum"
+                              ? "Scrum"
+                              : project.methodology === "kanban"
+                                ? "Kanban"
+                                : project.methodology === "waterfall"
+                                  ? "Waterfall"
+                                  : "Personalizado"}
+                          </span>
+                        </div>
+
+                        {/* Visualização Padrão */}
+                        <div className="flex items-center gap-1.5 rounded-md bg-indigo-500/20 px-3 py-1.5">
+                          <Folder className="h-3.5 w-3.5 text-indigo-400" />
+                          <span className="text-xs font-semibold text-indigo-400">
+                            {project.default_view === "board"
+                              ? "Quadro"
+                              : project.default_view === "list"
+                                ? "Lista"
+                                : project.default_view === "calendar"
+                                  ? "Calendário"
+                                  : project.default_view === "timeline"
+                                    ? "Timeline"
+                                    : "Gantt"}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -625,18 +670,18 @@ export default function ProjectViewPage() {
                           setEditedStatus(
                             e.target.value as
                               | "open"
-                              | "running"
+                              | "in_progress"
+                              | "paused"
                               | "completed"
-                              | "on-hold"
                               | "archived"
                           )
                         }
                         className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-100 transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
                       >
                         <option value="open">🟢 Aberto</option>
-                        <option value="running">🔵 Em Andamento</option>
-                        <option value="completed">🟢 Concluído</option>
-                        <option value="on-hold">🟡 Pausado</option>
+                        <option value="in_progress">🔵 Em Andamento</option>
+                        <option value="paused">🟡 Pausado</option>
+                        <option value="completed">✅ Concluído</option>
                         <option value="archived">⚪ Arquivado</option>
                       </select>
                     </div>
@@ -693,6 +738,56 @@ export default function ProjectViewPage() {
                         placeholder="📁"
                         maxLength={2}
                       />
+                    </div>
+
+                    {/* Metodologia */}
+                    <div>
+                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
+                        <Activity className="h-3.5 w-3.5" />
+                        Metodologia
+                      </label>
+                      <select
+                        value={editedMethodology}
+                        onChange={(e) =>
+                          setEditedMethodology(
+                            e.target.value as "scrum" | "kanban" | "waterfall" | "custom"
+                          )
+                        }
+                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-100 transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
+                      >
+                        <option value="kanban">📋 Kanban</option>
+                        <option value="scrum">🏃 Scrum</option>
+                        <option value="waterfall">🌊 Waterfall</option>
+                        <option value="custom">⚙️ Personalizado</option>
+                      </select>
+                    </div>
+
+                    {/* Visualização Padrão */}
+                    <div>
+                      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
+                        <Folder className="h-3.5 w-3.5" />
+                        Visualização Padrão
+                      </label>
+                      <select
+                        value={editedDefaultView}
+                        onChange={(e) =>
+                          setEditedDefaultView(
+                            e.target.value as
+                              | "board"
+                              | "list"
+                              | "calendar"
+                              | "timeline"
+                              | "gantt"
+                          )
+                        }
+                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-100 transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none"
+                      >
+                        <option value="board">📊 Quadro</option>
+                        <option value="list">📝 Lista</option>
+                        <option value="calendar">📅 Calendário</option>
+                        <option value="timeline">⏱️ Timeline</option>
+                        <option value="gantt">📈 Gantt</option>
+                      </select>
                     </div>
                   </div>
 

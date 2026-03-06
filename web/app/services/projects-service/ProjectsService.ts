@@ -56,10 +56,14 @@ export interface Project {
   title: string;
   description?: string;
   properties?: ProjectProperties;
-  status: "open" | "running" | "completed" | "on-hold" | "archived";
+  status: "open" | "in_progress" | "paused" | "completed" | "archived";
+  methodology: "scrum" | "kanban" | "waterfall" | "custom";
+  default_view: "board" | "list" | "calendar" | "timeline" | "gantt";
   created_at: string;
   updated_at: string;
   deleted: boolean;
+  active: boolean;
+  org_id?: string;
   owner?: ProjectOwner;
   collaborators?: ProjectCollaborator[];
   notes?: ProjectNote[];
@@ -72,15 +76,21 @@ export interface ProjectsResponse {
 export interface CreateProjectData {
   title: string;
   description?: string;
-  status?: "open" | "running" | "completed" | "on-hold" | "archived";
+  status?: "open" | "in_progress" | "paused" | "completed" | "archived";
+  methodology?: "scrum" | "kanban" | "waterfall" | "custom";
+  default_view?: "board" | "list" | "calendar" | "timeline" | "gantt";
   properties?: Omit<ProjectProperties, "progress">;
+  org_id?: string;
 }
 
 export interface UpdateProjectData {
   title?: string;
   description?: string;
-  status?: "open" | "running" | "completed" | "on-hold" | "archived";
+  status?: "open" | "in_progress" | "paused" | "completed" | "archived";
+  methodology?: "scrum" | "kanban" | "waterfall" | "custom";
+  default_view?: "board" | "list" | "calendar" | "timeline" | "gantt";
   properties?: Omit<ProjectProperties, "progress">;
+  active?: boolean;
 }
 
 export interface ManageCollaboratorData {
