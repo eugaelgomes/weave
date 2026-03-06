@@ -11,6 +11,7 @@ import NotesCarousel from "../components/ui/notes-carousel";
 import ProjectsCarousel from "../components/ui/project-carousel";
 import { FileText, Tag, Activity } from "lucide-react";
 import { FaProjectDiagram } from "react-icons/fa";
+import { CalendarPreview } from "../components/ui/calendar-componet";
 
 const FONT_SIZES = [
   "text-xs",
@@ -295,6 +296,9 @@ export default function HomePage() {
 
         {/* Projetos Recentes - Carrossel */}
         <ProjectsCarousel projects={recentProjects} />
+
+        {/* Componente Calendário */}
+        <CalendarPreview />
       </div>
     </div>
   );

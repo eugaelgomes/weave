@@ -1,8 +1,8 @@
 import { jwtDecode } from "jwt-decode";
 import { API_ENDPOINTS } from "../api-methods";
 import { apiClient, handleResponse } from "../api-methods";
+import type { UserPreferences } from "@/types/user-preferences";
 
-// --- 1. Interfaces de Domínio (Frontend) ---
 
 export interface PlanDetails {
   limits?: {
@@ -67,7 +67,7 @@ export interface User {
   auth_with_google?: boolean;
 
   // App preferences
-  usage_preference?: Record<string, unknown>;
+  usage_preference?: UserPreferences;
 
   // Plan information
   plan_id?: string;
@@ -83,8 +83,6 @@ export interface User {
   usage_period_end?: string;
   usage_details?: Record<string, unknown>;
 }
-
-// --- 2. Interfaces DTO (Backend Response Contracts) ---
 
 interface BackendProfile {
   id: string;
