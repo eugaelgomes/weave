@@ -6,7 +6,7 @@ type RequestOptions = {
   headers?: Record<string, string>;
 };
 
-async function request<T>(
+export async function request<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
@@ -269,27 +269,39 @@ export async function restoreOrganization(
 export interface Plan {
   plan_id: string;
   name: string;
-  description: string | null;
   plan_value: number;
   currency: string;
   billing_cycle: string;
   is_active: boolean;
   user_count: string;
-  created_at: string;
+  org_count: string;
   details: {
     limits: {
       max_notes: number;
       max_projects: number;
       max_team_members: number;
       storage: {
+        max_file_size_mb: number;
         total_monthly_upload_mb: number;
       };
+      exports: {
+        notes_monthly: number;
+        backups_monthly: number;
+      };
+    };
+    features: {
+      dark_mode: boolean;
+      collaboration_tools: boolean;
+      custom_branding: boolean;
+      priority_support: boolean;
     };
     weave_ai: {
       enabled: boolean;
       config: {
         monthly_messages: number;
+        available_models: string[];
       };
+      features: string[];
     };
   };
 }

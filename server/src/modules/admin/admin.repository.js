@@ -4,7 +4,7 @@ class AdminRepository {
   // ==================== DASHBOARD ====================
 
   async getDashboardStats() {
-    const query = `
+    const baseQuery = `
       SELECT
         (SELECT COUNT(*) FROM users WHERE deleted = false) AS total_users,
         (SELECT COUNT(*) FROM users WHERE deleted = false AND email_verified = true) AS verified_users,
@@ -15,8 +15,35 @@ class AdminRepository {
         (SELECT COUNT(*) FROM users WHERE deleted = false AND created_at >= NOW() - INTERVAL '30 days') AS new_users_30d,
         (SELECT COUNT(*) FROM organizations WHERE deleted = false AND created_at >= NOW() - INTERVAL '30 days') AS new_orgs_30d
     `;
-    const results = await executeQuery(query);
-    return results[0];
+
+    const usageQuery = `
+      SELECT
+        COUNT(*) AS active_subscriptions,
+        COALESCE(SUM(
+          COALESCE((usage_details->'monthly_cycle'->'weave_ai'->>'messages_sent')::bigint, 0)
+        ), 0) AS usage_ai_messages_total,
+        COALESCE(SUM(
+          COALESCE((usage_details->'monthly_cycle'->'storage'->>'total_uploaded_mb')::float, 0)
+        ), 0) AS usage_storage_total_mb,
+        COALESCE(SUM(
+          COALESCE((usage_details->'monthly_cycle'->'exports'->>'notes_count')::bigint, 0)
+        ), 0) AS usage_exports_notes_total,
+        COALESCE(SUM(
+          COALESCE((usage_details->'monthly_cycle'->'exports'->>'backups_count')::bigint, 0)
+        ), 0) AS usage_exports_backups_total,
+        COALESCE(AVG(
+          COALESCE((usage_details->'history_metadata'->>'usage_percentage_total')::float, 0)
+        ), 0) AS usage_avg_percentage
+      FROM plans_usage
+      WHERE usage_details IS NOT NULL
+    `;
+
+    const [baseResults, usageResults] = await Promise.all([
+      executeQuery(baseQuery),
+      executeQuery(usageQuery),
+    ]);
+
+    return { ...baseResults[0], ...usageResults[0] };
   }
 
   // ==================== USERS ====================

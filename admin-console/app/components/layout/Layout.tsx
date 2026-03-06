@@ -79,7 +79,7 @@ const Layout = ({ children }: LayoutProps) => {
 
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto scroll-smooth">
-            <div className="mx-auto min-h-full w-full bg-neutral-50 px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mx-auto min-h-full w-full bg-neutral-50 px-4 py-4 sm:px-4 lg:px-6">
               {children}
             </div>
           </div>

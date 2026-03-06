@@ -1,22 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { StatCard } from "@/app/components/StatCard";
-import { getDashboard, type DashboardStats } from "@/app/services/api";
 import { useAuth } from "@/app/contexts/AuthContext";
+import { useDashboard } from "@/app/contexts/dashboardContext";
 
 export default function DashboardPage() {
   const { isAuthenticated, isLoading } = useAuth();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      getDashboard()
-        .then((data) => setStats(data.stats))
-        .catch((err) => setError(err.message));
-    }
-  }, [isAuthenticated]);
+  const { stats, isLoading: statsLoading, error } = useDashboard();
 
   if (isLoading) {
     return <div className="flex h-screen items-center justify-center">Carregando...</div>;
@@ -66,10 +56,24 @@ export default function DashboardPage() {
               <StatCard title="Notas" value={stats.total_notes} />
             </div>
           </div>
+
+          <div>
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-400">
+              Uso de Planos
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <StatCard title="Assinaturas Ativas" value={stats.active_subscriptions} />
+              <StatCard title="Mensagens Weave AI" value={stats.usage_ai_messages_total} />
+              <StatCard title="Storage Total (MB)" value={Number(stats.usage_storage_total_mb).toFixed(2)} />
+              <StatCard title="Exportações de Notas" value={stats.usage_exports_notes_total} />
+              <StatCard title="Backups Exportados" value={stats.usage_exports_backups_total} />
+              <StatCard title="Uso Médio (%)" value={`${Number(stats.usage_avg_percentage).toFixed(1)}%`} />
+            </div>
+          </div>
         </>
       )}
 
-      {!stats && !error && (
+      {statsLoading && !stats && !error && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(8)].map((_, i) => (
             <div

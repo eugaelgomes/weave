@@ -30,7 +30,6 @@ temp/
 
 # Container build context
 .dockerignore
-Dockerfile.dev
 !Dockerfile
 
 # Docker system files
