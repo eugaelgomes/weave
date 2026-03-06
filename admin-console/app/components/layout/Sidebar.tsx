@@ -35,6 +35,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
   const navigationItems: NavigationItem[] = [
     { path: "/", icon: FaHome, label: "Dashboard" },
     { path: "/users", icon: FaUsers, label: "Usuários" },
+    { path: "/plans", icon: FaUsers, label: "Planos" },
   ];
 
   return (

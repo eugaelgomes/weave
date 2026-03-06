@@ -274,9 +274,24 @@ export interface Plan {
   currency: string;
   billing_cycle: string;
   is_active: boolean;
-  created_at: string;
   user_count: string;
-  org_count: string;
+  created_at: string;
+  details: {
+    limits: {
+      max_notes: number;
+      max_projects: number;
+      max_team_members: number;
+      storage: {
+        total_monthly_upload_mb: number;
+      };
+    };
+    weave_ai: {
+      enabled: boolean;
+      config: {
+        monthly_messages: number;
+      };
+    };
+  };
 }
 
 export async function listPlans(): Promise<{ plans: Plan[] }> {

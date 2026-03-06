@@ -55,12 +55,8 @@ interface MenuContentProps {
   theme: string;
 }
 
-// =====================================
-// Component MenuContent
-// =====================================
 const MenuContent = ({ user, logout, onClose, onToggleTheme, theme }: MenuContentProps) => (
   <div className="flex flex-col overflow-hidden">
-    {/* Header do Perfil (Com fundo mais transparente para herdar o glassmorphism no mobile) */}
     <div className="flex items-center gap-4 border-b border-neutral-200 bg-transparent px-4 py-4 dark:border-neutral-800">
       <UserAvatar user={user} size="md" />
       <div className="min-w-0 flex-1">
@@ -122,9 +118,6 @@ const MenuContent = ({ user, logout, onClose, onToggleTheme, theme }: MenuConten
   </div>
 );
 
-// ==============================================
-// Component Navbar
-// ==============================================
 const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
   const { user, logout, authenticated, updateUser } = useAuth();
   const { theme, setTheme } = useTheme();
@@ -165,7 +158,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
       <nav className="sticky top-0 z-40 w-full border-b border-neutral-200 bg-neutral-50/90 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/90 print:hidden">
         <div className="mx-auto w-full max-w-[1920px] px-2 sm:px-2 lg:px-4">
           <div className="flex h-14 items-center justify-between">
-            {/* LADO ESQUERDO: Toggle Mobile + Logo */}
+            {/* Esquerdo */}
             <div className="flex items-center gap-3 sm:gap-5">
               {authenticated && (
                 <button
@@ -186,7 +179,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                   <strong className="text-md sm:text-md font-bold text-yellow-500">Weave</strong>
                 </div>
 
-                {/* Organização (Aparece em todas as telas) */}
+                {/* Organização */}
                 {user?.org_id && (
                   <div className="animate-in fade-in flex items-center gap-2 duration-300 sm:gap-3">
                     <div className="h-4 w-px bg-neutral-200 sm:h-5 dark:bg-neutral-800" />
@@ -200,7 +193,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
               </Link>
             </div>
 
-            {/* LADO DIREITO: User Actions */}
+            {/* Lado direito*/}
             <div className="flex items-center gap-3">
               {authenticated && user && (
                 <div className="relative" ref={menuRef}>
@@ -221,7 +214,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                     <UserAvatar user={user} size="sm" />
                   </button>
 
-                  {/* DROPDOWN (Desktop) */}
+                  {/* Dropdown */}
                   {isMenuOpen && (
                     <div className="animate-in fade-in slide-in-from-top-2 absolute top-full right-0 z-50 mt-2 hidden w-80 origin-top-right duration-200 sm:block">
                       <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-2xl ring-1 ring-black/5 dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-neutral-950/50">
@@ -242,16 +235,14 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
         </div>
       </nav>
 
-      {/* MOBILE CENTERED MODAL COM GLASSMORPHISM (Substitui o Bottom Sheet) */}
+      {/* mobile modal */}
       {isMenuOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:hidden">
-          {/* Overlay Escuro para destacar o modal */}
           <div
             className="animate-in fade-in absolute inset-0 bg-neutral-950/50 backdrop-blur-sm transition-opacity duration-300"
             onClick={() => setMenuOpen(false)}
           />
 
-          {/* Container do Modal com Efeito de Vidro */}
           <div className="animate-in fade-in zoom-in-95 relative z-10 flex w-full max-w-[90%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-[0_8px_32px_rgba(0,0,0,0.15)] backdrop-blur-xl duration-300 dark:border-neutral-800 dark:bg-neutral-900/70">
             <div className="mt-0">
               <MenuContent
