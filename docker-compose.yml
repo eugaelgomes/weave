@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-# Configuração do docker
->>>>>>> b66ba8ea6339b589fd91c661ff5f094cfc71f86d
 services:
   # Backend
   server:

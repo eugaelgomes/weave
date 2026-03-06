@@ -3,28 +3,27 @@
 # Para desenvolvimento local.
 services:
   server:
-    build:
-      context: ./server
-      dockerfile: Dockerfile.dev
-    
     environment:
       - NODE_ENV=development
-
+    command: npm run dev
     develop:
       watch:
         - action: sync
-          path: ./server 
+          path: ./server
+          target: /app
           ignore:
             - node_modules/
 
   web:
     build:
       context: ./web
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      target: builder
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=development
+    command: npm run dev
     develop:
       watch:
         - action: sync
@@ -32,3 +31,9 @@ services:
           target: /app
           ignore:
             - node_modules/
+
+  blog:
+    command: npm run dev
+
+  console:
+    command: npm run dev
