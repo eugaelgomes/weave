@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { ConsoleLayout } from "@/app/components/ConsoleLayout";
 import { SearchBar } from "@/app/components/SearchBar";
 import { Badge } from "@/app/components/Badge";
 import { PaginationControls } from "@/app/components/PaginationControls";
@@ -60,7 +59,7 @@ export default function UsersPage() {
   };
 
   return (
-    <ConsoleLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Usuários</h1>
@@ -200,6 +199,6 @@ export default function UsersPage() {
           />
         )}
       </div>
-    </ConsoleLayout>
+    </>
   );
 }

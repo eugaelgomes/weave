@@ -10,6 +10,8 @@ const aiRoutes = require("@/modules/weave-ai/weave-ai.routes");
 const organizationsRoutes = require("@/modules/organizations/organizations.routes");
 const plansRoutes = require("@/modules/plans/plans.routes");
 const adminRoutes = require("@/modules/admin/admin.routes");
+const systemAuthRoutes = require("@/modules/system-auth/system-auth.routes");
+const systemAdminsRoutes = require("@/modules/system-admins/system-admins.routes");
 
 const router = express.Router();
 
@@ -24,6 +26,8 @@ const routeMap = [
   { path: "/organizations", handler: organizationsRoutes },
   { path: "/plans", handler: plansRoutes },
   { path: "/admin", handler: adminRoutes },
+  { path: "/system-auth", handler: systemAuthRoutes },
+  { path: "/system-admins", handler: systemAdminsRoutes },
 ];
 
 // Router mapping

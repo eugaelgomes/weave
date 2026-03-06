@@ -1,22 +1,33 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ConsoleLayout } from "@/app/components/ConsoleLayout";
 import { StatCard } from "@/app/components/StatCard";
 import { getDashboard, type DashboardStats } from "@/app/services/api";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 export default function DashboardPage() {
+  const { isAuthenticated, isLoading } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    getDashboard()
-      .then((data) => setStats(data.stats))
-      .catch((err) => setError(err.message));
-  }, []);
+    if (isAuthenticated) {
+        getDashboard()
+        .then((data) => setStats(data.stats))
+        .catch((err) => setError(err.message));
+    }
+  }, [isAuthenticated]);
+
+  if (isLoading) {
+      return <div className="flex h-screen items-center justify-center">Carregando...</div>;
+  }
+  
+  if (!isAuthenticated) {
+      return null; // AuthContext redireciona
+  }
 
   return (
-    <ConsoleLayout>
+    <>
       <div className="space-y-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
@@ -85,6 +96,6 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
-    </ConsoleLayout>
+    </>
   );
 }

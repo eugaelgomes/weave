@@ -25,7 +25,7 @@ async function request<T>(
     config.body = JSON.stringify(body);
   }
 
-  const response = await fetch(`${API_URL}/admin${endpoint}`, config);
+  const response = await fetch(`${API_URL}${endpoint}`, config);
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -35,6 +35,27 @@ async function request<T>(
   }
 
   return response.json();
+}
+
+// ==================== Auth ====================
+
+export async function login(email: string, password: string): Promise<any> {
+    return request("/system-auth/signin", {
+        method: "POST",
+        body: { email, password },
+    });
+}
+
+export async function logout(): Promise<void> {
+    return request("/system-auth/logout", {
+        method: "POST",
+    });
+}
+
+export async function getProfile(): Promise<any> { 
+    return request("/system-auth/profile", {
+        method: "GET",
+    });
 }
 
 // ==================== Dashboard ====================
@@ -51,7 +72,7 @@ export interface DashboardStats {
 }
 
 export async function getDashboard(): Promise<{ stats: DashboardStats }> {
-  return request("/dashboard");
+  return request("/admin/stats");
 }
 
 // ==================== Users ====================

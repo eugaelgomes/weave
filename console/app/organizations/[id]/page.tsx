@@ -3,7 +3,6 @@
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ConsoleLayout } from "@/app/components/ConsoleLayout";
 import { Badge } from "@/app/components/Badge";
 import { StatCard } from "@/app/components/StatCard";
 import {
@@ -101,18 +100,18 @@ export default function OrgDetailPage({
 
   if (loading) {
     return (
-      <ConsoleLayout>
+      <>
         <div className="space-y-6">
           <div className="h-8 w-48 animate-pulse rounded bg-muted" />
           <div className="h-64 animate-pulse rounded-xl border border-border bg-card" />
         </div>
-      </ConsoleLayout>
+      </>
     );
   }
 
   if (!org) {
     return (
-      <ConsoleLayout>
+      <>
         <div className="text-center">
           <h1 className="text-xl font-semibold text-foreground">
             Organização não encontrada
@@ -124,12 +123,12 @@ export default function OrgDetailPage({
             Voltar
           </button>
         </div>
-      </ConsoleLayout>
+      </>
     );
   }
 
   return (
-    <ConsoleLayout>
+    <>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -366,7 +365,7 @@ export default function OrgDetailPage({
           )}
         </div>
       </div>
-    </ConsoleLayout>
+    </>
   );
 }
 

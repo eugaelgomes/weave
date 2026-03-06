@@ -2,7 +2,6 @@
 
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
-import { ConsoleLayout } from "@/app/components/ConsoleLayout";
 import { Badge } from "@/app/components/Badge";
 import { StatCard } from "@/app/components/StatCard";
 import {
@@ -87,18 +86,18 @@ export default function UserDetailPage({
 
   if (loading) {
     return (
-      <ConsoleLayout>
+      <>
         <div className="space-y-6">
           <div className="h-8 w-48 animate-pulse rounded bg-muted" />
           <div className="h-64 animate-pulse rounded-xl border border-border bg-card" />
         </div>
-      </ConsoleLayout>
+      </>
     );
   }
 
   if (!user) {
     return (
-      <ConsoleLayout>
+      <>
         <div className="text-center">
           <h1 className="text-xl font-semibold text-foreground">
             Usuário não encontrado
@@ -110,12 +109,12 @@ export default function UserDetailPage({
             Voltar
           </button>
         </div>
-      </ConsoleLayout>
+      </>
     );
   }
 
   return (
-    <ConsoleLayout>
+    <>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -295,7 +294,7 @@ export default function UserDetailPage({
           </div>
         </div>
       </div>
-    </ConsoleLayout>
+    </>
   );
 }
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ConsoleLayout } from "@/app/components/ConsoleLayout";
 import { Badge } from "@/app/components/Badge";
 import { listPlans, type Plan } from "@/app/services/api";
 
@@ -25,7 +24,7 @@ export default function PlansPage() {
   };
 
   return (
-    <ConsoleLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Planos</h1>
@@ -106,6 +105,6 @@ export default function PlansPage() {
           </div>
         )}
       </div>
-    </ConsoleLayout>
+    </>
   );
 }
