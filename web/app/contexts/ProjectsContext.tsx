@@ -12,21 +12,25 @@ import {
   manageCollaborator as manageCollaboratorService,
   fetchProjectNotes as fetchProjectNotesService,
   manageProjectNote as manageProjectNoteService,
+  fetchProjectStages as fetchProjectStagesService,
   type Project,
   type CreateProjectData,
   type UpdateProjectData,
   type ProjectCollaborator,
   type ProjectNote,
+  type ProjectStage,
   type ManageCollaboratorData,
   type ManageNoteData,
 } from "../services/projects-service/ProjectsService";
 
-// Tipos específicos do contexto
+// Tipos específicos do contexto / Overview
 export interface ProjectOverview {
   id: string;
   title: string;
   description?: string;
   status: string;
+  methodology: string;
+  default_view: string;
   progress: number;
   notesCount: number;
   collaboratorsCount: number;
@@ -77,6 +81,9 @@ export interface ProjectsContextType {
   getProjectsByStatus: (status: string) => ProjectOverview[];
   getProjectsStats: () => ProjectsStats;
 
+  // tages
+  getProjectStages: (projectId: string) => Promise<ProjectStage[]>;
+
   // Funções de colaboradores
   getCollaborators: (projectId: string) => Promise<ProjectCollaborator[]>;
   addCollaborator: (
@@ -111,7 +118,7 @@ export function useProjects(): ProjectsContextType {
 export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
-  // Estado
+  // Estados
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectsOverview, setProjectsOverview] = useState<ProjectOverview[]>([]);
   const [loading, setLoading] = useState(false);
@@ -119,7 +126,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   const [lastFetch, setLastFetch] = useState<Date | null>(null);
   const [refreshInterval] = useState<number>(10 * 60 * 1000); // 10 minutos
 
-  // 1. BUSCAR PROJETOS (READ)
+  // Get Projects
   const fetchProjects = useCallback(async () => {
     if (!user?.id) return;
 
@@ -131,23 +138,24 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
 
       setProjects(projectsData);
 
-      // Versão resumida para overview/cards
       const overview: ProjectOverview[] = projectsData.map((project: Project) => ({
         id: project.id,
         title: project.title || "Projeto sem título",
         description: project.description,
-        status: project.status || "ativo",
+        status: project.status || "open",
+        methodology: project.methodology || "kanban",
+        default_view: project.default_view || "board",
         progress: project.properties?.progress || 0,
         notesCount: Array.isArray(project.notes) ? project.notes.length : 0,
         collaboratorsCount: Array.isArray(project.collaborators)
           ? project.collaborators.filter((c) => !c.removed).length
           : 0,
-        color: project.properties?.color,
-        icon: project.properties?.icon,
-        priority: project.properties?.priority,
-        complexity: project.properties?.complexity,
-        estimatedTime: project.properties?.estimated_time,
-        tags: project.properties?.tags,
+        color: project.properties?.color ?? undefined,
+        icon: project.properties?.icon ?? undefined,
+        priority: project.properties?.priority ?? undefined,
+        complexity: project.properties?.complexity ?? undefined,
+        estimatedTime: project.properties?.estimated_time ?? undefined,
+        tags: project.properties?.tags ?? undefined,
         lastModified: project.updated_at || project.created_at,
       }));
 
@@ -161,12 +169,10 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user?.id]);
 
-  // 1.1. REFRESH MANUAL DE PROJETOS
   const refreshProjects = useCallback(async () => {
     await fetchProjects();
   }, [fetchProjects]);
 
-  // 1.2. BUSCAR PROJETO POR ID
   const getProjectById = useCallback(
     async (projectId: string): Promise<Project | null> => {
       if (!user?.id || !projectId) return null;
@@ -182,7 +188,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     [user?.id]
   );
 
-  // 2. CRIAR PROJETO (CREATE)
+  // 2. Create Project
   const createProject = useCallback(
     async (projectData: CreateProjectData): Promise<Project | null> => {
       if (!user?.id) return null;
@@ -270,11 +276,11 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   const getProjectsStats = useCallback((): ProjectsStats => {
     const totalProjects = projectsOverview.length;
     const openProjects = projectsOverview.filter((p) => p.status === "open").length;
-    const runningProjects = projectsOverview.filter((p) => p.status === "running").length;
+    const inProgressProjects = projectsOverview.filter((p) => p.status === "in_progress").length;
     const completedProjects = projectsOverview.filter((p) => p.status === "completed").length;
-    const onHoldProjects = projectsOverview.filter((p) => p.status === "on-hold").length;
+    const pausedProjects = projectsOverview.filter((p) => p.status === "paused").length;
     const archivedProjects = projectsOverview.filter((p) => p.status === "archived").length;
-    const activeProjects = openProjects + runningProjects; // Soma de open + running
+    const activeProjects = openProjects + inProgressProjects;
     const totalNotes = projectsOverview.reduce((acc, p) => acc + p.notesCount, 0);
     const totalCollaborators = projectsOverview.reduce((acc, p) => acc + p.collaboratorsCount, 0);
     const averageProgress =
@@ -282,33 +288,28 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         ? Math.round(projectsOverview.reduce((acc, p) => acc + p.progress, 0) / totalProjects)
         : 0;
 
-    // Distribuição por status
     const statusDistribution: Record<string, number> = {
       open: openProjects,
-      running: runningProjects,
+      in_progress: inProgressProjects,
       completed: completedProjects,
-      "on-hold": onHoldProjects,
+      paused: pausedProjects,
       archived: archivedProjects,
     };
 
-    // Distribuição por prioridade
     const priorityDistribution: Record<string, number> = {
       alta: projectsOverview.filter((p) => p.priority === "alta").length,
       media: projectsOverview.filter((p) => p.priority === "media").length,
       baixa: projectsOverview.filter((p) => p.priority === "baixa").length,
     };
 
-    // Distribuição por complexidade
     const complexityDistribution: Record<string, number> = {
       alta: projectsOverview.filter((p) => p.complexity === "alta").length,
       media: projectsOverview.filter((p) => p.complexity === "media").length,
       baixa: projectsOverview.filter((p) => p.complexity === "baixa").length,
     };
 
-    // Projetos com deadline
     const projectsWithDeadline = projectsOverview.filter((p) => p.estimatedTime).length;
 
-    // Projeto mais colaborativo
     const mostCollaborative = projectsOverview.reduce(
       (max, p) =>
         p.collaboratorsCount > (max?.count || 0)
@@ -317,7 +318,6 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
       undefined as { title: string; count: number } | undefined
     );
 
-    // Projeto mais ativo (mais notas)
     const mostActive = projectsOverview.reduce(
       (max, p) =>
         p.notesCount > (max?.count || 0) ? { title: p.title, count: p.notesCount } : max,
@@ -340,6 +340,22 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
       mostActiveProject: mostActive?.count ? mostActive : undefined,
     };
   }, [projectsOverview]);
+
+  // 🟢 NOVO: STAGES / COLUNAS DO BOARD
+  const getProjectStages = useCallback(
+    async (projectId: string): Promise<ProjectStage[]> => {
+      if (!user?.id) return [];
+
+      try {
+        const stages = await fetchProjectStagesService(projectId);
+        return stages;
+      } catch (err: unknown) {
+        console.error("Erro ao buscar as etapas do projeto:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
 
   // --- FUNÇÕES DE COLABORADORES ---
 
@@ -501,16 +517,13 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     [user?.id, fetchProjects]
   );
 
-  // Efeito para buscar dados inicialmente e configurar polling
   useEffect(() => {
     if (!user?.id) return;
 
-    // Busca inicial apenas se não houver dados em cache
     if (projects.length === 0) {
       fetchProjects();
     }
 
-    // Configurar polling automático
     const intervalId = setInterval(() => {
       fetchProjects();
     }, refreshInterval);
@@ -537,6 +550,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     getRecentProjects,
     getProjectsByStatus,
     getProjectsStats,
+    getProjectStages,
     getCollaborators,
     addCollaborator,
     updateCollaboratorPermission,

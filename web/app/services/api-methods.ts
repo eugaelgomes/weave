@@ -44,6 +44,7 @@ export const API_ENDPOINTS = {
   // Projects
   PROJECTS: "/projects",
   PROJECTS_BY_ID: (id: string) => `/projects/${id}`,
+  PROJECTS_STAGES: (projectId: string) => `/projects/${projectId}/stages`,
   PROJECTS_COLLABORATORS: (projectId: string) => `/projects/${projectId}/collaborators`,
   PROJECTS_NOTES: (projectId: string) => `/projects/${projectId}/notes`,
 
@@ -74,12 +75,11 @@ export const API_ENDPOINTS = {
   AI_USE_CASES: "/weave-ai/use-cases",
 };
 
-// Interface estendida para suportar override da base URL
 export interface ApiRequestOptions extends RequestInit {
   overrideBaseURL?: string;
 }
 
-// Cliente da API
+// Client API
 class ApiClient {
   private baseURL: string;
   private defaultHeaders: Record<string, string>;
@@ -90,7 +90,6 @@ class ApiClient {
   }
 
   private async request(endpoint: string, options: ApiRequestOptions = {}): Promise<Response> {
-    // Verifica se é uma URL absoluta ou se precisa usar a base URL (com ou sem override)
     let url = endpoint;
     if (!endpoint.startsWith("http")) {
       const base = options.overrideBaseURL ?? this.baseURL;
@@ -199,7 +198,6 @@ export async function handleResponse<T = unknown>(response: Response): Promise<T
   }
 }
 
-// Instância singleton do cliente API
 export const apiClient = new ApiClient(API_BASE_URL);
 
 export default apiClient;

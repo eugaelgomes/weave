@@ -1,15 +1,42 @@
-// services/projects-service/ProjectsService.ts
 import { apiClient, handleResponse } from "../api-methods";
 import { API_ENDPOINTS } from "../api-methods";
 
 export interface ProjectProperties {
-  priority?: "alta" | "media" | "baixa";
+  // UI & Design
+  color?: string | null;
+  icon?: string | null;
   tags?: string[];
-  estimated_time?: string;
+  
+  // Gestão de Tempo e Prioridade
+  priority?: "alta" | "media" | "baixa" | null;
+  complexity?: "alta" | "media" | "baixa" | null;
+  estimated_time?: string | null;
   progress?: number;
-  complexity?: "alta" | "media" | "baixa";
-  color?: string;
-  icon?: string;
+  
+  // Metadados de Metodologias (Scrum/Kanban)
+  type?: "custom" | "continuous_flow" | "iterative" | string;
+  wip_limit_enabled?: boolean;
+  lead_time_target_days?: number | null;
+  sprint_duration_weeks?: number | null;
+  estimation_type?: string | null;
+}
+
+export interface ProjectStageProperties {
+  is_done: boolean;
+  wip_limit: number | null;
+  description: string | null;
+  auto_assign_to_creator: boolean;
+}
+
+export interface ProjectStage {
+  id: string;
+  project_id: string;
+  name: string;
+  position: number;
+  color: string | null;
+  properties: ProjectStageProperties;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ProjectOwner {
@@ -53,6 +80,7 @@ export interface ProjectNote {
 export interface Project {
   id: string;
   user_id: string;
+  org_id?: string | null;
   title: string;
   description?: string;
   properties?: ProjectProperties;
@@ -63,10 +91,12 @@ export interface Project {
   updated_at: string;
   deleted: boolean;
   active: boolean;
-  org_id?: string;
+  
+  // Relacionamentos Opcionais
   owner?: ProjectOwner;
   collaborators?: ProjectCollaborator[];
   notes?: ProjectNote[];
+  stages?: ProjectStage[]; // Adicionado: A API de criação agora retorna os stages
 }
 
 export interface ProjectsResponse {
@@ -104,18 +134,37 @@ export interface ManageNoteData {
   noteId: string;
 }
 
-// Helper para tratar propriedades que podem vir como string JSON do banco
+/**
+ * Trata propriedades e json arrays que podem vir como string do banco de dados (PostgreSQL)
+ */
 const parseProjectProperties = (project: Project): Project => {
   if (typeof project.properties === "string") {
     try {
       project.properties = JSON.parse(project.properties);
     } catch {
-      // Falha silenciosa ou log opcional se necessário
       console.warn(`Failed to parse properties for project ${project.id}`);
     }
   }
+  
+  if (project.stages && Array.isArray(project.stages)) {
+    project.stages = project.stages.map(stage => {
+      if (typeof stage.properties === "string") {
+        try {
+          stage.properties = JSON.parse(stage.properties);
+        } catch {
+          console.warn(`Failed to parse properties for stage ${stage.id}`);
+        }
+      }
+      return stage;
+    });
+  }
+
   return project;
 };
+
+// ==========================================
+// API METHODS
+// ==========================================
 
 export const fetchProjects = async (): Promise<Project[]> => {
   const response = await apiClient.get(API_ENDPOINTS.PROJECTS);
@@ -131,7 +180,8 @@ export const fetchProjectById = async (projectId: string): Promise<Project> => {
 
 export const createProject = async (projectData: CreateProjectData): Promise<Project> => {
   const response = await apiClient.post(API_ENDPOINTS.PROJECTS, projectData);
-  return await handleResponse<Project>(response);
+  const project = await handleResponse<Project>(response);
+  return parseProjectProperties(project);
 };
 
 export const updateProject = async (
@@ -140,13 +190,37 @@ export const updateProject = async (
 ): Promise<Project> => {
   const response = await apiClient.put(API_ENDPOINTS.PROJECTS_BY_ID(projectId), projectData);
   const data = await handleResponse<{ message: string; project: Project }>(response);
-  return data.project;
+  return parseProjectProperties(data.project);
 };
 
 export const deleteProject = async (projectId: string): Promise<void> => {
   const response = await apiClient.delete(API_ENDPOINTS.PROJECTS_BY_ID(projectId));
   await handleResponse<{ message: string }>(response);
 };
+
+/**
+ * Busca as etapas (colunas do Board) de um projeto específico
+ */
+export const fetchProjectStages = async (projectId: string): Promise<ProjectStage[]> => {
+  // Caso a rota já exista no seu API_ENDPOINTS use-a, caso contrário usamos template literal
+  const endpoint = `${API_ENDPOINTS.PROJECTS_BY_ID(projectId)}/stages`; 
+  const response = await apiClient.get(endpoint);
+  
+  const data = await handleResponse<{ stages: ProjectStage[] }>(response);
+  
+  return data.stages.map(stage => {
+    if (typeof stage.properties === "string") {
+      try {
+        stage.properties = JSON.parse(stage.properties);
+      } catch {
+        console.warn(`Failed to parse properties for stage ${stage.id}`);
+      }
+    }
+    return stage;
+  });
+};
+
+// --- COLABORADORES ---
 
 export const fetchProjectCollaborators = async (
   projectId: string
@@ -170,6 +244,8 @@ export const manageCollaborator = async (
   }>(response);
   return data.collaborators || [];
 };
+
+// --- NOTAS (CARDS) ---
 
 export const fetchProjectNotes = async (projectId: string): Promise<ProjectNote[]> => {
   const response = await apiClient.get(API_ENDPOINTS.PROJECTS_NOTES(projectId));
