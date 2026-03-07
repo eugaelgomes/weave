@@ -7,11 +7,6 @@ const {
 const { v4: uuidv4 } = require("uuid");
 
 class SpacesService {
-  /**
-   * Estrutura de pastas do bucket.
-   * Centraliza todos os paths para facilitar manutenção e evitar strings soltas.
-   * Para alterar a organização do bucket, basta editar este objeto.
-   */
   static FOLDER_PATHS = {
     BACKUPS: "backups",
     IMAGES: "images",
@@ -21,6 +16,11 @@ class SpacesService {
       BANNERS: "banners",
       FILES: "files",
     },
+    PROJECTS: {
+      ROOT: "projects",
+      ICONS: "icons",
+      FILES: "files",
+    },
     AVATARS: "avatars",
   };
 
@@ -28,7 +28,7 @@ class SpacesService {
     this.spacesEndpoint = process.env.DO_SPACES_ENDPOINT;
     this.accessKeyId = process.env.DO_SPACES_ACCESS_KEY;
     this.secretAccessKey = process.env.DO_SPACES_SECRET_KEY;
-    // Forçando o bucket central para wn-storage (com fallback para env caso precise flexibilizar no futuro)
+    // Força o bucket central para wn-storage
     this.bucketName = process.env.DO_SPACES_BUCKET_NAME || "wn-storage";
     this.region = process.env.DO_SPACES_REGION || "sfo3";
 
@@ -50,7 +50,7 @@ class SpacesService {
         accessKeyId: this.accessKeyId,
         secretAccessKey: this.secretAccessKey,
       },
-      forcePathStyle: false, // Digital Ocean Spaces usa virtual hosted-style
+      forcePathStyle: false,
     });
   }
 
@@ -91,9 +91,9 @@ class SpacesService {
         Key: key,
         Body: buffer,
         ContentType: "text/csv",
-        ACL: "private", // Backup privado, só acessível via token/assinatura
+        ACL: "private",
         CacheControl: "no-cache, no-store, must-revalidate",
-        Expires: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 horas
+        Expires: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48H
       };
 
       const command = new PutObjectCommand(uploadParams);
@@ -277,6 +277,35 @@ class SpacesService {
     const userFolder = `userId_${userId}`;
     const noteFolder = `noteId_${noteId}`;
     const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.FILES);
+    return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
+  }
+
+  // ========================================
+  // Project Assets (icon, files)
+  // Estrutura: projects/{userId}/{projectId}/{icons|files}/{arquivo}
+  // ========================================
+
+  async uploadProjectIcon(fileBuffer, mimeType, projectId, userId) {
+    const { PROJECTS } = SpacesService.FOLDER_PATHS;
+    const ext = this.getFileExtensionFromMimeType(mimeType);
+    const fileName = `${uuidv4()}${ext}`;
+    const userFolder = `userId_${userId}`;
+    const projectFolder = `projectId_${projectId}`;
+    const folderPath = this.buildKey(PROJECTS.ROOT, userFolder, projectFolder, PROJECTS.ICONS);
+    return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
+  }
+
+  async uploadProjectFile(fileBuffer, mimeType, projectId, userId, originalName = null) {
+    const { PROJECTS } = SpacesService.FOLDER_PATHS;
+    const ext = this.getFileExtensionFromMimeType(mimeType);
+    const safeOriginalName = originalName 
+      ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_") 
+      : `file${ext}`;
+
+    const fileName = `${uuidv4()}_${safeOriginalName}`;
+    const userFolder = `userId_${userId}`;
+    const projectFolder = `projectId_${projectId}`;
+    const folderPath = this.buildKey(PROJECTS.ROOT, userFolder, projectFolder, PROJECTS.FILES);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 

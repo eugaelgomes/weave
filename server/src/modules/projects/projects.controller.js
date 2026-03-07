@@ -10,14 +10,13 @@ const {
   inviteProjectMember,
 } = require("@/services/email/templates/projects/add-person");
 
+const { normalizeNewProject } = require("./normalizer");
+const spacesService = require("@/services/storage");
+
 class ProjectsController {
   constructor() {
     this.projectsRepository = projectsRepository;
   }
-
-  // ========================================
-  // MÉTODOS UTILITÁRIOS E VALIDAÇÃO
-  // ========================================
 
   /**
    * Valida e sanitiza properties do projeto
@@ -105,12 +104,20 @@ class ProjectsController {
         validated[key] = value;
       }
 
-      // Validar icon (deve ser string de emoji ou null)
+      // Validar icon (pode ser string/emoji ou objeto {path, name, type} para imagens)
       else if (key === "icon") {
-        if (value !== null && typeof value !== "string") {
-          throw new Error("Icon deve ser uma string (emoji)");
+        if (value !== null) {
+          // Aceita string (emoji) ou objeto (imagem do Spaces)
+          if (typeof value === "string") {
+            validated[key] = value;
+          } else if (typeof value === "object" && value.path !== undefined) {
+            validated[key] = value;
+          } else {
+            throw new Error("Icon deve ser uma string (emoji) ou objeto de imagem");
+          }
+        } else {
+          validated[key] = value;
         }
-        validated[key] = value;
       }
     }
 
@@ -194,6 +201,7 @@ class ProjectsController {
       title: project.title,
       description: project.description,
       properties: project.properties || {},
+      projects_files: project.projects_files || [],
       status: project.status,
       created_at: project.created_at,
       updated_at: project.updated_at,
@@ -251,6 +259,7 @@ class ProjectsController {
         title: project.title,
         description: project.description,
         properties: project.properties || {},
+        projects_files: project.projects_files || [],
         status: project.status,
         created_at: project.created_at,
         updated_at: project.updated_at,
@@ -302,6 +311,7 @@ class ProjectsController {
         title: project.title,
         description: project.description,
         properties: project.properties || {},
+        projects_files: project.projects_files || [],
         status: project.status,
         created_at: project.created_at,
         updated_at: project.updated_at,
@@ -371,76 +381,53 @@ class ProjectsController {
     }
   }
 
-  /**
+
+/**
    * POST /api/projects - Criar um novo projeto
    * Cria um novo projeto para o usuário autenticado
    */
   async createProject(req, res, next) {
     try {
-      const { title, description, status, properties } = req.body;
+      // 🟢 1. Extraímos os novos campos do body
+      const { 
+        title, 
+        description, 
+        status, 
+        properties, 
+        methodology, 
+        default_view, 
+        org_id 
+      } = req.body;
 
       // Validação de autenticação
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Buscar/Criar registro de uso
+      // Buscar/Criar registro de uso e validar limites do plano
       const usageRecord = await PlanUsageManager.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
-
-      // Buscar detalhes do plano
-      const planDetails = await PlansRepository.getPlanById(
-        getUserPlan.plan_id
-      );
+      const planDetails = await PlansRepository.getPlanById(getUserPlan.plan_id);
 
       if (!usageRecord || !planDetails) {
-        return res.status(404).json({
-          error: "Configuração de plano não encontrada para este usuário.",
-        });
+        return res.status(404).json({ error: "Configuração de plano não encontrada para este usuário." });
       }
 
-      // Validar se o plano tem estrutura válida
       if (!planDetails.details) {
         return res.status(500).json({
           error: "Configuração de plano inválida",
-          message:
-            "O plano não possui configuração (details) no banco de dados.",
-          debug: {
-            planId: getUserPlan.plan_id,
-            planName: planDetails.name,
-            hasDetails: !!planDetails.details,
-          },
+          message: "O plano não possui configuração (details) no banco de dados.",
         });
       }
 
-      // Helper para acessar valores nested
-      const getNestedValue = (obj, path) => {
-        return path.split(".").reduce((acc, part) => acc && acc[part], obj);
-      };
-
-      const maxProjects = getNestedValue(
-        planDetails.details,
-        PLAN_PATHS.LIMITS.MAX_PROJECTS
-      );
+      const getNestedValue = (obj, path) => path.split(".").reduce((acc, part) => acc && acc[part], obj);
+      const maxProjects = getNestedValue(planDetails.details, PLAN_PATHS.LIMITS.MAX_PROJECTS);
 
       if (maxProjects === undefined) {
         return res.status(500).json({
           error: "Configuração de plano inválida",
           message: "O plano não possui limite de projetos configurado.",
-          debug: {
-            planId: getUserPlan.plan_id,
-            planName: planDetails.name,
-            expectedPath: PLAN_PATHS.LIMITS.MAX_PROJECTS,
-            detailsStructure: Object.keys(planDetails.details || {}),
-          },
         });
       }
-
-      // Validar limite de projetos
-      const currentProjectsCount =
-        getNestedValue(
-          usageRecord.usage_details,
-          USAGE_PATHS.SUMMARY.PROJECTS_TOTAL
-        ) || 0;
 
       const canCreate = PlanUsageManager.checkLimit(
         planDetails.details,
@@ -456,34 +443,37 @@ class ProjectsController {
         });
       }
 
-      // Validação de dados obrigatórios
       if (!title) {
         throw new Error("Título é obrigatório");
       }
 
-      // Definir status padrão se não fornecido
-      const projectStatus =
-        status === undefined || status === null ? "open" : status;
+      const projectStatus = status === undefined || status === null ? "open" : status;
 
-      // Validar status
       if (!ALLOWED_PROJECT_STATUSES.includes(projectStatus)) {
         return res.status(400).json({
           error: `Status inválido. Permitidos: ${ALLOWED_PROJECT_STATUSES.join(", ")}`,
         });
       }
 
-      // Validar properties se fornecidas
-      const validatedProps = properties
-        ? this._validateProperties(properties)
-        : {};
+      // 🟢 2. Valida as propriedades de UI/Design que o usuário enviou (color, icon, tags)
+      const userValidatedProps = properties ? this._validateProperties(properties) : {};
 
-      // Criação do projeto
-      const result = await this.projectsRepository.createProject(
-        userId,
-        title,
-        description,
-        projectStatus,
-        validatedProps
+      // 🟢 3. CHAMADA AO NORMALIZER
+      // Passamos os dados da requisição + as propriedades validadas pelo usuário
+      const payload = { title, description, methodology, default_view, status: projectStatus };
+      const { projectData, stagesData } = normalizeNewProject(
+        payload, 
+        userId, 
+        org_id, 
+        userValidatedProps // Injetamos as props do usuário para mesclar com as props de negócio
+      );
+
+      // 🟢 4. Persistência no banco de dados
+      // NOTA ARQUITETURAL: Como agora você tem projectData e stagesData, 
+      // o método no Repository precisa salvar ambos usando uma Transaction SQL.
+      const result = await this.projectsRepository.createProjectWithStages(
+        projectData, 
+        stagesData
       );
 
       if (!result || result.length === 0) {
@@ -497,15 +487,48 @@ class ProjectsController {
 
       // Formatar e retornar o projeto criado
       const formattedProject = this._formatProjectResponse(newProject);
+      
+      // Opcional: Adicionar as stages à resposta para o front-end já renderizar o board
+      formattedProject.stages = result[0].stages || stagesData; 
+
       res.status(201).json(formattedProject);
     } catch (error) {
       this._handleError(error, res, next);
     }
   }
+  /**
+   * GET /api/projects/:id/stages - Buscar as etapas (colunas) de um projeto
+   * Retorna os stages de um projeto se o utilizador tiver acesso (dono ou colaborador)
+   */
+  async getProjectStages(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      // Validação de autenticação
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      // Validação de segurança: O utilizador tem acesso ao projeto?
+      // Se não tiver, este método lança um erro automaticamente e vai para o catch
+      await this._validateProjectAccess(id, userId);
+
+      // Busca as etapas na base de dados
+      const stages = await this.projectsRepository.getProjectStages(id);
+
+      // Retorna a resposta limpa
+      res.status(200).json({ 
+        stages: stages || [] 
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
 
   /**
    * PUT /api/projects/:id - Atualizar um projeto (consolidado)
    * Atualiza campos do projeto incluindo: title, description, status, properties
+   * Suporta upload de icon e files via multipart/form-data
    * Apenas os campos enviados são atualizados, os demais permanecem intactos
    */
   async updateProject(req, res, next) {
@@ -518,7 +541,7 @@ class ProjectsController {
       if (!userId) return;
 
       // Validação de propriedade do projeto
-      await this._validateProjectOwnership(id, userId);
+      const currentProject = await this._validateProjectOwnership(id, userId);
 
       // Validar status se fornecido
       if (status !== undefined && !ALLOWED_PROJECT_STATUSES.includes(status)) {
@@ -533,10 +556,71 @@ class ProjectsController {
       if (description !== undefined) updates.description = description;
       if (status !== undefined) updates.status = status;
 
-      // Se properties foi enviado, validar e fazer merge com existente
+      // Inicializar propertiesUpdate para acumular mudanças de properties
+      let propertiesUpdate = {};
+
+      // Se properties foi enviado, validar e preparar para merge
       if (properties !== undefined) {
-        const validatedProps = this._validateProperties(properties);
-        updates.properties = validatedProps;
+        propertiesUpdate = this._validateProperties(properties);
+      }
+
+      // Processar upload de ícone
+      if (req.files?.icon?.[0]) {
+        const iconFile = req.files.icon[0];
+        // Deletar ícone anterior se existir
+        if (currentProject?.properties?.icon?.path) {
+          const oldKey = currentProject.properties.icon.path;
+          if (oldKey) await spacesService.deleteImage(oldKey);
+        }
+        const result = await spacesService.uploadProjectIcon(
+          iconFile.buffer,
+          iconFile.mimetype,
+          id,
+          userId
+        );
+        propertiesUpdate.icon = {
+          path: result.path || result.key || '',
+          name: iconFile.originalname,
+          type: iconFile.mimetype,
+        };
+      }
+
+      // Processar upload de arquivos (para coluna projects_files)
+      if (req.files?.files?.length > 0) {
+        const newFiles = await Promise.all(
+          req.files.files.map(async (file) => {
+            const result = await spacesService.uploadProjectFile(
+              file.buffer,
+              file.mimetype,
+              id,
+              userId,
+              file.originalname
+            );
+            return {
+              id: result.fileName,
+              path: result.key || result.path || '',
+              name: file.originalname,
+              type: file.mimetype,
+              size: file.size,
+              uploaded_at: new Date().toISOString(),
+            };
+          })
+        );
+        // Salvar em coluna separada (projects_files), o repository faz append
+        updates.projects_files = newFiles;
+      }
+
+      // Remover ícone se enviado com path vazio
+      if (propertiesUpdate.icon && propertiesUpdate.icon.path === "") {
+        if (currentProject?.properties?.icon?.path) {
+          const oldKey = currentProject.properties.icon.path;
+          if (oldKey) await spacesService.deleteImage(oldKey);
+        }
+      }
+
+      // Se houver alterações em properties, adicionar ao updates
+      if (Object.keys(propertiesUpdate).length > 0) {
+        updates.properties = propertiesUpdate;
       }
 
       // Verifica se há algo para atualizar

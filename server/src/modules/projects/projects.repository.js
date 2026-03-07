@@ -9,6 +9,7 @@ class ProjectsRepository {
         p.title,
         p.description,
         p.properties,
+        p.projects_files,
         p.status,
         p.created_at,
         p.updated_at,
@@ -87,6 +88,7 @@ class ProjectsRepository {
         title,
         description,
         properties,
+        projects_files,
         status,
         created_at,
         updated_at,
@@ -108,6 +110,7 @@ class ProjectsRepository {
         p.title,
         p.description,
         p.properties,
+        p.projects_files,
         p.status,
         p.created_at,
         p.updated_at,
@@ -202,7 +205,7 @@ class ProjectsRepository {
   }
 
   async updateProject(projectId, userId, updates) {
-    const allowedFields = ["title", "description", "status", "properties"];
+    const allowedFields = ["title", "description", "status", "properties", "projects_files"];
 
     const keys = Object.keys(updates).filter((k) => allowedFields.includes(k));
 
@@ -231,6 +234,10 @@ class ProjectsRepository {
             )
           )`;
         }
+        if (key === "projects_files") {
+          // Append novos arquivos ao array existente
+          return `${key} = COALESCE(projects_files, '[]'::jsonb) || $${index + 3}::jsonb`;
+        }
         return `${key} = $${index + 3}`;
       })
       .join(", ");
@@ -245,6 +252,7 @@ class ProjectsRepository {
         title,
         description,
         properties,
+        projects_files,
         status,
         created_at,
         updated_at,
@@ -255,7 +263,9 @@ class ProjectsRepository {
       projectId,
       userId,
       ...keys.map((k) =>
-        k === "properties" ? JSON.stringify(updates[k]) : updates[k]
+        k === "properties" || k === "projects_files" 
+          ? JSON.stringify(updates[k]) 
+          : updates[k]
       ),
     ];
 
@@ -273,31 +283,113 @@ class ProjectsRepository {
     return executeQuery(query, [projectId, userId]);
   }
 
-  async createProject(userId, title, description, status, properties) {
+   /**
+   * Cria um projeto e as suas respectivas colunas (stages) de forma atômica
+   * utilizando CTEs do PostgreSQL.
+   */
+  async createProjectWithStages(projectData, stagesData) {
     const query = `
-      INSERT INTO projects (user_id, title, description, status, properties)
-      VALUES ($1, $2, $3, $4, $5::jsonb || jsonb_build_object('progress', 0))
-      RETURNING 
-        id::text,
-        user_id::text,
-        title,
-        description,
-        properties,
-        status,
-        created_at,
-        updated_at,
-        deleted;
+      -- 1. Inserimos o projeto principal e retornamos a linha gerada
+      WITH new_project AS (
+        INSERT INTO projects (
+          user_id, 
+          org_id, 
+          title, 
+          description, 
+          methodology, 
+          default_view, 
+          status, 
+          properties
+        )
+        VALUES (
+          $1::uuid, 
+          $2::uuid, 
+          $3, 
+          $4, 
+          $5::project_methodology, 
+          $6::project_view_type, 
+          $7::project_status, 
+          $8::jsonb
+        )
+        RETURNING *
+      ),
+      -- 2. Inserimos as colunas (stages) vinculando ao ID do projeto recém-criado
+      -- Usamos jsonb_to_recordset para "descompactar" o array do JavaScript em linhas SQL
+      inserted_stages AS (
+        INSERT INTO project_stages (project_id, name, position, color, properties)
+        SELECT 
+          p.id, 
+          s.name, 
+          s.position, 
+          s.color, 
+          s.properties::jsonb
+        FROM new_project p
+        CROSS JOIN jsonb_to_recordset($9::jsonb) AS s(name text, position integer, color text, properties jsonb)
+        RETURNING *
+      )
+      -- 3. Retornamos o projeto montado já com o array de stages embutido
+      SELECT 
+        np.id::text,
+        np.user_id::text,
+        np.org_id::text,
+        np.title,
+        np.description,
+        np.methodology,
+        np.default_view,
+        np.properties,
+        np.status,
+        np.created_at,
+        np.updated_at,
+        np.deleted,
+        (
+          SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', st.id::text,
+              'name', st.name,
+              'position', st.position,
+              'color', st.color,
+              'properties', st.properties
+            ) ORDER BY st.position ASC
+          ) FROM inserted_stages st
+        ) AS stages
+      FROM new_project np;
     `;
 
     const values = [
-      userId,
-      title,
-      description || null,
-      status || "ativo",
-      JSON.stringify(properties || {}),
+      projectData.user_id,
+      projectData.org_id || null,
+      projectData.title,
+      projectData.description || null,
+      projectData.methodology,
+      projectData.default_view,
+      projectData.status,
+      projectData.properties,
+      JSON.stringify(stagesData)
     ];
 
     return executeQuery(query, values);
+  }
+
+  /**
+   * Busca todas as colunas (stages) de um projeto específico
+   */
+  async getProjectStages(projectId) {
+    const query = `
+      SELECT 
+        id::text,
+        project_id::text,
+        name,
+        position,
+        color,
+        properties,
+        created_at,
+        updated_at
+      FROM project_stages
+      WHERE project_id = $1::uuid
+      ORDER BY position ASC;
+    `;
+    
+    return executeQuery(query, [projectId]);
   }
 
   async addCollaborator(
