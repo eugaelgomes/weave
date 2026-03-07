@@ -14,11 +14,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Weave Notes - Organize suas ideias",
+    default: "Weave Notes",
     template: "%s | Weave Notes",
   },
   description:
-    "Organize suas ideias e notas de forma simples e eficiente. Crie, edite e compartilhe suas anotações com segurança e praticidade.",
+    "Crie, edite e compartilhe suas anotações com segurança e praticidade.",
   keywords: [
     "notas",
     "anotações",
@@ -33,16 +33,16 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    title: "Weave Notes - Organize suas ideias",
+    title: "Weave Notes",
     description:
-      "Organize suas ideias e notas de forma simples e eficiente. Crie, edite e compartilhe suas anotações com segurança e praticidade.",
+      "Crie, edite e compartilhe suas anotações com segurança e praticidade.",
     siteName: "Weave Notes",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Weave Notes - Organize suas ideias",
+    title: "Weave Notes",
     description:
-      "Organize suas ideias e notas de forma simples e eficiente. Crie, edite e compartilhe suas anotações com segurança e praticidade.",
+      "Crie, edite e compartilhe suas anotações com segurança e praticidade.",
   },
   icons: {
     icon: "/favicon.ico",
