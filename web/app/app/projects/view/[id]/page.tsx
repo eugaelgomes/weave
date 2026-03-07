@@ -430,7 +430,7 @@ export default function ProjectViewPage() {
                   {/* Cabeçalho do Projeto */}
                   <div className="mb-4 flex items-start gap-3 sm:mb-6 sm:gap-4">
                     <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-600 sm:h-16 sm:w-16 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
-                      {getProjectIcon(project.properties?.icon)}
+                      {getProjectIcon(project.properties?.icon ?? undefined)}
                     </div>
                     <div className="min-w-0 flex-1">
                       <h1 className="mb-2 text-xl font-bold text-neutral-900 sm:mb-3 sm:text-2xl lg:text-3xl dark:text-neutral-100">{project.title}</h1>
