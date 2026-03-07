@@ -80,7 +80,14 @@ function configureGlobalMiddlewares(app) {
   app.set("trust proxy", 1);
   app.use(getClientIp);
 
-  app.use(cors(makeCorsOptions()));
+  const corsMiddleware = cors(makeCorsOptions());
+  app.use((req, res, next) => {
+    // Ignora a política estrita de CORS para webhooks e integrações de terceiros
+    if (req.path.includes("/webhooks/")) {
+      return next();
+    }
+    return corsMiddleware(req, res, next);
+  });
 
   app.use(
     helmet({
