@@ -108,9 +108,9 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
   const navigationItems: NavigationItem[] = [
     { path: "/app/home", icon: FaHome, label: t.nav.home },
     { path: "/app/notes", icon: FaBook, label: t.nav.notes },
-    { 
-      path: "/app/projects", 
-      icon: FaProjectDiagram, 
+    {
+      path: "/app/projects",
+      icon: FaProjectDiagram,
       label: t.nav.projects,
       subItems: [
         { path: "/app/projects", icon: FaList, label: "Ver todos" }, // Pode extrair "Ver todos" para o dicionário do t() depois
@@ -118,8 +118,8 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
           path: `/app/projects/${p.id}`,
           icon: FaProjectDiagram,
           label: p.title || t.common?.unnamed || "Projeto sem nome",
-        }))
-      ]
+        })),
+      ],
     },
     {
       path: "/app/weave-ai/chat",
@@ -236,9 +236,9 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                     <ul className="animate-in slide-in-from-top-1 mt-1 space-y-0.5 pl-4 duration-200">
                       {item.subItems!.map((subItem) => {
                         const SubIcon = subItem.icon;
-                        
+
                         const isSubActive =
-                          pathname === subItem.path || 
+                          pathname === subItem.path ||
                           (subItem.path !== item.path && pathname.startsWith(`${subItem.path}/`));
 
                         return (
@@ -255,7 +255,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                               <SubIcon
                                 className={`h-3 w-3 ${isSubActive ? "text-yellow-500" : "opacity-70"}`}
                               />
-                              <span className="text-xs font-medium truncate" title={subItem.label}>
+                              <span className="truncate text-xs font-medium" title={subItem.label}>
                                 {subItem.label}
                               </span>
                             </Link>
@@ -268,7 +268,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
               );
             })}
           </ul>
-          
+
           {!isCollapsed && (
             <>
               <div className="divisor my-4 h-px w-full shrink-0 bg-neutral-200 dark:bg-neutral-800" />
