@@ -1,13 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  LayoutGrid,
-  List,
-  Calendar,
-  Clock,
-  GanttChart,
-} from "lucide-react";
+import { LayoutGrid, List, Calendar, Clock, GanttChart } from "lucide-react";
 import type { ProjectViewType } from "./types";
 
 interface ViewTypeIconProps {
@@ -22,11 +16,7 @@ const sizeClasses = {
   lg: "h-5 w-5",
 };
 
-export default function ViewTypeIcon({
-  type,
-  className = "",
-  size = "md",
-}: ViewTypeIconProps) {
+export default function ViewTypeIcon({ type, className = "", size = "md" }: ViewTypeIconProps) {
   const sizeClass = sizeClasses[size];
   const combinedClassName = `${sizeClass} ${className}`.trim();
 

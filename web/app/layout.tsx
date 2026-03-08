@@ -5,6 +5,7 @@ import AuthProviderClient from "./contexts/AuthProviderClient";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,8 +22,7 @@ export const metadata: Metadata = {
     default: "Weave Notes",
     template: "%s | Weave Notes",
   },
-  description:
-    "Crie, edite e compartilhe suas anotações com segurança e praticidade.",
+  description: "Crie, edite e compartilhe suas anotações com segurança e praticidade.",
   keywords: [
     "notas",
     "anotações",
@@ -38,15 +38,13 @@ export const metadata: Metadata = {
     type: "website",
     locale: "pt_BR",
     title: "Weave Notes",
-    description:
-      "Crie, edite e compartilhe suas anotações com segurança e praticidade.",
+    description: "Crie, edite e compartilhe suas anotações com segurança e praticidade.",
     siteName: "Weave Notes",
   },
   twitter: {
     card: "summary_large_image",
     title: "Weave Notes",
-    description:
-      "Crie, edite e compartilhe suas anotações com segurança e praticidade.",
+    description: "Crie, edite e compartilhe suas anotações com segurança e praticidade.",
   },
   icons: {
     icon: "/favicon.ico",
@@ -67,7 +65,9 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider>
-          <AuthProviderClient>{children}</AuthProviderClient>
+          <AuthProviderClient>
+            <LanguageProvider>{children}</LanguageProvider>
+          </AuthProviderClient>
           <Toaster position="top-right" expand={true} richColors closeButton />
         </ThemeProvider>
       </body>

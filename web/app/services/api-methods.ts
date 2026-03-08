@@ -144,7 +144,11 @@ class ApiClient {
     });
   }
 
-  async patch(endpoint: string, data?: unknown, options: ApiRequestOptions = {}): Promise<Response> {
+  async patch(
+    endpoint: string,
+    data?: unknown,
+    options: ApiRequestOptions = {}
+  ): Promise<Response> {
     return this.request(endpoint, {
       ...options,
       method: "PATCH",

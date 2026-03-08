@@ -22,7 +22,7 @@ export async function checkHealth(): Promise<HealthStatus> {
         "Content-Type": "application/json",
       },
     });
-    
+
     const endTime = performance.now();
     const responseTime = Math.round(endTime - startTime);
 

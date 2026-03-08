@@ -5,19 +5,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useTheme } from "@/app/contexts/ThemeContext";
+import { useLanguage } from "@/app/contexts/LanguageContext";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { IoPersonCircleSharp } from "react-icons/io5";
 import { FiSun, FiMoon } from "react-icons/fi";
 import { type User } from "@/app/services/authentication/AuthService";
 
 const formatters = {
-  getDisplayName: (user: User) => {
-    const name = user?.user_name?.trim() || "Usuário";
+  getDisplayName: (user: User, fallback: string) => {
+    const name = user?.user_name?.trim() || fallback;
     const parts = name.split(" ");
     return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : parts[0];
   },
-  getUsername: (user: User) => {
-    return user?.username || user?.email?.split("@")[0] || "usuario";
+  getUsername: (user: User, fallback: string) => {
+    return user?.username || user?.email?.split("@")[0] || fallback;
   },
 };
 
@@ -30,14 +31,14 @@ const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "sm" | "md" | "l
 
   return (
     <div
-      className={`${sizeClasses[size]} relative flex-shrink-0 overflow-hidden rounded-md border border-neutral-100 bg-neutral-100 transition-all duration-300 dark:border-neutral-700 dark:bg-neutral-800`}
+      className={`${sizeClasses[size]} relative flex-shrink-0 overflow-hidden rounded-md border-1 border-neutral-100 bg-neutral-100 transition-all duration-300 dark:border-neutral-700 dark:bg-neutral-800`}
     >
       {user?.avatar_url ? (
         <Image
           src={user.avatar_url}
           alt={`Avatar de ${user.user_name}`}
           fill
-          className="object-cover"
+          className="ring-2 ring-neutral-400 object-cover transition-transform duration-300 hover:scale-105 dark:border-neutral-700"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
       ) : (
@@ -53,18 +54,19 @@ interface MenuContentProps {
   onClose: () => void;
   onToggleTheme: () => void;
   theme: string;
+  t: ReturnType<typeof useLanguage>["t"];
 }
 
-const MenuContent = ({ user, logout, onClose, onToggleTheme, theme }: MenuContentProps) => (
+const MenuContent = ({ user, logout, onClose, onToggleTheme, theme, t }: MenuContentProps) => (
   <div className="flex flex-col overflow-hidden">
     <div className="flex items-center gap-4 border-b border-neutral-200 bg-transparent px-4 py-4 dark:border-neutral-800">
       <UserAvatar user={user} size="md" />
       <div className="min-w-0 flex-1">
         <p className="truncate font-bold text-neutral-900 dark:text-neutral-100">
-          {user?.user_name || "Usuário"}
+          {user?.user_name || t.common.user}
         </p>
         <p className="truncate text-xs text-neutral-500 dark:text-neutral-400">
-          @{formatters.getUsername(user)}
+          @{formatters.getUsername(user, t.common.username)}
         </p>
       </div>
     </div>
@@ -86,10 +88,10 @@ const MenuContent = ({ user, logout, onClose, onToggleTheme, theme }: MenuConten
       >
         <div className="flex items-center gap-2">
           {theme === "light" ? <FiMoon className="h-4 w-4" /> : <FiSun className="h-4 w-4" />}
-          <span>Tema</span>
+          <span>{t.navbar.theme}</span>
         </div>
         <span className="rounded-md bg-black/5 px-2 py-0.5 text-xs font-bold tracking-wider text-neutral-500 uppercase dark:bg-white/10 dark:text-neutral-300">
-          {theme === "light" ? "Claro" : "Escuro"}
+          {theme === "light" ? t.navbar.light : t.navbar.dark}
         </span>
       </button>
 
@@ -112,7 +114,7 @@ const MenuContent = ({ user, logout, onClose, onToggleTheme, theme }: MenuConten
         }}
         className="flex w-full items-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
       >
-        Sair
+        {t.navbar.logout}
       </button>
     </nav>
   </div>
@@ -121,6 +123,7 @@ const MenuContent = ({ user, logout, onClose, onToggleTheme, theme }: MenuConten
 const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
   const { user, logout, authenticated, updateUser } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { t } = useLanguage();
 
   const [isMenuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -156,8 +159,8 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
   return (
     <>
       <nav className="sticky top-0 z-40 w-full bg-neutral-50/90 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/90 print:hidden">
-        <div className="mx-auto w-full max-w-[1920px] px-2 sm:px-2 lg:px-4">
-          <div className="flex h-14 items-center justify-between">
+        <div className="mx-auto w-full max-w-[1920px] px-2 sm:px-2 lg:px-2">
+          <div className="flex h-12 items-center justify-between">
             {/* Esquerdo */}
             <div className="flex items-center gap-3 sm:gap-5">
               {authenticated && (
@@ -170,27 +173,41 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                 </button>
               )}
 
-              <Link
-                href={authenticated ? "/app/home" : "/"}
-                className="group flex items-center gap-2 outline-none sm:gap-3"
-              >
-                {/* App Logo */}
-                <div className="h-max-content relative flex h-9 items-center justify-center overflow-hidden rounded-md transition-transform group-hover:scale-105 group-active:scale-95">
-                  <strong className="text-md sm:text-md font-bold text-yellow-500">Weave</strong>
-                </div>
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* Link do Logo / App */}
+                <Link
+                  href={authenticated ? "/app/home" : "/"}
+                  className="group flex items-center gap-2 outline-none sm:gap-3"
+                  aria-label={t.nav.backToHome}
+                >
+                  <div className="relative flex h-9 items-center justify-center overflow-hidden rounded-md transition-transform group-hover:scale-105 group-active:scale-95">
+                    <strong className="text-md sm:text-md rounded-md bg-neutral-200 px-2 font-bold text-yellow-500 dark:bg-neutral-800">
+                      Weave
+                    </strong>
+                  </div>
+                </Link>
 
-                {/* Organização */}
+                {/* Área da Organização - Separada do Link principal */}
                 {user?.org_id && (
                   <div className="animate-in fade-in flex items-center gap-2 duration-300 sm:gap-3">
-                    <div className="h-4 w-px bg-neutral-200 sm:h-5 dark:bg-neutral-800" />
+                    {/* Separador Visual */}
+                    <div
+                      className="h-4 w-px bg-neutral-200 sm:h-5 dark:bg-neutral-800"
+                      aria-hidden="true"
+                    />
+
                     <div className="flex items-center gap-2">
-                      <span className="max-w-[80px] truncate text-xs text-neutral-700 sm:max-w-[150px] sm:text-sm md:max-w-none dark:text-neutral-300">
+                      <Link
+                        href={`/app/organizations/${user.org_id}/about`}
+                        title={`Saiba mais sobre ${user.org_name}`}
+                        className="max-w-[80px] truncate text-xs text-neutral-700 transition-colors hover:text-yellow-600 sm:max-w-[150px] sm:text-sm md:max-w-none dark:text-neutral-300 dark:hover:text-yellow-500"
+                      >
                         {user.org_name}
-                      </span>
+                      </Link>
                     </div>
                   </div>
                 )}
-              </Link>
+              </div>
             </div>
 
             {/* Lado direito*/}
@@ -205,10 +222,10 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                   >
                     <div className="hidden flex-col items-end text-right sm:flex">
                       <span className="text-sm leading-none font-bold text-neutral-800 dark:text-neutral-200">
-                        {formatters.getDisplayName(user)}
+                        {formatters.getDisplayName(user, t.common.user)}
                       </span>
                       <span className="text-[9px] font-medium text-neutral-400">
-                        @{formatters.getUsername(user)}
+                        @{formatters.getUsername(user, t.common.username)}
                       </span>
                     </div>
                     <UserAvatar user={user} size="sm" />
@@ -224,6 +241,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                           onClose={() => setMenuOpen(false)}
                           onToggleTheme={handleThemeToggle}
                           theme={theme}
+                          t={t}
                         />
                       </div>
                     </div>
@@ -251,6 +269,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                 onClose={() => setMenuOpen(false)}
                 onToggleTheme={handleThemeToggle}
                 theme={theme}
+                t={t}
               />
             </div>
 
@@ -259,7 +278,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                 onClick={() => setMenuOpen(false)}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-black/5 py-3.5 text-sm font-bold text-neutral-700 transition-transform active:scale-95 dark:bg-white/10 dark:text-neutral-200"
               >
-                <FaTimes /> Fechar Menu
+                <FaTimes /> {t.navbar.closeMenu}
               </button>
             </div>
           </div>

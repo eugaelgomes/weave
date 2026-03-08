@@ -174,12 +174,22 @@ export default function SignUp() {
 
       {/* Toast de Mensagens */}
       {msg.text && (
-        <div className="animate-in slide-in-from-bottom-5 fade-in fixed bottom-4 left-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 duration-300 sm:bottom-10 sm:left-auto sm:right-10 sm:translate-x-0">
+        <div className="animate-in slide-in-from-bottom-5 fade-in fixed bottom-4 left-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 duration-300 sm:right-10 sm:bottom-10 sm:left-auto sm:translate-x-0">
           {msg.type === "error" && (
             <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-white/95 p-4 text-sm text-red-700 shadow-2xl backdrop-blur-xl">
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-red-100">
-                <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="h-4 w-4 text-red-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </div>
               <span className="font-medium">{msg.text}</span>
@@ -188,8 +198,18 @@ export default function SignUp() {
           {msg.type === "success" && (
             <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-white/95 p-4 text-sm text-green-700 shadow-2xl backdrop-blur-xl">
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-green-100">
-                <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg
+                  className="h-4 w-4 text-green-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
               <span className="font-medium">{msg.text}</span>
@@ -200,24 +220,46 @@ export default function SignUp() {
 
       {/* Container Principal */}
       <main className="z-10 flex w-full flex-1 items-center justify-center px-4 py-2 sm:px-6 lg:px-8">
-        
         {/* Card Único */}
         <div className="flex w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-xl lg:flex-row">
-          
           {/* Lado Esquerdo (Features) - oculto em mobile */}
-          <div className="order-2 hidden sm:flex w-full flex-col justify-center bg-neutral-50/50 p-6 sm:p-10 lg:order-1 lg:w-3/5 xl:p-16">
+          <div className="order-2 hidden w-full flex-col justify-center bg-neutral-50/50 p-6 sm:flex sm:p-10 lg:order-1 lg:w-3/5 xl:p-16">
             <h2 className="mb-6 text-center text-2xl font-black text-yellow-500 lg:mb-10 lg:text-3xl">
               Tudo que você precisa
             </h2>
-            
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 xl:gap-5">
               {[
-                { icon: <FaRobot className="h-5 w-5 text-yellow-500" />, title: "Weave AI", desc: "Chat e edição inteligente" },
-                { icon: <HiDocumentText className="h-5 w-5 text-yellow-500" />, title: "Notas em Blocos", desc: "Hierarquia e exportação" },
-                { icon: <HiFolder className="h-5 w-5 text-yellow-500" />, title: "Projetos", desc: "Tarefas e progresso" },
-                { icon: <FaBuilding className="h-5 w-5 text-yellow-500" />, title: "Organizações", desc: "Times e branding" },
-                { icon: <FaUsers className="h-5 w-5 text-yellow-500" />, title: "Colaboração", desc: "Edição conjunta" },
-                { icon: <FaSearch className="h-5 w-5 text-yellow-500" />, title: "Busca Web", desc: "IA traz contexto" },
+                {
+                  icon: <FaRobot className="h-5 w-5 text-yellow-500" />,
+                  title: "Weave AI",
+                  desc: "Chat e edição inteligente",
+                },
+                {
+                  icon: <HiDocumentText className="h-5 w-5 text-yellow-500" />,
+                  title: "Notas em Blocos",
+                  desc: "Hierarquia e exportação",
+                },
+                {
+                  icon: <HiFolder className="h-5 w-5 text-yellow-500" />,
+                  title: "Projetos",
+                  desc: "Tarefas e progresso",
+                },
+                {
+                  icon: <FaBuilding className="h-5 w-5 text-yellow-500" />,
+                  title: "Organizações",
+                  desc: "Times e branding",
+                },
+                {
+                  icon: <FaUsers className="h-5 w-5 text-yellow-500" />,
+                  title: "Colaboração",
+                  desc: "Edição conjunta",
+                },
+                {
+                  icon: <FaSearch className="h-5 w-5 text-yellow-500" />,
+                  title: "Busca Web",
+                  desc: "IA traz contexto",
+                },
               ].map((feat) => (
                 <div
                   key={feat.title}
@@ -240,7 +282,7 @@ export default function SignUp() {
 
           {/* Lado Direito (Formulário) */}
           <div className="order-1 flex w-full flex-col justify-center p-6 sm:p-10 lg:order-2 lg:w-2/5 xl:p-14">
-            <div className="flex flex-col mb-6 text-center">
+            <div className="mb-6 flex flex-col text-center">
               <h1 className="text-2xl font-black tracking-tight text-yellow-500 lg:text-3xl">
                 Crie sua conta
               </h1>
@@ -249,9 +291,7 @@ export default function SignUp() {
             <form onSubmit={handleSubmit} className="mx-auto w-full max-w-sm space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold tracking-wider text-neutral-500">
-                    Nome
-                  </label>
+                  <label className="text-xs font-bold tracking-wider text-neutral-500">Nome</label>
                   <input
                     name="name"
                     type="text"
@@ -280,9 +320,7 @@ export default function SignUp() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold tracking-wider text-neutral-500">
-                  E-mail
-                </label>
+                <label className="text-xs font-bold tracking-wider text-neutral-500">E-mail</label>
                 <input
                   name="email"
                   type="email"
@@ -297,9 +335,7 @@ export default function SignUp() {
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold tracking-wider text-neutral-500">
-                    Senha
-                  </label>
+                  <label className="text-xs font-bold tracking-wider text-neutral-500">Senha</label>
                   <div className="relative">
                     <input
                       name="password"
@@ -314,7 +350,7 @@ export default function SignUp() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-neutral-400 transition-colors hover:text-yellow-500"
+                      className="absolute top-1/2 right-3 -translate-y-1/2 p-2 text-neutral-400 transition-colors hover:text-yellow-500"
                     >
                       {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
                     </button>
@@ -339,7 +375,7 @@ export default function SignUp() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-neutral-400 transition-colors hover:text-yellow-500"
+                      className="absolute top-1/2 right-3 -translate-y-1/2 p-2 text-neutral-400 transition-colors hover:text-yellow-500"
                     >
                       {showConfirmPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
                     </button>

@@ -3,7 +3,6 @@ import { API_ENDPOINTS } from "../api-methods";
 import { apiClient, handleResponse } from "../api-methods";
 import type { UserPreferences } from "@/types/user-preferences";
 
-
 export interface PlanDetails {
   limits?: {
     max_notes?: number;

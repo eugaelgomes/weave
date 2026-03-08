@@ -124,7 +124,7 @@ const nextConfig: NextConfig = {
         {
           source: "/_next/static/:path*",
           headers: [staticCacheHeader],
-        },
+        }
       );
     }
 

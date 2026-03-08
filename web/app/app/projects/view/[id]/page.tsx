@@ -413,7 +413,7 @@ export default function ProjectViewPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_320px] sm:gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-[1fr_320px]">
           {/* Coluna Principal */}
           <div className="space-y-3 sm:space-y-4">
             {/* Informações do Projeto */}
@@ -433,7 +433,9 @@ export default function ProjectViewPage() {
                       {getProjectIcon(project.properties?.icon ?? undefined)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h1 className="mb-2 text-xl font-bold text-neutral-900 sm:mb-3 sm:text-2xl lg:text-3xl dark:text-neutral-100">{project.title}</h1>
+                      <h1 className="mb-2 text-xl font-bold text-neutral-900 sm:mb-3 sm:text-2xl lg:text-3xl dark:text-neutral-100">
+                        {project.title}
+                      </h1>
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         {/* Status Badge */}
                         <span
@@ -614,7 +616,9 @@ export default function ProjectViewPage() {
                     <div className="group flex items-center gap-2 rounded-md p-2 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
                       <Clock className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
                       <div>
-                        <span className="font-semibold text-neutral-500 dark:text-neutral-500">Criado em:</span>
+                        <span className="font-semibold text-neutral-500 dark:text-neutral-500">
+                          Criado em:
+                        </span>
                         <p className="text-neutral-700 dark:text-neutral-300">
                           {new Date(project.created_at).toLocaleDateString("pt-BR", {
                             day: "2-digit",
@@ -627,7 +631,9 @@ export default function ProjectViewPage() {
                     <div className="group flex items-center gap-2 rounded-md p-2 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
                       <TrendingUp className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
                       <div>
-                        <span className="font-semibold text-neutral-500 dark:text-neutral-500">Atualizado em:</span>
+                        <span className="font-semibold text-neutral-500 dark:text-neutral-500">
+                          Atualizado em:
+                        </span>
                         <p className="text-neutral-700 dark:text-neutral-300">
                           {new Date(project.updated_at).toLocaleDateString("pt-BR", {
                             day: "2-digit",
@@ -786,12 +792,7 @@ export default function ProjectViewPage() {
                         value={editedDefaultView}
                         onChange={(e) =>
                           setEditedDefaultView(
-                            e.target.value as
-                              | "board"
-                              | "list"
-                              | "calendar"
-                              | "timeline"
-                              | "gantt"
+                            e.target.value as "board" | "list" | "calendar" | "timeline" | "gantt"
                           )
                         }
                         className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-900 transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none sm:px-4 sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
@@ -1050,112 +1051,125 @@ export default function ProjectViewPage() {
               </div>
 
               <div className="p-3 sm:p-4">
-
-              {/* Owner */}
-              {project.owner && (
-                <div className="mb-3 overflow-hidden rounded-lg border border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-white p-3 dark:to-neutral-950">
-                  <div className="mb-2 flex items-center gap-2 sm:gap-3">
-                    {project.owner.avatar_url ? (
-                      <Image
-                        src={project.owner.avatar_url}
-                        alt={project.owner.name || project.owner.username}
-                        className="h-8 w-8 rounded-full border-2 border-yellow-500/50 object-cover sm:h-10 sm:w-10"
-                        height={40}
-                        width={40}
-                      />
-                    ) : (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-yellow-500/50 bg-yellow-500 text-xs font-bold text-neutral-950 sm:h-10 sm:w-10 sm:text-sm">
-                        {project.owner.name?.charAt(0).toUpperCase() ||
-                          project.owner.username.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-semibold text-neutral-800 sm:text-sm dark:text-neutral-100">
-                        {project.owner.name || project.owner.username}
-                      </p>
-                      <p className="truncate text-[10px] text-neutral-500">{project.owner.email}</p>
-                    </div>
-                  </div>
-                  <span className="inline-flex items-center gap-1 rounded-md bg-yellow-500/20 px-2 py-1 text-[10px] font-bold text-yellow-600 dark:text-yellow-400">
-                    <Folder className="h-3 w-3" />
-                    PROPRIETÁRIO
-                  </span>
-                </div>
-              )}
-
-              {/* Colaboradores */}
-              {collaborators.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-white py-6 sm:py-8 dark:border-neutral-800 dark:bg-neutral-900">
-                  <Users className="mb-2 h-6 w-6 text-neutral-300 sm:h-8 sm:w-8 dark:text-neutral-700" />
-                  <p className="text-xs text-neutral-400 dark:text-neutral-500">Nenhum colaborador</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {collaborators.map((collab) => (
-                    <div
-                      key={collab.user_id}
-                      className="group rounded-lg border border-neutral-200 bg-white p-2.5 transition-all hover:border-neutral-300 hover:bg-neutral-50 sm:p-3 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
-                    >
-                      <div className="mb-2 flex items-center gap-2 sm:gap-3">
-                        {collab.avatar_url ? (
-                          <Image
-                            src={collab.avatar_url}
-                            alt={collab.name || collab.username}
-                            className="h-7 w-7 rounded-full object-cover sm:h-8 sm:w-8"
-                            height={32}
-                            width={32}
-                          />
-                        ) : (
-                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-200 text-[10px] font-bold text-neutral-600 sm:h-8 sm:w-8 sm:text-xs dark:bg-neutral-700 dark:text-neutral-200">
-                            {collab.name?.charAt(0).toUpperCase() ||
-                              collab.username.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-medium text-neutral-700 dark:text-neutral-200">
-                            {collab.name || collab.username}
-                          </p>
-                          <p className="truncate text-[10px] text-neutral-400 dark:text-neutral-500">{collab.email}</p>
-                        </div>
-                        {isOwner && (
-                          <button
-                            onClick={() => handleRemoveCollaborator(collab.user_id)}
-                            className="rounded-md bg-red-500/10 p-1.5 text-red-500 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/20 dark:text-red-400"
-                            title="Remover colaborador"
-                          >
-                            <FaTimes className="h-3 w-3" />
-                          </button>
-                        )}
-                      </div>
-                      {isOwner ? (
-                        <select
-                          value={collab.permission}
-                          onChange={(e) =>
-                            handleUpdatePermission(
-                              collab.user_id,
-                              e.target.value as "admin" | "viewer"
-                            )
-                          }
-                          className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[10px] font-medium text-neutral-600 transition-colors focus:border-purple-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
-                        >
-                          <option value="viewer">◉ Visualizador</option>
-                          <option value="admin">★ Administrador</option>
-                        </select>
+                {/* Owner */}
+                {project.owner && (
+                  <div className="mb-3 overflow-hidden rounded-lg border border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-white p-3 dark:to-neutral-950">
+                    <div className="mb-2 flex items-center gap-2 sm:gap-3">
+                      {project.owner.avatar_url ? (
+                        <Image
+                          src={project.owner.avatar_url}
+                          alt={project.owner.name || project.owner.username}
+                          className="h-8 w-8 rounded-full border-2 border-yellow-500/50 object-cover sm:h-10 sm:w-10"
+                          height={40}
+                          width={40}
+                        />
                       ) : (
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold ${
-                            collab.permission === "admin"
-                              ? "bg-blue-500/20 text-blue-500 dark:text-blue-400"
-                              : "bg-neutral-200 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400"
-                          }`}
-                        >
-                          {collab.permission === "admin" ? <><FaKey className="h-2.5 w-2.5" /> ADMIN</> : <><FaEye className="h-2.5 w-2.5" /> VIEWER</>}
-                        </span>
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-yellow-500/50 bg-yellow-500 text-xs font-bold text-neutral-950 sm:h-10 sm:w-10 sm:text-sm">
+                          {project.owner.name?.charAt(0).toUpperCase() ||
+                            project.owner.username.charAt(0).toUpperCase()}
+                        </div>
                       )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold text-neutral-800 sm:text-sm dark:text-neutral-100">
+                          {project.owner.name || project.owner.username}
+                        </p>
+                        <p className="truncate text-[10px] text-neutral-500">
+                          {project.owner.email}
+                        </p>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <span className="inline-flex items-center gap-1 rounded-md bg-yellow-500/20 px-2 py-1 text-[10px] font-bold text-yellow-600 dark:text-yellow-400">
+                      <Folder className="h-3 w-3" />
+                      PROPRIETÁRIO
+                    </span>
+                  </div>
+                )}
+
+                {/* Colaboradores */}
+                {collaborators.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-white py-6 sm:py-8 dark:border-neutral-800 dark:bg-neutral-900">
+                    <Users className="mb-2 h-6 w-6 text-neutral-300 sm:h-8 sm:w-8 dark:text-neutral-700" />
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500">
+                      Nenhum colaborador
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {collaborators.map((collab) => (
+                      <div
+                        key={collab.user_id}
+                        className="group rounded-lg border border-neutral-200 bg-white p-2.5 transition-all hover:border-neutral-300 hover:bg-neutral-50 sm:p-3 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
+                      >
+                        <div className="mb-2 flex items-center gap-2 sm:gap-3">
+                          {collab.avatar_url ? (
+                            <Image
+                              src={collab.avatar_url}
+                              alt={collab.name || collab.username}
+                              className="h-7 w-7 rounded-full object-cover sm:h-8 sm:w-8"
+                              height={32}
+                              width={32}
+                            />
+                          ) : (
+                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-200 text-[10px] font-bold text-neutral-600 sm:h-8 sm:w-8 sm:text-xs dark:bg-neutral-700 dark:text-neutral-200">
+                              {collab.name?.charAt(0).toUpperCase() ||
+                                collab.username.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-medium text-neutral-700 dark:text-neutral-200">
+                              {collab.name || collab.username}
+                            </p>
+                            <p className="truncate text-[10px] text-neutral-400 dark:text-neutral-500">
+                              {collab.email}
+                            </p>
+                          </div>
+                          {isOwner && (
+                            <button
+                              onClick={() => handleRemoveCollaborator(collab.user_id)}
+                              className="rounded-md bg-red-500/10 p-1.5 text-red-500 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/20 dark:text-red-400"
+                              title="Remover colaborador"
+                            >
+                              <FaTimes className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
+                        {isOwner ? (
+                          <select
+                            value={collab.permission}
+                            onChange={(e) =>
+                              handleUpdatePermission(
+                                collab.user_id,
+                                e.target.value as "admin" | "viewer"
+                              )
+                            }
+                            className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[10px] font-medium text-neutral-600 transition-colors focus:border-purple-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                          >
+                            <option value="viewer">◉ Visualizador</option>
+                            <option value="admin">★ Administrador</option>
+                          </select>
+                        ) : (
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold ${
+                              collab.permission === "admin"
+                                ? "bg-blue-500/20 text-blue-500 dark:text-blue-400"
+                                : "bg-neutral-200 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400"
+                            }`}
+                          >
+                            {collab.permission === "admin" ? (
+                              <>
+                                <FaKey className="h-2.5 w-2.5" /> ADMIN
+                              </>
+                            ) : (
+                              <>
+                                <FaEye className="h-2.5 w-2.5" /> VIEWER
+                              </>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1177,7 +1191,9 @@ export default function ProjectViewPage() {
                     <div className="flex h-5 w-5 items-center justify-center rounded-md border border-blue-400/20 bg-blue-400/10 text-blue-500 dark:text-blue-400">
                       <FileText className="h-3 w-3" />
                     </div>
-                    <span className="text-xs font-medium text-neutral-500 transition-colors group-hover:text-neutral-700 dark:text-neutral-400 dark:group-hover:text-neutral-200">Notas</span>
+                    <span className="text-xs font-medium text-neutral-500 transition-colors group-hover:text-neutral-700 dark:text-neutral-400 dark:group-hover:text-neutral-200">
+                      Notas
+                    </span>
                   </div>
                   <div className="mx-3 hidden h-px flex-1 border-b border-dashed border-neutral-300 opacity-30 sm:block dark:border-neutral-800"></div>
                   <span className="font-mono text-sm font-bold text-blue-500 dark:text-blue-400">
@@ -1189,7 +1205,9 @@ export default function ProjectViewPage() {
                     <div className="flex h-5 w-5 items-center justify-center rounded-md border border-purple-400/20 bg-purple-400/10 text-purple-500 dark:text-purple-400">
                       <Users className="h-3 w-3" />
                     </div>
-                    <span className="text-xs font-medium text-neutral-500 transition-colors group-hover:text-neutral-700 dark:text-neutral-400 dark:group-hover:text-neutral-200">Colaboradores</span>
+                    <span className="text-xs font-medium text-neutral-500 transition-colors group-hover:text-neutral-700 dark:text-neutral-400 dark:group-hover:text-neutral-200">
+                      Colaboradores
+                    </span>
                   </div>
                   <div className="mx-3 hidden h-px flex-1 border-b border-dashed border-neutral-300 opacity-30 sm:block dark:border-neutral-800"></div>
                   <span className="font-mono text-sm font-bold text-purple-500 dark:text-purple-400">
@@ -1201,7 +1219,9 @@ export default function ProjectViewPage() {
                     <div className="flex h-5 w-5 items-center justify-center rounded-md border border-green-400/20 bg-green-400/10 text-green-500 dark:text-green-400">
                       <TrendingUp className="h-3 w-3" />
                     </div>
-                    <span className="text-xs font-medium text-neutral-500 transition-colors group-hover:text-neutral-700 dark:text-neutral-400 dark:group-hover:text-neutral-200">Progresso</span>
+                    <span className="text-xs font-medium text-neutral-500 transition-colors group-hover:text-neutral-700 dark:text-neutral-400 dark:group-hover:text-neutral-200">
+                      Progresso
+                    </span>
                   </div>
                   <div className="mx-3 hidden h-px flex-1 border-b border-dashed border-neutral-300 opacity-30 sm:block dark:border-neutral-800"></div>
                   <span className="font-mono text-sm font-bold text-green-500 dark:text-green-400">
@@ -1213,211 +1233,221 @@ export default function ProjectViewPage() {
           </div>
         </div>
 
-      {/* Modal: Adicionar Colaborador */}
-      {showAddCollaborator && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm dark:bg-black/70">
-          <div className="w-full max-w-md rounded-xl border border-neutral-200 bg-white p-4 shadow-2xl sm:p-6 dark:border-neutral-800 dark:bg-neutral-900">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="flex items-center gap-2 text-base font-bold text-neutral-800 sm:text-lg dark:text-neutral-100">
-                <FaUserPlus className="text-purple-500 dark:text-purple-400" />
-                Adicionar Colaborador
-              </h3>
-              <button
-                onClick={() => {
-                  setShowAddCollaborator(false);
-                  setCollaboratorSearch("");
-                  setSearchResults([]);
-                }}
-                className="rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
-              >
-                <FaTimes className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="relative mb-4">
-              <FaSearch className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" />
-              <input
-                type="text"
-                value={collaboratorSearch}
-                onChange={(e) => setCollaboratorSearch(e.target.value)}
-                placeholder="Buscar por nome ou email..."
-                className="w-full rounded-lg border border-neutral-300 bg-neutral-50 py-2.5 pr-3 pl-10 text-sm text-neutral-900 transition-colors placeholder:text-neutral-400 focus:border-purple-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder:text-neutral-600"
-                autoFocus
-              />
-            </div>
-
-            {searchingUsers && (
-              <div className="flex flex-col items-center justify-center py-8">
-                <FaSpinner className="mb-2 h-6 w-6 animate-spin text-purple-500 dark:text-purple-400" />
-                <p className="text-xs text-neutral-400 dark:text-neutral-500">Buscando usuários...</p>
+        {/* Modal: Adicionar Colaborador */}
+        {showAddCollaborator && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm dark:bg-black/70">
+            <div className="w-full max-w-md rounded-xl border border-neutral-200 bg-white p-4 shadow-2xl sm:p-6 dark:border-neutral-800 dark:bg-neutral-900">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-base font-bold text-neutral-800 sm:text-lg dark:text-neutral-100">
+                  <FaUserPlus className="text-purple-500 dark:text-purple-400" />
+                  Adicionar Colaborador
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowAddCollaborator(false);
+                    setCollaboratorSearch("");
+                    setSearchResults([]);
+                  }}
+                  className="rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
+                >
+                  <FaTimes className="h-4 w-4" />
+                </button>
               </div>
-            )}
 
-            {searchResults.length > 0 && (
-              <div className="max-h-80 space-y-2 overflow-y-auto rounded-lg">
-                {searchResults.map((user) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 p-3 transition-all hover:border-neutral-300 hover:bg-white dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:bg-neutral-900"
-                  >
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      {user.avatar_url ? (
-                        <Image
-                          src={user.avatar_url}
-                          alt={user.name || user.username}
-                          className="h-8 w-8 rounded-full object-cover sm:h-10 sm:w-10"
-                          height={40}
-                          width={40}
-                        />
-                      ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500/20 text-xs font-bold text-purple-500 sm:h-10 sm:w-10 sm:text-sm dark:text-purple-400">
-                          {user.name?.charAt(0).toUpperCase() ||
-                            user.username.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium text-neutral-700 sm:text-sm dark:text-neutral-200">
-                          {user.name || user.username}
-                        </p>
-                        <p className="truncate text-[10px] text-neutral-400 dark:text-neutral-500">{user.email}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-1 sm:gap-2">
-                      <button
-                        onClick={() => handleAddCollaborator(user.id, "viewer")}
-                        className="flex items-center gap-1 rounded-md bg-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-600 transition-all hover:bg-neutral-300 sm:px-3 sm:py-1.5 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
-                        title="Adicionar como visualizador"
-                      >
-                        <FaEye className="h-3 w-3" /> Viewer
-                      </button>
-                      <button
-                        onClick={() => handleAddCollaborator(user.id, "admin")}
-                        className="flex items-center gap-1 rounded-md bg-blue-500/20 px-2 py-1 text-[10px] font-medium text-blue-500 transition-all hover:bg-blue-500/30 sm:px-3 sm:py-1.5 dark:text-blue-400"
-                        title="Adicionar como administrador"
-                      >
-                        <FaKey className="h-3 w-3" /> Admin
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <div className="relative mb-4">
+                <FaSearch className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" />
+                <input
+                  type="text"
+                  value={collaboratorSearch}
+                  onChange={(e) => setCollaboratorSearch(e.target.value)}
+                  placeholder="Buscar por nome ou email..."
+                  className="w-full rounded-lg border border-neutral-300 bg-neutral-50 py-2.5 pr-3 pl-10 text-sm text-neutral-900 transition-colors placeholder:text-neutral-400 focus:border-purple-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder:text-neutral-600"
+                  autoFocus
+                />
               </div>
-            )}
 
-            {collaboratorSearch.length >= 2 && !searchingUsers && searchResults.length === 0 && (
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 py-8 dark:border-neutral-800">
-                <Users className="mb-2 h-8 w-8 text-neutral-300 dark:text-neutral-700" />
-                <p className="text-sm text-neutral-500">Nenhum usuário encontrado</p>
-                <p className="text-xs text-neutral-400 dark:text-neutral-600">Tente buscar por outro nome ou email</p>
-              </div>
-            )}
+              {searchingUsers && (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <FaSpinner className="mb-2 h-6 w-6 animate-spin text-purple-500 dark:text-purple-400" />
+                  <p className="text-xs text-neutral-400 dark:text-neutral-500">
+                    Buscando usuários...
+                  </p>
+                </div>
+              )}
 
-            {collaboratorSearch.length < 2 && searchResults.length === 0 && !searchingUsers && (
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 py-8 dark:border-neutral-800">
-                <FaSearch className="mb-2 h-8 w-8 text-neutral-300 dark:text-neutral-700" />
-                <p className="text-sm text-neutral-500">Digite pelo menos 2 caracteres</p>
-                <p className="text-xs text-neutral-400 dark:text-neutral-600">para buscar usuários</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Adicionar Nota */}
-      {showAddNote && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm dark:bg-black/70">
-          <div className="w-full max-w-md rounded-xl border border-neutral-200 bg-white p-4 shadow-2xl sm:p-6 dark:border-neutral-800 dark:bg-neutral-900">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="flex items-center gap-2 text-base font-bold text-neutral-800 sm:text-lg dark:text-neutral-100">
-                <FileText className="h-4 w-4 text-yellow-500 sm:h-5 sm:w-5 dark:text-yellow-400" />
-                Adicionar Nota ao Projeto
-              </h3>
-              <button
-                onClick={() => setShowAddNote(false)}
-                className="rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
-              >
-                <FaTimes className="h-4 w-4" />
-              </button>
-            </div>
-
-            {availableNotes.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 py-10 sm:py-12 dark:border-neutral-800">
-                <FileText className="mb-3 h-10 w-10 text-neutral-300 sm:h-12 sm:w-12 dark:text-neutral-700" />
-                <p className="mb-1 text-sm font-medium text-neutral-500 dark:text-neutral-400">Nenhuma nota disponível</p>
-                <p className="text-xs text-neutral-400 dark:text-neutral-600">
-                  Todas as suas notas já estão neste projeto
-                </p>
-              </div>
-            ) : (
-              <>
-                <p className="mb-3 text-xs text-neutral-400 dark:text-neutral-500">
-                  Selecione uma nota para adicionar ao projeto
-                </p>
-                <div className="max-h-96 space-y-2 overflow-y-auto rounded-lg">
-                  {availableNotes.map((note) => (
-                    <button
-                      key={note.id}
-                      onClick={() => handleAddNote(note.id)}
-                      className="group w-full rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-left transition-all hover:border-yellow-500/30 hover:bg-white dark:border-neutral-800 dark:bg-neutral-950 dark:hover:bg-neutral-900"
+              {searchResults.length > 0 && (
+                <div className="max-h-80 space-y-2 overflow-y-auto rounded-lg">
+                  {searchResults.map((user) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 p-3 transition-all hover:border-neutral-300 hover:bg-white dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:bg-neutral-900"
                     >
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <p className="flex-1 text-sm font-medium text-neutral-700 group-hover:text-yellow-500 dark:text-neutral-200 dark:group-hover:text-yellow-400">
-                          {note.title}
-                        </p>
-                        <Plus className="h-4 w-4 text-neutral-400 transition-colors group-hover:text-yellow-500 dark:text-neutral-600 dark:group-hover:text-yellow-400" />
-                      </div>
-
-                      {note.content && (
-                        <p className="mb-2 line-clamp-2 text-xs text-neutral-400 dark:text-neutral-500">
-                          {note.content.substring(0, 100)}...
-                        </p>
-                      )}
-
-                      {note.tags && note.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {note.tags.slice(0, 4).map((tag, i) => (
-                            <span
-                              key={i}
-                              className="rounded-full bg-neutral-200 px-2 py-0.5 text-[10px] text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400"
-                            >
-                              #{tag}
-                            </span>
-                          ))}
-                          {note.tags.length > 4 && (
-                            <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[10px] text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500">
-                              +{note.tags.length - 4}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {note.status && (
-                        <div className="mt-2 flex items-center gap-1.5">
-                          <div
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              note.status === "published"
-                                ? "bg-green-400"
-                                : note.status === "draft"
-                                  ? "bg-yellow-400"
-                                  : "bg-neutral-500"
-                            }`}
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        {user.avatar_url ? (
+                          <Image
+                            src={user.avatar_url}
+                            alt={user.name || user.username}
+                            className="h-8 w-8 rounded-full object-cover sm:h-10 sm:w-10"
+                            height={40}
+                            width={40}
                           />
-                          <span className="text-[10px] text-neutral-400 capitalize dark:text-neutral-500">
-                            {note.status === "published"
-                              ? "Publicada"
-                              : note.status === "draft"
-                                ? "Rascunho"
-                                : "Arquivada"}
-                          </span>
+                        ) : (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500/20 text-xs font-bold text-purple-500 sm:h-10 sm:w-10 sm:text-sm dark:text-purple-400">
+                            {user.name?.charAt(0).toUpperCase() ||
+                              user.username.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-medium text-neutral-700 sm:text-sm dark:text-neutral-200">
+                            {user.name || user.username}
+                          </p>
+                          <p className="truncate text-[10px] text-neutral-400 dark:text-neutral-500">
+                            {user.email}
+                          </p>
                         </div>
-                      )}
-                    </button>
+                      </div>
+                      <div className="flex gap-1 sm:gap-2">
+                        <button
+                          onClick={() => handleAddCollaborator(user.id, "viewer")}
+                          className="flex items-center gap-1 rounded-md bg-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-600 transition-all hover:bg-neutral-300 sm:px-3 sm:py-1.5 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          title="Adicionar como visualizador"
+                        >
+                          <FaEye className="h-3 w-3" /> Viewer
+                        </button>
+                        <button
+                          onClick={() => handleAddCollaborator(user.id, "admin")}
+                          className="flex items-center gap-1 rounded-md bg-blue-500/20 px-2 py-1 text-[10px] font-medium text-blue-500 transition-all hover:bg-blue-500/30 sm:px-3 sm:py-1.5 dark:text-blue-400"
+                          title="Adicionar como administrador"
+                        >
+                          <FaKey className="h-3 w-3" /> Admin
+                        </button>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </>
-            )}
+              )}
+
+              {collaboratorSearch.length >= 2 && !searchingUsers && searchResults.length === 0 && (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 py-8 dark:border-neutral-800">
+                  <Users className="mb-2 h-8 w-8 text-neutral-300 dark:text-neutral-700" />
+                  <p className="text-sm text-neutral-500">Nenhum usuário encontrado</p>
+                  <p className="text-xs text-neutral-400 dark:text-neutral-600">
+                    Tente buscar por outro nome ou email
+                  </p>
+                </div>
+              )}
+
+              {collaboratorSearch.length < 2 && searchResults.length === 0 && !searchingUsers && (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 py-8 dark:border-neutral-800">
+                  <FaSearch className="mb-2 h-8 w-8 text-neutral-300 dark:text-neutral-700" />
+                  <p className="text-sm text-neutral-500">Digite pelo menos 2 caracteres</p>
+                  <p className="text-xs text-neutral-400 dark:text-neutral-600">
+                    para buscar usuários
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Modal: Adicionar Nota */}
+        {showAddNote && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm dark:bg-black/70">
+            <div className="w-full max-w-md rounded-xl border border-neutral-200 bg-white p-4 shadow-2xl sm:p-6 dark:border-neutral-800 dark:bg-neutral-900">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-base font-bold text-neutral-800 sm:text-lg dark:text-neutral-100">
+                  <FileText className="h-4 w-4 text-yellow-500 sm:h-5 sm:w-5 dark:text-yellow-400" />
+                  Adicionar Nota ao Projeto
+                </h3>
+                <button
+                  onClick={() => setShowAddNote(false)}
+                  className="rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
+                >
+                  <FaTimes className="h-4 w-4" />
+                </button>
+              </div>
+
+              {availableNotes.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 py-10 sm:py-12 dark:border-neutral-800">
+                  <FileText className="mb-3 h-10 w-10 text-neutral-300 sm:h-12 sm:w-12 dark:text-neutral-700" />
+                  <p className="mb-1 text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                    Nenhuma nota disponível
+                  </p>
+                  <p className="text-xs text-neutral-400 dark:text-neutral-600">
+                    Todas as suas notas já estão neste projeto
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="mb-3 text-xs text-neutral-400 dark:text-neutral-500">
+                    Selecione uma nota para adicionar ao projeto
+                  </p>
+                  <div className="max-h-96 space-y-2 overflow-y-auto rounded-lg">
+                    {availableNotes.map((note) => (
+                      <button
+                        key={note.id}
+                        onClick={() => handleAddNote(note.id)}
+                        className="group w-full rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-left transition-all hover:border-yellow-500/30 hover:bg-white dark:border-neutral-800 dark:bg-neutral-950 dark:hover:bg-neutral-900"
+                      >
+                        <div className="mb-2 flex items-start justify-between gap-2">
+                          <p className="flex-1 text-sm font-medium text-neutral-700 group-hover:text-yellow-500 dark:text-neutral-200 dark:group-hover:text-yellow-400">
+                            {note.title}
+                          </p>
+                          <Plus className="h-4 w-4 text-neutral-400 transition-colors group-hover:text-yellow-500 dark:text-neutral-600 dark:group-hover:text-yellow-400" />
+                        </div>
+
+                        {note.content && (
+                          <p className="mb-2 line-clamp-2 text-xs text-neutral-400 dark:text-neutral-500">
+                            {note.content.substring(0, 100)}...
+                          </p>
+                        )}
+
+                        {note.tags && note.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {note.tags.slice(0, 4).map((tag, i) => (
+                              <span
+                                key={i}
+                                className="rounded-full bg-neutral-200 px-2 py-0.5 text-[10px] text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                            {note.tags.length > 4 && (
+                              <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[10px] text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500">
+                                +{note.tags.length - 4}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {note.status && (
+                          <div className="mt-2 flex items-center gap-1.5">
+                            <div
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                note.status === "published"
+                                  ? "bg-green-400"
+                                  : note.status === "draft"
+                                    ? "bg-yellow-400"
+                                    : "bg-neutral-500"
+                              }`}
+                            />
+                            <span className="text-[10px] text-neutral-400 capitalize dark:text-neutral-500">
+                              {note.status === "published"
+                                ? "Publicada"
+                                : note.status === "draft"
+                                  ? "Rascunho"
+                                  : "Arquivada"}
+                            </span>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

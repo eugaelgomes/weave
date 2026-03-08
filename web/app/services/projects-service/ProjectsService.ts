@@ -6,13 +6,13 @@ export interface ProjectProperties {
   color?: string | null;
   icon?: string | null;
   tags?: string[];
-  
+
   // Gestão de Tempo e Prioridade
   priority?: "alta" | "media" | "baixa" | null;
   complexity?: "alta" | "media" | "baixa" | null;
   estimated_time?: string | null;
   progress?: number;
-  
+
   // Metadados de Metodologias (Scrum/Kanban)
   type?: "custom" | "continuous_flow" | "iterative" | string;
   wip_limit_enabled?: boolean;
@@ -91,7 +91,7 @@ export interface Project {
   updated_at: string;
   deleted: boolean;
   active: boolean;
-  
+
   // Relacionamentos Opcionais
   owner?: ProjectOwner;
   collaborators?: ProjectCollaborator[];
@@ -145,9 +145,9 @@ const parseProjectProperties = (project: Project): Project => {
       console.warn(`Failed to parse properties for project ${project.id}`);
     }
   }
-  
+
   if (project.stages && Array.isArray(project.stages)) {
-    project.stages = project.stages.map(stage => {
+    project.stages = project.stages.map((stage) => {
       if (typeof stage.properties === "string") {
         try {
           stage.properties = JSON.parse(stage.properties);
@@ -203,12 +203,12 @@ export const deleteProject = async (projectId: string): Promise<void> => {
  */
 export const fetchProjectStages = async (projectId: string): Promise<ProjectStage[]> => {
   // Caso a rota já exista no seu API_ENDPOINTS use-a, caso contrário usamos template literal
-  const endpoint = `${API_ENDPOINTS.PROJECTS_BY_ID(projectId)}/stages`; 
+  const endpoint = `${API_ENDPOINTS.PROJECTS_BY_ID(projectId)}/stages`;
   const response = await apiClient.get(endpoint);
-  
+
   const data = await handleResponse<{ stages: ProjectStage[] }>(response);
-  
-  return data.stages.map(stage => {
+
+  return data.stages.map((stage) => {
     if (typeof stage.properties === "string") {
       try {
         stage.properties = JSON.parse(stage.properties);

@@ -415,7 +415,9 @@ export default function ProjectsPage() {
                         <div className="space-y-1.5">
                           {stats.complexityDistribution.alta > 0 && (
                             <div className="flex items-center justify-between">
-                              <span className="text-[10px] text-neutral-600 dark:text-neutral-500">Alta</span>
+                              <span className="text-[10px] text-neutral-600 dark:text-neutral-500">
+                                Alta
+                              </span>
                               <span className="font-mono text-xs font-bold text-red-500 dark:text-red-400">
                                 {stats.complexityDistribution.alta}
                               </span>
@@ -423,7 +425,9 @@ export default function ProjectsPage() {
                           )}
                           {stats.complexityDistribution.media > 0 && (
                             <div className="flex items-center justify-between">
-                              <span className="text-[10px] text-neutral-600 dark:text-neutral-500">Média</span>
+                              <span className="text-[10px] text-neutral-600 dark:text-neutral-500">
+                                Média
+                              </span>
                               <span className="font-mono text-xs font-bold text-yellow-500 dark:text-yellow-400">
                                 {stats.complexityDistribution.media}
                               </span>
@@ -431,7 +435,9 @@ export default function ProjectsPage() {
                           )}
                           {stats.complexityDistribution.baixa > 0 && (
                             <div className="flex items-center justify-between">
-                              <span className="text-[10px] text-neutral-600 dark:text-neutral-500">Baixa</span>
+                              <span className="text-[10px] text-neutral-600 dark:text-neutral-500">
+                                Baixa
+                              </span>
                               <span className="font-mono text-xs font-bold text-green-500 dark:text-green-400">
                                 {stats.complexityDistribution.baixa}
                               </span>
@@ -455,7 +461,9 @@ export default function ProjectsPage() {
                           <div className="flex items-start gap-2">
                             <Users className="mt-0.5 h-3 w-3 flex-shrink-0 text-purple-500 dark:text-purple-400" />
                             <div className="min-w-0 flex-1">
-                              <p className="text-[10px] text-neutral-600 dark:text-neutral-500">Mais colaborativo</p>
+                              <p className="text-[10px] text-neutral-600 dark:text-neutral-500">
+                                Mais colaborativo
+                              </p>
                               <p className="truncate text-xs font-medium text-neutral-800 dark:text-neutral-300">
                                 {stats.mostCollaborativeProject.title}
                               </p>
@@ -469,7 +477,9 @@ export default function ProjectsPage() {
                           <div className="flex items-start gap-2">
                             <FileText className="mt-0.5 h-3 w-3 flex-shrink-0 text-blue-500 dark:text-blue-400" />
                             <div className="min-w-0 flex-1">
-                              <p className="text-[10px] text-neutral-600 dark:text-neutral-500">Mais ativo</p>
+                              <p className="text-[10px] text-neutral-600 dark:text-neutral-500">
+                                Mais ativo
+                              </p>
                               <p className="truncate text-xs font-medium text-neutral-800 dark:text-neutral-300">
                                 {stats.mostActiveProject.title}
                               </p>
@@ -499,7 +509,9 @@ export default function ProjectsPage() {
                 </div>
               ) : (
                 <div className="flex h-32 items-center justify-center">
-                  <p className="font-mono text-sm text-neutral-500 dark:text-neutral-600">NO_DATA_FOUND</p>
+                  <p className="font-mono text-sm text-neutral-500 dark:text-neutral-600">
+                    NO_DATA_FOUND
+                  </p>
                 </div>
               )}
             </div>
@@ -507,8 +519,8 @@ export default function ProjectsPage() {
         </div>
 
         {/* Projetos Recentes - Carrossel */}
-        <ProjectsCarousel 
-          projects={recentProjects} 
+        <ProjectsCarousel
+          projects={recentProjects}
           title="Projetos Recentes"
           emptyMessage="Você ainda não tem projetos"
           emptyActionText="Criar Primeiro Projeto"

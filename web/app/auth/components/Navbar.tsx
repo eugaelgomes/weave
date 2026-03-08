@@ -14,11 +14,7 @@ interface NavbarProps {
   showAbout?: boolean;
 }
 
-export default function Navbar({
-  ctaLabel,
-  ctaHref,
-  showAbout = true,
-}: NavbarProps) {
+export default function Navbar({ ctaLabel, ctaHref, showAbout = true }: NavbarProps) {
   const pathname = usePathname();
   const isSignupRoute = pathname?.startsWith("/auth/signup");
   const defaultCta = isSignupRoute
@@ -32,7 +28,7 @@ export default function Navbar({
   const fullCtaHref = isExternal ? resolvedHref : `${APP_URL}${resolvedHref}`;
 
   return (
-    <nav className="relative top-0 flex w-full justify-center py-4 px-4 sm:px-8">
+    <nav className="relative top-0 flex w-full justify-center px-4 py-4 sm:px-8">
       <div className="flex w-full items-center justify-between rounded-md border-1 border-neutral-100 bg-white px-2 py-1.5 shadow shadow-md shadow-neutral-300/50 backdrop-blur-md transition-all sm:px-6 sm:py-2">
         {/* Logo Section */}
         <Link

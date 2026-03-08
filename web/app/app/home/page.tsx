@@ -5,13 +5,15 @@ import Link from "next/link";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotes } from "../../contexts/NotesContext";
 import { useProjects } from "../../contexts/ProjectsContext";
-import { checkHealth, type HealthStatus } from "../../services";
+//import { checkHealth, type HealthStatus } from "../../services";
 import { getTagColor } from "@/app/utils/tag-colors";
 import NotesCarousel from "../components/ui/notes-carousel";
 import ProjectsCarousel from "../components/ui/project-carousel";
 import { FileText, Tag, Activity } from "lucide-react";
 import { FaProjectDiagram } from "react-icons/fa";
 import { CalendarPreview } from "../components/ui/calendar-componet";
+import { useFormatters } from "@/app/utils/product-patterns";
+import { useLanguage } from "@/app/contexts/LanguageContext";
 
 const FONT_SIZES = [
   "text-xs",
@@ -41,9 +43,12 @@ export default function HomePage() {
   const { authenticated, loading, user } = useAuth();
   const { getNotesStats, getRecentNotes } = useNotes();
   const { getRecentProjects, getProjectsStats } = useProjects();
+  const { dateFormat, timeFormat } = useFormatters();
+  const { t } = useLanguage();
   const [showMetrics, setShowMetrics] = useState(false);
   const [showTags, setShowTags] = useState(false);
-  const [healthStatus, setHealthStatus] = React.useState<HealthStatus | null>(null);
+  /*
+  *const [healthStatus, setHealthStatus] = React.useState<HealthStatus | null>(null);
 
   React.useEffect(() => {
     const fetchHealth = async () => {
@@ -55,6 +60,7 @@ export default function HomePage() {
     const interval = setInterval(fetchHealth, 30000);
     return () => clearInterval(interval);
   }, []);
+  */
 
   if (loading) {
     return (
@@ -71,19 +77,13 @@ export default function HomePage() {
     return null;
   }
 
-  const userCurrentDateTime = new Date().toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const userCurrentDateTime = new Date();
 
   const stats = getNotesStats();
   const projectsStats = getProjectsStats();
   const recentNotes = getRecentNotes();
   const recentProjects = getRecentProjects();
-  const userName = String(user?.user_name || user?.username || "usuário");
+  const userName = String(user?.user_name || user?.username || t.common.user);
 
   const tagCloudData = useMemo(() => {
     if (!stats?.mostUsedTags || stats.mostUsedTags.length === 0) return [];
@@ -121,11 +121,15 @@ export default function HomePage() {
         <div className="flex flex-row items-center justify-between gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-2 shadow shadow-md sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-950">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium tracking-tight text-neutral-900 sm:text-base dark:text-neutral-100">
-              <span className="text-yellow-500">Olá,</span> {getFirstAndLastUserName(userName)}!
+              <span className="text-yellow-500">{t.greeting.hello}</span> {getFirstAndLastUserName(userName)}!
             </span>
           </div>
           <div className="flex items-center gap-3 text-xs text-neutral-600 sm:gap-4 sm:text-sm dark:text-neutral-400">
-            <span className="truncate text-xs">{userCurrentDateTime}</span>
+            <span className="truncate text-xs">
+              {`${dateFormat(userCurrentDateTime)} ${timeFormat(userCurrentDateTime)}`}
+            </span>
+            {/* Health Status Indicator - Commented Out */}
+            {/*
             <div
               title={
                 healthStatus
@@ -145,7 +149,6 @@ export default function HomePage() {
                   ></span>
                 )}
 
-                {/* Bolinha Principal */}
                 <div
                   className={`relative h-2 w-2 rounded-full transition-colors ${
                     !healthStatus
@@ -161,6 +164,7 @@ export default function HomePage() {
                 />
               </div>
             </div>
+            */}
           </div>
         </div>
 
@@ -173,7 +177,7 @@ export default function HomePage() {
               className="flex w-full items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900/50"
             >
               <h3 className="font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
-                Métricas
+                {t.home.metrics}
               </h3>
               <span className="text-neutral-500 sm:hidden">{showMetrics ? "−" : "+"}</span>
             </button>
@@ -187,7 +191,7 @@ export default function HomePage() {
                       <FileText className="h-3.5 w-3.5" />
                     </div>
                     <span className="text-[11px] font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
-                      Total de Notas
+                      {t.home.totalNotes}
                     </span>
                   </div>
                   <span className="font-mono text-sm font-bold text-yellow-400">
@@ -201,7 +205,7 @@ export default function HomePage() {
                       <Tag className="h-3.5 w-3.5" />
                     </div>
                     <span className="text-[11px] font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
-                      Tags únicas
+                      {t.home.uniqueTags}
                     </span>
                   </div>
                   <span className="font-mono text-sm font-bold text-blue-400">
@@ -216,7 +220,7 @@ export default function HomePage() {
                         <FaProjectDiagram className="h-3.5 w-3.5" />
                       </div>
                       <span className="text-[11px] font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
-                        Total de Projetos
+                      {t.home.totalProjects}
                       </span>
                     </div>
                     <span className="font-mono text-sm font-bold text-purple-400">
@@ -232,7 +236,7 @@ export default function HomePage() {
                         <Activity className="h-3.5 w-3.5" />
                       </div>
                       <span className="text-[11px] font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
-                        Projetos Ativos
+                      {t.home.activeProjects}
                       </span>
                     </div>
                     <span className="font-mono text-sm font-bold text-emerald-400">
@@ -250,7 +254,7 @@ export default function HomePage() {
               className="flex w-full items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900/30"
             >
               <h3 className="font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
-                Nuvem de Tags
+                {t.home.tagCloud}
               </h3>
               <span className="text-neutral-600 sm:hidden dark:text-neutral-500">
                 {showTags ? "−" : "+"}
@@ -260,7 +264,7 @@ export default function HomePage() {
             <div className={`${showTags ? "block" : "hidden"} flex-1 sm:block`}>
               <div className="flex h-full min-h-[200px] flex-col items-center justify-center p-6 sm:p-8">
                 <span className="mb-2 flex items-center gap-2 text-neutral-400">
-                  Essas são suas tags mais usadas
+                  {t.home.tagCloudDescription}
                 </span>
                 {tagCloudData.length > 0 ? (
                   <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center">
@@ -268,7 +272,7 @@ export default function HomePage() {
                       <Link
                         key={i}
                         href={`/app/notes?tag=${tagInfo.tag}`}
-                        title={`${tagInfo.count} notas`}
+                        title={`${tagInfo.count} ${t.common.notes}`}
                         // ALTERAÇÃO AQUI: Adicionado dark:brightness-125 e dark:saturate-150
                         className={` ${tagInfo.sizeClass} ${tagInfo.colorClass} ${tagInfo.weightClass} group cursor-pointer font-sans transition-all duration-300 hover:scale-110 hover:brightness-125 dark:brightness-125 dark:saturate-150`}
                       >
@@ -283,7 +287,7 @@ export default function HomePage() {
                 ) : (
                   <div className="flex flex-col items-center justify-center text-neutral-500">
                     <Tag className="mb-2 h-8 w-8 opacity-20" />
-                    <p className="font-mono text-xs">Sem tags suficientes</p>
+                    <p className="font-mono text-xs">{t.home.notEnoughTags}</p>
                   </div>
                 )}
               </div>
