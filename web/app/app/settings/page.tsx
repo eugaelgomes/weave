@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { User } from "@/app/_services/authentication/auth-service";
 import { requestBackup, getBackupStatus } from "@/app/_services/backup-service/backup-service";
@@ -627,7 +628,7 @@ const SettingsPage = () => {
         {/* ========================================================================================= */}
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           {/* Card de Organização */}
-          {user?.org_id && (
+          {user?.org_id ? (
             <div className="flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900/50">
               <div className="border-b border-neutral-100 bg-neutral-50/50 px-6 py-4 dark:border-neutral-800 dark:bg-neutral-800/20">
                 <h3 className="flex items-center gap-2 text-sm font-bold tracking-wide text-neutral-600 uppercase dark:text-neutral-400">
@@ -677,6 +678,29 @@ const SettingsPage = () => {
                     Membro desde {formatDate(user.org_member_since ?? "")}
                   </span>
                 </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+              <div className="border-b border-neutral-100 bg-neutral-50/50 px-6 py-4 dark:border-neutral-800 dark:bg-neutral-800/20">
+                <h3 className="flex items-center gap-2 text-sm font-bold tracking-wide text-neutral-600 uppercase dark:text-neutral-400">
+                  <Building2 className="h-4 w-4" /> Organização
+                </h3>
+              </div>
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+                  <Users className="h-6 w-6 text-neutral-400" />
+                </div>
+                <p className="text-sm text-neutral-500">
+                  Você ainda não faz parte de uma organização.
+                </p>
+                <Link
+                  href="/app/organization/settings"
+                  className="inline-flex items-center gap-2 rounded-lg bg-yellow-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-yellow-600"
+                >
+                  <Building2 className="h-4 w-4" />
+                  Criar organização
+                </Link>
               </div>
             </div>
           )}

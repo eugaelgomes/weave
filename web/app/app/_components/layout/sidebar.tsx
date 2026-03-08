@@ -105,6 +105,8 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
     })),
   ];
 
+  const hasOrg = !!authData.user.org_id;
+
   const navigationItems: NavigationItem[] = [
     { path: "/app/home", icon: FaHome, label: t.nav.home },
     { path: "/app/notes", icon: FaBook, label: t.nav.notes },
@@ -113,7 +115,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
       icon: FaProjectDiagram,
       label: t.nav.projects,
       subItems: [
-        { path: "/app/projects", icon: FaList, label: "Ver todos" }, // Pode extrair "Ver todos" para o dicionário do t() depois
+        { path: "/app/projects", icon: FaList, label: "Ver todos" },
         ...topProjects.map((p) => ({
           path: `/app/projects/${p.id}`,
           icon: FaProjectDiagram,
@@ -140,16 +142,20 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
       icon: FaCalendar,
       label: t.nav.calendar,
     },
-    {
-      path: "/app/organization",
-      icon: FaUsers,
-      label: t.nav.organization,
-      subItems: [
-        { path: "/app/organization/settings", icon: IoMdSettings, label: t.nav.settings },
-        { path: "/app/organization/members", icon: FaUserFriends, label: t.nav.members },
-        { path: "/app/organization/projects", icon: FaProjectDiagram, label: t.nav.projects },
-      ],
-    },
+    ...(hasOrg
+      ? [
+          {
+            path: "/app/organization",
+            icon: FaUsers,
+            label: t.nav.organization,
+            subItems: [
+              { path: "/app/organization/settings", icon: IoMdSettings, label: t.nav.settings },
+              { path: "/app/organization/members", icon: FaUserFriends, label: t.nav.members },
+              { path: "/app/organization/projects", icon: FaProjectDiagram, label: t.nav.projects },
+            ],
+          },
+        ]
+      : []),
     { path: "/app/settings", icon: IoMdSettings, label: t.nav.settings },
   ];
 
