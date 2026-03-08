@@ -46,6 +46,7 @@ import {
 } from "@/app/_services/projects-service/projects-service";
 import { User as SearchUser } from "@/app/_services/notes-service/notes-service";
 import Image from "next/image";
+import getStorageUrl from "@/app/_utils/get-storage-url";
 
 // Mapeamento de nomes de ícones para componentes
 const iconMap: Record<string, React.ReactNode> = {
@@ -1057,7 +1058,7 @@ export default function ProjectViewPage() {
                     <div className="mb-2 flex items-center gap-2 sm:gap-3">
                       {project.owner.avatar_url ? (
                         <Image
-                          src={project.owner.avatar_url}
+                          src={getStorageUrl(project.owner.avatar_url)}
                           alt={project.owner.name || project.owner.username}
                           className="h-8 w-8 rounded-full border-2 border-yellow-500/50 object-cover sm:h-10 sm:w-10"
                           height={40}
@@ -1103,7 +1104,7 @@ export default function ProjectViewPage() {
                         <div className="mb-2 flex items-center gap-2 sm:gap-3">
                           {collab.avatar_url ? (
                             <Image
-                              src={collab.avatar_url}
+                              src={getStorageUrl(collab.avatar_url)}
                               alt={collab.name || collab.username}
                               className="h-7 w-7 rounded-full object-cover sm:h-8 sm:w-8"
                               height={32}
@@ -1285,7 +1286,7 @@ export default function ProjectViewPage() {
                       <div className="flex items-center gap-2 sm:gap-3">
                         {user.avatar_url ? (
                           <Image
-                            src={user.avatar_url}
+                            src={getStorageUrl(user.avatar_url)}
                             alt={user.name || user.username}
                             className="h-8 w-8 rounded-full object-cover sm:h-10 sm:w-10"
                             height={40}

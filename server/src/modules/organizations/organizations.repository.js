@@ -1,5 +1,4 @@
 const { executeQuery, rowCount } = require("@/services/db");
-const imageUtils = require("@/middlewares/data/image-utils");
 
 class OrganizationsRepository {
   async getOrgsByUserId(user_id) {

@@ -1,6 +1,5 @@
 /* eslint-disable quotes */
 const { executeQuery } = require("@/services/db");
-const imageUtils = require("@/middlewares/data/image-utils");
 const { defaultAppPreferences } = require("@/modules/users/normalize");
 
 class UserRepository {

@@ -21,7 +21,16 @@ class SpacesService {
       ICONS: "icons",
       FILES: "files",
     },
-    AVATARS: "avatars",
+    USERS_CONTENT: {
+      ROOT: "users-content",
+      PROFILE: "profile",
+      AVATAR: "avatar",
+    },
+    ORGANIZATIONS: {
+      ROOT: "organizations",
+      LOGO: "logo",
+      BANNER: "banner",
+    },
   };
 
   constructor() {
@@ -310,10 +319,11 @@ class SpacesService {
   }
 
   /**
-   * Extrai a key (nome do arquivo) da URL
+   * Extrai a key (path relativo) da URL completa
    */
   extractKeyFromUrl(url) {
     if (!url) return null;
+    if (!url.startsWith("http")) return url;
 
     try {
       const urlObj = new URL(url);
@@ -324,6 +334,60 @@ class SpacesService {
       console.error("Erro ao extrair key da URL:", error);
       return null;
     }
+  }
+
+  // ========================================
+  // User Profile Avatar
+  // Estrutura: users-content/profile/{userId}/avatar/{arquivo}
+  // ========================================
+
+  async uploadProfileImage(fileBuffer, mimeType, userId) {
+    const { USERS_CONTENT } = SpacesService.FOLDER_PATHS;
+    const ext = this.getFileExtensionFromMimeType(mimeType);
+    const fileName = `user-${userId}-avatar${ext}`;
+    const folderPath = this.buildKey(USERS_CONTENT.ROOT, USERS_CONTENT.PROFILE, String(userId), USERS_CONTENT.AVATAR);
+    return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
+  }
+
+  // ========================================
+  // Organization Assets (logo, banner)
+  // Estrutura: organizations/{orgId}/{logo|banner}/{arquivo}
+  // ========================================
+
+  async uploadOrganizationLogo(fileBuffer, mimeType, organizationId) {
+    const { ORGANIZATIONS } = SpacesService.FOLDER_PATHS;
+    const ext = this.getFileExtensionFromMimeType(mimeType);
+    const fileName = `org-${organizationId}-logo${ext}`;
+    const folderPath = this.buildKey(ORGANIZATIONS.ROOT, String(organizationId), ORGANIZATIONS.LOGO);
+    return this.uploadImage(fileBuffer, mimeType, null, fileName, folderPath);
+  }
+
+  async uploadOrganizationBanner(fileBuffer, mimeType, organizationId) {
+    const { ORGANIZATIONS } = SpacesService.FOLDER_PATHS;
+    const ext = this.getFileExtensionFromMimeType(mimeType);
+    const fileName = `org-${organizationId}-banner${ext}`;
+    const folderPath = this.buildKey(ORGANIZATIONS.ROOT, String(organizationId), ORGANIZATIONS.BANNER);
+    return this.uploadImage(fileBuffer, mimeType, null, fileName, folderPath);
+  }
+
+  // ========================================
+  // Image Validation
+  // ========================================
+
+  isValidImageType(mimeType) {
+    const validTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+    ];
+    return validTypes.includes(mimeType);
+  }
+
+  isValidImageSize(size) {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    return size <= maxSize;
   }
 
   validateConfiguration() {

@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
-const imageUtils = require("@/middlewares/data/image-utils");
+const spacesService = require("@/services/storage");
 
 // Repositórios
 const UserRepository = require("@/modules/users/users.repository");
@@ -158,15 +158,13 @@ class userController {
       let profileImageUrl = null;
       if (req.file && req.file.buffer) {
         try {
-          const saveResult = await imageUtils.saveProfileImage(
+          const saveResult = await spacesService.uploadProfileImage(
             req.file.buffer,
-
             req.file.mimetype,
-
             userId
           );
           if (saveResult.success) {
-            profileImageUrl = saveResult.url;
+            profileImageUrl = saveResult.key;
             await UserRepository.updateProfileImage(userId, profileImageUrl);
           } else {
             console.error("Image upload failed:", saveResult.error);
@@ -437,8 +435,8 @@ class userController {
       const updates = {};
       if (name !== undefined) updates.name = name;
       if (theme_mode !== undefined) updates.theme_mode = theme_mode;
-      if (birth_date !== undefined) updates.birth_date = birth_date;
-      if (phone_number !== undefined) updates.phone_number = phone_number;
+      if (birth_date !== undefined) updates.birth_date = birth_date || null;
+      if (phone_number !== undefined) updates.phone_number = phone_number || null;
       if (private_profile !== undefined)
         updates.private_profile = private_profile;
       const resolvedPreference = usage_preference ?? user_preference;
@@ -470,7 +468,7 @@ class userController {
 
       let avatarUrl = updatedUser.avatar_url;
       if (req.file?.buffer) {
-        const uploadResult = await imageUtils.saveProfileImage(
+        const uploadResult = await spacesService.uploadProfileImage(
           req.file.buffer,
           req.file.mimetype,
           req.user.userId
@@ -478,7 +476,7 @@ class userController {
         if (uploadResult.success) {
           const updateImage = await UserRepository.updateProfileImage(
             req.user.userId,
-            uploadResult.url
+            uploadResult.key
           );
           avatarUrl = updateImage[0].avatar_url;
           auditChanges.avatar_updated = true;

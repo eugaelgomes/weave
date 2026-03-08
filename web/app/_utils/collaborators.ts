@@ -1,3 +1,5 @@
+import getStorageUrl from "@/app/_utils/get-storage-url";
+
 /**
  * Utilidades para trabalhar com colaboradores
  */
@@ -34,7 +36,7 @@ export function getCollaboratorDisplayName(collaborator: unknown): string {
 export function getCollaboratorAvatarUrl(collaborator: unknown): string | null {
   if (typeof collaborator === "object" && collaborator !== null) {
     const obj = collaborator as CollaboratorObject;
-    return obj.avatar_url || null;
+    return obj.avatar_url ? getStorageUrl(obj.avatar_url) : null;
   }
 
   return null;

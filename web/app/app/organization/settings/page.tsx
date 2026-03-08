@@ -25,6 +25,7 @@ import {
   CheckCircle2,
   LayoutDashboard,
 } from "lucide-react";
+import getStorageUrl from "@/app/_utils/get-storage-url";
 
 const Badge = ({ children, color = "zinc" }: { children: React.ReactNode; color?: string }) => {
   const colors: Record<string, string> = {
@@ -617,7 +618,7 @@ const OrganizationPage = () => {
               <div className="flex items-center gap-4">
                 {organization.owner.avatar_url ? (
                   <img
-                    src={organization.owner.avatar_url}
+                    src={getStorageUrl(organization.owner.avatar_url)}
                     alt={organization.owner.name}
                     className="h-16 w-16 rounded-full border-2 border-zinc-200 object-cover dark:border-zinc-700"
                   />

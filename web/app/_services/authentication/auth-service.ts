@@ -2,6 +2,7 @@ import { jwtDecode } from "jwt-decode";
 import { API_ENDPOINTS } from "../api-methods";
 import { apiClient, handleResponse } from "../api-methods";
 import type { UserPreferences } from "@/types/user-preferences";
+import getStorageUrl from "@/app/_utils/get-storage-url";
 
 export interface PlanDetails {
   limits?: {
@@ -265,7 +266,7 @@ const _mapBackendDataToUser = (data: BackendUserData): User => {
     user_name: profile.user_name,
     username: profile.username,
     email: profile.email,
-    avatar_url: profile.avatar_url,
+    avatar_url: getStorageUrl(profile.avatar_url),
     created_at: profile.created_at,
     updated_at: profile.updated_at,
     birth_date: profile.birth_date,
@@ -315,7 +316,7 @@ const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
     user_name: user.user_profile.name,
     username: user.user_profile.username,
     email: user.user_profile.email,
-    avatar_url: user.user_profile.avatar_url,
+    avatar_url: getStorageUrl(user.user_profile.avatar_url),
 
     // Settings
     theme_mode: user.user_settings.theme_mode,
@@ -345,7 +346,7 @@ const mapMeResponseToUser = (data: BackendMeResponse): User => {
     user_name: user.user_profile.user_name,
     username: user.user_profile.username,
     email: user.user_profile.email,
-    avatar_url: user.user_profile.avatar_url,
+    avatar_url: getStorageUrl(user.user_profile.avatar_url),
     birth_date: user.user_profile.birth_date,
     phone_number: user.user_profile.phone_number,
     created_at: user.user_profile.created_at,
@@ -463,8 +464,25 @@ export const initiateGoogleLogin = (): void => {
   window.location.href = `${baseUrl}${API_ENDPOINTS.GOOGLE_AUTH}`;
 };
 
-export const updateUserData = async (userData: Partial<User>): Promise<Partial<User>> => {
-  const response = await apiClient.put(API_ENDPOINTS.UPDATE_PROFILE, userData);
+export const updateUserData = async (userData: Partial<User> & { profilePicture?: File }): Promise<Partial<User>> => {
+  let body: FormData | Partial<User>;
+
+  if (userData.profilePicture instanceof File) {
+    const formData = new FormData();
+    formData.append("profilePicture", userData.profilePicture);
+    const { profilePicture, ...rest } = userData;
+    for (const [key, value] of Object.entries(rest)) {
+      if (value !== undefined && value !== null) {
+        formData.append(key, typeof value === "object" ? JSON.stringify(value) : String(value));
+      }
+    }
+    body = formData;
+  } else {
+    const { profilePicture, ...rest } = userData;
+    body = rest;
+  }
+
+  const response = await apiClient.put(API_ENDPOINTS.UPDATE_PROFILE, body);
 
   interface UpdateProfileResponse {
     user: {
@@ -487,7 +505,7 @@ export const updateUserData = async (userData: Partial<User>): Promise<Partial<U
     user_name: data.user.user_profile.user_name,
     username: data.user.user_profile.username,
     email: data.user.user_profile.email,
-    avatar_url: data.user.user_profile.avatar_url,
+    avatar_url: getStorageUrl(data.user.user_profile.avatar_url),
     birth_date: data.user.user_profile.birth_date,
     phone_number: data.user.user_profile.phone_number,
     created_at: data.user.user_profile.created_at,

@@ -1,6 +1,6 @@
 const organizationsRepository = require("@/modules/organizations/organizations.repository");
 const UserRepository = require("@/modules/users/users.repository");
-const imageUtils = require("@/middlewares/data/image-utils");
+const spacesService = require("@/services/storage");
 const crypto = require("crypto");
 const {
   send_organization_invite,
@@ -603,7 +603,7 @@ class OrganizationsController {
           .json({ success: false, error: "Organização não encontrada" });
       }
 
-      const result = await imageUtils.saveOrganizationLogo(
+      const result = await spacesService.uploadOrganizationLogo(
         req.file.buffer,
         req.file.mimetype,
         currentOrg.id
@@ -617,7 +617,7 @@ class OrganizationsController {
 
       const updatedOrg = await this.organizationsRepository.updateOrgLogo(
         currentOrg.id,
-        result.url,
+        result.key,
         userId
       );
 
@@ -627,8 +627,8 @@ class OrganizationsController {
         data: {
           organization: updatedOrg,
           upload: {
-            url: result.url,
-            filename: result.filename,
+            path: result.key,
+            filename: result.fileName,
             size: result.size,
           },
         },
@@ -660,7 +660,7 @@ class OrganizationsController {
           .json({ success: false, error: "Organização não encontrada" });
       }
 
-      const result = await imageUtils.saveOrganizationBanner(
+      const result = await spacesService.uploadOrganizationBanner(
         req.file.buffer,
         req.file.mimetype,
         currentOrg.id
@@ -674,7 +674,7 @@ class OrganizationsController {
 
       const updatedOrg = await this.organizationsRepository.updateOrgBanner(
         currentOrg.id,
-        result.url,
+        result.key,
         userId
       );
 
@@ -684,8 +684,8 @@ class OrganizationsController {
         organization_data: {
           organization: orgDataResponse(updatedOrg),
           upload: {
-            url: result.url,
-            filename: result.filename,
+            path: result.key,
+            filename: result.fileName,
             size: result.size,
           },
         },
@@ -900,14 +900,14 @@ class OrganizationsController {
       // Se tiver imagem, salva usando o id retornado pelo banco
       if (req.file && req.file.buffer) {
         try {
-          const saveResult = await imageUtils.saveProfileImage(
+          const saveResult = await spacesService.uploadProfileImage(
             req.file.buffer,
             req.file.mimetype,
             newUserId
           );
 
           if (saveResult.success) {
-            profileImageUrl = saveResult.url;
+            profileImageUrl = saveResult.key;
 
             // Atualiza o usuário com a URL da imagem
             const updateResult = await UserRepository.updateProfileImage(

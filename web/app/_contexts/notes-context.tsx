@@ -29,6 +29,7 @@ import {
   type ShareNoteData,
   type User as SearchUser,
 } from "../_services/notes-service/notes-service";
+import getStorageUrl from "@/app/_utils/get-storage-url";
 
 // Tipos específicos do contexto
 export interface NoteOverview {
@@ -168,7 +169,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
           note.author?.email ||
           note.name ||
           note.email,
-        owner_avatar_url: note.author?.avatar_url || note.avatar_url,
+        owner_avatar_url: getStorageUrl(note.author?.avatar_url || note.avatar_url || ""),
       }));
 
       setNotesOverview(overview);

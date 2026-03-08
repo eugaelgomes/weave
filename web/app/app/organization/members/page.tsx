@@ -22,6 +22,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { IoPersonCircleSharp } from "react-icons/io5";
+import getStorageUrl from "@/app/_utils/get-storage-url";
 
 // --- Tipos ---
 interface ActivityData {
@@ -55,7 +56,7 @@ const UserAvatar = ({ user, size = "sm" }: { user?: User; size?: "sm" | "md" }) 
     return (
       <div className={wrapperClass}>
         <Image
-          src={user.avatar_url}
+          src={getStorageUrl(user.avatar_url)}
           alt="Avatar"
           width={40}
           height={40}

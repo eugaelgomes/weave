@@ -1,4 +1,4 @@
-const imageUtils = require("@/middlewares/data/image-utils");
+const spacesService = require("@/services/storage");
 
 /**
  */
@@ -10,7 +10,7 @@ const validateImages = (req, res, next) => {
     }
 
     // Validação básica de tipo MIME
-    if (!imageUtils.isValidImageType(req.file.mimetype)) {
+    if (!spacesService.isValidImageType(req.file.mimetype)) {
       return res.status(400).json({
         error: "Invalid file type",
         message: "Only JPEG, PNG, WebP and GIF images are allowed.",
@@ -18,7 +18,7 @@ const validateImages = (req, res, next) => {
     }
 
     // Validação básica de tamanho
-    if (!imageUtils.isValidImageSize(req.file.size)) {
+    if (!spacesService.isValidImageSize(req.file.size)) {
       return res.status(413).json({
         error: "File too large",
         message: `Image size (${Math.round(req.file.size / 1024 / 1024)}MB) exceeds limit (5MB).`,
