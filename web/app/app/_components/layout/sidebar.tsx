@@ -21,6 +21,7 @@ import {
   FaAngleDoubleLeft,
   FaAngleDoubleRight,
   FaCalendar,
+  FaList,
 } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
 import { HiSparkles } from "react-icons/hi2";
@@ -55,8 +56,9 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
 
     const newExpandedState: Record<string, boolean> = {};
     const itemsWithSubs = [
-      { path: "/app/weave-ai/chat", checkPath: "/app/weave-ai/chat" },
+      { path: "/app/weave-ai/chat", checkPath: "/app/weave-ai" },
       { path: "/app/organization", checkPath: "/app/organization" },
+      { path: "/app/projects", checkPath: "/app/projects" }, // Garantimos que projetos abre automaticamente
     ];
 
     itemsWithSubs.forEach(({ path, checkPath }) => {
@@ -68,16 +70,15 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
     setExpandedItems((prev) => ({ ...prev, ...newExpandedState }));
   }, [pathname, isCollapsed]);
 
-  const isActive = (path: string) => {
-    if (path === "/app/home" && pathname === "/app/home/") return true;
-    if (path === "/app/notes" && pathname.startsWith("/app/notes/")) return true;
-    if (path === "/app/projects" && pathname.startsWith("/app/projects/")) return true;
-    if (path === "/app/weave-ai/chat" && pathname === "/app/weave-ai/chat") return true;
-    if (path === "/app/organization" && pathname.startsWith("/app/organization/")) return true;
-    if (path === "/app/notifications" && pathname.startsWith("/app/notifications/")) return true;
-    if (path === "/app/calendar" && pathname.startsWith("/app/calendar/")) return true;
-    if (path === "/app/settings" && pathname.startsWith("/app/settings/")) return true;
-    return pathname === path;
+  const isItemActive = (item: NavigationItem) => {
+    if (pathname === item.path || pathname === `${item.path}/`) return true;
+    if (pathname.startsWith(`${item.path}/`)) return true;
+    if (item.subItems) {
+      return item.subItems.some(
+        (sub) => pathname === sub.path || pathname.startsWith(`${sub.path}/`)
+      );
+    }
+    return false;
   };
 
   const handleLinkClick = () => {
@@ -90,10 +91,36 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
     setExpandedItems((prev) => ({ ...prev, [path]: !prev[path] }));
   };
 
+  if (!authenticated || !authData) return null;
+
+  const recentNotes = authData.notes.getRecentNotes().slice(0, 6);
+  const topProjects = authData.projects.getRecentProjects().slice(0, 5); // Os 5 mais recentes
+
+  const recentItems = [
+    ...recentNotes.map((note) => ({
+      type: "note" as const,
+      id: note.id,
+      title: note.title || t.common.untitled,
+      icon: FaBook,
+    })),
+  ];
+
   const navigationItems: NavigationItem[] = [
     { path: "/app/home", icon: FaHome, label: t.nav.home },
     { path: "/app/notes", icon: FaBook, label: t.nav.notes },
-    { path: "/app/projects", icon: FaProjectDiagram, label: t.nav.projects },
+    { 
+      path: "/app/projects", 
+      icon: FaProjectDiagram, 
+      label: t.nav.projects,
+      subItems: [
+        { path: "/app/projects", icon: FaList, label: "Ver todos" }, // Pode extrair "Ver todos" para o dicionário do t() depois
+        ...topProjects.map((p) => ({
+          path: `/app/projects/${p.id}`,
+          icon: FaProjectDiagram,
+          label: p.title || t.common?.unnamed || "Projeto sem nome",
+        }))
+      ]
+    },
     {
       path: "/app/weave-ai/chat",
       icon: HiSparkles,
@@ -126,26 +153,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
     { path: "/app/settings", icon: IoMdSettings, label: t.nav.settings },
   ];
 
-  if (!authenticated || !authData) return null;
-
-  const recentNotes = authData.notes.getRecentNotes().slice(0, 6);
-  const recentProjects = authData.projects.getRecentProjects().slice(0, 6);
-
-  const recentItems = [
-    ...recentNotes.map((note) => ({
-      type: "note" as const,
-      id: note.id,
-      title: note.title || t.common.untitled,
-      icon: FaBook,
-    })),
-    ...recentProjects.map((project) => ({
-      type: "project" as const,
-      id: project.id,
-      title: project.title || t.common.unnamed,
-      icon: FaProjectDiagram,
-    })),
-  ];
-
   return (
     <div className="flex h-full w-full flex-col bg-transparent text-neutral-600 lg:bg-neutral-50 dark:text-neutral-400 dark:lg:bg-neutral-950">
       <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 p-3 lg:hidden dark:border-neutral-800">
@@ -164,7 +171,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        {" "}
         <div
           className={`mb-2 flex shrink-0 items-center ${isCollapsed ? "justify-center" : "justify-between px-2"}`}
         >
@@ -179,11 +185,11 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
             {isCollapsed ? <FaAngleDoubleRight size={14} /> : <FaAngleDoubleLeft size={14} />}
           </button>
         </div>
-        <div className="flex-1 overflow-x-hidden px-2 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent">
+        <div className="flex-1 overflow-x-hidden overflow-y-auto px-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent">
           <ul className="space-y-1">
             {navigationItems.map((item) => {
               const Icon = item.icon;
-              const active = isActive(item.path);
+              const active = isItemActive(item);
               const hasSubItems = item.subItems && item.subItems.length > 0;
               const isExpanded = !isCollapsed && expandedItems[item.path];
 
@@ -209,7 +215,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                         <Icon
                           className={`transition-colors ${isCollapsed ? "h-5 w-5" : "h-4 w-4"} ${active ? "text-yellow-500" : "text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200"} `}
                         />
-
                         {!isCollapsed && <span className="text-sm">{item.label}</span>}
                       </div>
 
@@ -231,7 +236,10 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                     <ul className="animate-in slide-in-from-top-1 mt-1 space-y-0.5 pl-4 duration-200">
                       {item.subItems!.map((subItem) => {
                         const SubIcon = subItem.icon;
-                        const isSubActive = pathname === subItem.path;
+                        
+                        const isSubActive =
+                          pathname === subItem.path || 
+                          (subItem.path !== item.path && pathname.startsWith(`${subItem.path}/`));
 
                         return (
                           <li key={subItem.path}>
@@ -247,7 +255,9 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                               <SubIcon
                                 className={`h-3 w-3 ${isSubActive ? "text-yellow-500" : "opacity-70"}`}
                               />
-                              <span className="text-xs font-medium">{subItem.label}</span>
+                              <span className="text-xs font-medium truncate" title={subItem.label}>
+                                {subItem.label}
+                              </span>
                             </Link>
                           </li>
                         );
@@ -258,13 +268,14 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
               );
             })}
           </ul>
+          
           {!isCollapsed && (
             <>
               <div className="divisor my-4 h-px w-full shrink-0 bg-neutral-200 dark:bg-neutral-800" />
 
               <div className="animate-in fade-in flex-1 duration-300">
                 <h2 className="mb-2 px-2 text-[10px] font-bold tracking-wider text-yellow-500">
-                  {t.nav.recentAccess}
+                  {t.nav.recentAccess} (Anotações)
                 </h2>
 
                 <ul className="space-y-0.5">
@@ -276,11 +287,8 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                   )}
 
                   {recentItems.map((item) => {
-                    const path =
-                      item.type === "note"
-                        ? `/app/notes/${item.id}`
-                        : `/app/projects/${item.id}`;
-                    const isItemActive = pathname === path;
+                    const path = `/app/notes/${item.id}`;
+                    const isItemActive = pathname === path || pathname.startsWith(`${path}/`);
                     const ItemIcon = item.icon;
 
                     return (

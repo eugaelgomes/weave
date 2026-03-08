@@ -121,7 +121,8 @@ export default function HomePage() {
         <div className="flex flex-row items-center justify-between gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-2 shadow shadow-md sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-950">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium tracking-tight text-neutral-900 sm:text-base dark:text-neutral-100">
-              <span className="text-yellow-500">{t.greeting.hello}</span> {getFirstAndLastUserName(userName)}!
+              <span className="text-yellow-500">{t.greeting.hello}</span>{" "}
+              {getFirstAndLastUserName(userName)}!
             </span>
           </div>
           <div className="flex items-center gap-3 text-xs text-neutral-600 sm:gap-4 sm:text-sm dark:text-neutral-400">
@@ -220,7 +221,7 @@ export default function HomePage() {
                         <FaProjectDiagram className="h-3.5 w-3.5" />
                       </div>
                       <span className="text-[11px] font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
-                      {t.home.totalProjects}
+                        {t.home.totalProjects}
                       </span>
                     </div>
                     <span className="font-mono text-sm font-bold text-purple-400">
@@ -236,7 +237,7 @@ export default function HomePage() {
                         <Activity className="h-3.5 w-3.5" />
                       </div>
                       <span className="text-[11px] font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
-                      {t.home.activeProjects}
+                        {t.home.activeProjects}
                       </span>
                     </div>
                     <span className="font-mono text-sm font-bold text-emerald-400">

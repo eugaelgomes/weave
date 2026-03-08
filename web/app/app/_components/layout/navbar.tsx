@@ -38,7 +38,7 @@ const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "sm" | "md" | "l
           src={user.avatar_url}
           alt={`Avatar de ${user.user_name}`}
           fill
-          className="ring-2 ring-neutral-400 object-cover transition-transform duration-300 hover:scale-105 dark:border-neutral-700"
+          className="object-cover ring-2 ring-neutral-400 transition-transform duration-300 hover:scale-105 dark:border-neutral-700"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
       ) : (

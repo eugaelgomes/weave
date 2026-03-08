@@ -486,10 +486,7 @@ export default function CalendarPage() {
                           {/* Eventos do dia */}
                           <div className="flex-1 space-y-1.5">
                             {events.projects.map((project) => (
-                              <Link
-                                key={`ap-${project.id}`}
-                                href={`/app/projects/${project.id}`}
-                              >
+                              <Link key={`ap-${project.id}`} href={`/app/projects/${project.id}`}>
                                 <div className="group flex items-center gap-2.5 rounded-md border border-transparent bg-purple-50/50 px-3 py-2 transition-all hover:border-purple-200 hover:shadow-sm dark:bg-purple-950/20 dark:hover:border-purple-800/50">
                                   <div className="flex h-7 w-7 items-center justify-center rounded bg-purple-100 text-purple-500 dark:bg-purple-900/40 dark:text-purple-400">
                                     <FaProjectDiagram size={11} />

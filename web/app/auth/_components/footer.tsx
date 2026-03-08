@@ -12,7 +12,7 @@ export default function Footer() {
             href="https://blog.weavenotes.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-yellow-500 hover:underline"
+            className="font-semibold text-yellow-500 hover:underline"
           >
             Weave Notes
           </Link>
@@ -43,7 +43,15 @@ export default function Footer() {
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 transition-colors hover:text-purple-700 dark:hover:text-purple-300"
           >
-            Sobre o Weave
+            O Weave
+          </Link>
+          <Link
+            href="/support/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 transition-colors hover:text-purple-700 dark:hover:text-purple-300"
+          >
+            Ajuda
           </Link>
         </div>
       </div>

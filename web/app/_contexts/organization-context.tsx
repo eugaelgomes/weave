@@ -87,6 +87,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState<Date | null>(null);
+  const [initialFetchDone, setInitialFetchDone] = useState(false);
 
   // 1. BUSCAR DADOS COMPLETOS (Org + Membros + Convites)
   const fetchOrganizationData = useCallback(async () => {
@@ -114,8 +115,10 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       }
 
       setLastFetch(new Date());
+      setInitialFetchDone(true);
     } catch (err: unknown) {
       console.error("Erro ao buscar dados da organização:", err);
+      setInitialFetchDone(true);
       // Não setamos organization como null aqui imediatamente se for um erro de rede temporário,
       // mas se for 404 o service já retorna null.
       if (err instanceof Error) {
@@ -373,13 +376,14 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     [isOwner, isAdmin]
   );
 
-  // 8. INITIAL LOAD
+  // 8. INITIAL LOAD — só busca se o usuário tem org_id (vem do login/me)
   useEffect(() => {
-    // Carrega apenas se tiver usuário e ainda não tiver carregado (ou se não estiver carregando)
-    if (user?.id && !organization && !loading) {
+    if (user?.id && user.org_id && !initialFetchDone && !loading) {
       fetchOrganizationData();
+    } else if (user?.id && !user.org_id) {
+      setInitialFetchDone(true);
     }
-  }, [user?.id, organization, loading, fetchOrganizationData]);
+  }, [user?.id, user?.org_id, initialFetchDone, loading, fetchOrganizationData]);
 
   const hasOrganization = organization !== null && !organization.deleted;
 

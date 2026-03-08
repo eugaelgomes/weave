@@ -33,6 +33,15 @@ const PagesFooter = () => {
           >
             Termos de Serviço
           </a>
+          <span className="mx-2">|</span>
+          <a
+            href={`${process.env.NEXT_PUBLIC_APP_URL || "https://weavenotes.app"}/support/`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline"
+          >
+            Ajuda
+          </a>
         </div>
       </div>
     </div>
