@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { useAuth } from "../../contexts/AuthContext";
-import { useProjects } from "../../contexts/ProjectsContext";
-import ProjectsCarousel from "../components/ui/project-carousel";
+import { useAuth } from "../../_contexts/auth-context";
+import { useProjects } from "../../_contexts/projects-context";
+import ProjectsCarousel from "../_components/ui/project-carousel";
 import {
   Folder,
   Users,

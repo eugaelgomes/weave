@@ -2,9 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useAuth } from "../contexts/AuthContext";
-import { AuthenticatedProviders } from "../contexts/AuthenticatedProviders";
-import Layout from "./components/layout/layout";
+import { useAuth } from "../_contexts/auth-context";
+import { AuthenticatedProviders } from "../_contexts/authenticated-providers";
+import Layout from "./_components/layout/layout";
 
 export const dynamicParams = true;
 

@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useOrganization } from "@/app/contexts/OrganizationContext";
-import { useAuth } from "@/app/contexts/AuthContext";
-import { fetchOrganizationMembers, type OrganizationMember } from "@/app/services/organization";
+import { useOrganization } from "@/app/_contexts/organization-context";
+import { useAuth } from "@/app/_contexts/auth-context";
+import { fetchOrganizationMembers, type OrganizationMember } from "@/app/_services/organization";
 import {
   Building2,
   Settings,

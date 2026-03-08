@@ -16,8 +16,8 @@ import {
 } from "lucide-react";
 import { FaProjectDiagram } from "react-icons/fa";
 
-import { useNotes } from "../../contexts/NotesContext";
-import { useProjects } from "../../contexts/ProjectsContext";
+import { useNotes } from "../../_contexts/notes-context";
+import { useProjects } from "../../_contexts/projects-context";
 
 // ─── Utilitários de data ────────────────────────────────────────────────────
 const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
@@ -488,7 +488,7 @@ export default function CalendarPage() {
                             {events.projects.map((project) => (
                               <Link
                                 key={`ap-${project.id}`}
-                                href={`/app/projects/view/${project.id}`}
+                                href={`/app/projects/${project.id}`}
                               >
                                 <div className="group flex items-center gap-2.5 rounded-md border border-transparent bg-purple-50/50 px-3 py-2 transition-all hover:border-purple-200 hover:shadow-sm dark:bg-purple-950/20 dark:hover:border-purple-800/50">
                                   <div className="flex h-7 w-7 items-center justify-center rounded bg-purple-100 text-purple-500 dark:bg-purple-900/40 dark:text-purple-400">
@@ -511,7 +511,7 @@ export default function CalendarPage() {
                               </Link>
                             ))}
                             {events.notes.map((note) => (
-                              <Link key={`an-${note.id}`} href={`/app/notes/view/${note.id}`}>
+                              <Link key={`an-${note.id}`} href={`/app/notes/${note.id}`}>
                                 <div className="group flex items-center gap-2.5 rounded-md border border-transparent bg-yellow-50/50 px-3 py-2 transition-all hover:border-yellow-200 hover:shadow-sm dark:bg-yellow-950/20 dark:hover:border-yellow-800/50">
                                   <div className="flex h-7 w-7 items-center justify-center rounded bg-yellow-100 text-yellow-500 dark:bg-yellow-900/40 dark:text-yellow-400">
                                     <FileText size={11} />
@@ -609,7 +609,7 @@ export default function CalendarPage() {
                       </div>
                       <div className="space-y-1.5">
                         {selectedEvents.projects.map((project) => (
-                          <Link href={`/app/projects/view/${project.id}`} key={`sp-${project.id}`}>
+                          <Link href={`/app/projects/${project.id}`} key={`sp-${project.id}`}>
                             <div className="group flex items-center gap-2.5 rounded-md border border-neutral-100 bg-white p-2.5 transition-all hover:border-purple-200 hover:shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-purple-700/40">
                               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-purple-100 text-purple-500 dark:bg-purple-900/30 dark:text-purple-400">
                                 <FaProjectDiagram size={12} />
@@ -646,7 +646,7 @@ export default function CalendarPage() {
                       </div>
                       <div className="space-y-1.5">
                         {selectedEvents.notes.map((note) => (
-                          <Link href={`/app/notes/view/${note.id}`} key={`sn-${note.id}`}>
+                          <Link href={`/app/notes/${note.id}`} key={`sn-${note.id}`}>
                             <div className="group flex items-center gap-2.5 rounded-md border border-neutral-100 bg-white p-2.5 transition-all hover:border-yellow-200 hover:shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-yellow-700/40">
                               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-yellow-100 text-yellow-500 dark:bg-yellow-900/30 dark:text-yellow-400">
                                 <FileText size={12} />

@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useOrganization } from "@/app/contexts/OrganizationContext";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { useOrganization } from "@/app/_contexts/organization-context";
+import { useAuth } from "@/app/_contexts/auth-context";
 import Image from "next/image";
-import type { User } from "@/app/services/authentication/AuthService";
+import type { User } from "@/app/_services/authentication/auth-service";
 import {
   Users,
   Plus,

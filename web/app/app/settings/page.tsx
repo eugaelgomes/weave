@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { useAuth } from "@/app/contexts/AuthContext";
-import { User } from "@/app/services/authentication/AuthService";
-import { requestBackup, getBackupStatus } from "@/app/services/backup-service/BackupService";
+import { useAuth } from "@/app/_contexts/auth-context";
+import { User } from "@/app/_services/authentication/auth-service";
+import { requestBackup, getBackupStatus } from "@/app/_services/backup-service/backup-service";
 import {
   Camera,
   Save,
@@ -27,7 +27,7 @@ import {
   Database,
   Keyboard,
 } from "lucide-react";
-import { formatDate, formatRoleName } from "@/app/utils/format";
+import { formatDate, formatRoleName } from "@/app/_utils/format";
 
 interface FormData {
   name: string;

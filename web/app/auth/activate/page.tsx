@@ -11,7 +11,7 @@ import {
   FaGithub,
   FaLinkedin,
 } from "react-icons/fa";
-import { apiClient, API_ENDPOINTS } from "@/app/services/api-methods";
+import { apiClient, API_ENDPOINTS } from "@/app/_services/api-methods";
 
 interface Message {
   type: "error" | "success" | "loading" | "";

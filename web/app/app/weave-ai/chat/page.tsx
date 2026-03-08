@@ -23,12 +23,12 @@ import {
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import { useChat } from "@/app/contexts/ChatContext";
-import { useAuth } from "@/app/contexts/AuthContext";
-import { useNotes } from "@/app/contexts/NotesContext";
-import { useProjects } from "@/app/contexts/ProjectsContext";
-import { checkHealth, type HealthStatus } from "@/app/services";
-import type { AIModel } from "@/app/services/ai-agent-service/agent-servevice";
+import { useChat } from "@/app/_contexts/chat-context";
+import { useAuth } from "@/app/_contexts/auth-context";
+import { useNotes } from "@/app/_contexts/notes-context";
+import { useProjects } from "@/app/_contexts/projects-context";
+import { checkHealth, type HealthStatus } from "@/app/_services";
+import type { AIModel } from "@/app/_services/ai-agent-service/agent-service";
 import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
 

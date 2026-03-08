@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../_contexts/auth-context";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   FaEye,
@@ -17,8 +17,8 @@ import {
 } from "react-icons/fa";
 import { HiDocumentText, HiFolder } from "react-icons/hi2";
 import Link from "next/link";
-import Navbar from "@/app/auth/components/Navbar";
-import Footer from "@/app/auth/components/Footer";
+import Navbar from "@/app/auth/_components/navbar";
+import Footer from "@/app/auth/_components/footer";
 
 const BackgroundSinuous = () => (
   <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
@@ -51,7 +51,7 @@ const BackgroundSinuous = () => (
   </div>
 );
 
-const ForgotPasswordModal = dynamic(() => import("../modals/forgot-password"), {
+const ForgotPasswordModal = dynamic(() => import("../_modals/forgot-password"), {
   ssr: false,
 });
 

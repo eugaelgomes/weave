@@ -2,18 +2,18 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { useAuth } from "../../contexts/AuthContext";
-import { useNotes } from "../../contexts/NotesContext";
-import { useProjects } from "../../contexts/ProjectsContext";
-//import { checkHealth, type HealthStatus } from "../../services";
-import { getTagColor } from "@/app/utils/tag-colors";
-import NotesCarousel from "../components/ui/notes-carousel";
-import ProjectsCarousel from "../components/ui/project-carousel";
+import { useAuth } from "../../_contexts/auth-context";
+import { useNotes } from "../../_contexts/notes-context";
+import { useProjects } from "../../_contexts/projects-context";
+//import { checkHealth, type HealthStatus } from "../../_services";
+import { getTagColor } from "@/app/_utils/tag-colors";
+import NotesCarousel from "../_components/ui/notes-carousel";
+import ProjectsCarousel from "../_components/ui/project-carousel";
 import { FileText, Tag, Activity } from "lucide-react";
 import { FaProjectDiagram } from "react-icons/fa";
-import { CalendarPreview } from "../components/ui/calendar-componet";
-import { useFormatters } from "@/app/utils/product-patterns";
-import { useLanguage } from "@/app/contexts/LanguageContext";
+import { CalendarPreview } from "../_components/ui/calendar-component";
+import { useFormatters } from "@/app/_utils/product-patterns";
+import { useLanguage } from "@/app/_contexts/language-context";
 
 const FONT_SIZES = [
   "text-xs",

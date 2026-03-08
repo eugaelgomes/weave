@@ -7,12 +7,12 @@ import Image from "next/image";
 import { Search, Filter, Plus, X, SortAsc, RefreshCw, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { useNotes } from "../../contexts/NotesContext";
-import { deleteNotes } from "@/app/services/notes-service/NotesService";
-import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/utils/collaborators";
-import { getTagColor } from "@/app/utils/tag-colors";
-import Pagination from "../components/ui/pagination";
-import { formatDate } from "@/app/utils/format";
+import { useNotes } from "../../_contexts/notes-context";
+import { deleteNotes } from "@/app/_services/notes-service/notes-service";
+import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/_utils/collaborators";
+import { getTagColor } from "@/app/_utils/tag-colors";
+import Pagination from "../_components/ui/pagination";
+import { formatDate } from "@/app/_utils/format";
 import { FiCheckSquare } from "react-icons/fi";
 
 interface PaginationData {
@@ -211,7 +211,7 @@ const NotesWithPagination = () => {
         description: "",
         tags: [],
       });
-      if (newNote) router.push(`/app/notes/view/${newNote.id}`);
+      if (newNote) router.push(`/app/notes/${newNote.id}`);
     } catch (error: any) {
       console.error("Erro:", error);
 
@@ -645,7 +645,7 @@ const NotesWithPagination = () => {
                       </div>
                     )}
                     <Link
-                      href={selectionMode ? "#" : `/app/notes/view/${note.id}`}
+                      href={selectionMode ? "#" : `/app/notes/${note.id}`}
                       onClick={(e) => {
                         if (selectionMode) {
                           e.preventDefault();

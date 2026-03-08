@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash, FaRobot, FaUsers, FaBuilding, FaSearch } from "react-icons/fa";
 import { HiDocumentText, HiFolder } from "react-icons/hi2";
-import { useAuth } from "../../contexts/AuthContext";
-import Navbar from "@/app/auth/components/Navbar";
-import Footer from "@/app/auth/components/Footer";
+import { useAuth } from "../../_contexts/auth-context";
+import Navbar from "@/app/auth/_components/navbar";
+import Footer from "@/app/auth/_components/footer";
 
 const BackgroundSinuous = () => (
   <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">

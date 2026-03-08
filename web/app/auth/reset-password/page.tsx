@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { FaEye, FaEyeSlash, FaCheckCircle, FaGithub, FaLinkedin } from "react-icons/fa";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../_contexts/auth-context";
 
 interface Message {
   type: "error" | "success" | "";
