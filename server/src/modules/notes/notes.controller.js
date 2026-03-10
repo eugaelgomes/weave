@@ -693,7 +693,7 @@ class NotesController {
           userId
         );
         propertiesUpdate.icon = {
-          path: result.path || result.key || '',
+          path: result.path || result.key || "",
           name: iconFile.originalname,
           type: iconFile.mimetype,
         };
@@ -715,7 +715,7 @@ class NotesController {
           userId
         );
         propertiesUpdate.banner = {
-          path: result.path || result.key || '',
+          path: result.path || result.key || "",
           name: bannerFile.originalname,
           type: bannerFile.mimetype,
         };
@@ -736,7 +736,7 @@ class NotesController {
             );
             return {
               id: result.fileName,
-              path: result.key || result.path || '',
+              path: result.key || result.path || "",
               name: file.originalname,
               type: file.mimetype,
             };

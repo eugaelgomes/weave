@@ -16,7 +16,7 @@ function getAuthCookieOptions(req, options = {}) {
 
   // Usar sameSite 'lax' por padrão (funciona para subdomínios)
   // Só usar 'none' se COOKIE_SAME_SITE estiver explicitamente definido como 'none'
-  const sameSite = isProduction 
+  const sameSite = isProduction
     ? (process.env.COOKIE_SAME_SITE || "lax")
     : "lax";
 
@@ -67,10 +67,10 @@ function setAuthCookie(res, req, token, options = {}) {
 function clearAuthCookie(res, req) {
   const isProduction = process.env.NODE_ENV === "production";
   const domain = getCookieDomain(req.hostname);
-  const sameSite = isProduction 
+  const sameSite = isProduction
     ? (process.env.COOKIE_SAME_SITE || "lax")
     : "lax";
-  
+
   const clearOptions = {
     httpOnly: true,
     secure: isProduction,

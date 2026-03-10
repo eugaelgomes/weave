@@ -106,4 +106,4 @@ function normalizeAppPreferences(userPreferences = {}) {
 module.exports = {
   defaultAppPreferences,
   normalizeAppPreferences,
-}; 
+};

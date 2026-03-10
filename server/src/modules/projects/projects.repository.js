@@ -263,8 +263,8 @@ class ProjectsRepository {
       projectId,
       userId,
       ...keys.map((k) =>
-        k === "properties" || k === "projects_files" 
-          ? JSON.stringify(updates[k]) 
+        k === "properties" || k === "projects_files"
+          ? JSON.stringify(updates[k])
           : updates[k]
       ),
     ];
@@ -388,7 +388,7 @@ class ProjectsRepository {
       WHERE project_id = $1::uuid
       ORDER BY position ASC;
     `;
-    
+
     return executeQuery(query, [projectId]);
   }
 

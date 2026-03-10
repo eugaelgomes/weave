@@ -389,14 +389,14 @@ class ProjectsController {
   async createProject(req, res, next) {
     try {
       // 🟢 1. Extraímos os novos campos do body
-      const { 
-        title, 
-        description, 
-        status, 
-        properties, 
-        methodology, 
-        default_view, 
-        org_id 
+      const {
+        title,
+        description,
+        status,
+        properties,
+        methodology,
+        default_view,
+        org_id
       } = req.body;
 
       // Validação de autenticação
@@ -462,17 +462,17 @@ class ProjectsController {
       // Passamos os dados da requisição + as propriedades validadas pelo usuário
       const payload = { title, description, methodology, default_view, status: projectStatus };
       const { projectData, stagesData } = normalizeNewProject(
-        payload, 
-        userId, 
-        org_id, 
+        payload,
+        userId,
+        org_id,
         userValidatedProps // Injetamos as props do usuário para mesclar com as props de negócio
       );
 
       // 🟢 4. Persistência no banco de dados
-      // NOTA ARQUITETURAL: Como agora você tem projectData e stagesData, 
+      // NOTA ARQUITETURAL: Como agora você tem projectData e stagesData,
       // o método no Repository precisa salvar ambos usando uma Transaction SQL.
       const result = await this.projectsRepository.createProjectWithStages(
-        projectData, 
+        projectData,
         stagesData
       );
 
@@ -487,9 +487,9 @@ class ProjectsController {
 
       // Formatar e retornar o projeto criado
       const formattedProject = this._formatProjectResponse(newProject);
-      
+
       // Opcional: Adicionar as stages à resposta para o front-end já renderizar o board
-      formattedProject.stages = result[0].stages || stagesData; 
+      formattedProject.stages = result[0].stages || stagesData;
 
       res.status(201).json(formattedProject);
     } catch (error) {
@@ -516,8 +516,8 @@ class ProjectsController {
       const stages = await this.projectsRepository.getProjectStages(id);
 
       // Retorna a resposta limpa
-      res.status(200).json({ 
-        stages: stages || [] 
+      res.status(200).json({
+        stages: stages || []
       });
     } catch (error) {
       this._handleError(error, res, next);
@@ -579,7 +579,7 @@ class ProjectsController {
           userId
         );
         propertiesUpdate.icon = {
-          path: result.path || result.key || '',
+          path: result.path || result.key || "",
           name: iconFile.originalname,
           type: iconFile.mimetype,
         };
@@ -598,7 +598,7 @@ class ProjectsController {
             );
             return {
               id: result.fileName,
-              path: result.key || result.path || '',
+              path: result.key || result.path || "",
               name: file.originalname,
               type: file.mimetype,
               size: file.size,

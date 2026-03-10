@@ -96,7 +96,7 @@ class AIController {
       }
 
       // Determina o provider ideal
-      let provider = requestedProvider || getProviderForUseCase(useCase);
+      const provider = requestedProvider || getProviderForUseCase(useCase);
 
       // Enriquece contexto com Context Provider dinâmico
       const enrichedContext = await this._enrichContext(
@@ -426,7 +426,7 @@ Inclua apenas os campos que devem ser atualizados.`,
           );
 
           // Cria blocos se fornecidos
-          let blocks = [];
+          const blocks = [];
           if (
             context.includeBlocks !== false &&
             parsedResponse.blocks &&
@@ -464,7 +464,7 @@ Inclua apenas os campos que devem ser atualizados.`,
           );
 
           // Cria notas associadas se fornecidas
-          let notes = [];
+          const notes = [];
           if (
             context.includeNotes &&
             parsedResponse.notes &&
@@ -604,8 +604,8 @@ Inclua apenas os campos que devem ser atualizados.`,
   async _enrichContext(userId, useCase, context) {
     try {
       // Buscar dados completos de notas e projetos indexados
-      let indexedNotes = [];
-      let indexedProjects = [];
+      const indexedNotes = [];
+      const indexedProjects = [];
 
       if (context.noteIds && Array.isArray(context.noteIds)) {
         for (const noteId of context.noteIds) {
@@ -1007,7 +1007,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         );
 
         systemMessage +=
-          '\n\n## ⚡ MODO DE EXECUÇÃO ATIVADO\n\n**IMPORTANTE: Você TEM funções disponíveis e DEVE usá-las.**\n\nQuando o usuário pedir:\n- "Crie..." → use create_note ou create_project\n- "Edite..." → use update_note ou update_project\n- "Delete..." → use delete_note ou delete_project\n- "Adicione bloco..." → use create_block\n\n**NUNCA retorne JSON no texto. SEMPRE use as funções.**';
+          "\n\n## ⚡ MODO DE EXECUÇÃO ATIVADO\n\n**IMPORTANTE: Você TEM funções disponíveis e DEVE usá-las.**\n\nQuando o usuário pedir:\n- \"Crie...\" → use create_note ou create_project\n- \"Edite...\" → use update_note ou update_project\n- \"Delete...\" → use delete_note ou delete_project\n- \"Adicione bloco...\" → use create_block\n\n**NUNCA retorne JSON no texto. SEMPRE use as funções.**";
 
         // Reforço de contexto específico para evitar buscas desnecessárias
         if (context.noteId) {

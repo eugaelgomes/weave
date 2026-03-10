@@ -38,19 +38,19 @@ class SystemAuthRepository {
    */
   async validateAdminStatus(adminId) {
     const admin = await this.findAdminById(adminId);
-    
+
     if (!admin) {
       return { valid: false, reason: "Admin não encontrado" };
     }
-    
+
     if (!admin.is_active) {
       return { valid: false, reason: "Conta inativa" };
     }
-    
+
     if (admin.is_suspended) {
       return { valid: false, reason: "Conta suspensa" };
     }
-    
+
     return { valid: true, admin };
   }
 

@@ -6,7 +6,7 @@ async function delete_account_request(nome, email, username, token) {
   try {
     const confirmationLink = `${process.env.FRONTEND_URL}/auth/confirm-delete-account?token=${token}`;
 
-    let mailOptions = {
+    const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
       subject: "Confirmação de exclusão de conta - Weave Notes",

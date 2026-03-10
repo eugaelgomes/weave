@@ -5,17 +5,17 @@ const { requireSystemAdmin } = require("@/modules/system-auth/system-auth.middle
 const router = express.Router();
 
 router.post(
-    "/signin", 
+    "/signin",
     SystemAuthController.systemAdminLogin.bind(SystemAuthController)
 );
 
 router.post(
-    "/logout", 
+    "/logout",
     SystemAuthController.systemAdminLogout.bind(SystemAuthController)
 );
 
 router.get(
-    "/profile", 
+    "/profile",
     requireSystemAdmin, SystemAuthController.getProfile.bind(SystemAuthController)
 );
 

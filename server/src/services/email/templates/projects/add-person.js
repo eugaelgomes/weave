@@ -24,7 +24,7 @@ async function inviteProjectMember(
   };
 
   try {
-    let mailOptions = {
+    const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
       subject: `${personFirstName(nome) || "Olá"}, você foi adicionado ao projeto "${projectName || null}"`,

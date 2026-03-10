@@ -11,7 +11,7 @@ async function mail_rescue_pass(email, token, name) {
     resetLink = `${process.env.FRONTEND_URL}/auth/reset-password?reset_token=${token}`;
   }
   try {
-    let mailOptions = {
+    const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
       subject: "Redefinição de senha - Weave Notes",

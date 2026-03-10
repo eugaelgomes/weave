@@ -1,4 +1,4 @@
-/* eslint-disable quotes */
+
 const { executeQuery } = require("@/services/db");
 const { defaultAppPreferences } = require("@/modules/users/normalize");
 

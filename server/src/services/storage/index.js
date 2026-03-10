@@ -143,7 +143,7 @@ class SpacesService {
         Key: key,
         Body: imageBuffer,
         ContentType: mimeType,
-        ACL: "public-read", 
+        ACL: "public-read",
         CacheControl: "max-age=31536000", // Cache por 1 ano
       };
 
@@ -278,8 +278,8 @@ class SpacesService {
   async uploadNoteFile(fileBuffer, mimeType, noteId, userId, originalName = null) {
     const { NOTES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
-    const safeOriginalName = originalName 
-      ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_") 
+    const safeOriginalName = originalName
+      ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_")
       : `file${ext}`;
 
     const fileName = `${uuidv4()}_${safeOriginalName}`;
@@ -307,8 +307,8 @@ class SpacesService {
   async uploadProjectFile(fileBuffer, mimeType, projectId, userId, originalName = null) {
     const { PROJECTS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
-    const safeOriginalName = originalName 
-      ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_") 
+    const safeOriginalName = originalName
+      ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_")
       : `file${ext}`;
 
     const fileName = `${uuidv4()}_${safeOriginalName}`;

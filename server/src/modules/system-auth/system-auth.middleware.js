@@ -69,10 +69,10 @@ const requireRole = (allowedRoles) => {
     const userRole = req.systemAdmin.role;
 
     if (!allowedRoles.includes(userRole)) {
-      return res.status(403).json({ 
-        error: "Permissão insuficiente", 
+      return res.status(403).json({
+        error: "Permissão insuficiente",
         required: allowedRoles,
-        current: userRole 
+        current: userRole
       });
     }
 

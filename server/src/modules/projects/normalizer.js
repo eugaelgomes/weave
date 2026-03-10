@@ -1,5 +1,5 @@
-const DEFAULT_METHODOLOGY = 'kanban';
-const DEFAULT_VIEW = 'board';
+const DEFAULT_METHODOLOGY = "kanban";
+const DEFAULT_VIEW = "board";
 
 const BASE_PROJECT_PROPERTIES = {
   // UI & Design
@@ -12,7 +12,7 @@ const BASE_PROJECT_PROPERTIES = {
   estimated_time: null,
   progress: 0,
   // Metodologias
-  type: 'custom',
+  type: "custom",
   wip_limit_enabled: false,
   lead_time_target_days: null,
   sprint_duration_weeks: null,
@@ -31,27 +31,27 @@ const METHODOLOGY_CONFIGS = {
     properties: {
       wip_limit_enabled: true,
       lead_time_target_days: 7,
-      type: 'continuous_flow'
+      type: "continuous_flow"
     },
     stages: [
-      { name: 'Backlog', position: 0, color: '#94a3b8', properties: { is_done: false } },
-      { name: 'To Do', position: 1, color: '#e2e8f0', properties: { is_done: false } },
-      { name: 'Doing', position: 2, color: '#bfdbfe', properties: { is_done: false, wip_limit: 5 } },
-      { name: 'Done', position: 3, color: '#bbf7d0', properties: { is_done: true } }
+      { name: "Backlog", position: 0, color: "#94a3b8", properties: { is_done: false } },
+      { name: "To Do", position: 1, color: "#e2e8f0", properties: { is_done: false } },
+      { name: "Doing", position: 2, color: "#bfdbfe", properties: { is_done: false, wip_limit: 5 } },
+      { name: "Done", position: 3, color: "#bbf7d0", properties: { is_done: true } }
     ]
   },
   scrum: {
     properties: {
       sprint_duration_weeks: 2,
-      estimation_type: 'story_points',
-      type: 'iterative'
+      estimation_type: "story_points",
+      type: "iterative"
     },
     stages: [
-      { name: 'Product Backlog', position: 0, color: '#94a3b8', properties: { is_done: false } },
-      { name: 'Sprint Backlog', position: 1, color: '#e2e8f0', properties: { is_done: false } },
-      { name: 'In Progress', position: 2, color: '#bfdbfe', properties: { is_done: false } },
-      { name: 'Review / QA', position: 3, color: '#fef08a', properties: { is_done: false } },
-      { name: 'Done', position: 4, color: '#bbf7d0', properties: { is_done: true } }
+      { name: "Product Backlog", position: 0, color: "#94a3b8", properties: { is_done: false } },
+      { name: "Sprint Backlog", position: 1, color: "#e2e8f0", properties: { is_done: false } },
+      { name: "In Progress", position: 2, color: "#bfdbfe", properties: { is_done: false } },
+      { name: "Review / QA", position: 3, color: "#fef08a", properties: { is_done: false } },
+      { name: "Done", position: 4, color: "#bbf7d0", properties: { is_done: true } }
     ]
   }
 };
@@ -64,13 +64,13 @@ const METHODOLOGY_CONFIGS = {
  * @returns {Object} Objeto estruturado para Repository
  */
 const normalizeNewProject = (payload, userId, orgId, userProps = {}) => {
-  const title = payload.title?.trim() || 'The new project';
+  const title = payload.title?.trim() || "The new project";
   const description = payload.description?.trim() || null;
-  
-  const methodology = payload.methodology && METHODOLOGY_CONFIGS[payload.methodology] 
-    ? payload.methodology 
+
+  const methodology = payload.methodology && METHODOLOGY_CONFIGS[payload.methodology]
+    ? payload.methodology
     : DEFAULT_METHODOLOGY;
-    
+
   const default_view = payload.default_view || DEFAULT_VIEW;
 
   const config = METHODOLOGY_CONFIGS[methodology];
@@ -96,7 +96,7 @@ const normalizeNewProject = (payload, userId, orgId, userProps = {}) => {
     description,
     methodology,
     default_view,
-    status: payload.status || 'open',
+    status: payload.status || "open",
     properties: JSON.stringify(mergedProjectProperties)
   };
 

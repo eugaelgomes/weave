@@ -7,7 +7,7 @@ const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
 async function welcome_message(email, organization_name) {
   try {
-    let mailOptions = {
+    const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
       subject: `Olá, você foi convidade para o Weave Notes pela ${organization_name}`,

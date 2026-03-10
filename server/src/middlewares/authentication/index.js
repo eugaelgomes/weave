@@ -4,7 +4,7 @@ const SECRET_KEY = process.env.SECRET_KEY;
 
 const verifyToken = (req, res, next) => {
   const isProduction = process.env.NODE_ENV === "production";
-  
+
   // Token HTTP Only
   let token = req.cookies?.token;
   let tokenSource = "cookie";
@@ -40,12 +40,12 @@ const verifyToken = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, SECRET_KEY, { algorithms: ["HS256"] });
     req.user = decoded;
-    
+
     // Log de sucesso em produção (apenas primeira vez por sessão)
     if (isProduction) {
       console.log(`[Auth Success] User ${decoded.userId} via ${tokenSource}`);
     }
-    
+
     next();
   } catch (error) {
     // Log de erro em produção

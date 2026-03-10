@@ -10,7 +10,7 @@ async function welcome_message(nome, email, username, activationToken) {
       : `${process.env.FRONTEND_URL}/auth/activate?token=${activationToken}`;
 
   try {
-    let mailOptions = {
+    const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
       subject: "Bem-vindo ao Weave Notes - Ative sua conta",

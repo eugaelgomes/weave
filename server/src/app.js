@@ -12,21 +12,21 @@ const app = express();
 app.get("/health", (req, res) => {
   const origin = req.headers.origin;
   const isDev = process.env.NODE_ENV !== "production";
-  
+
   if (isDev && origin && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Credentials", "true");
   }
-  
+
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.setHeader("Pragma", "no-cache");
 
   const healthcheck = {
-    status: "online",
-    uptime: process.uptime(),
     message: "All systems operational",
-    timestamp: new Date().toISOString(),
     service: "weave-notes-api",
+    status: "online",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
   };
 
   res.send(healthcheck);

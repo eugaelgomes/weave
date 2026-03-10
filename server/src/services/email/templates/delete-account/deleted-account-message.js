@@ -4,7 +4,7 @@ const contactEmail = process.env.CONTACT_EMAIL || "contact@gaelgomes.dev";
 
 async function delete_account_notification(nome, email, username) {
   try {
-    let mailOptions = {
+    const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
       subject: "Conta excluída com sucesso - Weave Notes",

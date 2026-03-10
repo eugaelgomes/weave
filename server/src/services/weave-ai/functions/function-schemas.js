@@ -831,7 +831,7 @@ const chatFunctions = {
       properties: {
         title: {
           type: "string",
-          description: 'Título da conversa (opcional, default "Nova Conversa")',
+          description: "Título da conversa (opcional, default \"Nova Conversa\")",
           default: "Nova Conversa",
         },
       },

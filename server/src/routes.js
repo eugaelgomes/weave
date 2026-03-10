@@ -1,5 +1,6 @@
 const express = require("express");
 
+// Rotas nos módulos
 const authRoutes = require("@/modules/auth/auth.routes");
 const userRoutes = require("@/modules/users/users.routes");
 const passwordRoutes = require("@/modules/password/password.routes");
@@ -17,19 +18,19 @@ const webhooksRoutes = require("@/modules/webhooks/webhooks.routes");
 const router = express.Router();
 
 const routeMap = [
-  { path: "/auth", handler: authRoutes },
-  { path: "/users", handler: userRoutes },
-  { path: "/password", handler: passwordRoutes },
-  { path: "/notes", handler: notesRoutes },
-  { path: "/backup", handler: backupRoutes },
-  { path: "/projects", handler: projectsRoutes },
-  { path: "/weave-ai", handler: aiRoutes },
-  { path: "/organizations", handler: organizationsRoutes },
-  { path: "/plans", handler: plansRoutes },
-  { path: "/admin", handler: adminRoutes },
-  { path: "/system-auth", handler: systemAuthRoutes },
-  { path: "/system-admins", handler: systemAdminsRoutes },
-  { path: "/webhooks", handler: webhooksRoutes },
+  { handler: adminRoutes, path: "/admin" },
+  { handler: authRoutes, path: "/auth" },
+  { handler: backupRoutes, path: "/backup" },
+  { handler: aiRoutes, path: "/weave-ai" },
+  { handler: notesRoutes, path: "/notes" },
+  { handler: organizationsRoutes, path: "/organizations" },
+  { handler: passwordRoutes, path: "/password" },
+  { handler: plansRoutes, path: "/plans" },
+  { handler: projectsRoutes, path: "/projects" },
+  { handler: systemAdminsRoutes, path: "/system-admins" },
+  { handler: systemAuthRoutes, path: "/system-auth" },
+  { handler: userRoutes, path: "/users" },
+  { handler: webhooksRoutes, path: "/webhooks" },
 ];
 
 routeMap.forEach(({ path, handler }) => router.use(path, handler));

@@ -50,9 +50,9 @@ class SystemAuthController {
 
       // 2. Busca de Admin com tratamento de fallback
       const admin = await SystemAuthRepository.findAdminByEmail(email);
-      
+
       // Proteção contra Timing Attacks: Sempre processamos o bcrypt, mesmo se admin não existir
-      const dummyHash = "$2b$10$SomethingToPreventTimingAttacks"; 
+      const dummyHash = "$2b$10$SomethingToPreventTimingAttacks";
       const actualHash = admin?.password || dummyHash;
       const isMatch = await bcrypt.compare(password, actualHash);
 
@@ -86,7 +86,7 @@ class SystemAuthController {
       });
 
       // 5. Persistência de Auditoria (Async)
-      SystemAuthRepository.updateLastAccess(admin.id).catch(e => 
+      SystemAuthRepository.updateLastAccess(admin.id).catch(e =>
         logger.error("Falha ao atualizar último acesso", e)
       );
 
@@ -124,9 +124,9 @@ class SystemAuthController {
         maxAge: 0,
       });
 
-      return res.status(200).json({ 
-        status: "success", 
-        message: "Sessão encerrada com segurança." 
+      return res.status(200).json({
+        status: "success",
+        message: "Sessão encerrada com segurança."
       });
     } catch (error) {
       return this._handleError(error, res, "Logout");
@@ -148,7 +148,7 @@ class SystemAuthController {
       }
 
       const validation = await SystemAuthRepository.validateAdminStatus(adminId);
-      
+
       if (!validation || !validation.valid) {
         const err = new Error(validation?.reason || "Acesso negado.");
         err.statusCode = 403;

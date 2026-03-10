@@ -82,7 +82,7 @@ class userController {
     }
 
     try {
-      let {
+      const {
         name,
         user_name,
         username,
@@ -441,7 +441,7 @@ class userController {
         updates.private_profile = private_profile;
       const resolvedPreference = usage_preference ?? user_preference;
       if (resolvedPreference !== undefined) {
-        const parsed = typeof resolvedPreference === 'string'
+        const parsed = typeof resolvedPreference === "string"
           ? JSON.parse(resolvedPreference)
           : resolvedPreference;
         updates.user_preference = normalizeAppPreferences(parsed);
