@@ -184,6 +184,42 @@ class WebhooksController {
     }
   }
 
+  async disconnectCalendar(req, res) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) return res.status(401).json({ error: "Usuário não autenticado" });
+
+      // Tentar parar os webhooks ativos no Google
+      const tokens = await webhooksRepository.getGoogleTokens(userId);
+      if (tokens) {
+        const activeWebhooks = await webhooksRepository.getActiveWebhooks(userId);
+        for (const wh of activeWebhooks) {
+          try {
+            const calendar = googleService.getCalendarClient(tokens);
+            await calendar.channels.stop({
+              requestBody: {
+                id: wh.channel_id,
+                resourceId: wh.resource_id,
+              },
+            });
+          } catch (err) {
+            console.warn(`[Google Calendar] Falha ao parar channel ${wh.channel_id}: ${err.message}`);
+          }
+        }
+      }
+
+      // Limpar webhooks e tokens do banco
+      await webhooksRepository.clearWebhooks(userId);
+      await webhooksRepository.clearGoogleTokens(userId);
+
+      console.log(`[Google Calendar] Desconectado para o usuário ${userId}`);
+      res.json({ success: true, message: "Google Calendar desconectado com sucesso" });
+    } catch (error) {
+      console.error("[Google Calendar Disconnect]", error);
+      res.status(500).json({ error: "Falha ao desconectar Google Calendar" });
+    }
+  }
+
   async _registerCalendarWatch(userId, tokens) {
     const channelId = uuidv4();
     const calendarId = "primary";

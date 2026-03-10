@@ -35,6 +35,7 @@ import { FaGoogle } from "react-icons/fa";
 import {
   fetchGoogleCalendarStatus,
   connectGoogleCalendar,
+  disconnectGoogleCalendar,
 } from "@/app/_services/calendar-service/calendar-service";
 import { formatDate, formatRoleName } from "@/app/_utils/format";
 
@@ -83,6 +84,7 @@ const SettingsPage = () => {
   // Google Calendar
   const [gcalConnected, setGcalConnected] = useState(false);
   const [gcalLoading, setGcalLoading] = useState(true);
+  const [gcalDisconnecting, setGcalDisconnecting] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -1291,10 +1293,39 @@ const SettingsPage = () => {
                   </div>
                   {!gcalLoading && (
                     gcalConnected ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        Ativo
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={connectGoogleCalendar}
+                          className="flex items-center gap-1 rounded-md border border-blue-200 px-2.5 py-1 text-[11px] font-medium text-blue-600 transition-colors hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/30"
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                          Reconectar
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (!window.confirm("Deseja desconectar o Google Calendar? Os dados de integração serão removidos.")) return;
+                            setGcalDisconnecting(true);
+                            try {
+                              await disconnectGoogleCalendar();
+                              setGcalConnected(false);
+                              setSuccessMessage("Google Calendar desconectado com sucesso.");
+                            } catch (err: unknown) {
+                              setError((err as Error).message || "Erro ao desconectar.");
+                            } finally {
+                              setGcalDisconnecting(false);
+                            }
+                          }}
+                          disabled={gcalDisconnecting}
+                          className="flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1 text-[11px] font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30"
+                        >
+                          {gcalDisconnecting ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Unlink className="h-3 w-3" />
+                          )}
+                          Desconectar
+                        </button>
+                      </div>
                     ) : (
                       <button
                         onClick={connectGoogleCalendar}

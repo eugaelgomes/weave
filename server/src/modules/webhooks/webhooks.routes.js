@@ -9,5 +9,6 @@ router.get("/google/callback", webhooksController.googleCallback.bind(webhooksCo
 router.post("/google/calendar", webhooksController.handleGoogleCalendarWebhook.bind(webhooksController));
 router.get("/google/calendar/events", verifyToken, webhooksController.getCalendarEvents.bind(webhooksController));
 router.get("/google/calendar/status", verifyToken, webhooksController.getCalendarStatus.bind(webhooksController));
+router.delete("/google/calendar/disconnect", verifyToken, webhooksController.disconnectCalendar.bind(webhooksController));
 
 module.exports = router;

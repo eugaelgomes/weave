@@ -27,6 +27,15 @@ export function connectGoogleCalendar() {
   window.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1"}${API_ENDPOINTS.GOOGLE_CALENDAR_AUTH}`;
 }
 
+export async function disconnectGoogleCalendar(): Promise<{ success: boolean; message?: string }> {
+  const res = await apiClient.delete(API_ENDPOINTS.GOOGLE_CALENDAR_DISCONNECT);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || "Falha ao desconectar Google Calendar");
+  }
+  return res.json();
+}
+
 export async function fetchGoogleCalendarEvents(
   timeMin?: string,
   timeMax?: string

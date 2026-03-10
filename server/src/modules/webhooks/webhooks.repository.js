@@ -102,6 +102,24 @@ class WebhooksRepository {
     );
     return results.length > 0;
   }
+
+  async getActiveWebhooks(userId) {
+    return executeQuery(
+      `SELECT channel_id, resource_id, calendar_id
+       FROM google_calendar_webhooks
+       WHERE user_id = $1 AND is_active = true AND deleted = false`,
+      [userId]
+    );
+  }
+
+  async clearWebhooks(userId) {
+    await rowCount(
+      `UPDATE google_calendar_webhooks
+       SET is_active = false, deleted = true, updated_at = CURRENT_TIMESTAMP
+       WHERE user_id = $1`,
+      [userId]
+    );
+  }
 }
 
 module.exports = new WebhooksRepository();
