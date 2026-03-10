@@ -12,7 +12,7 @@ import {
   Clock,
   Trash,
 } from "lucide-react";
-import Pagination from "../_components/ui/pagination";
+import Pagination from "../_components/ui/notes/pagination";
 
 // =================== TYPES E INTERFACES ===================
 type NotificationType = "mention" | "system" | "alert" | "invite";

@@ -11,7 +11,7 @@ import { useNotes } from "../../_contexts/notes-context";
 import { deleteNotes } from "@/app/_services/notes-service/notes-service";
 import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/_utils/collaborators";
 import { getTagColor } from "@/app/_utils/tag-colors";
-import Pagination from "../_components/ui/pagination";
+import Pagination from "../_components/ui/notes/pagination";
 import { formatDate } from "@/app/_utils/format";
 import { FiCheckSquare } from "react-icons/fi";
 

@@ -7,11 +7,11 @@ import { useNotes } from "../../_contexts/notes-context";
 import { useProjects } from "../../_contexts/projects-context";
 //import { checkHealth, type HealthStatus } from "../../_services";
 import { getTagColor } from "@/app/_utils/tag-colors";
-import NotesCarousel from "../_components/ui/notes-carousel";
-import ProjectsCarousel from "../_components/ui/project-carousel";
+import NotesCarousel from "../_components/ui/notes/notes-carousel";
+import ProjectsCarousel from "../_components/ui/projects/project-carousel";
 import { FileText, Tag, Activity } from "lucide-react";
 import { FaProjectDiagram } from "react-icons/fa";
-import { CalendarPreview } from "../_components/ui/calendar-component";
+import { CalendarPreview } from "../_components/ui/calendar/calendar-component";
 import { useFormatters } from "@/app/_utils/product-patterns";
 import { useLanguage } from "@/app/_contexts/language-context";
 
