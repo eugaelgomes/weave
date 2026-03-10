@@ -14,10 +14,14 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
-import { FaProjectDiagram } from "react-icons/fa";
+import { FaProjectDiagram, FaGoogle } from "react-icons/fa";
 
 import { useNotes } from "../../_contexts/notes-context";
 import { useProjects } from "../../_contexts/projects-context";
+import {
+  fetchGoogleCalendarEvents,
+  type GoogleCalendarEvent,
+} from "../../_services/calendar-service/calendar-service";
 
 // ─── Utilitários de data ────────────────────────────────────────────────────
 const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
@@ -71,6 +75,9 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [gcalEvents, setGcalEvents] = useState<GoogleCalendarEvent[]>([]);
+  const [gcalConnected, setGcalConnected] = useState(false);
+  const [fetchedYear, setFetchedYear] = useState<number | null>(null);
 
   // ─── Navegação ──────────────────────────────────────────────────────────
   const nextMonth = useCallback(
@@ -87,6 +94,23 @@ export default function CalendarPage() {
     setSelectedDate(today);
   }, []);
 
+  // ─── Fetch Google Calendar Events ────────────────────────────────────────
+  useEffect(() => {
+    const year = currentDate.getFullYear();
+    if (fetchedYear === year) return;
+    const timeMin = new Date(year, 0, 1).toISOString();
+    const timeMax = new Date(year, 11, 31, 23, 59, 59).toISOString();
+    fetchGoogleCalendarEvents(timeMin, timeMax)
+      .then((res) => {
+        setGcalConnected(res.connected);
+        if (res.connected) {
+          setGcalEvents(res.events);
+          setFetchedYear(year);
+        }
+      })
+      .catch(() => {});
+  }, [currentDate, fetchedYear]);
+
   // ─── Keyboard shortcuts ─────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -101,13 +125,17 @@ export default function CalendarPage() {
 
   // ─── Mapa de eventos ───────────────────────────────────────────────────
   const eventsByDate = useMemo(() => {
-    const map = new Map<string, { notes: any[]; projects: any[] }>();
+    const map = new Map<string, { notes: any[]; projects: any[]; calendarEvents: GoogleCalendarEvent[] }>();
+
+    const ensureKey = (dateKey: string) => {
+      if (!map.has(dateKey)) map.set(dateKey, { notes: [], projects: [], calendarEvents: [] });
+    };
 
     const addToMap = (dateString: string, item: any, type: "note" | "project") => {
       if (!dateString) return;
       const d = new Date(dateString);
       const dateKey = toDateKey(d);
-      if (!map.has(dateKey)) map.set(dateKey, { notes: [], projects: [] });
+      ensureKey(dateKey);
       if (type === "note") map.get(dateKey)!.notes.push(item);
       if (type === "project") map.get(dateKey)!.projects.push(item);
     };
@@ -116,8 +144,24 @@ export default function CalendarPage() {
     projects?.forEach((project) =>
       addToMap(project.updated_at || project.created_at, project, "project")
     );
+
+    gcalEvents.forEach((event) => {
+      if (!event.start) return;
+      // Para eventos allDay ("2026-03-07"), usar data local para evitar off-by-one de timezone
+      let d: Date;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(event.start)) {
+        const [y, m, day] = event.start.split("-").map(Number);
+        d = new Date(y, m - 1, day);
+      } else {
+        d = new Date(event.start);
+      }
+      const dateKey = toDateKey(d);
+      ensureKey(dateKey);
+      map.get(dateKey)!.calendarEvents.push(event);
+    });
+
     return map;
-  }, [notes, projects]);
+  }, [notes, projects, gcalEvents]);
 
   // ─── Stats rápidos ──────────────────────────────────────────────────────
   const monthStats = useMemo(() => {
@@ -132,7 +176,7 @@ export default function CalendarPage() {
       if (y === year && m === month + 1) {
         notesCount += events.notes.length;
         projectsCount += events.projects.length;
-        if (events.notes.length > 0 || events.projects.length > 0) activeDays++;
+        if (events.notes.length > 0 || events.projects.length > 0 || events.calendarEvents.length > 0) activeDays++;
       }
     });
 
@@ -185,7 +229,7 @@ export default function CalendarPage() {
       const date = new Date(year, month, d);
       const dateKey = toDateKey(date);
       const events = eventsByDate.get(dateKey);
-      if (events && (events.notes.length > 0 || events.projects.length > 0)) {
+      if (events && (events.notes.length > 0 || events.projects.length > 0 || events.calendarEvents.length > 0)) {
         entries.push({ dateKey, date, events });
       }
     }
@@ -195,8 +239,8 @@ export default function CalendarPage() {
   // ─── Dados derivados ───────────────────────────────────────────────────
   const today = new Date();
   const selectedDateStr = toDateKey(selectedDate);
-  const selectedEvents = eventsByDate.get(selectedDateStr) || { notes: [], projects: [] };
-  const totalSelectedEvents = selectedEvents.notes.length + selectedEvents.projects.length;
+  const selectedEvents = eventsByDate.get(selectedDateStr) || { notes: [], projects: [], calendarEvents: [] as GoogleCalendarEvent[] };
+  const totalSelectedEvents = selectedEvents.notes.length + selectedEvents.projects.length + selectedEvents.calendarEvents.length;
 
   const formatTime = (dateString: string) => {
     const d = new Date(dateString);
@@ -349,9 +393,9 @@ export default function CalendarPage() {
                   const isSelected = dateStr === selectedDateStr;
                   const dayEvents = eventsByDate.get(dateStr);
                   const hasEvents =
-                    dayEvents && (dayEvents.notes.length > 0 || dayEvents.projects.length > 0);
+                    dayEvents && (dayEvents.notes.length > 0 || dayEvents.projects.length > 0 || dayEvents.calendarEvents.length > 0);
                   const totalEvents =
-                    (dayEvents?.notes.length || 0) + (dayEvents?.projects.length || 0);
+                    (dayEvents?.notes.length || 0) + (dayEvents?.projects.length || 0) + (dayEvents?.calendarEvents.length || 0);
                   const isSunday = idx % 7 === 0;
 
                   const isWeekend = idx % 7 === 0 || idx % 7 === 6;
@@ -397,6 +441,9 @@ export default function CalendarPage() {
                         <div className="mt-0.5 flex flex-col items-center gap-0.5 sm:mt-1">
                           {/* Dots para mobile */}
                           <div className="flex items-center gap-0.5 sm:hidden">
+                            {dayEvents?.calendarEvents.length > 0 && (
+                              <div className="h-1 w-1 rounded-full bg-blue-400" />
+                            )}
                             {dayEvents?.notes.length > 0 && (
                               <div className="h-1 w-1 rounded-full bg-yellow-400" />
                             )}
@@ -407,7 +454,15 @@ export default function CalendarPage() {
 
                           {/* Barras para desktop */}
                           <div className="hidden w-full flex-col gap-0.5 px-0.5 sm:flex">
-                            {dayEvents?.notes.slice(0, 2).map((note, i) => (
+                            {dayEvents?.calendarEvents.slice(0, 1).map((event, i) => (
+                              <div
+                                key={`gc-${i}`}
+                                className="truncate rounded-sm bg-blue-400/15 px-1 py-px text-[9px] leading-tight font-medium text-blue-600 dark:bg-blue-400/10 dark:text-blue-400"
+                              >
+                                {event.title}
+                              </div>
+                            ))}
+                            {dayEvents?.notes.slice(0, 1).map((note, i) => (
                               <div
                                 key={`n-${i}`}
                                 className="truncate rounded-sm bg-yellow-400/15 px-1 py-px text-[9px] leading-tight font-medium text-yellow-600 dark:bg-yellow-400/10 dark:text-yellow-400"
@@ -485,6 +540,28 @@ export default function CalendarPage() {
 
                           {/* Eventos do dia */}
                           <div className="flex-1 space-y-1.5">
+                            {events.calendarEvents?.map((event, i) => (
+                              <a key={`agc-${i}`} href={event.htmlLink || "#"} target="_blank" rel="noopener noreferrer">
+                                <div className="group flex items-center gap-2.5 rounded-md border border-transparent bg-blue-50/50 px-3 py-2 transition-all hover:border-blue-200 hover:shadow-sm dark:bg-blue-950/20 dark:hover:border-blue-800/50">
+                                  <div className="flex h-7 w-7 items-center justify-center rounded bg-blue-100 text-blue-500 dark:bg-blue-900/40 dark:text-blue-400">
+                                    <FaGoogle size={11} />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-medium text-neutral-800 group-hover:text-blue-600 dark:text-neutral-200 dark:group-hover:text-blue-400">
+                                      {event.title}
+                                    </p>
+                                    <p className="flex items-center gap-1 text-[10px] text-neutral-400">
+                                      <Clock size={9} />
+                                      {event.allDay ? "Dia inteiro" : formatTime(event.start!)}
+                                    </p>
+                                  </div>
+                                  <ArrowRight
+                                    size={12}
+                                    className="text-neutral-300 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:text-blue-400 group-hover:opacity-100 dark:text-neutral-600"
+                                  />
+                                </div>
+                              </a>
+                            ))}
                             {events.projects.map((project) => (
                               <Link key={`ap-${project.id}`} href={`/app/projects/${project.id}`}>
                                 <div className="group flex items-center gap-2.5 rounded-md border border-transparent bg-purple-50/50 px-3 py-2 transition-all hover:border-purple-200 hover:shadow-sm dark:bg-purple-950/20 dark:hover:border-purple-800/50">
@@ -594,6 +671,43 @@ export default function CalendarPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {/* Google Calendar */}
+                  {selectedEvents.calendarEvents.length > 0 && (
+                    <div>
+                      <div className="mb-2 flex items-center gap-2">
+                        <div className="h-px flex-1 bg-blue-200/50 dark:bg-blue-800/30" />
+                        <span className="font-mono text-[9px] font-bold tracking-widest text-blue-400 uppercase dark:text-blue-500">
+                          Google Calendar ({selectedEvents.calendarEvents.length})
+                        </span>
+                        <div className="h-px flex-1 bg-blue-200/50 dark:bg-blue-800/30" />
+                      </div>
+                      <div className="space-y-1.5">
+                        {selectedEvents.calendarEvents.map((event, i) => (
+                          <a href={event.htmlLink || "#"} key={`sgc-${i}`} target="_blank" rel="noopener noreferrer">
+                            <div className="group flex items-center gap-2.5 rounded-md border border-neutral-100 bg-white p-2.5 transition-all hover:border-blue-200 hover:shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-700/40">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-100 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400">
+                                <FaGoogle size={12} />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium text-neutral-800 group-hover:text-blue-600 dark:text-neutral-200 dark:group-hover:text-blue-400">
+                                  {event.title}
+                                </p>
+                                <p className="flex items-center gap-1 text-[10px] text-neutral-400">
+                                  <Clock size={8} />
+                                  {event.allDay ? "Dia inteiro" : formatTime(event.start!)}
+                                </p>
+                              </div>
+                              <ArrowRight
+                                size={12}
+                                className="text-neutral-300 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:text-blue-400 group-hover:opacity-100"
+                              />
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Projetos */}
                   {selectedEvents.projects.length > 0 && (
                     <div>
@@ -693,6 +807,12 @@ export default function CalendarPage() {
             {/* Footer mini-legenda */}
             <div className="border-t border-neutral-100 px-4 py-2.5 dark:border-neutral-800">
               <div className="flex items-center justify-center gap-4">
+                {gcalConnected && (
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2 w-2 rounded-full bg-blue-400" />
+                    <span className="text-[10px] text-neutral-400">Google</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-1.5">
                   <div className="h-2 w-2 rounded-full bg-yellow-400" />
                   <span className="text-[10px] text-neutral-400">Notas</span>

@@ -82,8 +82,9 @@ function configureGlobalMiddlewares(app) {
 
   const corsMiddleware = cors(makeCorsOptions());
   app.use((req, res, next) => {
-    // Ignora a política estrita de CORS para webhooks e integrações de terceiros
-    if (req.path.includes("/webhooks/")) {
+    // Ignora CORS apenas para callbacks de terceiros (ex: webhook POST do Google),
+    // que não enviam Origin e não são chamados pelo browser.
+    if (req.method === "POST" && req.path === "/api/v1/webhooks/google/calendar") {
       return next();
     }
     return corsMiddleware(req, res, next);

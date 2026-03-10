@@ -81,6 +81,27 @@ class WebhooksRepository {
       [syncToken, channelId]
     );
   }
+
+  async updateGoogleAccessToken(userId, accessToken, expiresAt) {
+    await rowCount(
+      `UPDATE user_oauth_tokens
+       SET access_token = $1,
+           expires_at = $2,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE user_id = $3 AND provider = 'google' AND deleted = false`,
+      [accessToken, expiresAt, userId]
+    );
+  }
+
+  async hasGoogleTokens(userId) {
+    const results = await executeQuery(
+      `SELECT 1 FROM user_oauth_tokens
+       WHERE user_id = $1 AND provider = 'google' AND deleted = false
+       LIMIT 1`,
+      [userId]
+    );
+    return results.length > 0;
+  }
 }
 
 module.exports = new WebhooksRepository();

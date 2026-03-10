@@ -5,6 +5,7 @@ const SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
 ];
 
+// Shared client only for OAuth flow (auth URL + token exchange)
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
@@ -26,9 +27,27 @@ const getTokens = async (code) => {
   return tokens;
 };
 
+// Creates an isolated OAuth2 client per user to avoid credential sharing between requests
+const createUserOAuth2Client = (tokens) => {
+  const client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+  );
+  client.setCredentials(tokens);
+  return client;
+};
+
 const getCalendarClient = (tokens) => {
-  oauth2Client.setCredentials(tokens);
-  return google.calendar({ version: "v3", auth: oauth2Client });
+  const client = createUserOAuth2Client(tokens);
+  return google.calendar({ version: "v3", auth: client });
+};
+
+// Returns { calendar, auth } so callers can read refreshed tokens from auth.credentials
+const getCalendarClientWithAuth = (tokens) => {
+  const auth = createUserOAuth2Client(tokens);
+  const calendar = google.calendar({ version: "v3", auth });
+  return { calendar, auth };
 };
 
 module.exports = {
@@ -36,4 +55,5 @@ module.exports = {
   getAuthUrl,
   getTokens,
   getCalendarClient,
+  getCalendarClientWithAuth,
 };
