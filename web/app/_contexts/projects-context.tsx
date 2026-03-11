@@ -14,6 +14,7 @@ import {
   manageProjectNote as manageProjectNoteService,
   fetchProjectStages as fetchProjectStagesService,
   type Project,
+  type SubProject,
   type CreateProjectData,
   type UpdateProjectData,
   type ProjectCollaborator,
@@ -41,6 +42,7 @@ export interface ProjectOverview {
   estimatedTime?: string;
   tags?: string[];
   lastModified: string;
+  subprojects?: SubProject[];
 }
 
 export interface ProjectsStats {
@@ -157,6 +159,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         estimatedTime: project.properties?.estimated_time ?? undefined,
         tags: project.properties?.tags ?? undefined,
         lastModified: project.updated_at || project.created_at,
+        subprojects: project.subprojects ?? [],
       }));
 
       setProjectsOverview(overview);

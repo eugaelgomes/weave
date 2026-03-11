@@ -97,7 +97,8 @@ const normalizeNewProject = (payload, userId, orgId, userProps = {}) => {
     methodology,
     default_view,
     status: payload.status || "open",
-    properties: JSON.stringify(mergedProjectProperties)
+    properties: JSON.stringify(mergedProjectProperties),
+    parent_project_id: payload.parent_project_id || null
   };
 
   return {

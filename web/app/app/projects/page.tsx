@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useAuth } from "../../_contexts/auth-context";
 import { useProjects } from "../../_contexts/projects-context";
 import ProjectsCarousel from "../_components/ui/projects/project-carousel";
-import { Folder, ChevronRight, FileText } from "lucide-react";
+import { Folder, ChevronRight, FolderOpen } from "lucide-react";
 
 export default function ProjectsPage() {
   const { authenticated, loading: authLoading, user } = useAuth();
@@ -68,16 +68,27 @@ export default function ProjectsPage() {
                   )}
                 </button>
 
-                {/* ESPAÇO PARA SUBPROJETOS
-                  Quando o backend estiver pronto, você pode mapear os subprojetos aqui,
-                  adicionando uma margem à esquerda (pl-6) para criar hierarquia visual.
-                */}
-                {/* {project.subprojects?.map(sub => (
-                  <button className="flex items-center gap-2 pl-6 pr-2 py-1.5 text-xs text-neutral-500 hover:text-neutral-900...">
-                    <FileText className="h-3 w-3" /> {sub.title}
-                  </button>
-                ))} 
-                */}
+                {project.subprojects && project.subprojects.length > 0 && (
+                  <ul className="mt-0.5 space-y-0.5">
+                    {project.subprojects.map((sub) => (
+                      <li key={sub.id}>
+                        <button
+                          onClick={() => setSelectedProjectId(sub.id)}
+                          className={`group flex w-full items-center gap-2 rounded-md pl-7 pr-2 py-1.5 text-xs transition-all ${
+                            selectedProjectId === sub.id
+                              ? "bg-neutral-200/60 text-neutral-900 font-medium dark:bg-neutral-800 dark:text-neutral-100"
+                              : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-500 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-300"
+                          }`}
+                        >
+                          <FolderOpen className={`h-3 w-3 flex-shrink-0 ${
+                            selectedProjectId === sub.id ? "text-yellow-500" : "text-neutral-400"
+                          }`} />
+                          <span className="truncate">{sub.title}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </li>
             ))}
 
