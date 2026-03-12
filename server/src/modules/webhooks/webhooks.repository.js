@@ -81,6 +81,45 @@ class WebhooksRepository {
       [syncToken, channelId]
     );
   }
+
+  async updateGoogleAccessToken(userId, accessToken, expiresAt) {
+    await rowCount(
+      `UPDATE user_oauth_tokens
+       SET access_token = $1,
+           expires_at = $2,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE user_id = $3 AND provider = 'google' AND deleted = false`,
+      [accessToken, expiresAt, userId]
+    );
+  }
+
+  async hasGoogleTokens(userId) {
+    const results = await executeQuery(
+      `SELECT 1 FROM user_oauth_tokens
+       WHERE user_id = $1 AND provider = 'google' AND deleted = false
+       LIMIT 1`,
+      [userId]
+    );
+    return results.length > 0;
+  }
+
+  async getActiveWebhooks(userId) {
+    return executeQuery(
+      `SELECT channel_id, resource_id, calendar_id
+       FROM google_calendar_webhooks
+       WHERE user_id = $1 AND is_active = true AND deleted = false`,
+      [userId]
+    );
+  }
+
+  async clearWebhooks(userId) {
+    await rowCount(
+      `UPDATE google_calendar_webhooks
+       SET is_active = false, deleted = true, updated_at = CURRENT_TIMESTAMP
+       WHERE user_id = $1`,
+      [userId]
+    );
+  }
 }
 
 module.exports = new WebhooksRepository();

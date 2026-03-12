@@ -73,6 +73,12 @@ export const API_ENDPOINTS = {
   AI_ANALYZE_PROJECT: "/weave-ai/analyze-project",
   AI_RESEARCH: "/weave-ai/research",
   AI_USE_CASES: "/weave-ai/use-cases",
+
+  // Google Calendar
+  GOOGLE_CALENDAR_AUTH: "/webhooks/google/auth",
+  GOOGLE_CALENDAR_STATUS: "/webhooks/google/calendar/status",
+  GOOGLE_CALENDAR_EVENTS: "/webhooks/google/calendar/events",
+  GOOGLE_CALENDAR_DISCONNECT: "/webhooks/google/calendar/disconnect",
 };
 
 export interface ApiRequestOptions extends RequestInit {

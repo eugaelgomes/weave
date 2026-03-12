@@ -27,7 +27,16 @@ import {
   Sparkles,
   Database,
   Keyboard,
+  Calendar,
+  RefreshCw,
+  Unlink,
 } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
+import {
+  fetchGoogleCalendarStatus,
+  connectGoogleCalendar,
+  disconnectGoogleCalendar,
+} from "@/app/_services/calendar-service/calendar-service";
 import { formatDate, formatRoleName } from "@/app/_utils/format";
 
 interface FormData {
@@ -72,6 +81,11 @@ const SettingsPage = () => {
   const [backupError, setBackupError] = useState("");
   const [backupLoading, setBackupLoading] = useState(false);
 
+  // Google Calendar
+  const [gcalConnected, setGcalConnected] = useState(false);
+  const [gcalLoading, setGcalLoading] = useState(true);
+  const [gcalDisconnecting, setGcalDisconnecting] = useState(false);
+
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
@@ -89,6 +103,13 @@ const SettingsPage = () => {
   });
 
   // ================== EFFECTS ==================
+  useEffect(() => {
+    fetchGoogleCalendarStatus()
+      .then((res) => setGcalConnected(res.connected))
+      .catch(() => setGcalConnected(false))
+      .finally(() => setGcalLoading(false));
+  }, []);
+
   useEffect(() => {
     if (user) {
       setUserData(user);
@@ -1244,6 +1265,78 @@ const SettingsPage = () => {
                 <p className="px-1.5 text-[11px] text-neutral-400">
                   Personalize na seção de teclado.
                 </p>
+              </div>
+            </div>
+
+            {/* Integrações - Google Calendar */}
+            <div className="space-y-2 rounded-md bg-neutral-50 p-3 dark:bg-neutral-800/30">
+              <h4 className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
+                <Calendar className="h-3.5 w-3.5 text-blue-500" />
+                Integrações
+              </h4>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-md border border-neutral-200 bg-white px-3 py-2 dark:border-neutral-700 dark:bg-neutral-800">
+                  <div className="flex items-center gap-2">
+                    <FaGoogle className="h-3.5 w-3.5 text-blue-500" />
+                    <div>
+                      <p className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                        Google Calendar
+                      </p>
+                      <p className="text-[10px] text-neutral-400">
+                        {gcalLoading
+                          ? "Verificando..."
+                          : gcalConnected
+                            ? "Conectado"
+                            : "Não conectado"}
+                      </p>
+                    </div>
+                  </div>
+                  {!gcalLoading && (
+                    gcalConnected ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={connectGoogleCalendar}
+                          className="flex items-center gap-1 rounded-md border border-blue-200 px-2.5 py-1 text-[11px] font-medium text-blue-600 transition-colors hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/30"
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                          Reconectar
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (!window.confirm("Deseja desconectar o Google Calendar? Os dados de integração serão removidos.")) return;
+                            setGcalDisconnecting(true);
+                            try {
+                              await disconnectGoogleCalendar();
+                              setGcalConnected(false);
+                              setSuccessMessage("Google Calendar desconectado com sucesso.");
+                            } catch (err: unknown) {
+                              setError((err as Error).message || "Erro ao desconectar.");
+                            } finally {
+                              setGcalDisconnecting(false);
+                            }
+                          }}
+                          disabled={gcalDisconnecting}
+                          className="flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1 text-[11px] font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30"
+                        >
+                          {gcalDisconnecting ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Unlink className="h-3 w-3" />
+                          )}
+                          Desconectar
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={connectGoogleCalendar}
+                        className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1 text-[11px] font-medium text-white transition-colors hover:bg-blue-700"
+                      >
+                        <FaGoogle className="h-3 w-3" />
+                        Conectar
+                      </button>
+                    )
+                  )}
+                </div>
               </div>
             </div>
           </div>
