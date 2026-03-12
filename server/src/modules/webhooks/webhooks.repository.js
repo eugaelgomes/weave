@@ -3,6 +3,14 @@ const { executeQuery, rowCount } = require("@/services/db/index");
 class WebhooksRepository {
   /* ── OAuth Tokens ── */
 
+  /**
+   * Salva ou atualiza os tokens OAuth2 do Google para um usuário.
+   * Se já existirem tokens, atualiza-os; caso contrário, insere um novo registro.
+   * @param {string} userId - ID do usuário
+   * @param {string} accessToken - Token de acesso do Google
+   * @param {string|null} refreshToken - Token de refresh (mantém o existente se null)
+   * @param {Date|null} expiresAt - Data de expiração do access token
+   */
   async saveGoogleTokens(userId, accessToken, refreshToken, expiresAt) {
     const existing = await executeQuery(
       `SELECT id FROM user_oauth_tokens
@@ -30,6 +38,11 @@ class WebhooksRepository {
     }
   }
 
+  /**
+   * Retorna os tokens OAuth2 do Google de um usuário.
+   * @param {string} userId - ID do usuário
+   * @returns {Promise<{access_token: string, refresh_token: string, expires_at: string}|undefined>}
+   */
   async getGoogleTokens(userId) {
     const results = await executeQuery(
       `SELECT access_token, refresh_token, expires_at
@@ -41,6 +54,10 @@ class WebhooksRepository {
     return results[0];
   }
 
+  /**
+   * Marca os tokens OAuth2 do Google de um usuário como deletados (soft delete).
+   * @param {string} userId - ID do usuário
+   */
   async clearGoogleTokens(userId) {
     await rowCount(
       `UPDATE user_oauth_tokens
@@ -52,6 +69,11 @@ class WebhooksRepository {
 
   /* ── Calendar Webhooks ── */
 
+  /**
+   * Busca um webhook ativo pelo channel ID.
+   * @param {string} channelId - ID do channel do Google Calendar
+   * @returns {Promise<object|undefined>}
+   */
   async getWebhookByChannelId(channelId) {
     const results = await executeQuery(
       `SELECT * FROM google_calendar_webhooks
@@ -62,6 +84,17 @@ class WebhooksRepository {
     return results[0];
   }
 
+  /**
+   * Cria um registro de webhook do Google Calendar.
+   * @param {object} params
+   * @param {string} params.userId - ID do usuário
+   * @param {string} params.calendarId - ID do calendário
+   * @param {string} params.channelId - ID do channel
+   * @param {string} params.resourceId - ID do recurso monitorado
+   * @param {string|null} params.syncToken - Token de sincronização
+   * @param {Date|null} params.expiresAt - Data de expiração do webhook
+   * @returns {Promise<object>} Registro criado
+   */
   async createWebhook({ userId, calendarId, channelId, resourceId, syncToken, expiresAt }) {
     const results = await executeQuery(
       `INSERT INTO google_calendar_webhooks
@@ -73,6 +106,11 @@ class WebhooksRepository {
     return results[0];
   }
 
+  /**
+   * Atualiza o sync token de um webhook existente.
+   * @param {string} channelId - ID do channel
+   * @param {string} syncToken - Novo sync token
+   */
   async updateSyncToken(channelId, syncToken) {
     await rowCount(
       `UPDATE google_calendar_webhooks
@@ -82,6 +120,12 @@ class WebhooksRepository {
     );
   }
 
+  /**
+   * Atualiza apenas o access token e sua expiração após um refresh automático.
+   * @param {string} userId - ID do usuário
+   * @param {string} accessToken - Novo access token
+   * @param {Date|null} expiresAt - Nova data de expiração
+   */
   async updateGoogleAccessToken(userId, accessToken, expiresAt) {
     await rowCount(
       `UPDATE user_oauth_tokens
@@ -93,6 +137,11 @@ class WebhooksRepository {
     );
   }
 
+  /**
+   * Verifica se o usuário possui tokens do Google armazenados.
+   * @param {string} userId - ID do usuário
+   * @returns {Promise<boolean>}
+   */
   async hasGoogleTokens(userId) {
     const results = await executeQuery(
       `SELECT 1 FROM user_oauth_tokens
@@ -103,6 +152,11 @@ class WebhooksRepository {
     return results.length > 0;
   }
 
+  /**
+   * Retorna todos os webhooks ativos de um usuário.
+   * @param {string} userId - ID do usuário
+   * @returns {Promise<Array<{channel_id: string, resource_id: string, calendar_id: string}>>}
+   */
   async getActiveWebhooks(userId) {
     return executeQuery(
       `SELECT channel_id, resource_id, calendar_id
@@ -112,6 +166,10 @@ class WebhooksRepository {
     );
   }
 
+  /**
+   * Desativa e marca como deletados todos os webhooks de um usuário (soft delete).
+   * @param {string} userId - ID do usuário
+   */
   async clearWebhooks(userId) {
     await rowCount(
       `UPDATE google_calendar_webhooks

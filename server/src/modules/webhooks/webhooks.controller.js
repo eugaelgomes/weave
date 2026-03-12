@@ -7,6 +7,11 @@ const WEBHOOK_BASE = process.env.GOOGLE_WEBHOOK_URL || "http://localhost:8080";
 const CALENDAR_WEBHOOK_ADDRESS = `${WEBHOOK_BASE}/api/v1/webhooks/google/calendar`;
 
 class WebhooksController {
+  /**
+   * Redireciona o usuário para a tela de consentimento OAuth2 do Google.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
   async googleAuth(req, res) {
     try {
       const userId = req.user?.userId;
@@ -22,6 +27,12 @@ class WebhooksController {
     }
   }
 
+  /**
+   * Callback OAuth2 do Google. Troca o authorization code por tokens,
+   * persiste-os no banco e registra o webhook de notificações do Calendar.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
   async googleCallback(req, res) {
     try {
       const { code, state } = req.query;
@@ -39,7 +50,6 @@ class WebhooksController {
       const expiresAt = tokens.expiry_date ? new Date(tokens.expiry_date) : null;
 
       await webhooksRepository.saveGoogleTokens(userId, tokens.access_token, tokens.refresh_token, expiresAt);
-      console.log(`[Google Calendar] Tokens salvos para o usuário ${userId}`);
 
       await this._registerCalendarWatch(userId, tokens);
 
@@ -50,6 +60,12 @@ class WebhooksController {
     }
   }
 
+  /**
+   * Recebe notificações push do Google Calendar (webhook).
+   * Responde 200 para sync e eventos recebidos.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
   async handleGoogleCalendarWebhook(req, res) {
     try {
       const channelId = req.headers["x-goog-channel-id"];
@@ -60,11 +76,9 @@ class WebhooksController {
       }
 
       if (resourceState === "sync") {
-        console.log(`[Google Calendar] Sync recebido para channel: ${channelId}`);
         return res.status(200).send("OK");
       }
 
-      console.log(`[Google Calendar] Evento recebido para channel: ${channelId}`);
       return res.status(200).send("OK");
     } catch (error) {
       console.error("[Google Webhook]", error.message);
@@ -72,6 +86,13 @@ class WebhooksController {
     }
   }
 
+  /**
+   * Retorna os eventos do Google Calendar do usuário autenticado.
+   * Aceita query params `timeMin` e `timeMax` para filtrar o intervalo.
+   * Busca eventos de todos os calendários acessíveis e deduplica por id.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
   async getCalendarEvents(req, res) {
     try {
       const userId = req.user?.userId;
@@ -98,10 +119,7 @@ class WebhooksController {
       const calendars = (calendarList.data.items || []).filter(
         (c) => c.accessRole === "owner" || c.accessRole === "writer" || c.accessRole === "reader"
       );
-      console.log(`[Google Calendar] Calendários do usuário (${calendars.length}):`);
-      calendars.forEach((c) => {
-        console.log(`  - ${c.id} | ${c.summary} | role=${c.accessRole} | primary=${!!c.primary}`);
-      });
+
 
       // Buscar eventos de todos os calendários
       const allItems = [];
@@ -116,7 +134,6 @@ class WebhooksController {
             timeMin: timeMin || defaultMin,
           });
           const items = calData.items || [];
-          console.log(`[Google Calendar] ${cal.summary} (${cal.id}): ${items.length} eventos`);
           allItems.push(...items);
         } catch (calErr) {
           console.warn(`[Google Calendar] Falha ao buscar ${cal.id}: ${calErr.message}`);
@@ -143,13 +160,6 @@ class WebhooksController {
         const sb = b.start?.dateTime || b.start?.date || "";
         return sa.localeCompare(sb);
       });
-      console.log(`[Google Calendar] getCalendarEvents — userId=${userId} total=${raw.length}`);
-      raw.forEach((e, i) => {
-        console.log(
-          `  [${i}] id=${e.id} kind=${e.kind} eventType=${e.eventType || "-"} status=${e.status} ` +
-          `allDay=${!e.start?.dateTime} start=${e.start?.dateTime || e.start?.date || "-"} title="${e.summary || "(sem título)"}"`
-        );
-      });
 
       const events = raw.map((e) => ({
         allDay: !e.start?.dateTime,
@@ -172,6 +182,11 @@ class WebhooksController {
     }
   }
 
+  /**
+   * Verifica se o usuário possui tokens do Google Calendar armazenados.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
   async getCalendarStatus(req, res) {
     try {
       const userId = req.user?.userId;
@@ -184,6 +199,12 @@ class WebhooksController {
     }
   }
 
+  /**
+   * Desconecta o Google Calendar: para os webhooks ativos no Google
+   * e remove tokens e webhooks do banco de dados.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
   async disconnectCalendar(req, res) {
     try {
       const userId = req.user?.userId;
@@ -212,7 +233,6 @@ class WebhooksController {
       await webhooksRepository.clearWebhooks(userId);
       await webhooksRepository.clearGoogleTokens(userId);
 
-      console.log(`[Google Calendar] Desconectado para o usuário ${userId}`);
       res.json({ success: true, message: "Google Calendar desconectado com sucesso" });
     } catch (error) {
       console.error("[Google Calendar Disconnect]", error);
@@ -220,6 +240,13 @@ class WebhooksController {
     }
   }
 
+  /**
+   * Registra um webhook (watch) no Google Calendar para receber notificações
+   * de alterações no calendário primário do usuário.
+   * @param {string} userId - ID do usuário no sistema
+   * @param {object} tokens - Tokens OAuth2 do Google (access_token, refresh_token)
+   * @private
+   */
   async _registerCalendarWatch(userId, tokens) {
     const channelId = uuidv4();
     const calendarId = "primary";
@@ -245,7 +272,6 @@ class WebhooksController {
         userId,
       });
 
-      console.log(`[Google Calendar] Webhook registrado — channel: ${channelId}`);
     } catch (error) {
       console.warn(`[Google Calendar] Watch falhou (tokens salvos): ${error.message}`);
     }
