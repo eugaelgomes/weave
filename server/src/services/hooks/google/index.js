@@ -5,11 +5,13 @@ const SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
 ];
 
+const CALENDAR_REDIRECT_URI = process.env.GOOGLE_CALENDAR_REDIRECT_URI || "http://localhost:8080/api/v1/webhooks/google/callback";
+
 // Shared client only for OAuth flow (auth URL + token exchange)
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
+  CALENDAR_REDIRECT_URI
 );
 
 const getAuthUrl = (userId) => {
@@ -32,7 +34,7 @@ const createUserOAuth2Client = (tokens) => {
   const client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
+    CALENDAR_REDIRECT_URI
   );
   client.setCredentials(tokens);
   return client;

@@ -221,7 +221,7 @@ export default function CalendarPage() {
   const agendaData = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    const entries: { dateKey: string; date: Date; events: { notes: any[]; projects: any[] } }[] =
+    const entries: { dateKey: string; date: Date; events: { notes: any[]; projects: any[]; calendarEvents: GoogleCalendarEvent[] } }[] =
       [];
 
     const daysInMonth = getDaysInMonth(year, month);

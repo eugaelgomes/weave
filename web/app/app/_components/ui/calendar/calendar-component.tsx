@@ -9,7 +9,8 @@ import {
   X,
   RefreshCw,
 } from "lucide-react";
-import { FaProjectDiagram, FaGoogle } from "react-icons/fa";
+import { FaProjectDiagram } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
 
 import { useNotes } from "@/app/_contexts/notes-context";
 import { useProjects } from "@/app/_contexts/projects-context";
@@ -315,7 +316,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
 
     return (
       <div className="flex items-center gap-1.5 truncate rounded px-1.5 py-1 text-[9px] font-medium transition-colors sm:text-[10px] bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20">
-        <FaGoogle size={9} className="hidden shrink-0 sm:block" />
+        <FcGoogle size={9} className="hidden shrink-0 sm:block" />
         <span className="flex-1 truncate">{event.title}</span>
         {time && (
           <span className="hidden shrink-0 text-[8px] opacity-70 sm:block sm:text-[9px]">{time}</span>
@@ -529,7 +530,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                         <div className="flex items-start gap-2">
                           <div className="mt-0.5 hidden shrink-0 sm:block">
                             {isCalendar ? (
-                              <FaGoogle size={14} className="text-blue-600 dark:text-blue-400" />
+                              <FcGoogle size={14} className="text-blue-600 dark:text-blue-400" />
                             ) : isNote ? (
                               <FileText size={14} className="text-yellow-600 dark:text-yellow-400" />
                             ) : (
@@ -765,7 +766,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                           }`}
                         >
                           {isCalendar ? (
-                            <FaGoogle size={14} />
+                            <FcGoogle size={14} />
                           ) : isNote ? (
                             <FileText size={14} />
                           ) : (
@@ -867,7 +868,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                   onClick={connectGoogleCalendar}
                   className="flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-[10px] font-medium text-blue-600 transition-colors hover:bg-blue-100 sm:text-[11px] dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
                 >
-                  <FaGoogle size={10} />
+                  <FcGoogle size={10} />
                   <span>{locale.startsWith("pt") ? "Sincronizar Agenda" : "Sync Calendar"}</span>
                 </button>
               )}

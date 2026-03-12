@@ -133,11 +133,34 @@ class AuthRepository {
   async findUserByEmail(email) {
     const query = `
       SELECT
-        user_id, username, name, email, password, avatar_url, auth_with_google, created_at
-      FROM
-        users
-      WHERE
-        email = $1
+        u.user_id,
+        u.username,
+        u.name,
+        u.email,
+        u.password,
+        u.avatar_url,
+        u.auth_with_google,
+        u.theme_mode,
+        u.private_profile,
+        u.plan_id,
+        u.created_at,
+        p.plan_id::text AS user_plan_id,
+        p.name AS plan_name,
+        om_data.org_id,
+        om_data.role AS org_member_role,
+        om_data.unique_name AS org_unique_name,
+        om_data.org_name
+      FROM users u
+      LEFT JOIN plans p ON p.plan_id = u.plan_id
+      LEFT JOIN LATERAL (
+        SELECT om.org_id, om.role, o.unique_name, o.org_name
+        FROM organizations_members om
+        JOIN organizations o ON o.id = om.org_id
+        WHERE om.user_id = u.user_id
+        ORDER BY om.created_at DESC
+        LIMIT 1
+      ) om_data ON true
+      WHERE u.email = $1 AND u.deleted = false
       LIMIT 1;
     `;
     const results = await executeQuery(query, [email]);
@@ -146,12 +169,35 @@ class AuthRepository {
 
   async findUserByGoogleId(googleId) {
     const query = `
-      SELECT 
-        user_id, username, name, email, password, avatar_url, auth_with_google, created_at
-      FROM 
-        users
-      WHERE
-        google_id = $1
+      SELECT
+        u.user_id,
+        u.username,
+        u.name,
+        u.email,
+        u.password,
+        u.avatar_url,
+        u.auth_with_google,
+        u.theme_mode,
+        u.private_profile,
+        u.plan_id,
+        u.created_at,
+        p.plan_id::text AS user_plan_id,
+        p.name AS plan_name,
+        om_data.org_id,
+        om_data.role AS org_member_role,
+        om_data.unique_name AS org_unique_name,
+        om_data.org_name
+      FROM users u
+      LEFT JOIN plans p ON p.plan_id = u.plan_id
+      LEFT JOIN LATERAL (
+        SELECT om.org_id, om.role, o.unique_name, o.org_name
+        FROM organizations_members om
+        JOIN organizations o ON o.id = om.org_id
+        WHERE om.user_id = u.user_id
+        ORDER BY om.created_at DESC
+        LIMIT 1
+      ) om_data ON true
+      WHERE u.google_id = $1 AND u.deleted = false
       LIMIT 1;
     `;
     const results = await executeQuery(query, [googleId]);
@@ -159,35 +205,26 @@ class AuthRepository {
   }
 
   async createUserWithGoogle(googleId, name, email, avatarUrl = null) {
-    try {
-      const username = email.split("@")[0] + "_" + Date.now();
+    const username = email.split("@")[0] + "_" + Date.now();
 
-      const query = `
-        INSERT INTO 
-          users (google_id, name, email, username, auth_with_google, avatar_url, password)
-        VALUES
-          ($1, $2, $3, $4, true, $5, '')
-        RETURNING 
-          user_id, username, name, email, avatar_url, auth_with_google, created_at;
-      `;
+    const query = `
+      INSERT INTO 
+        users (google_id, name, email, username, auth_with_google, avatar_url, password, email_verified, email_verified_at)
+      VALUES
+        ($1, $2, $3, $4, true, $5, '', true, NOW())
+      RETURNING 
+        user_id, username, name, email, avatar_url, auth_with_google, created_at;
+    `;
 
-      console.log("Query SQL:", query);
-      console.log("Parâmetros:", [googleId, name, email, username, avatarUrl]);
+    const results = await executeQuery(query, [
+      googleId,
+      name,
+      email,
+      username,
+      avatarUrl,
+    ]);
 
-      const results = await executeQuery(query, [
-        googleId,
-        name,
-        email,
-        username,
-        avatarUrl,
-      ]);
-      console.log("Resultado da inserção:", results);
-
-      return results[0];
-    } catch (error) {
-      console.error("Erro detalhado ao criar usuário com Google:", error);
-      throw error;
-    }
+    return results[0];
   }
 
   async updateUserWithGoogle(userId, googleId, avatarUrl = null) {

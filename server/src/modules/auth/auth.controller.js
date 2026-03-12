@@ -32,8 +32,8 @@ class AuthController {
           .json({ message: "Usuário/e-mail ou senha inválidos" });
       }
 
-      // Autenticação via Google
-      if (user.auth_with_google) {
+      // Conta Google sem senha definida — só pode logar via Google
+      if (user.auth_with_google && !user.password) {
         return res.status(401).json({
           message:
             "Esta conta usa autenticação via Google. Por favor, faça login com o Google.",
@@ -139,16 +139,6 @@ class AuthController {
         return res.redirect(`${frontendURL}/?error=missing_auth_code`);
       }
 
-      // Log das configurações para debug
-      console.log("=== DEBUG Google OAuth ===");
-      console.log("CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
-      console.log("REDIRECT_URI:", process.env.GOOGLE_REDIRECT_URI);
-      console.log(
-        "CLIENT_SECRET presente:",
-        !!process.env.GOOGLE_CLIENT_SECRET
-      );
-      console.log("Code recebido:", code.substring(0, 20) + "...");
-
       // Trocar o código por tokens de acesso
       // Google recomenda enviar os parâmetros no corpo como x-www-form-urlencoded
       const params = new URLSearchParams();
@@ -184,30 +174,32 @@ class AuthController {
         throw new Error("Dados incompletos do usuário Google");
       }
 
-      let user = null;
-
       // Primeiro, tentar encontrar por Google ID
-      user = await AuthRepository.findUserByGoogleId(googleUser.id);
+      let user = await AuthRepository.findUserByGoogleId(googleUser.id);
 
       if (!user) {
         // Se não encontrou por Google ID, tentar por email
-        user = await AuthRepository.findUserByEmail(googleUser.email);
+        const existingUser = await AuthRepository.findUserByEmail(googleUser.email);
 
-        if (user) {
+        if (existingUser) {
           // Usuário existe mas ainda não tem Google ID associado
-          user = await AuthRepository.updateUserWithGoogle(
-            user.user_id,
+          await AuthRepository.updateUserWithGoogle(
+            existingUser.user_id,
             googleUser.id,
             googleUser.picture
           );
+          // Re-buscar com dados completos (org, plan, etc.)
+          user = await AuthRepository.findUserByGoogleId(googleUser.id);
         } else {
           // Usuário não existe, criar novo
-          user = await AuthRepository.createUserWithGoogle(
+          await AuthRepository.createUserWithGoogle(
             googleUser.id,
             googleUser.name,
             googleUser.email,
             googleUser.picture
           );
+          // Re-buscar com dados completos
+          user = await AuthRepository.findUserByGoogleId(googleUser.id);
         }
       }
 
@@ -215,12 +207,16 @@ class AuthController {
         throw new Error("Falha ao criar/encontrar usuário");
       }
 
-      // Gerar JWT token
+      // Gerar JWT token com payload completo
       const payload = {
         userId: user.user_id,
         username: user.username,
         email: user.email,
         name: user.name,
+        org_id: user.org_id,
+        org_unique_name: user.org_unique_name,
+        plan_id: user.plan_id,
+        org_member_role: user.org_member_role,
       };
 
       const token = jwt.sign(payload, secretsManager(), {
@@ -237,16 +233,7 @@ class AuthController {
       const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
       res.redirect(`${frontendURL}/app/home?auth=success`);
     } catch (error) {
-      console.error("=== ERRO no callback Google ===");
-      console.error("Mensagem:", error.message);
-      if (error.response) {
-        console.error("Status:", error.response.status);
-        console.error(
-          "Dados do erro:",
-          JSON.stringify(error.response.data, null, 2)
-        );
-      }
-      console.error("Stack:", error.stack);
+      console.error("Google OAuth callback error:", error.message);
       const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
       res.redirect(`${frontendURL}/?error=auth_failed`);
     }
