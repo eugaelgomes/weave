@@ -256,6 +256,7 @@ class ProjectsController {
       const formattedProjects = projects.map((project) => ({
         id: project.id,
         user_id: project.user_id,
+        parent_project_id: project.parent_project_id || null,
         title: project.title,
         description: project.description,
         properties: project.properties || {},
@@ -281,6 +282,7 @@ class ProjectsController {
           : null,
         collaborators: project.collaborators || [],
         notes: project.associated_notes || [],
+        subprojects: project.subprojects || [],
       }));
 
       res.status(200).json({ projects: formattedProjects });
@@ -396,7 +398,8 @@ class ProjectsController {
         properties,
         methodology,
         default_view,
-        org_id
+        org_id,
+        parent_project_id
       } = req.body;
 
       // Validação de autenticação
@@ -460,7 +463,7 @@ class ProjectsController {
 
       // 🟢 3. CHAMADA AO NORMALIZER
       // Passamos os dados da requisição + as propriedades validadas pelo usuário
-      const payload = { title, description, methodology, default_view, status: projectStatus };
+      const payload = { title, description, methodology, default_view, status: projectStatus, parent_project_id };
       const { projectData, stagesData } = normalizeNewProject(
         payload,
         userId,

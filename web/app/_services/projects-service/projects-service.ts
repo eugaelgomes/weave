@@ -64,6 +64,7 @@ export interface ProjectNote {
   description?: string;
   tags?: string[];
   status?: string;
+  project_stage_id?: string | null;
   created_by?: {
     user_id: string;
     username: string;
@@ -77,10 +78,21 @@ export interface ProjectNote {
   updated_at: string;
 }
 
+export interface SubProject {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  properties?: ProjectProperties;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Project {
   id: string;
   user_id: string;
   org_id?: string | null;
+  parent_project_id?: string | null;
   title: string;
   description?: string;
   properties?: ProjectProperties;
@@ -96,7 +108,8 @@ export interface Project {
   owner?: ProjectOwner;
   collaborators?: ProjectCollaborator[];
   notes?: ProjectNote[];
-  stages?: ProjectStage[]; // Adicionado: A API de criação agora retorna os stages
+  stages?: ProjectStage[];
+  subprojects?: SubProject[];
 }
 
 export interface ProjectsResponse {
@@ -111,6 +124,7 @@ export interface CreateProjectData {
   default_view?: "board" | "list" | "calendar" | "timeline" | "gantt";
   properties?: Omit<ProjectProperties, "progress">;
   org_id?: string;
+  parent_project_id?: string;
 }
 
 export interface UpdateProjectData {

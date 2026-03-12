@@ -58,7 +58,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
     const itemsWithSubs = [
       { path: "/app/weave-ai/chat", checkPath: "/app/weave-ai" },
       { path: "/app/organization", checkPath: "/app/organization" },
-      { path: "/app/projects", checkPath: "/app/projects" }, // Garantimos que projetos abre automaticamente
     ];
 
     itemsWithSubs.forEach(({ path, checkPath }) => {
@@ -94,7 +93,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
   if (!authenticated || !authData) return null;
 
   const recentNotes = authData.notes.getRecentNotes().slice(0, 6);
-  const topProjects = authData.projects.getRecentProjects().slice(0, 5); // Os 5 mais recentes
 
   const recentItems = [
     ...recentNotes.map((note) => ({
@@ -114,14 +112,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
       path: "/app/projects",
       icon: FaProjectDiagram,
       label: t.nav.projects,
-      subItems: [
-        { path: "/app/projects", icon: FaList, label: "Ver todos" },
-        ...topProjects.map((p) => ({
-          path: `/app/projects/${p.id}`,
-          icon: FaProjectDiagram,
-          label: p.title || t.common?.unnamed || "Projeto sem nome",
-        })),
-      ],
     },
     {
       path: "/app/weave-ai/chat",

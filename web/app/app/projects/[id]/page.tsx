@@ -35,6 +35,14 @@ import {
   Shield,
   Mail,
   Plus,
+  Columns3,
+  List,
+  Calendar,
+  GanttChart,
+  Timer,
+  LayoutGrid,
+  GripVertical,
+  CheckCircle2,
 } from "lucide-react";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useProjects } from "@/app/_contexts/projects-context";
@@ -43,6 +51,7 @@ import {
   Project,
   ProjectCollaborator,
   ProjectNote,
+  ProjectStage,
 } from "@/app/_services/projects-service/projects-service";
 import { User as SearchUser } from "@/app/_services/notes-service/notes-service";
 import Image from "next/image";
@@ -76,6 +85,7 @@ export default function ProjectViewPage() {
     getProjectNotes,
     addNoteToProject,
     removeNoteFromProject,
+    getProjectStages,
   } = useProjects();
   const { searchUsers, notes } = useNotes();
 
@@ -119,6 +129,10 @@ export default function ProjectViewPage() {
     Array<{ id: string; title: string; content?: string; status?: string; tags?: string[] }>
   >([]);
 
+  // Estado de stages e view type
+  const [stages, setStages] = useState<ProjectStage[]>([]);
+  const [activeView, setActiveView] = useState<"board" | "list" | "calendar" | "timeline" | "gantt">("board");
+
   // Carregar projeto
   useEffect(() => {
     if (!projectId) return;
@@ -148,6 +162,19 @@ export default function ProjectViewPage() {
           // Carregar notas
           const notesData = await getProjectNotes(projectId);
           setProjectNotes(notesData);
+
+          // Carregar stages
+          try {
+            const stagesData = await getProjectStages(projectId);
+            setStages(stagesData);
+          } catch {
+            setStages([]);
+          }
+
+          // Definir view ativa baseada no default_view do projeto
+          if (projectData.default_view) {
+            setActiveView(projectData.default_view);
+          }
         }
       } catch (error) {
         console.error("Erro ao carregar projeto:", error);
@@ -157,7 +184,7 @@ export default function ProjectViewPage() {
     };
 
     loadProject();
-  }, [projectId, getProjectById, getCollaborators, getProjectNotes]);
+  }, [projectId, getProjectById, getCollaborators, getProjectNotes, getProjectStages]);
 
   // Buscar usuários para colaboradores
   useEffect(() => {
@@ -916,6 +943,156 @@ export default function ProjectViewPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* Visualização do Projeto - Seletor de View + Stages */}
+            <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4 sm:p-6 dark:border-neutral-800 dark:bg-neutral-950">
+              {/* Header com seletor de view */}
+              <div className="mb-3 flex flex-col gap-3 border-b border-neutral-200 pb-3 sm:mb-4 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-md border border-yellow-400/20 bg-yellow-400/10 text-yellow-500 dark:text-yellow-400">
+                    <LayoutGrid className="h-3.5 w-3.5" />
+                  </div>
+                  <h2 className="font-mono text-[10px] font-bold tracking-widest text-neutral-500 uppercase dark:text-neutral-500">
+                    Visualização
+                  </h2>
+                </div>
+
+                {/* View Type Buttons */}
+                <div className="flex items-center gap-1 rounded-lg border border-neutral-200 bg-white p-1 dark:border-neutral-700 dark:bg-neutral-900">
+                  {[
+                    { value: "board" as const, label: "Quadro", icon: <Columns3 className="h-3.5 w-3.5" /> },
+                    { value: "list" as const, label: "Lista", icon: <List className="h-3.5 w-3.5" /> },
+                    { value: "calendar" as const, label: "Calendário", icon: <Calendar className="h-3.5 w-3.5" /> },
+                    { value: "timeline" as const, label: "Timeline", icon: <Timer className="h-3.5 w-3.5" /> },
+                    { value: "gantt" as const, label: "Gantt", icon: <GanttChart className="h-3.5 w-3.5" /> },
+                  ].map((view) => (
+                    <button
+                      key={view.value}
+                      onClick={() => setActiveView(view.value)}
+                      title={view.label}
+                      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all ${
+                        activeView === view.value
+                          ? "bg-yellow-500/15 text-yellow-600 shadow-sm dark:bg-yellow-500/20 dark:text-yellow-400"
+                          : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                      }`}
+                    >
+                      {view.icon}
+                      <span className="hidden sm:inline">{view.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Conteúdo da View */}
+              {activeView === "board" && stages.length > 0 ? (
+                <div className="-mx-1 flex gap-3 overflow-x-auto pb-2">
+                  {stages
+                    .sort((a, b) => a.position - b.position)
+                    .map((stage) => {
+                      const stageNotes = projectNotes.filter(
+                        (note) => note.project_stage_id === stage.id
+                      );
+                      const isDoneStage = stage.properties?.is_done;
+                      return (
+                        <div
+                          key={stage.id}
+                          className="flex w-[260px] flex-shrink-0 flex-col rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
+                        >
+                          {/* Stage Header */}
+                          <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2.5 dark:border-neutral-800">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="h-2.5 w-2.5 rounded-full"
+                                style={{ backgroundColor: stage.color || "#737373" }}
+                              />
+                              <span className="text-xs font-bold text-neutral-700 dark:text-neutral-200">
+                                {stage.name}
+                              </span>
+                              {isDoneStage && (
+                                <CheckCircle2 className="h-3 w-3 text-green-500" />
+                              )}
+                            </div>
+                            <span className="rounded-full bg-neutral-100 px-2 py-0.5 font-mono text-[10px] font-bold text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+                              {stageNotes.length}
+                            </span>
+                          </div>
+
+                          {/* Stage Content */}
+                          <div className="flex-1 space-y-2 p-2">
+                            {stageNotes.length === 0 ? (
+                              <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-neutral-200 py-6 dark:border-neutral-800">
+                                <FileText className="mb-1.5 h-5 w-5 text-neutral-300 dark:text-neutral-700" />
+                                <p className="text-[10px] text-neutral-400 dark:text-neutral-600">
+                                  Sem notas neste estágio
+                                </p>
+                              </div>
+                            ) : (
+                              stageNotes.map((note) => (
+                                <div
+                                  key={note.id}
+                                  className="group rounded-md border border-neutral-200 bg-neutral-50 p-2.5 transition-all hover:border-neutral-300 hover:shadow-sm dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700"
+                                >
+                                  <div className="mb-1.5 flex items-start justify-between gap-2">
+                                    <p className="flex-1 text-xs font-medium text-neutral-700 dark:text-neutral-200">
+                                      {note.title}
+                                    </p>
+                                    <GripVertical className="h-3 w-3 flex-shrink-0 text-neutral-300 dark:text-neutral-700" />
+                                  </div>
+                                  {note.tags && note.tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-1">
+                                      {note.tags.slice(0, 3).map((tag, i) => (
+                                        <span
+                                          key={i}
+                                          className="rounded bg-neutral-200/70 px-1.5 py-0.5 text-[9px] font-medium text-neutral-500 dark:bg-neutral-800/70 dark:text-neutral-400"
+                                        >
+                                          #{tag}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))
+                            )}
+                          </div>
+
+                          {/* WIP Limit indicator */}
+                          {stage.properties?.wip_limit && (
+                            <div className="border-t border-neutral-200 px-3 py-1.5 dark:border-neutral-800">
+                              <p className={`text-[10px] font-medium ${
+                                stageNotes.length >= stage.properties.wip_limit
+                                  ? "text-red-500"
+                                  : "text-neutral-400 dark:text-neutral-600"
+                              }`}>
+                                WIP: {stageNotes.length}/{stage.properties.wip_limit}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              ) : activeView === "board" && stages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 py-10 dark:border-neutral-800">
+                  <Columns3 className="mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-700" />
+                  <p className="mb-1 text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                    Nenhum estágio configurado
+                  </p>
+                  <p className="text-xs text-neutral-400 dark:text-neutral-600">
+                    Configure estágios para visualizar o quadro Kanban
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 py-10 dark:border-neutral-800">
+                  <LayoutGrid className="mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-700" />
+                  <p className="mb-1 text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                    Visualização &quot;{activeView === "list" ? "Lista" : activeView === "calendar" ? "Calendário" : activeView === "timeline" ? "Timeline" : "Gantt"}&quot; em breve
+                  </p>
+                  <p className="text-xs text-neutral-400 dark:text-neutral-600">
+                    Por enquanto, utilize a visualização Quadro
+                  </p>
                 </div>
               )}
             </div>

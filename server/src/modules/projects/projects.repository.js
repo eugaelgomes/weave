@@ -6,6 +6,7 @@ class ProjectsRepository {
       SELECT 
         p.id::text,
         p.user_id::text,
+        p.parent_project_id::text,
         p.title,
         p.description,
         p.properties,
@@ -57,13 +58,29 @@ class ProjectsRepository {
           JOIN users nu ON nu.user_id = n.user_id
           WHERE n.project_id = p.id AND n.deleted = false),
           '[]'::jsonb
-        ) AS associated_notes
+        ) AS associated_notes,
+        COALESCE(
+          (SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', sp.id::text,
+              'title', sp.title,
+              'description', sp.description,
+              'status', sp.status,
+              'properties', sp.properties,
+              'created_at', sp.created_at,
+              'updated_at', sp.updated_at
+            )
+          ) FROM projects sp
+          WHERE sp.parent_project_id = p.id AND sp.deleted = false),
+          '[]'::jsonb
+        ) AS subprojects
       FROM projects p
       JOIN users u ON u.user_id = p.user_id
       LEFT JOIN organizations o ON o.id = p.org_id
       LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users cu ON cu.user_id = pm.user_id
       WHERE p.deleted = false
+        AND p.parent_project_id IS NULL
         AND (
           p.user_id = $1::uuid
           OR EXISTS (
@@ -299,7 +316,8 @@ class ProjectsRepository {
           methodology, 
           default_view, 
           status, 
-          properties
+          properties,
+          parent_project_id
         )
         VALUES (
           $1::uuid, 
@@ -309,7 +327,8 @@ class ProjectsRepository {
           $5::project_methodology, 
           $6::project_view_type, 
           $7::project_status, 
-          $8::jsonb
+          $8::jsonb,
+          $10::uuid
         )
         RETURNING *
       ),
@@ -364,7 +383,8 @@ class ProjectsRepository {
       projectData.default_view,
       projectData.status,
       projectData.properties,
-      JSON.stringify(stagesData)
+      JSON.stringify(stagesData),
+      projectData.parent_project_id || null
     ];
 
     return executeQuery(query, values);
@@ -784,6 +804,7 @@ class ProjectsRepository {
         n.description,
         n.tags,
         n.status,
+        n.project_stage_id::text,
         n.created_at,
         n.updated_at,
         nu.username AS created_by_username
