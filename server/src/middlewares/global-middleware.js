@@ -91,6 +91,9 @@ function configureGlobalMiddlewares(app) {
     if (req.method === "GET" && req.path.startsWith("/api/v1/auth/signin/sso/")) {
       return next();
     }
+    if (req.method === "GET" && req.path.startsWith("/api/v1/webhooks/google/callback")) {
+      return next();
+    }
     return corsMiddleware(req, res, next);
   });
 
