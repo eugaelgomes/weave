@@ -82,9 +82,13 @@ function configureGlobalMiddlewares(app) {
 
   const corsMiddleware = cors(makeCorsOptions());
   app.use((req, res, next) => {
-    // Ignora CORS apenas para callbacks de terceiros (ex: webhook POST do Google),
-    // que não enviam Origin e não são chamados pelo browser.
+    // Ignora CORS para callbacks de terceiros que não enviam Origin:
+    // - Webhooks (POST do Google Calendar)
+    // - Rotas SSO OAuth (GET redirects do browser, sem header Origin)
     if (req.method === "POST" && req.path === "/api/v1/webhooks/google/calendar") {
+      return next();
+    }
+    if (req.method === "GET" && req.path.startsWith("/api/v1/auth/signin/sso/")) {
       return next();
     }
     return corsMiddleware(req, res, next);
