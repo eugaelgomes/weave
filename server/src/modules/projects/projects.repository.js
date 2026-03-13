@@ -890,6 +890,133 @@ class ProjectsRepository {
 
     return executeQuery(query, [projectId, noteId, userId]);
   }
+  async getProjectStats(userId, filters = {}) {
+    const { status, methodology, from, to, parent_only = true } = filters;
+
+    const conditions = [
+      'p.deleted = false',
+      'p.active = true',
+      `(
+        p.user_id = $1::uuid
+        OR EXISTS (
+          SELECT 1 FROM projects_members pm2
+          WHERE pm2.project_id = p.id
+            AND pm2.user_id = $1::uuid
+            AND pm2.deleted = false
+            AND pm2.suspended = false
+        )
+      )`,
+    ];
+
+    const params = [userId];
+    let paramIndex = 2;
+
+    if (status) {
+      conditions.push(`p.status = $${paramIndex}::project_status`);
+      params.push(status);
+      paramIndex++;
+    }
+
+    if (methodology) {
+      conditions.push(`p.methodology = $${paramIndex}::project_methodology`);
+      params.push(methodology);
+      paramIndex++;
+    }
+
+    if (from) {
+      conditions.push(`p.created_at >= $${paramIndex}::timestamptz`);
+      params.push(from);
+      paramIndex++;
+    }
+
+    if (to) {
+      conditions.push(`p.created_at <= $${paramIndex}::timestamptz`);
+      params.push(to);
+      paramIndex++;
+    }
+
+    if (parent_only) {
+      conditions.push('p.parent_project_id IS NULL');
+    }
+
+    const whereClause = conditions.join('\n        AND ');
+
+    const query = `
+      WITH
+        user_projects AS (
+          SELECT
+            p.id,
+            p.status,
+            p.methodology,
+            p.properties,
+            CASE WHEN p.user_id = $1::uuid THEN 'owned' ELSE 'collaborating' END AS ownership
+          FROM projects p
+          WHERE ${whereClause}
+        ),
+        overview AS (
+          SELECT
+            COUNT(*)                                                      AS total,
+            COUNT(*) FILTER (WHERE ownership = 'owned')                  AS owned,
+            COUNT(*) FILTER (WHERE ownership = 'collaborating')          AS collaborating,
+            COUNT(*) FILTER (WHERE status IN ('open','in_progress'))     AS active,
+            COUNT(*) FILTER (WHERE status = 'open')                      AS open,
+            COUNT(*) FILTER (WHERE status = 'in_progress')               AS in_progress,
+            COUNT(*) FILTER (WHERE status = 'paused')                    AS paused,
+            COUNT(*) FILTER (WHERE status = 'completed')                 AS completed,
+            COUNT(*) FILTER (WHERE status = 'archived')                  AS archived
+          FROM user_projects
+        ),
+        methodology_stats AS (
+          SELECT
+            COUNT(*) FILTER (WHERE methodology = 'kanban')    AS kanban,
+            COUNT(*) FILTER (WHERE methodology = 'scrum')     AS scrum,
+            COUNT(*) FILTER (WHERE methodology = 'waterfall') AS waterfall,
+            COUNT(*) FILTER (WHERE methodology = 'custom')    AS custom
+          FROM user_projects
+        ),
+        progress_stats AS (
+          SELECT
+            COALESCE(ROUND(AVG((properties->>'progress')::numeric), 1), 0)      AS average,
+            COUNT(*) FILTER (WHERE (properties->>'progress')::numeric >= 80)    AS near_completion,
+            COUNT(*) FILTER (
+              WHERE properties->>'progress' IS NULL
+                 OR (properties->>'progress')::numeric = 0
+            )                                                                    AS not_started
+          FROM user_projects
+        ),
+        notes_stats AS (
+          SELECT
+            COUNT(*)                                         AS total,
+            COUNT(*) FILTER (WHERE n.status = 'visible')    AS visible,
+            COUNT(*) FILTER (WHERE n.status = 'archived')   AS archived,
+            COUNT(*) FILTER (WHERE n.status = 'secure')     AS secure
+          FROM notes n
+          WHERE n.project_id IN (SELECT id FROM user_projects)
+            AND n.deleted = false
+        ),
+        tasks_stats AS (
+          SELECT
+            COUNT(*)                               AS total,
+            COUNT(*) FILTER (WHERE b.done = true)  AS done,
+            COUNT(*) FILTER (WHERE b.done = false) AS pending
+          FROM blocks b
+          JOIN notes n ON n.id = b.note_id
+          WHERE n.project_id IN (SELECT id FROM user_projects)
+            AND n.deleted = false
+            AND b.deleted = false
+            AND b.type = 'todo'
+        )
+      SELECT
+        row_to_json(o.*)   AS overview,
+        row_to_json(m.*)   AS methodology,
+        row_to_json(ps.*)  AS progress,
+        row_to_json(ns.*)  AS notes,
+        row_to_json(ts.*)  AS tasks
+      FROM overview o, methodology_stats m, progress_stats ps, notes_stats ns, tasks_stats ts;
+    `;
+
+    return executeQuery(query, params);
+  }
 }
 
 module.exports = new ProjectsRepository();

@@ -11,13 +11,15 @@ router.get("/", projectsController.getAllProjects.bind(projectsController));
 
 router.post("/", projectsController.createProject.bind(projectsController));
 
+router.get("/stats", projectsController.getProjectStats.bind(projectsController));
+
 router.get("/:id", projectsController.getProjectById.bind(projectsController));
 
 router.put(
   "/:id",
   projectUpdateUpload.fields([
-    { name: "icon", maxCount: 1 },
-    { name: "files", maxCount: 10 },
+    { maxCount: 1, name: "icon" },
+    { maxCount: 10, name: "files" },
   ]),
   projectsController.updateProject.bind(projectsController)
 );

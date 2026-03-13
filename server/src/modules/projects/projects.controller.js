@@ -390,7 +390,6 @@ class ProjectsController {
    */
   async createProject(req, res, next) {
     try {
-      // 🟢 1. Extraímos os novos campos do body
       const {
         title,
         description,
@@ -406,7 +405,6 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Buscar/Criar registro de uso e validar limites do plano
       const usageRecord = await PlanUsageManager.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
       const planDetails = await PlansRepository.getPlanById(getUserPlan.plan_id);
@@ -1383,6 +1381,103 @@ class ProjectsController {
       res.status(200).json({
         message: "Nota atualizada no projeto com sucesso",
         associated_notes: result[0].associated_notes,
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  async getProjectStats(req, res, next) {
+    try {
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      const VALID_STATUSES = ['open', 'in_progress', 'paused', 'completed', 'archived'];
+      const VALID_METHODOLOGIES = ['kanban', 'scrum', 'waterfall', 'custom'];
+
+      const filters = {};
+
+      if (req.query.status && VALID_STATUSES.includes(req.query.status)) {
+        filters.status = req.query.status;
+      }
+
+      if (req.query.methodology && VALID_METHODOLOGIES.includes(req.query.methodology)) {
+        filters.methodology = req.query.methodology;
+      }
+
+      if (req.query.from) {
+        const from = new Date(req.query.from);
+        if (!isNaN(from.getTime())) filters.from = from;
+      }
+
+      if (req.query.to) {
+        const to = new Date(req.query.to);
+        if (!isNaN(to.getTime())) filters.to = to;
+      }
+
+      filters.parent_only = req.query.parent_only !== 'false';
+
+      const result = await this.projectsRepository.getProjectStats(userId, filters);
+      const row = result[0];
+
+      const tasks = row.tasks;
+      const tasksTotal = parseInt(tasks.total) || 0;
+      const tasksDone = parseInt(tasks.done) || 0;
+
+      const overview = row.overview;
+      const formattedOverview = {
+        total: parseInt(overview.total) || 0,
+        owned: parseInt(overview.owned) || 0,
+        collaborating: parseInt(overview.collaborating) || 0,
+        active: parseInt(overview.active) || 0,
+        by_status: {
+          open: parseInt(overview.open) || 0,
+          in_progress: parseInt(overview.in_progress) || 0,
+          paused: parseInt(overview.paused) || 0,
+          completed: parseInt(overview.completed) || 0,
+          archived: parseInt(overview.archived) || 0,
+        },
+      };
+
+      const progress = row.progress;
+      const formattedProgress = {
+        average: parseFloat(progress.average) || 0,
+        near_completion: parseInt(progress.near_completion) || 0,
+        not_started: parseInt(progress.not_started) || 0,
+      };
+
+      const notes = row.notes;
+      const formattedNotes = {
+        total: parseInt(notes.total) || 0,
+        visible: parseInt(notes.visible) || 0,
+        archived: parseInt(notes.archived) || 0,
+        secure: parseInt(notes.secure) || 0,
+      };
+
+      res.status(200).json({
+        overview: formattedOverview,
+        methodology: {
+          kanban: parseInt(row.methodology.kanban) || 0,
+          scrum: parseInt(row.methodology.scrum) || 0,
+          waterfall: parseInt(row.methodology.waterfall) || 0,
+          custom: parseInt(row.methodology.custom) || 0,
+        },
+        progress: formattedProgress,
+        notes: formattedNotes,
+        tasks: {
+          total: tasksTotal,
+          done: tasksDone,
+          pending: parseInt(tasks.pending) || 0,
+          completion_rate:
+            tasksTotal > 0 ? Math.round((tasksDone / tasksTotal) * 1000) / 10 : 0,
+        },
+        filters_applied: {
+          status: filters.status || null,
+          methodology: filters.methodology || null,
+          from: filters.from || null,
+          to: filters.to || null,
+          parent_only: filters.parent_only,
+        },
       });
     } catch (error) {
       this._handleError(error, res, next);

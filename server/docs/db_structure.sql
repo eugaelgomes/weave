@@ -147,6 +147,63 @@ CREATE TYPE public."notes_status" AS ENUM (
 	'secure');
 
 -- ----------------------------------------------------------------------------
+-- project_methodology
+-- Metodologia de gestão do projeto.
+-- Valores:
+--   'kanban'    : Quadro Kanban (padrão)
+--   'scrum'     : Metodologia Scrum
+--   'waterfall' : Metodologia Tradicional/Cascata
+--   'custom'    : Personalizado
+-- ----------------------------------------------------------------------------
+-- DROP TYPE public."project_methodology";
+
+CREATE TYPE public."project_methodology" AS ENUM (
+	'kanban',
+	'scrum',
+	'waterfall',
+	'custom');
+
+-- ----------------------------------------------------------------------------
+-- project_status
+-- Status do ciclo de vida do projeto.
+-- Valores:
+--   'open'      : Aberto/Em planejamento (padrão)
+--   'running'   : Em execução
+--   'completed' : Concluído
+--   'on-hold'   : Em espera
+--   'deleted'   : Deletado logicamente
+--   'archived'  : Arquivado
+-- ----------------------------------------------------------------------------
+-- DROP TYPE public."project_status";
+
+CREATE TYPE public."project_status" AS ENUM (
+	'open',
+	'running',
+	'completed',
+	'on-hold',
+	'deleted',
+	'archived');
+
+-- ----------------------------------------------------------------------------
+-- project_view_type
+-- Visualização padrão do projeto.
+-- Valores:
+--   'board'    : Visualização em Quadro (Kanban)
+--   'list'     : Visualização em Lista
+--   'calendar' : Visualização em Calendário
+--   'timeline' : Visualização em Linha do Tempo
+--   'gantt'    : Visualização de Gantt
+-- ----------------------------------------------------------------------------
+-- DROP TYPE public."project_view_type";
+
+CREATE TYPE public."project_view_type" AS ENUM (
+	'board',
+	'list',
+	'calendar',
+	'timeline',
+	'gantt');
+
+-- ----------------------------------------------------------------------------
 -- system_users_roles
 -- Papéis dos administradores internos do sistema (painel administrativo).
 -- Diferente de user_role, que é para membros de organizações/projetos.
@@ -890,6 +947,48 @@ GRANT ALL ON TABLE organizations_members TO avnadmin;
 
 
 -- ----------------------------------------------------------------------------
+-- TABELA: teams
+-- ----------------------------------------------------------------------------
+-- Equipes dentro de uma organização.
+-- Agrupamento de usuários para facilitar distribuição de tarefas e permissões.
+--
+-- Relacionamentos:
+--   org_id     → organizations.id (ON DELETE CASCADE)
+--   created_by → users.user_id
+-- ----------------------------------------------------------------------------
+-- DROP TABLE teams;
+
+CREATE TABLE teams ( id uuid DEFAULT uuid_generate_v4() NOT NULL, org_id uuid NOT NULL, created_by uuid NOT NULL, "name" varchar(255) NOT NULL, description text NULL, created_at timestamptz DEFAULT now() NOT NULL, updated_at timestamptz DEFAULT now() NOT NULL, deleted bool DEFAULT false NOT NULL, CONSTRAINT teams_pkey PRIMARY KEY (id), CONSTRAINT fk_teams_creator FOREIGN KEY (created_by) REFERENCES users(user_id), CONSTRAINT fk_teams_organization FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE);
+CREATE INDEX idx_teams_org_id ON public.teams USING btree (org_id);
+
+-- Permissions
+
+ALTER TABLE teams OWNER TO avnadmin;
+GRANT ALL ON TABLE teams TO avnadmin;
+
+
+-- ----------------------------------------------------------------------------
+-- TABELA: teams_members
+-- ----------------------------------------------------------------------------
+-- Membros de uma equipe.
+--
+-- Relacionamentos:
+--   team_id → teams.id (ON DELETE CASCADE)
+--   user_id → users.user_id (ON DELETE CASCADE)
+-- ----------------------------------------------------------------------------
+-- DROP TABLE teams_members;
+
+CREATE TABLE teams_members ( id uuid DEFAULT uuid_generate_v4() NOT NULL, team_id uuid NOT NULL, user_id uuid NOT NULL, "role" public."user_role" DEFAULT 'member'::user_role NOT NULL, added_at timestamptz DEFAULT now() NOT NULL, CONSTRAINT teams_members_pkey PRIMARY KEY (id), CONSTRAINT uq_team_user UNIQUE (team_id, user_id), CONSTRAINT fk_tm_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE, CONSTRAINT fk_tm_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE);
+CREATE INDEX idx_tm_team_id ON public.teams_members USING btree (team_id);
+CREATE INDEX idx_tm_user_id ON public.teams_members USING btree (user_id);
+
+-- Permissions
+
+ALTER TABLE teams_members OWNER TO avnadmin;
+GRANT ALL ON TABLE teams_members TO avnadmin;
+
+
+-- ----------------------------------------------------------------------------
 -- TABELA: plans_usage
 -- ----------------------------------------------------------------------------
 -- Rastreia o uso atual do plano para cada usuário ou organização.
@@ -964,16 +1063,23 @@ GRANT ALL ON TABLE plans_usage TO avnadmin;
 --   title       (text)               : Título do projeto (padrão: 'The new project')
 --   description (text, NULL)         : Descrição do projeto
 --   properties  (jsonb, NULL)        : Propriedades customizáveis em JSON
---   status      (text)               : Status do projeto (padrão: 'open')
+--   status      (project_status)     : Status do projeto (padrão: 'open')
 --   created_at  (timestamptz)        : Data de criação
 --   updated_at  (timestamptz)        : Última atualização
 --   deleted     (bool)               : Soft delete
 --   org_id      (uuid, FK, NULL)     : Organização (se projeto organizacional)
 --   active      (bool)               : Se o projeto está ativo
+--   methodology (project_methodology): Metodologia (kanban, scrum, etc.)
+--   default_view(project_view_type)  : Visualização padrão (board, list, etc.)
+--   projects_files (jsonb)           : Arquivos anexados ao projeto
+--   parent_project_id (uuid, FK)     : Projeto pai (para subprojetos)
 -- ----------------------------------------------------------------------------
 -- DROP TABLE projects;
 
-CREATE TABLE projects ( id uuid DEFAULT uuid_generate_v4() NOT NULL, user_id uuid NOT NULL, title text DEFAULT 'The new project'::text NOT NULL, description text DEFAULT 'Type description here...'::text NULL, properties jsonb DEFAULT '{}'::jsonb NULL, status text DEFAULT 'open'::text NOT NULL, created_at timestamptz DEFAULT now() NOT NULL, updated_at timestamptz DEFAULT now() NOT NULL, deleted bool DEFAULT false NOT NULL, org_id uuid NULL, active bool DEFAULT true NOT NULL, CONSTRAINT projects_pkey PRIMARY KEY (id), CONSTRAINT fk_org_id FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE, CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE);
+CREATE TABLE projects ( id uuid DEFAULT uuid_generate_v4() NOT NULL, user_id uuid NOT NULL, title text DEFAULT 'The new project'::text NOT NULL, description text DEFAULT 'Type description here...'::text NULL, properties jsonb DEFAULT '{}'::jsonb NULL, status public."project_status" DEFAULT 'open'::project_status NOT NULL, created_at timestamptz DEFAULT now() NOT NULL, updated_at timestamptz DEFAULT now() NOT NULL, deleted bool DEFAULT false NOT NULL, org_id uuid NULL, active bool DEFAULT true NOT NULL, methodology public."project_methodology" DEFAULT 'kanban'::project_methodology NOT NULL, default_view public."project_view_type" DEFAULT 'board'::project_view_type NOT NULL, projects_files jsonb DEFAULT '{}'::jsonb NOT NULL, parent_project_id uuid NULL, CONSTRAINT projects_pkey PRIMARY KEY (id), CONSTRAINT fk_org_id FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE, CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE, CONSTRAINT parent_project_id_fk FOREIGN KEY (parent_project_id) REFERENCES projects(id) ON DELETE CASCADE);
+CREATE INDEX idx_projects_org_active ON public.projects USING btree (org_id) WHERE ((deleted = false) AND (active = true));
+CREATE INDEX idx_projects_parent_project_id ON public.projects USING btree (parent_project_id) WHERE (parent_project_id IS NOT NULL);
+CREATE INDEX idx_projects_user_active ON public.projects USING btree (user_id) WHERE ((deleted = false) AND (active = true));
 
 -- Permissions
 
@@ -1083,6 +1189,44 @@ CREATE INDEX idx_user_token ON public.tokens USING btree (user_id, type, active)
 
 ALTER TABLE tokens OWNER TO avnadmin;
 GRANT ALL ON TABLE tokens TO avnadmin;
+
+
+-- ----------------------------------------------------------------------------
+-- TABELA: user_oauth_tokens
+-- ----------------------------------------------------------------------------
+-- Tokens de autenticação OAuth (Google, GitHub, etc.) dos usuários.
+-- Armazena access_token e refresh_token para integrações.
+--
+-- Relacionamentos:
+--   user_id → users.user_id (ON DELETE CASCADE, ON UPDATE CASCADE)
+-- ----------------------------------------------------------------------------
+-- DROP TABLE user_oauth_tokens;
+
+CREATE TABLE user_oauth_tokens ( id uuid DEFAULT uuid_generate_v4() NOT NULL, user_id uuid NOT NULL, provider varchar(50) DEFAULT 'google'::character varying NULL, access_token text NOT NULL, refresh_token text NULL, expires_at timestamptz NULL, created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL, updated_at timestamptz DEFAULT now() NULL, deleted bool DEFAULT false NOT NULL, CONSTRAINT user_oauth_tokens_pkey PRIMARY KEY (id), CONSTRAINT "user_oauth_tokens_userId_fk" FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE);
+
+-- Permissions
+
+ALTER TABLE user_oauth_tokens OWNER TO avnadmin;
+GRANT ALL ON TABLE user_oauth_tokens TO avnadmin;
+
+
+-- ----------------------------------------------------------------------------
+-- TABELA: google_calendar_webhooks
+-- ----------------------------------------------------------------------------
+-- Webhooks para integração com Google Calendar.
+-- Armazena identificadores de canal e expiração para sincronização.
+--
+-- Relacionamentos:
+--   user_id → users.user_id
+-- ----------------------------------------------------------------------------
+-- DROP TABLE google_calendar_webhooks;
+
+CREATE TABLE google_calendar_webhooks ( id uuid DEFAULT gen_random_uuid() NOT NULL, user_id uuid NOT NULL, calendar_id varchar(255) NOT NULL, channel_id uuid NOT NULL, resource_id varchar(255) NULL, sync_token varchar(255) NULL, expires_at timestamptz NULL, is_active bool DEFAULT true NOT NULL, created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL, updated_at timestamptz DEFAULT now() NOT NULL, deleted bool DEFAULT false NOT NULL, CONSTRAINT google_calendar_webhooks_pkey PRIMARY KEY (id), CONSTRAINT google_calendar_webhooks_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(user_id));
+
+-- Permissions
+
+ALTER TABLE google_calendar_webhooks OWNER TO avnadmin;
+GRANT ALL ON TABLE google_calendar_webhooks TO avnadmin;
 
 
 -- ============================================================================
