@@ -1,7 +1,12 @@
+"use client";
+
 import React from "react";
 import { HiSparkles } from "react-icons/hi2";
+import { useLanguage } from "./contexts/LanguageContext";
 
 export default function Loading() {
+  const { t } = useLanguage();
+
   return (
     <div className="flex h-screen w-full flex-col items-center justify-center bg-neutral-50 dark:bg-neutral-950">
       <div className="relative flex items-center justify-center">
@@ -19,10 +24,10 @@ export default function Loading() {
 
       <div className="mt-6 flex flex-col items-center gap-1 text-center">
         <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-          Weave AI
+          {t.loading.title}
         </h3>
         <p className="animate-pulse text-xs font-medium text-neutral-500 dark:text-neutral-400">
-          Sincronizando seu workspace...
+          {t.loading.message}
         </p>
       </div>
     </div>

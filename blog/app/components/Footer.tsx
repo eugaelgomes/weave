@@ -1,11 +1,19 @@
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import Link from "next/link";
 
-// footer component
 export default function Footer() {
   return (
-    <footer className="z-10 w-full px-6 py-4">
-      <div className="mx-auto flex max-w-7xl items-center justify-between text-[10px] text-neutral-400 sm:text-xs lg:text-sm">
+    <footer className="w-full px-6 py-8 mt-auto border-t border-neutral-200/50 dark:border-neutral-800/50 bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm">
+      <div
+        className="
+          mx-auto max-w-7xl
+          flex flex-col sm:flex-row
+          items-center
+          justify-between
+          gap-4
+          text-xs font-medium
+        "
+      >
         <div className="text-xs text-neutral-500">
           {new Date().getFullYear()} &copy;{" "}
           <a
@@ -19,13 +27,21 @@ export default function Footer() {
           >
             Weave Notes
           </a>
-          <span className="mx-2">-</span>
+          <span className="mx-2 hidden xs:inline">-</span>
           <span className="hidden sm:inline">
-            Todos os direitos reservados.
+            {" "}Todos os direitos reservados.
           </span>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 sm:text-xs lg:text-sm">
+        <div
+          className="
+            flex flex-wrap
+            items-center
+            justify-center sm:justify-end
+            gap-2 sm:gap-4 lg:gap-6
+            text-xs font-semibold text-neutral-400
+          "
+        >
           <Link
             href="/privacy"
             className="transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"
@@ -38,7 +54,9 @@ export default function Footer() {
           >
             Termos
           </Link>
-          {/*<a
+
+          {/* Descomente se quiser mostrar os ícones, eles também ficarão responsivos */}
+          {/* <a
             href="https://github.com/eugaelgomes"
             target="_blank"
             rel="noopener noreferrer"
@@ -46,8 +64,8 @@ export default function Footer() {
           >
             Github
             <FaGithub className="h-4 w-4 text-purple-500" />
-          </a>*/}
-          {/*<a
+          </a>
+          <a
             href="https://linkedin.com/in/gael-rene-gomes"
             target="_blank"
             rel="noopener noreferrer"
@@ -55,7 +73,15 @@ export default function Footer() {
           >
             Linkedin
             <FaLinkedin className="h-4 w-4 text-blue-500" />
-          </a>*/}
+          </a> */}
+
+          <Link
+            href="https://blog.weavenotes.app/support"
+            target="_blank"
+            className="transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"
+          >
+            Ajuda
+          </Link>
         </div>
       </div>
     </footer>

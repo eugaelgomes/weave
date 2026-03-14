@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import { ThemeProvider } from "./contexts/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,16 +20,17 @@ export const metadata: Metadata = {
     template: "%s | Weave Notes",
   },
   description:
-    "Crie, edite e compartilhe suas anotações com segurança e praticidade.",
+    "O workspace inteligente para gestão de projetos, notas e tarefas com IA.",
   keywords: [
+    "gestão de projetos",
+    "gerenciamento de tarefas",
     "notas",
     "anotações",
     "organização",
     "produtividade",
-    "notes",
-    "notepad",
-    "editor de texto",
+    "workspace",
     "colaboração",
+    "IA",
   ],
   authors: [{ name: "Weave" }],
   openGraph: {
@@ -35,14 +38,14 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     title: "Weave Notes",
     description:
-      "Crie, edite e compartilhe suas anotações com segurança e praticidade.",
+      "O workspace inteligente para gestão de projetos, notas e tarefas com IA.",
     siteName: "Weave Notes",
   },
   twitter: {
     card: "summary_large_image",
     title: "Weave Notes",
     description:
-      "Crie, edite e compartilhe suas anotações com segurança e praticidade.",
+      "O workspace inteligente para gestão de projetos, notas e tarefas com IA.",
   },
   icons: {
     icon: "/favicon.ico",
@@ -57,11 +60,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <LanguageProvider>{children}</LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
