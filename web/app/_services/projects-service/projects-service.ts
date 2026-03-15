@@ -275,3 +275,78 @@ export const manageProjectNote = async (
   const data = await handleResponse<{ message: string; notes?: ProjectNote[] }>(response);
   return data.notes || [];
 };
+
+// --- STATS ---
+
+export interface ProjectDashboardStats {
+  overview: {
+    total: number;
+    owned: number;
+    collaborating: number;
+    active: number;
+    by_status: {
+      open: number;
+      in_progress: number;
+      paused: number;
+      completed: number;
+      archived: number;
+    };
+  };
+  methodology: {
+    kanban: number;
+    scrum: number;
+    waterfall: number;
+    custom: number;
+  };
+  progress: {
+    average: number;
+    near_completion: number;
+    not_started: number;
+  };
+  notes: {
+    total: number;
+    visible: number;
+    archived: number;
+    secure: number;
+  };
+  tasks: {
+    total: number;
+    done: number;
+    pending: number;
+    completion_rate: number;
+  };
+  filters_applied: {
+    status: string | null;
+    methodology: string | null;
+    from: string | null;
+    to: string | null;
+    parent_only: boolean;
+  };
+}
+
+export interface ProjectStatsFilters {
+  status?: string;
+  methodology?: string;
+  from?: string;
+  to?: string;
+  parent_only?: boolean;
+}
+
+export const fetchProjectsStats = async (
+  filters: ProjectStatsFilters = {}
+): Promise<ProjectDashboardStats> => {
+  const params = new URLSearchParams();
+  if (filters.status) params.set("status", filters.status);
+  if (filters.methodology) params.set("methodology", filters.methodology);
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
+  if (filters.parent_only !== undefined) params.set("parent_only", String(filters.parent_only));
+
+  const query = params.toString();
+  const endpoint = query
+    ? `${API_ENDPOINTS.PROJECTS_STATS}?${query}`
+    : API_ENDPOINTS.PROJECTS_STATS;
+
+  const response = await apiClient.get(endpoint);
+  return handleResponse<ProjectDashboardStats>(response);
+};

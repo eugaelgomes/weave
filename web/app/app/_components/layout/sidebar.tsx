@@ -209,7 +209,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                     >
                       <div className={`flex items-center ${!isCollapsed && "gap-3"}`}>
                         <Icon
-                          className={`transition-colors ${isCollapsed ? "h-5 w-5" : "h-4 w-4"} ${active ? "text-yellow-500" : "text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200"} `}
+                          className={`transition-colors ${isCollapsed ? "h-4 w-4" : "h-4 w-4"} ${active ? "text-yellow-500" : "text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200"} `}
                         />
                         {!isCollapsed && <span className="text-sm">{item.label}</span>}
                       </div>

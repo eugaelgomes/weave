@@ -1,6 +1,6 @@
 const ptBR = {
   navbar: {
-    cta: "Começar agora",
+    cta: "Cadastre-se",
     home: "Início",
     login: "Entrar",
   },

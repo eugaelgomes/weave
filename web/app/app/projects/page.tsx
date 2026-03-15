@@ -5,6 +5,7 @@ import { useAuth } from "../../_contexts/auth-context";
 import { useProjects } from "../../_contexts/projects-context";
 import ProjectsCarousel from "../_components/ui/projects/project-carousel";
 import ProjectsDashboard from "../_components/ui/projects/projects-dashboard";
+import ProjectsOverview from "../_components/ui/projects/projects-overview";
 import { Folder, ChevronRight, FolderOpen, LayoutDashboard } from "lucide-react";
 
 export default function ProjectsPage() {
@@ -126,34 +127,7 @@ export default function ProjectsPage() {
       {/* CONTEÚDO PRINCIPAL (Detail) */}
       <div className="flex flex-1 flex-col overflow-y-auto bg-white p-3 sm:p-4 dark:bg-neutral-950">
         {selectedProjectId === "dashboard" ? (
-          <div className="flex flex-col h-full animate-in fade-in duration-300">
-            <header className="mb-4 flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-neutral-900">
-              <div>
-                <h1 className="text-base font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-                  Visão Geral
-                </h1>
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  Bem-vindo de volta, {userName}
-                </p>
-              </div>
-            </header>
-
-            <div className="mb-4 rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-neutral-800/50 dark:bg-neutral-900/20">
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                Selecione um projeto na barra lateral para visualizar seus detalhes, arquivos e subprojetos.
-              </p>
-            </div>
-
-            <div className="mt-auto">
-              <ProjectsCarousel
-                projects={recentProjects}
-                title="Acessados Recentemente"
-                emptyMessage="Você ainda não tem projetos"
-                emptyActionText="Criar Primeiro Projeto"
-                emptyActionHref="/app/projects/new"
-              />
-            </div>
-          </div>
+          <ProjectsOverview />
         ) : (
           <ProjectsDashboard projectId={selectedProjectId} />
         )}

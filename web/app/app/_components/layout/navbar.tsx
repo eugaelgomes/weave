@@ -196,13 +196,25 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                       aria-hidden="true"
                     />
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center">
                       <Link
-                        href={`/app/organizations/${user.org_id}/about`}
+                        href={`/app/organization/about/${user.org_id}`}
                         title={`Saiba mais sobre ${user.org_name}`}
-                        className="max-w-[80px] truncate text-xs text-neutral-700 transition-colors hover:text-yellow-600 sm:max-w-[150px] sm:text-sm md:max-w-none dark:text-neutral-300 dark:hover:text-yellow-500"
+                        className="group flex items-center gap-2 rounded-md transition-all duration-200 hover:opacity-80"
                       >
-                        {user.org_name}
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
+                          <Image
+                            src={user.org_logo_url || "/default-org-icon.png"}
+                            alt={`Logo da ${user.org_name}`}
+                            width={16}
+                            height={16}
+                            className="object-contain"
+                          />
+                        </div>
+
+                        <span className="max-w-[100px] truncate text-xs font-medium text-neutral-700 transition-colors group-hover:text-yellow-600 sm:max-w-[160px] sm:text-sm md:max-w-none dark:text-neutral-300 dark:group-hover:text-yellow-500">
+                          {user.org_name}
+                        </span>
                       </Link>
                     </div>
                   </div>

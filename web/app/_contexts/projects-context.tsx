@@ -13,6 +13,7 @@ import {
   fetchProjectNotes as fetchProjectNotesService,
   manageProjectNote as manageProjectNoteService,
   fetchProjectStages as fetchProjectStagesService,
+  fetchProjectsStats as fetchProjectsStatsService,
   type Project,
   type SubProject,
   type CreateProjectData,
@@ -22,9 +23,13 @@ import {
   type ProjectStage,
   type ManageCollaboratorData,
   type ManageNoteData,
+  type ProjectDashboardStats,
+  type ProjectStatsFilters,
 } from "../_services/projects-service/projects-service";
 
 // Tipos específicos do contexto / Overview
+export type { ProjectDashboardStats, ProjectStatsFilters };
+
 export interface ProjectOverview {
   id: string;
   title: string;
@@ -65,6 +70,7 @@ export interface ProjectsContextType {
   // Estado
   projects: Project[];
   projectsOverview: ProjectOverview[];
+  projectsStats: ProjectDashboardStats | null;
   loading: boolean;
   error: string | null;
   lastFetch: Date | null;
@@ -82,6 +88,7 @@ export interface ProjectsContextType {
   getRecentProjects: () => ProjectOverview[];
   getProjectsByStatus: (status: string) => ProjectOverview[];
   getProjectsStats: () => ProjectsStats;
+  fetchProjectsStats: (filters?: ProjectStatsFilters) => Promise<void>;
 
   // tages
   getProjectStages: (projectId: string) => Promise<ProjectStage[]>;
@@ -123,6 +130,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   // Estados
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectsOverview, setProjectsOverview] = useState<ProjectOverview[]>([]);
+  const [projectsStats, setProjectsStats] = useState<ProjectDashboardStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState<Date | null>(null);
@@ -344,6 +352,19 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     };
   }, [projectsOverview]);
 
+  const fetchProjectsStats = useCallback(
+    async (filters: ProjectStatsFilters = {}): Promise<void> => {
+      if (!user?.id) return;
+      try {
+        const stats = await fetchProjectsStatsService(filters);
+        setProjectsStats(stats);
+      } catch (err: unknown) {
+        console.error("Erro ao buscar stats de projetos:", err);
+      }
+    },
+    [user?.id]
+  );
+
   // 🟢 NOVO: STAGES / COLUNAS DO BOARD
   const getProjectStages = useCallback(
     async (projectId: string): Promise<ProjectStage[]> => {
@@ -540,6 +561,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   const value: ProjectsContextType = {
     projects,
     projectsOverview,
+    projectsStats,
     loading,
     error,
     lastFetch,
@@ -553,6 +575,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     getRecentProjects,
     getProjectsByStatus,
     getProjectsStats,
+    fetchProjectsStats,
     getProjectStages,
     getCollaborators,
     addCollaborator,

@@ -3,7 +3,7 @@ import React from "react";
 const PagesFooter = () => {
   return (
     <div>
-      <div className="flex justify-between rounded-md border border-neutral-200 bg-white px-4 py-2 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+      <div className="flex justify-between rounded-md border border-neutral-200 bg-neutral-50 px-4 py-2 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
         <div className="text-xs text-neutral-500">
           &copy; {new Date().getFullYear()}{" "}
           <a

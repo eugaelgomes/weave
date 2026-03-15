@@ -8,6 +8,9 @@ import {
   Calendar as CalendarIcon,
   X,
   RefreshCw,
+  Clock,
+  MapPin,
+  ExternalLink,
 } from "lucide-react";
 import { FaProjectDiagram } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
@@ -22,52 +25,13 @@ import {
   type GoogleCalendarEvent,
 } from "@/app/_services/calendar-service/calendar-service";
 
+import { calendarUtils } from "@/app/_utils/calendar";
 // ─── Interfaces e Tipos ──
 export interface CalendarPreviewProps {
   className?: string;
 }
 
 type ViewType = "day" | "week" | "month" | "semester" | "year";
-
-// ─── Utilitários de Data ──
-const MONTH_NAMES_PT = [
-  "Janeiro",
-  "Fevereiro",
-  "Março",
-  "Abril",
-  "Maio",
-  "Junho",
-  "Julho",
-  "Agosto",
-  "Setembro",
-  "Outubro",
-  "Novembro",
-  "Dezembro",
-];
-const MONTH_NAMES_EN = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-const WEEK_DAYS_PT = [
-  "Domingo",
-  "Segunda-Feira",
-  "Terça-Feira",
-  "Quarta-Feira",
-  "Quinta-Feira",
-  "Sexta-Feira",
-  "Sábado",
-];
-const WEEK_DAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
 const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
@@ -85,12 +49,89 @@ const getStartOfWeek = (date: Date) => {
   return new Date(d.setDate(diff));
 };
 
+// ─── Day View Grid Constants ─────────────────────────────────────────────────
+const HOUR_HEIGHT = 60;
+const TOTAL_GRID_HEIGHT = 24 * HOUR_HEIGHT;
+
+const getMinutesFromMidnight = (dateString: string): number => {
+  const date = new Date(dateString);
+  return date.getHours() * 60 + date.getMinutes();
+};
+
+const getEventDurationMinutes = (start: string, end: string | null): number => {
+  if (!end) return 60;
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const diff = (endDate.getTime() - startDate.getTime()) / (1000 * 60);
+  return Math.max(diff, 15);
+};
+
+const minutesToPixels = (minutes: number): number => {
+  return (minutes / (24 * 60)) * TOTAL_GRID_HEIGHT;
+};
+
+interface PositionedEvent {
+  event: { time: string; type: "note" | "project" | "calendar"; data: any };
+  startMin: number;
+  endMin: number;
+  column: number;
+  totalColumns: number;
+}
+
+const layoutOverlappingEvents = (
+  events: Array<{ time: string; type: "note" | "project" | "calendar"; data: any }>
+): PositionedEvent[] => {
+  const entries: PositionedEvent[] = events
+    .filter((e) => !e.data.allDay)
+    .map((event) => {
+      const startMin = getMinutesFromMidnight(event.time);
+      const endTime = event.type === "calendar" ? event.data.end : null;
+      const duration = getEventDurationMinutes(event.time, endTime);
+      return {
+        event,
+        startMin,
+        endMin: startMin + duration,
+        column: 0,
+        totalColumns: 1,
+      };
+    })
+    .sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
+
+  const groups: PositionedEvent[][] = [];
+  let currentGroup: PositionedEvent[] = [];
+  let groupEnd = 0;
+
+  for (const entry of entries) {
+    if (currentGroup.length > 0 && entry.startMin >= groupEnd) {
+      groups.push(currentGroup);
+      currentGroup = [];
+      groupEnd = 0;
+    }
+    let col = 0;
+    const usedCols = new Set(
+      currentGroup.filter((e) => e.endMin > entry.startMin).map((e) => e.column)
+    );
+    while (usedCols.has(col)) col++;
+    entry.column = col;
+    currentGroup.push(entry);
+    groupEnd = Math.max(groupEnd, entry.endMin);
+  }
+  if (currentGroup.length > 0) groups.push(currentGroup);
+
+  for (const group of groups) {
+    const maxCol = Math.max(...group.map((e) => e.column)) + 1;
+    group.forEach((e) => (e.totalColumns = maxCol));
+  }
+
+  return entries;
+};
+
 const getMonthNames = (locale: string = "pt-BR") => {
-  return locale.startsWith("en") ? MONTH_NAMES_EN : MONTH_NAMES_PT;
+  return locale.startsWith("en") ? calendarUtils.months.en : calendarUtils.months.pt;
 };
 
 const getWeekDays = (locale: string = "pt-BR") => {
-  return locale.startsWith("en") ? WEEK_DAYS_EN : WEEK_DAYS_PT;
+  return locale.startsWith("en") ? calendarUtils.weekDays.en : calendarUtils.weekDays.pt;
 };
 
 const formatTime = (
@@ -113,6 +154,21 @@ const formatTime = (
     minute: "2-digit",
     hour12: false,
   });
+};
+
+const formatTimeRange = (
+  startStr: string,
+  endStr: string | null,
+  allDay: boolean,
+  timeFormat: "12h" | "24h" = "24h",
+  locale: string = "pt-BR"
+): string => {
+  const isPtBr = locale.startsWith("pt");
+  if (allDay) return isPtBr ? "Dia inteiro" : "All day";
+  const startFormatted = formatTime(startStr, timeFormat, locale);
+  if (!endStr) return startFormatted;
+  const endFormatted = formatTime(endStr, timeFormat, locale);
+  return `${startFormatted} - ${endFormatted}`;
 };
 
 export function CalendarPreview({ className = "h-full min-h-[500px]" }: CalendarPreviewProps) {
@@ -157,6 +213,8 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
       updatedAtFull: isPtBr ? "Atualizada às" : "Updated at",
       records: isPtBr ? "Registros" : "Records",
       noActivities: isPtBr ? "Sem atividades" : "No activities",
+      allDay: isPtBr ? "Dia inteiro" : "All day",
+      openInGCal: isPtBr ? "Abrir no Google Calendar" : "Open in Google Calendar",
     };
   }, [locale]);
 
@@ -310,15 +368,15 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
   };
 
   const GCalEventChip = ({ event }: { event: GoogleCalendarEvent }) => {
-    const time = event.allDay
-      ? ""
-      : formatTime(event.start!, timeFormat, locale);
+    const time = formatTimeRange(
+      event.start!, event.end, event.allDay, timeFormat, locale
+    );
 
     return (
       <div className="flex items-center gap-1.5 truncate rounded px-1.5 py-1 text-[9px] font-medium transition-colors sm:text-[10px] bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20">
         <FcGoogle size={9} className="hidden shrink-0 sm:block" />
         <span className="flex-1 truncate">{event.title}</span>
-        {time && (
+        {!event.allDay && (
           <span className="hidden shrink-0 text-[8px] opacity-70 sm:block sm:text-[9px]">{time}</span>
         )}
       </div>
@@ -331,7 +389,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
     return (
       <div className="flex flex-1 flex-col gap-1 overflow-hidden border-t border-neutral-200 bg-neutral-100 px-1 dark:border-neutral-800 dark:bg-neutral-800">
         <div className={`grid grid-cols-${cols} rounded-md bg-white dark:bg-neutral-950`}>
-          {WEEK_DAYS.slice(0, cols).map((day, i) => (
+          {WEEK_DAYS.slice(0, cols).map((day) => (
             <div
               key={day}
               className="truncate px-1 py-2 text-center text-[10px] font-semibold text-neutral-500 sm:text-xs"
@@ -413,13 +471,12 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
     return renderGrid(days, 7);
   };
 
-  // ─── 3. RENDER: DIA (Estilo Google Calendar) ───
+  // ─── 3. RENDER: DAY VIEW (Blocos posicionados estilo Google Calendar) ───
   const renderDay = () => {
     const dateStr = toDateKey(currentDate);
     const dayEvents = eventsByDate.get(dateStr);
-    const isPtBr = locale.startsWith("pt");
 
-    // Combinar e ordenar eventos cronologicamente
+    // Combinar todos os eventos do dia
     const allEvents: Array<{ time: string; type: "note" | "project" | "calendar"; data: any }> = [];
 
     if (dayEvents) {
@@ -427,51 +484,91 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
         if (e.start) allEvents.push({ time: e.start, type: "calendar", data: e });
       });
       dayEvents.projects.forEach((p) => {
-        allEvents.push({
-          time: p.updated_at || p.created_at,
-          type: "project",
-          data: p,
-        });
+        allEvents.push({ time: p.updated_at || p.created_at, type: "project", data: p });
       });
       dayEvents.notes.forEach((n) => {
-        allEvents.push({
-          time: n.updated_at || n.created_at,
-          type: "note",
-          data: n,
-        });
+        allEvents.push({ time: n.updated_at || n.created_at, type: "note", data: n });
       });
     }
-
-    // Ordenar por horário
     allEvents.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
 
-    // Hora atual
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const isToday = isSameDay(currentDate, now);
+    // Separar eventos all-day de eventos com horário
+    const allDayEvents = allEvents.filter((e) => e.data.allDay === true);
+    const timedEvents = allEvents.filter((e) => e.data.allDay !== true);
 
-    // Gerar array de horas (0-23)
+    // Layout de eventos posicionados (com detecção de overlap)
+    const positionedEvents = layoutOverlappingEvents(timedEvents);
+
+    // Indicador de hora atual
+    const now = new Date();
+    const isToday = isSameDay(currentDate, now);
+    const currentTimeMin = now.getHours() * 60 + now.getMinutes();
+
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
-    // Agrupar eventos por hora
-    const eventsByHour = new Map<number, typeof allEvents>();
-    allEvents.forEach((event) => {
-      const eventDate = new Date(event.time);
-      const hour = eventDate.getHours();
-      if (!eventsByHour.has(hour)) {
-        eventsByHour.set(hour, []);
-      }
-      eventsByHour.get(hour)!.push(event);
-    });
+    const colorMap = {
+      calendar: {
+        bg: "bg-blue-100 dark:bg-blue-900/30",
+        border: "border-blue-500",
+        hover: "hover:bg-blue-200 dark:hover:bg-blue-900/50",
+        text: "text-blue-800 dark:text-blue-200",
+        timeText: "text-blue-600 dark:text-blue-400",
+      },
+      note: {
+        bg: "bg-yellow-100 dark:bg-yellow-900/30",
+        border: "border-yellow-500",
+        hover: "hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+        text: "text-yellow-800 dark:text-yellow-200",
+        timeText: "text-yellow-600 dark:text-yellow-400",
+      },
+      project: {
+        bg: "bg-purple-100 dark:bg-purple-900/30",
+        border: "border-purple-500",
+        hover: "hover:bg-purple-200 dark:hover:bg-purple-900/50",
+        text: "text-purple-800 dark:text-purple-200",
+        timeText: "text-purple-600 dark:text-purple-400",
+      },
+    };
 
     return (
       <div className="flex-1 overflow-y-auto bg-white dark:bg-neutral-950">
-        <div className="relative">
-          {/* Grade horária */}
+        {/* Seção de eventos all-day */}
+        {allDayEvents.length > 0 && (
+          <div className="border-b border-neutral-200 bg-neutral-50 px-2 py-2 dark:border-neutral-800 dark:bg-neutral-900/50">
+            <div className="flex items-center gap-2 pl-14 sm:pl-20">
+              <span className="text-[10px] font-medium text-neutral-500 sm:text-xs">
+                {texts.allDay}
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {allDayEvents.map((event, idx) => {
+                  const colors = colorMap[event.type];
+                  const title = event.type === "calendar"
+                    ? event.data.title
+                    : event.type === "note"
+                      ? event.data.title
+                      : event.data.name;
+                  return (
+                    <div
+                      key={`allday-${idx}`}
+                      className={`cursor-pointer rounded-md border-l-[3px] px-2 py-1 text-[10px] font-medium transition-colors sm:text-xs ${colors.bg} ${colors.border} ${colors.text} ${colors.hover}`}
+                    >
+                      {title}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Grid temporal com eventos posicionados */}
+        <div
+          className="relative [--label-w:56px] sm:[--label-w:80px]"
+          style={{ height: `${TOTAL_GRID_HEIGHT}px` }}
+        >
+          {/* Linhas de hora e labels */}
           {hours.map((hour) => {
-            const hourEvents = eventsByHour.get(hour) || [];
-            const isCurrentHour = isToday && hour === currentHour;
+            const isCurrentHour = isToday && hour === now.getHours();
             const hourLabel =
               timeFormat === "12h"
                 ? hour === 0
@@ -486,12 +583,12 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
             return (
               <div
                 key={hour}
-                className={`relative flex min-h-[60px] border-b border-neutral-200 dark:border-neutral-800 ${
+                className={`absolute right-0 left-0 border-b border-neutral-200 dark:border-neutral-800 ${
                   isCurrentHour ? "bg-yellow-50/30 dark:bg-yellow-900/5" : ""
                 }`}
+                style={{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }}
               >
-                {/* Coluna do horário */}
-                <div className="w-14 shrink-0 px-2 py-2 text-right sm:w-20 sm:px-3">
+                <div className="w-[var(--label-w)] shrink-0 px-2 py-2 text-right sm:px-3">
                   <span
                     className={`text-[10px] font-medium sm:text-xs ${
                       isCurrentHour
@@ -502,76 +599,68 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                     {hourLabel}
                   </span>
                 </div>
-
-                {/* Área de eventos */}
-                <div className="flex-1 space-y-1 p-1.5 sm:p-2">
-                  {hourEvents.map((event, idx) => {
-                    const isCalendar = event.type === "calendar";
-                    const isNote = event.type === "note";
-                    const item = event.data;
-                    const title = isCalendar
-                      ? item.title
-                      : isNote
-                        ? item.title
-                        : item.name;
-                    const timeStr = event.data.allDay ? "" : formatTime(event.time, timeFormat, locale);
-
-                    return (
-                      <div
-                        key={`${event.type}-${idx}`}
-                        className={`cursor-pointer rounded-md border-l-4 p-2 transition-all hover:shadow-md ${
-                          isCalendar
-                            ? "border-blue-500 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30"
-                            : isNote
-                              ? "border-yellow-500 bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:hover:bg-yellow-900/30"
-                              : "border-purple-500 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20 dark:hover:bg-purple-900/30"
-                        }`}
-                      >
-                        <div className="flex items-start gap-2">
-                          <div className="mt-0.5 hidden shrink-0 sm:block">
-                            {isCalendar ? (
-                              <FcGoogle size={14} className="text-blue-600 dark:text-blue-400" />
-                            ) : isNote ? (
-                              <FileText size={14} className="text-yellow-600 dark:text-yellow-400" />
-                            ) : (
-                              <FaProjectDiagram size={14} className="text-purple-600 dark:text-purple-400" />
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
-                              {timeStr && (
-                                <span className="text-[10px] font-semibold text-neutral-700 sm:text-xs dark:text-neutral-200">
-                                  {timeStr}
-                                </span>
-                              )}
-                              <h4 className="flex-1 truncate text-xs font-semibold text-neutral-900 sm:text-sm dark:text-neutral-100">
-                                {title}
-                              </h4>
-                            </div>
-                            {(item.description || item.content) && (
-                              <p className="mt-1 line-clamp-1 text-[10px] text-neutral-600 sm:text-xs dark:text-neutral-400">
-                                {(item.description || item.content || "").substring(0, 80)}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Linha indicadora da hora atual */}
-                {isCurrentHour && isToday && (
-                  <div
-                    className="absolute right-0 left-14 z-10 border-t-2 border-red-500 sm:left-20"
-                    style={{ top: `${(currentMinute / 60) * 60}px` }}
-                  >
-                    <div className="absolute -top-1 -left-1 h-2 w-2 rounded-full bg-red-500"></div>
-                  </div>
-                )}
               </div>
             );
           })}
+
+          {/* Blocos de eventos posicionados */}
+          {positionedEvents.map((pe, idx) => {
+            const { event, startMin, endMin, column, totalColumns } = pe;
+            const top = minutesToPixels(startMin);
+            const height = Math.max(minutesToPixels(endMin - startMin), 20);
+            const colors = colorMap[event.type];
+            const title = event.type === "calendar"
+              ? event.data.title
+              : event.type === "note"
+                ? event.data.title
+                : event.data.name;
+
+            const endStr = event.type === "calendar" ? event.data.end : null;
+            const timeRangeStr = formatTimeRange(event.time, endStr, false, timeFormat, locale);
+
+            return (
+              <div
+                key={`positioned-${idx}`}
+                className={`absolute cursor-pointer overflow-hidden rounded-md border-l-4 px-2 py-1 transition-all hover:z-20 hover:shadow-lg ${colors.bg} ${colors.border} ${colors.hover}`}
+                style={{
+                  top: `${top}px`,
+                  height: `${height}px`,
+                  left: `calc(var(--label-w) + (100% - var(--label-w) - 8px) / ${totalColumns} * ${column})`,
+                  width: `calc((100% - var(--label-w) - 8px) / ${totalColumns})`,
+                  zIndex: 10,
+                }}
+              >
+                <div className="flex h-full flex-col overflow-hidden">
+                  <h4 className={`truncate text-xs font-semibold ${colors.text}`}>
+                    {title}
+                  </h4>
+                  {height > 30 && (
+                    <span className={`text-[10px] ${colors.timeText}`}>
+                      {timeRangeStr}
+                    </span>
+                  )}
+                  {height > 55 && event.data.location && (
+                    <span className="mt-0.5 truncate text-[9px] text-neutral-500 dark:text-neutral-400">
+                      {event.data.location}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Indicador de hora atual (linha vermelha) */}
+          {isToday && (
+            <div
+              className="absolute right-0 z-30 border-t-2 border-red-500"
+              style={{
+                top: `${minutesToPixels(currentTimeMin)}px`,
+                left: "var(--label-w)",
+              }}
+            >
+              <div className="absolute -top-1.5 -left-1.5 h-3 w-3 rounded-full bg-red-500" />
+            </div>
+          )}
         </div>
 
         {/* Mensagem se não houver eventos */}
@@ -640,7 +729,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
     );
   };
 
-  // ─── 5. RENDER: PAINEL LATERAL DE DETALHES ───
+  // ─── 5. RENDER: PAINEL LATERAL DE DETALHES (Estilo Google Calendar) ───
   const renderSidePanel = () => {
     if (!selectedDate) return null;
 
@@ -670,7 +759,8 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
       });
     }
 
-    allEvents.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+    // Ordenação cronológica ascendente
+    allEvents.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
 
     const hasEvents = allEvents.length > 0;
     const dayName = WEEK_DAYS[selectedDate.getDay()];
@@ -678,6 +768,18 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
     const dayTitle = isPtBr
       ? `${dayName}, ${selectedDate.getDate()} de ${monthName}`
       : `${dayName}, ${monthName} ${selectedDate.getDate()}`;
+
+    const typeLabels = {
+      calendar: { label: "Google Calendar", badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+      note: { label: isPtBr ? "Nota" : "Note", badge: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" },
+      project: { label: isPtBr ? "Projeto" : "Project", badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+    };
+
+    const borderColors = {
+      calendar: "border-l-blue-500",
+      note: "border-l-yellow-500",
+      project: "border-l-purple-500",
+    };
 
     return (
       <>
@@ -736,74 +838,72 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                 <p className="text-xs sm:text-sm">{texts.noEvents}</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {allEvents.map((event, idx) => {
                   const isCalendar = event.type === "calendar";
                   const isNote = event.type === "note";
                   const item = event.data;
                   const title = isCalendar ? item.title : isNote ? item.title : item.name;
-                  const time = item.allDay ? "" : formatTime(event.time, timeFormat, locale);
+
+                  const endStr = isCalendar ? item.end : null;
+                  const timeRange = formatTimeRange(
+                    event.time, endStr, !!item.allDay, timeFormat, locale
+                  );
+
+                  const typeInfo = typeLabels[event.type];
+                  const borderColor = borderColors[event.type];
 
                   return (
                     <div
                       key={`${event.type}-${idx}`}
-                      className={`rounded-lg border p-3 transition-all hover:shadow-md ${
-                        isCalendar
-                          ? "border-blue-200 bg-blue-50/50 hover:border-blue-300 hover:bg-blue-50 dark:border-blue-900/30 dark:bg-blue-900/10 dark:hover:bg-blue-900/20"
-                          : isNote
-                            ? "border-yellow-200 bg-yellow-50/50 hover:border-yellow-300 hover:bg-yellow-50 dark:border-yellow-900/30 dark:bg-yellow-900/10 dark:hover:bg-yellow-900/20"
-                            : "border-purple-200 bg-purple-50/50 hover:border-purple-300 hover:bg-purple-50 dark:border-purple-900/30 dark:bg-purple-900/10 dark:hover:bg-purple-900/20"
-                      }`}
+                      className={`rounded-lg border border-l-4 border-neutral-200 ${borderColor} bg-white p-4 transition-all hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900`}
                     >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                            isCalendar
-                              ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                              : isNote
-                                ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400"
-                                : "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
-                          }`}
-                        >
-                          {isCalendar ? (
-                            <FcGoogle size={14} />
-                          ) : isNote ? (
-                            <FileText size={14} />
-                          ) : (
-                            <FaProjectDiagram size={14} />
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                            {title}
-                          </h4>
-                          {time && (
-                            <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-                              {time}
-                            </p>
-                          )}
-                          {(item.description || item.content) && (
-                            <p className="mt-1.5 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">
-                              {(item.description || item.content || "").substring(0, 200)}
-                            </p>
-                          )}
-                          {item.location && (
-                            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                              \uD83D\uDCCD {item.location}
-                            </p>
-                          )}
-                          {item.htmlLink && (
-                            <a
-                              href={item.htmlLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-2 inline-block text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400"
-                            >
-                              {isPtBr ? "Abrir no Google Calendar \u2192" : "Open in Google Calendar \u2192"}
-                            </a>
-                          )}
-                        </div>
+                      {/* Badge de tipo */}
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${typeInfo.badge}`}>
+                          {isCalendar ? <FcGoogle size={10} /> : isNote ? <FileText size={10} /> : <FaProjectDiagram size={10} />}
+                          {typeInfo.label}
+                        </span>
                       </div>
+
+                      {/* Título */}
+                      <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                        {title}
+                      </h4>
+
+                      {/* Horário */}
+                      <div className="mt-2 flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+                        <Clock size={14} className="shrink-0 text-neutral-400" />
+                        <span>{timeRange}</span>
+                      </div>
+
+                      {/* Localização */}
+                      {item.location && (
+                        <div className="mt-1.5 flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+                          <MapPin size={14} className="shrink-0 text-neutral-400" />
+                          <span className="truncate">{item.location}</span>
+                        </div>
+                      )}
+
+                      {/* Descrição */}
+                      {(item.description || item.content) && (
+                        <p className="mt-3 rounded-md bg-neutral-50 p-2 text-xs leading-relaxed text-neutral-600 dark:bg-neutral-800/50 dark:text-neutral-400">
+                          {(item.description || item.content || "").substring(0, 300)}
+                        </p>
+                      )}
+
+                      {/* Link do Google Calendar */}
+                      {item.htmlLink && (
+                        <a
+                          href={item.htmlLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
+                        >
+                          <ExternalLink size={12} />
+                          {texts.openInGCal}
+                        </a>
+                      )}
                     </div>
                   );
                 })}

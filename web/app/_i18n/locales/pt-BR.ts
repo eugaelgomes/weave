@@ -16,6 +16,7 @@ const ptBR = {
     next: "Próximo",
     search: "Buscar",
     notes: "notas",
+    projects: "projetos",
   },
 
   greeting: {

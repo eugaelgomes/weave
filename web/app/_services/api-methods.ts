@@ -43,6 +43,7 @@ export const API_ENDPOINTS = {
 
   // Projects
   PROJECTS: "/projects",
+  PROJECTS_STATS: "/projects/stats",
   PROJECTS_BY_ID: (id: string) => `/projects/${id}`,
   PROJECTS_STAGES: (projectId: string) => `/projects/${projectId}/stages`,
   PROJECTS_COLLABORATORS: (projectId: string) => `/projects/${projectId}/collaborators`,
