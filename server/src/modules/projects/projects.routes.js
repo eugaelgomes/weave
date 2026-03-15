@@ -1,17 +1,21 @@
 const express = require("express");
 const projectsController = require("@/modules/projects/projects.controller");
-const { verifyToken } = require("@/middlewares/authentication");
-const { projectUpdateUpload } = require("@/middlewares/data/project-upload");
+const { verifyToken } = require("@/middlewares/verify-token");
+const { projectUpdateUpload } = require("@/utils/data/project-upload");
+const { highTrafficLimiter, standardTrafficLimiter } = require("@/middlewares/request-limiters");
 
 const router = express.Router();
 
 router.use(verifyToken);
 
-router.get("/", projectsController.getAllProjects.bind(projectsController));
+// Leitura de projetos (Alto fluxo)
+router.get("/", highTrafficLimiter, projectsController.getAllProjects.bind(projectsController));
+router.get("/stats", highTrafficLimiter, projectsController.getProjectStats.bind(projectsController));
 
-router.post("/", projectsController.createProject.bind(projectsController));
-
-router.get("/stats", projectsController.getProjectStats.bind(projectsController));
+// Modificações (Fluxo moderado)
+router.post("/", standardTrafficLimiter, projectsController.createProject.bind(projectsController));
+router.patch("/:projectId", standardTrafficLimiter, projectsController.updateProject.bind(projectsController));
+router.delete("/:projectId", standardTrafficLimiter, projectsController.deleteProject.bind(projectsController));
 
 router.get("/:id", projectsController.getProjectById.bind(projectsController));
 

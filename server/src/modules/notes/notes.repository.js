@@ -1,4 +1,4 @@
-const { executeQuery, rowCount } = require("@/services/db");
+const { executeQuery, rowCount } = require("@/database/connection");
 
 class notesRepository {
   static get DEFAULT_PROPERTIES() {

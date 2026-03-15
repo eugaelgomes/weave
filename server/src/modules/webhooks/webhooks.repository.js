@@ -1,7 +1,6 @@
-const { executeQuery, rowCount } = require("@/services/db/index");
+const { executeQuery, rowCount } = require("@/database/connection");
 
 class WebhooksRepository {
-  /* ── OAuth Tokens ── */
 
   /**
    * Salva ou atualiza os tokens OAuth2 do Google para um usuário.
@@ -66,8 +65,6 @@ class WebhooksRepository {
       [userId]
     );
   }
-
-  /* ── Calendar Webhooks ── */
 
   /**
    * Busca um webhook ativo pelo channel ID.

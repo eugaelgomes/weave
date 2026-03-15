@@ -1,17 +1,17 @@
 const express = require("express");
 const userController = require("@/modules/users/users.controller");
-const { requestLimiter } = require("@/middlewares/security/limiters");
-const { inputValidation } = require("@/middlewares/data/input-validation");
-const upload = require("@/middlewares/data/profile-img");
+const { structuralLimiter, standardTrafficLimiter, highTrafficLimiter } = require("@/middlewares/request-limiters");
+const { inputValidation } = require("@/utils/data/input-validation");
+const upload = require("@/utils/data/profile-img");
 const validateCompressedImageSize = require("@/utils/image-validator");
-const { verifyToken } = require("@/middlewares/authentication");
+const { verifyToken } = require("@/middlewares/verify-token");
 
 const router = express.Router();
 
 router.post(
   "/create-account",
+  structuralLimiter,
   upload.single("profileImage"),
-  requestLimiter,
   validateCompressedImageSize,
   inputValidation(),
   userController.createUser.bind(userController)
@@ -19,21 +19,22 @@ router.post(
 
 router.post(
   "/activate-account",
-  requestLimiter,
+  standardTrafficLimiter,
   userController.activateAccount.bind(userController)
 );
 
-router.get("/me", verifyToken, userController.getProfile.bind(userController));
+router.get("/me", verifyToken, highTrafficLimiter, userController.getProfile.bind(userController));
 
 router.put(
   "/me/update-profile",
   verifyToken,
+  standardTrafficLimiter,
   upload.single("profilePicture"),
   validateCompressedImageSize,
   userController.updateProfile.bind(userController)
 );
 
-router.get("/search", verifyToken, (req, res, next) => {
+router.get("/search", verifyToken, highTrafficLimiter, (req, res, next) => {
   userController.searchUsers(req, res, next);
 });
 

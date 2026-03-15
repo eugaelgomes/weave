@@ -1,5 +1,5 @@
 
-const { executeQuery } = require("@/services/db");
+const { executeQuery } = require("@/database/connection");
 
 class BlocksRepository {
   // ========================================

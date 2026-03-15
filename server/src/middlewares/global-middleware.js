@@ -2,19 +2,19 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
-const { getClientIp } = require("@/middlewares/security/ip-address");
-const { sessionMiddleware } = require("@/middlewares/security/session");
+const { getClientIp } = require("@/middlewares/ip-address");
+const { sessionMiddleware } = require("@/middlewares/session");
 const { allowedOrigins } = require("@/config/allowed-origins");
 
-// Lista de origens CORS
+// Allowed origins cors
 const WHITELIST = allowedOrigins;
 
-// Limpeza de caracteres especiais para uso em RegExp
+// RegExp
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// Validador de origens CORS
+// Origin validator
 function buildMatcher(allowed) {
   if (allowed.includes("*")) {
     const pattern = "^" + allowed.split("*").map(escapeRegExp).join(".*") + "$";
@@ -42,7 +42,7 @@ function makeCorsOptions() {
         if (isDev) {
           return cb(null, true);
         }
-        return cb(new Error("Origin header obrigatório em produção"));
+        return cb(new Error("Headless requests are not allowed in production."));
       }
 
       const normalized = origin.replace(/\/+$/, "");
@@ -51,9 +51,7 @@ function makeCorsOptions() {
       if (ok) {
         return cb(null, true);
       }
-
-      console.warn(`[CORS Blocked] Origem tentada: ${origin}`);
-      return cb(new Error("Origem não permitida pela política CORS."));
+      return cb(new Error("Origin not allowed by CORS."));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -82,9 +80,9 @@ function configureGlobalMiddlewares(app) {
 
   const corsMiddleware = cors(makeCorsOptions());
   app.use((req, res, next) => {
-    // Ignora CORS para callbacks de terceiros que não enviam Origin:
+    // Ignore CORS for:
     // - Webhooks (POST do Google Calendar)
-    // - Rotas SSO OAuth (GET redirects do browser, sem header Origin)
+    // - SSO OAuth (GET redirects do browser, wi header Origin)
     if (req.method === "POST" && req.path === "/api/v1/webhooks/google/calendar") {
       return next();
     }

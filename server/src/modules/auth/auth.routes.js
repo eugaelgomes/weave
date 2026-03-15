@@ -1,17 +1,17 @@
 const express = require("express");
 
-const { verifyToken } = require("@/middlewares/authentication");
-const { requestLimiter } = require("@/middlewares/security/limiters");
-const toString = require("@/middlewares/data/stringfy");
+const { verifyToken } = require("@/middlewares/verify-token");
+const { authLimiter } = require("@/middlewares/request-limiters");
+const toString = require("@/utils/data/stringfy");
 
 const AuthController = require("@/modules/auth/auth.controller");
-const { loginValidation } = require("../../middlewares/data/input-validation");
+const { loginValidation } = require("@/utils/data/input-validation");
 
 const router = express.Router();
 
 router.post(
   "/signin",
-  requestLimiter,
+  authLimiter,
   loginValidation(),
   toString,
   AuthController.userSignin.bind(AuthController)

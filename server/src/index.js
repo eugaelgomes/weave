@@ -1,8 +1,12 @@
 require("module-alias/register");
 const http = require("http");
 const { app } = require("@/app");
-const { pool } = require("@/services/db/index");
+const { pool } = require("@/database/connection");
 
+/**
+ * @param {*} val
+ * @returns
+ */
 const normalizePort = (val) => {
   const port = parseInt(val, 10);
   if (isNaN(port)) return val;
@@ -15,7 +19,10 @@ app.set("port", port);
 
 const server = http.createServer(app);
 
-// Erros de Boot
+/**
+ *
+ * @param {*} error
+ */
 function onError(error) {
   if (error.syscall !== "listen") throw error;
 
@@ -43,7 +50,10 @@ server.on("listening", () => {
   console.log(`Weave Notes API running on ${bind}`);
 });
 
-// 5. Graceful Shutdown
+/**
+ * Handles graceful shutdown of the server
+ * @param {*} signal
+ */
 const gracefulShutdown = async (signal) => {
   console.log(`${signal} signal received: closing HTTP server`);
 

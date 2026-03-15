@@ -1,4 +1,3 @@
-// To apply alias import
 import path from "path";
 import moduleAlias from "module-alias";
 

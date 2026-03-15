@@ -1,5 +1,6 @@
 const DEFAULT_ORIGINS = [
   "http://localhost:3000",
+  "http://localhost:3001",
   "http://localhost:3002",
   "http://localhost:5173",
 ];
@@ -23,10 +24,8 @@ const cookieDomain = process.env.COOKIE_DOMAIN || undefined;
 const getCookieDomain = (hostname) => {
   if (process.env.NODE_ENV !== "production") return undefined;
 
-  // Se COOKIE_DOMAIN estiver definido na env, usa diretamente
   if (cookieDomain) return cookieDomain;
-
-  // Fallback: extrai o domínio raiz do hostname
+  // Extract the base domain
   if (ALLOWED_HOSTNAMES.includes(hostname)) {
     const parts = hostname.split(".");
     if (parts.length >= 2) {

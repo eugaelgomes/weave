@@ -1,5 +1,5 @@
 
-const { executeQuery } = require("@/services/db");
+const { executeQuery } = require("@/database/connection");
 const { defaultAppPreferences } = require("@/modules/users/normalize");
 
 class UserRepository {

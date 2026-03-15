@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 const webhooksRepository = require("./webhooks.repository");
-const googleService = require("@/services/hooks/google/index");
+const googleService = require("@/hooks/google/google-calendar");
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 const WEBHOOK_BASE = process.env.GOOGLE_WEBHOOK_URL || "http://localhost:8080";

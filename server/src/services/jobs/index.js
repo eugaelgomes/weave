@@ -1,4 +1,4 @@
-const { executeQuery } = require("../db/index");
+const { executeQuery } = require("@/database/connection");
 const storageService = require("../storage/index");
 
 class JobManager {

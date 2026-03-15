@@ -2,22 +2,25 @@ const express = require("express");
 
 const notesController = require("@/modules/notes/notes.controller");
 
-const { verifyToken } = require("@/middlewares/authentication");
-const { noteUpdateUpload } = require("@/middlewares/data/note-upload");
+const { verifyToken } = require("@/middlewares/verify-token");
+const { noteUpdateUpload } = require("@/utils/data/note-upload");
+const { highTrafficLimiter, standardTrafficLimiter } = require("@/middlewares/request-limiters");
 
 const router = express.Router();
 
 router.use(verifyToken);
 
-router.get("/", (req, res, next) => {
+// Rotas de leitura (Leve)
+router.get("/", highTrafficLimiter, (req, res, next) => {
   notesController.getAllNotes(req, res, next);
 });
 
-router.get("/stats", (req, res, next) => {
+router.get("/stats", highTrafficLimiter, (req, res, next) => {
   notesController.getNotesStats(req, res, next);
 });
 
-router.post("/complete", (req, res, next) => {
+// Operações de escrita/modificação (Médio)
+router.post("/complete", standardTrafficLimiter, (req, res, next) => {
   notesController.createCompleteNote(req, res, next);
 });
 

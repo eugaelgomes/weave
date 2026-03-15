@@ -1,4 +1,3 @@
-// Função "Stringfy" para transformar em texto.
 const toString = async (req, res, next) => {
   for (const key in req.body) {
     if (typeof req.body[key] !== "string") {

@@ -1,13 +1,15 @@
 const express = require("express");
 const organizationsController = require("@/modules/organizations/organizations.controller");
-const { verifyToken } = require("@/middlewares/authentication");
-const upload = require("@/middlewares/data/profile-img");
+const { verifyToken } = require("@/middlewares/verify-token");
+const upload = require("@/utils/data/profile-img");
 const validateImages = require("@/utils/image-validator");
+const { structuralLimiter, standardTrafficLimiter, highTrafficLimiter } = require("@/middlewares/request-limiters");
 
 const router = express.Router();
 
 router.post(
   "/invites/accept",
+  standardTrafficLimiter,
   upload.single("profileImage"),
   validateImages,
   organizationsController.acceptInvite.bind(organizationsController)
@@ -17,16 +19,19 @@ router.use(verifyToken);
 
 router.get(
   "/",
+  highTrafficLimiter,
   organizationsController.getOrganization.bind(organizationsController)
 );
 
 router.post(
   "/",
+  structuralLimiter,
   organizationsController.createOrganization.bind(organizationsController)
 );
 
 router.put(
   "/",
+  structuralLimiter,
   organizationsController.updateOrganization.bind(organizationsController)
 );
 

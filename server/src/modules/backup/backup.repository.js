@@ -1,4 +1,4 @@
-const { executeQuery } = require("@/services/db/index");
+const { executeQuery } = require("@/database/connection");
 
 class GetAllDataRepository {
   async getAllData(userId) {

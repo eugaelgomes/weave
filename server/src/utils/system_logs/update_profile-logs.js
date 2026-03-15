@@ -1,4 +1,4 @@
-const { executeQuery } = require("@/services/db");
+const { executeQuery } = require("@/database/connection");
 
 class updateProfileLogs {
   static #SENSITIVE_KEYS = [

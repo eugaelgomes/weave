@@ -1,20 +1,21 @@
 const jwt = require("jsonwebtoken");
 
-const SECRET_KEY = process.env.SECRET_KEY;
+const APPLICATION_SECRET_KEY = process.env.SECRET_KEY;
 
+/**
+ * Middleware para verificar o token JWT em cookies ou header Authorization.
+ * Em produção, inclui logs detalhados.
+ */
 const verifyToken = (req, res, next) => {
   const isProduction = process.env.NODE_ENV === "production";
 
   // Token HTTP Only
   let token = req.cookies?.token;
-  let tokenSource = "cookie";
-
   // Se token não estiver nos cookies, verificar o header Authorization
   if (!token) {
     const authHeader = req.headers.authorization;
     if (authHeader) {
       token = authHeader.split(" ")[1];
-      tokenSource = "header";
     }
   }
 
@@ -38,24 +39,23 @@ const verifyToken = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, SECRET_KEY, { algorithms: ["HS256"] });
+    const decoded = jwt.verify(token, APPLICATION_SECRET_KEY, { algorithms: ["HS256"] });
     req.user = decoded;
 
-    // Log de sucesso em produção (apenas primeira vez por sessão)
-    if (isProduction) {
-      console.log(`[Auth Success] User ${decoded.userId} via ${tokenSource}`);
-    }
+    //if (isProduction) {
+    //  console.log(`[Auth Success] User ${decoded.userId} via ${tokenSource}`);
+    //}
 
     next();
   } catch (error) {
     // Log de erro em produção
-    if (isProduction) {
-      console.error("[Auth Error] Token inválido", {
-        error: error.message,
-        tokenSource,
-      });
-    }
-    return res.status(401).json({ message: "Token inválido ou expirado." });
+    //if (isProduction) {
+    //  console.error("[Auth Error] Token inválido", {
+    //    error: error.message,
+    //    tokenSource,
+    //  });
+    //}
+    return res.status(401).json(error,{ message: "Token inválido ou expirado." });
   }
 };
 

@@ -1,11 +1,13 @@
 const express = require("express");
 const aiController = require("@/modules/weave-ai/weave-ai.controller");
-const { verifyToken } = require("@/middlewares/authentication");
+const { verifyToken } = require("@/middlewares/verify-token");
+const { strictLimiter } = require("@/middlewares/request-limiters");
 
 const router = express.Router();
 
 // Aplica autenticação em todas as rotas
 router.use(verifyToken);
+router.use(strictLimiter);
 
 /**
  * @route   POST /api/ai/chat

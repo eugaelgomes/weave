@@ -2,7 +2,7 @@ const express = require("express");
 
 const backupController = require("@/modules/backup/backup.controller");
 
-const { verifyToken } = require("@/middlewares/authentication");
+const { verifyToken } = require("@/middlewares/verify-token");
 
 const router = express.Router();
 

@@ -1,4 +1,4 @@
-const { pool } = require("@/services/db");
+const { pool } = require("@/database/connection");
 
 /**
  * Cria uma nova sessão de chat
@@ -114,6 +114,9 @@ async function getSessionMessageCount(sessionId) {
 
 /**
  * Deleta uma sessão e suas mensagens
+ * @param {string} sessionId
+ * @param {string} userId
+ * @returns {Promise<boolean>} Retorna true se a sessão foi deletada com sucesso
  */
 async function deleteSession(sessionId, userId) {
   const client = await pool.connect();
@@ -121,13 +124,13 @@ async function deleteSession(sessionId, userId) {
   try {
     await client.query("BEGIN");
 
-    // Deleta mensagens
+    // Delete messages
     await client.query(
       "DELETE FROM ai_chat_messages WHERE session_id = $1 AND user_id = $2",
       [sessionId, userId]
     );
 
-    // Deleta sessão
+    // Delete session
     await client.query(
       "DELETE FROM ai_chat_sessions WHERE id = $1 AND user_id = $2",
       [sessionId, userId]
