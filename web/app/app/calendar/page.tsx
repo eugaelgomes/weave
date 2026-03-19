@@ -125,7 +125,10 @@ export default function CalendarPage() {
 
   // ─── Mapa de eventos ───────────────────────────────────────────────────
   const eventsByDate = useMemo(() => {
-    const map = new Map<string, { notes: any[]; projects: any[]; calendarEvents: GoogleCalendarEvent[] }>();
+    const map = new Map<
+      string,
+      { notes: any[]; projects: any[]; calendarEvents: GoogleCalendarEvent[] }
+    >();
 
     const ensureKey = (dateKey: string) => {
       if (!map.has(dateKey)) map.set(dateKey, { notes: [], projects: [], calendarEvents: [] });
@@ -176,7 +179,12 @@ export default function CalendarPage() {
       if (y === year && m === month + 1) {
         notesCount += events.notes.length;
         projectsCount += events.projects.length;
-        if (events.notes.length > 0 || events.projects.length > 0 || events.calendarEvents.length > 0) activeDays++;
+        if (
+          events.notes.length > 0 ||
+          events.projects.length > 0 ||
+          events.calendarEvents.length > 0
+        )
+          activeDays++;
       }
     });
 
@@ -221,15 +229,21 @@ export default function CalendarPage() {
   const agendaData = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    const entries: { dateKey: string; date: Date; events: { notes: any[]; projects: any[]; calendarEvents: GoogleCalendarEvent[] } }[] =
-      [];
+    const entries: {
+      dateKey: string;
+      date: Date;
+      events: { notes: any[]; projects: any[]; calendarEvents: GoogleCalendarEvent[] };
+    }[] = [];
 
     const daysInMonth = getDaysInMonth(year, month);
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month, d);
       const dateKey = toDateKey(date);
       const events = eventsByDate.get(dateKey);
-      if (events && (events.notes.length > 0 || events.projects.length > 0 || events.calendarEvents.length > 0)) {
+      if (
+        events &&
+        (events.notes.length > 0 || events.projects.length > 0 || events.calendarEvents.length > 0)
+      ) {
         entries.push({ dateKey, date, events });
       }
     }
@@ -239,8 +253,15 @@ export default function CalendarPage() {
   // ─── Dados derivados ───────────────────────────────────────────────────
   const today = new Date();
   const selectedDateStr = toDateKey(selectedDate);
-  const selectedEvents = eventsByDate.get(selectedDateStr) || { notes: [], projects: [], calendarEvents: [] as GoogleCalendarEvent[] };
-  const totalSelectedEvents = selectedEvents.notes.length + selectedEvents.projects.length + selectedEvents.calendarEvents.length;
+  const selectedEvents = eventsByDate.get(selectedDateStr) || {
+    notes: [],
+    projects: [],
+    calendarEvents: [] as GoogleCalendarEvent[],
+  };
+  const totalSelectedEvents =
+    selectedEvents.notes.length +
+    selectedEvents.projects.length +
+    selectedEvents.calendarEvents.length;
 
   const formatTime = (dateString: string) => {
     const d = new Date(dateString);
@@ -393,9 +414,14 @@ export default function CalendarPage() {
                   const isSelected = dateStr === selectedDateStr;
                   const dayEvents = eventsByDate.get(dateStr);
                   const hasEvents =
-                    dayEvents && (dayEvents.notes.length > 0 || dayEvents.projects.length > 0 || dayEvents.calendarEvents.length > 0);
+                    dayEvents &&
+                    (dayEvents.notes.length > 0 ||
+                      dayEvents.projects.length > 0 ||
+                      dayEvents.calendarEvents.length > 0);
                   const totalEvents =
-                    (dayEvents?.notes.length || 0) + (dayEvents?.projects.length || 0) + (dayEvents?.calendarEvents.length || 0);
+                    (dayEvents?.notes.length || 0) +
+                    (dayEvents?.projects.length || 0) +
+                    (dayEvents?.calendarEvents.length || 0);
                   const isSunday = idx % 7 === 0;
 
                   const isWeekend = idx % 7 === 0 || idx % 7 === 6;
@@ -541,7 +567,12 @@ export default function CalendarPage() {
                           {/* Eventos do dia */}
                           <div className="flex-1 space-y-1.5">
                             {events.calendarEvents?.map((event, i) => (
-                              <a key={`agc-${i}`} href={event.htmlLink || "#"} target="_blank" rel="noopener noreferrer">
+                              <a
+                                key={`agc-${i}`}
+                                href={event.htmlLink || "#"}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
                                 <div className="group flex items-center gap-2.5 rounded-md border border-transparent bg-blue-50/50 px-3 py-2 transition-all hover:border-blue-200 hover:shadow-sm dark:bg-blue-950/20 dark:hover:border-blue-800/50">
                                   <div className="flex h-7 w-7 items-center justify-center rounded bg-blue-100 text-blue-500 dark:bg-blue-900/40 dark:text-blue-400">
                                     <FaGoogle size={11} />
@@ -683,7 +714,12 @@ export default function CalendarPage() {
                       </div>
                       <div className="space-y-1.5">
                         {selectedEvents.calendarEvents.map((event, i) => (
-                          <a href={event.htmlLink || "#"} key={`sgc-${i}`} target="_blank" rel="noopener noreferrer">
+                          <a
+                            href={event.htmlLink || "#"}
+                            key={`sgc-${i}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <div className="group flex items-center gap-2.5 rounded-md border border-neutral-100 bg-white p-2.5 transition-all hover:border-blue-200 hover:shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-700/40">
                               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-100 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400">
                                 <FaGoogle size={12} />

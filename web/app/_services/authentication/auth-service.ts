@@ -464,7 +464,9 @@ export const initiateGoogleLogin = (): void => {
   window.location.href = `${baseUrl}${API_ENDPOINTS.GOOGLE_AUTH}`;
 };
 
-export const updateUserData = async (userData: Partial<User> & { profilePicture?: File }): Promise<Partial<User>> => {
+export const updateUserData = async (
+  userData: Partial<User> & { profilePicture?: File }
+): Promise<Partial<User>> => {
   let body: FormData | Partial<User>;
 
   if (userData.profilePicture instanceof File) {

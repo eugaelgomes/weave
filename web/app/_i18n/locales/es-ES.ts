@@ -18,6 +18,7 @@ const esES: TranslationKeys = {
     next: "Siguiente",
     search: "Buscar",
     notes: "notas",
+    projects: "proyectos",
   },
 
   greeting: {

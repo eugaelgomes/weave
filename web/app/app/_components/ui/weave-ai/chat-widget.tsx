@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import {
-  Send,
-  Bot,
-  User,
-  Sparkles,
-  RefreshCw,
-  MessageSquare,
-} from "lucide-react";
+import { Send, Bot, User, Sparkles, RefreshCw, MessageSquare } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useChat } from "@/app/_contexts/chat-context";
@@ -21,25 +14,18 @@ interface ChatWidgetProps {
   className?: string;
 }
 
-export default function ChatWidget({ 
-  title = "Weave AI", 
+export default function ChatWidget({
+  title = "Weave AI",
   maxHeight = "400px",
-  className = ""
+  className = "",
 }: ChatWidgetProps) {
-  const {
-    models,
-    messages,
-    isTyping,
-    loadModels,
-    sendMessage,
-    createNewSession,
-    currentSession,
-  } = useChat();
+  const { models, messages, isTyping, loadModels, sendMessage, createNewSession, currentSession } =
+    useChat();
 
   const { user } = useAuth();
   const [input, setInput] = useState("");
   const [selectedModel, setSelectedModel] = useState<AIModel | null>(null);
-  
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -76,19 +62,18 @@ export default function ChatWidget({
   };
 
   return (
-    <div className={`flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-md dark:border-neutral-800 dark:bg-neutral-950 ${className}`}>
-      
+    <div
+      className={`flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-md dark:border-neutral-800 dark:bg-neutral-950 ${className}`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
         <div className="flex items-center gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-md bg-yellow-500/10 text-yellow-600">
             <Sparkles className="h-4 w-4" />
           </div>
-          <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
-            {title}
-          </h3>
+          <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{title}</h3>
         </div>
-        
+
         <div className="flex items-center gap-1">
           <button
             onClick={() => createNewSession()}
@@ -101,16 +86,14 @@ export default function ChatWidget({
       </div>
 
       {/* Messages Area */}
-      <div 
-        className="flex-1 overflow-y-auto p-4 scroll-smooth scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-neutral-800"
+      <div
+        className="scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-neutral-800 flex-1 overflow-y-auto scroll-smooth p-4"
         style={{ maxHeight }}
       >
         {messages.length === 0 ? (
           <div className="flex h-32 flex-col items-center justify-center text-center">
             <MessageSquare className="mb-2 h-6 w-6 text-neutral-300 dark:text-neutral-700" />
-            <p className="text-xs text-neutral-500">
-              Como posso ajudar hoje?
-            </p>
+            <p className="text-xs text-neutral-500">Como posso ajudar hoje?</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -119,24 +102,25 @@ export default function ChatWidget({
                 key={msg.id}
                 className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
               >
-                <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] ${
-                  msg.role === "user" 
-                    ? "bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
-                    : "bg-teal-500 text-white"
-                }`}>
+                <div
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] ${
+                    msg.role === "user"
+                      ? "bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
+                      : "bg-teal-500 text-white"
+                  }`}
+                >
                   {msg.role === "user" ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
                 </div>
-                <div className={`max-w-[85%] rounded-lg px-3 py-1.5 text-xs shadow-sm ${
-                  msg.role === "user"
-                    ? "bg-neutral-900 text-white dark:bg-neutral-50 dark:text-neutral-900"
-                    : "border border-neutral-200 bg-white text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200"
-                }`}>
-                  <ReactMarkdown 
-                    remarkPlugins={[remarkGfm]}
-                    className="prose prose-invert max-w-none text-inherit leading-relaxed"
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
+                <div
+                  className={`max-w-[85%] rounded-lg px-3 py-1.5 text-xs shadow-sm ${
+                    msg.role === "user"
+                      ? "bg-neutral-900 text-white dark:bg-neutral-50 dark:text-neutral-900"
+                      : "border border-neutral-200 bg-white text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200"
+                  }`}
+                >
+                  <div className="prose prose-invert max-w-none leading-relaxed text-inherit">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                  </div>
                 </div>
               </div>
             ))}

@@ -55,9 +55,7 @@ const ProjectsOverview = () => {
   if (!projectsStats) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          Nenhum dado disponível
-        </p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">Nenhum dado disponível</p>
       </div>
     );
   }
@@ -67,7 +65,7 @@ const ProjectsOverview = () => {
   const totalStatus = overview.total || 1;
 
   return (
-    <div className="flex flex-col gap-4 animate-in fade-in duration-300">
+    <div className="animate-in fade-in flex flex-col gap-4 duration-300">
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-neutral-100 pb-3 dark:border-neutral-900">
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-yellow-400/10 text-yellow-500 dark:text-yellow-400">
@@ -121,7 +119,7 @@ const ProjectsOverview = () => {
         <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/30">
           <div className="mb-2 flex items-center gap-1.5">
             <TrendingUp className="h-3.5 w-3.5 text-yellow-500" />
-            <span className="text-[10px] font-bold tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
+            <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
               Progresso Médio
             </span>
           </div>
@@ -155,7 +153,7 @@ const ProjectsOverview = () => {
         <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/30">
           <div className="mb-2 flex items-center gap-1.5">
             <CheckSquare className="h-3.5 w-3.5 text-blue-500" />
-            <span className="text-[10px] font-bold tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
+            <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
               Tarefas
             </span>
           </div>
@@ -193,7 +191,7 @@ const ProjectsOverview = () => {
         <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/30">
           <div className="mb-2.5 flex items-center gap-1.5">
             <Flame className="h-3.5 w-3.5 text-orange-500" />
-            <span className="text-[10px] font-bold tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
+            <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
               Por Status
             </span>
           </div>
@@ -205,7 +203,7 @@ const ProjectsOverview = () => {
                   <span className="w-20 truncate text-[10px] text-neutral-600 dark:text-neutral-400">
                     {statusLabels[key] ?? key}
                   </span>
-                  <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
                     <div
                       className={`h-full rounded-full ${statusColors[key] ?? "bg-neutral-400"} transition-all duration-500`}
                       style={{ width: `${pct}%` }}
@@ -224,20 +222,19 @@ const ProjectsOverview = () => {
         <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/30">
           <div className="mb-2.5 flex items-center gap-1.5">
             <Activity className="h-3.5 w-3.5 text-indigo-500" />
-            <span className="text-[10px] font-bold tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
+            <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
               Metodologia
             </span>
           </div>
           <div className="space-y-1.5">
             {Object.entries(methodology).map(([key, count]) => {
-              const pct =
-                totalMethodology > 0 ? Math.round((count / totalMethodology) * 100) : 0;
+              const pct = totalMethodology > 0 ? Math.round((count / totalMethodology) * 100) : 0;
               return (
                 <div key={key} className="flex items-center gap-2">
                   <span className="w-20 truncate text-[10px] text-neutral-600 dark:text-neutral-400">
                     {methodologyLabels[key] ?? key}
                   </span>
-                  <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
                     <div
                       className="h-full rounded-full bg-indigo-400 transition-all duration-500"
                       style={{ width: `${pct}%` }}
@@ -257,15 +254,31 @@ const ProjectsOverview = () => {
       <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/30">
         <div className="mb-2.5 flex items-center gap-1.5">
           <FileText className="h-3.5 w-3.5 text-teal-500" />
-          <span className="text-[10px] font-bold tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
+          <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
             Notas
           </span>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <NoteStatItem label="Total" value={notes.total} color="text-neutral-700 dark:text-neutral-200" />
-          <NoteStatItem label="Visíveis" value={notes.visible} color="text-teal-600 dark:text-teal-400" />
-          <NoteStatItem label="Arquivadas" value={notes.archived} color="text-yellow-600 dark:text-yellow-400" />
-          <NoteStatItem label="Seguras" value={notes.secure} color="text-red-600 dark:text-red-400" />
+          <NoteStatItem
+            label="Total"
+            value={notes.total}
+            color="text-neutral-700 dark:text-neutral-200"
+          />
+          <NoteStatItem
+            label="Visíveis"
+            value={notes.visible}
+            color="text-teal-600 dark:text-teal-400"
+          />
+          <NoteStatItem
+            label="Arquivadas"
+            value={notes.archived}
+            color="text-yellow-600 dark:text-yellow-400"
+          />
+          <NoteStatItem
+            label="Seguras"
+            value={notes.secure}
+            color="text-red-600 dark:text-red-400"
+          />
         </div>
       </div>
     </div>
@@ -289,7 +302,7 @@ function StatCard({
     <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2.5 dark:border-neutral-800 dark:bg-neutral-900/30">
       <div className="mb-1 flex items-center gap-1.5">
         <span className={`rounded p-0.5 ${bg} ${color}`}>{icon}</span>
-        <span className="text-[10px] font-bold tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
+        <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
           {label}
         </span>
       </div>
@@ -298,15 +311,7 @@ function StatCard({
   );
 }
 
-function NoteStatItem({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number;
-  color: string;
-}) {
+function NoteStatItem({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div className="flex flex-col">
       <span className="text-[10px] text-neutral-500 dark:text-neutral-400">{label}</span>

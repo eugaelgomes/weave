@@ -17,7 +17,6 @@ import ModalChat from "../_components/ui/weave-ai/chat-widget";
 import NotesCarousel from "../_components/ui/notes/notes-carousel";
 import ProjectsCarousel from "../_components/ui/projects/project-carousel";
 
-
 const FONT_SIZES = [
   "text-xs",
   "text-sm",

@@ -275,7 +275,10 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
 
   // ─── Estrutura de Eventos O(1) Lookup ────────────────────────────────────
   const eventsByDate = useMemo(() => {
-    const map = new Map<string, { notes: any[]; projects: any[]; calendarEvents: GoogleCalendarEvent[] }>();
+    const map = new Map<
+      string,
+      { notes: any[]; projects: any[]; calendarEvents: GoogleCalendarEvent[] }
+    >();
 
     const ensureKey = (dateKey: string) => {
       if (!map.has(dateKey)) map.set(dateKey, { notes: [], projects: [], calendarEvents: [] });
@@ -368,16 +371,16 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
   };
 
   const GCalEventChip = ({ event }: { event: GoogleCalendarEvent }) => {
-    const time = formatTimeRange(
-      event.start!, event.end, event.allDay, timeFormat, locale
-    );
+    const time = formatTimeRange(event.start!, event.end, event.allDay, timeFormat, locale);
 
     return (
-      <div className="flex items-center gap-1.5 truncate rounded px-1.5 py-1 text-[9px] font-medium transition-colors sm:text-[10px] bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20">
+      <div className="flex items-center gap-1.5 truncate rounded bg-blue-100 px-1.5 py-1 text-[9px] font-medium text-blue-700 transition-colors hover:bg-blue-200 sm:text-[10px] dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20">
         <FcGoogle size={9} className="hidden shrink-0 sm:block" />
         <span className="flex-1 truncate">{event.title}</span>
         {!event.allDay && (
-          <span className="hidden shrink-0 text-[8px] opacity-70 sm:block sm:text-[9px]">{time}</span>
+          <span className="hidden shrink-0 text-[8px] opacity-70 sm:block sm:text-[9px]">
+            {time}
+          </span>
         )}
       </div>
     );
@@ -542,11 +545,12 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
               <div className="flex flex-wrap gap-1">
                 {allDayEvents.map((event, idx) => {
                   const colors = colorMap[event.type];
-                  const title = event.type === "calendar"
-                    ? event.data.title
-                    : event.type === "note"
+                  const title =
+                    event.type === "calendar"
                       ? event.data.title
-                      : event.data.name;
+                      : event.type === "note"
+                        ? event.data.title
+                        : event.data.name;
                   return (
                     <div
                       key={`allday-${idx}`}
@@ -609,11 +613,12 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
             const top = minutesToPixels(startMin);
             const height = Math.max(minutesToPixels(endMin - startMin), 20);
             const colors = colorMap[event.type];
-            const title = event.type === "calendar"
-              ? event.data.title
-              : event.type === "note"
+            const title =
+              event.type === "calendar"
                 ? event.data.title
-                : event.data.name;
+                : event.type === "note"
+                  ? event.data.title
+                  : event.data.name;
 
             const endStr = event.type === "calendar" ? event.data.end : null;
             const timeRangeStr = formatTimeRange(event.time, endStr, false, timeFormat, locale);
@@ -631,13 +636,9 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                 }}
               >
                 <div className="flex h-full flex-col overflow-hidden">
-                  <h4 className={`truncate text-xs font-semibold ${colors.text}`}>
-                    {title}
-                  </h4>
+                  <h4 className={`truncate text-xs font-semibold ${colors.text}`}>{title}</h4>
                   {height > 30 && (
-                    <span className={`text-[10px] ${colors.timeText}`}>
-                      {timeRangeStr}
-                    </span>
+                    <span className={`text-[10px] ${colors.timeText}`}>{timeRangeStr}</span>
                   )}
                   {height > 55 && event.data.location && (
                     <span className="mt-0.5 truncate text-[9px] text-neutral-500 dark:text-neutral-400">
@@ -693,7 +694,9 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
           const daysInM = getDaysInMonth(year, month);
           for (let d = 1; d <= daysInM; d++) {
             const events = eventsByDate.get(toDateKey(new Date(year, month, d)));
-            if (events) monthEventsCount += events.notes.length + events.projects.length + events.calendarEvents.length;
+            if (events)
+              monthEventsCount +=
+                events.notes.length + events.projects.length + events.calendarEvents.length;
           }
 
           return (
@@ -770,9 +773,18 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
       : `${dayName}, ${monthName} ${selectedDate.getDate()}`;
 
     const typeLabels = {
-      calendar: { label: "Google Calendar", badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-      note: { label: isPtBr ? "Nota" : "Note", badge: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" },
-      project: { label: isPtBr ? "Projeto" : "Project", badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+      calendar: {
+        label: "Google Calendar",
+        badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+      },
+      note: {
+        label: isPtBr ? "Nota" : "Note",
+        badge: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+      },
+      project: {
+        label: isPtBr ? "Projeto" : "Project",
+        badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+      },
     };
 
     const borderColors = {
@@ -817,9 +829,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
 
           {/* Título do dia */}
           <div className="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-            <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-              {dayTitle}
-            </h3>
+            <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">{dayTitle}</h3>
             <p className="mt-0.5 text-xs text-neutral-500">
               {selectedDate.getFullYear()} &middot;{" "}
               {hasEvents
@@ -847,7 +857,11 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
 
                   const endStr = isCalendar ? item.end : null;
                   const timeRange = formatTimeRange(
-                    event.time, endStr, !!item.allDay, timeFormat, locale
+                    event.time,
+                    endStr,
+                    !!item.allDay,
+                    timeFormat,
+                    locale
                   );
 
                   const typeInfo = typeLabels[event.type];
@@ -860,8 +874,16 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                     >
                       {/* Badge de tipo */}
                       <div className="mb-2 flex items-center justify-between">
-                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${typeInfo.badge}`}>
-                          {isCalendar ? <FcGoogle size={10} /> : isNote ? <FileText size={10} /> : <FaProjectDiagram size={10} />}
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${typeInfo.badge}`}
+                        >
+                          {isCalendar ? (
+                            <FcGoogle size={10} />
+                          ) : isNote ? (
+                            <FileText size={10} />
+                          ) : (
+                            <FaProjectDiagram size={10} />
+                          )}
                           {typeInfo.label}
                         </span>
                       </div>

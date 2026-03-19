@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -67,7 +66,9 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
   const [stages, setStages] = useState<ProjectStage[]>([]);
   const [projectNotes, setProjectNotes] = useState<ProjectNote[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<"board" | "list" | "calendar" | "timeline" | "gantt">("board");
+  const [activeView, setActiveView] = useState<
+    "board" | "list" | "calendar" | "timeline" | "gantt"
+  >("board");
 
   useEffect(() => {
     if (!projectId) return;
@@ -117,27 +118,29 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
   }
 
   return (
-    <div className="flex flex-col h-full animate-in fade-in duration-300">
+    <div className="animate-in fade-in flex h-full flex-col duration-300">
       {/* Header do Projeto */}
       <header className="mb-4 border-b border-neutral-100 pb-3 dark:border-neutral-900">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="mb-1 flex items-center gap-2">
           <div
             className="flex h-7 w-7 items-center justify-center rounded-md text-white"
             style={{ backgroundColor: project.properties?.color || "#3f51b5" }}
           >
             <Folder className="h-3.5 w-3.5" />
           </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100 truncate">
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
               {project.title}
             </h1>
             {project.description && (
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+              <p className="truncate text-xs text-neutral-500 dark:text-neutral-400">
                 {project.description}
               </p>
             )}
           </div>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[project.status] || statusColors.open}`}>
+          <span
+            className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[project.status] || statusColors.open}`}
+          >
             {statusLabels[project.status] || project.status}
           </span>
         </div>
@@ -146,9 +149,11 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
       {/* Info Cards */}
       <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900/30">
-          <div className="flex items-center gap-1.5 mb-0.5">
+          <div className="mb-0.5 flex items-center gap-1.5">
             <Activity className="h-3 w-3 text-neutral-400" />
-            <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-500">Metodologia</span>
+            <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-500">
+              Metodologia
+            </span>
           </div>
           <p className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
             {methodologyLabels[project.methodology] || project.methodology}
@@ -157,9 +162,11 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
 
         {project.properties?.priority && (
           <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900/30">
-            <div className="flex items-center gap-1.5 mb-0.5">
+            <div className="mb-0.5 flex items-center gap-1.5">
               <Flag className="h-3 w-3 text-neutral-400" />
-              <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-500">Prioridade</span>
+              <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-500">
+                Prioridade
+              </span>
             </div>
             <p className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
               {priorityLabels[project.properties.priority] || project.properties.priority}
@@ -169,9 +176,11 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
 
         {project.properties?.complexity && (
           <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900/30">
-            <div className="flex items-center gap-1.5 mb-0.5">
+            <div className="mb-0.5 flex items-center gap-1.5">
               <Zap className="h-3 w-3 text-neutral-400" />
-              <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-500">Complexidade</span>
+              <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-500">
+                Complexidade
+              </span>
             </div>
             <p className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
               {priorityLabels[project.properties.complexity] || project.properties.complexity}
@@ -181,9 +190,11 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
 
         {project.properties?.estimated_time && (
           <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900/30">
-            <div className="flex items-center gap-1.5 mb-0.5">
+            <div className="mb-0.5 flex items-center gap-1.5">
               <Clock className="h-3 w-3 text-neutral-400" />
-              <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-500">Tempo Est.</span>
+              <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-500">
+                Tempo Est.
+              </span>
             </div>
             <p className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
               {project.properties.estimated_time}
@@ -194,7 +205,7 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
 
       {/* Tags */}
       {project.properties?.tags && project.properties.tags.length > 0 && (
-        <div className="mb-4 flex items-center gap-1.5 flex-wrap">
+        <div className="mb-4 flex flex-wrap items-center gap-1.5">
           <Tag className="h-3 w-3 text-neutral-400" />
           {project.properties.tags.map((tag, i) => (
             <span
@@ -219,7 +230,8 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
               Visualização
             </h2>
             <span className="text-[10px] text-neutral-400 dark:text-neutral-600">
-              · {stages.length} estágio{stages.length !== 1 ? "s" : ""} · {projectNotes.length} nota{projectNotes.length !== 1 ? "s" : ""}
+              · {stages.length} estágio{stages.length !== 1 ? "s" : ""} · {projectNotes.length} nota
+              {projectNotes.length !== 1 ? "s" : ""}
             </span>
           </div>
 
@@ -228,8 +240,16 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
             {[
               { value: "board" as const, label: "Quadro", icon: <Columns3 className="h-3 w-3" /> },
               { value: "list" as const, label: "Lista", icon: <List className="h-3 w-3" /> },
-              { value: "calendar" as const, label: "Calendário", icon: <Calendar className="h-3 w-3" /> },
-              { value: "timeline" as const, label: "Timeline", icon: <Timer className="h-3 w-3" /> },
+              {
+                value: "calendar" as const,
+                label: "Calendário",
+                icon: <Calendar className="h-3 w-3" />,
+              },
+              {
+                value: "timeline" as const,
+                label: "Timeline",
+                icon: <Timer className="h-3 w-3" />,
+              },
               { value: "gantt" as const, label: "Gantt", icon: <GanttChart className="h-3 w-3" /> },
             ].map((view) => (
               <button
@@ -274,9 +294,7 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
                         <span className="text-[11px] font-bold text-neutral-700 dark:text-neutral-200">
                           {stage.name}
                         </span>
-                        {isDoneStage && (
-                          <CheckCircle2 className="h-3 w-3 text-green-500" />
-                        )}
+                        {isDoneStage && <CheckCircle2 className="h-3 w-3 text-green-500" />}
                       </div>
                       <span className="rounded-full bg-neutral-100 px-2 py-0.5 font-mono text-[10px] font-bold text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
                         {stageNotes.length}
@@ -324,11 +342,13 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
                     {/* WIP Limit indicator */}
                     {stage.properties?.wip_limit && (
                       <div className="border-t border-neutral-200 px-2.5 py-1 dark:border-neutral-800">
-                        <p className={`text-[10px] font-medium ${
-                          stageNotes.length >= stage.properties.wip_limit
-                            ? "text-red-500"
-                            : "text-neutral-400 dark:text-neutral-600"
-                        }`}>
+                        <p
+                          className={`text-[10px] font-medium ${
+                            stageNotes.length >= stage.properties.wip_limit
+                              ? "text-red-500"
+                              : "text-neutral-400 dark:text-neutral-600"
+                          }`}
+                        >
                           WIP: {stageNotes.length}/{stage.properties.wip_limit}
                         </p>
                       </div>
@@ -351,7 +371,15 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
           <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-neutral-300 py-8 dark:border-neutral-800">
             <LayoutGrid className="mb-2 h-8 w-8 text-neutral-300 dark:text-neutral-700" />
             <p className="mb-0.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-              Visualização &quot;{activeView === "list" ? "Lista" : activeView === "calendar" ? "Calendário" : activeView === "timeline" ? "Timeline" : "Gantt"}&quot; em breve
+              Visualização &quot;
+              {activeView === "list"
+                ? "Lista"
+                : activeView === "calendar"
+                  ? "Calendário"
+                  : activeView === "timeline"
+                    ? "Timeline"
+                    : "Gantt"}
+              &quot; em breve
             </p>
             <p className="text-[11px] text-neutral-400 dark:text-neutral-600">
               Por enquanto, utilize a visualização Quadro

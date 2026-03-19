@@ -1,7 +1,5 @@
 const CDN_BASE =
-  process.env.NEXT_PUBLIC_CDN_BASE_URL ||
-  process.env.NEXT_PUBLIC_FILE_STORAGE_URL ||
-  "";
+  process.env.NEXT_PUBLIC_CDN_BASE_URL || process.env.NEXT_PUBLIC_FILE_STORAGE_URL || "";
 
 /**
  * Monta a URL completa de um arquivo a partir do path/key salvo no banco.

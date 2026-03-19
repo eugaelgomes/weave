@@ -18,6 +18,7 @@ const enUS: TranslationKeys = {
     next: "Next",
     search: "Search",
     notes: "notes",
+    projects: "projects",
   },
 
   greeting: {

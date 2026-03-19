@@ -131,7 +131,9 @@ export default function ProjectViewPage() {
 
   // Estado de stages e view type
   const [stages, setStages] = useState<ProjectStage[]>([]);
-  const [activeView, setActiveView] = useState<"board" | "list" | "calendar" | "timeline" | "gantt">("board");
+  const [activeView, setActiveView] = useState<
+    "board" | "list" | "calendar" | "timeline" | "gantt"
+  >("board");
 
   // Carregar projeto
   useEffect(() => {
@@ -963,11 +965,31 @@ export default function ProjectViewPage() {
                 {/* View Type Buttons */}
                 <div className="flex items-center gap-1 rounded-lg border border-neutral-200 bg-white p-1 dark:border-neutral-700 dark:bg-neutral-900">
                   {[
-                    { value: "board" as const, label: "Quadro", icon: <Columns3 className="h-3.5 w-3.5" /> },
-                    { value: "list" as const, label: "Lista", icon: <List className="h-3.5 w-3.5" /> },
-                    { value: "calendar" as const, label: "Calendário", icon: <Calendar className="h-3.5 w-3.5" /> },
-                    { value: "timeline" as const, label: "Timeline", icon: <Timer className="h-3.5 w-3.5" /> },
-                    { value: "gantt" as const, label: "Gantt", icon: <GanttChart className="h-3.5 w-3.5" /> },
+                    {
+                      value: "board" as const,
+                      label: "Quadro",
+                      icon: <Columns3 className="h-3.5 w-3.5" />,
+                    },
+                    {
+                      value: "list" as const,
+                      label: "Lista",
+                      icon: <List className="h-3.5 w-3.5" />,
+                    },
+                    {
+                      value: "calendar" as const,
+                      label: "Calendário",
+                      icon: <Calendar className="h-3.5 w-3.5" />,
+                    },
+                    {
+                      value: "timeline" as const,
+                      label: "Timeline",
+                      icon: <Timer className="h-3.5 w-3.5" />,
+                    },
+                    {
+                      value: "gantt" as const,
+                      label: "Gantt",
+                      icon: <GanttChart className="h-3.5 w-3.5" />,
+                    },
                   ].map((view) => (
                     <button
                       key={view.value}
@@ -1011,9 +1033,7 @@ export default function ProjectViewPage() {
                               <span className="text-xs font-bold text-neutral-700 dark:text-neutral-200">
                                 {stage.name}
                               </span>
-                              {isDoneStage && (
-                                <CheckCircle2 className="h-3 w-3 text-green-500" />
-                              )}
+                              {isDoneStage && <CheckCircle2 className="h-3 w-3 text-green-500" />}
                             </div>
                             <span className="rounded-full bg-neutral-100 px-2 py-0.5 font-mono text-[10px] font-bold text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
                               {stageNotes.length}
@@ -1061,11 +1081,13 @@ export default function ProjectViewPage() {
                           {/* WIP Limit indicator */}
                           {stage.properties?.wip_limit && (
                             <div className="border-t border-neutral-200 px-3 py-1.5 dark:border-neutral-800">
-                              <p className={`text-[10px] font-medium ${
-                                stageNotes.length >= stage.properties.wip_limit
-                                  ? "text-red-500"
-                                  : "text-neutral-400 dark:text-neutral-600"
-                              }`}>
+                              <p
+                                className={`text-[10px] font-medium ${
+                                  stageNotes.length >= stage.properties.wip_limit
+                                    ? "text-red-500"
+                                    : "text-neutral-400 dark:text-neutral-600"
+                                }`}
+                              >
                                 WIP: {stageNotes.length}/{stage.properties.wip_limit}
                               </p>
                             </div>
@@ -1088,7 +1110,15 @@ export default function ProjectViewPage() {
                 <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 py-10 dark:border-neutral-800">
                   <LayoutGrid className="mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-700" />
                   <p className="mb-1 text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                    Visualização &quot;{activeView === "list" ? "Lista" : activeView === "calendar" ? "Calendário" : activeView === "timeline" ? "Timeline" : "Gantt"}&quot; em breve
+                    Visualização &quot;
+                    {activeView === "list"
+                      ? "Lista"
+                      : activeView === "calendar"
+                        ? "Calendário"
+                        : activeView === "timeline"
+                          ? "Timeline"
+                          : "Gantt"}
+                    &quot; em breve
                   </p>
                   <p className="text-xs text-neutral-400 dark:text-neutral-600">
                     Por enquanto, utilize a visualização Quadro
