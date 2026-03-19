@@ -45,7 +45,7 @@ const Layout = ({ children }: LayoutProps) => {
 
         {/* Mobile Modal Sidebar */}
         {sidebarOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 lg:hidden">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:hidden">
             {/* Overlay */}
             <div
               className="animate-in fade-in absolute inset-0 bg-neutral-950/50 backdrop-blur-sm transition-opacity duration-300"
@@ -53,7 +53,10 @@ const Layout = ({ children }: LayoutProps) => {
             />
 
             {/* Modal Container */}
-            <div className="animate-in fade-in zoom-in-95 relative z-10 flex h-[85vh] w-full max-w-[90%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-[0_8px_32px_rgba(0,0,0,0.15)] backdrop-blur-xl duration-300 dark:border-neutral-800 dark:bg-neutral-900/70">
+            <div 
+              className="animate-in fade-in zoom-in-95 relative z-10 flex h-[85vh] w-full max-w-[90%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-[0_8px_32px_rgba(0,0,0,0.15)] duration-300 dark:border-neutral-800 dark:bg-neutral-900"
+              onClick={(e) => e.stopPropagation()}
+            >
               <Sidebar
                 onLinkClick={closeSidebar}
                 isCollapsed={false}
@@ -64,7 +67,7 @@ const Layout = ({ children }: LayoutProps) => {
         )}
 
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <div className="no-scrollbar flex-1 overflow-y-auto scroll-smooth rounded-lg border-t-2 border-l border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950">
+          <div className="no-scrollbar flex-1 overflow-y-auto scroll-smooth rounded-tl-lg border-t-3 border-l border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950">
             <div className="mx-auto min-h-full w-full bg-neutral-100 px-2 py-2 sm:px-2 sm:py-2 lg:px-2 lg:py-2 dark:bg-neutral-900">
               <div className="animate-in fade-in slide-in-from-bottom-2 space-y-2 duration-500">
                 {children}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/app/_contexts/auth-context";
@@ -8,8 +9,9 @@ import { useTheme } from "@/app/_contexts/theme-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { IoPersonCircleSharp } from "react-icons/io5";
-import { FiSun, FiMoon } from "react-icons/fi";
+import { FiSun, FiMoon, FiSearch } from "react-icons/fi";
 import { type User } from "@/app/_services/authentication/auth-service";
+import SearchModal from "@/app/app/_components/ui/navbar/search-modal";
 
 const formatters = {
   getDisplayName: (user: User, fallback: string) => {
@@ -126,7 +128,21 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
   const { t } = useLanguage();
 
   const [isMenuOpen, setMenuOpen] = useState(false);
+  const [isSearchOpen, setSearchOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleThemeToggle = () => {
     const newTheme = theme === "light" ? "dark" : "light";
@@ -181,7 +197,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                   aria-label={t.nav.backToHome}
                 >
                   <div className="relative flex h-9 items-center justify-center overflow-hidden rounded-md transition-transform group-hover:scale-105 group-active:scale-95">
-                    <strong className="text-md sm:text-md rounded-md bg-neutral-200 px-2 font-bold text-yellow-500 dark:bg-neutral-800">
+                    <strong className="text-md sm:text-md rounded-md px-1 font-bold text-yellow-500">
                       Weave
                     </strong>
                   </div>
@@ -208,7 +224,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                             alt={`Logo da ${user.org_name}`}
                             width={16}
                             height={16}
-                            className="object-contain"
+                            className="object-contain rounded-xs"
                           />
                         </div>
 
@@ -222,59 +238,94 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
               </div>
             </div>
 
+            {/* Centro - Barra de Pesquisa */}
+            {authenticated && user && (
+              <div className="mx-4 hidden max-w-lg flex-1 items-center md:flex">
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  className="group flex w-[350px] items-center gap-3 rounded-md border border-neutral-200 bg-neutral-100/50 px-2 py-1 transition-all hover:bg-neutral-100 hover:ring-2 hover:ring-yellow-500/20 dark:border-neutral-800 dark:bg-neutral-800/50 dark:hover:bg-neutral-800"
+                  aria-label="Abrir busca"
+                >
+                  <FiSearch className="h-4 w-4 text-neutral-400 group-hover:text-yellow-500" />
+                  <span className="flex-1 text-left text-sm text-neutral-500 dark:text-neutral-400">
+                    Pesquisa
+                  </span>
+                  <div className="flex items-center gap-1 rounded border border-neutral-300 bg-neutral-50 px-1.5 py-0.5 text-[10px] font-medium text-neutral-400 dark:border-neutral-700 dark:bg-neutral-900">
+                    <span className="text-[12px]">⌘</span>K
+                  </div>
+                </button>
+              </div>
+            )}
+
             {/* Lado direito*/}
             <div className="flex items-center gap-3">
               {authenticated && user && (
-                <div className="relative" ref={menuRef}>
+                <>
                   <button
-                    type="button"
-                    onClick={() => setMenuOpen(!isMenuOpen)}
-                    aria-expanded={isMenuOpen}
-                    className={`group flex items-center gap-3 rounded-md border border-transparent pl-3 transition-all duration-200 ${isMenuOpen ? "bg-neutral-100 dark:bg-neutral-800" : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50"} `}
+                    onClick={() => setSearchOpen(true)}
+                    className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 md:hidden dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
+                    aria-label="Abrir busca"
+                    title="Busca (Ctrl+K)"
                   >
-                    <div className="hidden flex-col items-end text-right sm:flex">
-                      <span className="text-sm leading-none font-bold text-neutral-800 dark:text-neutral-200">
-                        {formatters.getDisplayName(user, t.common.user)}
-                      </span>
-                      <span className="text-[9px] font-medium text-neutral-400">
-                        @{formatters.getUsername(user, t.common.username)}
-                      </span>
-                    </div>
-                    <UserAvatar user={user} size="sm" />
+                    <FiSearch className="h-5 w-5" />
                   </button>
 
-                  {/* Dropdown */}
-                  {isMenuOpen && (
-                    <div className="animate-in fade-in slide-in-from-top-2 absolute top-full right-0 z-50 mt-2 hidden w-80 origin-top-right duration-200 sm:block">
-                      <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-2xl ring-1 ring-black/5 dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-neutral-950/50">
-                        <MenuContent
-                          user={user}
-                          logout={logout}
-                          onClose={() => setMenuOpen(false)}
-                          onToggleTheme={handleThemeToggle}
-                          theme={theme}
-                          t={t}
-                        />
+                  <div className="relative" ref={menuRef}>
+                    <button
+                      type="button"
+                      onClick={() => setMenuOpen(!isMenuOpen)}
+                      aria-expanded={isMenuOpen}
+                      className={`group flex items-center gap-3 rounded-md border border-transparent pl-3 transition-all duration-200 ${isMenuOpen ? "bg-neutral-100 dark:bg-neutral-800" : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50"} `}
+                    >
+                      <div className="hidden flex-col items-end text-right sm:flex">
+                        <span className="text-sm leading-none font-bold text-neutral-800 dark:text-neutral-200">
+                          {formatters.getDisplayName(user, t.common.user)}
+                        </span>
+                        <span className="text-[9px] font-medium text-neutral-400">
+                          @{formatters.getUsername(user, t.common.username)}
+                        </span>
                       </div>
-                    </div>
-                  )}
-                </div>
+                      <UserAvatar user={user} size="sm" />
+                    </button>
+
+                    {/* Dropdown */}
+                    {isMenuOpen && (
+                      <div className="animate-in fade-in slide-in-from-top-2 absolute top-full right-0 z-50 mt-2 hidden w-80 origin-top-right duration-200 sm:block">
+                        <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-2xl ring-1 ring-black/5 dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-neutral-950/50">
+                          <MenuContent
+                            user={user}
+                            logout={logout}
+                            onClose={() => setMenuOpen(false)}
+                            onToggleTheme={handleThemeToggle}
+                            theme={theme}
+                            t={t}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           </div>
         </div>
       </nav>
 
+      <SearchModal isOpen={isSearchOpen} onClose={() => setSearchOpen(false)} />
+
       {/* mobile modal */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:hidden">
+      {isMenuOpen && mounted && createPortal(
+        <div className="fixed inset-0 z-[100] sm:hidden flex items-center justify-center p-4">
           <div
-            className="animate-in fade-in absolute inset-0 bg-neutral-950/50 backdrop-blur-sm transition-opacity duration-300"
+            className="absolute inset-0 bg-neutral-950/40 backdrop-blur-sm"
             onClick={() => setMenuOpen(false)}
           />
 
-          <div className="animate-in fade-in zoom-in-95 relative z-10 flex w-full max-w-[90%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-[0_8px_32px_rgba(0,0,0,0.15)] backdrop-blur-xl duration-300 dark:border-neutral-800 dark:bg-neutral-900/70">
-            <div className="mt-0">
+          <div 
+            className="relative z-10 flex w-full max-w-[90%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="max-h-[75vh] overflow-y-auto outline-none">
               <MenuContent
                 user={user!}
                 logout={logout}
@@ -285,16 +336,18 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
               />
             </div>
 
-            <div className="mt-2 px-2 pb-2">
+            <div className="mt-2 p-3 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
               <button
+                type="button"
                 onClick={() => setMenuOpen(false)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-black/5 py-3.5 text-sm font-bold text-neutral-700 transition-transform active:scale-95 dark:bg-white/10 dark:text-neutral-200"
+                className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-200/50 py-3 text-sm font-bold text-neutral-700 active:scale-95 dark:bg-neutral-800 dark:text-neutral-200"
               >
                 <FaTimes /> {t.navbar.closeMenu}
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
