@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 import Image from "next/image";
 
 // Importando componentes de UI refatorados
+import { SettingsHeader } from "../_components/ui/headers/settings-header";
 import { SettingsProfileData } from "@/app/app/_components/ui/settings/profile-data";
 import { SettingsProfilePreferences } from "@/app/app/_components/ui/settings/profile-preferences";
 import { SettingsOrgAndPlan } from "@/app/app/_components/ui/settings/org-and-plans";
@@ -324,14 +325,7 @@ const SettingsPage = () => {
     <div className="flex min-h-screen flex-col">
       <div className="mx-auto w-full space-y-2">
         {/* Header da Página */}
-        <div className="flex flex-col gap-1 rounded-md border-b border-neutral-200 bg-white px-4 py-2 pb-2 shadow-md sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800 dark:bg-neutral-950">
-          <h1 className="text-md tracking-tight text-neutral-900 dark:text-neutral-100">
-            Configurações da Conta
-          </h1>
-          <p className="text-[10px] text-neutral-500 sm:text-[11px] dark:text-neutral-400">
-            Faça a gestão dos seus dados pessoais, organização e preferências de segurança.
-          </p>
-        </div>
+        <SettingsHeader className="mb-2" />
 
         {/* Mensagens de Feedback Globais */}
         {(error || successMessage) && (

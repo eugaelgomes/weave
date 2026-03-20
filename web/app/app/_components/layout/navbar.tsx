@@ -176,7 +176,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
     <>
       <nav className="sticky top-0 z-40 w-full bg-neutral-50/90 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/90 print:hidden">
         <div className="mx-auto w-full max-w-[1920px] px-2 sm:px-2 lg:px-2">
-          <div className="flex h-12 items-center justify-between">
+          <div className="relative flex h-12 items-center justify-between">
             {/* Esquerdo */}
             <div className="flex items-center gap-3 sm:gap-5">
               {authenticated && (
@@ -224,7 +224,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                             alt={`Logo da ${user.org_name}`}
                             width={16}
                             height={16}
-                            className="object-contain rounded-xs"
+                            className="rounded-xs object-contain"
                           />
                         </div>
 
@@ -240,18 +240,18 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
 
             {/* Centro - Barra de Pesquisa */}
             {authenticated && user && (
-              <div className="mx-4 hidden max-w-lg flex-1 items-center md:flex">
+              <div className="absolute left-1/2 hidden -translate-x-1/2 items-center md:flex">
                 <button
                   onClick={() => setSearchOpen(true)}
-                  className="group flex w-[350px] items-center gap-3 rounded-md border border-neutral-200 bg-neutral-100/50 px-2 py-1 transition-all hover:bg-neutral-100 hover:ring-2 hover:ring-yellow-500/20 dark:border-neutral-800 dark:bg-neutral-800/50 dark:hover:bg-neutral-800"
+                  className="group flex w-[350px] items-center gap-3 rounded-md border border-neutral-200 bg-neutral-100/50 px-1 py-0.5 transition-all hover:bg-neutral-100 hover:ring-2 hover:ring-yellow-500/20 dark:border-neutral-800 dark:bg-neutral-800/50 dark:hover:bg-neutral-800"
                   aria-label="Abrir busca"
                 >
-                  <FiSearch className="h-4 w-4 text-neutral-400 group-hover:text-yellow-500" />
-                  <span className="flex-1 text-left text-sm text-neutral-500 dark:text-neutral-400">
-                    Pesquisa
+                  <FiSearch className="h-3 w-4 text-neutral-400 group-hover:text-yellow-500" />
+                  <span className="flex-1 text-left text-xs text-neutral-500 dark:text-neutral-500">
+                    Buscar notas, projetos, etc...
                   </span>
                   <div className="flex items-center gap-1 rounded border border-neutral-300 bg-neutral-50 px-1.5 py-0.5 text-[10px] font-medium text-neutral-400 dark:border-neutral-700 dark:bg-neutral-900">
-                    <span className="text-[12px]">⌘</span>K
+                    <span className="text-[10px]">⌘</span>K
                   </div>
                 </button>
               </div>
@@ -314,41 +314,43 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
       <SearchModal isOpen={isSearchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* mobile modal */}
-      {isMenuOpen && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] sm:hidden flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-neutral-950/40 backdrop-blur-sm"
-            onClick={() => setMenuOpen(false)}
-          />
+      {isMenuOpen &&
+        mounted &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:hidden">
+            <div
+              className="absolute inset-0 bg-neutral-950/40 backdrop-blur-sm"
+              onClick={() => setMenuOpen(false)}
+            />
 
-          <div 
-            className="relative z-10 flex w-full max-w-[90%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-900"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="max-h-[75vh] overflow-y-auto outline-none">
-              <MenuContent
-                user={user!}
-                logout={logout}
-                onClose={() => setMenuOpen(false)}
-                onToggleTheme={handleThemeToggle}
-                theme={theme}
-                t={t}
-              />
-            </div>
+            <div
+              className="relative z-10 flex w-full max-w-[90%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-900"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="max-h-[75vh] overflow-y-auto outline-none">
+                <MenuContent
+                  user={user!}
+                  logout={logout}
+                  onClose={() => setMenuOpen(false)}
+                  onToggleTheme={handleThemeToggle}
+                  theme={theme}
+                  t={t}
+                />
+              </div>
 
-            <div className="mt-2 p-3 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
-              <button
-                type="button"
-                onClick={() => setMenuOpen(false)}
-                className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-200/50 py-3 text-sm font-bold text-neutral-700 active:scale-95 dark:bg-neutral-800 dark:text-neutral-200"
-              >
-                <FaTimes /> {t.navbar.closeMenu}
-              </button>
+              <div className="mt-2 border-t border-neutral-100 bg-neutral-50/50 p-3 dark:border-neutral-800 dark:bg-neutral-900/50">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-200/50 py-3 text-sm font-bold text-neutral-700 active:scale-95 dark:bg-neutral-800 dark:text-neutral-200"
+                >
+                  <FaTimes /> {t.navbar.closeMenu}
+                </button>
+              </div>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 };

@@ -1017,6 +1017,18 @@ class ProjectsRepository {
 
     return executeQuery(query, params);
   }
+
+  async updateNoteStage(projectId, noteId, stageId) {
+    const query = `
+      UPDATE notes
+      SET project_stage_id = $3::uuid, updated_at = NOW()
+      WHERE id = $2::uuid 
+        AND project_id = $1::uuid
+        AND deleted = false
+      RETURNING id::text, project_stage_id::text;
+    `;
+    return executeQuery(query, [projectId, noteId, stageId]);
+  }
 }
 
 module.exports = new ProjectsRepository();

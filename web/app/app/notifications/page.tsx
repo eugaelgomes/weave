@@ -12,6 +12,7 @@ import {
   Clock,
   Trash,
 } from "lucide-react";
+import { NotificationsHeader } from "../_components/ui/headers/notifications-header";
 import Pagination from "../_components/ui/notes/pagination";
 
 // =================== TYPES E INTERFACES ===================
@@ -143,7 +144,9 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-5.5rem)] flex-col bg-neutral-50 dark:bg-neutral-950">
+    <div className="flex h-[calc(100vh-5.5rem)] flex-col space-y-3 bg-neutral-50 dark:bg-neutral-950">
+      <NotificationsHeader />
+
       {/* =================== HEADER / TOOLBAR =================== */}
       <div className="flex flex-col rounded-md border border-neutral-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800 dark:bg-neutral-950">
         <div className="flex items-center gap-4">
@@ -155,6 +158,7 @@ export default function NotificationsPage() {
               </span>
             )}
           </div>
+          {/* Removed redundant title
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
               Notificações
@@ -163,6 +167,7 @@ export default function NotificationsPage() {
               Gerencie seus alertas e mensagens do sistema
             </p>
           </div>
+          */}
         </div>
 
         <div className="mt-4 flex items-center justify-between gap-3 sm:mt-0 sm:justify-end">

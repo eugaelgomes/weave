@@ -1,18 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { 
-  FiSearch, 
-  FiFilter, 
-  FiBriefcase, 
-  FiGrid, 
-  FiUser, 
+import {
+  FiSearch,
+  FiFilter,
+  FiBriefcase,
+  FiGrid,
+  FiUser,
   FiSettings,
   FiFileText,
   FiHash,
   FiClock,
   FiTag,
-  FiFolder
+  FiFolder,
 } from "react-icons/fi";
 import { createPortal } from "react-dom";
 import { useNotes } from "@/app/_contexts/notes-context";
@@ -70,34 +70,36 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
     const term = searchTerm.toLowerCase();
 
     const matchedNotes: SearchResult[] = notesOverview
-      .filter(note => 
-        note.title.toLowerCase().includes(term) || 
-        note.tags?.some(tag => tag.toLowerCase().includes(term))
+      .filter(
+        (note) =>
+          note.title.toLowerCase().includes(term) ||
+          note.tags?.some((tag) => tag.toLowerCase().includes(term))
       )
       .slice(0, 5)
-      .map(note => ({
+      .map((note) => ({
         id: `note-${note.id}`,
         title: note.title,
         type: "note",
         icon: FiFileText,
-        subtitle: (note.tags && note.tags.length > 0) ? `#${note.tags.join(", #")}` : "Anotação",
-        href: `/app/notes/${note.id}`
+        subtitle: note.tags && note.tags.length > 0 ? `#${note.tags.join(", #")}` : "Anotação",
+        href: `/app/notes/${note.id}`,
       }));
 
     const matchedProjects: SearchResult[] = projectsOverview
-      .filter(project => 
-        project.title.toLowerCase().includes(term) || 
-        project.description?.toLowerCase().includes(term)
+      .filter(
+        (project) =>
+          project.title.toLowerCase().includes(term) ||
+          project.description?.toLowerCase().includes(term)
       )
       .slice(0, 5)
-      .map(project => ({
+      .map((project) => ({
         id: `project-${project.id}`,
         title: project.title,
         type: "project",
         icon: FiFolder,
         subtitle: project.status || "Projeto",
         href: `/app/projects/${project.id}`,
-        color: project.color
+        color: project.color,
       }));
 
     return { notes: matchedNotes, projects: matchedProjects };
@@ -105,49 +107,60 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
 
   if (!mounted || !isOpen) return null;
 
-  const recentProjects: SearchResult[] = projectsOverview.slice(0, 3).map(p => ({
+  const recentProjects: SearchResult[] = projectsOverview.slice(0, 3).map((p) => ({
     id: `recent-p-${p.id}`,
     title: p.title,
     type: "project",
     icon: FiFolder,
     subtitle: p.status,
     href: `/app/projects/${p.id}`,
-    color: p.color
+    color: p.color,
   }));
 
-  const recentNotes: SearchResult[] = notesOverview.slice(0, 3).map(n => ({
+  const recentNotes: SearchResult[] = notesOverview.slice(0, 3).map((n) => ({
     id: `recent-n-${n.id}`,
     title: n.title,
     type: "note",
     icon: FiFileText,
     subtitle: n.tags?.[0] ? `#${n.tags[0]}` : "Anotação",
-    href: `/app/notes/${n.id}`
+    href: `/app/notes/${n.id}`,
   }));
 
-  const Section = ({ title, items, emptyMessage, viewAllLabel, viewAllHref }: { 
-    title: string; 
-    items: SearchResult[]; 
+  const Section = ({
+    title,
+    items,
+    emptyMessage,
+    viewAllLabel,
+    viewAllHref,
+  }: {
+    title: string;
+    items: SearchResult[];
     emptyMessage?: string;
     viewAllLabel?: string;
     viewAllHref?: string;
   }) => (
     <div className="mb-4">
-      <h3 className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-neutral-500">
+      <h3 className="px-4 py-2 text-xs font-bold tracking-wider text-neutral-500 uppercase">
         {title}
       </h3>
       {items.length > 0 ? (
         <ul className="space-y-0.5">
           {items.map((item) => (
             <li key={item.id}>
-              <Link 
+              <Link
                 href={item.href}
                 onClick={onClose}
                 className="flex items-center gap-3 px-4 py-2 text-sm text-neutral-700 transition-colors hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
               >
-                <item.icon className={`h-4 w-4 ${item.color ? "" : "text-neutral-400"}`} style={item.color ? { color: item.color } : {}} />
+                <item.icon
+                  className={`h-4 w-4 ${item.color ? "" : "text-neutral-400"}`}
+                  style={item.color ? { color: item.color } : {}}
+                />
                 <div className="flex flex-col">
                   <span className="font-medium">{item.title}</span>
-                  {item.subtitle && <span className="text-[10px] text-neutral-400">{item.subtitle}</span>}
+                  {item.subtitle && (
+                    <span className="text-[10px] text-neutral-400">{item.subtitle}</span>
+                  )}
                 </div>
               </Link>
             </li>
@@ -159,10 +172,10 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
         </p>
       )}
       {viewAllLabel && items.length > 0 && (
-        <Link 
+        <Link
           href={viewAllHref || "#"}
           onClick={onClose}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-neutral-600 hover:text-yellow-600 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-neutral-600 transition-colors hover:text-yellow-600"
         >
           <FiGrid className="h-3 w-3" />
           {viewAllLabel}
@@ -172,24 +185,22 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   );
 
   return createPortal(
-    <div 
-      className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4 sm:px-6"
-    >
+    <div className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[10vh] sm:px-6">
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm transition-opacity" 
+      <div
+        className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal Container */}
-      <div className="relative z-10 w-full max-w-2xl transform overflow-hidden rounded-xl bg-white shadow-2xl transition-all dark:bg-neutral-900 ring-1 ring-black/5 dark:ring-white/10">
+      <div className="relative z-10 w-full max-w-2xl transform overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 transition-all dark:bg-neutral-900 dark:ring-white/10">
         {/* Search Input Header */}
         <div className="flex items-center border-b border-neutral-200 px-4 dark:border-neutral-800">
           <FiSearch className="h-5 w-5 text-neutral-400" />
           <input
             ref={inputRef}
             type="text"
-            className="h-12 w-full border-0 bg-transparent px-4 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-0 dark:text-neutral-100"
+            className="h-12 w-full border-0 bg-transparent px-4 text-sm text-neutral-900 placeholder:text-neutral-400 focus:ring-0 focus:outline-none dark:text-neutral-100"
             placeholder="O que você está procurando?"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -204,16 +215,16 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
           {searchTerm === "" ? (
             <>
               <Section title="Lugares" items={places} />
-              <Section 
-                title="Projetos Recentes" 
-                items={recentProjects} 
+              <Section
+                title="Projetos Recentes"
+                items={recentProjects}
                 emptyMessage="Projetos que você visita aparecerão aqui."
                 viewAllLabel="Ver todos os projetos"
                 viewAllHref="/app/projects"
               />
-              <Section 
-                title="Notas Recentes" 
-                items={recentNotes} 
+              <Section
+                title="Notas Recentes"
+                items={recentNotes}
                 emptyMessage="Suas notas recentes aparecerão aqui."
                 viewAllLabel="Ver todas as notas"
                 viewAllHref="/app/notes"
@@ -227,29 +238,42 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
               {filteredResults.notes.length > 0 && (
                 <Section title="Notas" items={filteredResults.notes} />
               )}
-              
+
               {filteredResults.projects.length === 0 && filteredResults.notes.length === 0 && (
                 <div className="px-4 py-12 text-center">
-                  <FiSearch className="mx-auto h-8 w-8 text-neutral-300 mb-3" />
-                  <p className="text-neutral-500 text-sm">Nenhum resultado encontrado para &quot;{searchTerm}&quot;</p>
-                  <p className="text-xs text-neutral-400 mt-1">Tente buscar por outro termo ou tag.</p>
+                  <FiSearch className="mx-auto mb-3 h-8 w-8 text-neutral-300" />
+                  <p className="text-sm text-neutral-500">
+                    Nenhum resultado encontrado para &quot;{searchTerm}&quot;
+                  </p>
+                  <p className="mt-1 text-xs text-neutral-400">
+                    Tente buscar por outro termo ou tag.
+                  </p>
                 </div>
               )}
             </>
           )}
         </div>
-        
+
         {/* Footer shortcuts */}
-        <div className="border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 py-2 px-4 flex items-center justify-between text-[10px] text-neutral-400">
+        <div className="flex items-center justify-between border-t border-neutral-100 bg-neutral-50/50 px-4 py-2 text-[10px] text-neutral-400 dark:border-neutral-800 dark:bg-neutral-900/50">
           <div className="flex gap-4">
             <span className="flex items-center gap-1">
-              <kbd className="rounded border border-neutral-200 px-1 bg-white dark:bg-neutral-800 dark:border-neutral-700">ESC</kbd> para fechar
+              <kbd className="rounded border border-neutral-200 bg-white px-1 dark:border-neutral-700 dark:bg-neutral-800">
+                ESC
+              </kbd>{" "}
+              para fechar
             </span>
-            <span className="flex items-center gap-1 sm:flex hidden">
-              <kbd className="rounded border border-neutral-200 px-1 bg-white dark:bg-neutral-800 dark:border-neutral-700">↑↓</kbd> para navegar
+            <span className="flex hidden items-center gap-1 sm:flex">
+              <kbd className="rounded border border-neutral-200 bg-white px-1 dark:border-neutral-700 dark:bg-neutral-800">
+                ↑↓
+              </kbd>{" "}
+              para navegar
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="rounded border border-neutral-200 px-1 bg-white dark:bg-neutral-800 dark:border-neutral-700">↵</kbd> para abrir
+              <kbd className="rounded border border-neutral-200 bg-white px-1 dark:border-neutral-700 dark:bg-neutral-800">
+                ↵
+              </kbd>{" "}
+              para abrir
             </span>
           </div>
         </div>

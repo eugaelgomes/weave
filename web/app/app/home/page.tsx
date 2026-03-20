@@ -9,6 +9,8 @@ import { useProjects } from "../../_contexts/projects-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 
 // Utils & Components
+
+import { HomeHeader } from "../_components/ui/headers/home-header";
 import { getTagColor } from "@/app/_utils/tag-colors";
 import { Stats } from "../_components/ui/home/stats";
 import { CalendarPreview } from "../_components/ui/calendar/calendar-component";
@@ -104,56 +106,7 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col">
       <div className="flex-1 space-y-3 overflow-y-auto">
         {/* Header */}
-        <div className="flex flex-row items-center justify-between gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-2 shadow shadow-md sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-950">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium tracking-tight text-neutral-900 sm:text-base dark:text-neutral-100">
-              <span className="text-yellow-500">{t.greeting.hello}</span>{" "}
-              {getFirstAndLastUserName(userName)}!
-            </span>
-          </div>
-          <div className="flex items-center gap-3 text-xs text-neutral-600 sm:gap-4 sm:text-sm dark:text-neutral-400">
-            <span className="truncate text-xs">
-              {`${dateFormat(userCurrentDateTime)} ${timeFormat(userCurrentDateTime)}`}
-            </span>
-            {/* Health Status Indicator - Commented Out */}
-            {/*
-            <div
-              title={
-                healthStatus
-                  ? healthStatus.status === "offline"
-                    ? "API Offline"
-                    : `${healthStatus.responseTime}ms`
-                  : "Verificando..."
-              }
-              className="flex items-center"
-            >
-              <div className="relative flex h-2 w-2">
-                {healthStatus && healthStatus.status !== "offline" && (
-                  <span
-                    className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
-                      healthStatus.responseTime < 200 ? "bg-emerald-400" : "bg-amber-400"
-                    }`}
-                  ></span>
-                )}
-
-                <div
-                  className={`relative h-2 w-2 rounded-full transition-colors ${
-                    !healthStatus
-                      ? "animate-pulse bg-neutral-400"
-                      : healthStatus.status === "offline"
-                        ? "bg-red-500"
-                        : healthStatus.responseTime < 200
-                          ? "bg-emerald-500"
-                          : healthStatus.responseTime < 500
-                            ? "bg-amber-500"
-                            : "bg-red-500"
-                  }`}
-                />
-              </div>
-            </div>
-            */}
-          </div>
-        </div>
+        <HomeHeader />
 
         {/* Estatísticas e Mapa Mental */}
         <Stats stats={stats} projectsStats={projectsStats} tagCloudData={tagCloudData} />

@@ -1,11 +1,13 @@
 "use client";
 
 import React from "react";
+import { OrganizationHeader } from "@/app/app/_components/ui/headers/organization-header";
 import { Layers } from "lucide-react";
 
 const ProjectsPage = () => {
   return (
     <div className="flex h-full flex-col">
+      <OrganizationHeader />
       <div className="border-b border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-950">
         <div className="flex items-center gap-3">
           <div className="rounded-lg bg-yellow-500/10 p-2">

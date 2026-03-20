@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Search, Filter, Plus, X, SortAsc, RefreshCw, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { NotesHeader } from "../_components/ui/headers/notes-header";
 import { useNotes } from "../../_contexts/notes-context";
 import { deleteNotes } from "@/app/_services/notes-service/notes-service";
 import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/_utils/collaborators";
@@ -326,14 +327,14 @@ const NotesWithPagination = () => {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col space-y-3">
+      <NotesHeader />
+
       {/* =================== HEADER / TOOLBAR =================== */}
       <div className="flex flex-col rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-950">
         {/* Linha 1: Título e Ações */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-4">
-            <h2 className="text-base font-semibold text-yellow-500 sm:text-lg">Notas</h2>
-            <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-800"></div>
             <div className="flex items-center gap-1 text-sm text-neutral-500 sm:gap-2">
               <span className="font-medium text-neutral-900 dark:text-neutral-200">
                 {pagination.total}

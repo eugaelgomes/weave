@@ -30,6 +30,7 @@ import { useProjects } from "@/app/_contexts/projects-context";
 import { checkHealth, type HealthStatus } from "@/app/_services";
 import type { AIModel } from "@/app/_services/ai-agent-service/agent-service";
 import "highlight.js/styles/github-dark.css";
+import { WeaveAIHeader } from "@/app/app/_components/ui/headers/weave-ai-header";
 import Image from "next/image";
 
 /* -------------------------------- Icons -------------------------------- */
@@ -215,27 +216,15 @@ export default function ChatPage() {
   return (
     <div className="flex h-full w-full flex-col space-y-3">
       {/* ============================ TOP BAR ============================ */}
-      <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="flex items-center justify-between gap-2">
-          <span className="sm:text-md text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
-            <span className="text-yellow-500">Weave AI</span>
-            {selectedModel && (
-              <span className="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
-                • {selectedModel.name}
-              </span>
-            )}
-          </span>
-        </div>
-        <div className="flex items-center justify-between gap-3 text-xs text-neutral-600 sm:gap-4 sm:text-sm dark:text-neutral-400">
-          <span className="truncate text-xs">
-            {new Date().toLocaleString("pt-BR", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
+      <WeaveAIHeader
+        titleSuffix={
+          selectedModel && (
+            <span className="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
+              • {selectedModel.name}
+            </span>
+          )
+        }
+        rightContent={
           <div
             title={
               healthStatus
@@ -260,8 +249,8 @@ export default function ChatPage() {
               }`}
             />
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* ============================ MAIN CHAT CONTAINER ============================ */}
       <div className="relative flex flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 text-neutral-900 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100">

@@ -18,6 +18,7 @@ import { FaProjectDiagram, FaGoogle } from "react-icons/fa";
 
 import { useNotes } from "../../_contexts/notes-context";
 import { useProjects } from "../../_contexts/projects-context";
+import { CalendarHeader } from "../_components/ui/headers/calendar-header";
 import {
   fetchGoogleCalendarEvents,
   type GoogleCalendarEvent,
@@ -273,71 +274,65 @@ export default function CalendarPage() {
     <div className="flex h-[calc(100vh-5.5rem)] flex-col overflow-hidden">
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
         {/* ═══════════ HEADER ═══════════ */}
-        <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-2 shadow-md sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-2 dark:border-neutral-800 dark:bg-neutral-950">
-          <div className="flex items-center gap-3">
-            <h2 className="text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
-              <span className="font-semibold text-neutral-700 dark:text-neutral-300">
-                Calendário
-              </span>
-            </h2>
-          </div>
+        <CalendarHeader
+          rightContent={
+            <div className="flex items-center justify-between gap-2 sm:justify-end">
+              {/* View toggle */}
+              <div className="flex items-center rounded-md border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-900">
+                <button
+                  onClick={() => setViewMode("month")}
+                  className={`rounded px-2 py-1 text-xs font-medium transition-all ${
+                    viewMode === "month"
+                      ? "bg-yellow-500 text-white shadow-sm"
+                      : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                  }`}
+                  title="Visão mensal"
+                >
+                  <Grid3X3 size={14} />
+                </button>
+                <button
+                  onClick={() => setViewMode("agenda")}
+                  className={`rounded px-2 py-1 text-xs font-medium transition-all ${
+                    viewMode === "agenda"
+                      ? "bg-yellow-500 text-white shadow-sm"
+                      : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                  }`}
+                  title="Visão agenda"
+                >
+                  <List size={14} />
+                </button>
+              </div>
 
-          <div className="flex items-center justify-between gap-2 sm:justify-end">
-            {/* View toggle */}
-            <div className="flex items-center rounded-md border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-900">
               <button
-                onClick={() => setViewMode("month")}
-                className={`rounded px-2 py-1 text-xs font-medium transition-all ${
-                  viewMode === "month"
-                    ? "bg-yellow-500 text-white shadow-sm"
-                    : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-                }`}
-                title="Visão mensal"
+                onClick={goToToday}
+                className="rounded-md border border-neutral-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-600 transition-colors hover:border-yellow-300 hover:text-yellow-600 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-yellow-400"
+                title="Ir para hoje (T)"
               >
-                <Grid3X3 size={14} />
+                Hoje
               </button>
-              <button
-                onClick={() => setViewMode("agenda")}
-                className={`rounded px-2 py-1 text-xs font-medium transition-all ${
-                  viewMode === "agenda"
-                    ? "bg-yellow-500 text-white shadow-sm"
-                    : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-                }`}
-                title="Visão agenda"
-              >
-                <List size={14} />
-              </button>
+
+              <div className="flex items-center rounded-md border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-900">
+                <button
+                  onClick={prevMonth}
+                  className="rounded p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  title="Mês anterior (←)"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="w-28 text-center text-xs text-neutral-900 sm:w-32 sm:text-sm dark:text-neutral-100">
+                  {MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}
+                </span>
+                <button
+                  onClick={nextMonth}
+                  className="rounded p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  title="Próximo mês (→)"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
-
-            <button
-              onClick={goToToday}
-              className="rounded-md border border-neutral-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-600 transition-colors hover:border-yellow-300 hover:text-yellow-600 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-yellow-400"
-              title="Ir para hoje (T)"
-            >
-              Hoje
-            </button>
-
-            <div className="flex items-center rounded-md border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-900">
-              <button
-                onClick={prevMonth}
-                className="rounded p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                title="Mês anterior (←)"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <span className="w-28 text-center text-xs text-neutral-900 sm:w-32 sm:text-sm dark:text-neutral-100">
-                {MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}
-              </span>
-              <button
-                onClick={nextMonth}
-                className="rounded p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                title="Próximo mês (→)"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
+          }
+        />
 
         {/* ═══════════ STATS BAR ═══════════ */}
         <div className="grid grid-cols-3 gap-3">

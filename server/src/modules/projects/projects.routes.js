@@ -47,4 +47,9 @@ router
   .get(projectsController.getAssociatedNotes.bind(projectsController))
   .put(projectsController.manageNotes.bind(projectsController));
 
+router.put(
+  "/:projectId/notes/:noteId/stage",
+  projectsController.updateNoteStage.bind(projectsController)
+);
+
 module.exports = router;

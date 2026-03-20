@@ -1483,6 +1483,46 @@ class ProjectsController {
       this._handleError(error, res, next);
     }
   }
+
+  async updateNoteStage(req, res, next) {
+    try {
+      const { projectId, noteId } = req.params;
+      const { stageId } = req.body;
+
+      // Validação de autenticação
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      if (!stageId) {
+        throw new Error("O campo 'stageId' é obrigatório.");
+      }
+
+      // Validação de segurança: O usuário tem acesso ao projeto?
+      // O método _validateProjectAccess já lança throw se não tiver acesso
+      await this._validateProjectAccess(projectId, userId);
+
+      // Atualizar
+      const result = await this.projectsRepository.updateNoteStage(
+        projectId,
+        noteId,
+        stageId
+      );
+
+      if (!result || result.length === 0) {
+        return res
+          .status(404)
+          .json({ error: "Nota não encontrada no projeto ou estágio inválido." });
+      }
+
+      res.status(200).json({
+        message: "Estágio da nota atualizado com sucesso",
+        noteId: result[0].id,
+        newStageId: result[0].project_stage_id,
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
 }
 
 module.exports = new ProjectsController();
