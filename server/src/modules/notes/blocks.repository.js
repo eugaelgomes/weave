@@ -1,4 +1,3 @@
-
 const { executeQuery } = require("@/database/connection");
 
 class BlocksRepository {

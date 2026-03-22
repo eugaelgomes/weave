@@ -44,7 +44,10 @@ export default [
     },
     rules: {
       "@typescript-eslint/no-require-imports": "off",
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_" },
+      ],
       "no-console": "warn",
       "no-unused-vars": "off",
       quotes: ["error", "double", { allowTemplateLiterals: true }],

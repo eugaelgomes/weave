@@ -23,7 +23,7 @@ Configura e exporta a instância Express.
 ```javascript
 const app = express();
 configureGlobalMiddlewares(app);
-app.use("/api/v1", routes);        // Prefixo de todas as rotas
+app.use("/api/v1", routes); // Prefixo de todas as rotas
 app.use(errorHandler.notFoundHandler);
 app.use(errorHandler.globalErrorHandler);
 module.exports = { app };
@@ -35,18 +35,18 @@ Também importa `@/services/jobs/index` para iniciar o cleanup automático de jo
 
 Router central que mapeia os módulos da API:
 
-| Prefixo | Módulo |
-|---------|--------|
-| `/api/v1/auth` | Auth |
-| `/api/v1/users` | Users |
-| `/api/v1/password` | Password |
-| `/api/v1/notes` | Notes |
-| `/api/v1/backup` | Backup |
-| `/api/v1/projects` | Projects |
-| `/api/v1/weave-ai` | Weave AI |
-| `/api/v1/organizations` | Organizations |
-| `/api/v1/plans` | Plans |
-| `/api/v1/health` | Health check (inline) |
+| Prefixo                 | Módulo                |
+| ----------------------- | --------------------- |
+| `/api/v1/auth`          | Auth                  |
+| `/api/v1/users`         | Users                 |
+| `/api/v1/password`      | Password              |
+| `/api/v1/notes`         | Notes                 |
+| `/api/v1/backup`        | Backup                |
+| `/api/v1/projects`      | Projects              |
+| `/api/v1/weave-ai`      | Weave AI              |
+| `/api/v1/organizations` | Organizations         |
+| `/api/v1/plans`         | Plans                 |
+| `/api/v1/health`        | Health check (inline) |
 
 O health check retorna status, uptime e timestamp. Headers `Cache-Control: no-cache, no-store, must-revalidate`.
 
@@ -84,6 +84,7 @@ Função `configureGlobalMiddlewares(app)` aplica, nesta ordem:
 7. `helmet(...)` — HSTS (1 ano, preload), CSP, frameguard deny, noSniff, referrerPolicy strict-origin-when-cross-origin
 
 **CORS:**
+
 - `credentials: true`
 - Métodos: GET, POST, PUT, DELETE, PATCH, OPTIONS
 - `maxAge: 600` (10 min de preflight cache)
@@ -98,15 +99,15 @@ Dois handlers encadeados:
 
 ### 3.3 Outros Middlewares
 
-| Arquivo | Função |
-|---------|--------|
-| `authentication/index.js` | `verifyToken` — valida JWT do cookie em rotas protegidas |
-| `data/input-validation.js` | Validações com `express-validator` (ex: `loginValidation()`) |
-| `data/stringfy.js` | Converte campos do body para string |
-| `data/image-utils.js` / `profile-img.js` | Processamento e validação de imagens |
-| `security/limiters.js` | `requestLimiter` — rate limiting por IP |
-| `security/ip-address.js` | `getClientIp` — extração de IP real |
-| `security/session.js` | Configuração de sessão Express |
+| Arquivo                                  | Função                                                       |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| `authentication/index.js`                | `verifyToken` — valida JWT do cookie em rotas protegidas     |
+| `data/input-validation.js`               | Validações com `express-validator` (ex: `loginValidation()`) |
+| `data/stringfy.js`                       | Converte campos do body para string                          |
+| `data/image-utils.js` / `profile-img.js` | Processamento e validação de imagens                         |
+| `security/limiters.js`                   | `requestLimiter` — rate limiting por IP                      |
+| `security/ip-address.js`                 | `getClientIp` — extração de IP real                          |
+| `security/session.js`                    | Configuração de sessão Express                               |
 
 ---
 
@@ -118,24 +119,24 @@ Pool de conexões PostgreSQL via `pg`.
 
 **Variáveis de Ambiente:**
 
-| Variável | Descrição |
-|----------|-----------|
-| `DATABASE_HOST_URL` | Host do banco |
-| `DATABASE_SERVICE_PORT` | Porta |
-| `DATABASE_USERNAME` | Usuário |
-| `DATABASE_PASSWORD` | Senha |
-| `DATABASE_NAME` | Nome do banco |
+| Variável                | Descrição     |
+| ----------------------- | ------------- |
+| `DATABASE_HOST_URL`     | Host do banco |
+| `DATABASE_SERVICE_PORT` | Porta         |
+| `DATABASE_USERNAME`     | Usuário       |
+| `DATABASE_PASSWORD`     | Senha         |
+| `DATABASE_NAME`         | Nome do banco |
 
 SSL habilitado por padrão com `rejectUnauthorized: false`.
 
 **Exports:**
 
-| Método | Retorno | Descrição |
-|--------|---------|-----------|
-| `pool` | `Pool` | Instância do pool |
-| `getConnection()` | `Promise<Client>` | Obtém client do pool |
-| `executeQuery(sql, params?)` | `Promise<Array>` | Executa query e retorna `rows` |
-| `rowCount(sql, params?)` | `Promise<number>` | Executa query e retorna `rowCount` |
+| Método                       | Retorno           | Descrição                          |
+| ---------------------------- | ----------------- | ---------------------------------- |
+| `pool`                       | `Pool`            | Instância do pool                  |
+| `getConnection()`            | `Promise<Client>` | Obtém client do pool               |
+| `executeQuery(sql, params?)` | `Promise<Array>`  | Executa query e retorna `rows`     |
+| `rowCount(sql, params?)`     | `Promise<number>` | Executa query e retorna `rowCount` |
 
 Conexões são liberadas automaticamente no `finally` de `executeQuery` e `rowCount`.
 
@@ -146,6 +147,7 @@ Transporter Nodemailer com singleton pattern.
 **Variáveis de Ambiente:** `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USERNAME`, `EMAIL_PASSWORD`
 
 **Configuração do transporter:**
+
 - `secure`: true apenas se porta 465
 - Connection pool: `pool: true`, `maxConnections: 5`, `maxMessages: 100`
 - Rate limiting: `rateDelta: 1000`, `rateLimit: 10`
@@ -154,19 +156,19 @@ Transporter Nodemailer com singleton pattern.
 
 **Templates disponíveis** (`src/services/email/templates/`):
 
-| Template | Path |
-|----------|------|
-| Recuperação de senha | `users-access/rescue-password/` |
-| Reset de senha | `users-access/reset-password/` |
-| Boas-vindas | `welcome-mail/` |
-| Notificação de backup | `backup/backup-notification.js` |
-| Backup concluído | `backup/index.js` |
-| Exclusão de conta (request) | `delete-account/delete-account-request.js` |
-| Conta excluída | `delete-account/deleted-account-message.js` |
-| Convite de colaboração (nota) | `notes/invite/` |
-| Convite de membro (org) | `organizations/invite/` |
-| Adição a projeto | `projects/add-person.js` |
-| Convite de membro (geral) | `invite-member/mail.js` |
+| Template                      | Path                                        |
+| ----------------------------- | ------------------------------------------- |
+| Recuperação de senha          | `users-access/rescue-password/`             |
+| Reset de senha                | `users-access/reset-password/`              |
+| Boas-vindas                   | `welcome-mail/`                             |
+| Notificação de backup         | `backup/backup-notification.js`             |
+| Backup concluído              | `backup/index.js`                           |
+| Exclusão de conta (request)   | `delete-account/delete-account-request.js`  |
+| Conta excluída                | `delete-account/deleted-account-message.js` |
+| Convite de colaboração (nota) | `notes/invite/`                             |
+| Convite de membro (org)       | `organizations/invite/`                     |
+| Adição a projeto              | `projects/add-person.js`                    |
+| Convite de membro (geral)     | `invite-member/mail.js`                     |
 
 ### 4.3 Job Manager (`src/services/jobs/index.js`)
 
@@ -178,16 +180,17 @@ Timestamps `started_at` e `completed_at` são setados automaticamente nas transi
 
 **Métodos:**
 
-| Método | Parâmetros | Retorno |
-|--------|-----------|---------|
-| `createJob(type, userId, metadata?)` | tipo, userId, metadados | `Promise<Object>` — job criado |
-| `updateJob(jobId, updates)` | id, `{ status, progress, error, result }` | `Promise<Object>` — job atualizado |
-| `getJob(jobId)` | id | `Promise<Object\|null>` — consulta cache primeiro, depois banco |
-| `getUserJobs(userId)` | userId | `Promise<Array>` — lista ordenada por `created_at DESC` |
-| `clearJobFromCache(jobId)` | id | `void` — remove apenas do cache |
-| `clearCache()` | — | `void` — limpa todo o cache em memória |
+| Método                               | Parâmetros                                | Retorno                                                         |
+| ------------------------------------ | ----------------------------------------- | --------------------------------------------------------------- |
+| `createJob(type, userId, metadata?)` | tipo, userId, metadados                   | `Promise<Object>` — job criado                                  |
+| `updateJob(jobId, updates)`          | id, `{ status, progress, error, result }` | `Promise<Object>` — job atualizado                              |
+| `getJob(jobId)`                      | id                                        | `Promise<Object\|null>` — consulta cache primeiro, depois banco |
+| `getUserJobs(userId)`                | userId                                    | `Promise<Array>` — lista ordenada por `created_at DESC`         |
+| `clearJobFromCache(jobId)`           | id                                        | `void` — remove apenas do cache                                 |
+| `clearCache()`                       | —                                         | `void` — limpa todo o cache em memória                          |
 
 **Cleanup automático de backups:**
+
 - Executado a cada 6 horas (e 5s após boot)
 - Busca tokens de download expirados na tabela `tokens`
 - Deleta arquivos do Storage (S3) e remove tokens do banco
@@ -199,27 +202,27 @@ Classe `SpacesService` para Digital Ocean Spaces (S3-compatible). Exportada como
 
 **Variáveis de Ambiente:**
 
-| Variável | Descrição |
-|----------|-----------|
-| `DO_SPACES_ENDPOINT` | Endpoint S3 |
-| `DO_SPACES_ACCESS_KEY` | Access key |
-| `DO_SPACES_SECRET_KEY` | Secret key |
-| `DO_SPACES_BUCKET_NAME` | Nome do bucket |
-| `DO_SPACES_REGION` | Região (padrão: `nyc3`) |
+| Variável                | Descrição               |
+| ----------------------- | ----------------------- |
+| `DO_SPACES_ENDPOINT`    | Endpoint S3             |
+| `DO_SPACES_ACCESS_KEY`  | Access key              |
+| `DO_SPACES_SECRET_KEY`  | Secret key              |
+| `DO_SPACES_BUCKET_NAME` | Nome do bucket          |
+| `DO_SPACES_REGION`      | Região (padrão: `nyc3`) |
 
 Valida credenciais no construtor — lança erro se incompletas.
 
 **Métodos:**
 
-| Método | Descrição |
-|--------|-----------|
-| `uploadImage(buffer, mimeType, folder?, fileName?)` | Upload público (ACL public-read, cache 1 ano). Retorna `{ success, url, key, fileName, size }` |
-| `uploadBackup(content, userId, fileName?)` | Upload privado de CSV (ACL private, sem cache, expira 48h). Retorna `{ success, key, fileName, size, expiresAt }` |
-| `deleteImage(key)` | Deleta arquivo. Retorna `boolean` |
-| `downloadFile(key)` | Download de arquivo. Retorna `Buffer` |
-| `extractKeyFromUrl(url)` | Extrai key S3 de uma URL completa |
-| `validateConfiguration()` | Retorna `{ isValid, config, missing }` |
-| `getFileExtensionFromMimeType(mimeType)` | Mapeia MIME para extensão |
+| Método                                              | Descrição                                                                                                         |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `uploadImage(buffer, mimeType, folder?, fileName?)` | Upload público (ACL public-read, cache 1 ano). Retorna `{ success, url, key, fileName, size }`                    |
+| `uploadBackup(content, userId, fileName?)`          | Upload privado de CSV (ACL private, sem cache, expira 48h). Retorna `{ success, key, fileName, size, expiresAt }` |
+| `deleteImage(key)`                                  | Deleta arquivo. Retorna `boolean`                                                                                 |
+| `downloadFile(key)`                                 | Download de arquivo. Retorna `Buffer`                                                                             |
+| `extractKeyFromUrl(url)`                            | Extrai key S3 de uma URL completa                                                                                 |
+| `validateConfiguration()`                           | Retorna `{ isValid, config, missing }`                                                                            |
+| `getFileExtensionFromMimeType(mimeType)`            | Mapeia MIME para extensão                                                                                         |
 
 **Formatos de imagem suportados:** JPEG, PNG, WebP, GIF
 
@@ -237,20 +240,20 @@ Valida credenciais no construtor — lança erro se incompletas.
 
 ## 6. Dependências Principais
 
-| Pacote | Uso |
-|--------|-----|
-| `express` | Framework HTTP |
-| `pg` | Cliente PostgreSQL |
-| `nodemailer` | Envio de emails SMTP |
-| `@aws-sdk/client-s3` | Storage S3-compatible |
-| `module-alias` | Path aliases |
-| `helmet` | Headers de segurança |
-| `cors` | Política CORS |
-| `cookie-parser` | Parse de cookies |
-| `bcrypt` | Hash de senhas |
-| `jsonwebtoken` | Geração/verificação JWT |
-| `express-validator` | Validação de input |
-| `dotenv` | Variáveis de ambiente |
+| Pacote               | Uso                     |
+| -------------------- | ----------------------- |
+| `express`            | Framework HTTP          |
+| `pg`                 | Cliente PostgreSQL      |
+| `nodemailer`         | Envio de emails SMTP    |
+| `@aws-sdk/client-s3` | Storage S3-compatible   |
+| `module-alias`       | Path aliases            |
+| `helmet`             | Headers de segurança    |
+| `cors`               | Política CORS           |
+| `cookie-parser`      | Parse de cookies        |
+| `bcrypt`             | Hash de senhas          |
+| `jsonwebtoken`       | Geração/verificação JWT |
+| `express-validator`  | Validação de input      |
+| `dotenv`             | Variáveis de ambiente   |
 
 ---
 

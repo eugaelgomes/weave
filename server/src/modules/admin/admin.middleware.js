@@ -20,7 +20,9 @@ const verifyAdmin = (req, res, next) => {
   const userEmail = req.user.email;
 
   if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
-    return res.status(403).json({ error: "Acesso negado. Permissão de administrador necessária." });
+    return res
+      .status(403)
+      .json({ error: "Acesso negado. Permissão de administrador necessária." });
   }
 
   next();
@@ -42,7 +44,9 @@ const verifyAdminToken = (req, res, next) => {
   }
 
   if (!token) {
-    return res.status(401).json({ error: "Acesso negado. Token não fornecido." });
+    return res
+      .status(401)
+      .json({ error: "Acesso negado. Token não fornecido." });
   }
 
   // 2. Verificar token
@@ -56,7 +60,9 @@ const verifyAdminToken = (req, res, next) => {
   // 3. Verificar admin
   const userEmail = req.user.email;
   if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
-    return res.status(403).json({ error: "Acesso negado. Permissão de administrador necessária." });
+    return res
+      .status(403)
+      .json({ error: "Acesso negado. Permissão de administrador necessária." });
   }
 
   next();

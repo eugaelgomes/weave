@@ -36,14 +36,15 @@ const responseCache = new Map();
 // Cache
 function cleanCache() {
   const now = Date.now();
+
   for (const [key, value] of responseCache.entries()) {
     if (now - value.timestamp > cacheConfig.ttl * 1000) {
       responseCache.delete(key);
     }
   }
 
-  // Tamanho do cache
-  if (responseCache.size > cacheConfig.maxSize) {
+  // Enforce max cache size by evicting the oldest entries
+  while (responseCache.size > cacheConfig.maxSize) {
     const firstKey = responseCache.keys().next().value;
     responseCache.delete(firstKey);
   }
@@ -1007,7 +1008,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         );
 
         systemMessage +=
-          "\n\n## ⚡ MODO DE EXECUÇÃO ATIVADO\n\n**IMPORTANTE: Você TEM funções disponíveis e DEVE usá-las.**\n\nQuando o usuário pedir:\n- \"Crie...\" → use create_note ou create_project\n- \"Edite...\" → use update_note ou update_project\n- \"Delete...\" → use delete_note ou delete_project\n- \"Adicione bloco...\" → use create_block\n\n**NUNCA retorne JSON no texto. SEMPRE use as funções.**";
+          '\n\n## ⚡ MODO DE EXECUÇÃO ATIVADO\n\n**IMPORTANTE: Você TEM funções disponíveis e DEVE usá-las.**\n\nQuando o usuário pedir:\n- "Crie..." → use create_note ou create_project\n- "Edite..." → use update_note ou update_project\n- "Delete..." → use delete_note ou delete_project\n- "Adicione bloco..." → use create_block\n\n**NUNCA retorne JSON no texto. SEMPRE use as funções.**';
 
         // Reforço de contexto específico para evitar buscas desnecessárias
         if (context.noteId) {

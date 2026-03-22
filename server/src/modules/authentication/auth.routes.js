@@ -4,7 +4,7 @@ const { verifyToken } = require("@/middlewares/verify-token");
 const { authLimiter } = require("@/middlewares/request-limiters");
 const toString = require("@/utils/data/stringfy");
 
-const AuthController = require("@/modules/auth/auth.controller");
+const AuthController = require("@/modules/authentication/auth.controller");
 const { loginValidation } = require("@/utils/data/input-validation");
 
 const router = express.Router();

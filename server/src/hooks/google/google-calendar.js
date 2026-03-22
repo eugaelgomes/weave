@@ -5,7 +5,9 @@ const SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
 ];
 
-const CALENDAR_REDIRECT_URI = process.env.GOOGLE_CALENDAR_REDIRECT_URI || "http://localhost:8080/api/v1/webhooks/google/callback";
+const CALENDAR_REDIRECT_URI =
+  process.env.GOOGLE_CALENDAR_REDIRECT_URI ||
+  "http://localhost:8080/api/v1/webhooks/google/callback";
 /**
  * Setup Envs of Google OAuth2 Client and Calendar API
  * @see https://developers.google.com/calendar/api/quickstart/nodejs

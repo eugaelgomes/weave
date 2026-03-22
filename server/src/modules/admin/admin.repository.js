@@ -48,10 +48,25 @@ class AdminRepository {
 
   // ==================== USERS ====================
 
-  async listUsers({ page = 1, limit = 20, search = "", status = "all", orderBy = "created_at", order = "DESC" }) {
+  async listUsers({
+    page = 1,
+    limit = 20,
+    search = "",
+    status = "all",
+    orderBy = "created_at",
+    order = "DESC",
+  }) {
     const offset = (page - 1) * limit;
-    const allowedOrderBy = ["created_at", "name", "email", "last_login", "updated_at"];
-    const safeOrderBy = allowedOrderBy.includes(orderBy) ? orderBy : "created_at";
+    const allowedOrderBy = [
+      "created_at",
+      "name",
+      "email",
+      "last_login",
+      "updated_at",
+    ];
+    const safeOrderBy = allowedOrderBy.includes(orderBy)
+      ? orderBy
+      : "created_at";
     const safeOrder = order === "ASC" ? "ASC" : "DESC";
 
     let whereClause = "WHERE 1=1";
@@ -144,9 +159,17 @@ class AdminRepository {
 
   async updateUser(userId, fields) {
     const allowedFields = [
-      "name", "email", "username", "email_verified",
-      "deleted", "private_profile", "phone_number",
-      "birth_date", "timezone", "org_id", "plan_id",
+      "name",
+      "email",
+      "username",
+      "email_verified",
+      "deleted",
+      "private_profile",
+      "phone_number",
+      "birth_date",
+      "timezone",
+      "org_id",
+      "plan_id",
     ];
 
     const updates = [];
@@ -199,10 +222,19 @@ class AdminRepository {
 
   // ==================== ORGANIZATIONS ====================
 
-  async listOrganizations({ page = 1, limit = 20, search = "", status = "all", orderBy = "created_at", order = "DESC" }) {
+  async listOrganizations({
+    page = 1,
+    limit = 20,
+    search = "",
+    status = "all",
+    orderBy = "created_at",
+    order = "DESC",
+  }) {
     const offset = (page - 1) * limit;
     const allowedOrderBy = ["created_at", "org_name", "updated_at"];
-    const safeOrderBy = allowedOrderBy.includes(orderBy) ? orderBy : "created_at";
+    const safeOrderBy = allowedOrderBy.includes(orderBy)
+      ? orderBy
+      : "created_at";
     const safeOrder = order === "ASC" ? "ASC" : "DESC";
 
     let whereClause = "WHERE 1=1";
@@ -291,8 +323,11 @@ class AdminRepository {
 
   async updateOrganization(orgId, fields) {
     const allowedFields = [
-      "org_name", "unique_name", "description",
-      "deleted", "plan_id",
+      "org_name",
+      "unique_name",
+      "description",
+      "deleted",
+      "plan_id",
     ];
 
     const updates = [];

@@ -33,14 +33,14 @@ Exporta `configureGlobalMiddlewares(app)` que aplica os middlewares na ordem:
 
 A whitelist vem de `allowedOrigins` em `@/config/allowed-origins`. Origens com `*` são convertidas em regex via `buildMatcher()`.
 
-| Propriedade | Valor |
-|-------------|-------|
-| `credentials` | `true` |
-| `methods` | GET, POST, PUT, DELETE, PATCH, OPTIONS |
-| `allowedHeaders` | Content-Type, Authorization, X-Requested-With, Accept, Cookie |
-| `exposedHeaders` | Content-Range, X-Content-Range, Set-Cookie |
-| `maxAge` | 600 (10 min preflight cache) |
-| `optionsSuccessStatus` | 204 |
+| Propriedade            | Valor                                                         |
+| ---------------------- | ------------------------------------------------------------- |
+| `credentials`          | `true`                                                        |
+| `methods`              | GET, POST, PUT, DELETE, PATCH, OPTIONS                        |
+| `allowedHeaders`       | Content-Type, Authorization, X-Requested-With, Accept, Cookie |
+| `exposedHeaders`       | Content-Range, X-Content-Range, Set-Cookie                    |
+| `maxAge`               | 600 (10 min preflight cache)                                  |
+| `optionsSuccessStatus` | 204                                                           |
 
 **Comportamento por ambiente:**
 
@@ -83,10 +83,10 @@ Valida JWT de acesso. Busca token nesta ordem:
 
 Decodifica com `jwt.verify(token, SECRET_KEY, { algorithms: ["HS256"] })` e anexa payload em `req.user`.
 
-| Status | Condição | Mensagem |
-|--------|----------|----------|
-| 401 | Token ausente | "Acesso negado. Token não fornecido." |
-| 401 | Token inválido/expirado | "Token inválido ou expirado." |
+| Status | Condição                | Mensagem                              |
+| ------ | ----------------------- | ------------------------------------- |
+| 401    | Token ausente           | "Acesso negado. Token não fornecido." |
+| 401    | Token inválido/expirado | "Token inválido ou expirado."         |
 
 **Payload decodificado disponível em `req.user`:**
 `{ userId, username, email, name, org_id, org_unique_name, plan_id, org_member_role }`
@@ -103,20 +103,20 @@ Exporta duas funções que retornam arrays de validadores `express-validator`:
 
 #### `inputValidation()` — criação/atualização de conta
 
-| Campo | Regras |
-|-------|--------|
-| `name` | Opcional. Letras unicode + espaços, 1-100 chars, trim + escape |
-| `user_name` | Opcional. Mesmas regras de `name` |
-| `username` | Obrigatório. `[a-zA-Z0-9._-]`, 6-18 chars, toLowerCase + escape |
-| `email` | Obrigatório. `isEmail()` + `normalizeEmail()` |
-| `password` | Mínimo 8 chars, 1 maiúscula, 1 minúscula, 1 número, símbolos opcionais |
+| Campo       | Regras                                                                 |
+| ----------- | ---------------------------------------------------------------------- |
+| `name`      | Opcional. Letras unicode + espaços, 1-100 chars, trim + escape         |
+| `user_name` | Opcional. Mesmas regras de `name`                                      |
+| `username`  | Obrigatório. `[a-zA-Z0-9._-]`, 6-18 chars, toLowerCase + escape        |
+| `email`     | Obrigatório. `isEmail()` + `normalizeEmail()`                          |
+| `password`  | Mínimo 8 chars, 1 maiúscula, 1 minúscula, 1 número, símbolos opcionais |
 
 #### `loginValidation()` — login
 
-| Campo | Regras |
-|-------|--------|
-| `login` | Obrigatório. 3-255 chars, trim + escape |
-| `password` | Obrigatório. notEmpty, trim |
+| Campo      | Regras                                  |
+| ---------- | --------------------------------------- |
+| `login`    | Obrigatório. 3-255 chars, trim + escape |
+| `password` | Obrigatório. notEmpty, trim             |
 
 ---
 
@@ -152,23 +152,23 @@ Exporta dois rate limiters via `express-rate-limit`:
 
 #### `requestLimiter` — limiter de uso geral
 
-| Propriedade | Valor |
-|-------------|-------|
-| Janela | 10 minutos |
-| Máximo | 15 requests |
-| Chave | `req.ip` |
-| Headers | `standardHeaders: true`, `legacyHeaders: false` |
+| Propriedade | Valor                                           |
+| ----------- | ----------------------------------------------- |
+| Janela      | 10 minutos                                      |
+| Máximo      | 15 requests                                     |
+| Chave       | `req.ip`                                        |
+| Headers     | `standardHeaders: true`, `legacyHeaders: false` |
 
 Resposta ao exceder: `429` com `"Too many requests. Please wait at least 10 minutes to try again."`
 
 #### `loginLimiter` — limiter de login (não utilizado atualmente)
 
-| Propriedade | Valor |
-|-------------|-------|
-| Janela | 15 minutos |
-| Máximo | 5 tentativas |
-| Chave | `req.body.username` ou `req.ip` |
-| `skipSuccessfulRequests` | `true` |
+| Propriedade              | Valor                           |
+| ------------------------ | ------------------------------- |
+| Janela                   | 15 minutos                      |
+| Máximo                   | 5 tentativas                    |
+| Chave                    | `req.body.username` ou `req.ip` |
+| `skipSuccessfulRequests` | `true`                          |
 
 ---
 
@@ -178,17 +178,17 @@ Resposta ao exceder: `429` com `"Too many requests. Please wait at least 10 minu
 
 Sessão Express com store PostgreSQL via `connect-pg-simple`.
 
-| Config | Valor |
-|--------|-------|
-| Store | `pgSession` (tabela `sessions`) |
-| Cookie name | `auth.sid` |
-| `httpOnly` | `true` |
-| `secure` | `true` em produção |
-| `sameSite` | `lax` |
-| `maxAge` | 24 horas |
-| `rolling` | `true` (renova a cada request) |
-| `resave` | `false` |
-| `saveUninitialized` | `false` |
+| Config              | Valor                           |
+| ------------------- | ------------------------------- |
+| Store               | `pgSession` (tabela `sessions`) |
+| Cookie name         | `auth.sid`                      |
+| `httpOnly`          | `true`                          |
+| `secure`            | `true` em produção              |
+| `sameSite`          | `lax`                           |
+| `maxAge`            | 24 horas                        |
+| `rolling`           | `true` (renova a cada request)  |
+| `resave`            | `false`                         |
+| `saveUninitialized` | `false`                         |
 
 **Variável de Ambiente:** `SESSION_SECRET`
 
@@ -253,10 +253,10 @@ Se as credenciais DO Spaces não estiverem configuradas, emite warning e `this.s
 
 #### Métodos de Upload
 
-| Método | Key pattern | ACL | Retorno |
-|--------|-------------|-----|---------|
-| `saveProfileImage(buffer, mimeType, userId)` | `users-content/profile/user-{userId}-avatar.{ext}` | public-read | `{ success, url, filename, key, size }` |
-| `saveOrganizationLogo(buffer, mimeType, orgId)` | `organizations/{orgId}/images/logo/org-{orgId}-logo.{ext}` | public-read | `{ success, url, filename, key, size }` |
+| Método                                            | Key pattern                                                    | ACL         | Retorno                                 |
+| ------------------------------------------------- | -------------------------------------------------------------- | ----------- | --------------------------------------- |
+| `saveProfileImage(buffer, mimeType, userId)`      | `users-content/profile/user-{userId}-avatar.{ext}`             | public-read | `{ success, url, filename, key, size }` |
+| `saveOrganizationLogo(buffer, mimeType, orgId)`   | `organizations/{orgId}/images/logo/org-{orgId}-logo.{ext}`     | public-read | `{ success, url, filename, key, size }` |
 | `saveOrganizationBanner(buffer, mimeType, orgId)` | `organizations/{orgId}/images/banner/org-{orgId}-banner.{ext}` | public-read | `{ success, url, filename, key, size }` |
 
 Em caso de erro, retornam `{ success: false, error: "..." }` em vez de lançar exceção.
@@ -267,12 +267,12 @@ Deleta arquivo do Spaces por key. Retorna `true` ou `false`.
 
 #### Métodos de Validação
 
-| Método | Descrição |
-|--------|-----------|
-| `isValidImageType(mimeType)` | Aceita: jpeg, jpg, png, webp, gif |
-| `isValidImageSize(size)` | Limite: 5 MB |
-| `getExtensionFromMimeType(mimeType)` | Mapeia MIME → extensão (fallback: `.jpg`) |
-| `extractKeyFromUrl(url)` | Extrai key S3 de uma URL completa; retorna a própria string se não for URL |
+| Método                               | Descrição                                                                  |
+| ------------------------------------ | -------------------------------------------------------------------------- |
+| `isValidImageType(mimeType)`         | Aceita: jpeg, jpg, png, webp, gif                                          |
+| `isValidImageSize(size)`             | Limite: 5 MB                                                               |
+| `getExtensionFromMimeType(mimeType)` | Mapeia MIME → extensão (fallback: `.jpg`)                                  |
+| `extractKeyFromUrl(url)`             | Extrai key S3 de uma URL completa; retorna a própria string se não for URL |
 
 **Variáveis de Ambiente:** `DO_SPACES_ENDPOINT`, `DO_SPACES_ACCESS_KEY`, `DO_SPACES_SECRET_KEY`, `DO_SPACES_BUCKET_NAME`, `DO_SPACES_REGION`
 

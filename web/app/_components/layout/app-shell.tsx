@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import Layout from "@/app/app/_components/layout/layout";
+import Layout from "@/app/app/app_layout";
 import AuthProviderClient from "@/app/_contexts/auth-provider-client";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { AuthenticatedProviders } from "@/app/_contexts/authenticated-providers";

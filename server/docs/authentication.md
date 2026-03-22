@@ -4,12 +4,12 @@ Módulo responsável por login, logout e autenticação OAuth (Google).
 
 ## Rotas
 
-| Método | Rota | Auth | Middleware | Descrição |
-|--------|------|------|------------|-----------|
-| POST | `/api/auth/signin` | Não | `requestLimiter`, `loginValidation`, `toString` | Login com email/username + senha |
-| GET | `/api/auth/signin/sso/google` | Não | — | Redireciona para OAuth2 do Google |
-| GET | `/api/auth/signin/sso/google/callback` | Não | — | Callback do Google OAuth2 |
-| POST | `/api/auth/logout` | Sim | `verifyToken` | Encerra sessão e limpa cookie |
+| Método | Rota                                   | Auth | Middleware                                      | Descrição                         |
+| ------ | -------------------------------------- | ---- | ----------------------------------------------- | --------------------------------- |
+| POST   | `/api/auth/signin`                     | Não  | `requestLimiter`, `loginValidation`, `toString` | Login com email/username + senha  |
+| GET    | `/api/auth/signin/sso/google`          | Não  | —                                               | Redireciona para OAuth2 do Google |
+| GET    | `/api/auth/signin/sso/google/callback` | Não  | —                                               | Callback do Google OAuth2         |
+| POST   | `/api/auth/logout`                     | Sim  | `verifyToken`                                   | Encerra sessão e limpa cookie     |
 
 ## Fluxo de Login (Credentials)
 
@@ -29,9 +29,11 @@ Módulo responsável por login, logout e autenticação OAuth (Google).
 ## Fluxo Google OAuth2
 
 ### Início (`/signin/sso/google`)
+
 Redireciona para `accounts.google.com` com `client_id`, `redirect_uri`, scope `openid email profile`.
 
 ### Callback (`/signin/sso/google/callback`)
+
 1. Troca authorization code por access token via `oauth2.googleapis.com/token`
 2. Busca dados do perfil via Google UserInfo API
 3. Resolução de usuário:
@@ -50,37 +52,37 @@ Redireciona para `accounts.google.com` com `client_id`, `redirect_uri`, scope `o
 
 ## Cookie Config
 
-| Propriedade | Dev | Produção |
-|-------------|-----|----------|
-| httpOnly | true | true |
-| secure | false | true |
-| sameSite | lax | none |
-| domain | via `getCookieDomain()` | via `getCookieDomain()` |
-| maxAge | 12h (login) / 24h (Google) | 12h (login) / 24h (Google) |
+| Propriedade | Dev                        | Produção                   |
+| ----------- | -------------------------- | -------------------------- |
+| httpOnly    | true                       | true                       |
+| secure      | false                      | true                       |
+| sameSite    | lax                        | none                       |
+| domain      | via `getCookieDomain()`    | via `getCookieDomain()`    |
+| maxAge      | 12h (login) / 24h (Google) | 12h (login) / 24h (Google) |
 
 ## Repository
 
 **AuthRepository** — singleton exportado com os seguintes métodos:
 
-| Método | Parâmetros | Retorno |
-|--------|-----------|---------|
-| `findUserByUsername(username)` | email ou username | Dados completos do usuário + plano + org + usage (query com LATERAL JOINs) |
-| `findUserByEmail(email)` | email | Dados básicos do usuário |
-| `findUserByGoogleId(googleId)` | ID Google | Dados básicos do usuário |
-| `createUserWithGoogle(googleId, name, email, avatarUrl?)` | dados do perfil Google | Novo usuário com `auth_with_google = true` |
-| `updateUserWithGoogle(userId, googleId, avatarUrl?)` | IDs | Usuário atualizado com vínculo Google |
-| `loginLogs(userId, ip, timestamp, success, userAgent)` | dados do request | Insere registro em `user_login_logs` |
-| `logUserLocation(userId, ip, timestamp, location, userAgent)` | dados do request | Insere registro em `user_location_logs` |
+| Método                                                        | Parâmetros             | Retorno                                                                    |
+| ------------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------- |
+| `findUserByUsername(username)`                                | email ou username      | Dados completos do usuário + plano + org + usage (query com LATERAL JOINs) |
+| `findUserByEmail(email)`                                      | email                  | Dados básicos do usuário                                                   |
+| `findUserByGoogleId(googleId)`                                | ID Google              | Dados básicos do usuário                                                   |
+| `createUserWithGoogle(googleId, name, email, avatarUrl?)`     | dados do perfil Google | Novo usuário com `auth_with_google = true`                                 |
+| `updateUserWithGoogle(userId, googleId, avatarUrl?)`          | IDs                    | Usuário atualizado com vínculo Google                                      |
+| `loginLogs(userId, ip, timestamp, success, userAgent)`        | dados do request       | Insere registro em `user_login_logs`                                       |
+| `logUserLocation(userId, ip, timestamp, location, userAgent)` | dados do request       | Insere registro em `user_location_logs`                                    |
 
 ## Códigos de Resposta
 
-| Status | Cenário |
-|--------|---------|
-| 200 | Login ou logout bem-sucedido |
-| 400 | Validação de input falhou |
-| 401 | Credenciais inválidas / conta Google tentando login por senha |
-| 403 | Email não verificado |
-| 500 | Erro interno |
+| Status | Cenário                                                       |
+| ------ | ------------------------------------------------------------- |
+| 200    | Login ou logout bem-sucedido                                  |
+| 400    | Validação de input falhou                                     |
+| 401    | Credenciais inválidas / conta Google tentando login por senha |
+| 403    | Email não verificado                                          |
+| 500    | Erro interno                                                  |
 
 ## Dependências
 

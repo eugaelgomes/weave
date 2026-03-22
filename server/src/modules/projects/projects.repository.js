@@ -222,7 +222,13 @@ class ProjectsRepository {
   }
 
   async updateProject(projectId, userId, updates) {
-    const allowedFields = ["title", "description", "status", "properties", "projects_files"];
+    const allowedFields = [
+      "title",
+      "description",
+      "status",
+      "properties",
+      "projects_files",
+    ];
 
     const keys = Object.keys(updates).filter((k) => allowedFields.includes(k));
 
@@ -300,7 +306,7 @@ class ProjectsRepository {
     return executeQuery(query, [projectId, userId]);
   }
 
-   /**
+  /**
    * Cria um projeto e as suas respectivas colunas (stages) de forma atômica
    * utilizando CTEs do PostgreSQL.
    */
@@ -384,7 +390,7 @@ class ProjectsRepository {
       projectData.status,
       projectData.properties,
       JSON.stringify(stagesData),
-      projectData.parent_project_id || null
+      projectData.parent_project_id || null,
     ];
 
     return executeQuery(query, values);
@@ -894,8 +900,8 @@ class ProjectsRepository {
     const { status, methodology, from, to, parent_only = true } = filters;
 
     const conditions = [
-      'p.deleted = false',
-      'p.active = true',
+      "p.deleted = false",
+      "p.active = true",
       `(
         p.user_id = $1::uuid
         OR EXISTS (
@@ -936,10 +942,10 @@ class ProjectsRepository {
     }
 
     if (parent_only) {
-      conditions.push('p.parent_project_id IS NULL');
+      conditions.push("p.parent_project_id IS NULL");
     }
 
-    const whereClause = conditions.join('\n        AND ');
+    const whereClause = conditions.join("\n        AND ");
 
     const query = `
       WITH

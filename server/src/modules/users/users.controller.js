@@ -5,7 +5,7 @@ const spacesService = require("@/services/storage");
 
 // Repositórios
 const UserRepository = require("@/modules/users/users.repository");
-const AuthRepository = require("@/modules/auth/auth.repository");
+const AuthRepository = require("@/modules/authentication/auth.repository");
 
 // Serviços de Email e Logs
 const welcomeMailModule = require("@/services/email/templates/welcome-mail");
@@ -27,6 +27,52 @@ const { welcome_message } = welcomeMailModule;
 
 const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
 const ALL_TIMEZONES = Intl.supportedValuesOf("timeZone");
+
+const mapDefaultAreaInfo = (defaultAreaData) => {
+  if (!defaultAreaData) {
+    return null;
+  }
+
+  return {
+    id: defaultAreaData.org_default_area_id,
+    name: defaultAreaData.org_default_area_name,
+    slug: defaultAreaData.org_default_area_slug,
+    role: defaultAreaData.org_default_area_role,
+    member_since: defaultAreaData.org_default_area_member_since,
+    description: defaultAreaData.org_default_area_description,
+    properties: defaultAreaData.org_default_area_properties || {},
+  };
+};
+
+const mapOrganizationInfo = (organizationData) => {
+  if (!organizationData) {
+    return null;
+  }
+
+  return {
+    id: organizationData.org_id,
+    unique_name: organizationData.org_unique_name,
+    name: organizationData.org_name,
+    logo_url: organizationData.org_logo_url,
+    member_role: organizationData.org_member_role,
+    member_since: organizationData.org_member_since,
+  };
+};
+
+const mapPlanUsageInfo = (usageData) => {
+  if (!usageData) {
+    return null;
+  }
+
+  return {
+    plan_id: usageData.usage_plan_id,
+    plan_name: usageData.usage_plan_name,
+    client_type: usageData.usage_client_type,
+    period_start: usageData.period_start,
+    period_end: usageData.period_end,
+    details: usageData.usage_details || {},
+  };
+};
 
 class userController {
   constructor() {
@@ -274,6 +320,10 @@ class userController {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
 
+      const organization = mapOrganizationInfo(user.organization);
+      const defaultArea = mapDefaultAreaInfo(user.default_area);
+      const planUsage = mapPlanUsageInfo(user.current_usage);
+
       return res.status(200).json({
         user: {
           user_profile: {
@@ -293,27 +343,21 @@ class userController {
             auth_with_google: user.auth_with_google,
           },
           user_organization: {
-            id: user.org_id,
-            unique_name: user.org_unique_name,
-            name: user.org_name,
-            logo_url: user.org_logo_url,
-            member_role: user.org_member_role,
-            member_since: user.org_member_since,
+            id: organization?.id || null,
+            unique_name: organization?.unique_name || null,
+            name: organization?.name || null,
+            logo_url: organization?.logo_url || null,
+            member_role: organization?.member_role || null,
+            member_since: organization?.member_since || null,
+            default_area: defaultArea,
           },
           current_plan: {
-            id: user.user_plan_id,
+            id: user.plan_id,
             plan_name: user.plan_name,
-            client_type: user.client_type,
+            client_type: planUsage?.client_type || null,
             details: user.plan_details || {},
           },
-          current_plan_usage: {
-            plan_id: user.usage_plan_id,
-            plan_name: user.usage_plan_name,
-            client_type: user.client_type,
-            period_start: user.period_start,
-            period_end: user.period_end,
-            details: user.usage_details || {},
-          },
+          current_plan_usage: planUsage,
           usage_preference: user.user_preference || {},
         },
       });
@@ -436,14 +480,16 @@ class userController {
       if (name !== undefined) updates.name = name;
       if (theme_mode !== undefined) updates.theme_mode = theme_mode;
       if (birth_date !== undefined) updates.birth_date = birth_date || null;
-      if (phone_number !== undefined) updates.phone_number = phone_number || null;
+      if (phone_number !== undefined)
+        updates.phone_number = phone_number || null;
       if (private_profile !== undefined)
         updates.private_profile = private_profile;
       const resolvedPreference = usage_preference ?? user_preference;
       if (resolvedPreference !== undefined) {
-        const parsed = typeof resolvedPreference === "string"
-          ? JSON.parse(resolvedPreference)
-          : resolvedPreference;
+        const parsed =
+          typeof resolvedPreference === "string"
+            ? JSON.parse(resolvedPreference)
+            : resolvedPreference;
         updates.user_preference = normalizeAppPreferences(parsed);
       }
 

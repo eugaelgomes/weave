@@ -1,7 +1,7 @@
 const express = require("express");
 
 // Rotas nos módulos
-const authRoutes = require("@/modules/auth/auth.routes");
+const authRoutes = require("@/modules/authentication/auth.routes");
 const userRoutes = require("@/modules/users/users.routes");
 const passwordRoutes = require("@/modules/password/password.routes");
 const notesRoutes = require("@/modules/notes/notes.routes");

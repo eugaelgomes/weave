@@ -31,6 +31,10 @@ class SpacesService {
       LOGO: "logo",
       BANNER: "banner",
     },
+    AGENTS: {
+      ROOT: "agents",
+      FILES: "files",
+    },
   };
 
   constructor() {
@@ -130,13 +134,23 @@ class SpacesService {
    * @param {string} folderPath - Path completo da pasta no bucket (opcional)
    * @returns {Promise<Object>} - Objeto com URL e key do arquivo
    */
-  async uploadImage(imageBuffer, mimeType, userId, fileName = null, folderPath = null) {
+  async uploadImage(
+    imageBuffer,
+    mimeType,
+    userId,
+    fileName = null,
+    folderPath = null
+  ) {
     try {
       const fileExtension = this.getFileExtensionFromMimeType(mimeType);
       const uniqueFileName = fileName || `image_${uuidv4()}${fileExtension}`;
       const key = folderPath
         ? this.buildKey(folderPath, uniqueFileName)
-        : this.buildKey(SpacesService.FOLDER_PATHS.IMAGES, String(userId), uniqueFileName);
+        : this.buildKey(
+            SpacesService.FOLDER_PATHS.IMAGES,
+            String(userId),
+            uniqueFileName
+          );
 
       const uploadParams = {
         Bucket: this.bucketName,
@@ -261,7 +275,12 @@ class SpacesService {
     const fileName = `${uuidv4()}${ext}`;
     const userFolder = `userId_${userId}`;
     const noteFolder = `noteId_${noteId}`;
-    const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.ICONS);
+    const folderPath = this.buildKey(
+      NOTES.ROOT,
+      userFolder,
+      noteFolder,
+      NOTES.ICONS
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
@@ -271,11 +290,22 @@ class SpacesService {
     const fileName = `${uuidv4()}${ext}`;
     const userFolder = `userId_${userId}`;
     const noteFolder = `noteId_${noteId}`;
-    const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.BANNERS);
+    const folderPath = this.buildKey(
+      NOTES.ROOT,
+      userFolder,
+      noteFolder,
+      NOTES.BANNERS
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  async uploadNoteFile(fileBuffer, mimeType, noteId, userId, originalName = null) {
+  async uploadNoteFile(
+    fileBuffer,
+    mimeType,
+    noteId,
+    userId,
+    originalName = null
+  ) {
     const { NOTES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const safeOriginalName = originalName
@@ -285,7 +315,12 @@ class SpacesService {
     const fileName = `${uuidv4()}_${safeOriginalName}`;
     const userFolder = `userId_${userId}`;
     const noteFolder = `noteId_${noteId}`;
-    const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.FILES);
+    const folderPath = this.buildKey(
+      NOTES.ROOT,
+      userFolder,
+      noteFolder,
+      NOTES.FILES
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
@@ -300,11 +335,22 @@ class SpacesService {
     const fileName = `${uuidv4()}${ext}`;
     const userFolder = `userId_${userId}`;
     const projectFolder = `projectId_${projectId}`;
-    const folderPath = this.buildKey(PROJECTS.ROOT, userFolder, projectFolder, PROJECTS.ICONS);
+    const folderPath = this.buildKey(
+      PROJECTS.ROOT,
+      userFolder,
+      projectFolder,
+      PROJECTS.ICONS
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  async uploadProjectFile(fileBuffer, mimeType, projectId, userId, originalName = null) {
+  async uploadProjectFile(
+    fileBuffer,
+    mimeType,
+    projectId,
+    userId,
+    originalName = null
+  ) {
     const { PROJECTS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const safeOriginalName = originalName
@@ -314,7 +360,12 @@ class SpacesService {
     const fileName = `${uuidv4()}_${safeOriginalName}`;
     const userFolder = `userId_${userId}`;
     const projectFolder = `projectId_${projectId}`;
-    const folderPath = this.buildKey(PROJECTS.ROOT, userFolder, projectFolder, PROJECTS.FILES);
+    const folderPath = this.buildKey(
+      PROJECTS.ROOT,
+      userFolder,
+      projectFolder,
+      PROJECTS.FILES
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
@@ -345,7 +396,12 @@ class SpacesService {
     const { USERS_CONTENT } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const fileName = `user-${userId}-avatar${ext}`;
-    const folderPath = this.buildKey(USERS_CONTENT.ROOT, USERS_CONTENT.PROFILE, String(userId), USERS_CONTENT.AVATAR);
+    const folderPath = this.buildKey(
+      USERS_CONTENT.ROOT,
+      USERS_CONTENT.PROFILE,
+      String(userId),
+      USERS_CONTENT.AVATAR
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
@@ -358,7 +414,11 @@ class SpacesService {
     const { ORGANIZATIONS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const fileName = `org-${organizationId}-logo${ext}`;
-    const folderPath = this.buildKey(ORGANIZATIONS.ROOT, String(organizationId), ORGANIZATIONS.LOGO);
+    const folderPath = this.buildKey(
+      ORGANIZATIONS.ROOT,
+      String(organizationId),
+      ORGANIZATIONS.LOGO
+    );
     return this.uploadImage(fileBuffer, mimeType, null, fileName, folderPath);
   }
 
@@ -366,7 +426,11 @@ class SpacesService {
     const { ORGANIZATIONS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const fileName = `org-${organizationId}-banner${ext}`;
-    const folderPath = this.buildKey(ORGANIZATIONS.ROOT, String(organizationId), ORGANIZATIONS.BANNER);
+    const folderPath = this.buildKey(
+      ORGANIZATIONS.ROOT,
+      String(organizationId),
+      ORGANIZATIONS.BANNER
+    );
     return this.uploadImage(fileBuffer, mimeType, null, fileName, folderPath);
   }
 
@@ -388,6 +452,20 @@ class SpacesService {
   isValidImageSize(size) {
     const maxSize = 5 * 1024 * 1024; // 5MB
     return size <= maxSize;
+  }
+
+  /**
+   * Gera um nome de arquivo único com base em timestamp + UUID.
+   * @param {string} extension - extensão sem ponto ou com ponto.
+   * @returns {string}
+   */
+  generateUniqueFileName(extension = "") {
+    const sanitizedExt = extension
+      ? extension.startsWith(".")
+        ? extension
+        : `.${extension}`
+      : "";
+    return `file_${Date.now()}_${uuidv4()}${sanitizedExt}`;
   }
 
   validateConfiguration() {

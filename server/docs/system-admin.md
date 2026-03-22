@@ -14,12 +14,12 @@ Sistema completo de administração separado para gerenciar usuários e organiza
 
 ### Roles e Permissões
 
-| Role | Permissões |
-|------|-----------|
-| `super_admin` | Acesso total: CRUD de admins, gerenciar users/orgs, deletar |
-| `manager` | Gerenciar users/orgs (atualizar, deletar), sem CRUD de admins |
-| `support` | Atualizar users/orgs, visualizar tudo, sem deletar |
-| `read_only` | Apenas visualização (dashboard, listas, detalhes) |
+| Role          | Permissões                                                    |
+| ------------- | ------------------------------------------------------------- |
+| `super_admin` | Acesso total: CRUD de admins, gerenciar users/orgs, deletar   |
+| `manager`     | Gerenciar users/orgs (atualizar, deletar), sem CRUD de admins |
+| `support`     | Atualizar users/orgs, visualizar tudo, sem deletar            |
+| `read_only`   | Apenas visualização (dashboard, listas, detalhes)             |
 
 ### Endpoints
 
@@ -50,9 +50,11 @@ Sistema completo de administração separado para gerenciar usuários e organiza
 **Base:** `/api/v1/admin` (requer autenticação)
 
 **Dashboard:**
+
 - `GET /dashboard` - Estatísticas gerais (todos os roles)
 
 **Usuários:**
+
 - `GET /users` - Listar usuários (todos os roles)
 - `GET /users/:id` - Detalhes do usuário (todos os roles)
 - `PUT /users/:id` - Atualizar usuário (**support, manager, super_admin**)
@@ -60,6 +62,7 @@ Sistema completo de administração separado para gerenciar usuários e organiza
 - `POST /users/:id/restore` - Restaurar usuário (**manager, super_admin**)
 
 **Organizações:**
+
 - `GET /organizations` - Listar organizações (todos os roles)
 - `GET /organizations/:id` - Detalhes da organização (todos os roles)
 - `PUT /organizations/:id` - Atualizar organização (**support, manager, super_admin**)
@@ -67,6 +70,7 @@ Sistema completo de administração separado para gerenciar usuários e organiza
 - `POST /organizations/:id/restore` - Restaurar organização (**manager, super_admin**)
 
 **Planos:**
+
 - `GET /plans` - Listar planos (todos os roles)
 
 ## Setup
@@ -104,6 +108,7 @@ SECRET_KEY=sua-chave-secreta-jwt
 ### JWT Separado
 
 O sistema usa JWT separado para admins com:
+
 - Cookie: `system_admin_token`
 - Header: `Authorization: Bearer <token>`
 - Claim especial: `isSystemAdmin: true`
@@ -139,6 +144,7 @@ requireSystemAdmin (base - valida JWT e status)
 ## Notas Importantes
 
 ⚠️ **Autenticação de Admin:** Atualmente o sistema **NÃO valida senha** pois a tabela `system_admins` não possui campo `password`. Considere:
+
 - Adicionar campo `password_hash` na tabela
 - Ou usar autenticação OAuth/SSO externa
 - Ou gerar tokens de acesso temporários

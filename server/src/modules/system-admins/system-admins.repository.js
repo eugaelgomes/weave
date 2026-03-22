@@ -3,10 +3,25 @@ const { executeQuery } = require("@/database/connection");
 class SystemAdminsRepository {
   // ==================== LISTAR ====================
 
-  async listAdmins({ page = 1, limit = 20, search = "", status = "all", orderBy = "created_at", order = "DESC" }) {
+  async listAdmins({
+    page = 1,
+    limit = 20,
+    search = "",
+    status = "all",
+    orderBy = "created_at",
+    order = "DESC",
+  }) {
     const offset = (page - 1) * limit;
-    const allowedOrderBy = ["created_at", "name", "email", "role", "updated_at"];
-    const safeOrderBy = allowedOrderBy.includes(orderBy) ? orderBy : "created_at";
+    const allowedOrderBy = [
+      "created_at",
+      "name",
+      "email",
+      "role",
+      "updated_at",
+    ];
+    const safeOrderBy = allowedOrderBy.includes(orderBy)
+      ? orderBy
+      : "created_at";
     const safeOrder = order === "ASC" ? "ASC" : "DESC";
 
     let whereClause = "WHERE is_deleted = false";
@@ -94,7 +109,13 @@ class SystemAdminsRepository {
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id, email, name, role, user_function, created_at
     `;
-    const results = await executeQuery(query, [email, name, role, user_function, createdBy]);
+    const results = await executeQuery(query, [
+      email,
+      name,
+      role,
+      user_function,
+      createdBy,
+    ]);
     return results[0];
   }
 

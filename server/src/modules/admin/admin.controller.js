@@ -13,7 +13,10 @@ class AdminController {
     if (error.message.includes("não encontrad")) {
       return res.status(404).json({ error: error.message });
     }
-    if (error.message.includes("obrigatório") || error.message.includes("inválido")) {
+    if (
+      error.message.includes("obrigatório") ||
+      error.message.includes("inválido")
+    ) {
       return res.status(400).json({ error: error.message });
     }
 
@@ -83,7 +86,10 @@ class AdminController {
       const updated = await this.adminRepository.updateUser(id, req.body);
       if (!updated) throw new Error("Nenhum campo válido para atualizar");
 
-      return res.json({ message: "Usuário atualizado com sucesso", user: updated });
+      return res.json({
+        message: "Usuário atualizado com sucesso",
+        user: updated,
+      });
     } catch (error) {
       return this._handleError(error, res);
     }
@@ -97,7 +103,10 @@ class AdminController {
       const deleted = await this.adminRepository.softDeleteUser(id);
       if (!deleted) throw new Error("Usuário não encontrado");
 
-      return res.json({ message: "Usuário desativado com sucesso", user: deleted });
+      return res.json({
+        message: "Usuário desativado com sucesso",
+        user: deleted,
+      });
     } catch (error) {
       return this._handleError(error, res);
     }
@@ -111,7 +120,10 @@ class AdminController {
       const restored = await this.adminRepository.restoreUser(id);
       if (!restored) throw new Error("Usuário não encontrado");
 
-      return res.json({ message: "Usuário restaurado com sucesso", user: restored });
+      return res.json({
+        message: "Usuário restaurado com sucesso",
+        user: restored,
+      });
     } catch (error) {
       return this._handleError(error, res);
     }
@@ -166,10 +178,16 @@ class AdminController {
       const { id } = req.params;
       if (!id) throw new Error("ID da organização é obrigatório");
 
-      const updated = await this.adminRepository.updateOrganization(id, req.body);
+      const updated = await this.adminRepository.updateOrganization(
+        id,
+        req.body
+      );
       if (!updated) throw new Error("Nenhum campo válido para atualizar");
 
-      return res.json({ message: "Organização atualizada com sucesso", organization: updated });
+      return res.json({
+        message: "Organização atualizada com sucesso",
+        organization: updated,
+      });
     } catch (error) {
       return this._handleError(error, res);
     }
@@ -183,7 +201,10 @@ class AdminController {
       const deleted = await this.adminRepository.softDeleteOrganization(id);
       if (!deleted) throw new Error("Organização não encontrada");
 
-      return res.json({ message: "Organização desativada com sucesso", organization: deleted });
+      return res.json({
+        message: "Organização desativada com sucesso",
+        organization: deleted,
+      });
     } catch (error) {
       return this._handleError(error, res);
     }
@@ -197,7 +218,10 @@ class AdminController {
       const restored = await this.adminRepository.restoreOrganization(id);
       if (!restored) throw new Error("Organização não encontrada");
 
-      return res.json({ message: "Organização restaurada com sucesso", organization: restored });
+      return res.json({
+        message: "Organização restaurada com sucesso",
+        organization: restored,
+      });
     } catch (error) {
       return this._handleError(error, res);
     }

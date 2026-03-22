@@ -23,7 +23,7 @@ const standardTrafficLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many failed attempts. Please try again later."},
+  message: { error: "Too many failed attempts. Please try again later." },
 });
 
 /**
@@ -35,7 +35,7 @@ const structuralLimiter = rateLimit({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error:"Too many failed attempts. Please try again later."},
+  message: { error: "Too many failed attempts. Please try again later." },
 });
 
 /**

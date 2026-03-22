@@ -2,9 +2,7 @@ const notesRepository = require("@/modules/notes/notes.repository");
 const blocksRepository = require("@/modules/notes/blocks.repository");
 const userRepository = require("@/modules/users/users.repository");
 const { collabMail } = require("@/services/email/templates/notes/invite");
-const {
-  ALLOWED_NOTE_STATUSES,
-} = require("@/services/patterns/product-patterns");
+const { ALLOWED_NOTE_STATUSES } = require("@/utils/patterns/product-patterns");
 const { PDFService } = require("@/services/note_export/pdf");
 
 const PlanUsageManager = require("@/modules/plans/plans.controller");
@@ -565,14 +563,23 @@ class NotesController {
 
       // Quando multipart/form-data, campos texto vêm como strings
       // Parsear properties se vier como string JSON
-      let { title, description, tags, status, deleted, project_id, properties } =
-        req.body;
+      let {
+        title,
+        description,
+        tags,
+        status,
+        deleted,
+        project_id,
+        properties,
+      } = req.body;
 
       if (typeof properties === "string") {
         try {
           properties = JSON.parse(properties);
         } catch {
-          return res.status(400).json({ error: "properties deve ser um JSON válido" });
+          return res
+            .status(400)
+            .json({ error: "properties deve ser um JSON válido" });
         }
       }
 
@@ -580,7 +587,10 @@ class NotesController {
         try {
           tags = JSON.parse(tags);
         } catch {
-          tags = tags.split(",").map((t) => t.trim()).filter(Boolean);
+          tags = tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean);
         }
       }
 
@@ -589,7 +599,10 @@ class NotesController {
       if (!userId) return;
 
       // Validação de acesso à nota (proprietário ou colaborador pode editar)
-      const { note, isOwner, isCollaborator } = await this._validateNoteAccess(id, userId);
+      const { note, isOwner, isCollaborator } = await this._validateNoteAccess(
+        id,
+        userId
+      );
 
       // Apenas o proprietário pode marcar como deletado
       if (deleted !== undefined && !isOwner) {
@@ -629,7 +642,9 @@ class NotesController {
       if (allUploadedFiles.length > 0) {
         usageRecord = await PlanUsageManager.managePlanUsage(userId);
         const getUserPlan = await PlansRepository.getUserAndPlan(userId);
-        const planDetails = await PlansRepository.getPlanById(getUserPlan.plan_id);
+        const planDetails = await PlansRepository.getPlanById(
+          getUserPlan.plan_id
+        );
 
         if (!usageRecord || !planDetails) {
           return res.status(404).json({
@@ -637,8 +652,10 @@ class NotesController {
           });
         }
 
-        const maxFileSizeMb = planDetails.details?.limits?.storage?.max_file_size_mb;
-        const totalMonthlyUploadMb = planDetails.details?.limits?.storage?.total_monthly_upload_mb;
+        const maxFileSizeMb =
+          planDetails.details?.limits?.storage?.max_file_size_mb;
+        const totalMonthlyUploadMb =
+          planDetails.details?.limits?.storage?.total_monthly_upload_mb;
 
         // Validar tamanho individual de cada arquivo
         if (maxFileSizeMb) {
@@ -675,7 +692,6 @@ class NotesController {
           }
         }
       }
-
 
       // Processar upload de ícone
       if (req.files?.icon?.[0]) {
@@ -777,7 +793,10 @@ class NotesController {
 
       // Registrar consumo de storage no plano após uploads bem-sucedidos
       if (usageRecord && totalUploadSizeMb > 0) {
-        await PlanUsageManager.consumeStorage(usageRecord.id, totalUploadSizeMb);
+        await PlanUsageManager.consumeStorage(
+          usageRecord.id,
+          totalUploadSizeMb
+        );
       }
 
       // Se há properties para atualizar
@@ -1344,6 +1363,5 @@ class NotesController {
     }
   }
 }
-
 
 module.exports = new NotesController();

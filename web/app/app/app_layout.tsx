@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "@/app/app/_components/layout/navbar";
 import Sidebar from "@/app/app/_components/layout/sidebar";
-import PagesFooter from "./footer";
+import PagesFooter from "./_components/layout/footer";
 
 interface LayoutProps {
   children: React.ReactNode;

@@ -1,67 +1,50 @@
 const express = require("express");
-const aiController = require("@/modules/weave-ai/weave-ai.controller");
+const multer = require("multer");
+
+const aiController = require("./weave-ai.controller");
+const agentController = require("./weave-ai.agents.controller");
 const { verifyToken } = require("@/middlewares/verify-token");
 const { strictLimiter } = require("@/middlewares/request-limiters");
 
 const router = express.Router();
 
-// Aplica autenticação em todas as rotas
-router.use(verifyToken);
-router.use(strictLimiter);
-
-/**
- * @route   POST /api/ai/chat
- * @desc    Chat unificado com IA - pode executar funções ou apenas responder
- * @access  Private
- * @body    {
- *   message: string,          // Mensagem do usuário
- *   allowEdit: boolean,       // Se true, permite executar funções (criar, editar, deletar)
- *                             // Se false, apenas responde sem executar ações
- *   useCase?: string,         // Caso de uso específico (opcional)
- *   provider?: string,        // Provider específico: 'gemini' ou 'perplexity' (opcional)
- *   sessionId?: string,       // ID da sessão de chat para manter histórico
- *   context?: object          // Contexto adicional (noteId, projectId, etc)
- * }
- */
-router.post("/chat", (req, res, next) => {
-  aiController.chat(req, res);
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
 });
 
-/**
- * @route   GET /api/ai/chat/history
- * @desc    Busca histórico de chat
- * @access  Private
- * @query   sessionId?: string
- */
-router.get("/chat/history", (req, res, next) => {
-  aiController.getChatHistory(req, res);
-});
+const knowledgeUpload = upload.array("knowledge_files", 5);
+const bind = (controller, method) => controller[method].bind(controller);
 
-/**
- * @route   GET /api/ai/use-cases
- * @desc    Lista todos os casos de uso disponíveis
- * @access  Private
- */
-router.get("/use-cases", (req, res, next) => {
-  aiController.listUseCases(req, res);
-});
+router.use(verifyToken, strictLimiter);
 
-/**
- * @route   GET /api/ai/models
- * @desc    Lista modelos de IA disponíveis
- * @access  Private
- */
-router.get("/models", (req, res, next) => {
-  aiController.getAvailableModels(req, res);
-});
+// Chat endpoints
+router.post("/chat", bind(aiController, "chat"));
+router.get("/chat/history", bind(aiController, "getChatHistory"));
 
-/**
- * @route   GET /api/ai/functions
- * @desc    Lista todas as funções que a IA pode executar (quando allowEdit=true)
- * @access  Private
- */
-router.get("/functions", (req, res, next) => {
-  aiController.listAvailableFunctions(req, res);
-});
+// AI catalog endpoints
+router.get("/use-cases", bind(aiController, "listUseCases"));
+router.get("/models", bind(aiController, "getAvailableModels"));
+router.get("/functions", bind(aiController, "listAvailableFunctions"));
+
+// Agent management endpoints
+router.get("/agents", bind(agentController, "getUserAgents"));
+router.get("/agents/providers", bind(agentController, "getProvidersAndModels"));
+
+router.get("/agents/:id", bind(agentController, "getAgentById"));
+router.post(
+  "/agents",
+  knowledgeUpload,
+  bind(agentController, "createUserAgent")
+);
+router.put(
+  "/agents/:id",
+  knowledgeUpload,
+  bind(agentController, "updateAgent")
+);
+router.delete("/agents/:id", bind(agentController, "deleteAgent"));
+router.post("/agents/:id/share", bind(agentController, "shareAgent"));
 
 module.exports = router;

@@ -27,7 +27,9 @@ class SystemAuthController {
 
     // Tratamento específico de erros de JWT ou Autenticação
     if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ status: "error", message: "Sessão expirada." });
+      return res
+        .status(401)
+        .json({ status: "error", message: "Sessão expirada." });
     }
 
     return res.status(statusCode).json(response);
@@ -66,7 +68,11 @@ class SystemAuthController {
       // 3. Validação de Status da Conta
       if (!admin.is_active || admin.is_suspended) {
         logger.warn(`Acesso negado: Conta inativa ou suspensa - ${email}`);
-        const err = new Error(admin.is_suspended ? "Esta conta administrativa foi suspensa." : "Conta inativa.");
+        const err = new Error(
+          admin.is_suspended
+            ? "Esta conta administrativa foi suspensa."
+            : "Conta inativa."
+        );
         err.statusCode = 403;
         err.isOperational = true;
         throw err;
@@ -86,7 +92,7 @@ class SystemAuthController {
       });
 
       // 5. Persistência de Auditoria (Async)
-      SystemAuthRepository.updateLastAccess(admin.id).catch(e =>
+      SystemAuthRepository.updateLastAccess(admin.id).catch((e) =>
         logger.error("Falha ao atualizar último acesso", e)
       );
 
@@ -105,9 +111,8 @@ class SystemAuthController {
           name: admin.name,
           role: admin.role,
         },
-        token
+        token,
       });
-
     } catch (error) {
       return this._handleError(error, res, "Login");
     }
@@ -126,7 +131,7 @@ class SystemAuthController {
 
       return res.status(200).json({
         status: "success",
-        message: "Sessão encerrada com segurança."
+        message: "Sessão encerrada com segurança.",
       });
     } catch (error) {
       return this._handleError(error, res, "Logout");
@@ -147,7 +152,8 @@ class SystemAuthController {
         throw err;
       }
 
-      const validation = await SystemAuthRepository.validateAdminStatus(adminId);
+      const validation =
+        await SystemAuthRepository.validateAdminStatus(adminId);
 
       if (!validation || !validation.valid) {
         const err = new Error(validation?.reason || "Acesso negado.");

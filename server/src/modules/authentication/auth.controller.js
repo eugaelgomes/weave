@@ -2,11 +2,42 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const { validationResult } = require("express-validator");
-const AuthRepository = require("@/modules/auth/auth.repository");
+const AuthRepository = require("@/modules/authentication/auth.repository");
 const { setAuthCookie, clearAuthCookie } = require("@/utils/cookie-helper");
 
 const authLogs = require("@/utils/system_logs/auth-logs");
 const { secretsManager } = require("@/services/secrets");
+
+const normalizeDefaultArea = (defaultAreaData) => {
+  if (!defaultAreaData) {
+    return null;
+  }
+
+  return {
+    id: defaultAreaData.org_default_area_id,
+    name: defaultAreaData.org_default_area_name,
+    slug: defaultAreaData.org_default_area_slug,
+    role: defaultAreaData.org_default_area_role,
+    member_since: defaultAreaData.org_default_area_member_since,
+    description: defaultAreaData.org_default_area_description,
+    properties: defaultAreaData.org_default_area_properties || {},
+  };
+};
+
+const normalizeOrganization = (organizationData) => {
+  if (!organizationData) {
+    return null;
+  }
+
+  return {
+    id: organizationData.org_id,
+    unique_name: organizationData.org_unique_name,
+    name: organizationData.org_name,
+    logo_url: organizationData.org_logo_url,
+    member_role: organizationData.org_member_role,
+    member_since: organizationData.org_member_since,
+  };
+};
 
 class AuthController {
   async userSignin(req, res) {
@@ -54,15 +85,20 @@ class AuthController {
           .json({ message: "Usuário/e-mail ou senha inválidos" });
       }
 
+      const organization = normalizeOrganization(user.organization);
+      const defaultArea = normalizeDefaultArea(user.default_area);
+
       const payload = {
         userId: user.user_id,
         username: user.username,
         email: user.email,
-        name: user.name,
-        org_id: user.org_id,
-        org_unique_name: user.org_unique_name,
         plan_id: user.plan_id,
-        org_member_role: user.org_member_role,
+        org_id: organization?.id || null,
+        org_unique_name: organization?.unique_name || null,
+        org_member_role: organization?.member_role || null,
+        org_default_area_id: defaultArea?.id || null,
+        org_default_area_slug: defaultArea?.slug || null,
+        org_default_area_role: defaultArea?.role || null,
       };
 
       const token = jwt.sign(payload, secretsManager(), {
@@ -84,7 +120,7 @@ class AuthController {
         user: {
           user_profile: {
             id: user.user_id,
-            name: user.name,
+            name: user.user_name || user.name,
             username: user.username,
             email: user.email,
             avatar_url: user.avatar_url,
@@ -94,14 +130,18 @@ class AuthController {
             private_profile: user.private_profile,
           },
           user_organization: {
-            id: user.org_id,
-            unique_name: user.org_unique_name,
-            name: user.org_name,
-            role: user.org_member_role,
+            id: organization?.id || null,
+            unique_name: organization?.unique_name || null,
+            name: organization?.name || null,
+            logo_url: organization?.logo_url || null,
+            role: organization?.member_role || null,
+            member_since: organization?.member_since || null,
+            default_area: defaultArea,
           },
           user_subscription: {
-            plan_id: user.user_plan_id,
+            plan_id: user.plan_id,
             plan_name: user.plan_name,
+            plan_details: user.plan_details || {},
           },
         },
         auth: {
@@ -179,7 +219,9 @@ class AuthController {
 
       if (!user) {
         // Se não encontrou por Google ID, tentar por email
-        const existingUser = await AuthRepository.findUserByEmail(googleUser.email);
+        const existingUser = await AuthRepository.findUserByEmail(
+          googleUser.email
+        );
 
         if (existingUser) {
           // Usuário existe mas ainda não tem Google ID associado
@@ -207,16 +249,21 @@ class AuthController {
         throw new Error("Falha ao criar/encontrar usuário");
       }
 
+      const organization = normalizeOrganization(user.organization);
+      const defaultArea = normalizeDefaultArea(user.default_area);
+
       // Gerar JWT token com payload completo
       const payload = {
         userId: user.user_id,
         username: user.username,
         email: user.email,
-        name: user.name,
-        org_id: user.org_id,
-        org_unique_name: user.org_unique_name,
         plan_id: user.plan_id,
-        org_member_role: user.org_member_role,
+        org_id: organization?.id || null,
+        org_unique_name: organization?.unique_name || null,
+        org_member_role: organization?.member_role || null,
+        org_default_area_id: defaultArea?.id || null,
+        org_default_area_slug: defaultArea?.slug || null,
+        org_default_area_role: defaultArea?.role || null,
       };
 
       const token = jwt.sign(payload, secretsManager(), {

@@ -39,7 +39,9 @@ const verifyToken = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, APPLICATION_SECRET_KEY, { algorithms: ["HS256"] });
+    const decoded = jwt.verify(token, APPLICATION_SECRET_KEY, {
+      algorithms: ["HS256"],
+    });
     req.user = decoded;
 
     //if (isProduction) {
@@ -55,7 +57,9 @@ const verifyToken = (req, res, next) => {
     //    tokenSource,
     //  });
     //}
-    return res.status(401).json(error,{ message: "Token inválido ou expirado." });
+    return res
+      .status(401)
+      .json(error, { message: "Token inválido ou expirado." });
   }
 };
 

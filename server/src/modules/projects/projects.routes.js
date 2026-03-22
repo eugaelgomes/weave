@@ -2,20 +2,43 @@ const express = require("express");
 const projectsController = require("@/modules/projects/projects.controller");
 const { verifyToken } = require("@/middlewares/verify-token");
 const { projectUpdateUpload } = require("@/utils/data/project-upload");
-const { highTrafficLimiter, standardTrafficLimiter } = require("@/middlewares/request-limiters");
+const {
+  highTrafficLimiter,
+  standardTrafficLimiter,
+} = require("@/middlewares/request-limiters");
 
 const router = express.Router();
 
 router.use(verifyToken);
 
 // Leitura de projetos (Alto fluxo)
-router.get("/", highTrafficLimiter, projectsController.getAllProjects.bind(projectsController));
-router.get("/stats", highTrafficLimiter, projectsController.getProjectStats.bind(projectsController));
+router.get(
+  "/",
+  highTrafficLimiter,
+  projectsController.getAllProjects.bind(projectsController)
+);
+router.get(
+  "/stats",
+  highTrafficLimiter,
+  projectsController.getProjectStats.bind(projectsController)
+);
 
 // Modificações (Fluxo moderado)
-router.post("/", standardTrafficLimiter, projectsController.createProject.bind(projectsController));
-router.patch("/:projectId", standardTrafficLimiter, projectsController.updateProject.bind(projectsController));
-router.delete("/:projectId", standardTrafficLimiter, projectsController.deleteProject.bind(projectsController));
+router.post(
+  "/",
+  standardTrafficLimiter,
+  projectsController.createProject.bind(projectsController)
+);
+router.patch(
+  "/:projectId",
+  standardTrafficLimiter,
+  projectsController.updateProject.bind(projectsController)
+);
+router.delete(
+  "/:projectId",
+  standardTrafficLimiter,
+  projectsController.deleteProject.bind(projectsController)
+);
 
 router.get("/:id", projectsController.getProjectById.bind(projectsController));
 
@@ -35,7 +58,10 @@ router.delete(
 
 router.get("/:id", projectsController.getProjectById.bind(projectsController));
 
-router.get("/:id/stages", projectsController.getProjectStages.bind(projectsController));
+router.get(
+  "/:id/stages",
+  projectsController.getProjectStages.bind(projectsController)
+);
 
 router
   .route("/:projectId/collaborators")

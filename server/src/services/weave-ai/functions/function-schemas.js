@@ -9,7 +9,7 @@ const {
   ALLOWED_NOTE_STATUSES,
   ALLOWED_BLOCK_TYPES,
   PROJECT_FIELDS,
-} = require("@/services/patterns/product-patterns");
+} = require("@/utils/patterns/product-patterns");
 
 /**
  * Níveis de segurança para operações
@@ -831,7 +831,7 @@ const chatFunctions = {
       properties: {
         title: {
           type: "string",
-          description: "Título da conversa (opcional, default \"Nova Conversa\")",
+          description: 'Título da conversa (opcional, default "Nova Conversa")',
           default: "Nova Conversa",
         },
       },

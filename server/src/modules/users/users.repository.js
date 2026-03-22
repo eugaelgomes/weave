@@ -1,4 +1,3 @@
-
 const { executeQuery } = require("@/database/connection");
 const { defaultAppPreferences } = require("@/modules/users/normalize");
 
@@ -416,10 +415,7 @@ class UserRepository {
       WHERE user_id = $2
       RETURNING user_id, user_preference
     `;
-    const results = await executeQuery(query, [
-      defaultAppPreferences,
-      userId,
-    ]);
+    const results = await executeQuery(query, [defaultAppPreferences, userId]);
     return results[0];
   }
 

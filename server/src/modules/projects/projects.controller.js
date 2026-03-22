@@ -1,7 +1,7 @@
 const projectsRepository = require("@/modules/projects/projects.repository");
 const {
   ALLOWED_PROJECT_STATUSES,
-} = require("@/services/patterns/product-patterns");
+} = require("@/utils/patterns/product-patterns");
 
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
@@ -113,7 +113,9 @@ class ProjectsController {
           } else if (typeof value === "object" && value.path !== undefined) {
             validated[key] = value;
           } else {
-            throw new Error("Icon deve ser uma string (emoji) ou objeto de imagem");
+            throw new Error(
+              "Icon deve ser uma string (emoji) ou objeto de imagem"
+            );
           }
         } else {
           validated[key] = value;
@@ -383,8 +385,7 @@ class ProjectsController {
     }
   }
 
-
-/**
+  /**
    * POST /api/projects - Criar um novo projeto
    * Cria um novo projeto para o usuário autenticado
    */
@@ -398,7 +399,7 @@ class ProjectsController {
         methodology,
         default_view,
         org_id,
-        parent_project_id
+        parent_project_id,
       } = req.body;
 
       // Validação de autenticação
@@ -407,21 +408,32 @@ class ProjectsController {
 
       const usageRecord = await PlanUsageManager.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
-      const planDetails = await PlansRepository.getPlanById(getUserPlan.plan_id);
+      const planDetails = await PlansRepository.getPlanById(
+        getUserPlan.plan_id
+      );
 
       if (!usageRecord || !planDetails) {
-        return res.status(404).json({ error: "Configuração de plano não encontrada para este usuário." });
+        return res
+          .status(404)
+          .json({
+            error: "Configuração de plano não encontrada para este usuário.",
+          });
       }
 
       if (!planDetails.details) {
         return res.status(500).json({
           error: "Configuração de plano inválida",
-          message: "O plano não possui configuração (details) no banco de dados.",
+          message:
+            "O plano não possui configuração (details) no banco de dados.",
         });
       }
 
-      const getNestedValue = (obj, path) => path.split(".").reduce((acc, part) => acc && acc[part], obj);
-      const maxProjects = getNestedValue(planDetails.details, PLAN_PATHS.LIMITS.MAX_PROJECTS);
+      const getNestedValue = (obj, path) =>
+        path.split(".").reduce((acc, part) => acc && acc[part], obj);
+      const maxProjects = getNestedValue(
+        planDetails.details,
+        PLAN_PATHS.LIMITS.MAX_PROJECTS
+      );
 
       if (maxProjects === undefined) {
         return res.status(500).json({
@@ -448,7 +460,8 @@ class ProjectsController {
         throw new Error("Título é obrigatório");
       }
 
-      const projectStatus = status === undefined || status === null ? "open" : status;
+      const projectStatus =
+        status === undefined || status === null ? "open" : status;
 
       if (!ALLOWED_PROJECT_STATUSES.includes(projectStatus)) {
         return res.status(400).json({
@@ -457,11 +470,20 @@ class ProjectsController {
       }
 
       // 🟢 2. Valida as propriedades de UI/Design que o usuário enviou (color, icon, tags)
-      const userValidatedProps = properties ? this._validateProperties(properties) : {};
+      const userValidatedProps = properties
+        ? this._validateProperties(properties)
+        : {};
 
       // 🟢 3. CHAMADA AO NORMALIZER
       // Passamos os dados da requisição + as propriedades validadas pelo usuário
-      const payload = { title, description, methodology, default_view, status: projectStatus, parent_project_id };
+      const payload = {
+        title,
+        description,
+        methodology,
+        default_view,
+        status: projectStatus,
+        parent_project_id,
+      };
       const { projectData, stagesData } = normalizeNewProject(
         payload,
         userId,
@@ -518,13 +540,12 @@ class ProjectsController {
 
       // Retorna a resposta limpa
       res.status(200).json({
-        stages: stages || []
+        stages: stages || [],
       });
     } catch (error) {
       this._handleError(error, res, next);
     }
   }
-
 
   /**
    * PUT /api/projects/:id - Atualizar um projeto (consolidado)
@@ -1343,7 +1364,10 @@ class ProjectsController {
       const project = await this._validateProjectAccess(projectId, userId);
 
       // Buscar notas diretamente da tabela notes via project_id
-      const notes = await this.projectsRepository.getAssociatedNotes(projectId, userId);
+      const notes = await this.projectsRepository.getAssociatedNotes(
+        projectId,
+        userId
+      );
 
       res.status(200).json({
         notes: notes,
@@ -1392,8 +1416,14 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const VALID_STATUSES = ['open', 'in_progress', 'paused', 'completed', 'archived'];
-      const VALID_METHODOLOGIES = ['kanban', 'scrum', 'waterfall', 'custom'];
+      const VALID_STATUSES = [
+        "open",
+        "in_progress",
+        "paused",
+        "completed",
+        "archived",
+      ];
+      const VALID_METHODOLOGIES = ["kanban", "scrum", "waterfall", "custom"];
 
       const filters = {};
 
@@ -1401,7 +1431,10 @@ class ProjectsController {
         filters.status = req.query.status;
       }
 
-      if (req.query.methodology && VALID_METHODOLOGIES.includes(req.query.methodology)) {
+      if (
+        req.query.methodology &&
+        VALID_METHODOLOGIES.includes(req.query.methodology)
+      ) {
         filters.methodology = req.query.methodology;
       }
 
@@ -1415,9 +1448,12 @@ class ProjectsController {
         if (!isNaN(to.getTime())) filters.to = to;
       }
 
-      filters.parent_only = req.query.parent_only !== 'false';
+      filters.parent_only = req.query.parent_only !== "false";
 
-      const result = await this.projectsRepository.getProjectStats(userId, filters);
+      const result = await this.projectsRepository.getProjectStats(
+        userId,
+        filters
+      );
       const row = result[0];
 
       const tasks = row.tasks;
@@ -1469,7 +1505,9 @@ class ProjectsController {
           done: tasksDone,
           pending: parseInt(tasks.pending) || 0,
           completion_rate:
-            tasksTotal > 0 ? Math.round((tasksDone / tasksTotal) * 1000) / 10 : 0,
+            tasksTotal > 0
+              ? Math.round((tasksDone / tasksTotal) * 1000) / 10
+              : 0,
         },
         filters_applied: {
           status: filters.status || null,
@@ -1511,7 +1549,9 @@ class ProjectsController {
       if (!result || result.length === 0) {
         return res
           .status(404)
-          .json({ error: "Nota não encontrada no projeto ou estágio inválido." });
+          .json({
+            error: "Nota não encontrada no projeto ou estágio inválido.",
+          });
       }
 
       res.status(200).json({

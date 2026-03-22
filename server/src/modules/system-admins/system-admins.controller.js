@@ -9,7 +9,11 @@ class SystemAdminsController {
     if (error.message.includes("não encontrad")) {
       return res.status(404).json({ error: error.message });
     }
-    if (error.message.includes("obrigatório") || error.message.includes("inválido") || error.message.includes("já cadastrado")) {
+    if (
+      error.message.includes("obrigatório") ||
+      error.message.includes("inválido") ||
+      error.message.includes("já cadastrado")
+    ) {
       return res.status(400).json({ error: error.message });
     }
 
@@ -99,7 +103,10 @@ class SystemAdminsController {
       if (!id) throw new Error("ID é obrigatório");
 
       // Prevenir que admin altere a si mesmo em campos críticos
-      if (id === req.systemAdmin.adminId && (req.body.role || req.body.is_active === false)) {
+      if (
+        id === req.systemAdmin.adminId &&
+        (req.body.role || req.body.is_active === false)
+      ) {
         throw new Error("Não é possível alterar sua própria role ou status");
       }
 

@@ -456,7 +456,9 @@ class notesRepository {
       if (updateData[field] !== undefined) {
         if (field === "properties") {
           // Merge parcial: atualiza apenas as chaves enviadas dentro de properties
-          updates.push(`properties = COALESCE(properties, '{}'::jsonb) || $${paramIndex}::jsonb`);
+          updates.push(
+            `properties = COALESCE(properties, '{}'::jsonb) || $${paramIndex}::jsonb`
+          );
           values.push(JSON.stringify(updateData[field]));
         } else {
           updates.push(`${field} = $${paramIndex}`);

@@ -9,6 +9,7 @@ Este erro ocorre quando o cookie de autenticação não está sendo enviado do f
 ### 1. Variáveis de Ambiente (Backend)
 
 #### Obrigatórias:
+
 ```env
 NODE_ENV=production
 SECRET_KEY=sua_chave_secreta_forte
@@ -16,11 +17,13 @@ ALLOWED_ORIGINS=https://seu-dominio.com,https://www.seu-dominio.com
 ```
 
 #### Opcional (recomendado para subdomínios):
+
 ```env
 COOKIE_DOMAIN=.seu-dominio.com
 ```
 
 #### Opcional (para cross-domain):
+
 ```env
 # Só use 'none' se frontend e backend estiverem em domínios completamente diferentes
 # Padrão: 'lax' (funciona para mesmo domínio e subdomínios)
@@ -28,11 +31,13 @@ COOKIE_SAME_SITE=none
 ```
 
 **Importante sobre COOKIE_DOMAIN:**
+
 - Se frontend e backend estão no mesmo domínio: deixe vazio
 - Se estão em subdomínios diferentes (ex: `app.example.com` e `api.example.com`): use `.example.com` (com ponto inicial)
 - Se estão em domínios completamente diferentes: não use (cookies cross-domain têm limitações)
 
 **Importante sobre COOKIE_SAME_SITE:**
+
 - **lax** (padrão): Funciona para mesmo domínio e subdomínios. Mais seguro e compatível.
 - **none**: Necessário apenas para domínios completamente diferentes (ex: app.com e api.outro.com). Requer HTTPS obrigatório.
 
@@ -41,6 +46,7 @@ COOKIE_SAME_SITE=none
 Em produção (`NODE_ENV=production`), os cookies são configurados com `secure: true`, o que **exige HTTPS**.
 
 **Certifique-se de que:**
+
 - ✅ Frontend está rodando em HTTPS
 - ✅ Backend está rodando em HTTPS
 - ✅ Certificado SSL é válido (não autoassinado)
@@ -49,13 +55,15 @@ Em produção (`NODE_ENV=production`), os cookies são configurados com `secure:
 ### 3. Configuração CORS
 
 #### No Backend (já configurado):
+
 - `credentials: true` ✅
 - `allowedOrigins` configurado com as URLs do frontend ✅
 
 #### No Frontend:
+
 ```typescript
 fetch(url, {
-  credentials: 'include', // ✅ Já configurado em api-methods.ts
+  credentials: "include", // ✅ Já configurado em api-methods.ts
   // ... outras opções
 });
 ```
@@ -65,6 +73,7 @@ fetch(url, {
 Se estiver usando um proxy reverso, certifique-se de passar os headers corretos:
 
 #### Nginx:
+
 ```nginx
 location /api/ {
     proxy_pass http://backend:8080;
@@ -79,6 +88,7 @@ location /api/ {
 ```
 
 #### Apache:
+
 ```apache
 ProxyPass /api/ http://backend:8080/
 ProxyPassReverse /api/ http://backend:8080/
@@ -90,6 +100,7 @@ ProxyAddHeaders On
 ### 5. Trust Proxy (Backend)
 
 No arquivo `global-middleware.js`, já está configurado:
+
 ```javascript
 app.set("trust proxy", 1); // ✅
 ```
@@ -140,6 +151,7 @@ pm2 logs server --lines 100 | grep -E "\[Auth|Cookie\]"
 ### 1. Verificar se o cookie está sendo criado
 
 Após fazer login, verifique nos DevTools do navegador:
+
 1. Abra DevTools (F12)
 2. Vá em Application/Storage → Cookies
 3. Procure pelo cookie `token`
@@ -152,12 +164,14 @@ Após fazer login, verifique nos DevTools do navegador:
 ### 2. Verificar se o cookie está sendo enviado
 
 Nas requisições subsequentes:
+
 1. DevTools → Network
 2. Faça uma requisição à API
 3. Verifique a requisição → Headers → Request Headers
 4. Procure por `Cookie: token=...`
 
 Se o cookie **não aparecer**, problemas comuns:
+
 - Domínio do cookie incorreto
 - Cookie expirado
 - SameSite/Secure incompatível com a configuração
@@ -182,38 +196,46 @@ curl -v https://api.example.com/api/v1/users/me \
 ## Soluções para Problemas Comuns
 
 ### Problema: Cookie não é criado
+
 **Causa**: HTTPS não configurado ou certificado inválido  
 **Solução**: Configure HTTPS com certificado válido (Let's Encrypt)
 
 ### Problema: Cookie criado mas não enviado
+
 **Causa**: Domínio do cookie incompatível  
 **Solução**: Configure `COOKIE_DOMAIN` corretamente ou deixe vazio
 
 ### Problema: CORS blocked
+
 **Causa**: `ALLOWED_ORIGINS` não inclui o frontend  
 **Solução**: Adicione a URL completa do frontend em `ALLOWED_ORIGINS`
 
 ### Problema: "Origin header obrigatório em produção"
+
 **Causa**: Requisição não tem header Origin  
 **Solução**: Certifique-se de que o frontend está enviando o header Origin (fetch com credentials: 'include' já faz isso)
 
 ### Problema: Funciona localmente mas não em produção
+
 **Causa**: Diferenças de configuração de ambiente  
 **Solução**: Verifique todas as variáveis de ambiente acima
 
 ## Arquivos Modificados
 
-✅ **server/src/utils/cookie-helper.js** (NOVO)  
-   - Função centralizada para configuração de cookies
-   - Logs de debug em produção
+✅ **server/src/utils/cookie-helper.js** (NOVO)
 
-✅ **server/src/middlewares/authentication/index.js**  
-   - Logs detalhados de debug
-   - Identificação da origem do token (cookie ou header)
+- Função centralizada para configuração de cookies
+- Logs de debug em produção
 
-✅ **server/src/modules/auth/auth.controller.js**  
-   - Uso do cookie-helper centralizado
-   - Consistência na configuração de cookies
+✅ **server/src/middlewares/authentication/index.js**
+
+- Logs detalhados de debug
+- Identificação da origem do token (cookie ou header)
+
+✅ **server/src/modules/auth/auth.controller.js**
+
+- Uso do cookie-helper centralizado
+- Consistência na configuração de cookies
 
 ## Próximos Passos
 

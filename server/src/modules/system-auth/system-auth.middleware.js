@@ -19,7 +19,9 @@ const requireSystemAdmin = async (req, res, next) => {
     }
 
     if (!token) {
-      return res.status(401).json({ error: "Token de autenticação não fornecido" });
+      return res
+        .status(401)
+        .json({ error: "Token de autenticação não fornecido" });
     }
 
     // 2. Verificar token
@@ -32,11 +34,15 @@ const requireSystemAdmin = async (req, res, next) => {
 
     // 3. Validar que é token de system admin
     if (!decoded.isSystemAdmin) {
-      return res.status(403).json({ error: "Acesso negado. Token não é de system admin." });
+      return res
+        .status(403)
+        .json({ error: "Acesso negado. Token não é de system admin." });
     }
 
     // 4. Validar status da conta
-    const validation = await SystemAuthRepository.validateAdminStatus(decoded.adminId);
+    const validation = await SystemAuthRepository.validateAdminStatus(
+      decoded.adminId
+    );
     if (!validation.valid) {
       return res.status(403).json({ error: validation.reason });
     }
@@ -72,7 +78,7 @@ const requireRole = (allowedRoles) => {
       return res.status(403).json({
         error: "Permissão insuficiente",
         required: allowedRoles,
-        current: userRole
+        current: userRole,
       });
     }
 

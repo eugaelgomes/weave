@@ -1,4 +1,8 @@
-const { executeQuery, rowCount } = require("@/database/connection");
+const {
+  executeQuery,
+  rowCount,
+  getConnection,
+} = require("@/database/connection");
 
 class OrganizationsRepository {
   async getOrgsByUserId(user_id) {
@@ -11,7 +15,7 @@ class OrganizationsRepository {
       o.logo_url,
       o.banner_url,
       o.description,
-      o.basic_properties,
+      o.basic_properties AS properties,
       o.org_domains,
       o.deleted,
       o.created_at,
@@ -90,20 +94,23 @@ class OrganizationsRepository {
     user_id,
     role,
     status,
-    invited_by
+    invited_by,
+    txClient = null
   ) {
+    const inviterId = invited_by || user_id;
     const query = `
-      INSERT INTO organizations_members (organization_id, user_id, role, status, invited_by)
+      INSERT INTO organizations_members (org_id, user_id, role, status, invited_by)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *;
     `;
-    const results = await executeQuery(query, [
-      organization_id,
-      user_id,
-      role,
-      status,
-      invited_by,
-    ]);
+    const params = [organization_id, user_id, role, status, inviterId];
+
+    if (txClient) {
+      const { rows } = await txClient.query(query, params);
+      return rows[0];
+    }
+
+    const results = await executeQuery(query, params);
     return results[0];
   }
 
@@ -111,7 +118,7 @@ class OrganizationsRepository {
     const query = `
       UPDATE organizations_members
       SET deleted = true, updated_at = now()
-      WHERE organization_id = $1 AND user_id = $2
+      WHERE org_id = $1 AND user_id = $2
       RETURNING *;
     `;
     const results = await executeQuery(query, [organization_id, user_id]);
@@ -122,7 +129,7 @@ class OrganizationsRepository {
     const query = `
       UPDATE organizations_members
       SET role = $3, updated_at = now()
-      WHERE organization_id = $1 AND user_id = $2
+      WHERE org_id = $1 AND user_id = $2
       RETURNING *;
     `;
     const results = await executeQuery(query, [organization_id, user_id, role]);
@@ -133,7 +140,7 @@ class OrganizationsRepository {
     const query = `
       UPDATE organizations_members
       SET status = $3, updated_at = now()
-      WHERE organization_id = $1 AND user_id = $2
+      WHERE org_id = $1 AND user_id = $2
       RETURNING *;
     `;
     const results = await executeQuery(query, [
@@ -147,7 +154,7 @@ class OrganizationsRepository {
   async isMember(organization_id, user_id) {
     const query = `
       SELECT 1 FROM organizations_members
-      WHERE organization_id = $1 AND user_id = $2;
+      WHERE org_id = $1 AND user_id = $2;
     `;
     const results = await executeQuery(query, [organization_id, user_id]);
     return results.length > 0;
@@ -176,13 +183,35 @@ class OrganizationsRepository {
     properties,
     org_domains
   ) {
+    const client = await getConnection();
     try {
       await client.query("BEGIN");
 
       const insertOrgQuery = `
-      INSERT INTO organizations (user_id, org_name, unique_name, logo_url, banner_url, description, properties, org_domains)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING *;
+      INSERT INTO organizations (
+        user_id,
+        org_name,
+        unique_name,
+        logo_url,
+        banner_url,
+        description,
+        basic_properties,
+        org_domains
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::text[])
+      RETURNING
+        id,
+        user_id,
+        org_name,
+        unique_name,
+        logo_url,
+        banner_url,
+        description,
+        basic_properties AS properties,
+        org_domains,
+        created_at,
+        updated_at,
+        deleted;
     `;
 
       const orgResult = await client.query(insertOrgQuery, [
@@ -214,7 +243,7 @@ class OrganizationsRepository {
         "super_admin",
         "active",
         null,
-        client // permite usar a mesma transação dentro do método
+        client
       );
 
       await client.query("COMMIT");
@@ -249,11 +278,23 @@ class OrganizationsRepository {
           logo_url = $5,
           banner_url = $6,
           description = $7,
-          properties = $8,
+          basic_properties = $8::jsonb,
           deleted = $9,
-          org_domains = $10
+          org_domains = $10::text[]
       WHERE id = $1 and user_id = $2
-      RETURNING *;
+      RETURNING
+        id,
+        user_id,
+        org_name,
+        unique_name,
+        logo_url,
+        banner_url,
+        description,
+        basic_properties AS properties,
+        org_domains,
+        created_at,
+        updated_at,
+        deleted;
     `;
     const results = await executeQuery(query, [
       org_id,

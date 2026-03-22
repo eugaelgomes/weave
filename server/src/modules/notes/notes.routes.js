@@ -4,7 +4,10 @@ const notesController = require("@/modules/notes/notes.controller");
 
 const { verifyToken } = require("@/middlewares/verify-token");
 const { noteUpdateUpload } = require("@/utils/data/note-upload");
-const { highTrafficLimiter, standardTrafficLimiter } = require("@/middlewares/request-limiters");
+const {
+  highTrafficLimiter,
+  standardTrafficLimiter,
+} = require("@/middlewares/request-limiters");
 
 const router = express.Router();
 

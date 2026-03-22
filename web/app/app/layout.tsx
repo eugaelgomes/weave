@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../_contexts/auth-context";
 import { AuthenticatedProviders } from "../_contexts/authenticated-providers";
-import Layout from "./_components/layout/layout";
+import Layout from "./app_layout";
 
 export const dynamicParams = true;
 
@@ -17,13 +17,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!loading && !authenticated && !hasRedirected.current) {
       hasRedirected.current = true;
-      // Normaliza o pathname removendo barras finais
       const normalizedPath = pathname.replace(/\/+$/, "") || "/app";
       router.push(`/auth/signin?redirect=${encodeURIComponent(normalizedPath)}`);
     }
   }, [authenticated, loading, router, pathname]);
 
-  // Aguarda verificação de autenticação
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -34,7 +32,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Mostra loading enquanto redireciona para signin
   if (!authenticated) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -45,7 +42,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Renderiza com providers e layout apenas se autenticado
   return (
     <AuthenticatedProviders>
       <Layout>{children}</Layout>

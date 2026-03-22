@@ -1,6 +1,10 @@
 const express = require("express");
 const userController = require("@/modules/users/users.controller");
-const { structuralLimiter, standardTrafficLimiter, highTrafficLimiter } = require("@/middlewares/request-limiters");
+const {
+  structuralLimiter,
+  standardTrafficLimiter,
+  highTrafficLimiter,
+} = require("@/middlewares/request-limiters");
 const { inputValidation } = require("@/utils/data/input-validation");
 const upload = require("@/utils/data/profile-img");
 const validateCompressedImageSize = require("@/utils/image-validator");
@@ -23,7 +27,12 @@ router.post(
   userController.activateAccount.bind(userController)
 );
 
-router.get("/me", verifyToken, highTrafficLimiter, userController.getProfile.bind(userController));
+router.get(
+  "/me",
+  verifyToken,
+  highTrafficLimiter,
+  userController.getProfile.bind(userController)
+);
 
 router.put(
   "/me/update-profile",

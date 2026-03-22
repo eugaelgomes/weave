@@ -42,7 +42,9 @@ function makeCorsOptions() {
         if (isDev) {
           return cb(null, true);
         }
-        return cb(new Error("Headless requests are not allowed in production."));
+        return cb(
+          new Error("Headless requests are not allowed in production.")
+        );
       }
 
       const normalized = origin.replace(/\/+$/, "");
@@ -83,13 +85,22 @@ function configureGlobalMiddlewares(app) {
     // Ignore CORS for:
     // - Webhooks (POST do Google Calendar)
     // - SSO OAuth (GET redirects do browser, wi header Origin)
-    if (req.method === "POST" && req.path === "/api/v1/webhooks/google/calendar") {
+    if (
+      req.method === "POST" &&
+      req.path === "/api/v1/webhooks/google/calendar"
+    ) {
       return next();
     }
-    if (req.method === "GET" && req.path.startsWith("/api/v1/auth/signin/sso/")) {
+    if (
+      req.method === "GET" &&
+      req.path.startsWith("/api/v1/auth/signin/sso/")
+    ) {
       return next();
     }
-    if (req.method === "GET" && req.path.startsWith("/api/v1/webhooks/google/callback")) {
+    if (
+      req.method === "GET" &&
+      req.path.startsWith("/api/v1/webhooks/google/callback")
+    ) {
       return next();
     }
     return corsMiddleware(req, res, next);

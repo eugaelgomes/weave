@@ -75,6 +75,11 @@ export const API_ENDPOINTS = {
   AI_RESEARCH: "/weave-ai/research",
   AI_USE_CASES: "/weave-ai/use-cases",
 
+  // Agents
+  AGENTS: "/weave-ai/agents",
+  AGENT_BY_ID: (id: string) => `/weave-ai/agents/${id}`,
+  AGENT_SHARE: (id: string) => `/weave-ai/agents/${id}/share`,
+
   // Google Calendar
   GOOGLE_CALENDAR_AUTH: "/webhooks/google/auth",
   GOOGLE_CALENDAR_STATUS: "/webhooks/google/calendar/status",

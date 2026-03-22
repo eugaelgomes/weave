@@ -1,7 +1,6 @@
 const { executeQuery, rowCount } = require("@/database/connection");
 
 class WebhooksRepository {
-
   /**
    * Salva ou atualiza os tokens OAuth2 do Google para um usuário.
    * Se já existirem tokens, atualiza-os; caso contrário, insere um novo registro.
@@ -92,7 +91,14 @@ class WebhooksRepository {
    * @param {Date|null} params.expiresAt - Data de expiração do webhook
    * @returns {Promise<object>} Registro criado
    */
-  async createWebhook({ userId, calendarId, channelId, resourceId, syncToken, expiresAt }) {
+  async createWebhook({
+    userId,
+    calendarId,
+    channelId,
+    resourceId,
+    syncToken,
+    expiresAt,
+  }) {
     const results = await executeQuery(
       `INSERT INTO google_calendar_webhooks
          (user_id, calendar_id, channel_id, resource_id, sync_token, expires_at)
