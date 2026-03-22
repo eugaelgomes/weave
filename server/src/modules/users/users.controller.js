@@ -6,6 +6,8 @@ const spacesService = require("@/services/storage");
 // Repositórios
 const UserRepository = require("@/modules/users/users.repository");
 const AuthRepository = require("@/modules/authentication/auth.repository");
+const OrganizationDomainsRepository = require("@/modules/organizations/repositories/domains.repository");
+const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 
 // Serviços de Email e Logs
 const welcomeMailModule = require("@/services/email/templates/welcome-mail");
@@ -139,6 +141,31 @@ class userController {
         birth_date = null,
         phone_number = null,
       } = req.body;
+
+      // Validar Domínio Corporativo
+      // Se o email pertencer a um domínio verificado, o usuário DEVE ter um convite.
+      const emailDomain = email.split("@")[1];
+      if (emailDomain) {
+        const domainInfo =
+          await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
+
+        if (domainInfo && domainInfo.status === "VERIFIED" || domainInfo.status === "PENDING") {
+          // Verifica se existe convite pendente para este email nesta organização
+          const existingInvite =
+            await OrganizationsRepository.checkExistingInvite(
+              domainInfo.organization_id,
+              email
+            );
+
+          if (!existingInvite) {
+            return res.status(403).json({
+              status: "error",
+              message:
+                "Este endereço de e-mail pertence a um domínio corporativo. Você precisa de um convite da organização para criar uma conta.",
+            });
+          }
+        }
+      }
 
       // Usa user_name se fornecido, senão usa name
       const userName = user_name || name;

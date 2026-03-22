@@ -138,7 +138,9 @@ class NotificationsRepository {
 
     if (entityType) {
       paramIndex += 1;
-      filters.push(`n.entity_type = $${paramIndex}::notification_entity_type_enum`);
+      filters.push(
+        `n.entity_type = $${paramIndex}::notification_entity_type_enum`
+      );
       params.push(entityType);
     }
 

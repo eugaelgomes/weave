@@ -217,12 +217,10 @@ class WebhooksController {
       res.json({ connected: true, events });
     } catch (error) {
       if (error.code === 401 || error.status === 401) {
-        return res
-          .status(401)
-          .json({
-            connected: false,
-            error: "Token expirado, reconecte o Google Calendar",
-          });
+        return res.status(401).json({
+          connected: false,
+          error: "Token expirado, reconecte o Google Calendar",
+        });
       }
       res
         .status(500)

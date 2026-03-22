@@ -135,15 +135,16 @@ class NotificationsController {
         });
       }
 
-      const notification = await this.notificationsRepository.createNotification({
-        userId,
-        actorId,
-        type,
-        entityType: entity_type,
-        entityId: entity_id,
-        title,
-        content: content && typeof content === "object" ? content : {},
-      });
+      const notification =
+        await this.notificationsRepository.createNotification({
+          userId,
+          actorId,
+          type,
+          entityType: entity_type,
+          entityId: entity_id,
+          title,
+          content: content && typeof content === "object" ? content : {},
+        });
 
       res.status(201).json({ notification });
     } catch (error) {

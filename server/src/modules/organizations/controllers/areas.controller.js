@@ -1,5 +1,5 @@
 const OrganizationsBaseController = require("./base-controller");
-const areasRepository = require("@/modules/organizations/repository/areas.repository");
+const areasRepository = require("@/modules/organizations/repositories/areas.repository");
 const usersRepository = require("@/modules/users/users.repository");
 const { normalizeOrganizationName } = require("../normalizer");
 

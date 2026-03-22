@@ -1,6 +1,6 @@
 const OrganizationsBaseController = require("./base-controller");
 const spacesService = require("@/services/storage");
-const areasRepository = require("@/modules/organizations/repository/areas.repository");
+const areasRepository = require("@/modules/organizations/repositories/areas.repository");
 const {
   normalizeOrganizationName,
   generateUniqueOrganizationName,
@@ -10,12 +10,25 @@ const {
   orgDataResponse,
 } = require("../normalizer");
 
+/**
+ * Controller for organization management.
+ * Handles organization lifecycle, branding assets, and organization projects.
+ */
 class OrganizationsController extends OrganizationsBaseController {
+  /**
+   * Initialize controller dependencies.
+   */
   constructor() {
     super();
     this.areasRepository = areasRepository;
   }
 
+  /**
+   * Generate a unique area slug inside an organization.
+   * @param {string|number} organizationId - Organization identifier
+   * @param {string} slugBase - Base slug to test
+   * @returns {Promise<string|null>} Unique slug or null when base is empty
+   */
   async _generateUniqueAreaSlug(organizationId, slugBase) {
     if (!slugBase) {
       return null;
@@ -40,8 +53,14 @@ class OrganizationsController extends OrganizationsBaseController {
     return candidate;
   }
 
+  /**
+   * Create the default area for a newly created organization.
+   * @param {Object} organization - Newly created organization data
+   * @param {string|number} createdBy - User id who creates the default area
+   * @returns {Promise<void>}
+   */
   async _createDefaultOrganizationArea(organization, createdBy) {
-    const defaultName = "Área Central";
+    const defaultName = "Area Central";
     const slugBase =
       organization.unique_name || normalizeOrganizationName(defaultName);
     try {
@@ -55,7 +74,7 @@ class OrganizationsController extends OrganizationsBaseController {
         parentAreaId: null,
         areaName: defaultName,
         slug: uniqueSlug || `${slugBase}-${organization.id}`,
-        description: `Área central da organização ${organization.org_name}`,
+        description: `Main area for organization ${organization.org_name}`,
         properties: { system: true },
         createdBy,
       });
@@ -68,11 +87,17 @@ class OrganizationsController extends OrganizationsBaseController {
         createdBy
       );
     } catch (error) {
-      console.error("Erro ao criar área padrão da organização:", error);
-      throw new Error("Falha ao criar a área central padrão da organização");
+      console.error("Error creating default organization area:", error);
+      throw new Error("Failed to create the default central organization area");
     }
   }
 
+  /**
+   * Create a new organization for the authenticated user.
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with created organization data or error
+   */
   async createOrganization(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -82,7 +107,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (existingOrg) {
         return res.status(400).json({
           success: false,
-          error: "Usuário já possui uma organização. Use PUT para atualizar.",
+          error: "User already has an organization. Use PUT to update it.",
         });
       }
 
@@ -102,13 +127,13 @@ class OrganizationsController extends OrganizationsBaseController {
       if (providedUniqueName) {
         unique_name = normalizeOrganizationName(providedUniqueName);
         if (!unique_name) {
-          throw new Error("Nome único fornecido é inválido após normalização");
+          throw new Error("Provided unique name is invalid after normalization");
         }
 
         const existingNames =
           await this.organizationsRepository.getAvailableOrgNames(unique_name);
         if (existingNames.includes(unique_name)) {
-          throw new Error(`Nome único '${unique_name}' já está em uso`);
+          throw new Error(`Unique name '${unique_name}' is already in use`);
         }
       } else {
         unique_name = await generateUniqueOrganizationName(org_name);
@@ -135,18 +160,24 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(201).json({
         status: "OK",
-        message: "Organização criada com sucesso",
+        message: "Organization created successfully",
         data: newOrganization,
       });
     } catch (error) {
-      console.error("Erro ao criar organização:", error);
+      console.error("Error creating organization:", error);
       res.status(400).json({
         success: false,
-        error: error.message || "Erro ao criar organização",
+        error: error.message || "Error creating organization",
       });
     }
   }
 
+  /**
+   * Get organization data for the authenticated user.
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with organization data or error
+   */
   async getOrganization(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -156,12 +187,11 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!organization) {
         return res.status(404).json({
           success: false,
-          error: "Organização não encontrada",
-          message: "Usuário ainda não possui uma organização",
+          error: "Organization not found",
+          message: "User does not have an organization yet",
         });
       }
 
-      // Construir resposta formatada
       const formattedOrganization = {
         created_at: organization.created_at,
         updated_at: organization.updated_at,
@@ -192,13 +222,19 @@ class OrganizationsController extends OrganizationsBaseController {
         .status(200)
         .json({ status: "OK", organization_data: formattedOrganization });
     } catch (error) {
-      console.error("Erro ao buscar organização:", error);
+      console.error("Error getting organization:", error);
       res
         .status(500)
-        .json({ success: false, error: "Erro ao buscar organização" });
+        .json({ success: false, error: "Error getting organization" });
     }
   }
 
+  /**
+   * Update organization basic data and settings.
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with updated organization data or error
+   */
   async updateOrganization(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -218,7 +254,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       let updatedUniqueName = currentOrg.unique_name;
@@ -236,7 +272,7 @@ class OrganizationsController extends OrganizationsBaseController {
           );
 
         if (existingNames.includes(normalizedName)) {
-          throw new Error("Nome único já está em uso");
+          throw new Error("Unique name is already in use");
         }
         updatedUniqueName = normalizedName;
       }
@@ -270,19 +306,31 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
-        message: "Organização atualizada com sucesso",
+        message: "Organization updated successfully",
         data: updatedOrg,
       });
     } catch (error) {
-      console.error("Erro ao atualizar organização:", error);
-      const statusCode = error.message.includes("não encontrada") ? 404 : 400;
+      console.error("Error updating organization:", error);
+      const statusCode =
+        error.message.includes("not found") ||
+        error.message.includes("nao encontrada") ||
+        error.message.includes("não encontrada")
+          ? 404
+          : 400;
+
       res.status(statusCode).json({
         success: false,
-        error: error.message || "Erro ao atualizar organização",
+        error: error.message || "Error updating organization",
       });
     }
   }
 
+  /**
+   * Update organization properties only.
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with updated organization data or error
+   */
   async updateOrganizationProperties(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -292,7 +340,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!properties || typeof properties !== "object") {
         return res.status(400).json({
           success: false,
-          error: "Properties é obrigatório e deve ser um objeto",
+          error: "Properties is required and must be an object",
         });
       }
 
@@ -300,7 +348,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const updatedProperties = updateOrganizationProperties(
@@ -323,19 +371,31 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
-        message: "Propriedades atualizadas com sucesso",
+        message: "Properties updated successfully",
         data: updatedOrg,
       });
     } catch (error) {
-      console.error("Erro ao atualizar properties:", error);
-      const statusCode = error.message.includes("não encontrada") ? 404 : 400;
+      console.error("Error updating properties:", error);
+      const statusCode =
+        error.message.includes("not found") ||
+        error.message.includes("nao encontrada") ||
+        error.message.includes("não encontrada")
+          ? 404
+          : 400;
+
       res.status(statusCode).json({
         success: false,
-        error: error.message || "Erro ao atualizar properties",
+        error: error.message || "Error updating properties",
       });
     }
   }
 
+  /**
+   * Soft-delete the current user organization.
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with deleted organization data or error
+   */
   async deleteOrganization(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -345,7 +405,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const deletedOrg = await this.organizationsRepository.updateOrg(
@@ -363,17 +423,23 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
-        message: "Organização excluída com sucesso",
+        message: "Organization deleted successfully",
         data: deletedOrg,
       });
     } catch (error) {
-      console.error("Erro ao excluir organização:", error);
+      console.error("Error deleting organization:", error);
       res
         .status(500)
-        .json({ success: false, error: "Erro ao excluir organização" });
+        .json({ success: false, error: "Error deleting organization" });
     }
   }
 
+  /**
+   * Restore a soft-deleted organization for the authenticated user.
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with restored organization data or error
+   */
   async restoreOrganization(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -386,7 +452,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!organization) {
         return res.status(404).json({
           success: false,
-          error: "Nenhuma organização deletada encontrada",
+          error: "No deleted organization found",
         });
       }
 
@@ -405,17 +471,23 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
-        message: "Organização restaurada com sucesso",
+        message: "Organization restored successfully",
         data: restoredOrg,
       });
     } catch (error) {
-      console.error("Erro ao restaurar organização:", error);
+      console.error("Error restoring organization:", error);
       res
         .status(500)
-        .json({ success: false, error: "Erro ao restaurar organização" });
+        .json({ success: false, error: "Error restoring organization" });
     }
   }
 
+  /**
+   * Upload and update organization logo.
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with upload metadata or error
+   */
   async uploadLogo(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -424,14 +496,14 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!req.file) {
         return res
           .status(400)
-          .json({ success: false, error: "Nenhum arquivo foi enviado" });
+          .json({ success: false, error: "No file was uploaded" });
       }
 
       const currentOrg = await this._getUserOrganization(userId);
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const result = await spacesService.uploadOrganizationLogo(
@@ -443,7 +515,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!result.success) {
         return res
           .status(500)
-          .json({ success: false, error: "Erro ao salvar logo" });
+          .json({ success: false, error: "Error saving logo" });
       }
 
       const updatedOrg = await this.organizationsRepository.updateOrgLogo(
@@ -454,7 +526,7 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
-        message: "Logo atualizado com sucesso",
+        message: "Logo updated successfully",
         data: {
           organization: updatedOrg,
           upload: {
@@ -465,13 +537,19 @@ class OrganizationsController extends OrganizationsBaseController {
         },
       });
     } catch (error) {
-      console.error("Erro ao fazer upload do logo:", error);
+      console.error("Error uploading logo:", error);
       res
         .status(500)
-        .json({ success: false, error: "Erro ao fazer upload do logo" });
+        .json({ success: false, error: "Error uploading logo" });
     }
   }
 
+  /**
+   * Upload and update organization banner.
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with upload metadata or error
+   */
   async uploadBanner(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -481,14 +559,14 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!req.file) {
         return res
           .status(400)
-          .json({ success: false, error: "Nenhum arquivo foi enviado" });
+          .json({ success: false, error: "No file was uploaded" });
       }
 
       const currentOrg = await this._getUserOrganization(userId);
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const result = await spacesService.uploadOrganizationBanner(
@@ -500,7 +578,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!result.success) {
         return res
           .status(500)
-          .json({ success: false, error: "Erro ao salvar banner" });
+          .json({ success: false, error: "Error saving banner" });
       }
 
       const updatedOrg = await this.organizationsRepository.updateOrgBanner(
@@ -511,7 +589,7 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
-        message: "Banner updated successfully!",
+        message: "Banner updated successfully",
         organization_data: {
           organization: orgDataResponse(updatedOrg),
           upload: {
@@ -522,13 +600,18 @@ class OrganizationsController extends OrganizationsBaseController {
         },
       });
     } catch (error) {
-      //console.error("Erro ao fazer upload do banner:", error);
       res
         .status(500)
-        .json({ success: false, error: "Erro ao fazer upload do banner" });
+        .json({ success: false, error: "Error uploading banner" });
     }
   }
 
+  /**
+   * List projects for the current user organization.
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with projects list or error
+   */
   async organizationProjects(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -538,7 +621,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const projects =
@@ -552,10 +635,10 @@ class OrganizationsController extends OrganizationsBaseController {
         projects: projects,
       });
     } catch (error) {
-      console.error("Erro ao buscar projetos da organização:", error);
+      console.error("Error getting organization projects:", error);
       res.status(500).json({
         status: "ERROR",
-        error: "Erro ao buscar projetos da organização",
+        error: "Error getting organization projects",
       });
     }
   }

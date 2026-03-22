@@ -450,6 +450,28 @@ RETURNING *;
     const results = await executeQuery(query, [organization_id]);
     return results;
   }
+
+  async refreshOrgDomainsCache(organizationId) {
+    const query = `
+      UPDATE organizations o
+      SET org_domains = (
+        SELECT COALESCE(
+          array_agg(od.domain_name ORDER BY od.domain_name),
+          '{}'::text[]
+        )
+        FROM organization_domains od
+        WHERE od.organization_id = $1
+          AND od.status = 'VERIFIED'
+          AND od.deleted = false
+      ),
+      updated_at = NOW()
+      WHERE o.id = $1
+      RETURNING org_domains;
+    `;
+
+    const results = await executeQuery(query, [organizationId]);
+    return results[0]?.org_domains || [];
+  }
 }
 
 module.exports = new OrganizationsRepository();

@@ -1,4 +1,7 @@
-const organizationsRepository = require("@/modules/organizations//repository/organizations.repository");
+const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
+
+const DOMAIN_REGEX =
+  /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
 
 class OrganizationsBaseController {
   constructor() {
@@ -32,19 +35,47 @@ class OrganizationsBaseController {
     }
   }
 
+  _normalizeDomain(domain) {
+    if (!domain || typeof domain !== "string") {
+      return null;
+    }
+
+    const normalized = domain
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\//, "")
+      .replace(/\/.*/, "");
+
+    return normalized.endsWith(".") ? normalized.slice(0, -1) : normalized;
+  }
+
+  _validateDomainName(domain) {
+    const normalized = this._normalizeDomain(domain);
+
+    if (!normalized || !DOMAIN_REGEX.test(normalized)) {
+      throw new Error(
+        "Domínio inválido. Use um domínio válido como example.com"
+      );
+    }
+
+    return normalized;
+  }
+
   _validateOrgDomains(domains) {
     if (!domains) return null;
     if (!Array.isArray(domains)) {
       throw new Error("org_domains deve ser um array");
     }
 
-    const domainRegex =
-      /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
-
-    const validatedDomains = domains.filter((domain) => {
-      if (typeof domain !== "string") return false;
-      return domainRegex.test(domain.trim());
-    });
+    const validatedDomains = domains
+      .map((domain) => {
+        try {
+          return this._validateDomainName(domain);
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter(Boolean);
 
     return validatedDomains.length > 0 ? validatedDomains : null;
   }

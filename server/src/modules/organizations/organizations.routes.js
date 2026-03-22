@@ -1,15 +1,22 @@
 const express = require("express");
+
+// Controllers
 const organizationsController = require("@/modules/organizations/controllers/organizations.controller");
 const organizationMembersController = require("@/modules/organizations/controllers/members.controller");
 const organizationAreasController = require("@/modules/organizations/controllers/areas.controller");
+const organizationDomainsController = require("@/modules/organizations/controllers/domains.controller");
+
+// Middlewares
 const { verifyToken } = require("@/middlewares/verify-token");
-const upload = require("@/utils/data/profile-img");
-const validateImages = require("@/utils/image-validator");
 const {
   structuralLimiter,
   standardTrafficLimiter,
   highTrafficLimiter,
 } = require("@/middlewares/request-limiters");
+
+// Utils
+const upload = require("@/utils/data/profile-img");
+const validateImages = require("@/utils/image-validator");
 
 const router = express.Router();
 
@@ -27,6 +34,38 @@ router.get(
   "/",
   highTrafficLimiter,
   organizationsController.getOrganization.bind(organizationsController)
+);
+
+router.get(
+  "/domains",
+  structuralLimiter,
+  organizationDomainsController.listDomains.bind(organizationDomainsController)
+);
+
+router.post(
+  "/domains",
+  structuralLimiter,
+  organizationDomainsController.createDomain.bind(organizationDomainsController)
+);
+
+router.post(
+  "/domains/:domainId/verify",
+  structuralLimiter,
+  organizationDomainsController.verifyDomain.bind(organizationDomainsController)
+);
+
+router.patch(
+  "/domains/:domainId/sso",
+  structuralLimiter,
+  organizationDomainsController.updateSsoSettings.bind(
+    organizationDomainsController
+  )
+);
+
+router.delete(
+  "/domains/:domainId",
+  structuralLimiter,
+  organizationDomainsController.deleteDomain.bind(organizationDomainsController)
 );
 
 router.get(

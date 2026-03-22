@@ -414,11 +414,9 @@ class ProjectsController {
       );
 
       if (!usageRecord || !planDetails) {
-        return res
-          .status(404)
-          .json({
-            error: "Configuração de plano não encontrada para este usuário.",
-          });
+        return res.status(404).json({
+          error: "Configuração de plano não encontrada para este usuário.",
+        });
       }
 
       if (!planDetails.details) {
@@ -1578,11 +1576,9 @@ class ProjectsController {
       );
 
       if (!result || result.length === 0) {
-        return res
-          .status(404)
-          .json({
-            error: "Nota não encontrada no projeto ou estágio inválido.",
-          });
+        return res.status(404).json({
+          error: "Nota não encontrada no projeto ou estágio inválido.",
+        });
       }
 
       res.status(200).json({

@@ -9,6 +9,9 @@ require("@/services/jobs/index");
 
 const app = express();
 
+/**
+ * Health Check Endpoint
+ */
 app.get("/health", (req, res) => {
   const origin = req.headers.origin;
   const isDev = process.env.NODE_ENV !== "production";

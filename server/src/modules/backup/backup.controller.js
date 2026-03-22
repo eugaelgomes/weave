@@ -139,7 +139,8 @@ class BackupController {
         type: "job_action",
         entityType: "job",
         entityId: jobId,
-        title: "Seu backup foi concluído com sucesso e está pronto para download",
+        title:
+          "Seu backup foi concluído com sucesso e está pronto para download",
         content: {
           action: "backup_completed",
           download_url: downloadUrl,

@@ -1,6 +1,6 @@
 const {
   getAvailableOrgNames,
-} = require("@/modules/organizations/repository/organizations.repository");
+} = require("@/modules/organizations/repositories/organizations.repository");
 
 const PREDEFINED_PROPERTIES = Object.freeze({
   theme: {

@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const { validationResult } = require("express-validator");
 const AuthRepository = require("@/modules/authentication/auth.repository");
+const OrganizationDomainsRepository = require("@/modules/organizations/repositories/domains.repository");
+const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 const { setAuthCookie, clearAuthCookie } = require("@/utils/cookie-helper");
 
 const authLogs = require("@/utils/system_logs/auth-logs");
@@ -233,6 +235,29 @@ class AuthController {
           // Re-buscar com dados completos (org, plan, etc.)
           user = await AuthRepository.findUserByGoogleId(googleUser.id);
         } else {
+          // Validar Domínio Corporativo
+          const emailDomain = googleUser.email.split("@")[1];
+          if (emailDomain) {
+            const domainInfo =
+              await OrganizationDomainsRepository.findActiveByDomain(
+                emailDomain
+              );
+
+            if (domainInfo && domainInfo.status === "VERIFIED") {
+              const existingInvite =
+                await OrganizationsRepository.checkExistingInvite(
+                  domainInfo.organization_id,
+                  googleUser.email
+                );
+
+              if (!existingInvite) {
+                throw new Error(
+                  "Este endereço de e-mail pertence a um domínio corporativo restringido."
+                );
+              }
+            }
+          }
+
           // Usuário não existe, criar novo
           await AuthRepository.createUserWithGoogle(
             googleUser.id,
