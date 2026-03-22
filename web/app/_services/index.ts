@@ -53,6 +53,24 @@ export {
   type ManageNoteData,
 } from "./projects-service/projects-service";
 
+// Notifications Services
+export {
+  fetchNotifications,
+  markNotificationAsRead,
+  markAllNotificationsRead,
+  toggleNotificationTrash,
+  deleteNotification,
+  type Notification,
+  type NotificationActor,
+  type NotificationContent,
+  type NotificationType,
+  type NotificationEntityType,
+  type NotificationStatusFilter,
+  type NotificationsResponse,
+  type FetchNotificationsParams,
+  type PaginationMeta,
+} from "./notifications/notifications-service";
+
 // Organization Services
 export {
   fetchOrganization,

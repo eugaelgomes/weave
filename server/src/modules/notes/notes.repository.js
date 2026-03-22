@@ -671,7 +671,7 @@ class notesRepository {
     ORDER BY nc.added_at ASC;
     `;
     const results = await executeQuery(query, [noteId]);
-    return results[0];
+    return results;
   }
 
   /**

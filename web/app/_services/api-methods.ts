@@ -34,6 +34,13 @@ export const API_ENDPOINTS = {
   FORGOT_PASSWORD: "/password/forgot-password",
   RESET_PASSWORD: "/password/reset-password",
 
+  // Notifications
+  NOTIFICATIONS: "/notifications",
+  NOTIFICATION_BY_ID: (id: string) => `/notifications/${id}`,
+  NOTIFICATION_MARK_READ: (id: string) => `/notifications/${id}/read`,
+  NOTIFICATION_TOGGLE_TRASH: (id: string) => `/notifications/${id}/trash`,
+  NOTIFICATIONS_MARK_ALL_READ: "/notifications/mark-all-read",
+
   // Notes
   NOTES: "/notes",
   NOTES_STATS: "/notes/stats",

@@ -1,4 +1,5 @@
 const notesRepository = require("@/modules/notes/notes.repository");
+const NotificationsRepository = require("@/modules/notifications/notifications.repository");
 const blocksRepository = require("@/modules/notes/blocks.repository");
 const userRepository = require("@/modules/users/users.repository");
 const { collabMail } = require("@/services/email/templates/notes/invite");
@@ -1169,6 +1170,23 @@ class NotesController {
         }
       }
 
+      // Adicionar notificação no sistema
+      if (noteData) {
+        await NotificationsRepository.createNotification({
+          userId: collaboratorId,
+          actorId: userId,
+          type: "note_shared",
+          entityType: "note",
+          entityId: noteId,
+          title: `Você foi adicionado à nota ${noteData.title}`,
+          content: {
+            action: "collaborator_added",
+            note_id: noteId,
+            shared_by: userId,
+          },
+        });
+      }
+
       res.status(201).json({
         message: "Colaborador adicionado com sucesso",
         collaborator: newCollaborator,
@@ -1191,7 +1209,7 @@ class NotesController {
       if (!userId) return;
 
       // Verificar se a nota existe e pertence ao usuário
-      await this._validateNoteOwnership(noteId, userId);
+      const note = await this._validateNoteOwnership(noteId, userId);
 
       // Verificar se o colaborador existe na nota
       const isCollaborator = await this.notesRepository.isCollaborator(

@@ -1,4 +1,5 @@
 const backupRepository = require("@/modules/backup/backup.repository");
+const NotificationsRepository = require("@/modules/notifications/notifications.repository");
 const userRepository = require("@/modules/users/users.repository");
 const jobManager = require("@/services/jobs/index");
 const {
@@ -131,6 +132,20 @@ class BackupController {
           `Falha ao enviar email: ${emailResult.error || "Erro desconhecido"}`
         );
       }
+
+      await NotificationsRepository.createNotification({
+        userId: userId,
+        actorId: userId,
+        type: "job_action",
+        entityType: "job",
+        entityId: jobId,
+        title: "Seu backup foi concluído com sucesso e está pronto para download",
+        content: {
+          action: "backup_completed",
+          download_url: downloadUrl,
+          expires_at: expiresAt,
+        },
+      });
 
       await jobManager.updateJob(jobId, {
         status: "completed",

@@ -1,4 +1,5 @@
 const projectsRepository = require("@/modules/projects/projects.repository");
+const NotificationsRepository = require("@/modules/notifications/notifications.repository");
 const {
   ALLOWED_PROJECT_STATUSES,
 } = require("@/utils/patterns/product-patterns");
@@ -744,7 +745,7 @@ class ProjectsController {
       if (!userId) return;
 
       // Verificar se o projeto existe e pertence ao usuário
-      await this._validateProjectOwnership(projectId, userId);
+      const project = await this._validateProjectOwnership(projectId, userId);
 
       // Validação de dados obrigatórios
       // Permitir action null se suspended for fornecido
@@ -893,6 +894,22 @@ class ProjectsController {
                   err
                 );
               });
+
+              // Adicionar notificação no sistema
+              await NotificationsRepository.createNotification({
+                userId: collaboratorId,
+                actorId: userId,
+                type: "project_invite",
+                entityType: "project",
+                entityId: projectId,
+                title: `Você foi adicionado ao projeto ${projectWithOwner[0].title}`,
+                content: {
+                  action: "collaborator_added",
+                  role: role,
+                  added_by: userId,
+                  project_id: projectId,
+                },
+              });
             } else {
               console.log(
                 "⚠️ [EMAIL DEBUG] Dados insuficientes para enviar email"
@@ -926,6 +943,20 @@ class ProjectsController {
             role
           );
           message = "Role atualizado com sucesso";
+
+          await NotificationsRepository.createNotification({
+            userId: collaboratorId,
+            actorId: userId,
+            type: "project_action",
+            entityType: "project",
+            entityId: projectId,
+            title: `Sua permissão no projeto ${project.title} foi alterada para ${role}`,
+            content: {
+              action: "collaborator_updated",
+              role: role,
+              project_id: projectId,
+            },
+          });
           break;
 
         case "remove":

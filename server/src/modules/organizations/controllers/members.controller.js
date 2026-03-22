@@ -1,5 +1,6 @@
 const OrganizationsBaseController = require("./base-controller");
 const UserRepository = require("@/modules/users/users.repository");
+const NotificationsRepository = require("@/modules/notifications/notifications.repository");
 const spacesService = require("@/services/storage");
 const bcrypt = require("bcrypt");
 const {
@@ -59,6 +60,22 @@ class OrganizationMembersController extends OrganizationsBaseController {
           "active",
           userId
         );
+
+      await NotificationsRepository.createNotification({
+        userId: memberId,
+        actorId: userId,
+        type: "organization_action",
+        entityType: "organization",
+        entityId: currentOrg.id,
+        title: `Você foi adicionado à organização ${currentOrg.org_name}`,
+        content: {
+          action: "member_added",
+          role: role,
+          organization_id: currentOrg.id,
+          organization_name: currentOrg.org_name,
+          triggered_by: userId,
+        },
+      });
 
       res.status(200).json({
         status: "OK",
@@ -264,6 +281,29 @@ class OrganizationMembersController extends OrganizationsBaseController {
         console.warn("Failed to send invite email:", emailResult.error);
       }
 
+      if (existingUser && existingUser.length > 0) {
+        const targetUser = existingUser[0];
+        await NotificationsRepository.createNotification({
+          userId: targetUser.user_id,
+          actorId: userId,
+          type: "organization_invite",
+          entityType: "organization",
+          entityId: currentOrg.id,
+          title: `Você foi convidado para a organização ${currentOrg.org_name}`,
+          content: {
+            action: "invite_sent",
+            invite_id: invite.invite_id,
+            role: role,
+            inviter_id: userId,
+            inviter_name: inviter.name || inviter.username || null,
+            organization_id: currentOrg.id,
+            organization_name: currentOrg.org_name,
+            invitee_email: email,
+            invitee_name: targetUser.name || targetUser.username || null,
+          },
+        });
+      }
+
       res.status(201).json({
         status: "OK",
         message: "Convite enviado com sucesso",
@@ -414,6 +454,21 @@ class OrganizationMembersController extends OrganizationsBaseController {
       );
 
       await this.organizationsRepository.verifyOrgInvite(invite.invite_id);
+
+      await NotificationsRepository.createNotification({
+        userId: invite.invited_by,
+        actorId: newUserId,
+        type: "organization_invite",
+        entityType: "organization",
+        entityId: invite.org_id,
+        title: `${name} aceitou seu convite para a organização.`,
+        content: {
+          action: "invite_accepted",
+          invite_id: invite.invite_id,
+          new_member_id: newUserId,
+          organization_id: invite.org_id,
+        },
+      });
 
       const mailResult = await welcome_message(name, invite.email, username);
       if (!mailResult.success) {

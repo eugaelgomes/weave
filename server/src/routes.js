@@ -14,6 +14,7 @@ const adminRoutes = require("@/modules/admin/admin.routes");
 const systemAuthRoutes = require("@/modules/system-auth/system-auth.routes");
 const systemAdminsRoutes = require("@/modules/system-admins/system-admins.routes");
 const webhooksRoutes = require("@/modules/webhooks/webhooks.routes");
+const notificationsRoutes = require("@/modules/notifications/notifications.routes");
 
 const router = express.Router();
 
@@ -26,6 +27,7 @@ const routeMap = [
   { handler: organizationsRoutes, path: "/organizations" },
   { handler: passwordRoutes, path: "/password" },
   { handler: plansRoutes, path: "/plans" },
+  { handler: notificationsRoutes, path: "/notifications" },
   { handler: projectsRoutes, path: "/projects" },
   { handler: systemAdminsRoutes, path: "/system-admins" },
   { handler: systemAuthRoutes, path: "/system-auth" },

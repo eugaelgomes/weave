@@ -40,6 +40,29 @@ CREATE TYPE public."user_role" AS ENUM (
 	'member',
 	'guest');
 
+-- DROP TYPE public."notification_type_enum";
+
+CREATE TYPE public."notification_type_enum" AS ENUM (
+	'system_alert',
+	'system_update',
+	'organization_invite',
+	'organization_action',
+	'project_invite',
+	'project_action',
+	'note_shared',
+	'note_action',
+	'ai_action',
+	'job_action');
+
+-- DROP TYPE public."notification_entity_type_enum";
+
+CREATE TYPE public."notification_entity_type_enum" AS ENUM (
+	'organization',
+	'project',
+	'note',
+	'job',
+	'weave-ai');
+
 -- DROP SEQUENCE public.aiservermessages_id_seq;
 
 CREATE SEQUENCE public.aiservermessages_id_seq
@@ -286,6 +309,40 @@ CREATE TABLE public.jobs (
 );
 CREATE INDEX idx_jobs_created_at ON public.jobs USING btree (created_at);
 CREATE INDEX idx_jobs_status ON public.jobs USING btree (status);
+
+
+-- public.notifications definição
+
+-- Drop table
+
+-- DROP TABLE public.notifications;
+
+CREATE TABLE public.notifications (
+	id uuid DEFAULT uuid_generate_v4() NOT NULL,
+	user_id uuid NOT NULL,
+	actor_id uuid NULL,
+	type public."notification_type_enum" NOT NULL,
+	entity_type public."notification_entity_type_enum" NOT NULL,
+	entity_id uuid NOT NULL,
+	title varchar(255) NOT NULL,
+	content jsonb DEFAULT '{}'::jsonb NOT NULL,
+	is_read bool DEFAULT false NOT NULL,
+	read_at timestamptz NULL,
+	in_trash bool DEFAULT false NOT NULL,
+	trashed_at timestamptz NULL,
+	created_at timestamptz DEFAULT now() NOT NULL,
+	updated_at timestamptz DEFAULT now() NOT NULL,
+	deleted bool DEFAULT false NOT NULL,
+	CONSTRAINT notifications_pkey PRIMARY KEY (id),
+	CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE,
+	CONSTRAINT fk_notifications_actor FOREIGN KEY (actor_id) REFERENCES public.users(user_id) ON DELETE SET NULL,
+	CONSTRAINT chk_notifications_read_state CHECK (((is_read = true) AND (read_at IS NOT NULL)) OR ((is_read = false) AND (read_at IS NULL))),
+	CONSTRAINT chk_notifications_trash_state CHECK (((in_trash = true) AND (trashed_at IS NOT NULL)) OR ((in_trash = false) AND (trashed_at IS NULL)))
+);
+CREATE INDEX idx_notifications_user_id ON public.notifications USING btree (user_id);
+CREATE INDEX idx_notifications_entity ON public.notifications USING btree (entity_type, entity_id);
+CREATE INDEX idx_notifications_created_at ON public.notifications USING btree (created_at DESC);
+CREATE INDEX idx_notifications_read_state ON public.notifications USING btree (is_read);
 
 
 -- public.organizations definição

@@ -79,6 +79,39 @@ CREATE TYPE public."user_role" AS ENUM (
 );
 ```
 
+### 6. notification_type_enum
+
+Classifica o tipo de evento que originou a notificação entregue ao usuário.
+
+```sql
+CREATE TYPE public."notification_type_enum" AS ENUM (
+	'system_alert',
+	'system_update',
+	'organization_invite',
+	'organization_action',
+	'project_invite',
+	'project_action',
+	'note_shared',
+	'note_action',
+	'ai_action',
+	'job_action'
+);
+```
+
+### 7. notification_entity_type_enum
+
+Identifica em qual entidade da plataforma a notificação está contextualizada.
+
+```sql
+CREATE TYPE public."notification_entity_type_enum" AS ENUM (
+	'organization',
+	'project',
+	'note',
+	'job',
+	'weave-ai'
+);
+```
+
 ---
 
 ## Sequences
@@ -106,6 +139,39 @@ CREATE SEQUENCE public.tokens_token_id_seq
 ---
 
 ## Tabelas Principais
+
+### 🔔 MÓDULO: NOTIFICAÇÕES IN-APP
+
+Responsável por armazenar todas as notificações entregues dentro da plataforma, garantindo que além do envio por email os usuários também consigam consultar o histórico direto no app. Cada registro referencia quem recebeu (`user_id`), quem disparou (`actor_id`), o tipo de evento, o contexto (entidade e `entity_id`) e guarda payload flexível em `content`.
+
+```sql
+CREATE TABLE public.notifications (
+	id uuid DEFAULT uuid_generate_v4() NOT NULL,
+	user_id uuid NOT NULL,
+	actor_id uuid NULL,
+	type public."notification_type_enum" NOT NULL,
+	entity_type public."notification_entity_type_enum" NOT NULL,
+	entity_id uuid NOT NULL,
+	title varchar(255) NOT NULL,
+	content jsonb DEFAULT '{}'::jsonb NOT NULL,
+	is_read bool DEFAULT false NOT NULL,
+	read_at timestamptz NULL,
+	in_trash bool DEFAULT false NOT NULL,
+	trashed_at timestamptz NULL,
+	created_at timestamptz DEFAULT now() NOT NULL,
+	updated_at timestamptz DEFAULT now() NOT NULL,
+	deleted bool DEFAULT false NOT NULL,
+	CONSTRAINT notifications_pkey PRIMARY KEY (id),
+	CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE,
+	CONSTRAINT fk_notifications_actor FOREIGN KEY (actor_id) REFERENCES public.users(user_id) ON DELETE SET NULL,
+	CONSTRAINT chk_notifications_read_state CHECK (((is_read = true) AND (read_at IS NOT NULL)) OR ((is_read = false) AND (read_at IS NULL))),
+	CONSTRAINT chk_notifications_trash_state CHECK (((in_trash = true) AND (trashed_at IS NOT NULL)) OR ((in_trash = false) AND (trashed_at IS NULL)))
+);
+CREATE INDEX idx_notifications_user_id ON public.notifications USING btree (user_id);
+CREATE INDEX idx_notifications_entity ON public.notifications USING btree (entity_type, entity_id);
+CREATE INDEX idx_notifications_created_at ON public.notifications USING btree (created_at DESC);
+CREATE INDEX idx_notifications_read_state ON public.notifications USING btree (is_read);
+```
 
 ### 📋 MÓDULO: PLANOS E ASSINATURAS
 
