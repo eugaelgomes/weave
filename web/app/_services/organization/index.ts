@@ -58,6 +58,79 @@ export interface OrganizationMember {
   } | null;
 }
 
+export interface OrganizationAreaMetrics {
+  headcount?: number;
+  projects?: number;
+  impact?: number;
+  coverage?: number;
+}
+
+export interface OrganizationAreaProperties {
+  color?: string;
+  status?: "ativo" | "planejamento" | "pausado" | "arquivado" | string;
+  focus?: string;
+  metrics?: OrganizationAreaMetrics;
+  tags?: string[];
+  [key: string]: unknown;
+}
+
+export interface OrganizationArea {
+  id: string;
+  organization_id: string;
+  parent_area_id: string | null;
+  area_name: string;
+  slug?: string;
+  description?: string | null;
+  properties?: OrganizationAreaProperties;
+  active?: boolean;
+  deleted?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type OrganizationAreaMemberRole = "manager" | "editor" | "viewer";
+
+export interface OrganizationAreaMember {
+  organization_id: string;
+  area_id: string;
+  user_id: string;
+  role: OrganizationAreaMemberRole | string;
+  added_by?: string;
+  created_at?: string;
+  updated_at?: string;
+  removed_at?: string | null;
+  name?: string;
+  username?: string;
+  email?: string;
+  avatar_url?: string | null;
+}
+
+export interface CreateOrganizationAreaInput {
+  area_name: string;
+  parent_area_id?: string | null;
+  slug?: string | null;
+  description?: string | null;
+  properties?: OrganizationAreaProperties;
+}
+
+export interface UpdateOrganizationAreaInput {
+  area_name?: string;
+  parent_area_id?: string | null;
+  slug?: string | null;
+  description?: string | null;
+  properties?: OrganizationAreaProperties;
+  active?: boolean;
+}
+
+export interface AddAreaMemberInput {
+  user_id: string;
+  role?: OrganizationAreaMemberRole;
+}
+
+export interface UpdateAreaMemberInput {
+  role: OrganizationAreaMemberRole;
+}
+
 export interface OrganizationInvite {
   invite_id: string;
   email: string;
@@ -65,6 +138,22 @@ export interface OrganizationInvite {
   expires_at: string;
   created_at?: string;
   invited_by?: string;
+}
+
+export interface OrganizationDomain {
+  id: string;
+  domain_name: string;
+  verification_token: string;
+  status: "PENDING" | "VERIFIED" | "FAILED";
+  verified_at?: string;
+  created_at: string;
+  instructions?: {
+    type: string;
+    host: string;
+    value: string;
+    description: string;
+  };
+  dns_checks?: any;
 }
 
 export interface Owner {
@@ -89,6 +178,19 @@ export interface Organization {
   created_at: string;
   updated_at: string;
   owner?: Owner;
+  settings?: any;
+  plan_snapshot?: any;
+  address?: any;
+  delete_at?: string;
+  deleted_by?: string;
+  plan_id?: string;
+  branding_properties?: any;
+  integrations?: any;
+  plan_name?: string;
+  plan_details?: any;
+  plan_value?: number;
+  currency?: string;
+  billing_cycle?: string;
 }
 
 export interface CreateOrganizationData {
@@ -164,6 +266,38 @@ const parseOrganizationProperties = (org: Organization): Organization => {
   }
 
   return org;
+};
+
+const parseAreaProperties = (area: OrganizationArea): OrganizationArea => {
+  if (typeof area.properties === "string") {
+    try {
+      area.properties = JSON.parse(area.properties);
+    } catch (error) {
+      area.properties = {};
+    }
+  }
+
+  return area;
+};
+
+const transformBackendArea = (payload: any): OrganizationArea => {
+  if (!payload) return payload;
+
+  const area: OrganizationArea = {
+    id: payload.id,
+    organization_id: payload.organization_id,
+    parent_area_id: payload.parent_area_id ?? null,
+    area_name: payload.area_name,
+    slug: payload.slug,
+    description: payload.description,
+    properties: payload.properties,
+    active: payload.active,
+    deleted: payload.deleted,
+    created_at: payload.created_at,
+    updated_at: payload.updated_at,
+  };
+
+  return parseAreaProperties(area);
 };
 
 // --- Services ---
@@ -299,6 +433,186 @@ export const restoreOrganization = async (userId?: string): Promise<Organization
   return transformBackendOrganization(data.data);
 };
 
+// --- Áreas ---
+
+export const fetchOrganizationAreas = async (): Promise<OrganizationArea[]> => {
+  try {
+    const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_AREAS);
+    const data = await handleResponse<{
+      status?: string;
+      success?: boolean;
+      data?: any[];
+      error?: string;
+    }>(response);
+
+    if ((data.status === "OK" || data.success) && Array.isArray(data.data)) {
+      return data.data.map(transformBackendArea);
+    }
+
+    return [];
+  } catch (error) {
+    console.error("Erro ao buscar áreas da organização:", error);
+    throw error instanceof Error
+      ? error
+      : new Error("Não foi possível carregar as áreas da organização");
+  }
+};
+
+export const fetchAreaMembers = async (areaId: string): Promise<OrganizationAreaMember[]> => {
+  try {
+    const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_AREA_MEMBERS(areaId));
+    const data = await handleResponse<{
+      status?: string;
+      success?: boolean;
+      members?: any[];
+      error?: string;
+    }>(response);
+
+    if ((data.status === "OK" || data.success) && Array.isArray(data.members)) {
+      return data.members as OrganizationAreaMember[];
+    }
+
+    return [];
+  } catch (error) {
+    console.error(`Erro ao buscar membros da área ${areaId}:`, error);
+    throw error instanceof Error
+      ? error
+      : new Error("Não foi possível carregar os membros da área");
+  }
+};
+
+export const createOrganizationArea = async (
+  payload: CreateOrganizationAreaInput
+): Promise<OrganizationArea> => {
+  const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_AREAS, payload);
+  const data = await handleResponse<{
+    status?: string;
+    success?: boolean;
+    data?: any;
+    error?: string;
+  }>(response);
+
+  if ((data.status === "OK" || data.success) && data.data) {
+    return transformBackendArea(data.data);
+  }
+
+  throw new Error(data.error || "Erro ao criar área");
+};
+
+export const getOrganizationArea = async (areaId: string): Promise<OrganizationArea> => {
+  const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_AREA_BY_ID(areaId));
+  const data = await handleResponse<{
+    status?: string;
+    success?: boolean;
+    data?: any;
+    error?: string;
+  }>(response);
+
+  if ((data.status === "OK" || data.success) && data.data) {
+    return transformBackendArea(data.data);
+  }
+
+  throw new Error(data.error || "Erro ao buscar área");
+};
+
+export const updateOrganizationArea = async (
+  areaId: string,
+  payload: UpdateOrganizationAreaInput
+): Promise<OrganizationArea> => {
+  const response = await apiClient.put(API_ENDPOINTS.ORGANIZATIONS_AREA_BY_ID(areaId), payload);
+  const data = await handleResponse<{
+    status?: string;
+    success?: boolean;
+    data?: any;
+    error?: string;
+  }>(response);
+
+  if ((data.status === "OK" || data.success) && data.data) {
+    return transformBackendArea(data.data);
+  }
+
+  throw new Error(data.error || "Erro ao atualizar área");
+};
+
+export const deleteOrganizationArea = async (areaId: string): Promise<OrganizationArea> => {
+  const response = await apiClient.delete(API_ENDPOINTS.ORGANIZATIONS_AREA_BY_ID(areaId));
+  const data = await handleResponse<{
+    status?: string;
+    success?: boolean;
+    data?: any;
+    error?: string;
+  }>(response);
+
+  if ((data.status === "OK" || data.success) && data.data) {
+    return transformBackendArea(data.data);
+  }
+
+  throw new Error(data.error || "Erro ao remover área");
+};
+
+export const addAreaMember = async (
+  areaId: string,
+  payload: AddAreaMemberInput
+): Promise<OrganizationAreaMember> => {
+  const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_AREA_MEMBERS(areaId), payload);
+  const data = await handleResponse<{
+    status?: string;
+    success?: boolean;
+    data?: OrganizationAreaMember;
+    error?: string;
+  }>(response);
+
+  if ((data.status === "OK" || data.success) && data.data) {
+    return data.data;
+  }
+
+  throw new Error(data.error || "Erro ao adicionar membro na área");
+};
+
+export const updateAreaMember = async (
+  areaId: string,
+  memberId: string,
+  payload: UpdateAreaMemberInput
+): Promise<OrganizationAreaMember> => {
+  const response = await apiClient.patch(
+    API_ENDPOINTS.ORGANIZATIONS_AREA_MEMBER(areaId, memberId),
+    payload
+  );
+  const data = await handleResponse<{
+    status?: string;
+    success?: boolean;
+    data?: OrganizationAreaMember;
+    error?: string;
+  }>(response);
+
+  if ((data.status === "OK" || data.success) && data.data) {
+    return data.data;
+  }
+
+  throw new Error(data.error || "Erro ao atualizar membro da área");
+};
+
+export const removeAreaMember = async (
+  areaId: string,
+  memberId: string
+): Promise<OrganizationAreaMember> => {
+  const response = await apiClient.delete(
+    API_ENDPOINTS.ORGANIZATIONS_AREA_MEMBER(areaId, memberId)
+  );
+  const data = await handleResponse<{
+    status?: string;
+    success?: boolean;
+    data?: OrganizationAreaMember;
+    error?: string;
+  }>(response);
+
+  if ((data.status === "OK" || data.success) && data.data) {
+    return data.data;
+  }
+
+  throw new Error(data.error || "Erro ao remover membro da área");
+};
+
 // --- Membros e Convites ---
 
 export const fetchOrganizationMembers = async (userId?: string): Promise<OrganizationMember[]> => {
@@ -422,6 +736,30 @@ export const removeMember = async (
   return data.data;
 };
 
+export const updateMemberRole = async (
+  memberId: string,
+  role: OrganizationMember["membership"]["role"],
+  userId?: string
+): Promise<OrganizationMember> => {
+  const url = userId
+    ? `${API_ENDPOINTS.ORGANIZATIONS_MEMBER(memberId)}?userId=${userId}`
+    : API_ENDPOINTS.ORGANIZATIONS_MEMBER(memberId);
+
+  const response = await apiClient.patch(url, { role, userId });
+  const data = await handleResponse<{
+    success?: boolean;
+    status?: string;
+    data?: OrganizationMember;
+    error?: string;
+  }>(response);
+
+  if ((data.status !== "OK" && !data.success) || !data.data) {
+    throw new Error(data.error || "Erro ao atualizar função do membro");
+  }
+
+  return data.data;
+};
+
 // --- Uploads ---
 
 /**
@@ -482,4 +820,92 @@ export const uploadOrganizationBanner = async (
   }
 
   return transformBackendOrganization(data.data.organization);
+};
+
+// --- Domínios ---
+
+export const fetchDomains = async (userId?: string): Promise<OrganizationDomain[]> => {
+  try {
+    const url = userId
+      ? `${API_ENDPOINTS.ORGANIZATIONS_DOMAINS}?userId=${userId}`
+      : API_ENDPOINTS.ORGANIZATIONS_DOMAINS;
+
+    const response = await apiClient.get(url);
+    const data = await handleResponse<{
+      status: string;
+      domains: OrganizationDomain[];
+    }>(response);
+
+    if (data.status === "OK" && data.domains) {
+      return data.domains;
+    }
+    return [];
+  } catch (error) {
+    console.error("Erro ao buscar domínios:", error);
+    return [];
+  }
+};
+
+export const createDomain = async (
+  domain_name: string,
+  userId?: string
+): Promise<OrganizationDomain> => {
+  const url = userId
+    ? `${API_ENDPOINTS.ORGANIZATIONS_DOMAINS}?userId=${userId}`
+    : API_ENDPOINTS.ORGANIZATIONS_DOMAINS;
+
+  const payload = { domain_name };
+  const response = await apiClient.post(url, payload);
+  const data = await handleResponse<{
+    status: string;
+    message: string;
+    data: OrganizationDomain;
+    error?: string;
+  }>(response);
+
+  if (data.status !== "OK" || !data.data) {
+    throw new Error(
+      data.data && typeof data.data === "string" ? data.data : data.error || "Erro ao criar domínio"
+    );
+  }
+  return data.data;
+};
+
+export const verifyDomain = async (
+  domainId: string,
+  userId?: string
+): Promise<{ domain: OrganizationDomain; dns_checks: any }> => {
+  const endpoint = API_ENDPOINTS.ORGANIZATIONS_DOMAIN_VERIFY(domainId);
+  const url = userId ? `${endpoint}?userId=${userId}` : endpoint;
+
+  const response = await apiClient.post(url, {});
+  const data = await handleResponse<{
+    status: string;
+    message: string;
+    data: OrganizationDomain;
+    dns_checks?: any;
+    error?: string;
+  }>(response);
+
+  if (data.status !== "OK" || !data.data) {
+    throw new Error(data.error || "Erro ao verificar domínio");
+  }
+
+  return { domain: data.data, dns_checks: data.dns_checks };
+};
+
+export const deleteDomain = async (domainId: string, userId?: string): Promise<void> => {
+  const endpoint = API_ENDPOINTS.ORGANIZATIONS_DOMAIN_DELETE(domainId);
+  const url = userId ? `${endpoint}?userId=${userId}` : endpoint;
+
+  const response = await apiClient.delete(url);
+  const data = await handleResponse<{
+    status: string;
+    message: string;
+    error?: string;
+  }>(response);
+
+  if (data.status !== "OK") {
+    throw new Error(data.error || "Erro ao deletar domínio");
+  }
 };

@@ -1,9 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Inbox, Mail, CheckCircle2, AlertCircle, UserPlus, FileText, Briefcase, Bot } from "lucide-react";
+import {
+  Inbox,
+  Mail,
+  CheckCircle2,
+  AlertCircle,
+  UserPlus,
+  FileText,
+  Briefcase,
+  Bot,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Notification, NotificationType } from "@/app/_services/notifications/notifications-service";
+import {
+  Notification,
+  NotificationType,
+} from "@/app/_services/notifications/notifications-service";
 
 interface NotificationListProps {
   notifications: Notification[];
@@ -42,39 +54,45 @@ export function NotificationList({ notifications }: NotificationListProps) {
   return (
     <div className="space-y-2">
       {notifications.map((notification) => {
-         const message = typeof notification.content === 'object' 
-            ? (notification.content.message || notification.content.description || notification.content.summary || "No content")
+        const message =
+          typeof notification.content === "object"
+            ? notification.content.message ||
+              notification.content.description ||
+              notification.content.summary ||
+              "No content"
             : "No content";
 
         return (
-        <Link
-          key={notification.id}
-          href={`/app/notifications/${notification.id}`}
-          className={cn(
-            "group flex items-start gap-3 rounded-md border p-3 transition-all hover:shadow-sm",
-            notification.is_read
-              ? "border-neutral-200 bg-white text-neutral-600 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400"
-              : "border-blue-100 bg-blue-50/50 text-neutral-900 dark:border-blue-900/30 dark:bg-blue-900/10 dark:text-neutral-100"
-          )}
-        >
-          <div className="mt-0.5 shrink-0">
-            {getNotificationIcon(notification.type)}
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <div className="flex items-center justify-between gap-2">
-              <span className={cn("text-xs font-semibold", !notification.is_read && "text-blue-600 dark:text-blue-400")}>
-                {notification.title}
-              </span>
-              <span className="shrink-0 text-[10px] text-neutral-400">
-                 {new Date(notification.created_at).toLocaleDateString()}
-              </span>
+          <Link
+            key={notification.id}
+            href={`/app/notifications/${notification.id}`}
+            className={cn(
+              "group flex items-start gap-3 rounded-md border p-3 transition-all hover:shadow-sm",
+              notification.is_read
+                ? "border-neutral-200 bg-white text-neutral-600 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400"
+                : "border-blue-100 bg-blue-50/50 text-neutral-900 dark:border-blue-900/30 dark:bg-blue-900/10 dark:text-neutral-100"
+            )}
+          >
+            <div className="mt-0.5 shrink-0">{getNotificationIcon(notification.type)}</div>
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <div className="flex items-center justify-between gap-2">
+                <span
+                  className={cn(
+                    "text-xs font-semibold",
+                    !notification.is_read && "text-blue-600 dark:text-blue-400"
+                  )}
+                >
+                  {notification.title}
+                </span>
+                <span className="shrink-0 text-[10px] text-neutral-400">
+                  {new Date(notification.created_at).toLocaleDateString()}
+                </span>
+              </div>
+              <p className="line-clamp-2 text-xs opacity-90">{String(message)}</p>
             </div>
-            <p className="line-clamp-2 text-xs opacity-90">
-              {String(message)}
-            </p>
-          </div>
-        </Link>
-      )})}
+          </Link>
+        );
+      })}
     </div>
   );
 }

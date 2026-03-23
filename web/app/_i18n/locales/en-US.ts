@@ -43,6 +43,7 @@ const enUS: TranslationKeys = {
     recentAccess: "Recent Access",
     openSidebar: "Open sidebar",
     backToHome: "Back to home",
+    areas: "Areas",
   },
 
   home: {

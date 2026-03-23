@@ -11,7 +11,11 @@ interface NotificationHeaderProps {
   titleSuffix?: ReactNode;
 }
 
-export function NotificationHeader({ className, rightContent, titleSuffix }: NotificationHeaderProps) {
+export function NotificationHeader({
+  className,
+  rightContent,
+  titleSuffix,
+}: NotificationHeaderProps) {
   // const { t } = useLanguage();
 
   return (

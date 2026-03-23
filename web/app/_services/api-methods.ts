@@ -69,8 +69,16 @@ export const API_ENDPOINTS = {
   ORGANIZATIONS_MEMBERS: "/organizations/members",
   ORGANIZATIONS_MEMBER: (memberId: string) => `/organizations/members/${memberId}`,
   ORGANIZATIONS_INVITES: "/organizations/invites",
+  ORGANIZATIONS_DOMAINS: "/organizations/domains",
+  ORGANIZATIONS_DOMAIN_VERIFY: (id: string) => `/organizations/domains/${id}/verify`,
+  ORGANIZATIONS_DOMAIN_DELETE: (id: string) => `/organizations/domains/${id}`,
   ORGANIZATIONS_LOGO: "/organizations/logo",
   ORGANIZATIONS_BANNER: "/organizations/banner",
+  ORGANIZATIONS_AREAS: "/organizations/areas",
+  ORGANIZATIONS_AREA_BY_ID: (id: string) => `/organizations/areas/${id}`,
+  ORGANIZATIONS_AREA_MEMBERS: (id: string) => `/organizations/areas/${id}/members`,
+  ORGANIZATIONS_AREA_MEMBER: (areaId: string, memberId: string) =>
+    `/organizations/areas/${areaId}/members/${memberId}`,
 
   // AI
   AI_MODELS: "/weave-ai/models",

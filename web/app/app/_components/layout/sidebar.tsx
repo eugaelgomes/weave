@@ -9,7 +9,7 @@ import { usePathname } from "next/navigation";
 import {
   FaBook,
   FaHome,
-  FaProjectDiagram,
+  FaProjectDiagram, // Ícone utilizado para Áreas e Projetos
   FaTimes,
   FaRegSadTear,
   FaComments,
@@ -21,7 +21,6 @@ import {
   FaAngleDoubleLeft,
   FaAngleDoubleRight,
   FaCalendar,
-  FaList,
 } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
 import { HiSparkles } from "react-icons/hi2";
@@ -141,6 +140,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
             subItems: [
               { path: "/app/organization/settings", icon: IoMdSettings, label: t.nav.settings },
               { path: "/app/organization/members", icon: FaUserFriends, label: t.nav.members },
+              { path: "/app/organization/areas", icon: FaProjectDiagram, label: t.nav.areas },
               { path: "/app/organization/projects", icon: FaProjectDiagram, label: t.nav.projects },
             ],
           },

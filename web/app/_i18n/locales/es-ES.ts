@@ -43,6 +43,7 @@ const esES: TranslationKeys = {
     recentAccess: "Acceso Reciente",
     openSidebar: "Abrir menú lateral",
     backToHome: "Volver al inicio",
+    areas: "Áreas",
   },
 
   home: {

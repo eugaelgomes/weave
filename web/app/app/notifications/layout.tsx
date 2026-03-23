@@ -70,11 +70,7 @@ function NotificationSidebar({ className, onLinkClick }: SidebarProps) {
   );
 }
 
-export default function NotificationsLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function NotificationsLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (

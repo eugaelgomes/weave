@@ -40,24 +40,23 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const fetchNotifications = useCallback(
     async (params: FetchNotificationsParams = {}) => {
       if (!user) return;
-      
+
       setLoading(true);
       setError(null);
       try {
         const data = await apiFetchNotifications(params);
         setNotifications(data.notifications);
         setTotal(data.pagination.total);
-        
+
         // If we are fetching 'all' or 'unread', we can update unread count estimate
         // Ideally the backend should return the unread count separately
-        if (params.status === 'unread') {
-             setUnreadCount(data.pagination.total);
-        } else if (!params.status || params.status === 'all') {
-            // This is just an approximation if we don't have a dedicated endpoint for count
-            const unread = data.notifications.filter(n => !n.is_read).length;
-            setUnreadCount(prev => prev > unread ? prev : unread); 
+        if (params.status === "unread") {
+          setUnreadCount(data.pagination.total);
+        } else if (!params.status || params.status === "all") {
+          // This is just an approximation if we don't have a dedicated endpoint for count
+          const unread = data.notifications.filter((n) => !n.is_read).length;
+          setUnreadCount((prev) => (prev > unread ? prev : unread));
         }
-
       } catch (err: any) {
         setError(err.message || "Failed to fetch notifications");
       } finally {
@@ -66,20 +65,21 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     },
     [user]
   );
-  
+
   // Initial fetch for unread count or just latest
   useEffect(() => {
     if (user) {
-        fetchNotifications({ limit: 20 });
+      fetchNotifications({ limit: 20 });
     }
   }, [user, fetchNotifications]);
-
 
   const markAsRead = useCallback(async (id: string) => {
     try {
       await apiMarkNotificationAsRead(id);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n))
+        prev.map((n) =>
+          n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
+        )
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err: any) {
@@ -110,14 +110,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const restoreFromTrash = useCallback(async (id: string) => {
-      try {
-        await apiToggleNotificationTrash(id, false);
-        // If we are currently viewing trash, we should remove it from the list
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
-         setTotal((prev) => Math.max(0, prev - 1));
-      } catch (err: any) {
-        setError(err.message || "Failed to restore notification");
-      }
+    try {
+      await apiToggleNotificationTrash(id, false);
+      // If we are currently viewing trash, we should remove it from the list
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setTotal((prev) => Math.max(0, prev - 1));
+    } catch (err: any) {
+      setError(err.message || "Failed to restore notification");
+    }
   }, []);
 
   const deletePermanently = useCallback(async (id: string) => {

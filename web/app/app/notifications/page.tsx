@@ -34,7 +34,7 @@ export default function NotificationsPage() {
 
   const handleMarkAllRead = async () => {
     await markAllAsRead();
-  }
+  };
 
   // Show global spinner only on first load if we have no notifications
   if ((initialLoading && notifications.length === 0) || (loading && notifications.length === 0)) {
@@ -46,46 +46,51 @@ export default function NotificationsPage() {
   }
 
   if (error && notifications.length === 0) {
-       return (
-      <div className="flex h-64 flex-col items-center justify-center text-red-500 rounded-md border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-950">
-        <p className="font-medium text-sm">Failed to load notifications</p>
-        <p className="text-xs text-neutral-500 mt-1">{error}</p>
-        <button 
-            onClick={() => fetchNotifications({ status: 'all', limit: 50 })}
-            className="mt-4 px-3 py-1.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-xs font-medium hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+    return (
+      <div className="flex h-64 flex-col items-center justify-center rounded-md border border-neutral-200 bg-white p-6 text-red-500 dark:border-neutral-800 dark:bg-neutral-950">
+        <p className="text-sm font-medium">Failed to load notifications</p>
+        <p className="mt-1 text-xs text-neutral-500">{error}</p>
+        <button
+          onClick={() => fetchNotifications({ status: "all", limit: 50 })}
+          className="mt-4 rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700"
         >
-            Retry
+          Retry
         </button>
       </div>
     );
   }
 
   const getTitle = () => {
-      switch(filterParam) {
-          case "archived": return "Archived";
-          case "trash": return "Trash";
-          case "unread": return "Unread";
-          default: return "Inbox";
-      }
-  }
+    switch (filterParam) {
+      case "archived":
+        return "Archived";
+      case "trash":
+        return "Trash";
+      case "unread":
+        return "Unread";
+      default:
+        return "Inbox";
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-900 pb-4">
+      <div className="flex items-center justify-between border-b border-neutral-100 pb-4 dark:border-neutral-900">
         <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
           {getTitle()}
         </h2>
         <div className="flex items-center gap-3">
-             {(!filterParam || filterParam === 'inbox' || filterParam === 'unread') && notifications.some(n => !n.is_read) && (
-            <button 
+          {(!filterParam || filterParam === "inbox" || filterParam === "unread") &&
+            notifications.some((n) => !n.is_read) && (
+              <button
                 onClick={handleMarkAllRead}
                 disabled={loading}
-                className="text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50 transition-colors"
+                className="text-xs font-medium text-blue-600 transition-colors hover:text-blue-700 disabled:opacity-50 dark:text-blue-400 dark:hover:text-blue-300"
                 title="Mark all listed notifications as read"
-            >
+              >
                 Mark all as read
-            </button>
-        )}
+              </button>
+            )}
         </div>
       </div>
       <NotificationList notifications={notifications} />

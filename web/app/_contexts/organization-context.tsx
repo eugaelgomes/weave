@@ -11,17 +11,33 @@ import {
   restoreOrganization as restoreOrganizationService,
   fetchOrganizationMembers as fetchMembersService,
   fetchPendingInvites as fetchInvitesService,
+  fetchOrganizationAreas as fetchAreasService,
+  fetchAreaMembers as fetchAreaMembersService,
+  createOrganizationArea as createAreaService,
+  getOrganizationArea as getAreaService,
+  updateOrganizationArea as updateAreaService,
+  deleteOrganizationArea as deleteAreaService,
+  addAreaMember as addAreaMemberService,
+  updateAreaMember as updateAreaMemberService,
+  removeAreaMember as removeAreaMemberService,
   addMemberDirectly as addMemberDirectlyService,
   inviteMember as inviteMemberService,
   cancelInvite as cancelInviteService,
   removeMember as removeMemberService,
+  updateMemberRole as updateMemberRoleService,
   type Organization,
   type OrganizationMember,
   type OrganizationInvite,
+  type OrganizationArea,
+  type OrganizationAreaMember,
   type CreateOrganizationData,
   type UpdateOrganizationData,
   type OrganizationProperties,
   type InviteMemberData,
+  type CreateOrganizationAreaInput,
+  type UpdateOrganizationAreaInput,
+  type AddAreaMemberInput,
+  type UpdateAreaMemberInput,
 } from "../_services/organization";
 
 export interface OrganizationStats {
@@ -38,8 +54,14 @@ export interface OrganizationContextType {
   organization: Organization | null;
   members: OrganizationMember[];
   invites: OrganizationInvite[];
+  areas: OrganizationArea[];
+  areaMembers: Record<string, OrganizationAreaMember[]>;
   loading: boolean;
+  areasLoading: boolean;
+  areaMembersLoading: boolean;
   error: string | null;
+  areasError: string | null;
+  areaMembersError: string | null;
   lastFetch: Date | null;
   hasOrganization: boolean;
 
@@ -57,6 +79,28 @@ export interface OrganizationContextType {
   inviteMember: (data: InviteMemberData) => Promise<{ success: boolean; message: string }>; // Convite por email
   cancelInvite: (inviteId: string) => Promise<boolean>;
   removeMember: (memberId: string) => Promise<boolean>;
+  updateMemberRole: (memberId: string, role: string) => Promise<boolean>;
+
+  // Gestão de Áreas
+  fetchAreas: (force?: boolean) => Promise<OrganizationArea[]>;
+  getAreaById: (areaId: string, options?: { force?: boolean }) => Promise<OrganizationArea | null>;
+  createArea: (data: CreateOrganizationAreaInput) => Promise<OrganizationArea | null>;
+  updateArea: (
+    areaId: string,
+    data: UpdateOrganizationAreaInput
+  ) => Promise<OrganizationArea | null>;
+  deleteArea: (areaId: string) => Promise<boolean>;
+  fetchAreaMembers: (areaId: string, force?: boolean) => Promise<OrganizationAreaMember[]>;
+  addAreaMember: (
+    areaId: string,
+    data: AddAreaMemberInput
+  ) => Promise<OrganizationAreaMember | null>;
+  updateAreaMember: (
+    areaId: string,
+    memberId: string,
+    data: UpdateAreaMemberInput
+  ) => Promise<OrganizationAreaMember | null>;
+  removeAreaMember: (areaId: string, memberId: string) => Promise<boolean>;
 
   // Dados Derivados
   getStats: () => OrganizationStats;
@@ -83,11 +127,18 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [invites, setInvites] = useState<OrganizationInvite[]>([]);
+  const [areas, setAreas] = useState<OrganizationArea[]>([]);
+  const [areaMembers, setAreaMembers] = useState<Record<string, OrganizationAreaMember[]>>({});
 
   const [loading, setLoading] = useState(false);
+  const [areasLoading, setAreasLoading] = useState(false);
+  const [areaMembersLoading, setAreaMembersLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [areasError, setAreasError] = useState<string | null>(null);
+  const [areaMembersError, setAreaMembersError] = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState<Date | null>(null);
   const [initialFetchDone, setInitialFetchDone] = useState(false);
+  const [areasFetched, setAreasFetched] = useState(false);
 
   // 1. BUSCAR DADOS COMPLETOS (Org + Membros + Convites)
   const fetchOrganizationData = useCallback(async () => {
@@ -109,9 +160,13 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         ]);
         setMembers(membersData);
         setInvites(invitesData);
+        setAreasFetched(false);
       } else {
         setMembers([]);
         setInvites([]);
+        setAreas([]);
+        setAreaMembers({});
+        setAreasFetched(false);
       }
 
       setLastFetch(new Date());
@@ -203,6 +258,9 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         setOrganization(null);
         setMembers([]);
         setInvites([]);
+        setAreas([]);
+        setAreaMembers({});
+        setAreasFetched(false);
       }
       return success;
     } catch (err: unknown) {
@@ -300,6 +358,256 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
+  const updateMemberRole = useCallback(async (memberId: string, role: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const updatedMember = await updateMemberRoleService(
+        memberId,
+        role as OrganizationMember["membership"]["role"]
+      );
+
+      setMembers((prev) =>
+        prev.map((member) =>
+          member.id === memberId
+            ? {
+                ...member,
+                membership: {
+                  ...member.membership,
+                  role: updatedMember.membership.role,
+                  updated_at: updatedMember.membership.updated_at,
+                },
+              }
+            : member
+        )
+      );
+
+      return true;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao atualizar função do membro");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // 6.1 GESTÃO DE ÁREAS
+  const fetchAreas = useCallback(
+    async (force = false): Promise<OrganizationArea[]> => {
+      if (!organization?.id) {
+        setAreas([]);
+        setAreasFetched(false);
+        return [];
+      }
+
+      if (areasFetched && !force) {
+        return areas;
+      }
+
+      setAreasLoading(true);
+      setAreasError(null);
+
+      try {
+        const fetchedAreas = await fetchAreasService();
+        setAreas(fetchedAreas);
+        setAreasFetched(true);
+        return fetchedAreas;
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Erro ao carregar áreas";
+        setAreasError(message);
+        throw err;
+      } finally {
+        setAreasLoading(false);
+      }
+    },
+    [organization?.id, areasFetched, areas]
+  );
+
+  const getAreaById = useCallback(
+    async (areaId: string, options: { force?: boolean } = {}): Promise<OrganizationArea | null> => {
+      if (!areaId) return null;
+      const { force = false } = options;
+
+      if (!force) {
+        const cached = areas.find((area) => area.id === areaId);
+        if (cached) {
+          return cached;
+        }
+      }
+
+      try {
+        const area = await getAreaService(areaId);
+        setAreas((prev) => {
+          const exists = prev.some((item) => item.id === area.id);
+          return exists ? prev.map((item) => (item.id === area.id ? area : item)) : [...prev, area];
+        });
+        return area;
+      } catch (err: unknown) {
+        setAreasError(err instanceof Error ? err.message : "Erro ao buscar área");
+        return null;
+      }
+    },
+    [areas]
+  );
+
+  const createArea = useCallback(
+    async (data: CreateOrganizationAreaInput): Promise<OrganizationArea | null> => {
+      setAreasLoading(true);
+      setAreasError(null);
+      try {
+        const newArea = await createAreaService(data);
+        setAreas((prev) => [...prev, newArea]);
+        return newArea;
+      } catch (err: unknown) {
+        setAreasError(err instanceof Error ? err.message : "Erro ao criar área");
+        return null;
+      } finally {
+        setAreasLoading(false);
+      }
+    },
+    []
+  );
+
+  const updateArea = useCallback(
+    async (areaId: string, data: UpdateOrganizationAreaInput): Promise<OrganizationArea | null> => {
+      setAreasLoading(true);
+      setAreasError(null);
+      try {
+        const updated = await updateAreaService(areaId, data);
+        setAreas((prev) => prev.map((area) => (area.id === areaId ? updated : area)));
+        return updated;
+      } catch (err: unknown) {
+        setAreasError(err instanceof Error ? err.message : "Erro ao atualizar área");
+        return null;
+      } finally {
+        setAreasLoading(false);
+      }
+    },
+    []
+  );
+
+  const deleteArea = useCallback(async (areaId: string): Promise<boolean> => {
+    setAreasLoading(true);
+    setAreasError(null);
+    try {
+      await deleteAreaService(areaId);
+      setAreas((prev) => prev.filter((area) => area.id !== areaId));
+      setAreaMembers((prev) => {
+        if (!(areaId in prev)) return prev;
+        const { [areaId]: _removed, ...rest } = prev;
+        return rest;
+      });
+      return true;
+    } catch (err: unknown) {
+      setAreasError(err instanceof Error ? err.message : "Erro ao remover área");
+      return false;
+    } finally {
+      setAreasLoading(false);
+    }
+  }, []);
+
+  const fetchMembersByArea = useCallback(
+    async (areaId: string, force = false): Promise<OrganizationAreaMember[]> => {
+      if (!areaId) return [];
+
+      if (!force && areaMembers[areaId]) {
+        return areaMembers[areaId];
+      }
+
+      setAreaMembersLoading(true);
+      setAreaMembersError(null);
+
+      try {
+        const membersList = await fetchAreaMembersService(areaId);
+        setAreaMembers((prev) => ({ ...prev, [areaId]: membersList }));
+        return membersList;
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Erro ao carregar membros da área";
+        setAreaMembersError(message);
+        throw err;
+      } finally {
+        setAreaMembersLoading(false);
+      }
+    },
+    [areaMembers]
+  );
+
+  const addAreaMember = useCallback(
+    async (areaId: string, data: AddAreaMemberInput): Promise<OrganizationAreaMember | null> => {
+      setAreaMembersLoading(true);
+      setAreaMembersError(null);
+      try {
+        const member = await addAreaMemberService(areaId, data);
+        setAreaMembers((prev) => {
+          const current = prev[areaId] ?? [];
+          return { ...prev, [areaId]: [...current, member] };
+        });
+        return member;
+      } catch (err: unknown) {
+        setAreaMembersError(err instanceof Error ? err.message : "Erro ao adicionar membro à área");
+        return null;
+      } finally {
+        setAreaMembersLoading(false);
+      }
+    },
+    []
+  );
+
+  const updateAreaMember = useCallback(
+    async (
+      areaId: string,
+      memberId: string,
+      data: UpdateAreaMemberInput
+    ): Promise<OrganizationAreaMember | null> => {
+      setAreaMembersLoading(true);
+      setAreaMembersError(null);
+      try {
+        const updated = await updateAreaMemberService(areaId, memberId, data);
+        setAreaMembers((prev) => {
+          const current = prev[areaId] ?? [];
+          return {
+            ...prev,
+            [areaId]: current.map((member) =>
+              member.user_id === memberId ? { ...member, ...updated } : member
+            ),
+          };
+        });
+        return updated;
+      } catch (err: unknown) {
+        setAreaMembersError(
+          err instanceof Error ? err.message : "Erro ao atualizar membro da área"
+        );
+        return null;
+      } finally {
+        setAreaMembersLoading(false);
+      }
+    },
+    []
+  );
+
+  const removeAreaMember = useCallback(
+    async (areaId: string, memberId: string): Promise<boolean> => {
+      setAreaMembersLoading(true);
+      setAreaMembersError(null);
+      try {
+        await removeAreaMemberService(areaId, memberId);
+        setAreaMembers((prev) => {
+          const current = prev[areaId] ?? [];
+          return {
+            ...prev,
+            [areaId]: current.filter((member) => member.user_id !== memberId),
+          };
+        });
+        return true;
+      } catch (err: unknown) {
+        setAreaMembersError(err instanceof Error ? err.message : "Erro ao remover membro da área");
+        return false;
+      } finally {
+        setAreaMembersLoading(false);
+      }
+    },
+    []
+  );
+
   // 7. DADOS DERIVADOS E STATS
   const getStats = useCallback((): OrganizationStats => {
     if (!organization) {
@@ -385,14 +693,26 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     }
   }, [user?.id, user?.org_id, initialFetchDone, loading, fetchOrganizationData]);
 
+  useEffect(() => {
+    if (organization?.id && !areasFetched) {
+      fetchAreas().catch(() => {});
+    }
+  }, [organization?.id, areasFetched, fetchAreas]);
+
   const hasOrganization = organization !== null && !organization.deleted;
 
   const value: OrganizationContextType = {
     organization,
     members,
     invites,
+    areas,
+    areaMembers,
     loading,
+    areasLoading,
+    areaMembersLoading,
     error,
+    areasError,
+    areaMembersError,
     lastFetch,
     hasOrganization,
     fetchOrganizationData,
@@ -406,6 +726,16 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     inviteMember,
     cancelInvite,
     removeMember,
+    updateMemberRole,
+    fetchAreas,
+    getAreaById,
+    createArea,
+    updateArea,
+    deleteArea,
+    fetchAreaMembers: fetchMembersByArea,
+    addAreaMember,
+    updateAreaMember,
+    removeAreaMember,
     getStats,
     isOwner,
     isAdmin,

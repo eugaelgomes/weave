@@ -41,6 +41,7 @@ const ptBR = {
     recentAccess: "Acesso Recente",
     openSidebar: "Abrir menu lateral",
     backToHome: "Voltar para o início",
+    areas: "Áreas",
   },
 
   home: {

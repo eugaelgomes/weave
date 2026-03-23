@@ -142,12 +142,9 @@ export const toggleNotificationTrash = async (
   notificationId: string,
   inTrash = true
 ): Promise<Notification> => {
-  const response = await apiClient.patch(
-    API_ENDPOINTS.NOTIFICATION_TOGGLE_TRASH(notificationId),
-    {
-      in_trash: inTrash,
-    }
-  );
+  const response = await apiClient.patch(API_ENDPOINTS.NOTIFICATION_TOGGLE_TRASH(notificationId), {
+    in_trash: inTrash,
+  });
 
   const data = await handleResponse<{ notification: Notification }>(response);
   return normalizeNotification(data.notification);
