@@ -20,12 +20,26 @@ class OrganizationsRepository {
       o.deleted,
       o.created_at,
       o.updated_at,
+      o.settings,
+      o.plan AS plan_snapshot,
+      o.address,
+      o.delete_at,
+      o.deleted_by,
+      o.plan_id,
+      o.branding_properties,
+      o.integrations,
+      p.name as plan_name,
+      p.details as plan_details,
+      p.plan_value,
+      p.currency,
+      p.billing_cycle,
       u.avatar_url,
       u.name,
       u.username,
       u.email
     FROM organizations o
     JOIN users u ON u.user_id = o.user_id
+    LEFT JOIN plans p ON p.plan_id = o.plan_id
     WHERE o.user_id = $1;
     `;
     const results = await executeQuery(query, [user_id]);

@@ -54,6 +54,18 @@ router.post(
   organizationDomainsController.verifyDomain.bind(organizationDomainsController)
 );
 
+router.delete(
+  "/domains/:domainId",
+  structuralLimiter,
+  organizationDomainsController.deleteDomain.bind(organizationDomainsController)
+);
+
+router.post(
+  "/domains/:domainId/verify",
+  structuralLimiter,
+  organizationDomainsController.verifyDomain.bind(organizationDomainsController)
+);
+
 router.patch(
   "/domains/:domainId/sso",
   structuralLimiter,
@@ -68,6 +80,7 @@ router.delete(
   organizationDomainsController.deleteDomain.bind(organizationDomainsController)
 );
 
+// ------ Areas Routes ------
 router.get(
   "/areas",
   highTrafficLimiter,
