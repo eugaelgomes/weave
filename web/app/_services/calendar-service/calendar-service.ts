@@ -51,6 +51,8 @@ export interface CreateInternalCalendarEventPayload {
   start_time: string;
   end_time: string;
   is_all_day?: boolean;
+  create_google_meet?: boolean;
+  attendees?: string[];
   organization_id?: string;
   note_id?: string;
   project_id?: string;

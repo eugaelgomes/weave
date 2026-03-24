@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { User } from "@/app/_services/authentication/auth-service";
 import { requestBackup, getBackupStatus } from "@/app/_services/backup-service/backup-service";
-import { fetchGoogleCalendarStatus } from "@/app/_services/calendar-service/calendar-service";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
 
@@ -49,11 +48,6 @@ const SettingsPage = () => {
   const [backupError, setBackupError] = useState("");
   const [backupLoading, setBackupLoading] = useState(false);
 
-  // Google Calendar
-  const [gcalConnected, setGcalConnected] = useState(false);
-  const [gcalLoading, setGcalLoading] = useState(true);
-  const [gcalDisconnecting, setGcalDisconnecting] = useState(false);
-
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
@@ -71,13 +65,6 @@ const SettingsPage = () => {
   });
 
   // ================== EFFECTS ==================
-  useEffect(() => {
-    fetchGoogleCalendarStatus()
-      .then((res) => setGcalConnected(res.connected))
-      .catch(() => setGcalConnected(false))
-      .finally(() => setGcalLoading(false));
-  }, []);
-
   useEffect(() => {
     if (user) {
       setUserData(user);

@@ -4,7 +4,6 @@ import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
-  FileText,
   Calendar as CalendarIcon,
   X,
   RefreshCw,
@@ -13,21 +12,11 @@ import {
   ExternalLink,
   Plus,
 } from "lucide-react";
-import { FaProjectDiagram } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 
-import { useNotes } from "@/app/_contexts/notes-context";
-import { useProjects } from "@/app/_contexts/projects-context";
 import { useAuth } from "@/app/_contexts/auth-context";
+import { useCalendar, type UnifiedCalendarEvent } from "@/app/_contexts/calendar-context";
 import type { UserPreferences } from "@/types/user-preferences";
-import {
-  fetchGoogleCalendarEvents,
-  fetchInternalCalendarEvents,
-  connectGoogleCalendar,
-  subscribeGoogleCalendarUpdates,
-  type GoogleCalendarEvent,
-  type InternalCalendarEvent,
-} from "@/app/_services/calendar-service/calendar-service";
 import CreateEventModal from "./create-event";
 
 import { calendarUtils } from "@/app/_utils/calendar";
@@ -38,7 +27,6 @@ export interface CalendarPreviewProps {
 }
 
 type ViewType = "day" | "week" | "month" | "semester" | "year";
-type UnifiedCalendarEvent = GoogleCalendarEvent & { source: "google" | "internal" };
 
 const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
 const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
@@ -78,21 +66,21 @@ const minutesToPixels = (minutes: number): number => {
 };
 
 interface PositionedEvent {
-  event: { time: string; type: "note" | "project" | "calendar"; data: any };
+  event: TimelineEvent;
   startMin: number;
   endMin: number;
   column: number;
   totalColumns: number;
 }
 
-const layoutOverlappingEvents = (
-  events: Array<{ time: string; type: "note" | "project" | "calendar"; data: any }>
-): PositionedEvent[] => {
+type TimelineEvent = { time: string; type: "calendar"; data: UnifiedCalendarEvent };
+
+const layoutOverlappingEvents = (events: TimelineEvent[]): PositionedEvent[] => {
   const entries: PositionedEvent[] = events
     .filter((e) => !e.data.allDay)
     .map((event) => {
       const startMin = getMinutesFromMidnight(event.time);
-      const endTime = event.type === "calendar" ? event.data.end : null;
+      const endTime = event.data.end;
       const duration = getEventDurationMinutes(event.time, endTime);
       return {
         event,
@@ -178,18 +166,31 @@ const formatTimeRange = (
   return `${startFormatted} - ${endFormatted}`;
 };
 
+const formatHourLabel = (hour: number, timeFormat: "12h" | "24h") => {
+  if (timeFormat === "12h") {
+    if (hour === 0) return "12 AM";
+    if (hour === 12) return "12 PM";
+    if (hour > 12) return `${hour - 12} PM`;
+    return `${hour} AM`;
+  }
+
+  return `${String(hour).padStart(2, "0")}:00`;
+};
+
 export function CalendarPreview({ className = "h-full min-h-[500px]" }: CalendarPreviewProps) {
-  const { notes } = useNotes();
-  const { projects } = useProjects();
   const { user } = useAuth();
+  const {
+    calendarEvents,
+    googleConnected,
+    loadEventsForYear,
+    refreshEventsForYear,
+    connectGoogleCalendar,
+  } = useCalendar();
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>("week");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [gcalEvents, setGcalEvents] = useState<UnifiedCalendarEvent[]>([]);
-  const [gcalConnected, setGcalConnected] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [fetchedWindow, setFetchedWindow] = useState<string | null>(null);
 
   const userPreferences = useMemo(() => {
     return (user?.usage_preference as UserPreferences) || {};
@@ -212,7 +213,9 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
       year: isPtBr ? "Ano" : "Year",
       firstSemester: isPtBr ? "1º Semestre" : "1st Semester",
       secondSemester: isPtBr ? "2º Semestre" : "2nd Semester",
-      noEvents: isPtBr ? "Nenhum evento programado para este dia." : "No events scheduled for this day.",
+      noEvents: isPtBr
+        ? "Nenhum evento programado para este dia."
+        : "No events scheduled for this day.",
       updatedAt: isPtBr ? "Atualizado às" : "Updated at",
       updatedAtFull: isPtBr ? "Atualizada às" : "Updated at",
       records: isPtBr ? "Registros" : "Records",
@@ -254,92 +257,19 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
   }, []);
 
   useEffect(() => {
-    const year = currentDate.getFullYear();
-    const windowKey = `${year}`;
-    if (fetchedWindow === windowKey) return;
-
-    const timeMin = new Date(year - 1, 11, 1).toISOString();
-    const timeMax = new Date(year + 1, 11, 31, 23, 59, 59).toISOString();
-
-    Promise.allSettled([
-      fetchGoogleCalendarEvents(timeMin, timeMax),
-      fetchInternalCalendarEvents(timeMin, timeMax),
-    ])
-      .then(([googleResult, internalResult]) => {
-        const allCalendarEvents: UnifiedCalendarEvent[] = [];
-
-        if (googleResult.status === "fulfilled") {
-          setGcalConnected(googleResult.value.connected);
-          if (googleResult.value.connected) {
-            allCalendarEvents.push(
-              ...googleResult.value.events.map((event) => ({
-                ...event,
-                source: "google" as const,
-              }))
-            );
-          }
-        } else {
-          setGcalConnected(false);
-        }
-
-        if (internalResult.status === "fulfilled") {
-          allCalendarEvents.push(
-            ...internalResult.value.map((event: InternalCalendarEvent) => ({
-              id: event.id,
-              title: event.title,
-              description: event.description,
-              location: event.location,
-              start: event.start_time,
-              end: event.end_time,
-              allDay: event.is_all_day,
-              htmlLink: null,
-              colorId: null,
-              source: "internal" as const,
-            }))
-          );
-        }
-
-        setGcalEvents(allCalendarEvents);
-        setFetchedWindow(windowKey);
-      })
-      .catch(() => {
-        setGcalEvents([]);
-      });
-  }, [currentDate, fetchedWindow]);
-
-  useEffect(() => {
-    if (!gcalConnected) return;
-    const unsubscribe = subscribeGoogleCalendarUpdates(() => {
-      setFetchedWindow(null);
+    loadEventsForYear(currentDate.getFullYear()).catch(() => {
+      // Error state is already managed by CalendarContext.
     });
-    return unsubscribe;
-  }, [gcalConnected]);
+  }, [currentDate, loadEventsForYear]);
 
   const eventsByDate = useMemo(() => {
-    const map = new Map<
-      string,
-      { notes: any[]; projects: any[]; calendarEvents: GoogleCalendarEvent[] }
-    >();
+    const map = new Map<string, { calendarEvents: UnifiedCalendarEvent[] }>();
 
     const ensureKey = (dateKey: string) => {
-      if (!map.has(dateKey)) map.set(dateKey, { notes: [], projects: [], calendarEvents: [] });
+      if (!map.has(dateKey)) map.set(dateKey, { calendarEvents: [] });
     };
 
-    const addToMap = (dateString: string, item: any, type: "note" | "project") => {
-      if (!dateString) return;
-      const d = new Date(dateString);
-      const dateKey = toDateKey(d);
-      ensureKey(dateKey);
-      if (type === "note") map.get(dateKey)!.notes.push(item);
-      if (type === "project") map.get(dateKey)!.projects.push(item);
-    };
-
-    notes?.forEach((note) => addToMap(note.updated_at || note.created_at, note, "note"));
-    projects?.forEach((project) =>
-      addToMap(project.updated_at || project.created_at, project, "project")
-    );
-
-    gcalEvents.forEach((event) => {
+    calendarEvents.forEach((event) => {
       if (!event.start) return;
       let d: Date;
       if (/^\d{4}-\d{2}-\d{2}$/.test(event.start)) {
@@ -354,7 +284,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
     });
 
     return map;
-  }, [notes, projects, gcalEvents]);
+  }, [calendarEvents]);
 
   const headerTitle = useMemo(() => {
     const year = currentDate.getFullYear();
@@ -383,30 +313,6 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
 
     return `${texts.year} ${year}`;
   }, [currentDate, view, MONTH_NAMES, locale, texts]);
-
-  const EventChip = ({ event, type }: { event: any; type: "note" | "project" }) => {
-    const isNote = type === "note";
-    const title = isNote ? event.title : event.name;
-    const time = formatTime(event.updated_at || event.created_at, timeFormat, locale);
-
-    return (
-      <div
-        className={`flex items-center gap-1.5 truncate rounded px-1.5 py-1 text-[9px] font-medium transition-colors sm:text-[10px] ${
-          isNote
-            ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-400 dark:hover:bg-yellow-500/20"
-            : "bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20"
-        }`}
-      >
-        {isNote ? (
-          <FileText size={10} className="hidden shrink-0 sm:block" />
-        ) : (
-          <FaProjectDiagram size={10} className="hidden shrink-0 sm:block" />
-        )}
-        <span className="flex-1 truncate">{title}</span>
-        <span className="hidden shrink-0 text-[8px] opacity-70 sm:block sm:text-[9px]">{time}</span>
-      </div>
-    );
-  };
 
   const CalendarEventChip = ({ event }: { event: UnifiedCalendarEvent }) => {
     const time = formatTimeRange(event.start!, event.end, event.allDay, timeFormat, locale);
@@ -437,9 +343,14 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
 
   const renderGrid = (daysToRender: Date[], cols: number) => {
     const today = new Date();
+    const gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+
     return (
-      <div className="flex flex-1 flex-col gap-1 overflow-hidden border-t border-neutral-200 bg-neutral-100 px-1 dark:border-neutral-800 dark:bg-neutral-800">
-        <div className={`grid grid-cols-${cols} rounded-md bg-white dark:bg-neutral-950`}>
+      <div className="flex flex-1 flex-col gap-1 overflow-hidden border-t border-neutral-200 bg-neutral-100 p-1 dark:border-neutral-800 dark:bg-neutral-800">
+        <div
+          className="grid rounded-md bg-white dark:bg-neutral-950"
+          style={{ gridTemplateColumns }}
+        >
           {WEEK_DAYS.slice(0, cols).map((day) => (
             <div
               key={day}
@@ -451,7 +362,8 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
           ))}
         </div>
         <div
-          className={`grid flex-1 grid-cols-${cols} gap-1 overflow-y-auto [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent`}
+          className="grid flex-1 gap-1 overflow-y-auto [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent"
+          style={{ gridTemplateColumns }}
         >
           {daysToRender.map((cellDate, idx) => {
             const dateStr = toDateKey(cellDate);
@@ -482,12 +394,6 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                   {dayEvents?.calendarEvents.map((e, i) => (
                     <CalendarEventChip key={`calendar-${i}`} event={e as UnifiedCalendarEvent} />
                   ))}
-                  {dayEvents?.projects.map((p, i) => (
-                    <EventChip key={`p-${i}`} event={p} type="project" />
-                  ))}
-                  {dayEvents?.notes.map((n, i) => (
-                    <EventChip key={`n-${i}`} event={n} type="note" />
-                  ))}
                 </div>
               </div>
             );
@@ -504,7 +410,230 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
       d.setDate(d.getDate() + i);
       return d;
     });
-    return renderGrid(days, 7);
+
+    const today = new Date();
+    const nowMinutes = today.getHours() * 60 + today.getMinutes();
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+
+    const weekEvents = days.map((day) => {
+      const dayEvents = eventsByDate.get(toDateKey(day));
+      const allEvents: TimelineEvent[] = [];
+
+      if (dayEvents) {
+        dayEvents.calendarEvents.forEach((e) => {
+          if (e.start) allEvents.push({ time: e.start, type: "calendar", data: e });
+        });
+      }
+
+      allEvents.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+
+      return {
+        date: day,
+        allDayEvents: allEvents.filter((e) => e.data.allDay === true),
+        positionedEvents: layoutOverlappingEvents(allEvents.filter((e) => e.data.allDay !== true)),
+      };
+    });
+
+    const colorMap = {
+      calendar: {
+        bg: "bg-blue-100 dark:bg-blue-900/30",
+        border: "border-blue-500",
+        hover: "hover:bg-blue-200 dark:hover:bg-blue-900/50",
+        text: "text-blue-800 dark:text-blue-200",
+        timeText: "text-blue-600 dark:text-blue-400",
+      },
+      note: {
+        bg: "bg-yellow-100 dark:bg-yellow-900/30",
+        border: "border-yellow-500",
+        hover: "hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+        text: "text-yellow-800 dark:text-yellow-200",
+        timeText: "text-yellow-600 dark:text-yellow-400",
+      },
+      project: {
+        bg: "bg-purple-100 dark:bg-purple-900/30",
+        border: "border-purple-500",
+        hover: "hover:bg-purple-200 dark:hover:bg-purple-900/50",
+        text: "text-purple-800 dark:text-purple-200",
+        timeText: "text-purple-600 dark:text-purple-400",
+      },
+    };
+
+    return (
+      <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto border-t border-neutral-200 bg-white [scrollbar-gutter:stable] dark:border-neutral-800 dark:bg-neutral-950 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent">
+        <div className="sticky top-0 z-20 grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 border-b border-neutral-200 [--label-w:56px] sm:[--label-w:80px] dark:divide-neutral-800 dark:border-neutral-800">
+          <div className="bg-neutral-50 px-2 py-2 text-right text-[10px] font-medium text-neutral-500 dark:bg-neutral-900/50 dark:text-neutral-400">
+            {texts.allDay}
+          </div>
+          {weekEvents.map(({ date, allDayEvents }, dayIndex) => {
+            const isToday = isSameDay(date, today);
+            const dayName = WEEK_DAYS[date.getDay()];
+
+            return (
+              <div
+                key={`week-head-${dayIndex}`}
+                onClick={() => setSelectedDate(date)}
+                className={`cursor-pointer px-1 py-1.5 text-center transition-colors ${
+                  isToday
+                    ? "bg-yellow-50/40 dark:bg-yellow-900/10"
+                    : "bg-white hover:bg-neutral-50 dark:bg-neutral-950 dark:hover:bg-neutral-900"
+                }`}
+              >
+                <div className="truncate text-[9px] font-semibold text-neutral-500 sm:text-[10px] dark:text-neutral-400">
+                  <span className="sm:hidden">{dayName.slice(0, 3)}</span>
+                  <span className="hidden sm:inline">{dayName}</span>
+                </div>
+                <div className="mt-0.5 flex items-center justify-center">
+                  <span
+                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold ${
+                      isToday
+                        ? "bg-yellow-500 text-white"
+                        : "text-neutral-700 dark:text-neutral-300"
+                    }`}
+                  >
+                    {date.getDate()}
+                  </span>
+                </div>
+                <div className="mt-1 flex min-h-8 flex-col gap-0.5">
+                  {allDayEvents.slice(0, 2).map((event, idx) => {
+                    const colors = colorMap[event.type];
+                    const title = event.data.title;
+
+                    return (
+                      <div
+                        key={`week-allday-${dayIndex}-${idx}`}
+                        className={`truncate rounded border-l-[3px] px-1.5 py-0.5 text-left text-[9px] font-medium ${colors.bg} ${colors.border} ${colors.text}`}
+                      >
+                        {title}
+                      </div>
+                    );
+                  })}
+                  {allDayEvents.length > 2 && (
+                    <span className="text-[9px] text-neutral-500 dark:text-neutral-400">
+                      +{allDayEvents.length - 2}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div
+          className="relative grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 [--label-w:56px] sm:[--label-w:80px] dark:divide-neutral-800"
+          style={{ height: `${TOTAL_GRID_HEIGHT}px` }}
+        >
+          <div className="pointer-events-none absolute inset-0 z-0">
+            {hours.map((hour) => (
+              <div
+                key={`week-hour-line-${hour}`}
+                className="absolute right-0 left-0 border-b border-neutral-200 dark:border-neutral-800"
+                style={{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }}
+              />
+            ))}
+          </div>
+
+          <div className="pointer-events-none absolute inset-0 z-[12]">
+            {Array.from({ length: 8 }, (_, idx) => (
+              <div
+                key={`week-vertical-divider-${idx}`}
+                className="absolute top-0 bottom-0 w-px bg-neutral-200 dark:bg-neutral-800"
+                style={{
+                  left:
+                    idx === 0
+                      ? "var(--label-w)"
+                      : `calc(var(--label-w) + ((100% - var(--label-w)) / 7) * ${idx})`,
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="relative z-10">
+            {hours.map((hour) => (
+              <div
+                key={`week-hour-label-${hour}`}
+                className="absolute right-0 left-0"
+                style={{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }}
+              >
+                <div className="px-2 py-2 text-right sm:px-3">
+                  <span className="text-[10px] font-medium text-neutral-500 sm:text-xs dark:text-neutral-400">
+                    {formatHourLabel(hour, timeFormat)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {weekEvents.map(({ date, positionedEvents }, dayIndex) => {
+            const isToday = isSameDay(date, today);
+
+            return (
+              <div
+                key={`week-day-col-${dayIndex}`}
+                onClick={() => setSelectedDate(date)}
+                className={`relative z-10 transition-colors ${
+                  isToday
+                    ? "bg-yellow-50/20 dark:bg-yellow-900/5"
+                    : "hover:bg-neutral-50/40 dark:hover:bg-neutral-900/20"
+                }`}
+              >
+                {positionedEvents.map((pe, idx) => {
+                  const { event, startMin, endMin, column, totalColumns } = pe;
+                  const top = minutesToPixels(startMin);
+                  const height = Math.max(minutesToPixels(endMin - startMin), 20);
+                  const colors = colorMap[event.type];
+                  const title = event.data.title;
+                  const endStr = event.data.end;
+                  const timeRangeStr = formatTimeRange(
+                    event.time,
+                    endStr,
+                    false,
+                    timeFormat,
+                    locale
+                  );
+
+                  return (
+                    <div
+                      key={`week-positioned-${dayIndex}-${idx}`}
+                      onClick={(evt) => {
+                        evt.stopPropagation();
+                        setSelectedDate(date);
+                      }}
+                      className={`absolute z-20 cursor-pointer overflow-hidden rounded-md border-l-4 px-1.5 py-1 transition-all hover:z-30 hover:shadow-lg ${colors.bg} ${colors.border} ${colors.hover}`}
+                      style={{
+                        top: `${top}px`,
+                        height: `${height}px`,
+                        left: `calc(((100% - 6px) / ${totalColumns}) * ${column} + 3px)`,
+                        width: `calc((100% - 6px) / ${totalColumns})`,
+                      }}
+                    >
+                      <div className="flex h-full flex-col overflow-hidden">
+                        <h4 className={`truncate text-[10px] font-semibold ${colors.text}`}>
+                          {title}
+                        </h4>
+                        {height > 28 && (
+                          <span className={`truncate text-[9px] ${colors.timeText}`}>
+                            {timeRangeStr}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {isToday && (
+                  <div
+                    className="absolute right-0 left-0 z-30 border-t-2 border-red-500"
+                    style={{ top: `${minutesToPixels(nowMinutes)}px` }}
+                  >
+                    <div className="absolute -top-1.5 -left-1.5 h-3 w-3 rounded-full bg-red-500" />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const renderMonth = () => {
@@ -513,7 +642,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
     const firstDay = getFirstDayOfMonth(year, month);
     const daysInMonth = getDaysInMonth(year, month);
     const days = [];
-    
+
     // Padding do mês anterior
     for (let i = 0; i < firstDay; i++) {
       days.push(new Date(year, month, -firstDay + i + 1));
@@ -533,25 +662,11 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
   const renderDay = () => {
     const dateStr = toDateKey(currentDate);
     const dayEvents = eventsByDate.get(dateStr);
-    const allEvents: Array<{ time: string; type: "note" | "project" | "calendar"; data: any }> = [];
+    const allEvents: TimelineEvent[] = [];
 
     if (dayEvents) {
       dayEvents.calendarEvents.forEach((e) => {
         if (e.start) allEvents.push({ time: e.start, type: "calendar", data: e });
-      });
-      dayEvents.projects.forEach((p) => {
-        allEvents.push({
-          time: p.updated_at || p.created_at,
-          type: "project",
-          data: p,
-        });
-      });
-      dayEvents.notes.forEach((n) => {
-        allEvents.push({
-          time: n.updated_at || n.created_at,
-          type: "note",
-          data: n,
-        });
       });
     }
 
@@ -601,12 +716,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
               <div className="flex flex-wrap gap-1">
                 {allDayEvents.map((event, idx) => {
                   const colors = colorMap[event.type];
-                  const title =
-                    event.type === "calendar"
-                      ? event.data.title
-                      : event.type === "note"
-                        ? event.data.title
-                        : event.data.name;
+                  const title = event.data.title;
                   return (
                     <div
                       key={`allday-${idx}`}
@@ -627,16 +737,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
         >
           {hours.map((hour) => {
             const isCurrentHour = isToday && hour === now.getHours();
-            const hourLabel =
-              timeFormat === "12h"
-                ? hour === 0
-                  ? "12 AM"
-                  : hour === 12
-                    ? "12 PM"
-                    : hour > 12
-                      ? `${hour - 12} PM`
-                      : `${hour} AM`
-                : `${String(hour).padStart(2, "0")}:00`;
+            const hourLabel = formatHourLabel(hour, timeFormat);
 
             return (
               <div
@@ -666,14 +767,9 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
             const top = minutesToPixels(startMin);
             const height = Math.max(minutesToPixels(endMin - startMin), 20);
             const colors = colorMap[event.type];
-            const title =
-              event.type === "calendar"
-                ? event.data.title
-                : event.type === "note"
-                  ? event.data.title
-                  : event.data.name;
+            const title = event.data.title;
 
-            const endStr = event.type === "calendar" ? event.data.end : null;
+            const endStr = event.data.end;
             const timeRangeStr = formatTimeRange(event.time, endStr, false, timeFormat, locale);
 
             return (
@@ -744,9 +840,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
           const daysInM = getDaysInMonth(year, month);
           for (let d = 1; d <= daysInM; d++) {
             const events = eventsByDate.get(toDateKey(new Date(year, month, d)));
-            if (events)
-              monthEventsCount +=
-                events.notes.length + events.projects.length + events.calendarEvents.length;
+            if (events) monthEventsCount += events.calendarEvents.length;
           }
 
           return (
@@ -789,17 +883,11 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
     const dayEvents = eventsByDate.get(dateStr);
     const isPtBr = locale.startsWith("pt");
 
-    const allEvents: Array<{ time: string; type: "note" | "project" | "calendar"; data: any }> = [];
+    const allEvents: TimelineEvent[] = [];
 
     if (dayEvents) {
       dayEvents.calendarEvents.forEach((e) => {
         if (e.start) allEvents.push({ time: e.start, type: "calendar", data: e });
-      });
-      dayEvents.projects.forEach((p) => {
-        allEvents.push({ time: p.updated_at || p.created_at, type: "project", data: p });
-      });
-      dayEvents.notes.forEach((n) => {
-        allEvents.push({ time: n.updated_at || n.created_at, type: "note", data: n });
       });
     }
 
@@ -814,28 +902,21 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
 
     const typeLabels = {
       calendar: {
-        label: "Google Calendar",
+        label: isPtBr ? "Evento de calendário" : "Calendar event",
         badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-      },
-      note: {
-        label: isPtBr ? "Nota" : "Note",
-        badge: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-      },
-      project: {
-        label: isPtBr ? "Projeto" : "Project",
-        badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
       },
     };
 
     const borderColors = {
       calendar: "border-l-blue-500",
-      note: "border-l-yellow-500",
-      project: "border-l-purple-500",
     };
 
     return (
       <>
-        <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden" onClick={closeSelectedDay} />
+        <div
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
+          onClick={closeSelectedDay}
+        />
         <div className="animate-in slide-in-from-right fixed inset-y-0 right-0 z-50 flex w-[85%] max-w-[400px] flex-col border-l border-neutral-200 bg-white shadow-xl duration-200 md:relative md:inset-auto md:z-auto md:w-[350px] md:max-w-none md:shadow-none lg:w-[400px] dark:border-neutral-800 dark:bg-neutral-950">
           <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-2 py-2 dark:border-neutral-800 dark:bg-neutral-900/50">
             <div className="flex items-center gap-1">
@@ -864,7 +945,11 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
             <h3 className="text-xs font-bold text-neutral-900 dark:text-neutral-100">{dayTitle}</h3>
             <p className="mt-0.5 text-[11px] text-neutral-500">
               {selectedDate.getFullYear()} &middot;{" "}
-              {hasEvents ? `${allEvents.length} ${isPtBr ? "eventos" : "events"}` : isPtBr ? "Sem eventos" : "No events"}
+              {hasEvents
+                ? `${allEvents.length} ${isPtBr ? "eventos" : "events"}`
+                : isPtBr
+                  ? "Sem eventos"
+                  : "No events"}
             </p>
           </div>
 
@@ -877,25 +962,40 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
             ) : (
               <div className="space-y-3">
                 {allEvents.map((event, idx) => {
-                  const isCalendar = event.type === "calendar";
-                  const isNote = event.type === "note";
                   const item = event.data;
-                  const title = isCalendar ? item.title : isNote ? item.title : item.name;
+                  const title = item.title;
 
-                  const endStr = isCalendar ? item.end : null;
-                  const timeRange = formatTimeRange(event.time, endStr, !!item.allDay, timeFormat, locale);
+                  const endStr = item.end;
+                  const timeRange = formatTimeRange(
+                    event.time,
+                    endStr,
+                    !!item.allDay,
+                    timeFormat,
+                    locale
+                  );
                   const typeInfo = typeLabels[event.type];
                   const borderColor = borderColors[event.type];
 
                   return (
-                    <div key={`${event.type}-${idx}`} className={`rounded-lg border border-l-4 border-neutral-200 ${borderColor} bg-white p-2 transition-all hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900`}>
+                    <div
+                      key={`${event.type}-${idx}`}
+                      className={`rounded-lg border border-l-4 border-neutral-200 ${borderColor} bg-white p-2 transition-all hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900`}
+                    >
                       <div className="mb-2 flex items-center justify-between">
-                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${typeInfo.badge}`}>
-                          {isCalendar ? <FcGoogle size={10} /> : isNote ? <FileText size={10} /> : <FaProjectDiagram size={10} />}
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${typeInfo.badge}`}
+                        >
+                          {item.source === "google" ? (
+                            <FcGoogle size={10} />
+                          ) : (
+                            <CalendarIcon size={10} />
+                          )}
                           {typeInfo.label}
                         </span>
                       </div>
-                      <h4 className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">{title}</h4>
+                      <h4 className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
+                        {title}
+                      </h4>
                       <div className="mt-2 flex items-center gap-2 text-[11px] text-neutral-600 dark:text-neutral-400">
                         <Clock size={14} className="shrink-0 text-neutral-400" />
                         <span>{timeRange}</span>
@@ -906,13 +1006,18 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                           <span className="truncate">{item.location}</span>
                         </div>
                       )}
-                      {(item.description || item.content) && (
+                      {item.description && (
                         <p className="mt-2 rounded-md bg-neutral-50 p-2 text-[11px] leading-relaxed text-neutral-600 dark:bg-neutral-800/50 dark:text-neutral-400">
-                          {(item.description || item.content || "").substring(0, 300)}
+                          {item.description.substring(0, 300)}
                         </p>
                       )}
                       {item.htmlLink && (
-                        <a href={item.htmlLink} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2 py-1 text-[11px] font-medium text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40">
+                        <a
+                          href={item.htmlLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2 py-1 text-[11px] font-medium text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
+                        >
                           <ExternalLink size={12} />
                           {texts.openInGCal}
                         </a>
@@ -930,52 +1035,86 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
 
   return (
     <>
-      <div className={`flex overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-950 ${className}`}>
+      <div
+        className={`flex overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-950 ${className}`}
+      >
         {/* Main Content Area */}
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Header & Controls */}
           <div className="flex flex-col gap-2 border-b border-neutral-200 bg-white px-2 py-1 dark:border-neutral-800 dark:bg-neutral-950">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              
               <div className="flex items-center justify-between gap-2">
-                <button onClick={goToToday} className="rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 transition-colors hover:bg-neutral-50 sm:text-[11px] dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900">
+                <button
+                  onClick={goToToday}
+                  className="rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 transition-colors hover:bg-neutral-50 sm:text-[11px] dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
+                >
                   {texts.today}
                 </button>
                 <div className="flex items-center gap-1 sm:gap-2">
-                  <button onClick={() => navigate(-1)} className="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 sm:p-1.5 dark:hover:bg-neutral-800 dark:hover:text-neutral-200">
+                  <button
+                    onClick={() => navigate(-1)}
+                    className="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 sm:p-1.5 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  >
                     <ChevronLeft size={18} />
                   </button>
                   <span className="min-w-[120px] text-center text-[11px] font-bold text-neutral-800 sm:min-w-[140px] sm:text-xs dark:text-neutral-100">
                     {headerTitle}
                   </span>
-                  <button onClick={() => navigate(1)} className="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 sm:p-1.5 dark:hover:bg-neutral-800 dark:hover:text-neutral-200">
+                  <button
+                    onClick={() => navigate(1)}
+                    className="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 sm:p-1.5 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  >
                     <ChevronRight size={18} />
                   </button>
                 </div>
               </div>
 
               <div className="flex items-center gap-1.5">
-                <button onClick={() => setIsCreateModalOpen(true)} className="inline-flex items-center gap-1 rounded-md border border-yellow-200 bg-yellow-50 px-2 py-1 text-[10px] font-semibold text-yellow-700 transition-colors hover:bg-yellow-100 sm:text-[10px] dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300 dark:hover:bg-yellow-900/35">
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="inline-flex items-center gap-1 rounded-md border border-yellow-200 bg-yellow-50 px-2 py-1 text-[10px] font-semibold text-yellow-700 transition-colors hover:bg-yellow-100 sm:text-[10px] dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300 dark:hover:bg-yellow-900/35"
+                >
                   <Plus size={12} />
                   <span>{locale.startsWith("pt") ? "Novo evento" : "New event"}</span>
                 </button>
-                {gcalConnected ? (
-                  <button onClick={() => setFetchedWindow(null)} className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700 sm:text-[10px] dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200" title={locale.startsWith("pt") ? "Atualizar eventos" : "Refresh events"}>
+                {googleConnected ? (
+                  <button
+                    onClick={() => {
+                      refreshEventsForYear(currentDate.getFullYear()).catch(() => {
+                        // Error state is already managed by CalendarContext.
+                      });
+                    }}
+                    className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700 sm:text-[10px] dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                    title={locale.startsWith("pt") ? "Atualizar eventos" : "Refresh events"}
+                  >
                     <RefreshCw size={12} />
                   </button>
                 ) : (
-                  <button onClick={connectGoogleCalendar} className="flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-medium text-blue-600 transition-colors hover:bg-blue-100 sm:text-[10px] dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40">
+                  <button
+                    onClick={connectGoogleCalendar}
+                    className="flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-medium text-blue-600 transition-colors hover:bg-blue-100 sm:text-[10px] dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
+                  >
                     <FcGoogle size={10} />
                     <span>{locale.startsWith("pt") ? "Sincronizar Agenda" : "Sync Calendar"}</span>
                   </button>
                 )}
-                
+
                 <div className="w-full overflow-x-auto pb-1 md:w-auto md:pb-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent">
                   <div className="flex w-max rounded-lg bg-neutral-100 p-0.5 dark:bg-neutral-900">
                     {(["day", "week", "month", "semester", "year"] as ViewType[]).map((v) => {
-                      const viewLabels: Record<ViewType, string> = { day: texts.day, week: texts.week, month: texts.month, semester: texts.semester, year: texts.year };
+                      const viewLabels: Record<ViewType, string> = {
+                        day: texts.day,
+                        week: texts.week,
+                        month: texts.month,
+                        semester: texts.semester,
+                        year: texts.year,
+                      };
                       return (
-                        <button key={v} onClick={() => setView(v)} className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all sm:text-[10px] ${view === v ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-800 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"}`}>
+                        <button
+                          key={v}
+                          onClick={() => setView(v)}
+                          className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all sm:text-[10px] ${view === v ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-800 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"}`}
+                        >
                           {viewLabels[v]}
                         </button>
                       );
@@ -1002,9 +1141,12 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         defaultDate={selectedDate || currentDate}
-        locale={locale}
-        googleConnected={gcalConnected}
-        onCreated={() => setFetchedWindow(null)}
+        googleConnected={googleConnected}
+        onCreated={() => {
+          refreshEventsForYear(currentDate.getFullYear()).catch(() => {
+            // Error state is already managed by CalendarContext.
+          });
+        }}
       />
     </>
   );

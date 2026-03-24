@@ -4,6 +4,7 @@ const googleService = require("@/hooks/google/google-calendar");
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
 
 class CalendarEventsController {
   constructor() {
@@ -70,6 +71,25 @@ class CalendarEventsController {
     return allowed.includes(normalized) ? normalized : null;
   }
 
+  _normalizeAttendees(attendees) {
+    if (!Array.isArray(attendees)) {
+      return [];
+    }
+
+    const unique = new Map();
+    attendees
+      .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+      .filter(Boolean)
+      .forEach((email) => {
+        const normalized = email.toLowerCase();
+        if (!unique.has(normalized)) {
+          unique.set(normalized, email);
+        }
+      });
+
+    return Array.from(unique.values());
+  }
+
   _normalizeCreatePayload(body, creatorId) {
     const title = typeof body?.title === "string" ? body.title.trim() : "";
     const description =
@@ -105,8 +125,15 @@ class CalendarEventsController {
       body?.sync_with_google ?? body?.syncWithGoogle,
       false
     );
+    const createGoogleMeet = this._extractBoolean(
+      body?.create_google_meet ?? body?.createGoogleMeet,
+      false
+    );
+    const attendees = this._normalizeAttendees(body?.attendees || body?.guests || []);
 
     return {
+      attendees,
+      createGoogleMeet,
       creatorId,
       description,
       endTime,
@@ -177,6 +204,23 @@ class CalendarEventsController {
       return "sync_with_google deve ser booleano";
     }
 
+    if (payload.createGoogleMeet === null) {
+      return "create_google_meet deve ser booleano";
+    }
+
+    if (payload.createGoogleMeet && !payload.syncWithGoogle) {
+      return "create_google_meet requer sync_with_google = true";
+    }
+
+    if (payload.attendees.length && !payload.syncWithGoogle) {
+      return "attendees requer sync_with_google = true";
+    }
+
+    const hasInvalidEmail = payload.attendees.some((email) => !EMAIL_REGEX.test(email));
+    if (hasInvalidEmail) {
+      return "attendees contem emails invalidos";
+    }
+
     return null;
   }
 
@@ -186,6 +230,19 @@ class CalendarEventsController {
       location: payload.location || undefined,
       summary: payload.title,
     };
+
+    if (payload.attendees.length) {
+      requestBody.attendees = payload.attendees.map((email) => ({ email }));
+    }
+
+    if (payload.createGoogleMeet) {
+      requestBody.conferenceData = {
+        createRequest: {
+          conferenceSolutionKey: { type: "hangoutsMeet" },
+          requestId: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+        },
+      };
+    }
 
     if (payload.isAllDay) {
       const startDate = payload.startTime.toISOString().slice(0, 10);
@@ -219,7 +276,9 @@ class CalendarEventsController {
     const requestBody = this._buildGoogleEventBody(payload);
     const { data } = await calendar.events.insert({
       calendarId,
+      conferenceDataVersion: payload.createGoogleMeet ? 1 : 0,
       requestBody,
+      sendUpdates: payload.attendees.length ? "all" : "none",
     });
 
     const refreshed = auth.credentials;
