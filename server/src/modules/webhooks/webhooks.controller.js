@@ -7,6 +7,10 @@ const WEBHOOK_BASE = process.env.GOOGLE_WEBHOOK_URL || "http://localhost:8080";
 const CALENDAR_WEBHOOK_ADDRESS = `${WEBHOOK_BASE}/api/v1/webhooks/google/calendar`;
 
 class WebhooksController {
+  constructor() {
+    this.calendarSseClients = new Map();
+  }
+
   /**
    * Redireciona o usuário para a tela de consentimento OAuth2 do Google.
    * @param {import('express').Request} req
@@ -85,6 +89,7 @@ class WebhooksController {
     try {
       const channelId = req.headers["x-goog-channel-id"];
       const resourceState = req.headers["x-goog-resource-state"];
+      const messageNumber = req.headers["x-goog-message-number"];
 
       if (!channelId || !resourceState) {
         return res.status(400).send("Missing headers");
@@ -94,11 +99,64 @@ class WebhooksController {
         return res.status(200).send("OK");
       }
 
-      return res.status(200).send("OK");
+      // Responde imediatamente para o Google e processa de forma assíncrona.
+      res.status(200).send("OK");
+      setImmediate(async () => {
+        await this._processCalendarWebhookNotification({
+          channelId,
+          messageNumber,
+          resourceState,
+        });
+      });
+      return;
     } catch (error) {
       console.error("[Google Webhook]", error.message);
       res.status(200).send("OK");
     }
+  }
+
+  /**
+   * Abre stream SSE para avisar o frontend sobre mudanças recebidas via webhook.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async streamCalendarEvents(req, res) {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
+
+    if (typeof res.flushHeaders === "function") {
+      res.flushHeaders();
+    }
+
+    if (!this.calendarSseClients.has(userId)) {
+      this.calendarSseClients.set(userId, new Set());
+    }
+
+    const clients = this.calendarSseClients.get(userId);
+    clients.add(res);
+
+    res.write(
+      `event: connected\ndata: ${JSON.stringify({ connected: true, ts: Date.now() })}\n\n`
+    );
+
+    const heartbeat = setInterval(() => {
+      res.write(`event: ping\ndata: ${Date.now()}\n\n`);
+    }, 25000);
+
+    req.on("close", () => {
+      clearInterval(heartbeat);
+      clients.delete(res);
+      if (clients.size === 0) {
+        this.calendarSseClients.delete(userId);
+      }
+    });
   }
 
   /**
@@ -331,6 +389,48 @@ class WebhooksController {
       console.warn(
         `[Google Calendar] Watch falhou (tokens salvos): ${error.message}`
       );
+    }
+  }
+
+  /**
+   * Processa de forma assíncrona uma notificação do webhook do Google Calendar
+   * e emite um evento em tempo real para o frontend do usuário.
+   * @param {{channelId: string, resourceState: string, messageNumber?: string}} params
+   * @private
+   */
+  async _processCalendarWebhookNotification({
+    channelId,
+    resourceState,
+    messageNumber,
+  }) {
+    try {
+      const webhook = await webhooksRepository.getWebhookByChannelId(channelId);
+      if (!webhook?.user_id) return;
+
+      this._broadcastCalendarUpdate(webhook.user_id, {
+        channelId,
+        messageNumber: messageNumber || null,
+        resourceState,
+        ts: Date.now(),
+      });
+    } catch (error) {
+      console.error("[Google Webhook Async Process]", error.message);
+    }
+  }
+
+  /**
+   * Envia evento SSE para todas as conexões ativas de um usuário.
+   * @param {string} userId
+   * @param {object} payload
+   * @private
+   */
+  _broadcastCalendarUpdate(userId, payload) {
+    const clients = this.calendarSseClients.get(userId);
+    if (!clients || clients.size === 0) return;
+
+    const data = `event: calendar-update\ndata: ${JSON.stringify(payload)}\n\n`;
+    for (const client of clients) {
+      client.write(data);
     }
   }
 }

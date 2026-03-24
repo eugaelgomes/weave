@@ -27,6 +27,12 @@ router.get(
 );
 
 router.get(
+  "/google/calendar/stream",
+  verifyToken,
+  webhooksController.streamCalendarEvents.bind(webhooksController)
+);
+
+router.get(
   "/google/calendar/status",
   verifyToken,
   webhooksController.getCalendarStatus.bind(webhooksController)

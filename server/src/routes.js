@@ -15,6 +15,7 @@ const systemAuthRoutes = require("@/modules/system-auth/system-auth.routes");
 const systemAdminsRoutes = require("@/modules/system-admins/system-admins.routes");
 const webhooksRoutes = require("@/modules/webhooks/webhooks.routes");
 const notificationsRoutes = require("@/modules/notifications/notifications.routes");
+const calendarEventsRoutes = require("@/modules/calendar-events/calendar-events.routes");
 
 const router = express.Router();
 
@@ -22,6 +23,7 @@ const routeMap = [
   { handler: adminRoutes, path: "/admin" },
   { handler: authRoutes, path: "/auth" },
   { handler: backupRoutes, path: "/backup" },
+  { handler: calendarEventsRoutes, path: "/calendar-events" },
   { handler: aiRoutes, path: "/weave-ai" },
   { handler: notesRoutes, path: "/notes" },
   { handler: organizationsRoutes, path: "/organizations" },
