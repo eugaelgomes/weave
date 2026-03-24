@@ -99,7 +99,12 @@ export const API_ENDPOINTS = {
   GOOGLE_CALENDAR_AUTH: "/webhooks/google/auth",
   GOOGLE_CALENDAR_STATUS: "/webhooks/google/calendar/status",
   GOOGLE_CALENDAR_EVENTS: "/webhooks/google/calendar/events",
+  GOOGLE_CALENDAR_STREAM: "/webhooks/google/calendar/stream",
   GOOGLE_CALENDAR_DISCONNECT: "/webhooks/google/calendar/disconnect",
+
+  // Internal Calendar Events
+  CALENDAR_EVENTS: "/calendar-events",
+  CALENDAR_EVENT_BY_ID: (id: string) => `/calendar-events/${id}`,
 };
 
 export interface ApiRequestOptions extends RequestInit {

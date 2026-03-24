@@ -17,6 +17,49 @@ export interface CalendarEventsResponse {
   events: GoogleCalendarEvent[];
 }
 
+export interface InternalCalendarEvent {
+  id: string;
+  organization_id: string | null;
+  creator_id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  start_time: string;
+  end_time: string;
+  is_all_day: boolean;
+  note_id: string | null;
+  project_id: string | null;
+  is_from_note: boolean;
+  is_from_project: boolean;
+  google_event_id: string | null;
+  google_calendar_id: string | null;
+  outlook_event_id: string | null;
+  outlook_calendar_id: string | null;
+  last_synced_at: string | null;
+  sync_status: "SYNCED" | "PENDING" | "FAILED" | "OUT_OF_SYNC";
+  etag: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted: boolean;
+  deleted_at: string | null;
+}
+
+export interface CreateInternalCalendarEventPayload {
+  title: string;
+  description?: string;
+  location?: string;
+  start_time: string;
+  end_time: string;
+  is_all_day?: boolean;
+  organization_id?: string;
+  note_id?: string;
+  project_id?: string;
+  is_from_note?: boolean;
+  is_from_project?: boolean;
+  sync_with_google?: boolean;
+  google_calendar_id?: string;
+}
+
 export async function fetchGoogleCalendarStatus(): Promise<{ connected: boolean }> {
   const res = await apiClient.get(API_ENDPOINTS.GOOGLE_CALENDAR_STATUS);
   if (!res.ok) return { connected: false };
@@ -52,4 +95,59 @@ export async function fetchGoogleCalendarEvents(
     return { connected: body.connected ?? false, events: [] };
   }
   return res.json();
+}
+
+export function subscribeGoogleCalendarUpdates(onUpdate: () => void): () => void {
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
+  const streamUrl = `${baseUrl}${API_ENDPOINTS.GOOGLE_CALENDAR_STREAM}`;
+
+  const source = new EventSource(streamUrl, { withCredentials: true });
+
+  source.addEventListener("calendar-update", () => {
+    onUpdate();
+  });
+
+  source.onerror = () => {
+    // Let the native EventSource retry strategy handle reconnects.
+  };
+
+  return () => {
+    source.close();
+  };
+}
+
+export async function fetchInternalCalendarEvents(
+  from?: string,
+  to?: string,
+  organizationId?: string
+): Promise<InternalCalendarEvent[]> {
+  const params = new URLSearchParams();
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
+  if (organizationId) params.set("organization_id", organizationId);
+
+  const query = params.toString() ? `?${params.toString()}` : "";
+  const res = await apiClient.get(`${API_ENDPOINTS.CALENDAR_EVENTS}${query}`);
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || "Falha ao buscar eventos internos");
+  }
+
+  const data = (await res.json()) as { events?: InternalCalendarEvent[] };
+  return data.events || [];
+}
+
+export async function createInternalCalendarEvent(
+  payload: CreateInternalCalendarEventPayload
+): Promise<InternalCalendarEvent> {
+  const res = await apiClient.post(API_ENDPOINTS.CALENDAR_EVENTS, payload);
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || "Falha ao criar evento");
+  }
+
+  const data = (await res.json()) as { event: InternalCalendarEvent };
+  return data.event;
 }

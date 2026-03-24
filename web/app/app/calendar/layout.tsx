@@ -15,7 +15,7 @@ export default function CalendarLayout({ children }: { children: React.ReactNode
       <CalendarHeader />
 
       <div className="mt-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 bg-white md:flex-row dark:border-neutral-800 dark:bg-neutral-950">
-        <div className="w-full flex-shrink-0 overflow-y-auto border-b border-neutral-200 bg-neutral-50 md:w-[220px]  md:border-b-0 dark:border-neutral-800 dark:bg-neutral-900/30">
+        <div className="w-full flex-shrink-0 overflow-y-auto border-b border-neutral-200 bg-neutral-50 md:w-[220px] md:border-b-0 dark:border-neutral-800 dark:bg-neutral-900/30 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent">
           <div className="space-y-4 p-2.5">
             <div>
               <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
