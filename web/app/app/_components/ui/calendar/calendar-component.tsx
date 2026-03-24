@@ -395,7 +395,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
           {WEEK_DAYS.slice(0, cols).map((day) => (
             <div
               key={day}
-              className="truncate px-1 py-2 text-center text-[10px] font-semibold text-neutral-500 sm:text-xs"
+              className="truncate px-1 py-1.5 text-center text-[9px] font-semibold text-neutral-500 sm:text-[10px]"
             >
               <span className="sm:hidden">{day.slice(0, 3)}</span>
               <span className="hidden sm:inline">{day}</span>
@@ -419,7 +419,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
               >
                 <div className="flex items-center justify-between">
                   <span
-                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-medium sm:h-6 sm:w-6 sm:text-xs ${
+                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-medium sm:h-6 sm:w-6 sm:text-[10px] ${
                       isToday
                         ? "bg-yellow-500 text-white shadow-sm"
                         : "text-neutral-600 dark:text-neutral-400"
@@ -636,7 +636,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                 }}
               >
                 <div className="flex h-full flex-col overflow-hidden">
-                  <h4 className={`truncate text-xs font-semibold ${colors.text}`}>{title}</h4>
+                  <h4 className={`truncate text-[11px] font-semibold ${colors.text}`}>{title}</h4>
                   {height > 30 && (
                     <span className={`text-[10px] ${colors.timeText}`}>{timeRangeStr}</span>
                   )}
@@ -668,7 +668,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
         {allEvents.length === 0 && (
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-neutral-400">
             <CalendarIcon size={48} className="mb-3 opacity-20" />
-            <p className="text-sm">{texts.noEvents}</p>
+            <p className="text-xs">{texts.noEvents}</p>
           </div>
         )}
       </div>
@@ -706,9 +706,9 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                 setCurrentDate(new Date(year, month, 1));
                 setView("month");
               }}
-              className="group flex flex-col items-center justify-center bg-white p-3 hover:bg-neutral-50 sm:p-4 dark:bg-neutral-950 dark:hover:bg-neutral-900"
+              className="group flex flex-col items-center justify-center bg-white p-2 hover:bg-neutral-50 sm:p-2 dark:bg-neutral-950 dark:hover:bg-neutral-900"
             >
-              <h4 className="text-sm font-semibold text-neutral-700 group-hover:text-yellow-500 sm:text-base dark:text-neutral-300">
+              <h4 className="text-xs font-semibold text-neutral-700 group-hover:text-yellow-500 sm:text-sm dark:text-neutral-300">
                 {MONTH_NAMES[month]}
               </h4>
               <div className="mt-2 flex h-8 w-full items-end justify-center gap-1 opacity-60">
@@ -716,7 +716,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                   <span className="text-[10px] text-neutral-400">{texts.noActivities}</span>
                 ) : (
                   <div className="flex flex-col items-center">
-                    <span className="text-base font-bold text-neutral-800 sm:text-lg dark:text-neutral-200">
+                    <span className="text-sm font-bold text-neutral-800 sm:text-base dark:text-neutral-200">
                       {monthEventsCount}
                     </span>
                     <span className="text-[8px] text-neutral-500 uppercase sm:text-[9px]">
@@ -804,7 +804,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
         {/* Painel lateral */}
         <div className="animate-in slide-in-from-right fixed inset-y-0 right-0 z-50 flex w-[85%] max-w-[400px] flex-col border-l border-neutral-200 bg-white shadow-xl duration-200 md:relative md:inset-auto md:z-auto md:w-[350px] md:max-w-none md:shadow-none lg:w-[400px] dark:border-neutral-800 dark:bg-neutral-950">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-900/50">
+          <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-2 py-2 dark:border-neutral-800 dark:bg-neutral-900/50">
             <div className="flex items-center gap-1">
               <button
                 onClick={() => navigateSelectedDay(-1)}
@@ -828,9 +828,9 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
           </div>
 
           {/* Título do dia */}
-          <div className="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-            <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">{dayTitle}</h3>
-            <p className="mt-0.5 text-xs text-neutral-500">
+          <div className="border-b border-neutral-200 px-2 py-2 dark:border-neutral-800">
+            <h3 className="text-xs font-bold text-neutral-900 dark:text-neutral-100">{dayTitle}</h3>
+            <p className="mt-0.5 text-[11px] text-neutral-500">
               {selectedDate.getFullYear()} &middot;{" "}
               {hasEvents
                 ? `${allEvents.length} ${isPtBr ? "eventos" : "events"}`
@@ -841,7 +841,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
           </div>
 
           {/* Lista de eventos */}
-          <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+          <div className="flex-1 overflow-y-auto p-2">
             {!hasEvents ? (
               <div className="flex flex-col items-center justify-center py-12 text-neutral-400">
                 <CalendarIcon size={36} className="mb-3 opacity-20" />
@@ -870,7 +870,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                   return (
                     <div
                       key={`${event.type}-${idx}`}
-                      className={`rounded-lg border border-l-4 border-neutral-200 ${borderColor} bg-white p-4 transition-all hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900`}
+                      className={`rounded-lg border border-l-4 border-neutral-200 ${borderColor} bg-white p-2 transition-all hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900`}
                     >
                       {/* Badge de tipo */}
                       <div className="mb-2 flex items-center justify-between">
@@ -889,19 +889,19 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                       </div>
 
                       {/* Título */}
-                      <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                      <h4 className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
                         {title}
                       </h4>
 
                       {/* Horário */}
-                      <div className="mt-2 flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+                      <div className="mt-2 flex items-center gap-2 text-[11px] text-neutral-600 dark:text-neutral-400">
                         <Clock size={14} className="shrink-0 text-neutral-400" />
                         <span>{timeRange}</span>
                       </div>
 
                       {/* Localização */}
                       {item.location && (
-                        <div className="mt-1.5 flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+                        <div className="mt-1.5 flex items-center gap-2 text-[11px] text-neutral-600 dark:text-neutral-400">
                           <MapPin size={14} className="shrink-0 text-neutral-400" />
                           <span className="truncate">{item.location}</span>
                         </div>
@@ -909,7 +909,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
 
                       {/* Descrição */}
                       {(item.description || item.content) && (
-                        <p className="mt-3 rounded-md bg-neutral-50 p-2 text-xs leading-relaxed text-neutral-600 dark:bg-neutral-800/50 dark:text-neutral-400">
+                        <p className="mt-2 rounded-md bg-neutral-50 p-2 text-[11px] leading-relaxed text-neutral-600 dark:bg-neutral-800/50 dark:text-neutral-400">
                           {(item.description || item.content || "").substring(0, 300)}
                         </p>
                       )}
@@ -920,7 +920,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                           href={item.htmlLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
+                          className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2 py-1 text-[11px] font-medium text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
                         >
                           <ExternalLink size={12} />
                           {texts.openInGCal}
@@ -939,18 +939,18 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
 
   return (
     <div
-      className={`flex overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-950 ${className}`}
+      className={`flex overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-950 ${className}`}
     >
       {/* Área principal do calendário */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* ═══════════ HEADER & CONTROLS ═══════════ */}
-        <div className="flex flex-col gap-3 border-b border-neutral-200 bg-white px-3 py-3 sm:px-4 dark:border-neutral-800 dark:bg-neutral-950">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-2 border-b border-neutral-200 bg-white px-2 py-1 dark:border-neutral-800 dark:bg-neutral-950">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             {/* Navegação de Datas */}
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-2">
               <button
                 onClick={goToToday}
-                className="rounded-md border border-neutral-200 px-3 py-1.5 text-[10px] font-semibold text-neutral-600 transition-colors hover:bg-neutral-50 sm:text-xs dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
+                className="rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 transition-colors hover:bg-neutral-50 sm:text-[11px] dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
               >
                 {texts.today}
               </button>
@@ -961,7 +961,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                 >
                   <ChevronLeft size={18} />
                 </button>
-                <span className="min-w-[120px] text-center text-xs font-bold text-neutral-800 sm:min-w-[140px] sm:text-sm dark:text-neutral-100">
+                <span className="min-w-[120px] text-center text-[11px] font-bold text-neutral-800 sm:min-w-[140px] sm:text-xs dark:text-neutral-100">
                   {headerTitle}
                 </span>
                 <button
@@ -974,13 +974,13 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
             </div>
 
             {/* Seletor de Views (Scrollável horizontalmente no mobile) */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {gcalConnected ? (
                 <button
                   onClick={() => {
                     setFetchedWindow(null);
                   }}
-                  className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1.5 text-[10px] font-medium text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700 sm:text-[11px] dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                  className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700 sm:text-[10px] dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
                   title={locale.startsWith("pt") ? "Atualizar eventos" : "Refresh events"}
                 >
                   <RefreshCw size={12} />
@@ -988,14 +988,14 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
               ) : (
                 <button
                   onClick={connectGoogleCalendar}
-                  className="flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-[10px] font-medium text-blue-600 transition-colors hover:bg-blue-100 sm:text-[11px] dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
+                  className="flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-medium text-blue-600 transition-colors hover:bg-blue-100 sm:text-[10px] dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
                 >
                   <FcGoogle size={10} />
                   <span>{locale.startsWith("pt") ? "Sincronizar Agenda" : "Sync Calendar"}</span>
                 </button>
               )}
               <div className="hide-scrollbar w-full overflow-x-auto pb-1 md:w-auto md:pb-0">
-                <div className="flex w-max rounded-lg bg-neutral-100 p-1 dark:bg-neutral-900">
+                <div className="flex w-max rounded-lg bg-neutral-100 p-0.5 dark:bg-neutral-900">
                   {(["day", "week", "month", "semester", "year"] as ViewType[]).map((v) => {
                     const viewLabels: Record<ViewType, string> = {
                       day: texts.day,
@@ -1009,7 +1009,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                       <button
                         key={v}
                         onClick={() => setView(v)}
-                        className={`rounded-md px-3 py-1.5 text-[10px] font-medium transition-all sm:text-xs ${
+                        className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all sm:text-[10px] ${
                           view === v
                             ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-800 dark:text-white"
                             : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"

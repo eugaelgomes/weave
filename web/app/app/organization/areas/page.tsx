@@ -720,21 +720,32 @@ const TreeNodeView = ({
         </div>
       </div>
 
-      {hasChildren && isExpanded && (
-        <div className="relative ml-[9px] flex flex-col border-l-2 border-yellow-500/50 pl-5 dark:border-yellow-500/50">
-          {node.children.map((child) => (
-            <div key={child.area.id} className="relative">
-              <div className="absolute top-[30px] -left-5 w-5 border-t-2 border-yellow-500/50 dark:border-yellow-500/50" />
-              <TreeNodeView
-                node={child}
-                level={level + 1}
-                selectedId={selectedId}
-                onSelect={onSelect}
-                onCreateSub={onCreateSub}
-                onMove={onMove}
-              />
-            </div>
-          ))}
+{hasChildren && isExpanded && (
+        <div className="relative ml-[9px] flex flex-col pl-5">
+          {node.children.map((child, index) => {
+            const isLast = index === node.children.length - 1;
+            
+            return (
+              <div key={child.area.id} className="relative">
+                {/* Linha vertical contínua para os próximos irmãos (fica oculta no último) */}
+                {!isLast && (
+                  <div className="absolute top-0 bottom-0 -left-5 border-l-2 border-yellow-500/50 dark:border-yellow-500/50" />
+                )}
+                
+                {/* Cotovelo arredondado ligando a linha principal ao card atual */}
+                <div className="absolute top-0 -left-5 w-5 h-[32px] rounded-bl-xl border-b-2 border-l-2 border-yellow-500/50 dark:border-yellow-500/50" />
+                
+                <TreeNodeView
+                  node={child}
+                  level={level + 1}
+                  selectedId={selectedId}
+                  onSelect={onSelect}
+                  onCreateSub={onCreateSub}
+                  onMove={onMove}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

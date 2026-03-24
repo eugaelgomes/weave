@@ -197,7 +197,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                   aria-label={t.nav.backToHome}
                 >
                   <div className="relative flex h-9 items-center justify-center overflow-hidden rounded-md transition-transform group-hover:scale-105 group-active:scale-95">
-                    <strong className="text-md sm:text-md rounded-md px-1 font-bold text-yellow-500">
+                    <strong className="text-md sm:text-md rounded-md font-bold text-yellow-500">
                       Weave
                     </strong>
                   </div>
