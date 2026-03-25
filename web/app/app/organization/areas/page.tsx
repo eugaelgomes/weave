@@ -18,14 +18,14 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { OrganizationHeader } from "@/app/app/_components/ui/headers/organization-header";
-import { useOrganization } from "@/app/_contexts/organization-context";
-import type {
-  OrganizationArea,
-  OrganizationAreaMember,
-  OrganizationMember,
-  OrganizationAreaMemberRole,
-  OrganizationAreaProperties,
-} from "@/app/_services";
+import { 
+  useOrganization,
+  type OrganizationArea,
+  type OrganizationAreaMember,
+  type OrganizationMember,
+  type OrganizationAreaMemberRole,
+  type OrganizationAreaProperties,
+} from "@/app/_contexts/organization-context";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 
 // --- Types & Data Structures ---

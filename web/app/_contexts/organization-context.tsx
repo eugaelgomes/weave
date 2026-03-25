@@ -40,6 +40,14 @@ import {
   type UpdateAreaMemberInput,
 } from "../_services/organization";
 
+export type {
+  OrganizationArea,
+  OrganizationAreaMember,
+  OrganizationMember,
+  OrganizationAreaMemberRole,
+  OrganizationAreaProperties,
+} from "../_services/organization";
+
 export interface OrganizationStats {
   totalMembers: number;
   totalProjects: number;
