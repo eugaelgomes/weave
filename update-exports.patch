@@ -1,0 +1,12 @@
+--- a/web/app/_contexts/organization-context.tsx
++++ b/web/app/_contexts/organization-context.tsx
+@@ -42,2 +42,9 @@
+ } from "../_services/organization";
++
++export type {
++  OrganizationArea,
++  OrganizationAreaMember,
++  OrganizationMember,
++  OrganizationAreaMemberRole,
++  OrganizationAreaProperties,
++} from "../_services/organization";

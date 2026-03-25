@@ -63,12 +63,12 @@ const Pagination = ({
     >
       {/* Informação (Texto cinza discreto) */}
       {showInfo && (
-        <div className="order-2 text-xs font-medium text-neutral-500 sm:order-1">
+        <div className="order-2 text-[10px] font-medium text-neutral-500 sm:order-1 dark:text-neutral-400">
           Mostrando{" "}
-          <span className="text-neutral-300">
+          <span className="text-neutral-700 dark:text-neutral-300">
             {startItem}-{endItem}
           </span>{" "}
-          de <span className="text-neutral-300">{totalItems}</span>
+          de <span className="text-neutral-700 dark:text-neutral-300">{totalItems}</span>
         </div>
       )}
 
@@ -78,10 +78,10 @@ const Pagination = ({
         <button
           onClick={() => handlePageClick(currentPage - 1)}
           disabled={currentPage === 1}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200 disabled:opacity-30 disabled:hover:bg-transparent"
+          className="flex h-6 w-6 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent dark:text-neutral-400 dark:hover:bg-neutral-800 dark:disabled:hover:bg-transparent"
           title="Anterior"
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={14} />
         </button>
 
         {/* Page Numbers */}
@@ -91,13 +91,13 @@ const Pagination = ({
             <>
               <button
                 onClick={() => handlePageClick(1)}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-xs font-medium text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
+                className="flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
               >
                 1
               </button>
               {visiblePages[0] > 2 && (
-                <span className="flex h-8 w-6 items-center justify-center text-neutral-600">
-                  <MoreHorizontal size={12} />
+                <span className="flex h-6 w-4 items-center justify-center text-neutral-400 dark:text-neutral-600">
+                  <MoreHorizontal size={10} />
                 </span>
               )}
             </>
@@ -108,10 +108,10 @@ const Pagination = ({
             <button
               key={page}
               onClick={() => handlePageClick(page)}
-              className={`flex h-8 w-8 items-center justify-center rounded-md text-xs font-medium transition-all ${
+              className={`flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-medium transition-all ${
                 page === currentPage
-                  ? "border border-neutral-700 bg-neutral-800 text-yellow-500 shadow-sm"
-                  : "text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+                  ? "border border-yellow-200 bg-yellow-50 text-yellow-600 shadow-sm dark:border-neutral-800 dark:bg-yellow-500/10 dark:text-yellow-500"
+                  : "text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
               }`}
             >
               {page}
@@ -122,13 +122,13 @@ const Pagination = ({
           {visiblePages[visiblePages.length - 1] < totalPages && (
             <>
               {visiblePages[visiblePages.length - 1] < totalPages - 1 && (
-                <span className="flex h-8 w-6 items-center justify-center text-neutral-600">
-                  <MoreHorizontal size={12} />
+                <span className="flex h-6 w-4 items-center justify-center text-neutral-400 dark:text-neutral-600">
+                  <MoreHorizontal size={10} />
                 </span>
               )}
               <button
                 onClick={() => handlePageClick(totalPages)}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-xs font-medium text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
+                className="flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
               >
                 {totalPages}
               </button>
@@ -140,10 +140,10 @@ const Pagination = ({
         <button
           onClick={() => handlePageClick(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200 disabled:opacity-30 disabled:hover:bg-transparent"
+          className="flex h-6 w-6 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent dark:text-neutral-400 dark:hover:bg-neutral-800 dark:disabled:hover:bg-transparent"
           title="Próxima"
         >
-          <ChevronRight size={16} />
+          <ChevronRight size={14} />
         </button>
       </div>
     </div>
