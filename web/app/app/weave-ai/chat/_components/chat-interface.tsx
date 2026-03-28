@@ -40,7 +40,7 @@ const ModelIcon = ({ provider }: { provider?: string }) => {
 
 /* -------------------------------- Componente Principal -------------------------------- */
 
-export default function ChatInterface() {
+export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
   const { messages, loading, isTyping, currentSession } = useChat();
   const { user } = useAuth();
   const { notesOverview } = useNotes();
@@ -60,7 +60,7 @@ export default function ChatInterface() {
   const models: AIModel[] = [
     { id: "gpt-4", name: "GPT-4", provider: "openai" },
     { id: "claude-3", name: "Claude 3", provider: "anthropic" }
-  ] as AIModel[];
+  ] as unknown as AIModel[];
   
   const useCases = [
     { value: "general", label: "Geral" },

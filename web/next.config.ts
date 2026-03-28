@@ -70,6 +70,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
       { protocol: "https", hostname: "sfo3.digitaloceanspaces.com" },
+      { protocol: "https", hostname: "wn-storage.sfo3.digitaloceanspaces.com" },
       { protocol: "https", hostname: "cwn.sfo3.cdn.digitaloceanspaces.com" },
       { protocol: "https", hostname: "cw-notes.sfo3.cdn.digitaloceanspaces.com" },
       { protocol: "https", hostname: "weave-notes.sfo3.digitaloceanspaces.com" },

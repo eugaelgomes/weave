@@ -41,7 +41,7 @@ const priorityLabels: Record<string, string> = {
 
 const ProjectsPage = () => {
   // Assumindo que o seu useProjects expõe a lista de projetos e o estado de loading
-  const { projects = [], isLoading } = useProjects() as { projects: Project[], isLoading: boolean };
+  const { projects = [], loading: isLoading } = useProjects();
   const [searchTerm, setSearchTerm] = useState("");
 
   // Lógica de filtragem no client-side (ideal para dezenas/centenas de projetos)

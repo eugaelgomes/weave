@@ -9,6 +9,7 @@ const { setAuthCookie, clearAuthCookie } = require("@/utils/cookie-helper");
 
 const authLogs = require("@/utils/system_logs/auth-logs");
 const { secretsManager } = require("@/services/secrets");
+const { presignObjectFields } = require("@/utils/data/presign-storage-files");
 
 const normalizeDefaultArea = (defaultAreaData) => {
   if (!defaultAreaData) {
@@ -110,6 +111,10 @@ class AuthController {
 
       authLogs.createLog(user.user_id, "auth_login", req, "success");
 
+      // Gerar URLs pré-assinadas para avatar e logo (válidas por 12h para coincidir com o token)
+      const protectedUser = await presignObjectFields(user, ["avatar_url"], 12 * 60 * 60);
+      const protectedOrg = organization ? await presignObjectFields(organization, ["logo_url"], 12 * 60 * 60) : null;
+
       // Token https only
       setAuthCookie(res, req, token, {
         maxAge: 12 * 60 * 60 * 1000,
@@ -121,23 +126,23 @@ class AuthController {
         message: "Successfully performed user signin.",
         user: {
           user_profile: {
-            id: user.user_id,
-            name: user.user_name || user.name,
-            username: user.username,
-            email: user.email,
-            avatar_url: user.avatar_url,
+            id: protectedUser.user_id,
+            name: protectedUser.user_name || protectedUser.name,
+            username: protectedUser.username,
+            email: protectedUser.email,
+            avatar_url: protectedUser.avatar_url,
           },
           user_settings: {
-            theme_mode: user.theme_mode,
-            private_profile: user.private_profile,
+            theme_mode: protectedUser.theme_mode,
+            private_profile: protectedUser.private_profile,
           },
           user_organization: {
-            id: organization?.id || null,
-            unique_name: organization?.unique_name || null,
-            name: organization?.name || null,
-            logo_url: organization?.logo_url || null,
-            role: organization?.member_role || null,
-            member_since: organization?.member_since || null,
+            id: protectedOrg?.id || null,
+            unique_name: protectedOrg?.unique_name || null,
+            name: protectedOrg?.name || null,
+            logo_url: protectedOrg?.logo_url || null,
+            role: protectedOrg?.member_role || null,
+            member_since: protectedOrg?.member_since || null,
             default_area: defaultArea,
           },
           user_subscription: {

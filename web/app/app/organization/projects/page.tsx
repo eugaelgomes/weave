@@ -35,7 +35,7 @@ const statusColors: Record<string, string> = {
 };
 
 const ProjectsManagementPage = () => {
-  const { projects = [], isLoading } = useProjects() as { projects: Project[], isLoading: boolean };
+  const { projects = [], loading: isLoading } = useProjects();
   
   // Estados de Filtro
   const [searchTerm, setSearchTerm] = useState("");

@@ -374,7 +374,9 @@ class SpacesService {
    */
   extractKeyFromUrl(url) {
     if (!url) return null;
-    if (!url.startsWith("http")) return url;
+    if (!url.startsWith("http")) {
+      return url.startsWith("/") ? url.substring(1) : url;
+    }
 
     try {
       const urlObj = new URL(url);

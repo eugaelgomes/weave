@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
 const spacesService = require("@/services/storage");
+const { presignObjectFields } = require("@/utils/data/presign-storage-files");
 
 // Repositórios
 const UserRepository = require("@/modules/users/users.repository");
@@ -351,31 +352,36 @@ class userController {
       const defaultArea = mapDefaultAreaInfo(user.default_area);
       const planUsage = mapPlanUsageInfo(user.current_usage);
 
+      // Gerar URLs pré-assinadas para evitar acesso não autorizado e direto ao S3
+      // A duração de 12 horas mantém a imagem visível no frontend pelo mesmo tempo de vida de uma sessão normal (embora ela use os cookies do next/auth)
+      const protectedUser = await presignObjectFields(user, ["avatar_url"], 12 * 60 * 60);
+      const protectedOrg = organization ? await presignObjectFields(organization, ["logo_url"], 12 * 60 * 60) : null;
+
       return res.status(200).json({
         user: {
           user_profile: {
-            id: user.user_id,
-            user_name: user.user_name,
-            username: user.username,
-            email: user.email,
-            avatar_url: user.avatar_url,
-            birth_date: user.birth_date,
-            phone_number: user.phone_number,
-            created_at: user.created_at,
-            updated_at: user.updated_at,
+            id: protectedUser.user_id,
+            user_name: protectedUser.user_name,
+            username: protectedUser.username,
+            email: protectedUser.email,
+            avatar_url: protectedUser.avatar_url,
+            birth_date: protectedUser.birth_date,
+            phone_number: protectedUser.phone_number,
+            created_at: protectedUser.created_at,
+            updated_at: protectedUser.updated_at,
           },
           user_settings: {
-            theme_mode: user.theme_mode,
-            private_profile: user.private_profile,
-            auth_with_google: user.auth_with_google,
+            theme_mode: protectedUser.theme_mode,
+            private_profile: protectedUser.private_profile,
+            auth_with_google: protectedUser.auth_with_google,
           },
           user_organization: {
-            id: organization?.id || null,
-            unique_name: organization?.unique_name || null,
-            name: organization?.name || null,
-            logo_url: organization?.logo_url || null,
-            member_role: organization?.member_role || null,
-            member_since: organization?.member_since || null,
+            id: protectedOrg?.id || null,
+            unique_name: protectedOrg?.unique_name || null,
+            name: protectedOrg?.name || null,
+            logo_url: protectedOrg?.logo_url || null,
+            member_role: protectedOrg?.member_role || null,
+            member_since: protectedOrg?.member_since || null,
             default_area: defaultArea,
           },
           current_plan: {
@@ -590,6 +596,9 @@ class userController {
         );
       }
 
+      const mockUserForPresign = { avatar_url: avatarUrl };
+      const protectedMock = await presignObjectFields(mockUserForPresign, ["avatar_url"], 12 * 60 * 60);
+
       const response = {
         user: {
           user_profile: {
@@ -597,7 +606,7 @@ class userController {
             user_name: updatedUser.user_name || updatedUser.name,
             username: updatedUser.username,
             email: updatedUser.email,
-            avatar_url: avatarUrl,
+            avatar_url: protectedMock.avatar_url,
             birth_date: updatedUser.birth_date,
             phone_number: updatedUser.phone_number,
           },
