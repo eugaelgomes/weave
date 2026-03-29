@@ -67,7 +67,7 @@ class ApiTokensRepository {
       RETURNING id
     `;
     const result = await executeQuery(query, [id, userId]);
-    return rowCount(result) > 0;
+    return result.length > 0;
   }
 
   /**

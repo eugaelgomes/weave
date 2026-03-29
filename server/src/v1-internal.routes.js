@@ -20,6 +20,30 @@ const apiTokensRoutes = require("@/modules/api-tokens/api-tokens.routes");
 
 const router = express.Router();
 
+router.use((req, res, next) => {
+  /**
+   * Ignore cors verification for webhooks and SSO signin route.
+   */
+  if (req.path.startsWith("/webhooks") || req.path.startsWith("/auth/signin/sso/")) {
+    return next();
+  }
+
+  const env = process.env.NODE_ENV;
+  const origin = req.headers.origin;
+
+  if (env === "development") {
+    if (origin && !/^http:\/\/localhost(:\d+)?$/.test(origin) && !/^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) {
+      return res.status(403).json({ error: "Acesso negado." });
+    }
+  } else {
+    if (origin !== "https://weavenotes.app") {
+      return res.status(403).json({ error: "Acesso negado." });
+    }
+  }
+
+  next();
+});
+
 const routeMap = [
   { handler: adminRoutes, path: "/admin" },
   { handler: apiTokensRoutes, path: "/api-tokens" },
