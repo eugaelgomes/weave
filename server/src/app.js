@@ -1,8 +1,7 @@
 const express = require("express");
 const { configureGlobalMiddlewares } = require("@/middlewares/global-middleware");
 const { errorHandler } = require("@/middlewares/error-handler");
-const v1InternalRoutes = require("./v1-internal.routes");
-const v1PublicRoutes = require("./v1-public.routes");
+const { registerApiRoutes } = require("./routes");
 
 require("@/services/jobs/index");
 
@@ -40,8 +39,7 @@ configureGlobalMiddlewares(app);
 /**
  * 3. Routing (Internal & Public APIs)
  */
-app.use("/api/v1", v1InternalRoutes);
-app.use("/api/public/v1", v1PublicRoutes);
+registerApiRoutes(app, { version: "v1" });
 
 /**
  * 4. Error Handling & Fallbacks (404 / 500)
