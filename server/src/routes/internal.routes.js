@@ -29,10 +29,25 @@ const parseOriginList = (rawValue = "") =>
 const resolveProductionOrigins = () => {
   const envValue =
     process.env.PRODUCTION_ALLOWED_ORIGINS || process.env.ALLOWED_ORIGINS || "";
-  return new Set(parseOriginList(envValue));
+  return parseOriginList(envValue);
 };
 
-const PRODUCTION_ORIGINS = resolveProductionOrigins();
+// Configurar matchers semelhantes ao CORS
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildMatcher(allowed) {
+  if (allowed.includes("*")) {
+    const pattern = "^" + allowed.split("*").map(escapeRegExp).join(".*") + "$";
+    const re = new RegExp(pattern);
+    return (origin) => re.test(origin);
+  }
+  return (origin) => origin === allowed;
+}
+
+const PRODUCTION_ORIGINS_LIST = resolveProductionOrigins();
+const originMatchers = PRODUCTION_ORIGINS_LIST.map(buildMatcher);
 let missingOriginConfigLogged = false;
 
 const shouldSkipOriginGuard = (path) =>
@@ -47,17 +62,19 @@ const isAllowedOrigin = (origin, isDev) => {
     return DEV_ORIGIN_REGEX.test(origin);
   }
 
-  if (PRODUCTION_ORIGINS.size === 0) {
+  if (PRODUCTION_ORIGINS_LIST.length === 0) {
     if (!missingOriginConfigLogged) {
       missingOriginConfigLogged = true;
       console.warn(
-        "[Origin Guard] Nenhuma origem de produção configurada. Defina PRODUCTION_ALLOWED_ORIGINS para restringir o acesso."
+        "[Origin Guard] Nenhuma origem de produção configurada. Defina PRODUCTION_ALLOWED_ORIGINS ou ALLOWED_ORIGINS para restringir o acesso."
       );
     }
     return true;
   }
 
-  return PRODUCTION_ORIGINS.has(origin);
+  // Remove trailing slashes origin caso venha da policy para conferir
+  const normalizedOrigin = origin.replace(/\/+$/, "");
+  return originMatchers.some((fn) => fn(normalizedOrigin));
 };
 
 const routeRegistry = [

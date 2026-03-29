@@ -120,7 +120,14 @@ class userController {
     return req.user.userId;
   }
 
-  // Criação de novo usuário
+  /**
+   * Endpoint de criação de novos usuários (Sign up).
+   * Valida username, email, gera os tokens e envia o e-mail de Welcome.
+   * 
+   * @param {import('express').Request} req 
+   * @param {import('express').Response} res 
+   * @param {import('express').NextFunction} next 
+   */
   async createUser(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -336,6 +343,12 @@ class userController {
     }
   }
 
+  /**
+   * Retorna os dados completos do próprio perfil do usuário logado (Meu Perfil)
+   * 
+   * @param {import('express').Request} req 
+   * @param {import('express').Response} res 
+   */
   async getProfile(req, res) {
     try {
       this._validateAuthentication(req, res);
@@ -400,7 +413,13 @@ class userController {
     }
   }
 
-  // Atualização de perfil
+  /**
+   * Atualização de dados cadastrais e preferências de perfil do usuário.
+   * Utiliza tokens no caso de troca de e-mail.
+   * 
+   * @param {import('express').Request} req Onde req.body contém os itens a serem atualizados.
+   * @param {import('express').Response} res 
+   */
   async updateProfile(req, res) {
     const {
       name,

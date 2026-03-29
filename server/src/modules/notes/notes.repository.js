@@ -12,6 +12,17 @@ class notesRepository {
     };
   }
 
+  /**
+   * Cria uma nova nota no banco de dados.
+   * 
+   * @param {string} userId O ID do usuário criador
+   * @param {string} title O título da nota
+   * @param {string|object} content O conteúdo da nota
+   * @param {string[]} [tags=[]] Lista de tags
+   * @param {'visible'|'archived'|'trash'} [status="visible"] Status da nota
+   * @param {string|null} [projectId=null] ID do projeto vinculado
+   * @returns {Promise<import('@/types/models').Note>} A nota salva no banco
+   */
   async createNotesQuery(
     userId,
     title,
@@ -37,6 +48,12 @@ class notesRepository {
     return results[0];
   }
 
+  /**
+   * Busca todas as notas de um usuário.
+   * 
+   * @param {string} userId O ID do usuário
+   * @returns {Promise<import('@/types/models').Note[]>} Lista de notas do usuário
+   */
   async getAllNotesByUserId(userId) {
     const query = `
     SELECT 

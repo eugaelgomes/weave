@@ -1,6 +1,13 @@
 const { executeQuery } = require("@/database/connection");
 
 class AuthRepository {
+  /**
+   * Busca um usuário pelo nome de usuário ou e-mail.
+   * Usado para o processo de login na plataforma.
+   * 
+   * @param {string} username O nome de usuário ou e-mail
+   * @returns {Promise<import('@/types/models').User | null>} Objeto de usuário detalhado ou null se não encontrado
+   */
   async findUserByUsername(username) {
     const query = `
       WITH target_user AS (
@@ -103,6 +110,16 @@ class AuthRepository {
     return results[0];
   }
 
+  /**
+   * Salva um log de tentativa de login (sucesso ou falha).
+   * 
+   * @param {string} userId O ID do usuário
+   * @param {string} ip O endereço IP da requisição
+   * @param {Date | string} timestamp Data/hora da tentativa
+   * @param {boolean} success Indica se o login foi bem sucedido
+   * @param {string} userAgent Informações do navegador/cliente
+   * @returns {Promise<any>}
+   */
   async loginLogs(userId, ip, timestamp, success, userAgent) {
     const query = `
       INSERT INTO user_login_logs (user_id, ip_address, created_at, success, user_agent)
@@ -117,6 +134,16 @@ class AuthRepository {
     ]);
   }
 
+  /**
+   * Salva a localização geográfica a partir de um IP durante o login.
+   * 
+   * @param {string} userId O ID do usuário logado
+   * @param {string} ip O endereço IP
+   * @param {Date | string} timestamp Moment da requisição
+   * @param {string} location Formato com a localidade (ex: "City, Country")
+   * @param {string} userAgent Informações do dispositivo
+   * @returns {Promise<any>}
+   */
   async logUserLocation(userId, ip, timestamp, location, userAgent) {
     const query = `
       INSERT INTO user_location_logs (user_id, ip_address, created_at, location, user_agent) 
@@ -131,6 +158,13 @@ class AuthRepository {
     ]);
   }
 
+  /**
+   * Busca um usuário estritamente pelo e-mail e verifica se não está deletado.
+   * Usado para envio de recuperar senhas, OAuth e verificações de duplicidade.
+   * 
+   * @param {string} email Email a ser pesquisado
+   * @returns {Promise<import('@/types/models').User | null>} Objeto preenchido com dados ou null se não houver
+   */
   async findUserByEmail(email) {
     const query = `
       SELECT
@@ -178,6 +212,12 @@ class AuthRepository {
     return results[0];
   }
 
+  /**
+   * Busca diretamente um usuário que teve registro via Google OAuth.
+   * 
+   * @param {string} googleId Identificador único fornecido pelo provedor Google
+   * @returns {Promise<import('@/types/models').User | null>} Dados do usuário recuperados do banco
+   */
   async findUserByGoogleId(googleId) {
     const query = `
       SELECT
@@ -225,6 +265,16 @@ class AuthRepository {
     return results[0];
   }
 
+  /**
+   * Registra um novo usuário no banco com credenciais do Google OAuth.
+   * Cria o nome de usuário usando uma base do e-mail.
+   * 
+   * @param {string} googleId ID do provedor Google
+   * @param {string} name Nome do usuário
+   * @param {string} email Email do usuário
+   * @param {string|null} [avatarUrl=null] URL de foto de perfil fornecida
+   * @returns {Promise<import('@/types/models').User>} Retorna o novo usuário inserido (com os dados essenciais para emitir token)
+   */
   async createUserWithGoogle(googleId, name, email, avatarUrl = null) {
     const username = email.split("@")[0] + "_" + Date.now();
 
@@ -244,6 +294,15 @@ class AuthRepository {
     return results[0];
   }
 
+  /**
+   * Conecta um registro já existente no sistema a uma conta do Google.
+   * Utilizado quando um e-mail idêntico tenta logar pelo OAuth.
+   * 
+   * @param {string} userId UUID do usuário no banco
+   * @param {string} googleId Identificador único do provedor Google
+   * @param {string|null} [avatarUrl=null] Atualização de capa se houver
+   * @returns {Promise<import('@/types/models').User>} Retorna os dados essenciais atualizados
+   */
   async updateUserWithGoogle(userId, googleId, avatarUrl = null) {
     const query = `
       UPDATE users

@@ -43,6 +43,13 @@ const normalizeOrganization = (organizationData) => {
 };
 
 class AuthController {
+  /**
+   * Autenticação padrão de um usuário (Login tradicional com senha).
+   * 
+   * @param {import('express').Request} req O objeto de requisição do Express contendo body: {username, password, clientLocalTime}
+   * @param {import('express').Response} res O objeto de resposta do Express
+   * @returns {Promise<import('express').Response>} Retorna os dados do usuário, JWT no cookie ou Status 401
+   */
   async userSignin(req, res) {
     const { login, password } = req.body;
     const username = login;
@@ -163,12 +170,25 @@ class AuthController {
     }
   }
 
+  /**
+   * Inicia o fluxo de autenticação pelo Google (Redirecionamento).
+   * 
+   * @param {import('express').Request} req O objeto de requisição do Express
+   * @param {import('express').Response} res O objeto de resposta do Express
+   */
   async googleAuth(req, res) {
     // Redireciona para o endpoint do Google OAuth2
     const googleOAuthURL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.GOOGLE_REDIRECT_URI)}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`;
     res.redirect(googleOAuthURL);
   }
 
+  /**
+   * Callback do fluxo do Google OAuth. Processa o código, pega o perfil, 
+   * verifica se o usuário cria em nosso sistema ou efetua o login.
+   * 
+   * @param {import('express').Request} req O objeto de requisição do Express
+   * @param {import('express').Response} res O objeto de resposta do Express
+   */
   async googleCallback(req, res) {
     try {
       const { code, error } = req.query;
@@ -316,6 +336,12 @@ class AuthController {
     }
   }
 
+  /**
+   * Finaliza a sessão do usuário via limpeza dos cookies de Auth.
+   * 
+   * @param {import('express').Request} req O objeto de requisição do Express
+   * @param {import('express').Response} res O objeto de resposta do Express
+   */
   async logout(req, res) {
     try {
       console.log(

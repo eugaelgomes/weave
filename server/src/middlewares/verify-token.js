@@ -11,6 +11,10 @@ const APPLICATION_SECRET_KEY = process.env.SECRET_KEY;
  * 2. Autenticação de API (Pública): Tokens via header 'Authorization: Bearer wn_prefix.secret'.
  * 
  * Em produção, inclui logs detalhados para problemas de autenticação.
+ * 
+ * @param {import('express').Request} req O objeto de requisição do Express
+ * @param {import('express').Response} res O objeto de resposta do Express
+ * @param {import('express').NextFunction} next O callback para passar ao próximo middleware
  */
 const verifyToken = async (req, res, next) => {
   const isProduction = process.env.NODE_ENV === "production";

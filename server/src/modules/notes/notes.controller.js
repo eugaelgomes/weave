@@ -19,9 +19,9 @@ class NotesController {
 
   /**
    * Validação de autenticação do usuário
-   * @param {Object} req
-   * @param {Object} res
-   * @returns {Object|null}
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @returns {string|null} Retorna o ID do usuário (como string) ou null
    */
   _validateAuthentication(req, res) {
     const userId = req.user?.userId;

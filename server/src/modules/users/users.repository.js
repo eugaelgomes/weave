@@ -2,6 +2,21 @@ const { executeQuery } = require("@/database/connection");
 const { defaultAppPreferences } = require("@/modules/users/normalize");
 
 class UserRepository {
+  /**
+   * Cria um novo usuário no banco de dados.
+   * 
+   * @param {Object} userData
+   * @param {string} userData.name
+   * @param {string} userData.username
+   * @param {string} userData.email
+   * @param {string} [userData.password]
+   * @param {string} [userData.timezone]
+   * @param {boolean} [userData.private_profile]
+   * @param {string} [userData.birth_date]
+   * @param {string} [userData.phone_number]
+   * @param {string} [userData.avatar_url]
+   * @returns {Promise<import('@/types/models').User>} Usuário recém-criado
+   */
   async createUser(userData) {
     const {
       name,
@@ -77,11 +92,24 @@ class UserRepository {
     return results[0];
   }
 
+  /**
+   * Checa se já existe um usuário com o mesmo username ou email
+   * 
+   * @param {string} username Username desejado
+   * @param {string} email Email desejado
+   * @returns {Promise<import('@/types/models').User[]>}
+   */
   async findByUsernameOrEmail(username, email) {
     const query = `SELECT * FROM users WHERE (email = $1 OR username = $2) AND deleted = false`;
     return await executeQuery(query, [email, username]);
   }
 
+  /**
+   * Busca dados públicos do usuário por ID
+   * 
+   * @param {string} userId O ID interno do usuário
+   * @returns {Promise<import('@/types/models').User | undefined>}
+   */
   async getUserById(userId) {
     const query = `
     SELECT 
@@ -162,6 +190,11 @@ class UserRepository {
     return results;
   }
 
+  /**
+   * Busca um usuário (dados restritos) por ID
+   * @param {string} userId
+   * @returns {Promise<import('@/types/models').User | undefined>}
+   */
   async findById(userId) {
     const query = `
       SELECT 
@@ -184,6 +217,13 @@ class UserRepository {
     return results[0];
   }
 
+  /**
+   * Salva a nova URL base de imagem do perfil de um usuário
+   * 
+   * @param {string} userId
+   * @param {string} url URL assinada/s3
+   * @returns {Promise<any>}
+   */
   async updateProfileImage(userId, url) {
     const query = `
       UPDATE users
@@ -194,6 +234,13 @@ class UserRepository {
     return await executeQuery(query, [url, userId]);
   }
 
+  /**
+   * Atualiza perfis de usuário, fazendo build de chaves customizadas via update dinâmico
+   * 
+   * @param {string} userId O ID interno do usuário
+   * @param {Partial<import('@/types/models').User>} updates Objeto de atualização
+   * @returns {Promise<import('@/types/models').User | undefined>}
+   */
   async updateUserProfile(userId, updates) {
     const fields = [];
     const values = [];
@@ -253,6 +300,13 @@ class UserRepository {
     return results[0];
   }
 
+  /**
+   * Atualiza a senha de um usuário no banco (que já deve vir criptografada - bcrypt)
+   * 
+   * @param {string} userId
+   * @param {string} hashedPassword
+   * @returns {Promise<any>}
+   */
   async updateUserPassword(userId, hashedPassword) {
     const query = `
       UPDATE users
