@@ -14,6 +14,7 @@ import { SettingsProfilePreferences } from "@/app/app/_components/ui/settings/pr
 import { SettingsOrgAndPlan } from "@/app/app/_components/ui/settings/org-and-plans";
 import { SettingsApiTokens } from "@/app/app/_components/ui/settings/api-tokens";
 import { SettingsDangerZone } from "@/app/app/_components/ui/settings/danger-zone";
+import { IntegrationsSettings } from "@/app/app/_components/ui/settings/integrations";
 
 export interface FormData {
   name: string;
@@ -345,14 +346,9 @@ const SettingsPage = () => {
 
         <SettingsOrgAndPlan user={user} />
 
-        <SettingsProfilePreferences
-          formData={formData}
-          editMode={editMode}
-          isLoading={isLoading}
-          handlePreferenceChange={handlePreferenceChange}
-          handleCancelEdit={handleCancelEdit}
-          handleSaveChanges={handleSaveChanges}
-        />
+        <SettingsProfilePreferences />
+
+        <IntegrationsSettings />
 
         <SettingsApiTokens />
 

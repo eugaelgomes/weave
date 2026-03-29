@@ -37,7 +37,7 @@ export const SettingsOrgAndPlan: React.FC<SettingsOrgAndPlanProps> = ({ user }) 
   // Escala de design Weave
   const cardBase = "flex flex-col overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm dark:border-neutral-800/60 dark:bg-neutral-950 transition-all";
   const headerBase = "flex items-center justify-between border-b border-neutral-100/60 px-4 py-2.5 dark:border-neutral-800/50";
-  const headerTitle = "flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-neutral-500 dark:text-neutral-400";
+  const headerTitle = "flex items-center gap-2 text-[10px] font-bold tracking-[0.15em] text-neutral-500 dark:text-neutral-400";
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -108,7 +108,7 @@ export const SettingsOrgAndPlan: React.FC<SettingsOrgAndPlanProps> = ({ user }) 
               <CreditCard size={12} className="text-amber-500" />
               Assinatura
             </h3>
-            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20">
+            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-black tracking-wider text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20">
               {user.plan_name}
             </span>
           </div>
@@ -122,7 +122,7 @@ export const SettingsOrgAndPlan: React.FC<SettingsOrgAndPlanProps> = ({ user }) 
                 { label: "Membros", usage: teamUsage, max: maxTeam }
               ].map((item, i) => (
                 <div key={i} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-tight">
+                  <div className="flex items-center justify-between text-[10px] font-bold tracking-tight">
                     <span className="text-neutral-500">{item.label}</span>
                     <span className="text-neutral-900 dark:text-neutral-300">
                       {item.usage} <span className="text-neutral-400">/ {item.max ?? "∞"}</span>

@@ -29,7 +29,7 @@ interface SettingsProfileDataProps {
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   handleCancelEdit: () => void;
   handleSaveChanges: () => void;
-  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
 }
 
 export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
@@ -44,7 +44,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
   setFormData,
 }) => {
   // Configuração de Escala (Sincronizada com o Sidebar)
-  const labelClass = "text-[10px] font-bold uppercase tracking-[0.12em] text-neutral-400 dark:text-neutral-500 mb-1 block";
+  const labelClass = "text-[10px] font-bold tracking-[0.12em] text-neutral-400 dark:text-neutral-500 mb-1 block";
   
   // Lógica para manter os dados acesos (sem opacidade baixa) quando desativado
   const inputBaseClass = "w-full rounded-md text-[12px] font-medium transition-all outline-none";
@@ -56,7 +56,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
     <div className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800/60 dark:bg-neutral-950">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5 dark:border-neutral-800/60">
-        <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
+        <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
           <UserIcon size={14} className="text-amber-500" />
           Perfil e Identidade
         </h3>
@@ -137,7 +137,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
 
             {/* Secção 2: Preferências & Privacidade */}
             <div className="space-y-4">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Configurações de Perfil</h4>
+              <h4 className="text-[10px] font-bold tracking-widest text-neutral-400">Configurações de Perfil</h4>
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-1">
                   <label className={labelClass}>Tema Preferencial</label>
@@ -145,7 +145,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
                     name="theme_mode"
                     disabled={!editMode}
                     value={formData.theme_mode}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, theme_mode: e.target.value }))}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, theme_mode: e.target.value }))}
                     className={`${inputBaseClass} ${editMode ? 'border border-neutral-200 bg-neutral-50 px-3 py-1.5 dark:border-neutral-800 dark:bg-neutral-900' : 'bg-transparent px-0 opacity-100'}`}
                   >
                     <option value="light">Modo Claro</option>
@@ -160,10 +160,10 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
                       type="checkbox"
                       disabled={!editMode}
                       checked={formData.private_profile}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, private_profile: e.target.checked }))}
+                      onChange={(e) => setFormData((prev: any) => ({ ...prev, private_profile: e.target.checked }))}
                       className={`h-3.5 w-3.5 rounded border-neutral-300 text-amber-500 focus:ring-amber-500 ${!editMode && 'opacity-100 accent-amber-500'}`}
                     />
-                    <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-tight">Perfil Privado</span>
+                    <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 tracking-tight">Perfil Privado</span>
                   </label>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
             {editMode && (
               <div className="space-y-4 border-t border-neutral-100 dark:border-neutral-800 pt-6 animate-in slide-in-from-top-2 duration-300">
                 <div className="p-4 rounded-md bg-amber-50/20 border border-amber-100/50 dark:bg-amber-900/5 dark:border-amber-900/20">
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-amber-600 flex items-center gap-2 mb-3">
+                  <h4 className="text-[10px] font-bold tracking-widest text-amber-600 flex items-center gap-2 mb-3">
                     <Lock size={12} /> Alterar Senha
                   </h4>
                   <div className="grid gap-3 sm:grid-cols-2">

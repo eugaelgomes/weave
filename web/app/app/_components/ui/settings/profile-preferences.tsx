@@ -1,31 +1,63 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Bell, Type, Layout, Globe, Lock, Users,
   Sparkles, Database, Keyboard, Save, Loader2,
 } from "lucide-react";
+import { useAuth } from "@/app/_contexts/auth-context";
 
-interface SettingsProfilePreferencesProps {
-  formData: any;
-  editMode: boolean;
-  isLoading: boolean;
-  handlePreferenceChange: (category: string, key: string, value: any) => void;
-  handleCancelEdit: () => void;
-  handleSaveChanges: () => void;
-}
+export const SettingsProfilePreferences: React.FC = () => {
+  const { user, updateUser } = useAuth();
+  
+  const [preferences, setPreferences] = useState<any>({});
+  const [editMode, setEditMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-export const SettingsProfilePreferences: React.FC<SettingsProfilePreferencesProps> = ({
-  formData,
-  editMode,
-  isLoading,
-  handlePreferenceChange,
-  handleCancelEdit,
-  handleSaveChanges,
-}) => {
+  useEffect(() => {
+    if (user?.usage_preference) {
+      setPreferences(user.usage_preference);
+    }
+  }, [user]);
+
+  const handlePreferenceChange = (category: string, key: string, value: any) => {
+    setPreferences((prev: any) => ({
+      ...prev,
+      [category]: {
+        ...(prev[category] || {}),
+        [key]: value,
+      },
+    }));
+    setEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    if (user?.usage_preference) {
+      setPreferences(user.usage_preference);
+    }
+    setEditMode(false);
+  };
+
+  const handleSaveChanges = async () => {
+    setIsLoading(true);
+    try {
+      const result = await updateUser({ usage_preference: preferences });
+      if (result.success) {
+        setEditMode(false);
+      } else {
+        // Tratar erro (pode adicionar toast notification aqui se tiver)
+        console.error(result.message);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Configuração de Estilo Padronizada (Escala Sidebar)
   const categoryCardClass = "space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:border-neutral-800/50 dark:bg-neutral-900/20";
-  const labelClass = "text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2";
+  const labelClass = "text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2";
   const itemLabelClass = "group flex cursor-pointer items-center gap-2.5 rounded-md py-1 transition-all";
   const inputClass = "w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-200";
 
@@ -34,7 +66,7 @@ export const SettingsProfilePreferences: React.FC<SettingsProfilePreferencesProp
       
       {/* Header Compacto */}
       <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5 dark:border-neutral-800/60">
-        <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
+        <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
           <Layout size={14} className="text-amber-500" />
           Preferências do Sistema
         </h3>
@@ -56,8 +88,7 @@ export const SettingsProfilePreferences: React.FC<SettingsProfilePreferencesProp
               <label key={item.key} className={itemLabelClass}>
                 <input
                   type="checkbox"
-                  disabled={!editMode}
-                  checked={formData.usage_preference?.notifications?.[item.key] ?? true}
+                  checked={preferences?.notifications?.[item.key] ?? true}
                   onChange={(e) => handlePreferenceChange("notifications", item.key, e.target.checked)}
                   className="h-3.5 w-3.5 rounded border-neutral-300 text-amber-500 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-900"
                 />
@@ -78,8 +109,8 @@ export const SettingsProfilePreferences: React.FC<SettingsProfilePreferencesProp
                 <span className="text-[9px] font-bold text-neutral-400">Fonte (px)</span>
                 <input
                   type="number"
-                  disabled={!editMode}
-                  value={formData.usage_preference?.editor?.fontSize ?? 14}
+                  
+                  value={preferences?.editor?.fontSize ?? 14}
                   onChange={(e) => handlePreferenceChange("editor", "fontSize", parseInt(e.target.value))}
                   className={inputClass}
                 />
@@ -89,8 +120,8 @@ export const SettingsProfilePreferences: React.FC<SettingsProfilePreferencesProp
                 <input
                   type="number"
                   step="0.1"
-                  disabled={!editMode}
-                  value={formData.usage_preference?.editor?.lineHeight ?? 1.6}
+                  
+                  value={preferences?.editor?.lineHeight ?? 1.6}
                   onChange={(e) => handlePreferenceChange("editor", "lineHeight", parseFloat(e.target.value))}
                   className={inputClass}
                 />
@@ -101,8 +132,8 @@ export const SettingsProfilePreferences: React.FC<SettingsProfilePreferencesProp
                 <label key={item.key} className={itemLabelClass}>
                   <input
                     type="checkbox"
-                    disabled={!editMode}
-                    checked={formData.usage_preference?.editor?.[item.key] ?? true}
+                    
+                    checked={preferences?.editor?.[item.key] ?? true}
                     onChange={(e) => handlePreferenceChange("editor", item.key, e.target.checked)}
                     className="h-3.5 w-3.5 rounded border-neutral-300 text-amber-500 focus:ring-amber-500"
                   />
@@ -125,8 +156,8 @@ export const SettingsProfilePreferences: React.FC<SettingsProfilePreferencesProp
               <label key={item.key} className={itemLabelClass}>
                 <input
                   type="checkbox"
-                  disabled={!editMode}
-                  checked={formData.usage_preference?.ai?.[item.key] ?? true}
+                  
+                  checked={preferences?.ai?.[item.key] ?? true}
                   onChange={(e) => handlePreferenceChange("ai", item.key, e.target.checked)}
                   className="h-3.5 w-3.5 rounded border-neutral-300 text-amber-500 focus:ring-amber-500"
                 />
@@ -141,8 +172,8 @@ export const SettingsProfilePreferences: React.FC<SettingsProfilePreferencesProp
           <h4 className={labelClass}><Globe size={12} className="text-amber-500" /> Regional</h4>
           <div className="space-y-2">
             <select
-              disabled={!editMode}
-              value={formData.usage_preference?.language?.interface ?? "pt-PT"}
+              
+              value={preferences?.language?.interface ?? "pt-PT"}
               onChange={(e) => handlePreferenceChange("language", "interface", e.target.value)}
               className={inputClass}
             >
@@ -151,18 +182,18 @@ export const SettingsProfilePreferences: React.FC<SettingsProfilePreferencesProp
             </select>
             <div className="grid grid-cols-2 gap-2">
               <select
-                disabled={!editMode}
+                
                 className={inputClass}
-                value={formData.usage_preference?.language?.dateFormat ?? "DD/MM/YYYY"}
+                value={preferences?.language?.dateFormat ?? "DD/MM/YYYY"}
                 onChange={(e) => handlePreferenceChange("language", "dateFormat", e.target.value)}
               >
                 <option value="DD/MM/YYYY">DD/MM/YYYY</option>
                 <option value="YYYY-MM-DD">ISO (YYYY-MM-DD)</option>
               </select>
               <select
-                disabled={!editMode}
+                
                 className={inputClass}
-                value={formData.usage_preference?.language?.timeFormat ?? "24h"}
+                value={preferences?.language?.timeFormat ?? "24h"}
                 onChange={(e) => handlePreferenceChange("language", "timeFormat", e.target.value)}
               >
                 <option value="24h">24h</option>
@@ -183,8 +214,8 @@ export const SettingsProfilePreferences: React.FC<SettingsProfilePreferencesProp
               <label key={item.key} className={itemLabelClass}>
                 <input
                   type="checkbox"
-                  disabled={!editMode}
-                  checked={formData.usage_preference?.privacy?.[item.key] ?? false}
+                  
+                  checked={preferences?.privacy?.[item.key] ?? false}
                   onChange={(e) => handlePreferenceChange("privacy", item.key, e.target.checked)}
                   className="h-3.5 w-3.5 rounded border-neutral-300 text-amber-500 focus:ring-amber-500"
                 />
@@ -201,8 +232,8 @@ export const SettingsProfilePreferences: React.FC<SettingsProfilePreferencesProp
             <label className={itemLabelClass}>
               <input
                 type="checkbox"
-                disabled={!editMode}
-                checked={formData.usage_preference?.shortcuts?.enabled ?? true}
+                
+                checked={preferences?.shortcuts?.enabled ?? true}
                 onChange={(e) => handlePreferenceChange("shortcuts", "enabled", e.target.checked)}
                 className="h-3.5 w-3.5 rounded border-neutral-300 text-amber-500 focus:ring-amber-500"
               />

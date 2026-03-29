@@ -20,30 +20,14 @@ export interface ApiTokenCreateResponse {
 }
 
 export interface ApiScope {
-  id: string;
-  name: string;
+  value: string;
+  label: string;
   description: string;
-  resource: string;
-  action: string;
 }
 
-export interface ApiScopesInfo {
-  resources: Array<{
-    id: string;
-    name: string;
-    description: string;
-    actions: Array<{
-      id: string;
-      name: string;
-      description: string;
-      scopeName: string;
-    }>;
-  }>;
-}
-
-export const fetchApiTokensScopes = async (): Promise<ApiScopesInfo> => {
+export const fetchApiTokensScopes = async (): Promise<ApiScope[]> => {
   const response = await apiClient.get(API_ENDPOINTS.API_TOKENS_SCOPES);
-  return handleResponse<ApiScopesInfo>(response);
+  return handleResponse<ApiScope[]>(response);
 };
 
 export const fetchApiTokens = async (): Promise<ApiToken[]> => {
@@ -55,6 +39,7 @@ export const createApiToken = async (data: {
   name: string;
   scopes: string[];
   expiresAt: string | null;
+  organizationId?: string | null;
 }): Promise<ApiTokenCreateResponse> => {
   const response = await apiClient.post(API_ENDPOINTS.API_TOKENS_CREATE, data);
   return handleResponse<ApiTokenCreateResponse>(response);
