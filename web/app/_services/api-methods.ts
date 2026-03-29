@@ -105,6 +105,13 @@ export const API_ENDPOINTS = {
   // Internal Calendar Events
   CALENDAR_EVENTS: "/calendar-events",
   CALENDAR_EVENT_BY_ID: (id: string) => `/calendar-events/${id}`,
+
+  // Internal API Tokens
+  API_TOKENS_SCOPES: "/api-tokens/scopes",
+  API_TOKENS_LIST: "/api-tokens/get-tokens",
+  API_TOKENS_CREATE: "/api-tokens/create-token",
+  API_TOKENS_REVOKE: (id: string) => `/api-tokens/${id}/revoke`,
+  API_TOKENS_DELETE: (id: string) => `/api-tokens/${id}`,
 };
 
 export interface ApiRequestOptions extends RequestInit {

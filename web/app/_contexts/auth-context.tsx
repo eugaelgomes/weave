@@ -21,12 +21,16 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   authenticated: boolean;
+  
+  // Auth Functions
   login: (
     usernameOrPayload: string | { login: string; password: string },
     password?: string
   ) => Promise<{ success: boolean; message?: string; data?: unknown }>;
   loginWithGoogle: () => void;
   logout: () => void;
+  
+  // User Profile
   createUser: (
     userData: CreateUserData | FormData
   ) => Promise<{ success: boolean; message?: string }>;
@@ -57,6 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const profileData = await getUserDataService();
 
         setUser(profileData);
+
         if (
           profileData.theme_mode &&
           (profileData.theme_mode === "light" || profileData.theme_mode === "dark")

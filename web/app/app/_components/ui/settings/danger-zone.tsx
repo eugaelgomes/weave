@@ -1,15 +1,39 @@
 "use client";
 
-import React from "react";
-import { AlertTriangle, Download, Trash2, Loader2 } from "lucide-react";
+import React, { useState } from "react";
+import { AlertTriangle, Download, Trash2, Loader2, X } from "lucide-react";
 
-interface SettingsDangerZoneProps {
-  handleCreateBackup: () => void;
-  backupLoading: boolean;
-  backupMessage: string;
-  backupError: string;
-  handleDeleteAccount: () => void;
-}
+// --- Sub-componente Interno de Modal (Ajustado para a nova escala) ---
+const ConfirmationModal = ({ 
+  isOpen, onClose, onConfirm, title, description, confirmText, variant = "primary", isLoading = false 
+}: any) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="w-full max-w-[320px] bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-md shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-100 dark:border-neutral-900">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Verificação</span>
+          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={14} /></button>
+        </div>
+        <div className="p-4 space-y-2">
+          <h3 className="text-[13px] font-bold text-neutral-900 dark:text-neutral-100">{title}</h3>
+          <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-tight">{description}</p>
+        </div>
+        <div className="flex items-center justify-end gap-2 px-3 py-2.5 bg-neutral-50 dark:bg-neutral-900/50 border-t border-neutral-100 dark:border-neutral-900">
+          <button onClick={onClose} className="px-3 py-1 text-[11px] font-medium text-neutral-500">Cancelar</button>
+          <button 
+            onClick={onConfirm}
+            className={`px-4 py-1.5 text-[11px] font-bold text-white rounded-md ${
+              variant === "danger" ? "bg-red-600 hover:bg-red-700" : "bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900"
+            }`}
+          >
+            {isLoading ? "..." : confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const SettingsDangerZone: React.FC<SettingsDangerZoneProps> = ({
   handleCreateBackup,
@@ -18,74 +42,68 @@ export const SettingsDangerZone: React.FC<SettingsDangerZoneProps> = ({
   backupError,
   handleDeleteAccount,
 }) => {
+  const [modalBackup, setModalBackup] = useState(false);
+  const [modalDelete, setModalDelete] = useState(false);
+
+  // Botão reduzido para w-40 (160px) para alinhar com a delicadeza do sidebar
+  const btnBase = "flex w-full sm:w-40 shrink-0 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-bold transition-all shadow-sm disabled:opacity-50";
+
   return (
-    <div className="overflow-hidden rounded-xl border border-red-200/60 bg-white shadow-sm transition-all dark:border-red-900/30 dark:bg-neutral-950">
-      <div className="flex items-center justify-between border-b border-red-100/60 px-5 py-3 dark:border-red-900/20">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-200 dark:text-neutral-100">
-          <AlertTriangle className="h-4 w-4 text-red-500" />
+    <div className="overflow-hidden rounded-md border border-red-200/50 bg-white shadow-sm dark:border-red-900/20 dark:bg-neutral-950">
+      {/* Header seguindo a escala do "Acesso Recente" do sidebar */}
+      <div className="flex items-center justify-between border-b border-red-100/40 px-4 py-2 dark:border-red-900/10">
+        <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-red-500/80">
+          <AlertTriangle size={12} />
           Zona de Perigo
         </h3>
       </div>
 
-      <div className="flex flex-col gap-5 p-5">
-        {/* Item: Exportar Dados (Ação Segura) */}
-        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="max-w-xl space-y-1">
-            <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-              Exportar Dados
-            </h4>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Descarregue uma cópia completa das suas notas, projetos e configurações em formato
-              JSON/Zip.
-            </p>
-            {/* Mensagens de Feedback */}
-            {(backupMessage || backupError) && (
-              <p
-                className={`pt-1 text-xs font-medium ${
-                  backupError
-                    ? "text-red-500 dark:text-red-400"
-                    : "text-yellow-600 dark:text-yellow-500"
-                }`}
-              >
-                {backupError || backupMessage}
-              </p>
-            )}
+      <div className="flex flex-col gap-4 p-4">
+        {/* Item 1: Exportar */}
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="space-y-0.5">
+            <h4 className="text-[12px] font-bold text-neutral-800 dark:text-neutral-100">Exportar Dados</h4>
+            <p className="text-[11px] text-neutral-500 dark:text-neutral-400">Backup completo de notas e configurações (JSON/Zip).</p>
           </div>
-          <button
-            onClick={handleCreateBackup}
-            disabled={backupLoading}
-            className="flex w-full shrink-0 items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 py-2 text-xs font-medium text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none disabled:opacity-50 sm:w-60 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
-          >
-            {backupLoading ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Download className="h-3.5 w-3.5" />
-            )}
-            Fazer Cópia de Segurança
+          <button onClick={() => setModalBackup(true)} className={`${btnBase} border border-neutral-200 text-neutral-700 hover:bg-neutral-50 dark:border-neutral-800 dark:text-neutral-300`}>
+            <Download size={13} /> Fazer Backup
           </button>
         </div>
 
-        {/* Separador */}
-        <div className="h-px w-full bg-red-100/60 dark:bg-red-900/20" />
+        <div className="h-px w-full bg-neutral-100 dark:bg-neutral-900" />
 
-        {/* Item: Eliminar Conta (Ação Destrutiva) */}
-        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="max-w-xl space-y-1">
-            <h4 className="text-sm font-medium text-red-700 dark:text-red-400">Eliminar Conta</h4>
-            <p className="text-xs text-red-600/80 dark:text-red-400/70">
-              Esta ação é permanente. Todos os seus dados, projetos e notas serão removidos sem
-              possibilidade de recuperação.
-            </p>
+        {/* Item 2: Eliminar */}
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="space-y-0.5">
+            <h4 className="text-[12px] font-bold text-red-600 dark:text-red-500">Eliminar Conta</h4>
+            <p className="text-[11px] text-red-600/70 dark:text-red-400/60">Ação irreversível. Todos os dados serão expurgados.</p>
           </div>
-          <button
-            onClick={handleDeleteAccount}
-            className="flex w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none sm:w-60 dark:bg-red-500/10 dark:text-red-500 dark:hover:bg-red-600 dark:hover:text-white dark:focus:ring-offset-neutral-950"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Eliminar Permanentemente
+          <button onClick={() => setModalDelete(true)} className={`${btnBase} bg-red-600 text-white hover:bg-red-700`}>
+            <Trash2 size={13} /> Eliminar Conta
           </button>
         </div>
       </div>
+
+      {/* Modais Integrados */}
+      <ConfirmationModal 
+        isOpen={modalBackup} 
+        onClose={() => setModalBackup(false)} 
+        onConfirm={() => { handleCreateBackup(); setModalBackup(false); }}
+        title="Exportar Dados?"
+        description="Iremos preparar um pacote com todo o seu conteúdo estruturado."
+        confirmText="Confirmar"
+        isLoading={backupLoading}
+      />
+
+      <ConfirmationModal 
+        isOpen={modalDelete} 
+        onClose={() => setModalDelete(false)} 
+        onConfirm={handleDeleteAccount}
+        variant="danger"
+        title="Excluir Conta?"
+        description="Isso apagará permanentemente todos os seus dados sem volta."
+        confirmText="Excluir Tudo"
+      />
     </div>
   );
 };

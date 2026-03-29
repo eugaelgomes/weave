@@ -16,11 +16,13 @@ const systemAdminsRoutes = require("@/modules/system-admins/system-admins.routes
 const webhooksRoutes = require("@/modules/webhooks/webhooks.routes");
 const notificationsRoutes = require("@/modules/notifications/notifications.routes");
 const calendarEventsRoutes = require("@/modules/calendar-events/calendar-events.routes");
+const apiTokensRoutes = require("@/modules/api-tokens/api-tokens.routes");
 
 const router = express.Router();
 
 const routeMap = [
   { handler: adminRoutes, path: "/admin" },
+  { handler: apiTokensRoutes, path: "/api-tokens" },
   { handler: authRoutes, path: "/auth" },
   { handler: backupRoutes, path: "/backup" },
   { handler: calendarEventsRoutes, path: "/calendar-events" },

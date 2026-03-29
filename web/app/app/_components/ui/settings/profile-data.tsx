@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { Camera, User as UserIcon, Mail, Shield, Save, Loader2 } from "lucide-react";
+import { Camera, User as UserIcon, Mail, Shield, Save, Loader2, Calendar, Smartphone, AtSign, Lock } from "lucide-react";
 import { formatDate } from "@/app/_utils/format";
 import { User } from "@/app/_services/authentication/auth-service";
 
@@ -29,8 +29,7 @@ interface SettingsProfileDataProps {
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   handleCancelEdit: () => void;
   handleSaveChanges: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
 }
 
 export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
@@ -44,266 +43,153 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
   handleSaveChanges,
   setFormData,
 }) => {
+  // Configuração de Escala (Sincronizada com o Sidebar)
+  const labelClass = "text-[10px] font-bold uppercase tracking-[0.12em] text-neutral-400 dark:text-neutral-500 mb-1 block";
+  
+  // Lógica para manter os dados acesos (sem opacidade baixa) quando desativado
+  const inputBaseClass = "w-full rounded-md text-[12px] font-medium transition-all outline-none";
+  const inputStateClass = editMode 
+    ? "border border-neutral-200 bg-neutral-50/50 px-3 py-1.5 focus:bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-200 dark:focus:border-neutral-700" 
+    : "border-transparent bg-transparent px-0 opacity-100 text-neutral-900 dark:text-neutral-100 cursor-default";
+
   return (
-    <div className="group overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900/50">
-      {/* Header do Card */}
-      <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2 dark:border-neutral-800">
-        <h3 className="flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
-          <UserIcon className="h-4 w-4 text-neutral-500" />
-          Perfil e Dados Pessoais
+    <div className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800/60 dark:bg-neutral-950">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5 dark:border-neutral-800/60">
+        <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
+          <UserIcon size={14} className="text-amber-500" />
+          Perfil e Identidade
         </h3>
         {!editMode && (
           <button
             onClick={() => setEditMode(true)}
-            className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+            className="rounded-md border border-neutral-200 bg-white px-3 py-1 text-[10px] font-bold text-neutral-700 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 transition-all active:scale-95 shadow-sm"
           >
-            Editar Perfil
+            Editar Dados
           </button>
         )}
       </div>
 
-      <div className="p-6">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 xl:gap-12">
-          {/* --- Coluna Esquerda: Avatar e Info Estática --- */}
-          <div className="flex flex-col items-center gap-4 border-b border-neutral-100 pb-6 md:flex-row md:justify-center md:gap-8 lg:col-span-4 lg:flex-col lg:items-start lg:border-r lg:border-b-0 lg:pr-6 lg:pb-0 xl:col-span-3 dark:border-neutral-800">
-            <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-md border-4 border-neutral-50 shadow-sm dark:border-neutral-800">
-              <Image
-                src={formData.avatar_url || "/default-avatar.png"}
-                alt="Profile"
-                fill
-                className="object-cover transition-transform duration-500 hover:scale-105"
-              />
+      <div className="p-4 sm:p-6">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+          
+          {/* Coluna Esquerda: Avatar e Meta */}
+          <div className="lg:col-span-3 flex flex-col items-center lg:items-start gap-4">
+            <div className={`relative group h-28 w-28 shrink-0 overflow-hidden rounded-md border-2 transition-all ${editMode ? 'border-amber-500 shadow-lg' : 'border-neutral-100 dark:border-neutral-800'}`}>
+              <Image src={formData.avatar_url || "/default-avatar.png"} alt="Avatar" fill className="object-cover" />
               {editMode && (
-                <label className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
-                  <Camera className="h-8 w-8 text-white drop-shadow-md" />
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleInputChange}
-                    disabled={isLoading}
-                  />
+                <label className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera size={20} className="text-white mb-1" />
+                  <span className="text-[9px] font-black text-white uppercase">Upload</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={handleInputChange} disabled={isLoading} />
                 </label>
               )}
             </div>
-
-            <div className="w-full text-center md:text-left">
-              <div className="rounded-md bg-neutral-50 p-3 dark:bg-neutral-800/50">
-                <p className="text-[10px] font-bold tracking-widest text-neutral-400 uppercase">
-                  Membro Desde
-                </p>
-                <p className="mt-1 font-mono text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  {formatDate(user?.created_at || "")}
-                </p>
-              </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-neutral-100 dark:bg-neutral-900 text-[9px] font-bold text-neutral-500 dark:text-neutral-400 uppercase">
+              <Calendar size={11} />
+              Membro: {formatDate(user?.created_at || "")}
             </div>
           </div>
 
-          {/* --- Coluna Direita: Formulários --- */}
-          <div className="flex flex-col gap-8 lg:col-span-8 xl:col-span-9">
-            {/* Bloco 1: Identificação Básica */}
+          {/* Coluna Direita: Formulários Completos */}
+          <div className="lg:col-span-9 space-y-8">
+            
+            {/* Secção 1: Identificação Básica */}
             <div className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5 sm:col-span-2">
-                  <label className="text-xs font-semibold text-neutral-500 uppercase">
-                    Nome Completo
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    disabled={!editMode || isLoading}
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm transition-all focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-200/50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-900"
-                  />
+              <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label className={labelClass}>Nome Completo</label>
+                  <input type="text" name="name" disabled={!editMode} value={formData.name} onChange={handleInputChange} className={`${inputBaseClass} ${inputStateClass}`} />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-neutral-500 uppercase">
-                    Username
-                  </label>
+                <div className="space-y-1">
+                  <label className={labelClass}>Username</label>
                   <div className="relative">
-                    <span className="absolute top-2 left-3 text-sm text-neutral-400">@</span>
-                    <input
-                      type="text"
-                      name="username"
-                      disabled={!editMode || isLoading}
-                      value={formData.username}
-                      onChange={handleInputChange}
-                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-2 pr-3 pl-7 text-sm transition-all focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-200/50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-900"
-                    />
+                    {editMode && <AtSign size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />}
+                    <input type="text" name="username" disabled={!editMode} value={formData.username} onChange={handleInputChange} className={`${inputBaseClass} ${inputStateClass} ${editMode ? 'pl-8' : 'pl-0'}`} />
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-neutral-500 uppercase">Email</label>
+                <div className="space-y-1">
+                  <label className={labelClass}>E-mail Principal</label>
                   <div className="relative">
-                    <Mail className="absolute top-2.5 left-3 h-4 w-4 text-neutral-400" />
-                    <input
-                      type="email"
-                      name="email"
-                      disabled={!editMode || isLoading}
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-2 pr-3 pl-9 text-sm transition-all focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-200/50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-900"
-                    />
+                    {editMode && <Mail size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />}
+                    <input type="email" name="email" disabled={!editMode} value={formData.email} onChange={handleInputChange} className={`${inputBaseClass} ${inputStateClass} ${editMode ? 'pl-8' : 'pl-0'}`} />
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-neutral-500 uppercase">
-                    Telefone
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone_number"
-                    disabled={!editMode || isLoading}
-                    value={formData.phone_number}
-                    onChange={handleInputChange}
-                    placeholder="(00) 00000-0000"
-                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm transition-all focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-200/50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-900"
-                  />
+                <div className="space-y-1">
+                  <label className={labelClass}>Telefone</label>
+                  <div className="relative">
+                    {editMode && <Smartphone size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />}
+                    <input type="tel" name="phone_number" disabled={!editMode} value={formData.phone_number} onChange={handleInputChange} className={`${inputBaseClass} ${inputStateClass} ${editMode ? 'pl-8' : 'pl-0'}`} />
+                  </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-neutral-500 uppercase">
-                    Data de Nascimento
-                  </label>
-                  <input
-                    type="date"
-                    name="birth_date"
-                    disabled={!editMode || isLoading}
-                    value={formData.birth_date}
-                    onChange={handleInputChange}
-                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm transition-all focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-200/50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-900"
-                  />
+                <div className="space-y-1">
+                  <label className={labelClass}>Data de Nascimento</label>
+                  <input type="date" name="birth_date" disabled={!editMode} value={formData.birth_date} onChange={handleInputChange} className={`${inputBaseClass} ${inputStateClass}`} />
                 </div>
               </div>
             </div>
 
-            {/* Divisor Visual */}
             <div className="h-px w-full bg-neutral-100 dark:bg-neutral-800" />
 
-            {/* Bloco 2: Preferências */}
+            {/* Secção 2: Preferências & Privacidade */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                Preferências & Privacidade
-              </h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-neutral-500 uppercase">
-                    Tema da Interface
-                  </label>
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Configurações de Perfil</h4>
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <label className={labelClass}>Tema Preferencial</label>
                   <select
                     name="theme_mode"
-                    disabled={!editMode || isLoading}
+                    disabled={!editMode}
                     value={formData.theme_mode}
-                    onChange={(e) =>
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      setFormData((prev: any) => ({ ...prev, theme_mode: e.target.value }))
-                    }
-                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm transition-all focus:border-neutral-400 focus:bg-white disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                    onChange={(e) => setFormData((prev) => ({ ...prev, theme_mode: e.target.value }))}
+                    className={`${inputBaseClass} ${editMode ? 'border border-neutral-200 bg-neutral-50 px-3 py-1.5 dark:border-neutral-800 dark:bg-neutral-900' : 'bg-transparent px-0 opacity-100'}`}
                   >
-                    <option value="light">Claro</option>
-                    <option value="dark">Escuro</option>
-                    <option value="system">Sistema (Automático)</option>
+                    <option value="light">Modo Claro</option>
+                    <option value="dark">Modo Escuro</option>
+                    <option value="system">Sistema</option>
                   </select>
                 </div>
 
-                <div className="flex flex-col justify-end space-y-1.5">
-                  <div
-                    className={`flex items-center gap-3 rounded-md border p-2 transition-colors ${formData.private_profile ? "border-neutral-400 bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800" : "border-neutral-200 dark:border-neutral-700"}`}
-                  >
+                <div className="flex items-end">
+                  <label className={`flex flex-1 items-center gap-3 rounded-md border px-3 py-1.5 transition-all ${editMode ? 'border-neutral-200 hover:border-amber-500 cursor-pointer' : 'border-transparent opacity-100 px-0'}`}>
                     <input
                       type="checkbox"
-                      id="private_profile"
-                      name="private_profile"
-                      disabled={!editMode || isLoading}
+                      disabled={!editMode}
                       checked={formData.private_profile}
-                      onChange={(e) =>
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        setFormData((prev: any) => ({ ...prev, private_profile: e.target.checked }))
-                      }
-                      className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700"
+                      onChange={(e) => setFormData((prev) => ({ ...prev, private_profile: e.target.checked }))}
+                      className={`h-3.5 w-3.5 rounded border-neutral-300 text-amber-500 focus:ring-amber-500 ${!editMode && 'opacity-100 accent-amber-500'}`}
                     />
-                    <label
-                      htmlFor="private_profile"
-                      className="cursor-pointer text-sm font-medium text-neutral-700 select-none dark:text-neutral-300"
-                    >
-                      Perfil Privado
-                    </label>
-                  </div>
+                    <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-tight">Perfil Privado</span>
+                  </label>
                 </div>
               </div>
             </div>
 
-            {/* Bloco 3: Segurança (Condicional) */}
+            {/* Secção 3: Segurança (Fricção Inteligente) */}
             {editMode && (
-              <div className="animate-in fade-in slide-in-from-top-2">
-                <div className="mb-4 flex items-center gap-2 border-b border-neutral-100 pb-2 dark:border-neutral-800">
-                  <Shield className="h-4 w-4 text-neutral-500" />
-                  <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                    Segurança
-                  </h3>
+              <div className="space-y-4 border-t border-neutral-100 dark:border-neutral-800 pt-6 animate-in slide-in-from-top-2 duration-300">
+                <div className="p-4 rounded-md bg-amber-50/20 border border-amber-100/50 dark:bg-amber-900/5 dark:border-amber-900/20">
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-amber-600 flex items-center gap-2 mb-3">
+                    <Lock size={12} /> Alterar Senha
+                  </h4>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <input type="password" name="currentPassword" placeholder="Senha Atual (opcional)" className={`${inputBaseClass} border border-neutral-200 bg-white dark:bg-neutral-950 dark:border-neutral-800 px-3 py-1.5 sm:col-span-2`} onChange={handleInputChange} />
+                    <input type="password" name="newPassword" placeholder="Nova Senha" className={`${inputBaseClass} border border-neutral-200 bg-white dark:bg-neutral-950 dark:border-neutral-800 px-3 py-1.5`} onChange={handleInputChange} />
+                    <input type="password" name="confirmPassword" placeholder="Confirmar Nova Senha" className={`${inputBaseClass} border border-neutral-200 bg-white dark:bg-neutral-950 dark:border-neutral-800 px-3 py-1.5`} onChange={handleInputChange} />
+                  </div>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <input
-                      type="password"
-                      name="currentPassword"
-                      value={formData.currentPassword || ""}
-                      onChange={handleInputChange}
-                      placeholder="Senha Atual (Necessário para salvar alterações)"
-                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm transition-all focus:border-neutral-400 focus:bg-white dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="password"
-                      name="newPassword"
-                      value={formData.newPassword || ""}
-                      onChange={handleInputChange}
-                      placeholder="Nova Senha (min. 6 caracteres)"
-                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm transition-all focus:border-neutral-400 focus:bg-white dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      value={formData.confirmPassword || ""}
-                      onChange={handleInputChange}
-                      placeholder="Confirmar Nova Senha"
-                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm transition-all focus:border-neutral-400 focus:bg-white dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                    />
-                  </div>
+                <div className="flex items-center justify-end gap-3">
+                  <button onClick={handleCancelEdit} disabled={isLoading} className="text-[11px] font-bold text-neutral-400 hover:text-neutral-600">Descartar</button>
+                  <button onClick={handleSaveChanges} disabled={isLoading} className="flex items-center gap-2 rounded-md bg-neutral-900 px-6 py-1.5 text-[11px] font-bold text-white hover:bg-black dark:bg-neutral-100 dark:text-neutral-900 active:scale-95 transition-all">
+                    {isLoading ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                    Salvar Alterações
+                  </button>
                 </div>
-              </div>
-            )}
-
-            {/* Footer de Ações (Apenas em Edição) */}
-            {editMode && (
-              <div className="flex flex-col-reverse items-center justify-end gap-3 border-t border-neutral-100 pt-6 sm:flex-row dark:border-neutral-800">
-                <button
-                  onClick={handleCancelEdit}
-                  disabled={isLoading}
-                  className="w-full rounded-md px-4 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 sm:w-auto dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveChanges}
-                  disabled={isLoading}
-                  className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-900 px-6 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-neutral-800 disabled:opacity-70 sm:w-auto dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
-                  Salvar Alterações
-                </button>
               </div>
             )}
           </div>

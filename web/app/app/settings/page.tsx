@@ -12,6 +12,7 @@ import { SettingsHeader } from "../_components/ui/headers/settings-header";
 import { SettingsProfileData } from "@/app/app/_components/ui/settings/profile-data";
 import { SettingsProfilePreferences } from "@/app/app/_components/ui/settings/profile-preferences";
 import { SettingsOrgAndPlan } from "@/app/app/_components/ui/settings/org-and-plans";
+import { SettingsApiTokens } from "@/app/app/_components/ui/settings/api-tokens";
 import { SettingsDangerZone } from "@/app/app/_components/ui/settings/danger-zone";
 
 export interface FormData {
@@ -352,6 +353,8 @@ const SettingsPage = () => {
           handleCancelEdit={handleCancelEdit}
           handleSaveChanges={handleSaveChanges}
         />
+
+        <SettingsApiTokens />
 
         <SettingsDangerZone
           backupLoading={backupLoading}

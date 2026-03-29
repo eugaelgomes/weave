@@ -4,6 +4,9 @@
 export * from "./authentication/auth-service";
 export * from "./authentication/use-auth-provider";
 
+// API Tokens
+export * from "./api-tokens-service/api-tokens.service";
+
 // Notes Services
 export {
   fetchNotes,

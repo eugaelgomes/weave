@@ -8,6 +8,7 @@ import { ChatProvider } from "./chat-context";
 import { AgentProvider } from "./agent-context";
 import { NotificationProvider } from "./notification-context";
 import { CalendarProvider } from "./calendar-context";
+import { ApiTokensProvider } from "./api-tokens-context";
 
 export function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -16,9 +17,11 @@ export function AuthenticatedProviders({ children }: { children: React.ReactNode
         <OrganizationProvider>
           <NotificationProvider>
             <CalendarProvider>
-              <ChatProvider>
-                <AgentProvider>{children}</AgentProvider>
-              </ChatProvider>
+              <ApiTokensProvider>
+                <ChatProvider>
+                  <AgentProvider>{children}</AgentProvider>
+                </ChatProvider>
+              </ApiTokensProvider>
             </CalendarProvider>
           </NotificationProvider>
         </OrganizationProvider>
