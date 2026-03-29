@@ -5,16 +5,7 @@ import Link from "next/link";
 import { OrganizationHeader } from "@/app/app/_components/ui/headers/organization-header";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { Project } from "@/app/_services/projects-service/projects-service";
-import { 
-  Layers, 
-  Search, 
-  Plus, 
-  Folder, 
-  Clock, 
-  Flag, 
-  Activity,
-  ArrowRight
-} from "lucide-react";
+import { Layers, Search, Plus, Folder, Clock, Flag, Activity, ArrowRight } from "lucide-react";
 
 // Reaproveitando seus dicionários de status para consistência visual em todo o SaaS
 const statusLabels: Record<string, string> = {
@@ -46,15 +37,16 @@ const ProjectsPage = () => {
 
   // Lógica de filtragem no client-side (ideal para dezenas/centenas de projetos)
   // Caso a aplicação escale para milhares, considere server-side filtering
-  const filteredProjects = projects.filter((project) =>
-    project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProjects = projects.filter(
+    (project) =>
+      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="flex h-full flex-col animate-in fade-in duration-300">
+    <div className="animate-in fade-in flex h-full flex-col duration-300">
       <OrganizationHeader />
-      
+
       {/* Page Header */}
       <div className="border-b border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-950">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -71,19 +63,19 @@ const ProjectsPage = () => {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400" />
               <input
                 type="text"
                 placeholder="Buscar projetos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-10 w-full rounded-md border border-neutral-300 bg-white pl-9 pr-4 text-sm focus:border-yellow-500 focus:outline-none focus:ring-1 focus:ring-yellow-500 sm:w-64 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+                className="h-10 w-full rounded-md border border-neutral-300 bg-white pr-4 pl-9 text-sm focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:w-64 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
               />
             </div>
-            <button className="flex h-10 items-center justify-center gap-2 rounded-md bg-yellow-500 px-4 text-sm font-medium text-white transition-colors hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-950">
+            <button className="flex h-10 items-center justify-center gap-2 rounded-md bg-yellow-500 px-4 text-sm font-medium text-white transition-colors hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:outline-none dark:focus:ring-offset-neutral-950">
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">Novo Projeto</span>
             </button>
@@ -92,12 +84,12 @@ const ProjectsPage = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-6 bg-white dark:bg-neutral-950">
+      <div className="flex-1 overflow-y-auto bg-white p-6 dark:bg-neutral-950">
         <div className="mx-auto max-w-7xl">
           {isLoading ? (
-             <div className="flex h-64 items-center justify-center">
-               <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-yellow-500" />
-             </div>
+            <div className="flex h-64 items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-yellow-500" />
+            </div>
           ) : filteredProjects.length === 0 ? (
             /* Empty State */
             <div className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-12 text-center dark:border-neutral-800 dark:bg-neutral-900/50">
@@ -106,8 +98,8 @@ const ProjectsPage = () => {
                 {searchTerm ? "Nenhum projeto encontrado" : "Nenhum projeto criado"}
               </h2>
               <p className="mb-6 text-neutral-600 dark:text-neutral-400">
-                {searchTerm 
-                  ? "Tente ajustar os termos da sua busca." 
+                {searchTerm
+                  ? "Tente ajustar os termos da sua busca."
                   : "Crie o primeiro projeto da sua organização para começar a colaborar."}
               </p>
               {!searchTerm && (
@@ -121,33 +113,35 @@ const ProjectsPage = () => {
             /* Projects Grid */
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredProjects.map((project) => (
-                <Link 
-                  href={`/app/projects/${project.id}`} 
+                <Link
+                  href={`/app/projects/${project.id}`}
                   key={project.id}
                   className="group flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-5 transition-all hover:border-yellow-500 hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-yellow-500"
                 >
                   <div>
                     <div className="mb-4 flex items-start justify-between gap-4">
-                      <div 
+                      <div
                         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white"
                         style={{ backgroundColor: project.properties?.color || "#3f51b5" }}
                       >
                         <Folder className="h-5 w-5" />
                       </div>
-                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${statusColors[project.status] || statusColors.open}`}>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase ${statusColors[project.status] || statusColors.open}`}
+                      >
                         {statusLabels[project.status] || project.status}
                       </span>
                     </div>
-                    
-                    <h3 className="mb-2 line-clamp-1 text-base font-bold text-neutral-900 group-hover:text-yellow-600 dark:text-neutral-100 dark:group-hover:text-yellow-500 transition-colors">
+
+                    <h3 className="mb-2 line-clamp-1 text-base font-bold text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-100 dark:group-hover:text-yellow-500">
                       {project.title}
                     </h3>
-                    
-                    <p className="mb-4 line-clamp-2 text-sm text-neutral-500 dark:text-neutral-400 h-10">
+
+                    <p className="mb-4 line-clamp-2 h-10 text-sm text-neutral-500 dark:text-neutral-400">
                       {project.description || "Nenhuma descrição fornecida para este projeto."}
                     </p>
 
-                    <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div className="mb-4 grid grid-cols-2 gap-2">
                       {project.methodology && (
                         <div className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
                           <Activity className="h-3.5 w-3.5" />
@@ -157,7 +151,10 @@ const ProjectsPage = () => {
                       {project.properties?.priority && (
                         <div className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
                           <Flag className="h-3.5 w-3.5" />
-                          <span className="truncate">{priorityLabels[project.properties.priority] || project.properties.priority}</span>
+                          <span className="truncate">
+                            {priorityLabels[project.properties.priority] ||
+                              project.properties.priority}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -172,7 +169,7 @@ const ProjectsPage = () => {
                         +3
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-1 text-sm font-medium text-yellow-600 opacity-0 transition-opacity group-hover:opacity-100 dark:text-yellow-500">
                       Acessar <ArrowRight className="h-4 w-4" />
                     </div>

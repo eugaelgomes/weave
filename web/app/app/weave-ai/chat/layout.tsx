@@ -21,7 +21,7 @@ function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
   return (
     <div className={cn("flex flex-col bg-white dark:bg-neutral-950", className)}>
       <div className="flex h-8 items-center justify-between border-b border-neutral-100 px-2 dark:border-neutral-900">
-        <div className="flex items-center gap-1 text-[10px] font-semibold tracking-widest text-neutral-700 dark:text-neutral-200 uppercase">
+        <div className="flex items-center gap-1 text-[10px] font-semibold tracking-widest text-neutral-700 uppercase dark:text-neutral-200">
           <Bot className="h-3 w-3 text-yellow-500" />
           Chat
         </div>
@@ -54,7 +54,7 @@ function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
         <div className="space-y-3">
           <div>
             <div className="mb-1 flex items-center justify-between px-1">
-              <h3 className="text-[9px] font-semibold tracking-widest text-neutral-500 dark:text-neutral-400 uppercase">
+              <h3 className="text-[9px] font-semibold tracking-widest text-neutral-500 uppercase dark:text-neutral-400">
                 Histórico
               </h3>
             </div>
@@ -130,7 +130,9 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
             </span>
           </div>
 
-          <div className="custom-scrollbar flex-1 overflow-auto bg-neutral-50 p-0 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">{children}</div>
+          <div className="custom-scrollbar flex-1 overflow-auto bg-neutral-50 p-0 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+            {children}
+          </div>
         </main>
       </div>
     </div>

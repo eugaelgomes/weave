@@ -56,6 +56,24 @@ export {
   type ManageNoteData,
 } from "./projects-service/projects-service";
 
+// Project Taxonomy Services (Tags and Task Priorities)
+export {
+  fetchProjectTags,
+  createProjectTag,
+  updateProjectTag,
+  deleteProjectTag,
+  fetchTaskPriorities,
+  createTaskPriority,
+  updateTaskPriority,
+  deleteTaskPriority,
+  type ProjectTag,
+  type TaskPriority,
+  type CreateProjectTagData,
+  type UpdateProjectTagData,
+  type CreateTaskPriorityData,
+  type UpdateTaskPriorityData,
+} from "./projects-service/project-taxonomy-service";
+
 // Notifications Services
 export {
   fetchNotifications,

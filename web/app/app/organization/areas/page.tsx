@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { OrganizationHeader } from "@/app/app/_components/ui/headers/organization-header";
-import { 
+import {
   useOrganization,
   type OrganizationArea,
   type OrganizationAreaMember,
@@ -302,7 +302,9 @@ export default function AreasPage() {
     if (draggedId === newParentId) return;
 
     // Prevenir Dependência Cíclica (ex: mover avô para dentro do neto)
-    let current: OrganizationArea | null = newParentId ? (areas.find((a) => a.id === newParentId) ?? null) : null;
+    let current: OrganizationArea | null = newParentId
+      ? (areas.find((a) => a.id === newParentId) ?? null)
+      : null;
     while (current) {
       if (current.id === draggedId) {
         toast.error(
@@ -720,21 +722,21 @@ const TreeNodeView = ({
         </div>
       </div>
 
-{hasChildren && isExpanded && (
+      {hasChildren && isExpanded && (
         <div className="relative ml-[9px] flex flex-col pl-5">
           {node.children.map((child, index) => {
             const isLast = index === node.children.length - 1;
-            
+
             return (
               <div key={child.area.id} className="relative">
                 {/* Linha vertical contínua para os próximos irmãos (fica oculta no último) */}
                 {!isLast && (
                   <div className="absolute top-0 bottom-0 -left-5 border-l-2 border-yellow-500/50 dark:border-yellow-500/50" />
                 )}
-                
+
                 {/* Cotovelo arredondado ligando a linha principal ao card atual */}
-                <div className="absolute top-0 -left-5 w-5 h-[32px] rounded-bl-xl border-b-2 border-l-2 border-yellow-500/50 dark:border-yellow-500/50" />
-                
+                <div className="absolute top-0 -left-5 h-[32px] w-5 rounded-bl-xl border-b-2 border-l-2 border-yellow-500/50 dark:border-yellow-500/50" />
+
                 <TreeNodeView
                   node={child}
                   level={level + 1}

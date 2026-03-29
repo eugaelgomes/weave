@@ -10,12 +10,12 @@ import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/_uti
 import { getTagColor } from "@/app/_utils/tag-colors";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 
-import type { Note } from "@/app/_services/notes-service/notes-service";
+import type { NoteOverview } from "@/app/_contexts/notes-context";
 
 // =================== INTERFACES ===================
 
 interface NotesCarouselProps {
-  notes: Note[];
+  notes: NoteOverview[];
   title?: string;
   emptyMessage?: string;
   emptyActionText?: string;
@@ -27,7 +27,6 @@ interface NotesCarouselProps {
 const formatDate = (dateString?: string) => {
   if (!dateString) return null;
   const date = new Date(dateString);
-  // Verifica se a data é válida
   if (isNaN(date.getTime())) return null;
   return date;
 };
@@ -46,7 +45,7 @@ export default function NotesCarousel({
 
   const scrollToSlide = (index: number) => {
     if (carouselRef.current && notes.length > 0) {
-      const cardWidth = 320 + 16; // Largura do card + gap aproximado
+      const cardWidth = 220 + 8; // Largura nova do card (220) + gap (8)
       carouselRef.current.scrollTo({ left: cardWidth * index, behavior: "smooth" });
       setCurrentSlide(index);
     }
@@ -61,54 +60,54 @@ export default function NotesCarousel({
   };
 
   return (
-    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4 shadow-md dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 sm:p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
       {/* Header do Carrossel */}
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <h3 className="sm:text-md text-base font-semibold text-neutral-500 dark:text-neutral-100">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h3 className="text-xs sm:text-sm font-semibold text-neutral-500 dark:text-neutral-100">
           {title}
         </h3>
         {notes.length > 1 && (
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <button
               onClick={prevSlide}
               disabled={currentSlide === 0}
-              className="rounded-md bg-neutral-100 p-2 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 disabled:opacity-30 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+              className="rounded bg-neutral-100 p-1 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 disabled:opacity-30 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
               aria-label="Anterior"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3 w-3" />
             </button>
             <button
               onClick={nextSlide}
               disabled={currentSlide === notes.length - 1}
-              className="rounded-md bg-neutral-100 p-2 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 disabled:opacity-30 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+              className="rounded bg-neutral-100 p-1 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 disabled:opacity-30 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
               aria-label="Próximo"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3 w-3" />
             </button>
           </div>
         )}
       </div>
 
       {notes.length === 0 ? (
-        <div className="py-10 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-md bg-neutral-100 dark:bg-neutral-800">
-            <FileText className="h-6 w-6 text-neutral-400 dark:text-neutral-500" />
+        <div className="py-4 text-center">
+          <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-md bg-neutral-100 dark:bg-neutral-800">
+            <FileText className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
           </div>
-          <p className="mb-3 text-sm font-medium text-neutral-600 dark:text-neutral-300">
+          <p className="mb-2 text-xs font-medium text-neutral-600 dark:text-neutral-300">
             {emptyMessage}
           </p>
           <Link
             href={emptyActionHref}
-            className="inline-flex items-center gap-2 rounded-md bg-yellow-500 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600"
+            className="inline-flex items-center gap-1.5 rounded bg-yellow-500 px-3 py-1.5 text-[10px] font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600"
           >
-            <FileText className="h-4 w-4" /> {emptyActionText}
+            <FileText className="h-3 w-3" /> {emptyActionText}
           </Link>
         </div>
       ) : (
         <div className="relative">
           <div
             ref={carouselRef}
-            className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-1"
+            className="no-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-1"
           >
             {notes.map((note) => {
               const validDate = formatDate(note.updated_at || note.lastModified);
@@ -116,7 +115,6 @@ export default function NotesCarousel({
                 ? new Date(note.created_at).getTime() > Date.now() - 86400000
                 : false;
 
-              // Verificação segura se a nota possui ícone e cor válidos
               const hasIcon = Boolean(note.properties?.icon?.path);
               const hasColor = Boolean(note.properties?.color);
               const baseColor =
@@ -126,50 +124,47 @@ export default function NotesCarousel({
                 <Link
                   key={note.id}
                   href={`/app/notes/${note.id}`}
-                  className="block w-[85vw] max-w-[320px] flex-shrink-0 snap-center sm:w-[320px] sm:snap-start"
+                  className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center sm:w-[220px] sm:snap-start"
                 >
                   <div
-                    // As classes do Tailwind continuam sempre no className
-                    className="group flex h-[280px] flex-col justify-between rounded-md border border-neutral-200 bg-neutral-50 p-3 transition-all duration-200 hover:-translate-y-1 hover:border-neutral-300 hover:shadow-lg hover:shadow-neutral-200/50 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:shadow-neutral-900/50"
-                    // O style recebe as propriedades dinâmicas ou 'undefined' para fallback limpo
+                    className="group flex h-[140px] flex-col justify-between rounded-md border border-neutral-200 bg-neutral-50 p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:shadow-neutral-900/50"
                     style={{
-                      // Se tiver cor, aplica as variações. Se não, usa o padrão do Tailwind
                       backgroundColor: baseColor ? `${baseColor}40` : undefined,
-                      boxShadow: baseColor ? `0 4px 14px 0 ${baseColor}15` : undefined,
+                      boxShadow: baseColor ? `0 2px 8px 0 ${baseColor}15` : undefined,
                     }}
                   >
                     {/* Topo: Ícone, Título e Badge */}
                     <div>
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
+                      <div className="mb-1.5 flex items-start justify-between gap-1.5">
+                        <div className="flex items-center gap-1.5">
                           {hasIcon && (
-                            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded-sm">
+                            <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center overflow-hidden rounded-[2px]">
                               <Image
                                 src={getStorageUrl(note.properties!.icon!.path)}
                                 alt={`Ícone de ${note.title}`}
-                                width={32}
-                                height={32}
+                                width={16}
+                                height={16}
                                 className="h-full w-full object-cover"
                               />
                             </div>
                           )}
-                          <h2 className="line-clamp-2 text-base leading-tight text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-100 dark:group-hover:text-yellow-500">
+                          <h2 className="line-clamp-2 text-xs font-semibold leading-tight text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-100 dark:group-hover:text-yellow-500">
                             {note.title || "Nota sem título"}
                           </h2>
                         </div>
 
                         {isNew && (
                           <span
-                            className="flex h-2 w-2 flex-shrink-0 rounded-md bg-yellow-500 shadow-sm"
+                            className="flex h-1.5 w-1.5 flex-shrink-0 rounded-full bg-yellow-500 shadow-sm"
                             title="Nova"
                           />
                         )}
                       </div>
 
                       {/* Descrição */}
-                      <div className="mt-3 mb-4">
-                        <p className="line-clamp-3 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
-                          {note.preview || note.description || "Sem descrição..."}
+                      <div className="mt-1.5 mb-2">
+                        <p className="line-clamp-2 text-[10px] leading-relaxed text-neutral-500 dark:text-neutral-400">
+                          {note.preview || "Sem descrição..."}
                         </p>
                       </div>
                     </div>
@@ -178,20 +173,20 @@ export default function NotesCarousel({
                     <div>
                       {/* Tags */}
                       {note.tags && note.tags.length > 0 && (
-                        <div className="mb-3 flex flex-wrap gap-1.5">
+                        <div className="mb-2 flex flex-wrap gap-1">
                           {note.tags.slice(0, 3).map((tag, i) => {
                             const colors = getTagColor(tag);
                             return (
                               <span
                                 key={i}
-                                className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
+                                className={`inline-flex items-center rounded border px-1.5 py-[1px] text-[8px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
                               >
                                 {tag}
                               </span>
                             );
                           })}
                           {(note.tags?.length || 0) > 3 && (
-                            <span className="inline-flex items-center rounded-md border border-neutral-200 bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+                            <span className="inline-flex items-center rounded border border-neutral-200 bg-neutral-100 px-1.5 py-[1px] text-[8px] font-medium text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
                               +{note.tags!.length - 3}
                             </span>
                           )}
@@ -199,24 +194,24 @@ export default function NotesCarousel({
                       )}
 
                       {/* Linha divisória + Colaboradores e Data */}
-                      <div className="flex items-center justify-between border-t border-neutral-100 pt-3 dark:border-neutral-900">
+                      <div className="flex items-center justify-between border-t border-neutral-100 pt-2 dark:border-neutral-900">
                         {/* Colaboradores */}
-                        <div className="flex -space-x-2">
+                        <div className="flex -space-x-1.5">
                           {/* Avatar do dono da nota */}
                           <div
-                            className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-1 border-neutral-900 bg-neutral-100 dark:border-neutral-200 dark:bg-neutral-800"
+                            className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full border border-neutral-900 bg-neutral-100 dark:border-neutral-200 dark:bg-neutral-800"
                             title={note.owner_name || "Dono"}
                           >
                             {note.owner_avatar_url ? (
                               <Image
                                 src={note.owner_avatar_url}
                                 alt={note.owner_name || "Dono"}
-                                width={24}
-                                height={24}
+                                width={16}
+                                height={16}
                                 className="h-full w-full object-cover"
                               />
                             ) : (
-                              <span className="text-[8px] font-bold text-yellow-600 dark:text-yellow-400">
+                              <span className="text-[6px] font-bold text-yellow-600 dark:text-yellow-400">
                                 {note.owner_name ? note.owner_name.charAt(0).toUpperCase() : "?"}
                               </span>
                             )}
@@ -230,19 +225,19 @@ export default function NotesCarousel({
                                 return (
                                   <div
                                     key={i}
-                                    className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-1 border-neutral-900 bg-neutral-100 dark:border-neutral-950 dark:bg-neutral-800 dark:ring-neutral-900"
+                                    className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full border border-neutral-900 bg-neutral-100 dark:border-neutral-950 dark:bg-neutral-800 dark:ring-neutral-900"
                                     title={name}
                                   >
                                     {avatar ? (
                                       <Image
                                         src={avatar}
                                         alt={name}
-                                        width={24}
-                                        height={24}
+                                        width={16}
+                                        height={16}
                                         className="h-full w-full object-cover"
                                       />
                                     ) : (
-                                      <span className="text-[8px] font-bold text-neutral-500 dark:text-neutral-400">
+                                      <span className="text-[6px] font-bold text-neutral-500 dark:text-neutral-400">
                                         {name ? name.charAt(0).toUpperCase() : "?"}
                                       </span>
                                     )}
@@ -250,7 +245,7 @@ export default function NotesCarousel({
                                 );
                               })}
                               {note.collaborators.length > 3 && (
-                                <div className="relative flex h-6 w-6 items-center justify-center rounded-md border-2 border-white bg-neutral-200 text-[8px] font-bold text-neutral-600 dark:border-neutral-950 dark:bg-neutral-800 dark:text-neutral-400">
+                                <div className="relative flex h-4 w-4 items-center justify-center rounded-full border border-white bg-neutral-200 text-[6px] font-bold text-neutral-600 dark:border-neutral-950 dark:bg-neutral-800 dark:text-neutral-400">
                                   +{note.collaborators.length - 3}
                                 </div>
                               )}
@@ -260,16 +255,14 @@ export default function NotesCarousel({
 
                         {/* Data e Hora */}
                         <div className="flex flex-col items-end">
-                          <div className="flex items-center gap-1 text-[10px] font-medium text-neutral-700 dark:text-neutral-300">
-                            <Calendar size={10} className="text-neutral-400" />
+                          <div className="flex items-center gap-0.5 text-[8px] font-medium text-neutral-700 dark:text-neutral-400">
+                            <Calendar size={8} className="text-neutral-400" />
                             <span>
                               {validDate
                                 ? validDate.toLocaleDateString("pt-BR", {
                                     day: "2-digit",
                                     month: "short",
                                     year: "2-digit",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
                                   })
                                 : "--"}
                             </span>
@@ -285,15 +278,15 @@ export default function NotesCarousel({
 
           {/* Indicadores de Slide */}
           {notes.length > 1 && (
-            <div className="mt-4 flex justify-center gap-1.5">
+            <div className="mt-2 flex justify-center gap-1">
               {notes.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => scrollToSlide(index)}
-                  className={`h-1.5 rounded-md transition-all ${
+                  className={`h-1 rounded-full transition-all ${
                     currentSlide === index
-                      ? "w-6 bg-yellow-500"
-                      : "w-1.5 bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+                      ? "w-4 bg-yellow-500"
+                      : "w-1 bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-700 dark:hover:bg-neutral-600"
                   }`}
                   aria-label={`Ir para nota ${index + 1}`}
                 />

@@ -52,20 +52,22 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
   const [allowEdit, setAllowEdit] = useState(false);
   const [selectedUseCase, setSelectedUseCase] = useState("general");
   const [showContextMenu, setShowContextMenu] = useState(false);
-  const [contextItems, setContextItems] = useState<{ type: string; id: string; title: string }[]>([]);
+  const [contextItems, setContextItems] = useState<{ type: string; id: string; title: string }[]>(
+    []
+  );
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const models: AIModel[] = [
     { id: "gpt-4", name: "GPT-4", provider: "openai" },
-    { id: "claude-3", name: "Claude 3", provider: "anthropic" }
+    { id: "claude-3", name: "Claude 3", provider: "anthropic" },
   ] as unknown as AIModel[];
-  
+
   const useCases = [
     { value: "general", label: "Geral" },
     { value: "code", label: "Programação" },
-    { value: "writing", label: "Escrita" }
+    { value: "writing", label: "Escrita" },
   ];
 
   const handleSend = () => {
@@ -113,7 +115,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
             {isModelMenuOpen && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setIsModelMenuOpen(false)} />
-                <div className="absolute right-0 top-full z-20 mt-1 w-40 rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+                <div className="absolute top-full right-0 z-20 mt-1 w-40 rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
                   {models.map((model) => (
                     <button
                       key={model.id}
@@ -139,9 +141,8 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
       {/* ============================ CHAT AREA ============================ */}
       <div className="flex-1 flex-shrink-0 overflow-y-auto scroll-smooth p-2">
         <div className="mx-auto w-full max-w-4xl space-y-4">
-          
           {messages?.length === 0 && !loading && (
-            <div className="mt-12 flex flex-col items-center text-center duration-500 animate-in fade-in">
+            <div className="animate-in fade-in mt-12 flex flex-col items-center text-center duration-500">
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded bg-neutral-100 dark:bg-neutral-900">
                 <Sparkles className="h-5 w-5 text-neutral-400" />
               </div>
@@ -156,16 +157,26 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
             const isUser = msg.role === "user";
 
             return (
-              <div key={msg.id} className={`flex gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+              <div
+                key={msg.id}
+                className={`flex gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}
+              >
                 {/* Avatar Compacto */}
-                <div className="flex-shrink-0 mt-0.5">
-                  <div className={`flex h-6 w-6 items-center justify-center overflow-hidden rounded shadow-sm ${
+                <div className="mt-0.5 flex-shrink-0">
+                  <div
+                    className={`flex h-6 w-6 items-center justify-center overflow-hidden rounded shadow-sm ${
                       isUser ? "bg-blue-600" : "bg-emerald-500"
                     }`}
                   >
                     {isUser ? (
                       user?.avatar_url ? (
-                        <Image src={user.avatar_url} alt="User" width={24} height={24} className="h-full w-full object-cover" />
+                        <Image
+                          src={user.avatar_url}
+                          alt="User"
+                          width={24}
+                          height={24}
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
                         <User className="h-3 w-3 text-white" />
                       )
@@ -176,17 +187,20 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                 </div>
 
                 {/* Message Bubble Compacto */}
-                <div className={`flex max-w-[85%] flex-col ${isUser ? "items-end" : "items-start"}`}>
-                  <div className={`relative rounded p-2 text-xs leading-relaxed border ${
+                <div
+                  className={`flex max-w-[85%] flex-col ${isUser ? "items-end" : "items-start"}`}
+                >
+                  <div
+                    className={`relative rounded border p-2 text-xs leading-relaxed ${
                       isUser
-                        ? "bg-neutral-900 border-neutral-900 text-white dark:bg-neutral-100 dark:border-neutral-100 dark:text-neutral-900"
-                        : "bg-white border-neutral-200 text-neutral-800 dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-200"
+                        ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900"
+                        : "border-neutral-200 bg-white text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200"
                     }`}
                   >
                     {isUser ? (
                       <p className="whitespace-pre-wrap">{msg.content}</p>
                     ) : (
-                      <div className="prose prose-neutral prose-sm dark:prose-invert max-w-none text-xs prose-pre:p-2 prose-pre:rounded">
+                      <div className="prose prose-neutral prose-sm dark:prose-invert prose-pre:p-2 prose-pre:rounded max-w-none text-xs">
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           rehypePlugins={[rehypeHighlight]}
@@ -196,11 +210,19 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                       </div>
                     )}
 
-                    <div className={`mt-1.5 flex items-center gap-2 pt-1 opacity-70 ${isUser ? "justify-end" : "justify-between"}`}>
+                    <div
+                      className={`mt-1.5 flex items-center gap-2 pt-1 opacity-70 ${isUser ? "justify-end" : "justify-between"}`}
+                    >
                       <span className="text-[9px]">
-                        {new Date(msg.created_at || msg.timestamp || Date.now()).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(msg.created_at || msg.timestamp || Date.now()).toLocaleTimeString(
+                          "pt-PT",
+                          { hour: "2-digit", minute: "2-digit" }
+                        )}
                       </span>
-                      <button onClick={() => navigator.clipboard.writeText(msg.content)} className="flex items-center gap-1 text-[9px] uppercase hover:opacity-100">
+                      <button
+                        onClick={() => navigator.clipboard.writeText(msg.content)}
+                        className="flex items-center gap-1 text-[9px] uppercase hover:opacity-100"
+                      >
                         <Copy className="h-2.5 w-2.5" /> Copiar
                       </button>
                     </div>
@@ -224,25 +246,33 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} className="h-2" />
         </div>
       </div>
 
       {/* ============================ INPUT AREA REDISTRIBUÍDA ============================ */}
       <div className="border-t border-neutral-200 bg-neutral-50/50 p-2 dark:border-neutral-800 dark:bg-neutral-950/50">
-        <div className="mx-auto max-w-4xl flex flex-col gap-2">
-          
+        <div className="mx-auto flex max-w-4xl flex-col gap-2">
           {/* Header do Input (Ferramentas e Contextos Integrados) */}
           <div className="flex flex-wrap items-center justify-between gap-2">
-            
             {/* Contextos Ativos */}
             <div className="flex flex-wrap gap-1">
               {contextItems.map((item) => (
-                <div key={`${item.type}-${item.id}`} className="flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
-                  {item.type === "note" ? <FileText className="h-2.5 w-2.5" /> : <FolderKanban className="h-2.5 w-2.5" />}
+                <div
+                  key={`${item.type}-${item.id}`}
+                  className="flex items-center gap-1 rounded border border-blue-200 bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-800 dark:border-blue-800/50 dark:bg-blue-900/40 dark:text-blue-300"
+                >
+                  {item.type === "note" ? (
+                    <FileText className="h-2.5 w-2.5" />
+                  ) : (
+                    <FolderKanban className="h-2.5 w-2.5" />
+                  )}
                   <span className="font-medium">{item.title}</span>
-                  <button onClick={() => handleRemoveContext(item.type, item.id)} className="hover:text-blue-900 dark:hover:text-blue-100">
+                  <button
+                    onClick={() => handleRemoveContext(item.type, item.id)}
+                    className="hover:text-blue-900 dark:hover:text-blue-100"
+                  >
                     <X className="h-2.5 w-2.5" />
                   </button>
                 </div>
@@ -250,20 +280,22 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
             </div>
 
             {/* Configurações da Mensagem */}
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="ml-auto flex items-center gap-2">
               <select
                 value={selectedUseCase}
                 onChange={(e) => setSelectedUseCase(e.target.value)}
-                className="rounded bg-transparent px-1 py-0.5 text-[10px] font-medium text-neutral-600 hover:bg-neutral-200 dark:text-neutral-400 dark:hover:bg-neutral-800 outline-none cursor-pointer border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700 transition-all"
+                className="cursor-pointer rounded border border-transparent bg-transparent px-1 py-0.5 text-[10px] font-medium text-neutral-600 transition-all outline-none hover:border-neutral-200 hover:bg-neutral-200 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
               >
                 {useCases.map((uc) => (
-                  <option key={uc.value} value={uc.value}>{uc.label}</option>
+                  <option key={uc.value} value={uc.value}>
+                    {uc.label}
+                  </option>
                 ))}
               </select>
 
               <button
                 onClick={() => setAllowEdit(!allowEdit)}
-                className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium border transition-all ${
+                className={`flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-medium transition-all ${
                   allowEdit
                     ? "border-green-300 bg-green-50 text-green-700 dark:border-green-800/50 dark:bg-green-900/20 dark:text-green-400"
                     : "border-transparent text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-800"
@@ -276,13 +308,12 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
           </div>
 
           {/* Unified Input Box (Pílula) */}
-          <div className="relative flex items-end gap-1 rounded-lg border border-neutral-300 bg-white p-1 shadow-sm focus-within:border-neutral-400 focus-within:ring-1 focus-within:ring-neutral-200 dark:border-neutral-700 dark:bg-neutral-900 dark:focus-within:border-neutral-600 dark:focus-within:ring-neutral-800 transition-all">
-            
+          <div className="relative flex items-end gap-1 rounded-lg border border-neutral-300 bg-white p-1 shadow-sm transition-all focus-within:border-neutral-400 focus-within:ring-1 focus-within:ring-neutral-200 dark:border-neutral-700 dark:bg-neutral-900 dark:focus-within:border-neutral-600 dark:focus-within:ring-neutral-800">
             {/* Botão de Anexo Integrado */}
             <div className="relative mb-0.5 ml-0.5">
               <button
                 onClick={() => setShowContextMenu(!showContextMenu)}
-                className="flex h-7 w-7 items-center justify-center rounded text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200 transition-colors"
+                className="flex h-7 w-7 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
               >
                 <Paperclip className="h-3.5 w-3.5" />
               </button>
@@ -291,19 +322,31 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
               {showContextMenu && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowContextMenu(false)} />
-                  <div className="absolute bottom-full left-0 z-20 mb-2 w-56 rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900 overflow-hidden">
+                  <div className="absolute bottom-full left-0 z-20 mb-2 w-56 overflow-hidden rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
                     <div className="max-h-48 overflow-y-auto p-1">
-                      <div className="px-1.5 py-1 text-[9px] font-bold uppercase text-neutral-400">Notas</div>
+                      <div className="px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase">
+                        Notas
+                      </div>
                       {notesOverview?.slice(0, 5).map((note: any) => (
-                        <button key={note.id} onClick={() => handleAddContext("note", note.id, note.title)} className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 text-left">
+                        <button
+                          key={note.id}
+                          onClick={() => handleAddContext("note", note.id, note.title)}
+                          className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                        >
                           <FileText className="h-3 w-3 text-blue-500" />
                           <span className="truncate">{note.title}</span>
                         </button>
                       ))}
-                      
-                      <div className="mt-1 px-1.5 py-1 text-[9px] font-bold uppercase text-neutral-400 border-t border-neutral-100 dark:border-neutral-800">Projetos</div>
+
+                      <div className="mt-1 border-t border-neutral-100 px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase dark:border-neutral-800">
+                        Projetos
+                      </div>
                       {projectsOverview?.slice(0, 5).map((project: any) => (
-                        <button key={project.id} onClick={() => handleAddContext("project", project.id, project.title)} className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 text-left">
+                        <button
+                          key={project.id}
+                          onClick={() => handleAddContext("project", project.id, project.title)}
+                          className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                        >
                           <FolderKanban className="h-3 w-3 text-purple-500" />
                           <span className="truncate">{project.title}</span>
                         </button>
@@ -329,14 +372,14 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
               placeholder="Envie uma mensagem..."
               className="max-h-24 min-h-[32px] flex-1 resize-none bg-transparent px-2 py-1.5 text-xs outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
             />
-            
+
             {/* Botão de Envio Integrado */}
             <button
               onClick={handleSend}
               disabled={!input.trim()}
-              className="mb-0.5 mr-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded bg-neutral-900 text-white transition-colors hover:bg-black disabled:opacity-30 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+              className="mr-0.5 mb-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded bg-neutral-900 text-white transition-colors hover:bg-black disabled:opacity-30 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
             >
-              <Send className="h-3 w-3 ml-0.5" />
+              <Send className="ml-0.5 h-3 w-3" />
             </button>
           </div>
         </div>

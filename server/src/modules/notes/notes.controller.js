@@ -2,7 +2,7 @@ const notesRepository = require("@/modules/notes/notes.repository");
 const NotificationsRepository = require("@/modules/notifications/notifications.repository");
 const blocksRepository = require("@/modules/notes/blocks.repository");
 const userRepository = require("@/modules/users/users.repository");
-const { collabMail } = require("@/services/email/templates/notes/invite");
+const { collabMail } = require("@/services/email/templates/notes/invite/collab-notification");
 const { ALLOWED_NOTE_STATUSES } = require("@/utils/patterns/product-patterns");
 const { PDFService } = require("@/services/note_export/pdf");
 

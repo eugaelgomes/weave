@@ -1,0 +1,118 @@
+import React from "react";
+import { FaArrowLeft, FaTrash } from "react-icons/fa";
+import { Sparkles, Activity, Columns3, List, Timer, ChevronRight } from "lucide-react";
+
+interface ProjectHeaderProps {
+  project: any;
+  stagesCount: number;
+  activeView: string;
+  setActiveView: (view: any) => void;
+  isEditing: boolean;
+  setIsEditing: (val: boolean) => void;
+  canEdit: boolean;
+  isOwner: boolean;
+  onDelete: () => void;
+  onToggleSidebar: () => void;
+  onBack: () => void;
+}
+
+export default function ProjectHeader({
+  project,
+  activeView,
+  setActiveView,
+  isEditing,
+  setIsEditing,
+  canEdit,
+  isOwner,
+  onDelete,
+  onToggleSidebar,
+  onBack,
+}: ProjectHeaderProps) {
+  return (
+    <header className="flex h-11 flex-none items-center justify-between border-b border-neutral-200 bg-white/80 px-3 backdrop-blur-md dark:border-neutral-800/50 dark:bg-[#0E0E11]/80">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onBack}
+          className="flex size-6 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+        >
+          <FaArrowLeft className="size-2.5" />
+        </button>
+
+        <div className="mx-1 h-3 w-[1px] bg-neutral-200 dark:bg-neutral-800" />
+
+        <div className="flex items-center gap-2">
+          <div
+            className="flex size-5 items-center justify-center rounded-[4px] shadow-sm"
+            style={{ backgroundColor: project.properties?.color || "#eab308" }}
+          >
+            <Activity className="size-3 text-white/90" />
+          </div>
+          <div className="flex flex-col leading-none">
+            <h1 className="text-[11px] font-medium tracking-tight text-neutral-800 dark:text-neutral-200">
+              {project.title}
+            </h1>
+            <div className="mt-0.5 flex items-center gap-1">
+              <span className="text-[8px] font-bold tracking-wider text-neutral-400 uppercase">
+                {project.status.replace("_", " ")}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        {/* View Selectors - Ultra Compact Segmented Control */}
+        <div className="flex items-center rounded-md bg-neutral-100 p-0.5 dark:bg-neutral-900">
+          {[
+            { id: "board", icon: <Columns3 className="size-3" />, label: "Board" },
+            { id: "list", icon: <List className="size-3" />, label: "List" },
+            { id: "timeline", icon: <Timer className="size-3" />, label: "Time" },
+          ].map((view) => (
+            <button
+              key={view.id}
+              onClick={() => setActiveView(view.id)}
+              className={`flex items-center gap-1 rounded-[4px] px-2 py-1 text-[10px] font-medium transition-all ${
+                activeView === view.id
+                  ? "bg-white text-neutral-950 shadow-sm dark:bg-neutral-800 dark:text-neutral-100"
+                  : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-300"
+              }`}
+            >
+              {view.icon}
+              <span className="hidden lg:inline">{view.label}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1 border-l border-neutral-200 pl-3 dark:border-neutral-800">
+          {canEdit && !isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-1 rounded px-2 py-1 text-[10px] font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+            >
+              <Sparkles className="size-3" />
+              Editar
+            </button>
+          )}
+
+          {isOwner && (
+            <button
+              onClick={() => {
+                if (window.confirm("Eliminar projeto?")) onDelete();
+              }}
+              className="flex size-6 items-center justify-center rounded text-neutral-400 transition-colors hover:text-red-500 dark:hover:text-red-400"
+            >
+              <FaTrash className="size-2.5" />
+            </button>
+          )}
+
+          <button
+            onClick={onToggleSidebar}
+            className="ml-1 flex size-6 items-center justify-center rounded border border-transparent text-neutral-400 transition-all hover:border-neutral-200 hover:bg-white hover:text-neutral-900 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+          >
+            <Activity className="size-3" />
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}

@@ -79,7 +79,7 @@ export default function ProjectsCarousel({
 
   const scrollToSlide = (index: number) => {
     if (carouselRef.current && projects.length > 0) {
-      const cardWidth = carouselRef.current.scrollWidth / projects.length;
+      const cardWidth = 220 + 8; // Largura nova do card (220) + gap (8)
       carouselRef.current.scrollTo({ left: cardWidth * index, behavior: "smooth" });
       setCurrentSlide(index);
     }
@@ -94,51 +94,51 @@ export default function ProjectsCarousel({
   };
 
   return (
-    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 shadow-md sm:p-4 dark:border-neutral-800 dark:bg-neutral-950">
-      <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
-        <h3 className="sm:text-md text-base font-semibold text-neutral-500 dark:text-neutral-100">
+    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 sm:p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h3 className="text-xs font-semibold text-neutral-500 sm:text-sm dark:text-neutral-100">
           {title}
         </h3>
         {projects.length > 1 && (
-          <div className="flex gap-1.5 sm:gap-2">
+          <div className="flex gap-1">
             <button
               onClick={prevSlide}
               disabled={currentSlide === 0}
-              className="rounded-md bg-neutral-100 p-2 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 disabled:opacity-30 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+              className="rounded bg-neutral-100 p-1 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 disabled:opacity-30 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
               aria-label="Anterior"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3 w-3" />
             </button>
             <button
               onClick={nextSlide}
               disabled={currentSlide === projects.length - 1}
-              className="rounded-md bg-neutral-100 p-2 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 disabled:opacity-30 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+              className="rounded bg-neutral-100 p-1 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 disabled:opacity-30 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
               aria-label="Próximo"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3 w-3" />
             </button>
           </div>
         )}
       </div>
 
       {projects.length === 0 ? (
-        <div className="py-8 text-center text-neutral-500 dark:text-neutral-400">
-          <Folder className="mx-auto mb-2 h-10 w-10 text-neutral-400 dark:text-neutral-600" />
-          <p className="mb-2 text-base font-medium text-neutral-700 dark:text-neutral-200">
+        <div className="py-4 text-center text-neutral-500 dark:text-neutral-400">
+          <Folder className="mx-auto mb-2 h-8 w-8 text-neutral-400 dark:text-neutral-600" />
+          <p className="mb-2 text-xs font-medium text-neutral-700 dark:text-neutral-200">
             {emptyMessage}
           </p>
           <Link
             href={emptyActionHref}
-            className="inline-flex items-center gap-2 rounded-md bg-yellow-500 px-3 py-1.5 text-sm font-medium text-neutral-950 transition-colors hover:bg-yellow-600"
+            className="inline-flex items-center gap-1.5 rounded bg-yellow-500 px-3 py-1.5 text-[10px] font-medium text-neutral-950 transition-colors hover:bg-yellow-600"
           >
-            <Folder className="h-4 w-4" /> {emptyActionText}
+            <Folder className="h-3 w-3" /> {emptyActionText}
           </Link>
         </div>
       ) : (
         <div className="relative">
           <div
             ref={carouselRef}
-            className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth sm:gap-4"
+            className="no-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-1"
           >
             {projects.map((project) => {
               const statusConfig = project.status
@@ -150,24 +150,24 @@ export default function ProjectsCarousel({
                 <Link
                   key={project.id}
                   href={`/app/projects/${project.id}`}
-                  className="block w-[calc(100vw-3rem)] max-w-[280px] flex-shrink-0 snap-start sm:w-[320px] sm:max-w-[340px]"
+                  className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center sm:w-[220px] sm:snap-start"
                 >
-                  <div className="group flex h-[260px] flex-col rounded-lg border border-neutral-200 bg-neutral-50 p-4 transition-all duration-200 hover:border-neutral-300 hover:shadow-lg hover:shadow-neutral-200/50 sm:h-[260px] dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:shadow-neutral-900/50">
+                  <div className="group flex h-[160px] flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:shadow-neutral-900/50">
                     {/* Cabeçalho com ícone e prioridade */}
-                    <div className="mb-2 flex flex-shrink-0 items-start justify-between gap-2">
-                      <div className="flex min-w-0 flex-1 items-center gap-1">
+                    <div className="mb-1.5 flex flex-shrink-0 items-start justify-between gap-1.5">
+                      <div className="flex min-w-0 flex-1 items-center gap-1.5">
                         {project.icon && (
-                          <span className="text-md flex-shrink-0">{project.icon}</span>
+                          <span className="text-xs flex-shrink-0">{project.icon}</span>
                         )}
                         <div className="min-w-0 flex-1">
-                          <h3 className="line-clamp-2 text-sm leading-tight font-semibold text-neutral-900 transition-colors group-hover:text-yellow-600 sm:text-base dark:text-white dark:group-hover:text-yellow-400">
+                          <h3 className="line-clamp-1 text-xs font-semibold leading-tight text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-white dark:group-hover:text-yellow-400">
                             {project.title}
                           </h3>
                         </div>
                       </div>
                       {project.priority && (
                         <div
-                          className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md ${
+                          className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-[2px] ${
                             project.priority === "alta"
                               ? "text-red-600 dark:text-red-400"
                               : project.priority === "media"
@@ -176,15 +176,15 @@ export default function ProjectsCarousel({
                           }`}
                           title={`Prioridade: ${project.priority}`}
                         >
-                          <AlertCircle className="h-3.5 w-3.5" />
+                          <AlertCircle className="h-3 w-3" />
                         </div>
                       )}
                     </div>
 
                     {/* Descrição */}
-                    <div className="mb-3 min-h-0 flex-1">
+                    <div className="mb-1.5 min-h-0 flex-1">
                       {project.description && (
-                        <p className="line-clamp-2 text-xs leading-relaxed text-neutral-500 sm:text-sm dark:text-neutral-400">
+                        <p className="line-clamp-2 text-[10px] leading-relaxed text-neutral-500 dark:text-neutral-400">
                           {project.description}
                         </p>
                       )}
@@ -192,20 +192,20 @@ export default function ProjectsCarousel({
 
                     {/* Tags */}
                     {project.tags && project.tags.length > 0 && (
-                      <div className="mb-3 flex flex-shrink-0 flex-wrap gap-1.5">
+                      <div className="mb-1.5 flex flex-shrink-0 flex-wrap gap-1">
                         {project.tags.slice(0, 3).map((tag, idx) => {
                           const tagColor = getTagColor(tag);
                           return (
                             <span
                               key={idx}
-                              className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-medium ${tagColor.bg} ${tagColor.text} ${tagColor.border}`}
+                              className={`inline-flex items-center gap-1 rounded border px-1.5 py-[1px] text-[8px] font-medium ${tagColor.bg} ${tagColor.text} ${tagColor.border}`}
                             >
                               {tag}
                             </span>
                           );
                         })}
                         {project.tags.length > 3 && (
-                          <span className="inline-flex items-center rounded-md border border-neutral-200 bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800/70 dark:text-neutral-400">
+                          <span className="inline-flex items-center rounded border border-neutral-200 bg-neutral-100 px-1.5 py-[1px] text-[8px] font-medium text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800/70 dark:text-neutral-400">
                             +{project.tags.length - 3}
                           </span>
                         )}
@@ -214,12 +214,12 @@ export default function ProjectsCarousel({
 
                     {/* Metadata Row: Complexidade e Tempo Estimado */}
                     {(project.complexity || project.estimatedTime) && (
-                      <div className="mb-3 flex w-full items-center justify-between border-t border-neutral-100 pt-2 dark:border-neutral-800/50">
+                      <div className="mb-1.5 flex w-full items-center justify-between border-t border-neutral-100 pt-1.5 dark:border-neutral-800/50">
                         {/* Complexidade — Esquerda */}
                         {project.complexity && (
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1">
                             <Zap
-                              className={`h-3 w-3 ${
+                              className={`h-2.5 w-2.5 ${
                                 project.complexity === "alta"
                                   ? "text-red-500 dark:text-red-400"
                                   : project.complexity === "media"
@@ -227,7 +227,7 @@ export default function ProjectsCarousel({
                                     : "text-green-500 dark:text-green-400"
                               }`}
                             />
-                            <span className="text-[10px] font-medium text-neutral-500 capitalize dark:text-neutral-400">
+                            <span className="text-[8px] font-medium text-neutral-500 capitalize dark:text-neutral-400">
                               {project.complexity}
                             </span>
                           </div>
@@ -235,9 +235,9 @@ export default function ProjectsCarousel({
 
                         {/* Prazo — Direita */}
                         {project.estimatedTime && (
-                          <div className="flex items-center gap-1.5">
-                            <Clock className="h-3 w-3 text-neutral-400 dark:text-neutral-500" />
-                            <span className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-2.5 w-2.5 text-neutral-400 dark:text-neutral-500" />
+                            <span className="text-[8px] font-medium text-neutral-500 dark:text-neutral-400">
                               {project.estimatedTime}
                             </span>
                           </div>
@@ -246,16 +246,16 @@ export default function ProjectsCarousel({
                     )}
 
                     {/* Progresso */}
-                    <div className="mb-3 flex-shrink-0">
-                      <div className="mb-1.5 flex items-center justify-between">
-                        <span className="text-[10px] font-medium text-neutral-500 sm:text-xs dark:text-neutral-500">
+                    <div className="mb-1.5 flex-shrink-0">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-[8px] font-medium text-neutral-500 dark:text-neutral-500">
                           Progresso
                         </span>
-                        <span className="text-[10px] font-bold text-neutral-700 sm:text-xs dark:text-neutral-400">
+                        <span className="text-[8px] font-bold text-neutral-700 dark:text-neutral-400">
                           {project.progress ?? 0}%
                         </span>
                       </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
@@ -267,40 +267,40 @@ export default function ProjectsCarousel({
                     </div>
 
                     {/* Rodapé com Status e Contadores */}
-                    <div className="flex flex-shrink-0 items-center justify-between gap-2">
+                    <div className="flex flex-shrink-0 items-center justify-between gap-1.5">
                       <div>
                         {statusConfig && StatusIcon && (
                           <div
-                            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${statusConfig.bg} ${statusConfig.border}`}
+                            className={`inline-flex items-center gap-1 rounded border px-1.5 py-[1px] ${statusConfig.bg} ${statusConfig.border}`}
                           >
-                            <StatusIcon className={`h-3 w-3 ${statusConfig.color}`} />
-                            <span className={`text-[10px] font-medium ${statusConfig.color}`}>
+                            <StatusIcon className={`h-2.5 w-2.5 ${statusConfig.color}`} />
+                            <span className={`text-[8px] font-medium ${statusConfig.color}`}>
                               {statusConfig.label}
                             </span>
                           </div>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         {/* Contador de Notas */}
                         {project.notesCount > 0 && (
                           <div
-                            className="flex items-center gap-1 text-neutral-400 dark:text-neutral-500"
+                            className="flex items-center gap-0.5 text-neutral-400 dark:text-neutral-500"
                             title={`${project.notesCount} nota(s)`}
                           >
-                            <FileText className="h-3 w-3" />
-                            <span className="text-[10px] font-medium">{project.notesCount}</span>
+                            <FileText className="h-2.5 w-2.5" />
+                            <span className="text-[8px] font-medium">{project.notesCount}</span>
                           </div>
                         )}
 
                         {/* Contador de Colaboradores */}
                         {project.collaboratorsCount > 0 && (
                           <div
-                            className="flex items-center gap-1 text-neutral-400 dark:text-neutral-500"
+                            className="flex items-center gap-0.5 text-neutral-400 dark:text-neutral-500"
                             title={`${project.collaboratorsCount} colaborador(es)`}
                           >
-                            <Users className="h-3 w-3" />
-                            <span className="text-[10px] font-medium">
+                            <Users className="h-2.5 w-2.5" />
+                            <span className="text-[8px] font-medium">
                               {project.collaboratorsCount}
                             </span>
                           </div>
@@ -314,15 +314,15 @@ export default function ProjectsCarousel({
           </div>
 
           {projects.length > 1 && (
-            <div className="mt-4 flex justify-center gap-1.5 sm:gap-2">
+            <div className="mt-2 flex justify-center gap-1">
               {projects.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => scrollToSlide(index)}
-                  className={`h-1.5 rounded-full transition-all ${
+                  className={`h-1 rounded-full transition-all ${
                     currentSlide === index
-                      ? "w-6 bg-yellow-500"
-                      : "w-1.5 bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+                      ? "w-4 bg-yellow-500"
+                      : "w-1 bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-700 dark:hover:bg-neutral-600"
                   }`}
                   aria-label={`Ir para projeto ${index + 1}`}
                 />

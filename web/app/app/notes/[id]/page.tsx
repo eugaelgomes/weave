@@ -1417,9 +1417,9 @@ const NoteDetail = () => {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="flex h-full flex-col overflow-hidden bg-neutral-50 shadow-sm dark:bg-neutral-950">
       {/* =================== HEADER =================== */}
-      <div className="flex-shrink-0 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5 dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="flex-shrink-0 border-b border-neutral-200 bg-neutral-50 px-2 dark:border-neutral-800 dark:bg-neutral-950">
         <div className="mx-auto flex w-full items-center justify-between">
           <button
             onClick={handleBack}

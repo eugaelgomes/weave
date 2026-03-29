@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
+import { useNotification } from "@/app/_contexts/notification-context";
 import { useSafeAuthenticatedData } from "@/app/app/_hooks/use-authenticated-data";
 import { usePathname } from "next/navigation";
 import {
@@ -24,7 +25,7 @@ import {
   Settings,
   Sparkles,
   Workflow,
-  type LucideIcon
+  type LucideIcon,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -42,11 +43,13 @@ interface NavigationItem {
     icon: LucideIcon;
     label: string;
   }[];
+  badge?: number;
 }
 
 const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarProps) => {
   const { authenticated } = useAuth();
   const { t } = useLanguage();
+  const { unreadCount } = useNotification();
   const authData = useSafeAuthenticatedData();
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
@@ -122,14 +125,15 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
       ],
     },
     {
-      path: "/app/notifications",
-      icon: MessageSquare,
-      label: t.nav.notifications,
-    },
-    {
       path: "/app/calendar",
       icon: Calendar,
       label: t.nav.calendar,
+    },
+    {
+      path: "/app/notifications",
+      icon: MessageSquare,
+      label: t.nav.notifications,
+      badge: unreadCount,
     },
     ...(hasOrg
       ? [
@@ -191,7 +195,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
 
               // Se estiver recolhido E o item tiver filhos, apontamos o Link para o primeiro subitem
               // para evitar cair na página raiz vazia (ex: /app/organization)
-              const linkHref = (isCollapsed && hasSubItems) ? item.subItems![0].path : item.path;
+              const linkHref = isCollapsed && hasSubItems ? item.subItems![0].path : item.path;
 
               return (
                 <li key={item.path} className="group relative">
@@ -207,8 +211,8 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                         }
                       }}
                       className={`flex flex-1 rounded-md transition-all duration-200 ${
-                        isCollapsed 
-                          ? "flex-col items-center justify-center gap-1 p-2" 
+                        isCollapsed
+                          ? "flex-col items-center justify-center gap-1 p-2"
                           : "items-center justify-between px-2.5 py-2"
                       } ${
                         active
@@ -216,12 +220,26 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                           : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
                       } `}
                     >
-                      <div className={`flex items-center ${isCollapsed ? "flex-col gap-1 w-full" : "gap-2.5"}`}>
-                        <Icon
-                          className={`h-4 w-4 transition-colors ${active ? "text-yellow-500" : "text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200"} `}
-                        />
-                        <span className={`${isCollapsed ? "text-[8px] text-center leading-none truncate w-full" : "text-xs"}`}>
+                      <div
+                        className={`flex items-center ${isCollapsed ? "w-full flex-col gap-1" : "gap-2.5"}`}
+                      >
+                        <div className="relative">
+                          <Icon
+                            className={`h-4 w-4 transition-colors ${active ? "text-yellow-500" : "text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200"} `}
+                          />
+                          {isCollapsed && item.badge !== undefined && item.badge > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-2 w-2 rounded-full bg-yellow-500" />
+                          )}
+                        </div>
+                        <span
+                          className={`${isCollapsed ? "w-full truncate text-center text-[8px] leading-none" : "flex items-center gap-2 text-xs"}`}
+                        >
                           {item.label}
+                          {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
+                            <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-yellow-500 px-1 text-[9px] font-bold text-white">
+                              {item.badge > 99 ? "99+" : item.badge}
+                            </span>
+                          )}
                         </span>
                       </div>
 
@@ -325,4 +343,4 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
   );
 };
 
-export default Sidebar; 
+export default Sidebar;

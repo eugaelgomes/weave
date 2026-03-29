@@ -113,7 +113,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* CONTEÚDO PRINCIPAL (Detail) */}
-        <div className="flex flex-1 flex-col overflow-y-auto bg-white p-2 sm:p-2 dark:bg-neutral-950">
+        <div className="flex flex-1 flex-col overflow-y-auto bg-white dark:bg-neutral-950">
           {children}
         </div>
       </div>

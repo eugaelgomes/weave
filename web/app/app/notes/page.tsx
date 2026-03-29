@@ -327,14 +327,12 @@ const NotesWithPagination = () => {
 
   return (
     <div className="flex h-full flex-col space-y-2">
-      
-
       {/* =================== HEADER / TOOLBAR =================== */}
       <div className="flex flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-950">
         {/* Linha Única: Título, Busca e Ações */}
         <div className="flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
           {/* Lado Esquerdo: Registros & Check */}
-          <div className="flex order-1 shrink-0 items-center gap-2">
+          <div className="order-1 flex shrink-0 items-center gap-2">
             <div className="flex items-center gap-1 text-[11px] text-neutral-500">
               <span className="font-semibold text-neutral-900 dark:text-neutral-200">
                 {pagination.total}
@@ -355,8 +353,11 @@ const NotesWithPagination = () => {
           </div>
 
           {/* Centro: Busca */}
-          <div className="relative order-3 flex-1 w-full min-w-[200px] sm:order-2 sm:w-auto sm:max-w-md">
-            <Search className="absolute top-1/2 left-2.5 -translate-y-1/2 text-neutral-400" size={13} />
+          <div className="relative order-3 w-full min-w-[200px] flex-1 sm:order-2 sm:w-auto sm:max-w-md">
+            <Search
+              className="absolute top-1/2 left-2.5 -translate-y-1/2 text-neutral-400"
+              size={13}
+            />
             <input
               type="text"
               placeholder="Buscar notas..."
@@ -372,7 +373,7 @@ const NotesWithPagination = () => {
           </div>
 
           {/* Lado Direito: Ações */}
-          <div className="flex order-2 shrink-0 items-center gap-1.5 sm:order-3">
+          <div className="order-2 flex shrink-0 items-center gap-1.5 sm:order-3">
             <button
               onClick={handleRefresh}
               disabled={isLoading}
@@ -594,7 +595,7 @@ const NotesWithPagination = () => {
         <div className="mx-auto">
           {/* Headers da Lista - Visível apenas em desktop */}
           {notes.length > 0 && !showFullSkeleton && (
-            <div className="hidden grid-cols-12 gap-4 rounded-md bg-neutral-50 p-2 px-4 text-[10px] font-semibold tracking-wider text-neutral-400  sm:grid dark:bg-neutral-950">
+            <div className="hidden grid-cols-12 gap-4 rounded-md bg-neutral-50 p-2 px-4 text-[10px] font-semibold tracking-wider text-neutral-400 sm:grid dark:bg-neutral-950">
               <div className="col-span-4">Detalhes</div>
               <div className="col-span-2">Projeto</div>
               <div className="col-span-3">Tags</div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -177,7 +177,8 @@ const formatHourLabel = (hour: number, timeFormat: "12h" | "24h") => {
   return `${String(hour).padStart(2, "0")}:00`;
 };
 
-export function CalendarPreview({ className = "h-full min-h-[500px]" }: CalendarPreviewProps) {
+// Aqui definimos um max height e valores seguros para não poluir a view
+export function CalendarPreview({ className = "h-[70vh] min-h-[500px] max-h-[800px]" }: CalendarPreviewProps) {
   const { user } = useAuth();
   const {
     calendarEvents,
@@ -191,6 +192,9 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
   const [view, setView] = useState<ViewType>("week");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  
+  // Ref para controlar o scroll do calendário
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const userPreferences = useMemo(() => {
     return (user?.usage_preference as UserPreferences) || {};
@@ -261,6 +265,25 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
       // Error state is already managed by CalendarContext.
     });
   }, [currentDate, loadEventsForYear]);
+
+  // Efeito responsável por alinhar o scroll no horário atual
+  useEffect(() => {
+    if ((view === "day" || view === "week") && scrollContainerRef.current) {
+      const now = new Date();
+      const minutes = now.getHours() * 60 + now.getMinutes();
+      const targetY = minutesToPixels(minutes);
+
+      setTimeout(() => {
+        if (scrollContainerRef.current) {
+          const offset = targetY - scrollContainerRef.current.clientHeight / 2;
+          scrollContainerRef.current.scrollTo({
+            top: Math.max(0, offset),
+            behavior: "smooth"
+          });
+        }
+      }, 100);
+    }
+  }, [view, currentDate]);
 
   const eventsByDate = useMemo(() => {
     const map = new Map<string, { calendarEvents: UnifiedCalendarEvent[] }>();
@@ -458,10 +481,14 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
       },
     };
 
-    return (
-      <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto border-t border-neutral-200 bg-white [scrollbar-gutter:stable] dark:border-neutral-800 dark:bg-neutral-950 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent">
-        <div className="sticky top-0 z-20 grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 border-b border-neutral-200 [--label-w:56px] sm:[--label-w:80px] dark:divide-neutral-800 dark:border-neutral-800">
-          <div className="bg-neutral-50 px-2 py-2 text-right text-[10px] font-medium text-neutral-500 dark:bg-neutral-900/50 dark:text-neutral-400">
+return (
+      <div 
+        ref={scrollContainerRef}
+        className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto border-t border-neutral-200 bg-white [scrollbar-gutter:stable] dark:border-neutral-800 dark:bg-neutral-950 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent"
+      >
+        {/* CABEÇALHO DA SEMANA (Diminuído altura e largura) */}
+        <div className="sticky top-0 z-20 grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 border-b border-neutral-200 [--label-w:40px] sm:[--label-w:56px] dark:divide-neutral-800 dark:border-neutral-800">
+          <div className="bg-neutral-50 px-1 py-1 text-right text-[10px] font-medium text-neutral-500 dark:bg-neutral-900/50 dark:text-neutral-400">
             {texts.allDay}
           </div>
           {weekEvents.map(({ date, allDayEvents }, dayIndex) => {
@@ -472,7 +499,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
               <div
                 key={`week-head-${dayIndex}`}
                 onClick={() => setSelectedDate(date)}
-                className={`cursor-pointer px-1 py-1.5 text-center transition-colors ${
+                className={`cursor-pointer px-1 py-1 text-center transition-colors ${
                   isToday
                     ? "bg-yellow-50/40 dark:bg-yellow-900/10"
                     : "bg-white hover:bg-neutral-50 dark:bg-neutral-950 dark:hover:bg-neutral-900"
@@ -482,9 +509,9 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                   <span className="sm:hidden">{dayName.slice(0, 3)}</span>
                   <span className="hidden sm:inline">{dayName}</span>
                 </div>
-                <div className="mt-0.5 flex items-center justify-center">
+                <div className="flex items-center justify-center">
                   <span
-                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold ${
+                    className={`flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[10px] font-semibold ${
                       isToday
                         ? "bg-yellow-500 text-white"
                         : "text-neutral-700 dark:text-neutral-300"
@@ -493,7 +520,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                     {date.getDate()}
                   </span>
                 </div>
-                <div className="mt-1 flex min-h-8 flex-col gap-0.5">
+                <div className="mt-0.5 flex flex-col gap-0.5">
                   {allDayEvents.slice(0, 2).map((event, idx) => {
                     const colors = colorMap[event.type];
                     const title = event.data.title;
@@ -501,7 +528,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                     return (
                       <div
                         key={`week-allday-${dayIndex}-${idx}`}
-                        className={`truncate rounded border-l-[3px] px-1.5 py-0.5 text-left text-[9px] font-medium ${colors.bg} ${colors.border} ${colors.text}`}
+                        className={`truncate rounded border-l-[3px] px-1 py-0.5 text-left text-[9px] font-medium ${colors.bg} ${colors.border} ${colors.text}`}
                       >
                         {title}
                       </div>
@@ -518,10 +545,12 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
           })}
         </div>
 
+        {/* CORPO DA SEMANA (Diminuído largura) */}
         <div
-          className="relative grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 [--label-w:56px] sm:[--label-w:80px] dark:divide-neutral-800"
+          className="relative grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 [--label-w:40px] sm:[--label-w:56px] dark:divide-neutral-800"
           style={{ height: `${TOTAL_GRID_HEIGHT}px` }}
         >
+          {/* ... resto do grid (linhas, marcações, horas) mantém igual ... */}
           <div className="pointer-events-none absolute inset-0 z-0">
             {hours.map((hour) => (
               <div
@@ -532,12 +561,13 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
             ))}
           </div>
 
-          <div className="pointer-events-none absolute inset-0 z-[12]">
+          <div className="pointer-events-none absolute inset-0 z-[12]" style={{ height: `${TOTAL_GRID_HEIGHT}px` }}>
             {Array.from({ length: 8 }, (_, idx) => (
               <div
                 key={`week-vertical-divider-${idx}`}
-                className="absolute top-0 bottom-0 w-px bg-neutral-200 dark:bg-neutral-800"
+                className="absolute top-0 w-px bg-neutral-200 dark:bg-neutral-800"
                 style={{
+                  height: `${TOTAL_GRID_HEIGHT}px`,
                   left:
                     idx === 0
                       ? "var(--label-w)"
@@ -554,8 +584,8 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                 className="absolute right-0 left-0"
                 style={{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }}
               >
-                <div className="px-2 py-2 text-right sm:px-3">
-                  <span className="text-[10px] font-medium text-neutral-500 sm:text-xs dark:text-neutral-400">
+                <div className="px-1 py-1 text-center sm:px-2">
+                  <span className="text-[9px] font-medium text-neutral-500 sm:text-[10px] dark:text-neutral-400">
                     {formatHourLabel(hour, timeFormat)}
                   </span>
                 </div>
@@ -643,15 +673,12 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
     const daysInMonth = getDaysInMonth(year, month);
     const days = [];
 
-    // Padding do mês anterior
     for (let i = 0; i < firstDay; i++) {
       days.push(new Date(year, month, -firstDay + i + 1));
     }
-    // Mês atual
     for (let i = 1; i <= daysInMonth; i++) {
       days.push(new Date(year, month, i));
     }
-    // Padding do próximo mês
     const remaining = (7 - (days.length % 7)) % 7;
     for (let i = 1; i <= remaining; i++) {
       days.push(new Date(year, month + 1, i));
@@ -706,10 +733,13 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
     };
 
     return (
-      <div className="flex-1 overflow-y-auto bg-white dark:bg-neutral-950 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent">
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto bg-white dark:bg-neutral-950 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent"
+      >
         {allDayEvents.length > 0 && (
-          <div className="border-b border-neutral-200 bg-neutral-50 px-2 py-2 dark:border-neutral-800 dark:bg-neutral-900/50">
-            <div className="flex items-center gap-2 pl-14 sm:pl-20">
+          <div className="border-b border-neutral-200 bg-neutral-50 px-1 py-1 dark:border-neutral-800 dark:bg-neutral-900/50">
+            <div className="flex items-center gap-2 pl-10 sm:pl-14">
               <span className="text-[10px] font-medium text-neutral-500 sm:text-xs">
                 {texts.allDay}
               </span>
@@ -720,7 +750,7 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
                   return (
                     <div
                       key={`allday-${idx}`}
-                      className={`cursor-pointer rounded-md border-l-[3px] px-2 py-1 text-[10px] font-medium transition-colors sm:text-xs ${colors.bg} ${colors.border} ${colors.text} ${colors.hover}`}
+                      className={`cursor-pointer rounded-md border-l-[3px] px-2 py-0.5 text-[10px] font-medium transition-colors sm:text-xs ${colors.bg} ${colors.border} ${colors.text} ${colors.hover}`}
                     >
                       {title}
                     </div>
@@ -731,85 +761,88 @@ export function CalendarPreview({ className = "h-full min-h-[500px]" }: Calendar
           </div>
         )}
 
+        {/* CORPO DO DIA (Diminuído largura) */}
         <div
-          className="relative [--label-w:56px] sm:[--label-w:80px]"
+          className="relative [--label-w:40px] sm:[--label-w:56px]"
           style={{ height: `${TOTAL_GRID_HEIGHT}px` }}
         >
-          {hours.map((hour) => {
-            const isCurrentHour = isToday && hour === now.getHours();
-            const hourLabel = formatHourLabel(hour, timeFormat);
+          <div className="relative [--label-w:56px] sm:[--label-w:80px]" style={{ height: `${TOTAL_GRID_HEIGHT}px` }}>
+            {hours.map((hour) => {
+              const isCurrentHour = isToday && hour === now.getHours();
+              const hourLabel = formatHourLabel(hour, timeFormat);
 
-            return (
-              <div
-                key={hour}
-                className={`absolute right-0 left-0 border-b border-neutral-200 dark:border-neutral-800 ${
-                  isCurrentHour ? "bg-yellow-50/30 dark:bg-yellow-900/5" : ""
-                }`}
-                style={{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }}
-              >
-                <div className="w-[var(--label-w)] shrink-0 px-2 py-2 text-right sm:px-3">
-                  <span
-                    className={`text-[10px] font-medium sm:text-xs ${
-                      isCurrentHour
-                        ? "text-yellow-600 dark:text-yellow-400"
-                        : "text-neutral-500 dark:text-neutral-400"
-                    }`}
-                  >
-                    {hourLabel}
-                  </span>
+              return (
+                <div
+                  key={hour}
+                  className={`absolute right-0 left-0 border-b border-neutral-200 dark:border-neutral-800 ${
+                    isCurrentHour ? "bg-yellow-50/30 dark:bg-yellow-900/5" : ""
+                  }`}
+                  style={{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }}
+                >
+                  <div className="w-[var(--label-w)] shrink-0 px-2 py-2 text-right sm:px-3">
+                    <span
+                      className={`text-[10px] font-medium sm:text-xs ${
+                        isCurrentHour
+                          ? "text-yellow-600 dark:text-yellow-400"
+                          : "text-neutral-500 dark:text-neutral-400"
+                      }`}
+                    >
+                      {hourLabel}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
 
-          {positionedEvents.map((pe, idx) => {
-            const { event, startMin, endMin, column, totalColumns } = pe;
-            const top = minutesToPixels(startMin);
-            const height = Math.max(minutesToPixels(endMin - startMin), 20);
-            const colors = colorMap[event.type];
-            const title = event.data.title;
+            {positionedEvents.map((pe, idx) => {
+              const { event, startMin, endMin, column, totalColumns } = pe;
+              const top = minutesToPixels(startMin);
+              const height = Math.max(minutesToPixels(endMin - startMin), 20);
+              const colors = colorMap[event.type];
+              const title = event.data.title;
 
-            const endStr = event.data.end;
-            const timeRangeStr = formatTimeRange(event.time, endStr, false, timeFormat, locale);
+              const endStr = event.data.end;
+              const timeRangeStr = formatTimeRange(event.time, endStr, false, timeFormat, locale);
 
-            return (
+              return (
+                <div
+                  key={`positioned-${idx}`}
+                  className={`absolute cursor-pointer overflow-hidden rounded-md border-l-4 px-2 py-1 transition-all hover:z-20 hover:shadow-lg ${colors.bg} ${colors.border} ${colors.hover}`}
+                  style={{
+                    top: `${top}px`,
+                    height: `${height}px`,
+                    left: `calc(var(--label-w) + (100% - var(--label-w) - 8px) / ${totalColumns} * ${column})`,
+                    width: `calc((100% - var(--label-w) - 8px) / ${totalColumns})`,
+                    zIndex: 10,
+                  }}
+                >
+                  <div className="flex h-full flex-col overflow-hidden">
+                    <h4 className={`truncate text-[11px] font-semibold ${colors.text}`}>{title}</h4>
+                    {height > 30 && (
+                      <span className={`text-[10px] ${colors.timeText}`}>{timeRangeStr}</span>
+                    )}
+                    {height > 55 && event.data.location && (
+                      <span className="mt-0.5 truncate text-[9px] text-neutral-500 dark:text-neutral-400">
+                        {event.data.location}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {isToday && (
               <div
-                key={`positioned-${idx}`}
-                className={`absolute cursor-pointer overflow-hidden rounded-md border-l-4 px-2 py-1 transition-all hover:z-20 hover:shadow-lg ${colors.bg} ${colors.border} ${colors.hover}`}
+                className="absolute right-0 z-30 border-t-2 border-red-500"
                 style={{
-                  top: `${top}px`,
-                  height: `${height}px`,
-                  left: `calc(var(--label-w) + (100% - var(--label-w) - 8px) / ${totalColumns} * ${column})`,
-                  width: `calc((100% - var(--label-w) - 8px) / ${totalColumns})`,
-                  zIndex: 10,
+                  top: `${minutesToPixels(currentTimeMin)}px`,
+                  left: "var(--label-w)",
                 }}
               >
-                <div className="flex h-full flex-col overflow-hidden">
-                  <h4 className={`truncate text-[11px] font-semibold ${colors.text}`}>{title}</h4>
-                  {height > 30 && (
-                    <span className={`text-[10px] ${colors.timeText}`}>{timeRangeStr}</span>
-                  )}
-                  {height > 55 && event.data.location && (
-                    <span className="mt-0.5 truncate text-[9px] text-neutral-500 dark:text-neutral-400">
-                      {event.data.location}
-                    </span>
-                  )}
-                </div>
+                <div className="absolute -top-1.5 -left-1.5 h-3 w-3 rounded-full bg-red-500" />
               </div>
-            );
-          })}
-
-          {isToday && (
-            <div
-              className="absolute right-0 z-30 border-t-2 border-red-500"
-              style={{
-                top: `${minutesToPixels(currentTimeMin)}px`,
-                left: "var(--label-w)",
-              }}
-            >
-              <div className="absolute -top-1.5 -left-1.5 h-3 w-3 rounded-full bg-red-500" />
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {allEvents.length === 0 && (

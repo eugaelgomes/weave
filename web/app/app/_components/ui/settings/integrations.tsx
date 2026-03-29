@@ -16,13 +16,13 @@ export const IntegrationsSettings: React.FC<any> = () => {
   // --- Classes base refinadas para menor espaçamento ---
   const itemCardClass =
     "group flex h-full flex-col gap-3 rounded-md border p-3.5 transition-all duration-200";
-  
+
   const connectedCardClass =
     "border-emerald-500/30 bg-emerald-50/50 shadow-sm dark:border-emerald-500/20 dark:bg-emerald-900/10";
-  
+
   const defaultCardClass =
     "border-neutral-200 bg-white hover:border-neutral-300 hover:shadow-sm dark:border-neutral-800 dark:bg-neutral-900/40 dark:hover:border-neutral-700";
-  
+
   const disabledCardClass =
     "border-neutral-100 bg-neutral-50/50 opacity-75 dark:border-neutral-800/50 dark:bg-neutral-900/20";
 
@@ -32,7 +32,6 @@ export const IntegrationsSettings: React.FC<any> = () => {
 
   return (
     <div className="overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm dark:border-neutral-800/60 dark:bg-neutral-950">
-      
       {/* --- Header --- */}
       <div className="flex items-center justify-between border-b border-neutral-100/60 px-4 py-2 dark:border-neutral-800/60">
         <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] text-neutral-500 dark:text-neutral-400">
@@ -45,18 +44,24 @@ export const IntegrationsSettings: React.FC<any> = () => {
         {/* --- Top Section --- */}
         <div className="mb-4">
           <p className="max-w-2xl text-[11px] leading-relaxed text-neutral-500 dark:text-neutral-400">
-            Conecte o Weave às suas ferramentas favoritas para sincronizar eventos, criar notas automaticamente e otimizar o seu fluxo de trabalho.
+            Conecte o Weave às suas ferramentas favoritas para sincronizar eventos, criar notas
+            automaticamente e otimizar o seu fluxo de trabalho.
           </p>
         </div>
 
         {/* --- Grid Responsivo (1 col -> 2 cols -> 3 cols) --- */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          
           {/* Google Calendar */}
-          <div className={`${itemCardClass} ${googleConnected ? connectedCardClass : defaultCardClass}`}>
+          <div
+            className={`${itemCardClass} ${googleConnected ? connectedCardClass : defaultCardClass}`}
+          >
             <div className="flex items-start gap-3">
               <div className={logoWrapClass}>
-                <Image src={GoogleCalendarLogo} alt="Google Calendar" className="h-full w-full object-contain" />
+                <Image
+                  src={GoogleCalendarLogo}
+                  alt="Google Calendar"
+                  className="h-full w-full object-contain"
+                />
               </div>
 
               <div className="space-y-0.5">
@@ -98,7 +103,11 @@ export const IntegrationsSettings: React.FC<any> = () => {
           <div className={`${itemCardClass} ${disabledCardClass}`}>
             <div className="flex items-start gap-3">
               <div className={logoWrapClass}>
-                <Image src={OutlookLogo} alt="Outlook" className="h-full w-full opacity-60 grayscale object-contain" />
+                <Image
+                  src={OutlookLogo}
+                  alt="Outlook"
+                  className="h-full w-full object-contain opacity-60 grayscale"
+                />
               </div>
 
               <div className="space-y-0.5">
@@ -130,7 +139,11 @@ export const IntegrationsSettings: React.FC<any> = () => {
           <div className={`${itemCardClass} ${disabledCardClass}`}>
             <div className="flex items-start gap-3">
               <div className={logoWrapClass}>
-                <Image src={SlackLogo} alt="Slack" className="h-full w-full opacity-60 grayscale object-contain" />
+                <Image
+                  src={SlackLogo}
+                  alt="Slack"
+                  className="h-full w-full object-contain opacity-60 grayscale"
+                />
               </div>
 
               <div className="space-y-0.5">
@@ -157,7 +170,6 @@ export const IntegrationsSettings: React.FC<any> = () => {
               </button>
             </div>
           </div>
-
         </div>
       </div>
     </div>

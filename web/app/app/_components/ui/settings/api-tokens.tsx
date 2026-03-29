@@ -508,7 +508,6 @@ export const SettingsApiTokens: React.FC = () => {
                             )}
                           </div>
 
-
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[10px] font-medium text-neutral-400">
                             <span className="flex items-center gap-1">
                               <Calendar size={10} />{" "}

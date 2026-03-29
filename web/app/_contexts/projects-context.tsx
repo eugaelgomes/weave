@@ -26,9 +26,33 @@ import {
   type ProjectDashboardStats,
   type ProjectStatsFilters,
 } from "../_services/projects-service/projects-service";
+import {
+  fetchProjectTags as fetchProjectTagsService,
+  createProjectTag as createProjectTagService,
+  updateProjectTag as updateProjectTagService,
+  deleteProjectTag as deleteProjectTagService,
+  fetchTaskPriorities as fetchTaskPrioritiesService,
+  createTaskPriority as createTaskPriorityService,
+  updateTaskPriority as updateTaskPriorityService,
+  deleteTaskPriority as deleteTaskPriorityService,
+  type ProjectTag,
+  type TaskPriority,
+  type CreateProjectTagData,
+  type UpdateProjectTagData,
+  type CreateTaskPriorityData,
+  type UpdateTaskPriorityData,
+} from "../_services/projects-service/project-taxonomy-service";
 
 // Tipos específicos do contexto / Overview
 export type { ProjectDashboardStats, ProjectStatsFilters };
+export type {
+  ProjectTag,
+  TaskPriority,
+  CreateProjectTagData,
+  UpdateProjectTagData,
+  CreateTaskPriorityData,
+  UpdateTaskPriorityData,
+};
 
 export interface ProjectOverview {
   id: string;
@@ -92,6 +116,27 @@ export interface ProjectsContextType {
 
   // tages
   getProjectStages: (projectId: string) => Promise<ProjectStage[]>;
+
+  // Taxonomia de projeto (tags e prioridades)
+  getProjectTags: (projectId: string) => Promise<ProjectTag[]>;
+  createProjectTag: (projectId: string, data: CreateProjectTagData) => Promise<ProjectTag | null>;
+  updateProjectTag: (
+    projectId: string,
+    tagId: string,
+    data: UpdateProjectTagData
+  ) => Promise<ProjectTag | null>;
+  deleteProjectTag: (projectId: string, tagId: string) => Promise<boolean>;
+  getTaskPriorities: (projectId: string) => Promise<TaskPriority[]>;
+  createTaskPriority: (
+    projectId: string,
+    data: CreateTaskPriorityData
+  ) => Promise<TaskPriority | null>;
+  updateTaskPriority: (
+    projectId: string,
+    priorityId: string,
+    data: UpdateTaskPriorityData
+  ) => Promise<TaskPriority | null>;
+  deleteTaskPriority: (projectId: string, priorityId: string) => Promise<boolean>;
 
   // Funções de colaboradores
   getCollaborators: (projectId: string) => Promise<ProjectCollaborator[]>;
@@ -381,6 +426,130 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     [user?.id]
   );
 
+  // --- TAGS DE PROJETO ---
+  const getProjectTags = useCallback(
+    async (projectId: string): Promise<ProjectTag[]> => {
+      if (!user?.id) return [];
+
+      try {
+        return await fetchProjectTagsService(projectId);
+      } catch (err: unknown) {
+        console.error("Erro ao buscar tags do projeto:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const createProjectTag = useCallback(
+    async (projectId: string, data: CreateProjectTagData): Promise<ProjectTag | null> => {
+      if (!user?.id) return null;
+
+      try {
+        return await createProjectTagService(projectId, data);
+      } catch (err: unknown) {
+        console.error("Erro ao criar tag do projeto:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const updateProjectTag = useCallback(
+    async (
+      projectId: string,
+      tagId: string,
+      data: UpdateProjectTagData
+    ): Promise<ProjectTag | null> => {
+      if (!user?.id) return null;
+
+      try {
+        return await updateProjectTagService(projectId, tagId, data);
+      } catch (err: unknown) {
+        console.error("Erro ao atualizar tag do projeto:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const deleteProjectTag = useCallback(
+    async (projectId: string, tagId: string): Promise<boolean> => {
+      if (!user?.id) return false;
+
+      try {
+        await deleteProjectTagService(projectId, tagId);
+        return true;
+      } catch (err: unknown) {
+        console.error("Erro ao remover tag do projeto:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  // --- PRIORIDADES DE TAREFAS ---
+  const getTaskPriorities = useCallback(
+    async (projectId: string): Promise<TaskPriority[]> => {
+      if (!user?.id) return [];
+
+      try {
+        return await fetchTaskPrioritiesService(projectId);
+      } catch (err: unknown) {
+        console.error("Erro ao buscar prioridades de tarefas:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const createTaskPriority = useCallback(
+    async (projectId: string, data: CreateTaskPriorityData): Promise<TaskPriority | null> => {
+      if (!user?.id) return null;
+
+      try {
+        return await createTaskPriorityService(projectId, data);
+      } catch (err: unknown) {
+        console.error("Erro ao criar prioridade de tarefa:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const updateTaskPriority = useCallback(
+    async (
+      projectId: string,
+      priorityId: string,
+      data: UpdateTaskPriorityData
+    ): Promise<TaskPriority | null> => {
+      if (!user?.id) return null;
+
+      try {
+        return await updateTaskPriorityService(projectId, priorityId, data);
+      } catch (err: unknown) {
+        console.error("Erro ao atualizar prioridade de tarefa:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const deleteTaskPriority = useCallback(
+    async (projectId: string, priorityId: string): Promise<boolean> => {
+      if (!user?.id) return false;
+
+      try {
+        await deleteTaskPriorityService(projectId, priorityId);
+        return true;
+      } catch (err: unknown) {
+        console.error("Erro ao remover prioridade de tarefa:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
   // --- FUNÇÕES DE COLABORADORES ---
 
   const getCollaborators = useCallback(
@@ -577,6 +746,14 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     getProjectsStats,
     fetchProjectsStats,
     getProjectStages,
+    getProjectTags,
+    createProjectTag,
+    updateProjectTag,
+    deleteProjectTag,
+    getTaskPriorities,
+    createTaskPriority,
+    updateTaskPriority,
+    deleteTaskPriority,
     getCollaborators,
     addCollaborator,
     updateCollaboratorPermission,

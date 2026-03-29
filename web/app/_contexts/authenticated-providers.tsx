@@ -9,23 +9,35 @@ import { AgentProvider } from "./agent-context";
 import { NotificationProvider } from "./notification-context";
 import { CalendarProvider } from "./calendar-context";
 import { ApiTokensProvider } from "./api-tokens-context";
+import { TagsProvider } from "./tags-context";
+import { TaskPrioritiesProvider } from "./task-priorities-context";
+
+// Exemplo (opcional, apenas para melhorar a leitura do código)
+const composeProviders = (...providers: React.ElementType[]) =>
+  providers.reduce((AccumulatedProviders, CurrentProvider) => {
+    const ComposedProviders = ({ children }: { children: React.ReactNode }) => (
+      <AccumulatedProviders>
+        <CurrentProvider>{children}</CurrentProvider>
+      </AccumulatedProviders>
+    );
+    (ComposedProviders as any).displayName =
+      `Composed(${(CurrentProvider as any).displayName || (CurrentProvider as any).name || "Provider"})`;
+    return ComposedProviders;
+  });
+
+const AppProviders = composeProviders(
+  NotesProvider,
+  ProjectsProvider,
+  OrganizationProvider,
+  NotificationProvider,
+  CalendarProvider,
+  ApiTokensProvider,
+  TagsProvider,
+  TaskPrioritiesProvider,
+  ChatProvider,
+  AgentProvider
+);
 
 export function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
-  return (
-    <NotesProvider>
-      <ProjectsProvider>
-        <OrganizationProvider>
-          <NotificationProvider>
-            <CalendarProvider>
-              <ApiTokensProvider>
-                <ChatProvider>
-                  <AgentProvider>{children}</AgentProvider>
-                </ChatProvider>
-              </ApiTokensProvider>
-            </CalendarProvider>
-          </NotificationProvider>
-        </OrganizationProvider>
-      </ProjectsProvider>
-    </NotesProvider>
-  );
+  return <AppProviders>{children}</AppProviders>;
 }

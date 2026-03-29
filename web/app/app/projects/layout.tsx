@@ -30,8 +30,6 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
     );
   }
 
-  // Se não estiver autenticado, o AuthContext ou middleware deve lidar com o redirect
-  // mas podemos retornar null aqui para evitar flash
   if (!authenticated) {
     if (typeof window !== "undefined") {
       window.location.href = "/auth/signin";
@@ -41,9 +39,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
 
   const recentProjects = getRecentProjects();
 
-  // Verifica se está na página raiz de projects ou em um projeto específico
   const isDashboard = pathname === "/app/projects";
-  // Extrai o ID do projeto da URL se existir
   const currentProjectId = !isDashboard ? pathname.split("/app/projects/")[1] : null;
 
   return (
@@ -54,7 +50,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
         {/* SIDEBAR LATERAL */}
         <div className="w-full flex-shrink-0 overflow-y-auto border-b border-neutral-200 bg-neutral-50 md:w-[180px] md:border-r md:border-b-0 dark:border-neutral-800 dark:bg-neutral-900/30">
           <div className="p-2.5">
-            <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+            <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
               Menu
             </h2>
 
@@ -81,7 +77,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
               </li>
             </ul>
 
-            <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+            <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
               Meus Projetos
             </h2>
 
@@ -94,13 +90,12 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                 return (
                   <li key={project.id} className="flex flex-col">
                     <div className="flex w-full min-w-0 items-center">
-                      {/* Botão de expandir/recolher (apenas se tiver subprojetos) */}
                       <div className="flex w-5 flex-shrink-0 items-center justify-center">
                         {hasSubprojects && (
                           <button
                             onClick={(e) => toggleProject(e, project.id)}
                             className="rounded p-0.5 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                            aria-label={isExpanded ? "Collapse project" : "Expand project"}
+                            aria-label={isExpanded ? "Recolher projeto" : "Expandir projeto"}
                           >
                             {isExpanded ? (
                               <ChevronDown className="h-3 w-3" />
@@ -130,21 +125,29 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                       </Link>
                     </div>
 
-                    {/* SUBPROJETOS COM DESIGN DE ÁRVORE */}
+                    {/* Subprojetos com as guias visuais em Amarelo */}
                     {hasSubprojects && isExpanded && (
-                      <ul className="relative mt-0.5 ml-[25px] space-y-0.5 border-l border-neutral-200 dark:border-neutral-800">
-                        {project.subprojects?.map((sub) => {
+                      <ul className="relative mt-1 ml-[17px] flex flex-col pl-4">
+                        {project.subprojects?.map((sub, index) => {
                           const isSubActive = currentProjectId === sub.id;
+                          const isLast = index === project.subprojects!.length - 1;
 
                           return (
                             <li key={sub.id} className="relative">
-                              <span className="absolute top-1/2 -left-[1px] w-3 border-t border-neutral-200 dark:border-neutral-800" />
+                              {/* Linha vertical contínua amarela (oculta no último nó) */}
+                              {!isLast && (
+                                <div className="absolute top-0 bottom-0 -left-4 border-l border-yellow-500/50 dark:border-yellow-500/50" />
+                              )}
+
+                              {/* Cotovelo arredondado amarelo ligando ao link atual */}
+                              <div className="absolute top-0 -left-4 h-[15px] w-4 rounded-bl-md border-b border-l border-yellow-500/50 dark:border-yellow-500/50" />
+
                               <Link
                                 href={`/app/projects/${sub.id}`}
-                                className={`group ml-2 flex w-[calc(100%-0.5rem)] items-center gap-1.5 rounded-md px-2 py-1 text-[11px] transition-all ${
+                                className={`group mb-0.5 ml-1 flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] transition-all ${
                                   isSubActive
                                     ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
-                                    : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-500 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-300"
+                                    : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-300"
                                 }`}
                               >
                                 <FolderOpen
@@ -170,8 +173,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
           </div>
         </div>
 
-        {/* CONTEÚDO PRINCIPAL (Detail) */}
-        <div className="flex flex-1 flex-col overflow-y-auto bg-white p-3 sm:p-4 dark:bg-neutral-950">
+        <div className="flex flex-1 flex-col overflow-y-auto bg-white dark:bg-neutral-950">
           {children}
         </div>
       </div>

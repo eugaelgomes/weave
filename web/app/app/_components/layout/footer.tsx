@@ -10,8 +10,7 @@ const PagesFooter = () => {
   const linkClass = "hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors";
 
   return (
-    <div className="flex flex-col items-center justify-between gap-4 rounded-md border border-neutral-200/50 bg-neutral-50/50 px-4 py-2.5 shadow-sm sm:flex-row dark:border-neutral-800/50 dark:bg-neutral-950/50 backdrop-blur-sm">
-      
+    <div className="flex flex-col items-center justify-between gap-4 rounded-md border border-neutral-200/50 bg-neutral-50/50 px-4 py-2.5 shadow-sm backdrop-blur-sm sm:flex-row dark:border-neutral-800/50 dark:bg-neutral-950/50">
       {/* Copyright & Brand */}
       <div className="text-[11px] font-medium text-neutral-400 dark:text-neutral-500">
         &copy; {currentYear}{" "}
@@ -19,7 +18,7 @@ const PagesFooter = () => {
           href={blogUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-bold text-amber-600/70 hover:text-amber-600 dark:text-amber-500/40 dark:hover:text-amber-500 transition-colors"
+          className="font-bold text-amber-600/70 transition-colors hover:text-amber-600 dark:text-amber-500/40 dark:hover:text-amber-500"
         >
           Weave Notes
         </a>
@@ -42,12 +41,7 @@ const PagesFooter = () => {
         >
           Termos
         </a>
-        <a 
-          href={`${blogUrl}/docs`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={linkClass}
-        >
+        <a href={`${blogUrl}/docs`} target="_blank" rel="noopener noreferrer" className={linkClass}>
           Documentações
         </a>
         <a

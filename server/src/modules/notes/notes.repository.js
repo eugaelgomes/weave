@@ -232,7 +232,7 @@ class notesRepository {
     }
 
     if (tags && tags.length > 0) {
-      whereConditions.push(`n.tags @> $$${paramIndex}::uuid[]`);
+      whereConditions.push(`n.tags @> $${paramIndex}::uuid[]`);
       queryParams.push(tags);
       paramIndex++;
     }
@@ -426,7 +426,7 @@ class notesRepository {
             AND n.deleted = false 
     ),
     all_tags_unnested AS (
-        SELECT unnest(tags) AS tag_name
+      SELECT unnest(tags)::text AS tag_name
         FROM user_scope_notes
     )
     SELECT

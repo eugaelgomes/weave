@@ -26,6 +26,8 @@ export interface NoteProperties {
     type: string;
   };
   relations?: string[];
+  priority?: string;
+  due_date?: string;
 }
 
 export interface Tag {

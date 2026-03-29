@@ -21,7 +21,7 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   authenticated: boolean;
-  
+
   // Auth Functions
   login: (
     usernameOrPayload: string | { login: string; password: string },
@@ -29,7 +29,7 @@ type AuthContextType = {
   ) => Promise<{ success: boolean; message?: string; data?: unknown }>;
   loginWithGoogle: () => void;
   logout: () => void;
-  
+
   // User Profile
   createUser: (
     userData: CreateUserData | FormData

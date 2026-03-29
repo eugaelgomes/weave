@@ -88,6 +88,8 @@ const routeRegistry = [
   { basePath: "/weave-ai", handler: aiRoutes },
   { basePath: "/notes", handler: notesRoutes },
   { basePath: "/organizations", handler: organizationsRoutes },
+  { basePath: "/projects", handler: tagsRoutes },
+  { basePath: "/projects", handler: taskPrioritiesRoutes },
   { basePath: "/organizations", handler: tagsRoutes },
   { basePath: "/organizations", handler: taskPrioritiesRoutes },
   { basePath: "/password", handler: passwordRoutes },

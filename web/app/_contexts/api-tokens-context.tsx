@@ -16,9 +16,14 @@ type ApiTokensContextType = {
   apiTokens: ApiToken[];
   scopesInfo: ApiScope[] | null;
   loadingTokens: boolean;
-  
+
   loadApiTokens: () => Promise<void>;
-  generateApiToken: (name: string, scopes: string[], expiresAt: string | null, organizationId?: string | null) => Promise<{ success: boolean; data?: ApiToken; message?: string }>;
+  generateApiToken: (
+    name: string,
+    scopes: string[],
+    expiresAt: string | null,
+    organizationId?: string | null
+  ) => Promise<{ success: boolean; data?: ApiToken; message?: string }>;
   revokeToken: (id: string) => Promise<{ success: boolean; message?: string }>;
   removeToken: (id: string) => Promise<{ success: boolean; message?: string }>;
 };
@@ -27,20 +32,17 @@ const ApiTokensContext = createContext<ApiTokensContextType | undefined>(undefin
 
 export const ApiTokensProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { authenticated } = useAuth();
-  
+
   const [apiTokens, setApiTokens] = useState<ApiToken[]>([]);
   const [scopesInfo, setScopesInfo] = useState<ApiScope[] | null>(null);
   const [loadingTokens, setLoadingTokens] = useState(false);
 
   const loadApiTokens = async () => {
     if (!authenticated) return;
-    
+
     setLoadingTokens(true);
     try {
-      const [tokens, scopes] = await Promise.all([
-        fetchApiTokens(),
-        fetchApiTokensScopes()
-      ]);
+      const [tokens, scopes] = await Promise.all([fetchApiTokens(), fetchApiTokensScopes()]);
       setApiTokens(tokens);
       setScopesInfo(scopes);
     } catch (error) {
@@ -60,12 +62,17 @@ export const ApiTokensProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [authenticated]);
 
-  const generateApiToken = async (name: string, scopes: string[], expiresAt: string | null, organizationId?: string | null) => {
+  const generateApiToken = async (
+    name: string,
+    scopes: string[],
+    expiresAt: string | null,
+    organizationId?: string | null
+  ) => {
     try {
       const response = await createApiToken({ name, scopes, expiresAt, organizationId });
       const fullTokenRecord = {
         ...response.record,
-        token: response.token // store plain token so UI can display it once
+        token: response.token, // store plain token so UI can display it once
       };
       setApiTokens((prev) => [fullTokenRecord, ...prev]);
       return { success: true, data: fullTokenRecord };
@@ -79,7 +86,9 @@ export const ApiTokensProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       await revokeApiToken(id);
       setApiTokens((prev) =>
-        prev.map((token) => (token.id === id ? { ...token, revoked_at: new Date().toISOString() } : token))
+        prev.map((token) =>
+          token.id === id ? { ...token, revoked_at: new Date().toISOString() } : token
+        )
       );
       return { success: true };
     } catch (error) {
