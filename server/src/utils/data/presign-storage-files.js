@@ -17,8 +17,10 @@ const SPACES_PREFIXES = [
   spacesService.constructor?.FOLDER_PATHS?.IMAGES || "images",
   spacesService.constructor?.FOLDER_PATHS?.NOTES?.ROOT || "notes",
   spacesService.constructor?.FOLDER_PATHS?.PROJECTS?.ROOT || "projects",
-  spacesService.constructor?.FOLDER_PATHS?.USERS_CONTENT?.ROOT || "users-content",
-  spacesService.constructor?.FOLDER_PATHS?.ORGANIZATIONS?.ROOT || "organizations",
+  spacesService.constructor?.FOLDER_PATHS?.USERS_CONTENT?.ROOT ||
+    "users-content",
+  spacesService.constructor?.FOLDER_PATHS?.ORGANIZATIONS?.ROOT ||
+    "organizations",
   spacesService.constructor?.FOLDER_PATHS?.AGENTS?.ROOT || "agents",
 ];
 
@@ -27,11 +29,15 @@ function isSpacesManagedValue(value) {
   const trimmed = value.trim();
   if (!trimmed || trimmed.startsWith("blob:")) return false;
 
-  const hasProtocol = trimmed.startsWith("http://") || trimmed.startsWith("https://");
+  const hasProtocol =
+    trimmed.startsWith("http://") || trimmed.startsWith("https://");
   if (hasProtocol) {
     try {
       const { hostname } = new URL(trimmed);
-      return hostname === spacesHostname || hostname.includes(spacesService.bucketName);
+      return (
+        hostname === spacesHostname ||
+        hostname.includes(spacesService.bucketName)
+      );
     } catch (error) {
       console.error("URL inválida ao verificar domínio do Spaces:", error);
       return false;
@@ -113,7 +119,9 @@ async function presignObjectFields(data, fields = [], expiresIn = 3600) {
  */
 async function presignListFields(list, fields = [], expiresIn = 3600) {
   if (!list || !Array.isArray(list)) return [];
-  return Promise.all(list.map((item) => presignObjectFields(item, fields, expiresIn)));
+  return Promise.all(
+    list.map((item) => presignObjectFields(item, fields, expiresIn))
+  );
 }
 
 module.exports = {

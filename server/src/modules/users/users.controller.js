@@ -123,10 +123,10 @@ class userController {
   /**
    * Endpoint de criação de novos usuários (Sign up).
    * Valida username, email, gera os tokens e envia o e-mail de Welcome.
-   * 
-   * @param {import('express').Request} req 
-   * @param {import('express').Response} res 
-   * @param {import('express').NextFunction} next 
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
    */
   async createUser(req, res, next) {
     const errors = validationResult(req);
@@ -157,7 +157,10 @@ class userController {
         const domainInfo =
           await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
 
-        if (domainInfo && domainInfo.status === "VERIFIED" || domainInfo.status === "PENDING") {
+        if (
+          (domainInfo && domainInfo.status === "VERIFIED") ||
+          domainInfo.status === "PENDING"
+        ) {
           // Verifica se existe convite pendente para este email nesta organização
           const existingInvite =
             await OrganizationsRepository.checkExistingInvite(
@@ -345,9 +348,9 @@ class userController {
 
   /**
    * Retorna os dados completos do próprio perfil do usuário logado (Meu Perfil)
-   * 
-   * @param {import('express').Request} req 
-   * @param {import('express').Response} res 
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
    */
   async getProfile(req, res) {
     try {
@@ -367,8 +370,14 @@ class userController {
 
       // Gerar URLs pré-assinadas para evitar acesso não autorizado e direto ao S3
       // A duração de 12 horas mantém a imagem visível no frontend pelo mesmo tempo de vida de uma sessão normal (embora ela use os cookies do next/auth)
-      const protectedUser = await presignObjectFields(user, ["avatar_url"], 12 * 60 * 60);
-      const protectedOrg = organization ? await presignObjectFields(organization, ["logo_url"], 12 * 60 * 60) : null;
+      const protectedUser = await presignObjectFields(
+        user,
+        ["avatar_url"],
+        12 * 60 * 60
+      );
+      const protectedOrg = organization
+        ? await presignObjectFields(organization, ["logo_url"], 12 * 60 * 60)
+        : null;
 
       return res.status(200).json({
         user: {
@@ -416,9 +425,9 @@ class userController {
   /**
    * Atualização de dados cadastrais e preferências de perfil do usuário.
    * Utiliza tokens no caso de troca de e-mail.
-   * 
+   *
    * @param {import('express').Request} req Onde req.body contém os itens a serem atualizados.
-   * @param {import('express').Response} res 
+   * @param {import('express').Response} res
    */
   async updateProfile(req, res) {
     const {
@@ -616,7 +625,11 @@ class userController {
       }
 
       const mockUserForPresign = { avatar_url: avatarUrl };
-      const protectedMock = await presignObjectFields(mockUserForPresign, ["avatar_url"], 12 * 60 * 60);
+      const protectedMock = await presignObjectFields(
+        mockUserForPresign,
+        ["avatar_url"],
+        12 * 60 * 60
+      );
 
       const response = {
         user: {

@@ -14,7 +14,7 @@ class notesRepository {
 
   /**
    * Cria uma nova nota no banco de dados.
-   * 
+   *
    * @param {string} userId O ID do usuário criador
    * @param {string} title O título da nota
    * @param {string|object} content O conteúdo da nota
@@ -29,11 +29,13 @@ class notesRepository {
     content,
     tags = [],
     status = "visible",
-    projectId = null
+    projectId = null,
+    priorityId = null,
+    assignedTo = null
   ) {
     const query = `
-      INSERT INTO notes (user_id, title, description, tags, status, project_id, properties)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO notes (user_id, title, description, tags, status, project_id, properties, priority_id, assigned_to)
+      VALUES ($1, $2, $3, $4::uuid[], $5, $6, $7, $8, $9)
       RETURNING *; 
     `;
     const results = await executeQuery(query, [
@@ -44,13 +46,15 @@ class notesRepository {
       status,
       projectId,
       JSON.stringify(notesRepository.DEFAULT_PROPERTIES),
+      priorityId,
+      assignedTo,
     ]);
     return results[0];
   }
 
   /**
    * Busca todas as notas de um usuário.
-   * 
+   *
    * @param {string} userId O ID do usuário
    * @returns {Promise<import('@/types/models').Note[]>} Lista de notas do usuário
    */
@@ -77,12 +81,23 @@ class notesRepository {
       -- projeto associado
       p.title AS project_name,
 
+      tp.id AS priority_id,
+      tp.name AS priority_name,
+      tp.color_hex AS priority_color,
+      
+      -- resolved tags
+      COALESCE(
+        (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color_hex))
+         FROM tags t WHERE t.id = ANY(n.tags)), '[]'::json
+      ) AS resolved_tags,
+
       -- colaboradores em JSON (agregados via LATERAL, sem multiplicar linhas)
       COALESCE(collab.data, '[]'::json) AS collaborators
 
     FROM notes n
     INNER JOIN users u ON n.user_id = u.user_id
     LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
+    LEFT JOIN task_priorities tp ON n.priority_id = tp.id AND tp.deleted = false
     LEFT JOIN LATERAL (
       SELECT json_agg(
         json_build_object(
@@ -136,7 +151,16 @@ class notesRepository {
         -- projeto associado
         p.title as project_name,
 
-        -- colaboradores em JSON
+        tp.id AS priority_id,
+        tp.name AS priority_name,
+        tp.color_hex AS priority_color,
+        
+        -- resolved tags
+        COALESCE(
+          (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color_hex))
+           FROM tags t WHERE t.id = ANY(n.tags)), '[]'::json
+        ) AS resolved_tags,
+        
         COALESCE(
             json_agg(
                 json_build_object(
@@ -152,6 +176,7 @@ class notesRepository {
       FROM notes n
       INNER JOIN users u ON n.user_id = u.user_id
       LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
+    LEFT JOIN task_priorities tp ON n.priority_id = tp.id AND tp.deleted = false
       LEFT JOIN note_collaborators nc ON n.id = nc.note_id
       LEFT JOIN users c ON nc.user_id = c.user_id
       WHERE (n.user_id = $1 OR EXISTS (
@@ -159,7 +184,7 @@ class notesRepository {
           WHERE nc2.note_id = n.id AND nc2.user_id = $1
       ))
         AND n.deleted = false
-      GROUP BY n.id, u.user_id, p.title
+      GROUP BY n.id, u.user_id, p.id, tp.id
       ORDER BY n.updated_at DESC;
     `;
     const results = await executeQuery(query, [userId]);
@@ -207,7 +232,7 @@ class notesRepository {
     }
 
     if (tags && tags.length > 0) {
-      whereConditions.push(`n.tags && $${paramIndex}`);
+      whereConditions.push(`n.tags @> $$${paramIndex}::uuid[]`);
       queryParams.push(tags);
       paramIndex++;
     }
@@ -259,6 +284,7 @@ class notesRepository {
       FROM notes n
       INNER JOIN users u ON n.user_id = u.user_id
       LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
+    LEFT JOIN task_priorities tp ON n.priority_id = tp.id AND tp.deleted = false
       LEFT JOIN note_collaborators nc ON n.id = nc.note_id
       LEFT JOIN users c ON nc.user_id = c.user_id
       LEFT JOIN organizations o ON p.org_id = o.id AND o.deleted = false
@@ -267,7 +293,8 @@ class notesRepository {
         n.id,
         u.user_id,
         p.id,
-        o.id
+        o.id,
+        tp.id
       ORDER BY 
         n.${validSortField} ${validSortOrder}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1};
@@ -328,6 +355,16 @@ class notesRepository {
         -- projeto associado
         n.project_id::text,
         p.title AS project_name,
+
+        tp.id AS priority_id,
+        tp.name AS priority_name,
+        tp.color_hex AS priority_color,
+        
+        -- resolved tags
+        COALESCE(
+          (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color_hex))
+           FROM tags t WHERE t.id = ANY(n.tags)), '[]'::json
+        ) AS resolved_tags,
         -- organização associada
         p.org_id::text,
         o.org_name,
@@ -346,16 +383,18 @@ class notesRepository {
     FROM notes n
     INNER JOIN users u ON n.user_id = u.user_id
     LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
+    LEFT JOIN task_priorities tp ON n.priority_id = tp.id AND tp.deleted = false
     LEFT JOIN note_collaborators nc ON n.id = nc.note_id
     LEFT JOIN users c ON nc.user_id = c.user_id
     LEFT JOIN organizations o ON p.org_id = o.id AND o.deleted = false
-    WHERE n.id = $1 AND n.deleted = false
+    WHERE n.id = $1 AND n.deleted = false AND n.deleted = false
     GROUP BY 
         n.id, 
         u.user_id, 
         p.id,
         p.org_id,
-        o.id
+        o.id,
+        tp.id
     LIMIT 1;
     `;
     const results = await executeQuery(query, [noteId]);
@@ -460,6 +499,9 @@ class notesRepository {
       "description",
       "tags",
       "status",
+      "priority_id",
+      "assigned_to",
+      "deleted_by",
       "deleted",
       "project_id",
       "properties",

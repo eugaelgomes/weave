@@ -866,7 +866,10 @@ class NotesController {
         await this._validateNoteOwnership(noteId, userId);
       }
 
-      const affectedRows = await this.notesRepository.deleteNoteById(noteIds);
+      const affectedRows = await this.notesRepository.deleteNoteById(
+        noteIds,
+        userId
+      );
 
       if (usageRecord) {
         await PlanUsageManager.decrementNoteUsage(usageRecord.id, affectedRows);

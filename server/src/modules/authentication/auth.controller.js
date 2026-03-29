@@ -45,7 +45,7 @@ const normalizeOrganization = (organizationData) => {
 class AuthController {
   /**
    * Autenticação padrão de um usuário (Login tradicional com senha).
-   * 
+   *
    * @param {import('express').Request} req O objeto de requisição do Express contendo body: {username, password, clientLocalTime}
    * @param {import('express').Response} res O objeto de resposta do Express
    * @returns {Promise<import('express').Response>} Retorna os dados do usuário, JWT no cookie ou Status 401
@@ -119,8 +119,14 @@ class AuthController {
       authLogs.createLog(user.user_id, "auth_login", req, "success");
 
       // Gerar URLs pré-assinadas para avatar e logo (válidas por 12h para coincidir com o token)
-      const protectedUser = await presignObjectFields(user, ["avatar_url"], 12 * 60 * 60);
-      const protectedOrg = organization ? await presignObjectFields(organization, ["logo_url"], 12 * 60 * 60) : null;
+      const protectedUser = await presignObjectFields(
+        user,
+        ["avatar_url"],
+        12 * 60 * 60
+      );
+      const protectedOrg = organization
+        ? await presignObjectFields(organization, ["logo_url"], 12 * 60 * 60)
+        : null;
 
       // Token https only
       setAuthCookie(res, req, token, {
@@ -172,7 +178,7 @@ class AuthController {
 
   /**
    * Inicia o fluxo de autenticação pelo Google (Redirecionamento).
-   * 
+   *
    * @param {import('express').Request} req O objeto de requisição do Express
    * @param {import('express').Response} res O objeto de resposta do Express
    */
@@ -183,9 +189,9 @@ class AuthController {
   }
 
   /**
-   * Callback do fluxo do Google OAuth. Processa o código, pega o perfil, 
+   * Callback do fluxo do Google OAuth. Processa o código, pega o perfil,
    * verifica se o usuário cria em nosso sistema ou efetua o login.
-   * 
+   *
    * @param {import('express').Request} req O objeto de requisição do Express
    * @param {import('express').Response} res O objeto de resposta do Express
    */
@@ -338,7 +344,7 @@ class AuthController {
 
   /**
    * Finaliza a sessão do usuário via limpeza dos cookies de Auth.
-   * 
+   *
    * @param {import('express').Request} req O objeto de requisição do Express
    * @param {import('express').Response} res O objeto de resposta do Express
    */

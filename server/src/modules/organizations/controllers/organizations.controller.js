@@ -127,7 +127,9 @@ class OrganizationsController extends OrganizationsBaseController {
       if (providedUniqueName) {
         unique_name = normalizeOrganizationName(providedUniqueName);
         if (!unique_name) {
-          throw new Error("Provided unique name is invalid after normalization");
+          throw new Error(
+            "Provided unique name is invalid after normalization"
+          );
         }
 
         const existingNames =
@@ -538,9 +540,7 @@ class OrganizationsController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("Error uploading logo:", error);
-      res
-        .status(500)
-        .json({ success: false, error: "Error uploading logo" });
+      res.status(500).json({ success: false, error: "Error uploading logo" });
     }
   }
 
@@ -600,9 +600,7 @@ class OrganizationsController extends OrganizationsBaseController {
         },
       });
     } catch (error) {
-      res
-        .status(500)
-        .json({ success: false, error: "Error uploading banner" });
+      res.status(500).json({ success: false, error: "Error uploading banner" });
     }
   }
 

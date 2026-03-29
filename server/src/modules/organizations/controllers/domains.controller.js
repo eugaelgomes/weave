@@ -235,9 +235,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("Error verifying domain:", error);
-      res
-        .status(500)
-        .json({ success: false, error: "Error verifying domain" });
+      res.status(500).json({ success: false, error: "Error verifying domain" });
     }
   }
 
@@ -290,9 +288,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("Error deleting domain:", error);
-      res
-        .status(500)
-        .json({ success: false, error: "Error deleting domain" });
+      res.status(500).json({ success: false, error: "Error deleting domain" });
     }
   }
 

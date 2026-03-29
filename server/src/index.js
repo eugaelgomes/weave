@@ -1,4 +1,5 @@
 require("module-alias/register");
+require("dotenv").config();
 const http = require("http");
 const { app } = require("@/app");
 const { pool } = require("@/database/connection");

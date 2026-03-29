@@ -28,12 +28,43 @@ export interface NoteProperties {
   relations?: string[];
 }
 
+export interface Tag {
+  id: string;
+  org_id: string;
+  name: string;
+  color: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  deleted: boolean;
+  deleted_at?: string;
+  deleted_by?: string;
+}
+
+export interface TaskPriority {
+  id: string;
+  org_id: string;
+  name: string;
+  color: string;
+  level: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  deleted: boolean;
+  deleted_at?: string;
+  deleted_by?: string;
+}
+
 export interface Note {
   id: string;
   title: string;
   description?: string;
   properties?: NoteProperties;
   tags?: string[];
+  priority_id?: string | null;
+  assigned_to?: string | null;
+  deleted_by?: string | null;
+  deleted?: boolean;
   status?: string;
   created_at: string;
   updated_at: string;

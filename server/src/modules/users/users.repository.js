@@ -4,7 +4,7 @@ const { defaultAppPreferences } = require("@/modules/users/normalize");
 class UserRepository {
   /**
    * Cria um novo usuário no banco de dados.
-   * 
+   *
    * @param {Object} userData
    * @param {string} userData.name
    * @param {string} userData.username
@@ -94,7 +94,7 @@ class UserRepository {
 
   /**
    * Checa se já existe um usuário com o mesmo username ou email
-   * 
+   *
    * @param {string} username Username desejado
    * @param {string} email Email desejado
    * @returns {Promise<import('@/types/models').User[]>}
@@ -106,7 +106,7 @@ class UserRepository {
 
   /**
    * Busca dados públicos do usuário por ID
-   * 
+   *
    * @param {string} userId O ID interno do usuário
    * @returns {Promise<import('@/types/models').User | undefined>}
    */
@@ -219,7 +219,7 @@ class UserRepository {
 
   /**
    * Salva a nova URL base de imagem do perfil de um usuário
-   * 
+   *
    * @param {string} userId
    * @param {string} url URL assinada/s3
    * @returns {Promise<any>}
@@ -236,7 +236,7 @@ class UserRepository {
 
   /**
    * Atualiza perfis de usuário, fazendo build de chaves customizadas via update dinâmico
-   * 
+   *
    * @param {string} userId O ID interno do usuário
    * @param {Partial<import('@/types/models').User>} updates Objeto de atualização
    * @returns {Promise<import('@/types/models').User | undefined>}
@@ -302,7 +302,7 @@ class UserRepository {
 
   /**
    * Atualiza a senha de um usuário no banco (que já deve vir criptografada - bcrypt)
-   * 
+   *
    * @param {string} userId
    * @param {string} hashedPassword
    * @returns {Promise<any>}

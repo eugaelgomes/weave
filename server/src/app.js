@@ -1,5 +1,7 @@
 const express = require("express");
-const { configureGlobalMiddlewares } = require("@/middlewares/global-middleware");
+const {
+  configureGlobalMiddlewares,
+} = require("@/middlewares/global-middleware");
 const { errorHandler } = require("@/middlewares/error-handler");
 const { registerApiRoutes } = require("./routes");
 
@@ -14,7 +16,11 @@ app.get("/health", (req, res) => {
   const origin = req.headers.origin;
   const isDev = process.env.NODE_ENV !== "production";
 
-  if (isDev && origin && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+  if (
+    isDev &&
+    origin &&
+    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+  ) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Credentials", "true");
   }

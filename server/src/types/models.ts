@@ -7,7 +7,7 @@ export interface User {
   username?: string;
   password?: string;
   avatar_url?: string;
-  system_role: 'super_admin' | 'admin' | 'user';
+  system_role: "super_admin" | "admin" | "user";
   created_at: Date;
   updated_at: Date;
   birth_date?: Date;
@@ -33,7 +33,7 @@ export interface Note {
   user_id: string;
   project_id?: string;
   organization_id?: string;
-  status: 'active' | 'archived' | 'trash';
+  status: "active" | "archived" | "trash";
   tags: string[]; // Vem do postgres text[]
   created_at: Date;
   updated_at: Date;

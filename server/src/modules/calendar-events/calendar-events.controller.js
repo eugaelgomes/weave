@@ -97,7 +97,8 @@ class CalendarEventsController {
     const location =
       typeof body?.location === "string" ? body.location.trim() : null;
 
-    const organizationId = body?.organization_id || body?.organizationId || null;
+    const organizationId =
+      body?.organization_id || body?.organizationId || null;
     const noteId = body?.note_id || body?.noteId || null;
     const projectId = body?.project_id || body?.projectId || null;
 
@@ -120,7 +121,9 @@ class CalendarEventsController {
       !!projectId
     );
 
-    const syncStatus = this._parseSyncStatus(body?.sync_status || body?.syncStatus);
+    const syncStatus = this._parseSyncStatus(
+      body?.sync_status || body?.syncStatus
+    );
     const syncWithGoogle = this._extractBoolean(
       body?.sync_with_google ?? body?.syncWithGoogle,
       false
@@ -129,7 +132,9 @@ class CalendarEventsController {
       body?.create_google_meet ?? body?.createGoogleMeet,
       false
     );
-    const attendees = this._normalizeAttendees(body?.attendees || body?.guests || []);
+    const attendees = this._normalizeAttendees(
+      body?.attendees || body?.guests || []
+    );
 
     return {
       attendees,
@@ -216,7 +221,9 @@ class CalendarEventsController {
       return "attendees requer sync_with_google = true";
     }
 
-    const hasInvalidEmail = payload.attendees.some((email) => !EMAIL_REGEX.test(email));
+    const hasInvalidEmail = payload.attendees.some(
+      (email) => !EMAIL_REGEX.test(email)
+    );
     if (hasInvalidEmail) {
       return "attendees contem emails invalidos";
     }
@@ -269,7 +276,9 @@ class CalendarEventsController {
     const calendarId = payload.googleCalendarId || "primary";
     const { calendar, auth } = googleService.getCalendarClientWithAuth({
       access_token: tokens.access_token,
-      expiry_date: tokens.expires_at ? new Date(tokens.expires_at).getTime() : null,
+      expiry_date: tokens.expires_at
+        ? new Date(tokens.expires_at).getTime()
+        : null,
       refresh_token: tokens.refresh_token,
     });
 
@@ -282,8 +291,13 @@ class CalendarEventsController {
     });
 
     const refreshed = auth.credentials;
-    if (refreshed.access_token && refreshed.access_token !== tokens.access_token) {
-      const newExpiry = refreshed.expiry_date ? new Date(refreshed.expiry_date) : null;
+    if (
+      refreshed.access_token &&
+      refreshed.access_token !== tokens.access_token
+    ) {
+      const newExpiry = refreshed.expiry_date
+        ? new Date(refreshed.expiry_date)
+        : null;
       await webhooksRepository.updateGoogleAccessToken(
         payload.creatorId,
         refreshed.access_token,
@@ -327,8 +341,12 @@ class CalendarEventsController {
       fields.end_time = this._parseDate(value);
     }
 
-    if (body?.organization_id !== undefined || body?.organizationId !== undefined) {
-      fields.organization_id = body?.organization_id || body?.organizationId || null;
+    if (
+      body?.organization_id !== undefined ||
+      body?.organizationId !== undefined
+    ) {
+      fields.organization_id =
+        body?.organization_id || body?.organizationId || null;
     }
 
     if (body?.note_id !== undefined || body?.noteId !== undefined) {
@@ -353,7 +371,10 @@ class CalendarEventsController {
       );
     }
 
-    if (body?.is_from_project !== undefined || body?.isFromProject !== undefined) {
+    if (
+      body?.is_from_project !== undefined ||
+      body?.isFromProject !== undefined
+    ) {
       fields.is_from_project = this._extractBoolean(
         body?.is_from_project ?? body?.isFromProject,
         false
@@ -361,14 +382,18 @@ class CalendarEventsController {
     }
 
     if (body?.sync_status !== undefined || body?.syncStatus !== undefined) {
-      fields.sync_status = this._parseSyncStatus(body?.sync_status || body?.syncStatus);
+      fields.sync_status = this._parseSyncStatus(
+        body?.sync_status || body?.syncStatus
+      );
     }
 
     if (
       body?.last_synced_at !== undefined ||
       body?.lastSyncedAt !== undefined
     ) {
-      const parsed = this._parseDate(body?.last_synced_at || body?.lastSyncedAt);
+      const parsed = this._parseDate(
+        body?.last_synced_at || body?.lastSyncedAt
+      );
       fields.last_synced_at = parsed;
     }
 
@@ -376,8 +401,12 @@ class CalendarEventsController {
       fields.etag = body.etag || null;
     }
 
-    if (body?.google_event_id !== undefined || body?.googleEventId !== undefined) {
-      fields.google_event_id = body?.google_event_id || body?.googleEventId || null;
+    if (
+      body?.google_event_id !== undefined ||
+      body?.googleEventId !== undefined
+    ) {
+      fields.google_event_id =
+        body?.google_event_id || body?.googleEventId || null;
     }
 
     if (
@@ -388,8 +417,12 @@ class CalendarEventsController {
         body?.google_calendar_id || body?.googleCalendarId || null;
     }
 
-    if (body?.outlook_event_id !== undefined || body?.outlookEventId !== undefined) {
-      fields.outlook_event_id = body?.outlook_event_id || body?.outlookEventId || null;
+    if (
+      body?.outlook_event_id !== undefined ||
+      body?.outlookEventId !== undefined
+    ) {
+      fields.outlook_event_id =
+        body?.outlook_event_id || body?.outlookEventId || null;
     }
 
     if (
@@ -476,7 +509,8 @@ class CalendarEventsController {
           payload.etag = syncData.etag;
         } catch (syncError) {
           return res.status(400).json({
-            error: syncError.message || "Falha ao sincronizar com Google Calendar",
+            error:
+              syncError.message || "Falha ao sincronizar com Google Calendar",
           });
         }
       }
@@ -493,8 +527,12 @@ class CalendarEventsController {
       const creatorId = this._requireAuthentication(req, res);
       if (!creatorId) return;
 
-      const organizationId = req.query.organization_id || req.query.organizationId;
-      const includeDeleted = this._extractBoolean(req.query.include_deleted, false);
+      const organizationId =
+        req.query.organization_id || req.query.organizationId;
+      const includeDeleted = this._extractBoolean(
+        req.query.include_deleted,
+        false
+      );
       const from = this._parseDate(req.query.from);
       const to = this._parseDate(req.query.to);
 
@@ -574,7 +612,9 @@ class CalendarEventsController {
       if (!Object.keys(fields).length) {
         return res
           .status(400)
-          .json({ error: "Nenhum campo valido foi informado para atualizacao" });
+          .json({
+            error: "Nenhum campo valido foi informado para atualizacao",
+          });
       }
 
       const current = await this.calendarEventsRepository.getEventById({
@@ -586,12 +626,24 @@ class CalendarEventsController {
         return res.status(404).json({ error: "Evento nao encontrado" });
       }
 
-      if (fields.start_time && !fields.end_time && current.end_time <= fields.start_time) {
-        return res.status(400).json({ error: "end_time deve ser maior que start_time" });
+      if (
+        fields.start_time &&
+        !fields.end_time &&
+        current.end_time <= fields.start_time
+      ) {
+        return res
+          .status(400)
+          .json({ error: "end_time deve ser maior que start_time" });
       }
 
-      if (fields.end_time && !fields.start_time && fields.end_time <= current.start_time) {
-        return res.status(400).json({ error: "end_time deve ser maior que start_time" });
+      if (
+        fields.end_time &&
+        !fields.start_time &&
+        fields.end_time <= current.start_time
+      ) {
+        return res
+          .status(400)
+          .json({ error: "end_time deve ser maior que start_time" });
       }
 
       const event = await this.calendarEventsRepository.updateEvent({

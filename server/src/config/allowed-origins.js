@@ -3,6 +3,8 @@ const DEFAULT_ORIGINS = [
   "http://localhost:3001",
   "http://localhost:3002",
   "http://localhost:5173",
+  "https://weavenotes.app",
+  "https://www.weavenotes.app",
 ];
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS

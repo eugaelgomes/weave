@@ -4,7 +4,7 @@ class AuthRepository {
   /**
    * Busca um usuário pelo nome de usuário ou e-mail.
    * Usado para o processo de login na plataforma.
-   * 
+   *
    * @param {string} username O nome de usuário ou e-mail
    * @returns {Promise<import('@/types/models').User | null>} Objeto de usuário detalhado ou null se não encontrado
    */
@@ -112,7 +112,7 @@ class AuthRepository {
 
   /**
    * Salva um log de tentativa de login (sucesso ou falha).
-   * 
+   *
    * @param {string} userId O ID do usuário
    * @param {string} ip O endereço IP da requisição
    * @param {Date | string} timestamp Data/hora da tentativa
@@ -136,7 +136,7 @@ class AuthRepository {
 
   /**
    * Salva a localização geográfica a partir de um IP durante o login.
-   * 
+   *
    * @param {string} userId O ID do usuário logado
    * @param {string} ip O endereço IP
    * @param {Date | string} timestamp Moment da requisição
@@ -161,7 +161,7 @@ class AuthRepository {
   /**
    * Busca um usuário estritamente pelo e-mail e verifica se não está deletado.
    * Usado para envio de recuperar senhas, OAuth e verificações de duplicidade.
-   * 
+   *
    * @param {string} email Email a ser pesquisado
    * @returns {Promise<import('@/types/models').User | null>} Objeto preenchido com dados ou null se não houver
    */
@@ -214,7 +214,7 @@ class AuthRepository {
 
   /**
    * Busca diretamente um usuário que teve registro via Google OAuth.
-   * 
+   *
    * @param {string} googleId Identificador único fornecido pelo provedor Google
    * @returns {Promise<import('@/types/models').User | null>} Dados do usuário recuperados do banco
    */
@@ -268,7 +268,7 @@ class AuthRepository {
   /**
    * Registra um novo usuário no banco com credenciais do Google OAuth.
    * Cria o nome de usuário usando uma base do e-mail.
-   * 
+   *
    * @param {string} googleId ID do provedor Google
    * @param {string} name Nome do usuário
    * @param {string} email Email do usuário
@@ -297,7 +297,7 @@ class AuthRepository {
   /**
    * Conecta um registro já existente no sistema a uma conta do Google.
    * Utilizado quando um e-mail idêntico tenta logar pelo OAuth.
-   * 
+   *
    * @param {string} userId UUID do usuário no banco
    * @param {string} googleId Identificador único do provedor Google
    * @param {string|null} [avatarUrl=null] Atualização de capa se houver

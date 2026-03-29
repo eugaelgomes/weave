@@ -1,7 +1,6 @@
 const { executeQuery, rowCount } = require("@/database/connection");
 
 class ApiTokensRepository {
-
   /**
    * Insere um novo token no banco de dados.
    * @param {Object} params - Parâmetros para criação do token.
@@ -14,7 +13,15 @@ class ApiTokensRepository {
    * @param {Date|string} [params.expiresAt] - Data em que o token será expirado (opcional).
    * @returns {Promise<Object>} Retorna informações básicas de metadados do token recém-criado.
    */
-  async createToken({ name, keyPrefix, tokenHash, userId, organizationId, scopes, expiresAt }) {
+  async createToken({
+    name,
+    keyPrefix,
+    tokenHash,
+    userId,
+    organizationId,
+    scopes,
+    expiresAt,
+  }) {
     const query = `
       INSERT INTO api_tokens (
         name, key_prefix, token_hash, user_id, organization_id, scopes, expires_at
@@ -22,8 +29,16 @@ class ApiTokensRepository {
         $1, $2, $3, $4, $5, $6, $7
       ) RETURNING id, name, key_prefix, scopes, expires_at, created_at
     `;
-    const values = [name, keyPrefix, tokenHash, userId, organizationId || null, scopes || ['read'], expiresAt || null];
-    
+    const values = [
+      name,
+      keyPrefix,
+      tokenHash,
+      userId,
+      organizationId || null,
+      scopes || ["read"],
+      expiresAt || null,
+    ];
+
     const result = await executeQuery(query, values);
     return result[0];
   }

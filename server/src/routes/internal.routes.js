@@ -16,6 +16,8 @@ const webhooksRoutes = require("@/modules/webhooks/webhooks.routes");
 const notificationsRoutes = require("@/modules/notifications/notifications.routes");
 const calendarEventsRoutes = require("@/modules/calendar-events/calendar-events.routes");
 const apiTokensRoutes = require("@/modules/api-tokens/api-tokens.routes");
+const tagsRoutes = require("@/modules/tags/tags.routes");
+const taskPrioritiesRoutes = require("@/modules/task_priorities/task_priorities.routes");
 
 const DEFAULT_VERSION = "v1";
 const DEV_ORIGIN_REGEX = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
@@ -86,6 +88,8 @@ const routeRegistry = [
   { basePath: "/weave-ai", handler: aiRoutes },
   { basePath: "/notes", handler: notesRoutes },
   { basePath: "/organizations", handler: organizationsRoutes },
+  { basePath: "/organizations", handler: tagsRoutes },
+  { basePath: "/organizations", handler: taskPrioritiesRoutes },
   { basePath: "/password", handler: passwordRoutes },
   { basePath: "/plans", handler: plansRoutes },
   { basePath: "/notifications", handler: notificationsRoutes },
@@ -116,7 +120,9 @@ const createInternalRouter = ({ version = DEFAULT_VERSION } = {}) => {
     return next();
   });
 
-  routeRegistry.forEach(({ basePath, handler }) => router.use(basePath, handler));
+  routeRegistry.forEach(({ basePath, handler }) =>
+    router.use(basePath, handler)
+  );
 
   return router;
 };
