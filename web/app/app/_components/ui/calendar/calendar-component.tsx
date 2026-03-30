@@ -178,7 +178,9 @@ const formatHourLabel = (hour: number, timeFormat: "12h" | "24h") => {
 };
 
 // Aqui definimos um max height e valores seguros para não poluir a view
-export function CalendarPreview({ className = "h-[70vh] min-h-[500px] max-h-[800px]" }: CalendarPreviewProps) {
+export function CalendarPreview({
+  className = "h-[70vh] min-h-[500px] max-h-[800px]",
+}: CalendarPreviewProps) {
   const { user } = useAuth();
   const {
     calendarEvents,
@@ -192,7 +194,7 @@ export function CalendarPreview({ className = "h-[70vh] min-h-[500px] max-h-[800
   const [view, setView] = useState<ViewType>("week");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  
+
   // Ref para controlar o scroll do calendário
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -278,7 +280,7 @@ export function CalendarPreview({ className = "h-[70vh] min-h-[500px] max-h-[800
           const offset = targetY - scrollContainerRef.current.clientHeight / 2;
           scrollContainerRef.current.scrollTo({
             top: Math.max(0, offset),
-            behavior: "smooth"
+            behavior: "smooth",
           });
         }
       }, 100);
@@ -481,8 +483,8 @@ export function CalendarPreview({ className = "h-[70vh] min-h-[500px] max-h-[800
       },
     };
 
-return (
-      <div 
+    return (
+      <div
         ref={scrollContainerRef}
         className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto border-t border-neutral-200 bg-white [scrollbar-gutter:stable] dark:border-neutral-800 dark:bg-neutral-950 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent"
       >
@@ -511,7 +513,7 @@ return (
                 </div>
                 <div className="flex items-center justify-center">
                   <span
-                    className={`flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[10px] font-semibold ${
+                    className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold sm:h-5 sm:w-5 ${
                       isToday
                         ? "bg-yellow-500 text-white"
                         : "text-neutral-700 dark:text-neutral-300"
@@ -561,7 +563,10 @@ return (
             ))}
           </div>
 
-          <div className="pointer-events-none absolute inset-0 z-[12]" style={{ height: `${TOTAL_GRID_HEIGHT}px` }}>
+          <div
+            className="pointer-events-none absolute inset-0 z-[12]"
+            style={{ height: `${TOTAL_GRID_HEIGHT}px` }}
+          >
             {Array.from({ length: 8 }, (_, idx) => (
               <div
                 key={`week-vertical-divider-${idx}`}
@@ -733,7 +738,7 @@ return (
     };
 
     return (
-      <div 
+      <div
         ref={scrollContainerRef}
         className="flex-1 overflow-y-auto bg-white dark:bg-neutral-950 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent"
       >
@@ -766,7 +771,10 @@ return (
           className="relative [--label-w:40px] sm:[--label-w:56px]"
           style={{ height: `${TOTAL_GRID_HEIGHT}px` }}
         >
-          <div className="relative [--label-w:56px] sm:[--label-w:80px]" style={{ height: `${TOTAL_GRID_HEIGHT}px` }}>
+          <div
+            className="relative [--label-w:56px] sm:[--label-w:80px]"
+            style={{ height: `${TOTAL_GRID_HEIGHT}px` }}
+          >
             {hours.map((hour) => {
               const isCurrentHour = isToday && hour === now.getHours();
               const hourLabel = formatHourLabel(hour, timeFormat);
@@ -1074,90 +1082,106 @@ return (
         {/* Main Content Area */}
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Header & Controls */}
-          <div className="flex flex-col gap-2 border-b border-neutral-200 bg-white px-2 py-1 dark:border-neutral-800 dark:bg-neutral-950">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center justify-between gap-2">
-                <button
-                  onClick={goToToday}
-                  className="rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 transition-colors hover:bg-neutral-50 sm:text-[11px] dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
-                >
-                  {texts.today}
-                </button>
-                <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex flex-col gap-3 border-b border-neutral-200 bg-white px-2 py-2 sm:px-3 sm:py-2.5 dark:border-neutral-800 dark:bg-neutral-950">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+              <div className="flex flex-col gap-3 xl:flex-1">
+                <div className="flex items-center justify-center gap-2 sm:justify-between xl:justify-start">
                   <button
                     onClick={() => navigate(-1)}
-                    className="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 sm:p-1.5 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                    className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:p-2 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                    type="button"
                   >
                     <ChevronLeft size={18} />
                   </button>
-                  <span className="min-w-[120px] text-center text-[11px] font-bold text-neutral-800 sm:min-w-[140px] sm:text-xs dark:text-neutral-100">
+
+                  <span className="min-w-[140px] text-center text-xs font-bold text-neutral-800 sm:min-w-[180px] sm:text-sm lg:min-w-[220px] dark:text-neutral-100">
                     {headerTitle}
                   </span>
+
                   <button
                     onClick={() => navigate(1)}
-                    className="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 sm:p-1.5 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                    className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:p-2 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                    type="button"
                   >
                     <ChevronRight size={18} />
                   </button>
                 </div>
+
+                <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center">
+                  <button
+                    onClick={goToToday}
+                    className="rounded-md border border-neutral-200 px-2 py-2 text-[11px] font-semibold text-neutral-600 transition-colors hover:bg-neutral-50 sm:px-2.5 sm:py-1.5 sm:text-[11px] dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
+                    type="button"
+                  >
+                    {texts.today}
+                  </button>
+
+                  {googleConnected ? (
+                    <button
+                      onClick={() => {
+                        refreshEventsForYear(currentDate.getFullYear()).catch(() => {
+                          // Error state is already managed by CalendarContext.
+                        });
+                      }}
+                      className="inline-flex items-center justify-center gap-1 rounded-md border border-neutral-200 px-2 py-2 text-[11px] font-medium text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700 sm:px-2.5 sm:py-1.5 sm:text-[11px] dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                      title={locale.startsWith("pt") ? "Atualizar eventos" : "Refresh events"}
+                      type="button"
+                    >
+                      <RefreshCw size={13} />
+                      <span>{locale.startsWith("pt") ? "Atualizar" : "Refresh"}</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={connectGoogleCalendar}
+                      className="inline-flex items-center justify-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-2 text-[11px] font-medium text-blue-600 transition-colors hover:bg-blue-100 sm:px-2.5 sm:py-1.5 sm:text-[11px] dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
+                      type="button"
+                    >
+                      <FcGoogle size={12} />
+                      <span>{locale.startsWith("pt") ? "Sincronizar" : "Sync"}</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="inline-flex items-center justify-center gap-1 rounded-md border border-yellow-200 bg-yellow-50 px-2 py-2 text-[11px] font-semibold text-yellow-700 transition-colors hover:bg-yellow-100 sm:px-2.5 sm:py-1.5 sm:text-[11px] dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300 dark:hover:bg-yellow-900/35"
+                    type="button"
+                  >
+                    <Plus size={13} />
+                    <span>{locale.startsWith("pt") ? "Criar" : "Create"}</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="inline-flex items-center gap-1 rounded-md border border-yellow-200 bg-yellow-50 px-2 py-1 text-[10px] font-semibold text-yellow-700 transition-colors hover:bg-yellow-100 sm:text-[10px] dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300 dark:hover:bg-yellow-900/35"
-                >
-                  <Plus size={12} />
-                  <span>{locale.startsWith("pt") ? "Novo evento" : "New event"}</span>
-                </button>
-                {googleConnected ? (
-                  <button
-                    onClick={() => {
-                      refreshEventsForYear(currentDate.getFullYear()).catch(() => {
-                        // Error state is already managed by CalendarContext.
-                      });
-                    }}
-                    className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700 sm:text-[10px] dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
-                    title={locale.startsWith("pt") ? "Atualizar eventos" : "Refresh events"}
-                  >
-                    <RefreshCw size={12} />
-                  </button>
-                ) : (
-                  <button
-                    onClick={connectGoogleCalendar}
-                    className="flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-medium text-blue-600 transition-colors hover:bg-blue-100 sm:text-[10px] dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
-                  >
-                    <FcGoogle size={10} />
-                    <span>{locale.startsWith("pt") ? "Sincronizar Agenda" : "Sync Calendar"}</span>
-                  </button>
-                )}
+              <div className="w-full overflow-x-auto pb-1 xl:w-auto xl:pb-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent">
+                <div className="flex w-max min-w-full rounded-lg bg-neutral-100 p-0.5 sm:min-w-0 dark:bg-neutral-900">
+                  {(["day", "week", "month", "semester", "year"] as ViewType[]).map((v) => {
+                    const viewLabels: Record<ViewType, string> = {
+                      day: texts.day,
+                      week: texts.week,
+                      month: texts.month,
+                      semester: texts.semester,
+                      year: texts.year,
+                    };
 
-                <div className="w-full overflow-x-auto pb-1 md:w-auto md:pb-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent">
-                  <div className="flex w-max rounded-lg bg-neutral-100 p-0.5 dark:bg-neutral-900">
-                    {(["day", "week", "month", "semester", "year"] as ViewType[]).map((v) => {
-                      const viewLabels: Record<ViewType, string> = {
-                        day: texts.day,
-                        week: texts.week,
-                        month: texts.month,
-                        semester: texts.semester,
-                        year: texts.year,
-                      };
-                      return (
-                        <button
-                          key={v}
-                          onClick={() => setView(v)}
-                          className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all sm:text-[10px] ${view === v ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-800 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"}`}
-                        >
-                          {viewLabels[v]}
-                        </button>
-                      );
-                    })}
-                  </div>
+                    return (
+                      <button
+                        key={v}
+                        onClick={() => setView(v)}
+                        type="button"
+                        className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all sm:flex-none sm:px-2.5 sm:py-1 sm:text-[11px] ${
+                          view === v
+                            ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-800 dark:text-white"
+                            : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                        }`}
+                      >
+                        {viewLabels[v]}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           </div>
-
           {/* Conditional Rendering of Views */}
           {view === "day" && renderDay()}
           {view === "week" && renderWeek()}

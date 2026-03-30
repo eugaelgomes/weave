@@ -84,7 +84,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
   };
 
   const handleLinkClick = () => {
-    if (onLinkClick) onLinkClick();
+    onLinkClick?.();
   };
 
   const toggleExpand = (path: string) => {
@@ -154,8 +154,9 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
   ];
 
   return (
-    <div className="flex h-full w-full flex-col bg-transparent text-neutral-600 lg:bg-neutral-50 dark:text-neutral-400 dark:lg:bg-neutral-950">
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 p-3 lg:hidden dark:border-neutral-800">
+    <div className="flex h-full flex-col bg-neutral-50 text-neutral-600 dark:bg-neutral-950 dark:text-neutral-400">
+      {/* Header mobile */}
+      <div className="flex items-center justify-between border-b border-neutral-200 p-3 lg:hidden dark:border-neutral-800">
         <div className="flex items-center gap-2">
           <Book className="h-3.5 w-3.5 text-yellow-500" />
           <h2 className="text-xs font-bold tracking-wider text-neutral-700 dark:text-neutral-200">
@@ -164,122 +165,114 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
         </div>
         <button
           onClick={handleLinkClick}
-          className="text-neutral-700 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100"
+          className="rounded p-1 text-neutral-600 hover:bg-black/5 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/5 dark:hover:text-neutral-100"
+          aria-label="Fechar menu"
         >
           <X size={16} />
         </button>
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div
-          className={`mb-2 flex shrink-0 items-center ${isCollapsed ? "justify-center" : "justify-between px-2"}`}
-        >
+        {/* Toggle collapse desktop only */}
+        <div className="flex items-center px-2 py-1.5">
           {!isCollapsed && (
-            <h2 className="text-[10px] font-bold tracking-wider text-yellow-500">Menu</h2>
+            <h2 className="text-[10px] font-bold uppercase tracking-wider text-yellow-500">
+              Menu
+            </h2>
           )}
-          <button
-            onClick={toggleCollapse}
-            className="hidden rounded-md px-6 py-2 text-yellow-500 hover:bg-neutral-100 hover:text-yellow-500/50 lg:block dark:hover:bg-neutral-800 dark:hover:text-white"
-            title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
-          >
-            {isCollapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
-          </button>
+          {toggleCollapse && (
+            <button
+              onClick={toggleCollapse}
+              className="ml-auto hidden rounded-md p-1 text-yellow-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 lg:block"
+              title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
+            >
+              {isCollapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
+            </button>
+          )}
         </div>
-        <div className="flex-1 overflow-x-hidden overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent">
-          <ul className="space-y-1">
+
+        <div className="flex-1 overflow-y-auto">
+          <ul className="space-y-1 px-1 pb-2 pt-1">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               const active = isItemActive(item);
               const hasSubItems = item.subItems && item.subItems.length > 0;
               const isExpanded = !isCollapsed && expandedItems[item.path];
-
-              // Se estiver recolhido E o item tiver filhos, apontamos o Link para o primeiro subitem
-              // para evitar cair na página raiz vazia (ex: /app/organization)
               const linkHref = isCollapsed && hasSubItems ? item.subItems![0].path : item.path;
 
               return (
-                <li key={item.path} className="group relative">
-                  <div className="flex items-center">
-                    <Link
-                      href={linkHref}
-                      onClick={(e) => {
-                        if (hasSubItems && !isCollapsed) {
-                          e.preventDefault();
-                          toggleExpand(item.path);
-                        } else {
-                          handleLinkClick();
-                        }
-                      }}
-                      className={`flex flex-1 rounded-md transition-all duration-200 ${
-                        isCollapsed
-                          ? "flex-col items-center justify-center gap-1 p-2"
-                          : "items-center justify-between px-2.5 py-2"
-                      } ${
-                        active
-                          ? "bg-yellow-500/10 font-medium text-yellow-500"
-                          : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
-                      } `}
-                    >
-                      <div
-                        className={`flex items-center ${isCollapsed ? "w-full flex-col gap-1" : "gap-2.5"}`}
-                      >
-                        <div className="relative">
-                          <Icon
-                            className={`h-4 w-4 transition-colors ${active ? "text-yellow-500" : "text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200"} `}
-                          />
-                          {isCollapsed && item.badge !== undefined && item.badge > 0 && (
-                            <span className="absolute -top-1 -right-1 flex h-2 w-2 rounded-full bg-yellow-500" />
-                          )}
-                        </div>
-                        <span
-                          className={`${isCollapsed ? "w-full truncate text-center text-[8px] leading-none" : "flex items-center gap-2 text-xs"}`}
-                        >
-                          {item.label}
-                          {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
-                            <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-yellow-500 px-1 text-[9px] font-bold text-white">
-                              {item.badge > 99 ? "99+" : item.badge}
-                            </span>
-                          )}
+                <li key={item.path}>
+                  <Link
+                    href={linkHref}
+                    onClick={(e) => {
+                      if (hasSubItems && !isCollapsed) {
+                        e.preventDefault();
+                        toggleExpand(item.path);
+                      } else {
+                        handleLinkClick();
+                      }
+                    }}
+                    className={`flex items-center rounded-md px-2 py-2 font-medium text-sm transition duration-200 ${
+                      active
+                        ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-500"
+                        : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon
+                        className={`h-4 w-4 ${
+                          active
+                            ? "text-yellow-500"
+                            : "text-neutral-500 dark:text-neutral-500"
+                        }`}
+                      />
+                      {!isCollapsed && <span className="truncate">{item.label}</span>}
+                      {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
+                        <span className="ml-auto flex h-4 min-w-[18px] items-center justify-center rounded-full bg-yellow-500 px-1 text-[9px] font-bold text-white">
+                          {item.badge > 99 ? "99+" : item.badge}
                         </span>
-                      </div>
-
-                      {!isCollapsed && hasSubItems && (
-                        <div className="text-neutral-400">
-                          {isExpanded ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
-                        </div>
                       )}
-                    </Link>
-                  </div>
+                      {isCollapsed && item.badge !== undefined && item.badge > 0 && (
+                        <span className="ml-1 flex h-1.5 w-1.5 rounded-full bg-yellow-500" />
+                      )}
+                    </div>
+
+                    {!isCollapsed && hasSubItems && (
+                      <ChevronRight
+                        className={`ml-auto size-3 transition-transform ${
+                          isExpanded ? "rotate-90" : ""
+                        }`}
+                      />
+                    )}
+                  </Link>
 
                   {!isCollapsed && hasSubItems && isExpanded && (
-                    <ul className="animate-in slide-in-from-top-1 mt-1 space-y-0.5 pl-4 duration-200">
+                    <ul className="mt-1 space-y-1 pl-7">
                       {item.subItems!.map((subItem) => {
                         const SubIcon = subItem.icon;
-
                         const isSubActive =
                           pathname === subItem.path ||
-                          (subItem.path !== item.path && pathname.startsWith(`${subItem.path}/`));
+                          pathname.startsWith(`${subItem.path}/`);
 
                         return (
                           <li key={subItem.path}>
                             <Link
                               href={subItem.path}
                               onClick={handleLinkClick}
-                              className={`flex items-center gap-2.5 rounded-md px-2.5 py-1.5 transition-all duration-200 ${
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 font-medium text-sm transition duration-200 ${
                                 isSubActive
-                                  ? "bg-yellow-500/10 font-medium text-yellow-600 dark:text-yellow-500"
-                                  : "text-neutral-500 hover:text-neutral-800 dark:text-neutral-500 dark:hover:text-neutral-300"
+                                  ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-500"
+                                  : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900"
                               }`}
                             >
                               <SubIcon
-                                className={`h-2.5 w-2.5 ${isSubActive ? "text-yellow-500" : "opacity-70"}`}
+                                className={`size-2.5 ${
+                                  isSubActive
+                                    ? "text-yellow-500"
+                                    : "text-neutral-500 opacity-70 dark:text-neutral-500"
+                                }`}
                               />
-                              <span
-                                className="truncate text-[11px] font-medium"
-                                title={subItem.label}
-                              >
-                                {subItem.label}
-                              </span>
+                              <span className="truncate text-sm">{subItem.label}</span>
                             </Link>
                           </li>
                         );
@@ -293,46 +286,50 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
 
           {!isCollapsed && (
             <>
-              <div className="divisor my-4 h-px w-full shrink-0 bg-neutral-200 dark:bg-neutral-800" />
+              <div className="my-2 h-px w-full bg-neutral-200 dark:bg-neutral-800" />
 
-              <div className="animate-in fade-in flex-1 duration-300">
-                <h2 className="mb-2 px-2 text-[10px] font-bold tracking-wider text-yellow-500">
+              <div>
+                <h2 className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-wider text-yellow-500">
                   {t.nav.recentAccess}
                 </h2>
 
-                <ul className="space-y-0.5">
-                  {recentItems.length === 0 && (
-                    <li className="flex flex-col items-center justify-center gap-2 px-2.5 py-8 text-center text-xs text-neutral-500">
-                      <Frown className="h-5 w-5 opacity-50" />
-                      <span className="text-xs">{t.common.empty}</span>
+                <ul className="space-y-1 px-1">
+                  {recentItems.length === 0 ? (
+                    <li className="flex flex-col items-center justify-center gap-2 py-6 text-center text-sm text-neutral-500">
+                      <Frown className="size-6 opacity-60" />
+                      <span className="text-sm">{t.common.empty}</span>
                     </li>
+                  ) : (
+                    recentItems.map((item) => {
+                      const path = `/app/notes/${item.id}`;
+                      const isItemActive = pathname === path || pathname.startsWith(`${path}/`);
+                      const ItemIcon = item.icon;
+
+                      return (
+                        <li key={`${item.type}-${item.id}`}>
+                          <Link
+                            href={path}
+                            onClick={handleLinkClick}
+                            title={item.title}
+                            className={`group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition duration-200 ${
+                              isItemActive
+                                ? "bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-white"
+                                : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900"
+                            }`}
+                          >
+                            <ItemIcon
+                              className={`size-3.5 ${
+                                isItemActive
+                                  ? "text-yellow-500"
+                                  : "text-neutral-400 dark:text-neutral-500"
+                              }`}
+                            />
+                            <span className="truncate text-sm">{item.title}</span>
+                          </Link>
+                        </li>
+                      );
+                    })
                   )}
-
-                  {recentItems.map((item) => {
-                    const path = `/app/notes/${item.id}`;
-                    const isItemActive = pathname === path || pathname.startsWith(`${path}/`);
-                    const ItemIcon = item.icon;
-
-                    return (
-                      <li key={`${item.type}-${item.id}`}>
-                        <Link
-                          href={path}
-                          onClick={handleLinkClick}
-                          title={item.title}
-                          className={`group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[11px] transition-all duration-200 ${
-                            isItemActive
-                              ? "bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-white"
-                              : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
-                          }`}
-                        >
-                          <ItemIcon
-                            className={`h-3 w-3 flex-shrink-0 ${isItemActive ? "text-yellow-500" : "text-neutral-400"}`}
-                          />
-                          <span className="truncate">{item.title}</span>
-                        </Link>
-                      </li>
-                    );
-                  })}
                 </ul>
               </div>
             </>

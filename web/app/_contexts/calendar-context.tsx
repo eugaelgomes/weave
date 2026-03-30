@@ -16,7 +16,11 @@ import {
 } from "@/app/_services/calendar-service/calendar-service";
 
 export type CalendarEventSource = "google" | "internal";
-export type UnifiedCalendarEvent = GoogleCalendarEvent & { source: CalendarEventSource };
+export type UnifiedCalendarEvent = GoogleCalendarEvent & {
+  source: CalendarEventSource;
+  internalId?: string;
+  googleEventId?: string | null;
+};
 
 interface CalendarContextType {
   calendarEvents: UnifiedCalendarEvent[];
@@ -37,6 +41,8 @@ const CalendarContext = createContext<CalendarContextType | undefined>(undefined
 
 const mapInternalEvent = (event: InternalCalendarEvent): UnifiedCalendarEvent => ({
   id: event.id,
+  internalId: event.id,
+  googleEventId: event.google_event_id,
   title: event.title,
   description: event.description,
   location: event.location,
@@ -104,23 +110,34 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
       ]);
 
       const nextEvents: UnifiedCalendarEvent[] = [];
+      const googleEventIds = new Set<string>();
 
       if (googleResult.status === "fulfilled") {
         setGoogleConnected(googleResult.value.connected);
         if (googleResult.value.connected) {
-          nextEvents.push(
-            ...googleResult.value.events.map((event) => ({
+          googleResult.value.events.forEach((event) => {
+            googleEventIds.add(event.id);
+            nextEvents.push({
               ...event,
               source: "google" as const,
-            }))
-          );
+            });
+          });
         }
       } else {
         setGoogleConnected(false);
       }
 
       if (internalResult.status === "fulfilled") {
-        nextEvents.push(...internalResult.value.map(mapInternalEvent));
+        internalResult.value.forEach((event) => {
+          const mapped = mapInternalEvent(event);
+          if (mapped.googleEventId && googleEventIds.has(mapped.googleEventId)) {
+            return;
+          }
+          if (mapped.googleEventId) {
+            googleEventIds.add(mapped.googleEventId);
+          }
+          nextEvents.push(mapped);
+        });
       }
 
       if (googleResult.status === "rejected" && internalResult.status === "rejected") {
