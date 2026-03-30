@@ -103,6 +103,12 @@ function configureGlobalMiddlewares(app) {
     ) {
       return next();
     }
+    if (
+      req.method === "GET" &&
+      req.path.startsWith("/api/v1/webhooks/google/auth")
+    ) {
+      return next();
+    }
     return corsMiddleware(req, res, next);
   });
 
