@@ -156,10 +156,12 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
   const [isSearchOpen, setSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const menuRef = useRef<HTMLDivElement>(null);
+  const desktopMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
+
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
@@ -174,9 +176,14 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
 
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false);
+      const target = event.target as Node;
+      if (
+        (desktopMenuRef.current && desktopMenuRef.current.contains(target)) ||
+        (mobileMenuRef.current && mobileMenuRef.current.contains(target))
+      ) {
+        return;
       }
+      setMenuOpen(false);
     };
 
     if (isMenuOpen) {
@@ -300,7 +307,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                     <Search className="h-5 w-5" strokeWidth={2} />
                   </button>
 
-                  <div className="relative" ref={menuRef}>
+                  <div className="relative" ref={desktopMenuRef}>
                     <button
                       type="button"
                       onClick={() => setMenuOpen((prev) => !prev)}
@@ -359,7 +366,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
             />
 
             <div
-              ref={menuRef}
+              ref={mobileMenuRef}
               className="relative z-[111] flex w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-900"
             >
               <div className="max-h-[75vh] overflow-y-auto">
