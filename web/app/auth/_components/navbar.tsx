@@ -7,8 +7,8 @@ interface NavbarProps {
 
 export default function Navbar({ ctaLabel, ctaHref }: NavbarProps) {
   return (
-    <nav className="relative top-0 z-50 flex w-full justify-center shadow shadow-md">
-      <div className="flex h-14 w-full items-center justify-between bg-white px-6">
+    <nav className="relative top-0 z-50 flex w-full justify-center border-b border-neutral-200 shadow-none">
+      <div className="flex h-12 w-full items-center justify-between bg-white/95 px-4 text-xs font-medium sm:px-6 sm:text-sm">
         <Link
           href={process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app"}
           className="group flex items-center gap-3 rounded-lg transition-opacity focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-50 focus-visible:outline-none"
@@ -23,17 +23,17 @@ export default function Navbar({ ctaLabel, ctaHref }: NavbarProps) {
               priority
             />
           </div>*/}
-          <span className="text-lg font-black tracking-tight text-yellow-500">Weave Notes</span>
+          <span className="text-base font-black tracking-tight text-yellow-500">Weave Notes</span>
         </Link>
 
         <div className="flex items-center gap-4">
-          <span className="hidden bg-gradient-to-r from-yellow-500 to-violet-500 bg-clip-text text-sm font-medium tracking-wide text-transparent sm:inline">
+          <span className="hidden bg-gradient-to-r from-yellow-500 to-violet-500 bg-clip-text text-xs font-semibold tracking-wide text-transparent sm:inline">
             O workspace inteligente para quem pensa grande.
           </span>
           {ctaLabel && ctaHref && (
             <Link
               href={ctaHref}
-              className="rounded-lg bg-yellow-500 px-4 py-1.5 text-sm font-bold text-white transition-colors hover:bg-yellow-600"
+              className="rounded-lg bg-yellow-500 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white transition-colors hover:bg-yellow-600"
             >
               {ctaLabel}
             </Link>

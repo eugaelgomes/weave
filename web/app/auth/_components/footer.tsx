@@ -4,9 +4,9 @@ import Link from "next/link";
 // footer component
 export default function Footer() {
   return (
-    <footer className="z-10 w-full px-6 py-4">
-      <div className="mx-auto flex items-center justify-between text-[10px] text-neutral-400 sm:text-xs lg:text-sm">
-        <div className="text-xs text-neutral-500">
+    <footer className="z-10 w-full border-none px-4 py-3 text-[10px] text-neutral-400 sm:text-xs">
+      <div className="mx-auto flex items-center justify-between">
+        <div className="text-[11px] text-neutral-500 sm:text-xs">
           {new Date().getFullYear()} &copy;{" "}
           <Link
             href="https://blog.weavenotes.app"
@@ -20,7 +20,7 @@ export default function Footer() {
           <span className="hidden sm:inline">Todos os direitos reservados.</span>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4 sm:text-xs lg:gap-6 lg:text-sm">
+        <div className="flex items-center gap-2 text-[11px] sm:gap-3 sm:text-xs">
           <Link
             href="https://blog.weavenotes.app/privacy"
             target="_blank"

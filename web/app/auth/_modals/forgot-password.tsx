@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { FaTimes, FaEnvelope, FaSpinner } from "react-icons/fa";
+import { FaTimes, FaSpinner } from "react-icons/fa";
+import { HiOutlineMail } from "react-icons/hi";
 import { useAuth } from "../../_contexts/auth-context";
 
 interface ForgotPasswordModalProps {
@@ -20,13 +21,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
     setMessage(null);
 
     if (!email.trim()) {
-      setMessage({ type: "error", text: "Por favor, digite seu email." });
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setMessage({ type: "error", text: "Por favor, digite um email válido." });
+      setMessage({ type: "error", text: "Por favor, introduza o seu e-mail." });
       return;
     }
 
@@ -37,24 +32,17 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
       if (result.success) {
         setMessage({
           type: "success",
-          text: result.message || "Instruções de recuperação enviadas para seu email!",
+          text: result.message || "Link enviado com sucesso!",
         });
-        setTimeout(() => {
-          setEmail("");
-          setMessage(null);
-          onClose();
-        }, 3000);
+        setTimeout(() => handleClose(), 3000);
       } else {
         setMessage({
           type: "error",
-          text: result.message || "Erro ao enviar instruções. Tente novamente.",
+          text: result.message || "E-mail não encontrado.",
         });
       }
     } catch {
-      setMessage({
-        type: "error",
-        text: "Não foi possível conectar ao servidor. Verifique sua conexão.",
-      });
+      setMessage({ type: "error", text: "Erro na ligação ao servidor." });
     } finally {
       setLoading(false);
     }
@@ -71,87 +59,78 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md space-y-5 rounded-md border border-neutral-200/60 bg-white p-6 shadow-xl backdrop-blur-2xl transition-colors">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-xl font-bold text-neutral-900">
-            {/*<FaEnvelope className="text-yellow-500" size={20} />*/}
-            Recuperar acesso
-          </h3>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Overlay */}
+      <div 
+        className="absolute inset-0 bg-neutral-900/30 backdrop-blur-sm transition-opacity" 
+        onClick={handleClose}
+      />
+
+      {/* Modal - Compacto e Rounded MD */}
+      <div className="relative w-full max-w-sm overflow-hidden rounded-md bg-white p-5 shadow-xl border border-neutral-200 transition-all">
+        
+        {/* Header Compacto */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <HiOutlineMail className="text-yellow-600" size={18} />
+            <h3 className="text-lg font-bold text-neutral-900">Recuperar acesso</h3>
+          </div>
           <button
             onClick={handleClose}
             disabled={loading}
-            className="rounded-md p-2 text-neutral-900 transition-colors hover:bg-neutral-100 hover:text-neutral-950 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-neutral-300 dark:hover:text-neutral-300"
-            title="Fechar"
-            aria-label="Fechar modal"
+            className="text-neutral-400 hover:text-neutral-600 disabled:opacity-0"
           >
-            <FaTimes size={18} />
+            <FaTimes size={14} />
           </button>
         </div>
 
-        {/* Message */}
+        {/* Feedback Messages */}
         {message && (
           <div
-            className={`flex items-center gap-3 rounded-md border p-3 text-sm shadow-lg backdrop-blur-xl ${
+            className={`mb-4 flex items-center rounded-md border px-3 py-2 text-xs font-semibold ${
               message.type === "error"
-                ? "border-red-500/50 bg-red-950/80 text-red-200"
-                : "border-green-500/50 bg-green-950/80 text-green-200"
+                ? "border-red-200 bg-red-50 text-red-700"
+                : "border-green-200 bg-green-50 text-green-700"
             }`}
           >
-            <span className="font-medium">{message.text}</span>
+            {message.text}
           </div>
         )}
 
-        {/* Description */}
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          Digite seu email cadastrado e enviaremos as instruções para redefinir sua senha.
+        <p className="mb-4 text-xs font-medium text-neutral-500 leading-relaxed">
+          Introduza o e-mail associado à sua conta para receber as instruções de recuperação.
         </p>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label
-              htmlFor="recovery-email"
-              className="text-xs font-bold tracking-wider text-neutral-700"
-            >
-              Email
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+              Endereço de E-mail
             </label>
             <input
-              id="recovery-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
-              placeholder="seu@email.com"
-              autoComplete="email"
-              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 transition-all placeholder:text-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-600"
+              placeholder="your.email@weavenotes.app"
+              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-yellow-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-yellow-500/20 disabled:opacity-50"
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 border-t border-neutral-200 pt-4 transition-colors dark:border-white/5">
+          <div className="flex items-center gap-3 pt-1">
             <button
               type="button"
               onClick={handleClose}
               disabled={loading}
-              className="flex-1 rounded-md border border-white bg-neutral-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-300 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-1 rounded-md py-2 text-xs font-bold text-neutral-500 hover:bg-neutral-50 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex flex-1 items-center justify-center gap-2 rounded-md bg-yellow-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-yellow-500/20 transition-all hover:bg-yellow-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-[1.5] flex items-center justify-center gap-2 rounded-md bg-yellow-500 py-2 text-xs font-bold text-white shadow-sm hover:bg-yellow-600 transition-all active:scale-[0.98] disabled:opacity-70"
             >
-              {loading ? (
-                <>
-                  <FaSpinner className="animate-spin" size={14} />
-                  Enviando...
-                </>
-              ) : (
-                "Enviar Instruções"
-              )}
+              {loading ? <FaSpinner className="animate-spin" size={12} /> : "Enviar Link"}
             </button>
           </div>
         </form>
