@@ -44,7 +44,9 @@ export default function ProjectViewPage() {
   // Estados de UI
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [activeView, setActiveView] = useState<"board" | "list" | "calendar" | "timeline" | "gantt">("board");
+  const [activeView, setActiveView] = useState<
+    "board" | "list" | "calendar" | "timeline" | "gantt"
+  >("board");
   const [showSidebar, setShowSidebar] = useState(false);
   const [showAddCollaborator, setShowAddCollaborator] = useState(false);
   const [showAddNote, setShowAddNote] = useState(false);

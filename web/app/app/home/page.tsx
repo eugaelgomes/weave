@@ -16,7 +16,6 @@ import NotesCarousel from "../_components/ui/notes/notes-carousel";
 import ProjectsCarousel from "../_components/ui/projects/project-carousel";
 import HomeDashboard from "../_components/ui/home/home-dashboard";
 
-
 export default function HomePage() {
   const { authenticated, loading } = useAuth();
   const { getRecentNotes } = useNotes();

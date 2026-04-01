@@ -83,7 +83,7 @@ const esES: TranslationKeys = {
       filterButtonLabel: "Filtrar resultados",
       projects: "Proyectos",
       notes: "Notas",
-      noResultTitle: "No se encontraron resultados para \"{term}\"",
+      noResultTitle: 'No se encontraron resultados para "{term}"',
       noResultDescription: "Intenta buscar otro término o etiqueta.",
       escToClose: "para cerrar",
       arrowsToNavigate: "para navegar",

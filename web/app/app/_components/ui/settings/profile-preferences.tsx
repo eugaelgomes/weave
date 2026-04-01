@@ -1,26 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Bell,
-  Type,
-  Layout,
-  Globe,
-  Lock,
-  Users,
-  Sparkles,
-  Database,
-  Keyboard,
-  Save,
-  Loader2,
-} from "lucide-react";
+import { Bell, Type, Layout, Globe, Lock, Sparkles, Keyboard, Loader2 } from "lucide-react";
 import { useAuth } from "@/app/_contexts/auth-context";
 
 export const SettingsProfilePreferences: React.FC = () => {
   const { user, updateUser } = useAuth();
 
   const [preferences, setPreferences] = useState<any>({});
-  const [editMode, setEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -29,33 +16,25 @@ export const SettingsProfilePreferences: React.FC = () => {
     }
   }, [user]);
 
-  const handlePreferenceChange = (category: string, key: string, value: any) => {
-    setPreferences((prev: any) => ({
-      ...prev,
+  const handlePreferenceChange = async (category: string, key: string, value: any) => {
+    // 1. Atualização otimista do estado local (UI reage imediatamente)
+    const updatedPreferences = {
+      ...preferences,
       [category]: {
-        ...(prev[category] || {}),
+        ...(preferences[category] || {}),
         [key]: value,
       },
-    }));
-    setEditMode(true);
-  };
+    };
 
-  const handleCancelEdit = () => {
-    if (user?.usage_preference) {
-      setPreferences(user.usage_preference);
-    }
-    setEditMode(false);
-  };
+    setPreferences(updatedPreferences);
 
-  const handleSaveChanges = async () => {
+    // 2. Salva no banco em segundo plano
     setIsLoading(true);
     try {
-      const result = await updateUser({ usage_preference: preferences });
-      if (result.success) {
-        setEditMode(false);
-      } else {
-        // Tratar erro (pode adicionar toast notification aqui se tiver)
-        console.error(result.message);
+      const result = await updateUser({ usage_preference: updatedPreferences });
+      if (!result.success) {
+        // Se der erro, você pode reverter o estado aqui ou mostrar um toast
+        console.error("Erro ao salvar:", result.message);
       }
     } catch (error) {
       console.error(error);
@@ -76,12 +55,19 @@ export const SettingsProfilePreferences: React.FC = () => {
 
   return (
     <div className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800/60 dark:bg-neutral-950">
-      {/* Header Compacto */}
+      {/* Header Compacto com Indicador de Salvamento */}
       <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5 dark:border-neutral-800/60">
         <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
           <Layout size={14} className="text-amber-500" />
           Preferências do Sistema
         </h3>
+        {/* Spinner que aparece apenas quando está salvando */}
+        {isLoading && (
+          <div className="flex items-center gap-1.5 text-[10px] font-medium text-neutral-400">
+            <Loader2 size={12} className="animate-spin text-amber-500" />
+            Salvando...
+          </div>
+        )}
       </div>
 
       {/* Grid de Alta Densidade */}
@@ -99,14 +85,19 @@ export const SettingsProfilePreferences: React.FC = () => {
               { key: "mentionsAndComments", label: "Menções" },
             ].map((item) => (
               <label key={item.key} className={itemLabelClass}>
-                <input
-                  type="checkbox"
-                  checked={preferences?.notifications?.[item.key] ?? true}
-                  onChange={(e) =>
-                    handlePreferenceChange("notifications", item.key, e.target.checked)
-                  }
-                  className="h-3.5 w-3.5 rounded border-neutral-300 text-amber-500 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-900"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={preferences?.notifications?.[item.key] ?? true}
+                    onChange={(e) =>
+                      handlePreferenceChange("notifications", item.key, e.target.checked)
+                    }
+                    className="peer sr-only"
+                    disabled={isLoading}
+                  />
+                  <div className="h-4 w-7 rounded-full bg-neutral-300 transition-colors peer-checked:bg-amber-500 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-500 peer-focus-visible:ring-offset-1 dark:bg-neutral-700 dark:peer-focus-visible:ring-offset-neutral-950"></div>
+                  <div className="absolute top-0.5 left-0.5 h-3 w-3 transform rounded-full bg-white transition-transform peer-checked:translate-x-3"></div>
+                </div>
                 <span className="text-[11px] font-medium text-neutral-600 transition-colors group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
                   {item.label}
                 </span>
@@ -124,12 +115,15 @@ export const SettingsProfilePreferences: React.FC = () => {
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <span className="text-[9px] font-bold text-neutral-400">Fonte (px)</span>
+                {/* Dica: Para inputs de texto/número que salvam sozinhos, 
+                    usar onBlur previne que salve a cada tecla digitada */}
                 <input
                   type="number"
-                  value={preferences?.editor?.fontSize ?? 14}
-                  onChange={(e) =>
+                  defaultValue={preferences?.editor?.fontSize ?? 14}
+                  onBlur={(e) =>
                     handlePreferenceChange("editor", "fontSize", parseInt(e.target.value))
                   }
+                  disabled={isLoading}
                   className={inputClass}
                 />
               </div>
@@ -138,10 +132,11 @@ export const SettingsProfilePreferences: React.FC = () => {
                 <input
                   type="number"
                   step="0.1"
-                  value={preferences?.editor?.lineHeight ?? 1.6}
-                  onChange={(e) =>
+                  defaultValue={preferences?.editor?.lineHeight ?? 1.6}
+                  onBlur={(e) =>
                     handlePreferenceChange("editor", "lineHeight", parseFloat(e.target.value))
                   }
+                  disabled={isLoading}
                   className={inputClass}
                 />
               </div>
@@ -152,12 +147,17 @@ export const SettingsProfilePreferences: React.FC = () => {
                 { key: "spellCheck", label: "Corretor" },
               ].map((item) => (
                 <label key={item.key} className={itemLabelClass}>
-                  <input
-                    type="checkbox"
-                    checked={preferences?.editor?.[item.key] ?? true}
-                    onChange={(e) => handlePreferenceChange("editor", item.key, e.target.checked)}
-                    className="h-3.5 w-3.5 rounded border-neutral-300 text-amber-500 focus:ring-amber-500"
-                  />
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={preferences?.editor?.[item.key] ?? true}
+                      onChange={(e) => handlePreferenceChange("editor", item.key, e.target.checked)}
+                      className="peer sr-only"
+                      disabled={isLoading}
+                    />
+                    <div className="h-4 w-7 rounded-full bg-neutral-300 transition-colors peer-checked:bg-amber-500 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-500 peer-focus-visible:ring-offset-1 dark:bg-neutral-700 dark:peer-focus-visible:ring-offset-neutral-950"></div>
+                    <div className="absolute top-0.5 left-0.5 h-3 w-3 transform rounded-full bg-white transition-transform peer-checked:translate-x-3"></div>
+                  </div>
                   <span className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
                     {item.label}
                   </span>
@@ -179,12 +179,17 @@ export const SettingsProfilePreferences: React.FC = () => {
               { key: "contextAwareAssistance", label: "Contexto Dinâmico" },
             ].map((item) => (
               <label key={item.key} className={itemLabelClass}>
-                <input
-                  type="checkbox"
-                  checked={preferences?.ai?.[item.key] ?? true}
-                  onChange={(e) => handlePreferenceChange("ai", item.key, e.target.checked)}
-                  className="h-3.5 w-3.5 rounded border-neutral-300 text-amber-500 focus:ring-amber-500"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={preferences?.ai?.[item.key] ?? true}
+                    onChange={(e) => handlePreferenceChange("ai", item.key, e.target.checked)}
+                    className="peer sr-only"
+                    disabled={isLoading}
+                  />
+                  <div className="h-4 w-7 rounded-full bg-neutral-300 transition-colors peer-checked:bg-amber-500 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-500 peer-focus-visible:ring-offset-1 dark:bg-neutral-700 dark:peer-focus-visible:ring-offset-neutral-950"></div>
+                  <div className="absolute top-0.5 left-0.5 h-3 w-3 transform rounded-full bg-white transition-transform peer-checked:translate-x-3"></div>
+                </div>
                 <span className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
                   {item.label}
                 </span>
@@ -202,6 +207,7 @@ export const SettingsProfilePreferences: React.FC = () => {
             <select
               value={preferences?.language?.interface ?? "pt-PT"}
               onChange={(e) => handlePreferenceChange("language", "interface", e.target.value)}
+              disabled={isLoading}
               className={inputClass}
             >
               <option value="pt-BR">Português (Brasil)</option>
@@ -212,6 +218,7 @@ export const SettingsProfilePreferences: React.FC = () => {
                 className={inputClass}
                 value={preferences?.language?.dateFormat ?? "DD/MM/YYYY"}
                 onChange={(e) => handlePreferenceChange("language", "dateFormat", e.target.value)}
+                disabled={isLoading}
               >
                 <option value="DD/MM/YYYY">DD/MM/YYYY</option>
                 <option value="YYYY-MM-DD">ISO (YYYY-MM-DD)</option>
@@ -220,6 +227,7 @@ export const SettingsProfilePreferences: React.FC = () => {
                 className={inputClass}
                 value={preferences?.language?.timeFormat ?? "24h"}
                 onChange={(e) => handlePreferenceChange("language", "timeFormat", e.target.value)}
+                disabled={isLoading}
               >
                 <option value="24h">24h</option>
                 <option value="12h">12h</option>
@@ -239,12 +247,17 @@ export const SettingsProfilePreferences: React.FC = () => {
               { key: "showOnlineStatus", label: "Visibilidade Online" },
             ].map((item) => (
               <label key={item.key} className={itemLabelClass}>
-                <input
-                  type="checkbox"
-                  checked={preferences?.privacy?.[item.key] ?? false}
-                  onChange={(e) => handlePreferenceChange("privacy", item.key, e.target.checked)}
-                  className="h-3.5 w-3.5 rounded border-neutral-300 text-amber-500 focus:ring-amber-500"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={preferences?.privacy?.[item.key] ?? false}
+                    onChange={(e) => handlePreferenceChange("privacy", item.key, e.target.checked)}
+                    className="peer sr-only"
+                    disabled={isLoading}
+                  />
+                  <div className="h-4 w-7 rounded-full bg-neutral-300 transition-colors peer-checked:bg-amber-500 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-500 peer-focus-visible:ring-offset-1 dark:bg-neutral-700 dark:peer-focus-visible:ring-offset-neutral-950"></div>
+                  <div className="absolute top-0.5 left-0.5 h-3 w-3 transform rounded-full bg-white transition-transform peer-checked:translate-x-3"></div>
+                </div>
                 <span className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
                   {item.label}
                 </span>
@@ -260,12 +273,17 @@ export const SettingsProfilePreferences: React.FC = () => {
           </h4>
           <div className="space-y-2">
             <label className={itemLabelClass}>
-              <input
-                type="checkbox"
-                checked={preferences?.shortcuts?.enabled ?? true}
-                onChange={(e) => handlePreferenceChange("shortcuts", "enabled", e.target.checked)}
-                className="h-3.5 w-3.5 rounded border-neutral-300 text-amber-500 focus:ring-amber-500"
-              />
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  checked={preferences?.shortcuts?.enabled ?? true}
+                  onChange={(e) => handlePreferenceChange("shortcuts", "enabled", e.target.checked)}
+                  className="peer sr-only"
+                  disabled={isLoading}
+                />
+                <div className="h-4 w-7 rounded-full bg-neutral-300 transition-colors peer-checked:bg-amber-500 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-500 peer-focus-visible:ring-offset-1 dark:bg-neutral-700 dark:peer-focus-visible:ring-offset-neutral-950"></div>
+                <div className="absolute top-0.5 left-0.5 h-3 w-3 transform rounded-full bg-white transition-transform peer-checked:translate-x-3"></div>
+              </div>
               <span className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
                 Atalhos Ativados
               </span>
@@ -277,27 +295,6 @@ export const SettingsProfilePreferences: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Footer de Ações (Sincronizado) */}
-      {editMode && (
-        <div className="flex items-center justify-end gap-3 border-t border-neutral-100 bg-neutral-50/50 px-4 py-3 dark:border-neutral-800/60 dark:bg-neutral-900/40">
-          <button
-            onClick={handleCancelEdit}
-            disabled={isLoading}
-            className="px-3 py-1.5 text-[11px] font-bold text-neutral-500 transition-colors hover:text-neutral-800"
-          >
-            Descartar
-          </button>
-          <button
-            onClick={handleSaveChanges}
-            disabled={isLoading}
-            className="flex items-center gap-2 rounded-md bg-amber-500 px-4 py-1.5 text-[11px] font-bold text-neutral-950 shadow-sm transition-all hover:bg-amber-400 active:scale-95"
-          >
-            {isLoading ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
-            Salvar Preferências
-          </button>
-        </div>
-      )}
     </div>
   );
 };

@@ -9,7 +9,7 @@ import {
   Settings,
   FileText,
   Folder,
-  Home
+  Home,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useNotes } from "@/app/_contexts/notes-context";

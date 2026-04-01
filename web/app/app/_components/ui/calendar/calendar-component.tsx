@@ -1082,19 +1082,22 @@ export function CalendarPreview({
         {/* Main Content Area */}
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Header & Controls */}
+          {/* Header & Controls */}
           <div className="flex flex-col gap-3 border-b border-neutral-200 bg-white px-2 py-2 sm:px-3 sm:py-2.5 dark:border-neutral-800 dark:bg-neutral-950">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-              <div className="flex flex-col gap-3 xl:flex-1">
-                <div className="flex items-center justify-center gap-2 sm:justify-between xl:justify-start">
+              {/* Esquerda: Navegação e Data */}
+              <div className="flex items-center justify-between sm:justify-start sm:gap-4 xl:flex-1">
+                <div className="flex items-center gap-1">
                   <button
                     onClick={() => navigate(-1)}
                     className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:p-2 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                     type="button"
+                    title={locale.startsWith("pt") ? "Anterior" : "Previous"}
                   >
                     <ChevronLeft size={18} />
                   </button>
 
-                  <span className="min-w-[140px] text-center text-xs font-bold text-neutral-800 sm:min-w-[180px] sm:text-sm lg:min-w-[220px] dark:text-neutral-100">
+                  <span className="min-w-[150px] text-center text-[13px] font-bold tracking-wide text-neutral-800 sm:text-[14px] dark:text-neutral-100">
                     {headerTitle}
                   </span>
 
@@ -1102,82 +1105,101 @@ export function CalendarPreview({
                     onClick={() => navigate(1)}
                     className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:p-2 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                     type="button"
+                    title={locale.startsWith("pt") ? "Próximo" : "Next"}
                   >
                     <ChevronRight size={18} />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center">
+                <button
+                  onClick={goToToday}
+                  className="hidden rounded-md border border-neutral-200 px-3 py-1.5 text-[11px] font-bold tracking-wider text-neutral-500 uppercase transition-colors hover:bg-neutral-50 hover:text-neutral-700 sm:inline-flex dark:border-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                  type="button"
+                >
+                  {texts.today}
+                </button>
+              </div>
+
+              {/* Centro/Direita: Controles e Ações */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between xl:gap-4">
+                {/* Visualização (Views) */}
+                <div className="w-full overflow-x-auto pb-1 sm:w-auto sm:pb-0 [&::-webkit-scrollbar]:hidden">
+                  <div className="flex w-max rounded-lg bg-neutral-100/80 p-1 dark:bg-neutral-900/80">
+                    {(["day", "week", "month", "semester", "year"] as ViewType[]).map((v) => {
+                      const viewLabels: Record<ViewType, string> = {
+                        day: texts.day,
+                        week: texts.week,
+                        month: texts.month,
+                        semester: texts.semester,
+                        year: texts.year,
+                      };
+
+                      return (
+                        <button
+                          key={v}
+                          onClick={() => setView(v)}
+                          type="button"
+                          className={`flex-1 rounded-md px-3 py-1.5 text-[11px] font-bold tracking-wider whitespace-nowrap uppercase transition-all sm:flex-none ${
+                            view === v
+                              ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-800 dark:text-white"
+                              : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-300"
+                          }`}
+                        >
+                          {viewLabels[v]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Botões de Ação */}
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:w-auto">
+                  {/* Botão Hoje para Mobile (visto apenas no mobile) */}
                   <button
                     onClick={goToToday}
-                    className="rounded-md border border-neutral-200 px-2 py-2 text-[11px] font-semibold text-neutral-600 transition-colors hover:bg-neutral-50 sm:px-2.5 sm:py-1.5 sm:text-[11px] dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
+                    className="rounded-md border border-neutral-200 px-3 py-2 text-[11px] font-bold tracking-wider text-neutral-500 uppercase transition-colors hover:bg-neutral-50 sm:hidden dark:border-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-900"
                     type="button"
                   >
                     {texts.today}
                   </button>
 
-                  {googleConnected ? (
-                    <button
-                      onClick={() => {
-                        refreshEventsForYear(currentDate.getFullYear()).catch(() => {
-                          // Error state is already managed by CalendarContext.
-                        });
-                      }}
-                      className="inline-flex items-center justify-center gap-1 rounded-md border border-neutral-200 px-2 py-2 text-[11px] font-medium text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700 sm:px-2.5 sm:py-1.5 sm:text-[11px] dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
-                      title={locale.startsWith("pt") ? "Atualizar eventos" : "Refresh events"}
-                      type="button"
-                    >
-                      <RefreshCw size={13} />
-                      <span>{locale.startsWith("pt") ? "Atualizar" : "Refresh"}</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={connectGoogleCalendar}
-                      className="inline-flex items-center justify-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-2 text-[11px] font-medium text-blue-600 transition-colors hover:bg-blue-100 sm:px-2.5 sm:py-1.5 sm:text-[11px] dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
-                      type="button"
-                    >
-                      <FcGoogle size={12} />
-                      <span>{locale.startsWith("pt") ? "Sincronizar" : "Sync"}</span>
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => setIsCreateModalOpen(true)}
-                    className="inline-flex items-center justify-center gap-1 rounded-md border border-yellow-200 bg-yellow-50 px-2 py-2 text-[11px] font-semibold text-yellow-700 transition-colors hover:bg-yellow-100 sm:px-2.5 sm:py-1.5 sm:text-[11px] dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300 dark:hover:bg-yellow-900/35"
-                    type="button"
-                  >
-                    <Plus size={13} />
-                    <span>{locale.startsWith("pt") ? "Criar" : "Create"}</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="w-full overflow-x-auto pb-1 xl:w-auto xl:pb-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500 dark:[&::-webkit-scrollbar-thumb]:bg-yellow-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-yellow-500/60 [&::-webkit-scrollbar-track]:bg-transparent">
-                <div className="flex w-max min-w-full rounded-lg bg-neutral-100 p-0.5 sm:min-w-0 dark:bg-neutral-900">
-                  {(["day", "week", "month", "semester", "year"] as ViewType[]).map((v) => {
-                    const viewLabels: Record<ViewType, string> = {
-                      day: texts.day,
-                      week: texts.week,
-                      month: texts.month,
-                      semester: texts.semester,
-                      year: texts.year,
-                    };
-
-                    return (
+                  <div className="col-span-2 flex gap-2 sm:col-span-1">
+                    {googleConnected ? (
                       <button
-                        key={v}
-                        onClick={() => setView(v)}
+                        onClick={() => {
+                          refreshEventsForYear(currentDate.getFullYear()).catch(() => {});
+                        }}
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-neutral-200 px-3 py-2 text-[11px] font-bold text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-800 sm:flex-none sm:px-3 sm:py-1.5 dark:border-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
+                        title={locale.startsWith("pt") ? "Atualizar eventos" : "Refresh events"}
                         type="button"
-                        className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all sm:flex-none sm:px-2.5 sm:py-1 sm:text-[11px] ${
-                          view === v
-                            ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-800 dark:text-white"
-                            : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
-                        }`}
                       >
-                        {viewLabels[v]}
+                        <RefreshCw size={13} className="text-neutral-400" />
+                        <span className="hidden sm:inline">
+                          {locale.startsWith("pt") ? "Atualizar" : "Refresh"}
+                        </span>
                       </button>
-                    );
-                  })}
+                    ) : (
+                      <button
+                        onClick={connectGoogleCalendar}
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-[11px] font-bold text-blue-700 transition-colors hover:bg-blue-100 sm:flex-none sm:px-3 sm:py-1.5 dark:border-blue-800/60 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
+                        type="button"
+                      >
+                        <FcGoogle size={14} />
+                        <span className="hidden sm:inline">
+                          {locale.startsWith("pt") ? "Sincronizar" : "Sync Google"}
+                        </span>
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => setIsCreateModalOpen(true)}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-amber-200 bg-amber-500 px-4 py-2 text-[11px] font-bold text-white shadow-sm transition-all hover:bg-amber-600 active:scale-95 sm:flex-none sm:py-1.5 dark:border-amber-600 dark:hover:bg-amber-500"
+                      type="button"
+                    >
+                      <Plus size={14} />
+                      <span>{locale.startsWith("pt") ? "Criar Evento" : "Create Event"}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

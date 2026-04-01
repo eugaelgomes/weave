@@ -108,11 +108,7 @@ const weaveFeatureTree: FeatureNode[] = [
     icon: FaBuilding,
     title: "Organizações",
     blurb: "Governanca para equipes",
-    subs: [
-      "Areas e subareas sem limite",
-      "4 niveis de acesso",
-      "Dominios permitidos com DNS",
-    ],
+    subs: ["Areas e subareas sem limite", "4 niveis de acesso", "Dominios permitidos com DNS"],
   },
   {
     icon: FaSearch,
@@ -141,7 +137,10 @@ export default function FeaturesList() {
         </div>
 
         <div className="relative mt-4 md:mt-6">
-          <span className="pointer-events-none absolute left-1/2 -top-6 hidden h-[calc(100%+1.5rem)] w-px -translate-x-1/2 bg-neutral-200 md:block" aria-hidden="true" />
+          <span
+            className="pointer-events-none absolute -top-6 left-1/2 hidden h-[calc(100%+1.5rem)] w-px -translate-x-1/2 bg-neutral-200 md:block"
+            aria-hidden="true"
+          />
 
           <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
             {weaveFeatureTree.map((feature, index) => {
@@ -152,16 +151,19 @@ export default function FeaturesList() {
                   key={feature.title}
                   className={`relative flex flex-col rounded-lg border p-2.5 text-left shadow-[0_6px_16px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-0.5 ${style.card} ${style.hover}`}
                 >
-                  <span className={`pointer-events-none absolute -left-5 top-1/2 hidden h-px w-5 -translate-y-1/2 md:inline ${style.line}`} aria-hidden="true" />
+                  <span
+                    className={`pointer-events-none absolute top-1/2 -left-5 hidden h-px w-5 -translate-y-1/2 md:inline ${style.line}`}
+                    aria-hidden="true"
+                  />
 
                   <div className="flex items-center gap-1.5">
-                    <span className={`flex h-6 w-6 items-center justify-center rounded-md border shadow-sm ${style.iconWrap}`}>
+                    <span
+                      className={`flex h-6 w-6 items-center justify-center rounded-md border shadow-sm ${style.iconWrap}`}
+                    >
                       <Icon className={`h-3.5 w-3.5 ${style.icon}`} />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-[10px] font-bold text-neutral-900">
-                        {feature.title}
-                      </p>
+                      <p className="text-[10px] font-bold text-neutral-900">{feature.title}</p>
                       <p className="text-[9px] text-neutral-600">{feature.blurb}</p>
                     </div>
                   </div>
@@ -169,7 +171,10 @@ export default function FeaturesList() {
                   <ul className="mt-1.5 space-y-0.5 border-l border-dashed border-neutral-300 pl-2.5 text-[9px] text-neutral-700">
                     {feature.subs.map((sub) => (
                       <li key={`${feature.title}-${sub}`} className="relative pl-2.5">
-                        <span className={`pointer-events-none absolute left-0 top-1/2 h-px w-1.5 -translate-y-1/2 ${style.line}`} aria-hidden="true" />
+                        <span
+                          className={`pointer-events-none absolute top-1/2 left-0 h-px w-1.5 -translate-y-1/2 ${style.line}`}
+                          aria-hidden="true"
+                        />
                         {sub}
                       </li>
                     ))}

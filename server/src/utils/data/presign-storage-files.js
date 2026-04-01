@@ -1,6 +1,7 @@
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const spacesService = require("../../services/storage");
+const { assertFileAccess, StorageAccessError } = require("@/services/storage/access-control");
 
 const spacesHostname = (() => {
   try {
@@ -23,6 +24,8 @@ const SPACES_PREFIXES = [
     "organizations",
   spacesService.constructor?.FOLDER_PATHS?.AGENTS?.ROOT || "agents",
 ];
+
+const SESSION_MAX_AGE_SECONDS = 12 * 60 * 60;
 
 function isSpacesManagedValue(value) {
   if (!value || typeof value !== "string") return false;
@@ -54,7 +57,7 @@ function isSpacesManagedValue(value) {
  * @param {number} expiresIn - Tempo em segundos para a URL expirar (padrão 3600s = 1 hora)
  * @returns {Promise<string|null>} A URL pré-assinada
  */
-async function generatePresignedUrl(key, expiresIn = 3600) {
+async function generatePresignedUrl(key, expiresIn = SESSION_MAX_AGE_SECONDS) {
   if (!key) return null;
 
   try {
@@ -83,8 +86,31 @@ async function generatePresignedUrl(key, expiresIn = 3600) {
  * @param {number} expiresIn - Tempo em segundos para a URL expirar (padrão 3600s = 1 hora)
  * @returns {Promise<Object>} Novo objeto com as URLs substituídas
  */
-async function presignObjectFields(data, fields = [], expiresIn = 3600) {
+const normalizeOptions = (options) => {
+  if (typeof options === "number") {
+    return { expiresIn: options };
+  }
+
+  if (options && typeof options === "object") {
+    return {
+      expiresIn: options.expiresIn ?? SESSION_MAX_AGE_SECONDS,
+      userId: options.userId,
+    };
+  }
+
+  return { expiresIn: SESSION_MAX_AGE_SECONDS };
+};
+
+async function presignObjectFields(data, fields = [], options = {}) {
   if (!data) return data;
+
+  const { expiresIn, userId } = normalizeOptions(options);
+
+  if (!userId) {
+    throw new StorageAccessError(
+      "Contexto do usuário é obrigatório para gerar URLs assinadas."
+    );
+  }
 
   const result = { ...data };
 
@@ -103,6 +129,7 @@ async function presignObjectFields(data, fields = [], expiresIn = 3600) {
       continue;
     }
 
+    await assertFileAccess(userId, key);
     result[field] = await generatePresignedUrl(key, expiresIn);
   }
 
@@ -117,10 +144,10 @@ async function presignObjectFields(data, fields = [], expiresIn = 3600) {
  * @param {number} expiresIn - Tempo em segundos para a URL expirar
  * @returns {Promise<Array<Object>>}
  */
-async function presignListFields(list, fields = [], expiresIn = 3600) {
+async function presignListFields(list, fields = [], options = {}) {
   if (!list || !Array.isArray(list)) return [];
   return Promise.all(
-    list.map((item) => presignObjectFields(item, fields, expiresIn))
+    list.map((item) => presignObjectFields(item, fields, options))
   );
 }
 

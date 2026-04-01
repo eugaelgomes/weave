@@ -81,7 +81,7 @@ const ptBR = {
       filterButtonLabel: "Filtrar resultados",
       projects: "Projetos",
       notes: "Notas",
-      noResultTitle: "Nenhum resultado encontrado para \"{term}\"",
+      noResultTitle: 'Nenhum resultado encontrado para "{term}"',
       noResultDescription: "Tente buscar por outro termo ou tag.",
       escToClose: "para fechar",
       arrowsToNavigate: "para navegar",

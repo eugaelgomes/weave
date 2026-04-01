@@ -176,14 +176,12 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
         {/* Toggle collapse desktop only */}
         <div className="flex items-center px-2 py-1.5">
           {!isCollapsed && (
-            <h2 className="text-[10px] font-bold uppercase tracking-wider text-yellow-500">
-              Menu
-            </h2>
+            <h2 className="text-[10px] font-bold tracking-wider text-yellow-500 uppercase">Menu</h2>
           )}
           {toggleCollapse && (
             <button
               onClick={toggleCollapse}
-              className="ml-auto hidden rounded-md p-1 text-yellow-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 lg:block"
+              className="ml-auto hidden rounded-md p-1 text-yellow-500 hover:bg-neutral-100 lg:block dark:hover:bg-neutral-800"
               title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
             >
               {isCollapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
@@ -191,8 +189,8 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <ul className="space-y-1 px-1 pb-2 pt-1">
+        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent">
+          <ul className="space-y-1 px-1 pt-1 pb-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               const active = isItemActive(item);
@@ -212,7 +210,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                         handleLinkClick();
                       }
                     }}
-                    className={`flex items-center rounded-md px-2 py-2 font-medium text-sm transition duration-200 ${
+                    className={`flex items-center rounded-md px-2 py-2 text-sm font-medium transition duration-200 ${
                       active
                         ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-500"
                         : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-white"
@@ -221,9 +219,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                     <div className="flex items-center gap-2">
                       <Icon
                         className={`h-4 w-4 ${
-                          active
-                            ? "text-yellow-500"
-                            : "text-neutral-500 dark:text-neutral-500"
+                          active ? "text-yellow-500" : "text-neutral-500 dark:text-neutral-500"
                         }`}
                       />
                       {!isCollapsed && <span className="truncate">{item.label}</span>}
@@ -251,15 +247,14 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                       {item.subItems!.map((subItem) => {
                         const SubIcon = subItem.icon;
                         const isSubActive =
-                          pathname === subItem.path ||
-                          pathname.startsWith(`${subItem.path}/`);
+                          pathname === subItem.path || pathname.startsWith(`${subItem.path}/`);
 
                         return (
                           <li key={subItem.path}>
                             <Link
                               href={subItem.path}
                               onClick={handleLinkClick}
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 font-medium text-sm transition duration-200 ${
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium transition duration-200 ${
                                 isSubActive
                                   ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-500"
                                   : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900"
@@ -289,7 +284,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
               <div className="my-2 h-px w-full bg-neutral-200 dark:bg-neutral-800" />
 
               <div>
-                <h2 className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-wider text-yellow-500">
+                <h2 className="mb-1.5 px-2 text-[10px] font-bold tracking-wider text-yellow-500 uppercase">
                   {t.nav.recentAccess}
                 </h2>
 

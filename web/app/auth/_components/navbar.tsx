@@ -33,7 +33,7 @@ export default function Navbar({ ctaLabel, ctaHref }: NavbarProps) {
           {ctaLabel && ctaHref && (
             <Link
               href={ctaHref}
-              className="rounded-lg bg-yellow-500 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white transition-colors hover:bg-yellow-600"
+              className="rounded-lg bg-yellow-500 px-3 py-1 text-xs font-bold tracking-wide text-white uppercase transition-colors hover:bg-yellow-600"
             >
               {ctaLabel}
             </Link>

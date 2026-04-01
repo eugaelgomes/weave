@@ -44,6 +44,34 @@ export interface PlanDetails {
   };
 }
 
+export interface UsageDetails {
+  monthly_cycle?: {
+    exports?: {
+      notes_count?: number;
+      backups_count?: number;
+    };
+    storage?: {
+      files_count?: number;
+      total_uploaded_mb?: number;
+    };
+    weave_ai?: {
+      messages_sent?: number;
+      tokens_estimated?: number;
+    };
+    current_period_end?: string;
+    current_period_start?: string;
+  };
+  usage_summary?: {
+    notes_total?: number;
+    projects_total?: number;
+    team_members_total?: number;
+  };
+  history_metadata?: {
+    last_activity_at?: string;
+    usage_percentage_total?: number;
+  };
+}
+
 export interface User {
   id?: string;
   username?: string;
@@ -60,6 +88,7 @@ export interface User {
   org_unique_name?: string;
   org_logo_url?: string;
   org_member_role?: string | string[] | null;
+  logo_url?: string;
   org_member_since?: string;
 
   theme_mode?: string;
@@ -81,7 +110,7 @@ export interface User {
   usage_client_type?: string;
   usage_period_start?: string;
   usage_period_end?: string;
-  usage_details?: Record<string, unknown>;
+  usage_details?: UsageDetails;
 }
 
 interface BackendProfile {
@@ -109,6 +138,7 @@ interface BackendOrganization {
   org_name: string;
   org_logo_url?: string;
   org_member_role?: string | string[] | null;
+  logo_url?: string;
   org_member_since?: string;
 }
 
@@ -116,7 +146,7 @@ interface BackendPlan {
   id: string;
   plan_name: string;
   client_type: string;
-  details: Record<string, unknown>;
+  details: any;
 }
 
 interface BackendPlanUsage {
@@ -125,7 +155,7 @@ interface BackendPlanUsage {
   client_type: string;
   period_start: string;
   period_end: string;
-  details: Record<string, unknown>;
+  details: any;
 }
 
 // Interface unificada dos dados que vêm dentro de 'user_data'
@@ -157,6 +187,7 @@ interface BackendLoginUserOrganization {
   unique_name: string;
   name: string;
   role?: string | string[] | null;
+  logo_url?: string;
 }
 
 interface BackendLoginUserSubscription {
@@ -211,7 +242,7 @@ interface BackendMeResponse {
       id: string;
       plan_name: string;
       client_type: string;
-      details: Record<string, unknown>;
+      details: any;
     };
     current_plan_usage: {
       plan_id: string;
@@ -219,7 +250,7 @@ interface BackendMeResponse {
       client_type: string;
       period_start: string;
       period_end: string;
-      details: Record<string, unknown>;
+      details: any;
     };
     usage_preference?: Record<string, unknown>;
   };
@@ -241,6 +272,11 @@ export interface CreateUserData {
   password: string;
   user_name?: string;
 }
+
+const normalizeStorageUrl = (value?: string | null): string => {
+  if (!value) return "";
+  return getStorageUrl(value);
+};
 
 // --- 3. Helpers & Mappers (Adapter Pattern) ---
 
@@ -281,7 +317,7 @@ const _mapBackendDataToUser = (data: BackendUserData): User => {
     org_id: organization?.id,
     org_name: organization?.org_name,
     org_unique_name: organization?.unique_name,
-    org_logo_url: organization?.org_logo_url,
+    org_logo_url: normalizeStorageUrl(organization?.org_logo_url),
     org_member_role: organization?.org_member_role,
     org_member_since: organization?.org_member_since,
 
@@ -309,6 +345,7 @@ const _mapBackendDataToUser = (data: BackendUserData): User => {
  */
 const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
   const { user } = data;
+  const organization = user.user_organization;
 
   return {
     // Profile
@@ -323,10 +360,11 @@ const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
     private_profile: user.user_settings.private_profile,
 
     // Organization
-    org_id: user.user_organization.id,
-    org_name: user.user_organization.name,
-    org_unique_name: user.user_organization.unique_name,
-    org_member_role: user.user_organization.role,
+    org_id: organization?.id,
+    org_name: organization?.name,
+    org_unique_name: organization?.unique_name,
+    org_logo_url: normalizeStorageUrl(organization?.logo_url),
+    org_member_role: organization?.role,
 
     // Plan
     plan_id: user.user_subscription.plan_id,
@@ -339,6 +377,7 @@ const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
  */
 const mapMeResponseToUser = (data: BackendMeResponse): User => {
   const { user } = data;
+  const organization = user.user_organization;
 
   return {
     // Profile
@@ -358,12 +397,12 @@ const mapMeResponseToUser = (data: BackendMeResponse): User => {
     auth_with_google: user.user_settings.auth_with_google,
 
     // Organization
-    org_id: user.user_organization.id,
-    org_name: user.user_organization.name,
-    org_unique_name: user.user_organization.unique_name,
-    org_logo_url: user.user_organization.logo_url,
-    org_member_role: user.user_organization.member_role,
-    org_member_since: user.user_organization.member_since,
+    org_id: organization?.id,
+    org_name: organization?.name,
+    org_unique_name: organization?.unique_name,
+    org_logo_url: normalizeStorageUrl(organization?.logo_url),
+    org_member_role: organization?.member_role,
+    org_member_since: organization?.member_since,
 
     // Plan
     plan_id: user.current_plan.id,

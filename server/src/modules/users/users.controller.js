@@ -373,10 +373,16 @@ class userController {
       const protectedUser = await presignObjectFields(
         user,
         ["avatar_url"],
-        12 * 60 * 60
+        {
+          expiresIn: 12 * 60 * 60,
+          userId: req.user.userId,
+        }
       );
       const protectedOrg = organization
-        ? await presignObjectFields(organization, ["logo_url"], 12 * 60 * 60)
+        ? await presignObjectFields(organization, ["logo_url"], {
+            expiresIn: 12 * 60 * 60,
+            userId: req.user.userId,
+          })
         : null;
 
       return res.status(200).json({
@@ -628,7 +634,10 @@ class userController {
       const protectedMock = await presignObjectFields(
         mockUserForPresign,
         ["avatar_url"],
-        12 * 60 * 60
+        {
+          expiresIn: 12 * 60 * 60,
+          userId: req.user.userId,
+        }
       );
 
       const response = {

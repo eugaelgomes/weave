@@ -78,7 +78,7 @@ const Layout = ({ children }: LayoutProps) => {
         )}
 
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <div className="no-scrollbar flex-1 overflow-y-auto scroll-smooth rounded-tl-lg border-l border-t border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950">
+          <div className="flex-1 overflow-y-auto scroll-smooth rounded-tl-lg border-t border-l border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent">
             <div className="mx-auto flex min-h-full w-full flex-col bg-neutral-100 px-2 py-2 dark:bg-neutral-900">
               <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-1 flex-col space-y-2 duration-500">
                 <div className="flex-1">{children}</div>

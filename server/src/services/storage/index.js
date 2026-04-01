@@ -374,15 +374,24 @@ class SpacesService {
    */
   extractKeyFromUrl(url) {
     if (!url) return null;
+    const normalize = (value = "") => value.replace(/\/+/g, "/");
+    const trimLeadingSlash = (value = "") => value.replace(/^\/+/, "");
+
     if (!url.startsWith("http")) {
-      return url.startsWith("/") ? url.substring(1) : url;
+      return trimLeadingSlash(normalize(url));
     }
 
     try {
       const urlObj = new URL(url);
-      const pathWithoutBucket = urlObj.pathname.substring(1);
-      const bucketPrefixLength = this.bucketName.length + 1;
-      return pathWithoutBucket.substring(bucketPrefixLength);
+      const normalizedPath = normalize(urlObj.pathname);
+      let path = trimLeadingSlash(normalizedPath);
+
+      const bucketPrefix = `${this.bucketName}/`;
+      if (path.startsWith(bucketPrefix)) {
+        path = path.substring(bucketPrefix.length);
+      }
+
+      return path;
     } catch (error) {
       console.error("Erro ao extrair key da URL:", error);
       return null;

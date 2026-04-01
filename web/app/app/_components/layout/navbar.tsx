@@ -7,14 +7,7 @@ import Image from "next/image";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useTheme } from "@/app/_contexts/theme-context";
 import { useLanguage } from "@/app/_contexts/language-context";
-import {
-  Menu,
-  X,
-  Sun,
-  Moon,
-  Search,
-  CircleUserRound,
-} from "lucide-react";
+import { Menu, X, Sun, Moon, Search, CircleUserRound } from "lucide-react";
 import { type User } from "@/app/_services/authentication/auth-service";
 import SearchModal from "@/app/app/_components/ui/navbar/search-modal";
 
@@ -29,13 +22,7 @@ const formatters = {
   },
 };
 
-const UserAvatar = ({
-  user,
-  size = "sm",
-}: {
-  user: User;
-  size?: "sm" | "md" | "lg";
-}) => {
+const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "sm" | "md" | "lg" }) => {
   const sizeClasses = {
     sm: "h-8 w-8",
     md: "h-12 w-12",
@@ -73,14 +60,7 @@ interface MenuContentProps {
   t: ReturnType<typeof useLanguage>["t"];
 }
 
-const MenuContent = ({
-  user,
-  logout,
-  onClose,
-  onToggleTheme,
-  theme,
-  t,
-}: MenuContentProps) => (
+const MenuContent = ({ user, logout, onClose, onToggleTheme, theme, t }: MenuContentProps) => (
   <div className="flex flex-col overflow-hidden">
     <div className="flex items-center gap-4 border-b border-neutral-200 px-4 py-4 dark:border-neutral-800">
       <UserAvatar user={user} size="md" />
@@ -161,7 +141,6 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
 
   useEffect(() => {
     setMounted(true);
-
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
@@ -247,10 +226,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
 
               {user?.org_id && (
                 <div className="hidden items-center gap-2 sm:flex">
-                  <div
-                    className="h-4 w-px bg-neutral-200 dark:bg-neutral-800"
-                    aria-hidden="true"
-                  />
+                  <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-800" aria-hidden="true" />
                   <Link
                     href={`/app/organization/about/${user.org_id}`}
                     title={`Saiba mais sobre ${user.org_name}`}

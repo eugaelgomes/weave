@@ -910,7 +910,7 @@ class NotesController {
       // Validar tipos permitidos
       const {
         ALLOWED_BLOCK_TYPES,
-      } = require("@/services/patterns/product-patterns");
+      } = require("@/utils/patterns/product-patterns");
       if (!ALLOWED_BLOCK_TYPES.includes(type)) {
         throw new Error(
           `Tipo inválido. Tipos permitidos: ${ALLOWED_BLOCK_TYPES.join(", ")}`

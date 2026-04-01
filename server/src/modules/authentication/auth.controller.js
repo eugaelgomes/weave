@@ -122,10 +122,16 @@ class AuthController {
       const protectedUser = await presignObjectFields(
         user,
         ["avatar_url"],
-        12 * 60 * 60
+        {
+          expiresIn: 12 * 60 * 60,
+          userId: user.user_id,
+        }
       );
       const protectedOrg = organization
-        ? await presignObjectFields(organization, ["logo_url"], 12 * 60 * 60)
+        ? await presignObjectFields(organization, ["logo_url"], {
+            expiresIn: 12 * 60 * 60,
+            userId: user.user_id,
+          })
         : null;
 
       // Token https only

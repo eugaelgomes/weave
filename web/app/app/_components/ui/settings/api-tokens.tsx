@@ -80,12 +80,10 @@ const PasswordConfirmModal = ({ isOpen, onClose, onConfirm }: any) => {
     setError("");
 
     try {
-      // Como o auth().login() do front sobrescrevia todo o contexto e relogava a página
-      // fazemos a checagem com o mesmo endpoint do login mas sem relogar pela context root
       const response = await apiClient.post(API_ENDPOINTS.SIGNIN, {
-        login: "current_user", // Backend usa sessão e jwt, porém a rota é pra e-mail e senha
+        login: "current_user",
         password,
-        verify_only: true, // Flag adicional para o backend, se necessário, ou mock de reautenticação
+        verify_only: true,
       });
 
       if (response.ok) {
@@ -120,7 +118,7 @@ const PasswordConfirmModal = ({ isOpen, onClose, onConfirm }: any) => {
                 placeholder="Sua senha..."
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-[12px] outline-none focus:ring-1 focus:ring-yellow-500 dark:border-neutral-800 dark:bg-neutral-950"
+                className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-[12px] outline-none placeholder:text-neutral-400 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-800 dark:bg-neutral-950 dark:placeholder:text-neutral-600"
                 autoFocus
               />
               {error && <p className="text-[10px] font-bold text-red-500">{error}</p>}
@@ -319,7 +317,7 @@ export const SettingsApiTokens: React.FC = () => {
                       placeholder="Ex: Integração GitHub Actions"
                       value={newTokenName}
                       onChange={(e) => setNewTokenName(e.target.value)}
-                      className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-[12px] outline-none focus:ring-1 focus:ring-yellow-500 dark:border-neutral-800 dark:bg-neutral-950"
+                      className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-[12px] outline-none placeholder:text-neutral-400 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-800 dark:bg-neutral-950 dark:placeholder:text-neutral-600"
                       required
                     />
                   </div>
@@ -364,10 +362,10 @@ export const SettingsApiTokens: React.FC = () => {
                                   : "border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:bg-neutral-900"
                               }`}
                             >
-                              <div className="relative mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center">
+                              <div className="relative mt-0.5 flex items-center">
                                 <input
                                   type="checkbox"
-                                  className="peer h-3.5 w-3.5 rounded border-neutral-300 text-yellow-500 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900"
+                                  className="peer sr-only"
                                   checked={isSelected}
                                   onChange={(e) => {
                                     if (e.target.checked) {
@@ -379,8 +377,10 @@ export const SettingsApiTokens: React.FC = () => {
                                     }
                                   }}
                                 />
+                                <div className="h-4 w-7 rounded-full bg-neutral-300 transition-colors peer-checked:bg-yellow-500 peer-focus-visible:ring-2 peer-focus-visible:ring-yellow-500 peer-focus-visible:ring-offset-1 dark:bg-neutral-700 dark:peer-focus-visible:ring-offset-neutral-950"></div>
+                                <div className="absolute top-0.5 left-0.5 h-3 w-3 transform rounded-full bg-white transition-transform peer-checked:translate-x-3"></div>
                               </div>
-                              <div className="flex flex-col gap-0.5">
+                              <div className="flex flex-col gap-0.5 pt-0.5">
                                 <span
                                   className={`text-[11px] font-bold transition-colors ${
                                     isSelected
@@ -434,7 +434,7 @@ export const SettingsApiTokens: React.FC = () => {
         </div>
 
         {/* Resumo e Listagem de Tokens */}
-        <div className="space-y-2">
+        <div className="mt-4 space-y-2">
           {loadingTokens ? (
             <div className="flex flex-col items-center gap-2 py-10">
               <Loader2 className="h-5 w-5 animate-spin text-neutral-300" />

@@ -505,7 +505,7 @@ Inclua apenas os campos que devem ser atualizados.`,
 
           const {
             ALLOWED_BLOCK_TYPES,
-          } = require("@/services/patterns/product-patterns");
+          } = require("@/utils/patterns/product-patterns");
           const blocks = [];
           if (parsedResponse.blocks && parsedResponse.blocks.length > 0) {
             for (let i = 0; i < parsedResponse.blocks.length; i++) {

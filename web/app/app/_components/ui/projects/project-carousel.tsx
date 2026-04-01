@@ -94,7 +94,7 @@ export default function ProjectsCarousel({
   };
 
   return (
-    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 sm:p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 shadow-sm sm:p-3 dark:border-neutral-800 dark:bg-neutral-950">
       <div className="mb-2 flex items-center justify-between gap-2">
         <h3 className="text-xs font-semibold text-neutral-500 sm:text-sm dark:text-neutral-100">
           {title}
@@ -157,10 +157,10 @@ export default function ProjectsCarousel({
                     <div className="mb-1.5 flex flex-shrink-0 items-start justify-between gap-1.5">
                       <div className="flex min-w-0 flex-1 items-center gap-1.5">
                         {project.icon && (
-                          <span className="text-xs flex-shrink-0">{project.icon}</span>
+                          <span className="flex-shrink-0 text-xs">{project.icon}</span>
                         )}
                         <div className="min-w-0 flex-1">
-                          <h3 className="line-clamp-1 text-xs font-semibold leading-tight text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-white dark:group-hover:text-yellow-400">
+                          <h3 className="line-clamp-1 text-xs leading-tight font-semibold text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-white dark:group-hover:text-yellow-400">
                             {project.title}
                           </h3>
                         </div>
