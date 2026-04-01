@@ -158,8 +158,8 @@ class userController {
           await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
 
         if (
-          (domainInfo && domainInfo.status === "VERIFIED") ||
-          domainInfo.status === "PENDING"
+          domainInfo &&
+          (domainInfo.status === "VERIFIED" || domainInfo.status === "PENDING")
         ) {
           // Verifica se existe convite pendente para este email nesta organização
           const existingInvite =
