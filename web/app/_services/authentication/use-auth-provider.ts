@@ -126,7 +126,7 @@ export function useAuthProvider(): AuthState & AuthActions {
       console.error("Logout error:", error);
     } finally {
       clearAuthState();
-      router.push("/auth/signin");
+      router.push("/auth/");
       return { success: true };
     }
   };

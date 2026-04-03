@@ -13,7 +13,7 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({
   children,
   fallback,
-  redirectTo = "/auth/signin",
+  redirectTo = "/auth/",
 }: ProtectedRouteProps) {
   const { authenticated, loading } = useAuth();
   const router = useRouter();

@@ -92,7 +92,7 @@ export default function Navbar({
           </Link>
           
           <a
-            href={`${APP_URL}/auth/signin`}
+            href={`${APP_URL}/auth`}
             className="rounded-md px-4 py-1.5 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-100/80 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-white"
           >
             {t.navbar.login}

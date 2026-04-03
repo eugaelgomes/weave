@@ -18,7 +18,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (!loading && !authenticated && !hasRedirected.current) {
       hasRedirected.current = true;
       const normalizedPath = pathname.replace(/\/+$/, "") || "/app";
-      router.push(`/auth/signin?redirect=${encodeURIComponent(normalizedPath)}`);
+      router.push(`/auth/?redirect=${encodeURIComponent(normalizedPath)}`);
     }
   }, [authenticated, loading, router, pathname]);
 

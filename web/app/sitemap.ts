@@ -13,7 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
     {
-      url: `${NEXT_PUBLIC_APP_URL}/auth/signin`,
+      url: `${NEXT_PUBLIC_APP_URL}/auth/`,
       lastModified,
       changeFrequency: "yearly",
       priority: 0.5,

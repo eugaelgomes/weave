@@ -181,7 +181,7 @@ Se o cookie **não aparecer**, problemas comuns:
 
 ```bash
 # Login
-curl -v -X POST https://api.example.com/api/v1/auth/signin \
+curl -v -X POST https://api.example.com/api/v1/auth \
   -H "Content-Type: application/json" \
   -H "Origin: https://example.com" \
   -d '{"login":"user","password":"pass"}' \

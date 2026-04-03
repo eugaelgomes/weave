@@ -25,7 +25,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
   // Se não estiver autenticado, o AuthContext ou middleware deve lidar com o redirect
   if (!authenticated) {
     if (typeof window !== "undefined") {
-      window.location.href = "/auth/signin";
+      window.location.href = "/auth/";
     }
     return null;
   }

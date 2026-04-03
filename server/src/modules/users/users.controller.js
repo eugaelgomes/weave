@@ -287,7 +287,7 @@ class userController {
           avatar_url: profileImageUrl,
           created_at: newUser[0].created_at,
         },
-        redirect: "/auth/signin",
+        redirect: "/auth/",
       });
     } catch (error) {
       console.error("An error occurred during registration:", error);

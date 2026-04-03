@@ -53,7 +53,7 @@ const originMatchers = PRODUCTION_ORIGINS_LIST.map(buildMatcher);
 let missingOriginConfigLogged = false;
 
 const shouldSkipOriginGuard = (path) =>
-  path.startsWith("/webhooks") || path.startsWith("/auth/signin/sso/");
+  path.startsWith("/webhooks") || path.startsWith("/auth/sso/");
 
 const isAllowedOrigin = (origin, isDev) => {
   if (!origin) {

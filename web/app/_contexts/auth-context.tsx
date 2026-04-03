@@ -77,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     // Só verifica autenticação se não estiver em páginas públicas
-    const publicPaths = ["/auth/signin", "/auth/signup", "/auth/reset-password"];
+    const publicPaths = ["/auth/", "/auth/signup", "/auth/reset-password"];
     const isPublicPath = publicPaths.some((path) => window.location.pathname.startsWith(path));
 
     if (isPublicPath) {
@@ -157,7 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Limpa estado local independentemente do sucesso da chamada de rede
       setUser(null);
       setTheme("light");
-      window.location.href = "/auth/signin";
+      window.location.href = "/auth/";
     }
   };
 

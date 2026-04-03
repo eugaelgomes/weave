@@ -1,0 +1,37 @@
+export const enUS = {
+  signIn: {
+    title: "Welcome Back!",
+    usernamePlaceholder: "Username or Email",
+    passwordPlaceholder: "Password",
+    forgotPassword: "Forgot Password?",
+    submitButton: "Sign In",
+    orLoginWith: "or sign in with",
+    noAccount: "Don't have an account?",
+    createAccount: "Create one now!",
+  },
+  signUp: {
+    title: "Create Account",
+    usernamePlaceholder: "Username or Email",
+    passwordPlaceholder: "Password",
+    confirmPasswordPlaceholder: "Confirm Password",
+    termsText1: "By clicking ",
+    termsText2: "Register",
+    termsText3: ", you agree to our terms of use.",
+    submitButton: "Sign Up",
+    orRegisterWith: "or sign up with",
+    alreadyHaveAccount: "Already have an account?",
+    loginNow: "Sign in now!",
+  },
+  forgotPassword: {
+    title: "Forgot Password?",
+    emailPlaceholder: "Enter your email address",
+    infoText: "* We will send you a secure link to reset your password.",
+    submitButton: "Send",
+    rememberedPassword: "Remembered your password?",
+    loginNow: "Sign in now!",
+  },
+  errors: {
+    defaultTitle: "An error occurred",
+    tryAgain: "Try again",
+  },
+};

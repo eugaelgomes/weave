@@ -386,7 +386,7 @@ const fewShotExamples = {
 **Fase 2: Backend Core** (Alta Prioridade)
 - [ ] Implementar modelo de usuário
 - [ ] Criar endpoint de registro (POST /auth/signup)
-- [ ] Criar endpoint de login (POST /auth/signin)
+- [ ] Criar endpoint de login (POST /auth/)
 - [ ] Implementar geração de tokens JWT
 - [ ] Adicionar middleware de validação de token
 

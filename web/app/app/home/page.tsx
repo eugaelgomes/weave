@@ -32,7 +32,7 @@ export default function HomePage() {
 
   if (!authenticated) {
     if (typeof window !== "undefined") {
-      window.location.href = "/auth/signin";
+      window.location.href = "/auth/";
     }
     return null;
   }

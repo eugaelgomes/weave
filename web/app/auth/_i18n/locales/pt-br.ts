@@ -1,0 +1,37 @@
+export const ptBR = {
+  signIn: {
+    title: "Bem-vindo de volta!",
+    usernamePlaceholder: "Usuário ou E-mail",
+    passwordPlaceholder: "Senha",
+    forgotPassword: "Esqueceu a senha?",
+    submitButton: "Entrar",
+    orLoginWith: "ou entrar com",
+    noAccount: "Não possui uma conta?",
+    createAccount: "Crie uma agora!",
+  },
+  signUp: {
+    title: "Criar Conta",
+    usernamePlaceholder: "Usuário ou E-mail",
+    passwordPlaceholder: "Senha",
+    confirmPasswordPlaceholder: "Confirmar Senha",
+    termsText1: "Ao clicar em ",
+    termsText2: "Cadastre-se",
+    termsText3: ", você concorda com nossos termos de uso.",
+    submitButton: "Cadastre-se",
+    orRegisterWith: "ou cadastre-se com",
+    alreadyHaveAccount: "Já possui uma conta?",
+    loginNow: "Entrar agora!",
+  },
+  forgotPassword: {
+    title: "Esqueceu a senha?",
+    emailPlaceholder: "Digite seu endereço de e-mail",
+    infoText: "* Enviaremos um link seguro para você redefinir sua senha.",
+    submitButton: "Enviar",
+    rememberedPassword: "Lembrou sua senha?",
+    loginNow: "Entrar agora!",
+  },
+  errors: {
+    defaultTitle: "Ocorreu um erro",
+    tryAgain: "Tentar novamente",
+  },
+};

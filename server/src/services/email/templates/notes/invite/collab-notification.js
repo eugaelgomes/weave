@@ -22,8 +22,8 @@ async function collabMail(
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     // Redirecionar para login com parâmetro de redirect para a nota
     const noteUrl = noteId
-      ? `${frontendUrl}/auth/signin?redirect=/app/notes/view/${noteId}`
-      : `${frontendUrl}/auth/signin?redirect=/app/notes`;
+      ? `${frontendUrl}/auth/?redirect=/app/notes/view/${noteId}`
+      : `${frontendUrl}/auth/?redirect=/app/notes`;
 
     // Gerar o template do email
     const emailTemplate = addedToNoteTemplate({

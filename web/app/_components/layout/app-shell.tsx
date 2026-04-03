@@ -26,7 +26,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
       hasRedirected.current = true;
       // Normalize the pathname before storing it in redirect query param.
       const normalizedPath = pathname.replace(/\/+$/, "") || "/app";
-      router.push(`/auth/signin?redirect=${encodeURIComponent(normalizedPath)}`);
+      router.push(`/auth/?redirect=${encodeURIComponent(normalizedPath)}`);
     }
   }, [authenticated, loading, pathname, router]);
 

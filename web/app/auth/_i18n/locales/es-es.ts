@@ -1,0 +1,37 @@
+export const esES = {
+  signIn: {
+    title: "¡Bienvenido de nuevo!",
+    usernamePlaceholder: "Usuario o Correo",
+    passwordPlaceholder: "Contraseña",
+    forgotPassword: "¿Olvidaste tu contraseña?",
+    submitButton: "Entrar",
+    orLoginWith: "o entrar con",
+    noAccount: "¿No tienes una cuenta?",
+    createAccount: "¡Crea una ahora!",
+  },
+  signUp: {
+    title: "Crear Cuenta",
+    usernamePlaceholder: "Usuario o Correo",
+    passwordPlaceholder: "Contraseña",
+    confirmPasswordPlaceholder: "Confirmar Contraseña",
+    termsText1: "Al hacer clic en ",
+    termsText2: "Registrar",
+    termsText3: ", aceptas nuestros términos de uso.",
+    submitButton: "Regístrate",
+    orRegisterWith: "o registrar con",
+    alreadyHaveAccount: "¿Ya tienes una cuenta?",
+    loginNow: "¡Entra ahora!",
+  },
+  forgotPassword: {
+    title: "¿Olvidaste la Contraseña?",
+    emailPlaceholder: "Ingresa tu dirección de correo electrónico",
+    infoText: "* Te enviaremos un enlace seguro para restablecer tu contraseña.",
+    submitButton: "Enviar",
+    rememberedPassword: "¿Recordaste tu contraseña?",
+    loginNow: "¡Entra ahora!",
+  },
+  errors: {
+    defaultTitle: "Ocurrió un error",
+    tryAgain: "Intentar de nuevo",
+  },
+};

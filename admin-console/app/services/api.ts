@@ -40,7 +40,7 @@ export async function request<T>(
 // ==================== Auth ====================
 
 export async function login(email: string, password: string): Promise<any> {
-    return request("/system-auth/signin", {
+    return request("/system-auth", {
         method: "POST",
         body: { email, password },
     });

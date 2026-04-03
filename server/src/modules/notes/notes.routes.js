@@ -55,6 +55,10 @@ router.delete("/", (req, res, next) => {
   notesController.deleteNote(req, res, next);
 });
 
+router.delete("/:id", (req, res, next) => {
+  notesController.deleteNote(req, res, next);
+});
+
 router.get("/:noteId/blocks", (req, res, next) => {
   notesController.getBlocksByNote(req, res, next);
 });

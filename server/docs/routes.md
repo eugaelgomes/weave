@@ -22,7 +22,7 @@ Todas as rotas da API são prefixadas com `/api`. Este documento descreve todos 
 
 ### 1.1 Login com Email e Senha
 
-**Endpoint:** `POST /api/auth/signin`
+**Endpoint:** `POST /api/auth`
 
 **Descrição:** Autentica usuário com email/username e senha.
 
@@ -66,7 +66,7 @@ Todas as rotas da API são prefixadas com `/api`. Este documento descreve todos 
 
 ### 1.2 Iniciar Login com Google OAuth
 
-**Endpoint:** `GET /api/auth/signin/sso/google`
+**Endpoint:** `GET /api/auth/sso/google`
 
 **Descrição:** Inicia o fluxo de autenticação OAuth 2.0 com Google.
 
@@ -78,7 +78,7 @@ Todas as rotas da API são prefixadas com `/api`. Este documento descreve todos 
 
 ### 1.3 Callback Google OAuth
 
-**Endpoint:** `GET /api/auth/signin/sso/google/callback`
+**Endpoint:** `GET /api/auth/sso/google/callback`
 
 **Descrição:** Endpoint de callback para processar resposta do Google OAuth.
 
@@ -1136,7 +1136,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ```bash
 # 1. Login
-curl -X POST http://localhost:8080/api/auth/signin \
+curl -X POST http://localhost:8080/api/auth \
   -H "Content-Type: application/json" \
   -d '{"username":"user@email.com","password":"senha123"}'
 
