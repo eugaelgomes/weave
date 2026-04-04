@@ -27,6 +27,16 @@ router.get(
   AuthController.googleCallback.bind(AuthController)
 );
 
+router.get(
+  "/signin/sso/github",
+  AuthController.githubAuth.bind(AuthController)
+);
+
+router.get(
+  "/signin/sso/github/callback",
+  AuthController.githubCallback.bind(AuthController)
+);
+
 router.post("/logout", verifyToken, AuthController.logout.bind(AuthController));
 
 //router.post(

@@ -50,7 +50,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const t = getTranslations(locale);
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, loginWithGithub } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -158,7 +158,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
           <button
             type="button"
             onClick={loginWithGoogle}
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-neutral-200 hover:shadow-md focus:ring-2 focus:ring-slate-300 focus:outline-none"
           >
             <GoogleIcon className="h-4 w-4" />
             Google
@@ -166,9 +166,8 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
 
           <button
             type="button"
-            disabled
-            title="GitHub em breve"
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-[#24292f] py-2.5 text-sm font-medium text-white opacity-60"
+            onClick={loginWithGithub}
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-[#24292f] py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-[#1d2228] hover:shadow"
           >
             <GitHubIcon className="h-4 w-4" />
             GitHub
@@ -177,10 +176,10 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
 
         <button
           onClick={() => onNavigate("signup")}
-          className="mt-8 text-sm font-medium text-slate-500"
+          className="mt-8 text-sm font-medium text-slate-500 transition-colors duration-200 hover:text-slate-700"
         >
           {t.signIn.noAccount}{" "}
-          <span className="font-semibold text-yellow-600 transition-colors hover:text-yellow-500">
+          <span className="font-semibold text-yellow-600 transition-colors duration-200 hover:text-yellow-500">
             {t.signIn.createAccount}
           </span>
         </button>

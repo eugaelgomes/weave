@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-export default function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Pass through if request is aiming for public files or api
   if (
     request.nextUrl.pathname.startsWith("/_next") ||
@@ -13,7 +13,7 @@ export default function middleware(request: NextRequest) {
   // Se for rota de login, permitir
   if (request.nextUrl.pathname === "/signin") {
     const token = request.cookies.get("system_admin_token");
-    // Se já tem token, redireciona para dashboard
+    // Se ja tem token, redireciona para dashboard
     if (token) {
       return NextResponse.redirect(new URL("/", request.url));
     }

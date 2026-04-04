@@ -349,6 +349,181 @@ class AuthController {
   }
 
   /**
+   * GITHUB oAuth
+   */
+  async githubAuth(req, res) {
+    const githubOAuthURL = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.GITHUB_REDIRECT_URI)}&scope=user:email`;
+
+    res.redirect(githubOAuthURL);
+  }
+
+  /**
+   * GITHUB oAuth Callback
+   * @param {import('express').Request} req - O objeto de requisição, contendo o `code` do GitHub na query string.
+   * @param {import('express').Response} res - O objeto de resposta, utilizado para aplicar os cookies e efetuar redirecionamentos.
+   * @throws {Error} Lança erros internos em caso de falha na comunicação com o GitHub ou dados inconsistentes.
+   * @returns {Promise<void>} Redireciona o utilizador para a aplicação (home) ou para a página inicial com parâmetros de erro.
+   */
+  async githubCallback(req, res) {
+    const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
+
+    try {
+      const { code, error } = req.query;
+
+      if (error) {
+        console.error("Erro durante a autenticação com o GitHub", error);
+        return res.redirect(`${frontendURL}/?error=authorization_denied`);
+      }
+
+      if (!code) {
+        console.error("Código de autorização do GitHub não encontrado");
+        return res.redirect(`${frontendURL}/?error=missing_auth_code`);
+      }
+
+      // 1. Trocar o código por tokens de acesso (GitHub Flow)
+      const tokenResponse = await axios.post(
+        "https://github.com/login/oauth/access_token",
+        {
+          client_id: process.env.GITHUB_CLIENT_ID,
+          client_secret: process.env.GITHUB_CLIENT_SECRET,
+          code: code,
+          redirect_uri: process.env.GITHUB_REDIRECT_URI,
+        },
+        {
+          headers: {
+            "Accept": "application/json",
+          },
+        }
+      );
+
+      const { access_token } = tokenResponse.data;
+
+      if (!access_token) {
+        throw new Error("Token de acesso não recebido do GitHub");
+      }
+
+      // 2. Buscar perfil básico do utilizador
+      const userResponse = await axios.get("https://api.github.com/user", {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+          Accept: "application/vnd.github.v3+json",
+          "User-Agent": "Weave-Notes",
+        },
+      });
+      const githubUser = userResponse.data;
+
+      // 3. Buscar e-mails do utilizador (garante a captura de e-mails privados)
+      const emailsResponse = await axios.get("https://api.github.com/user/emails", {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+          Accept: "application/vnd.github.v3+json",
+          "User-Agent": "Weave-Notes-App",
+        },
+      });
+
+      const emails = Array.isArray(emailsResponse.data) ? emailsResponse.data : [];
+      const primaryEmailObj = emails.find(
+        (e) => e.primary && e.verified
+      ) || emails[0];
+
+      const userEmail = primaryEmailObj?.email;
+
+      // CORREÇÃO: A API do GitHub retorna a propriedade como 'id' (número), não 'github_id'.
+      if (!githubUser.id || !userEmail) {
+        throw new Error("Dados incompletos do utilizador no GitHub");
+      }
+
+      // 4. Fluxo de verificação no banco de dados
+      let user = await AuthRepository.findUserByGithubId(githubUser.id);
+
+      if (!user) {
+        const existingUser = await AuthRepository.findUserByEmail(userEmail);
+
+        if (existingUser) {
+          // Linkar conta existente com o novo provedor GitHub
+          await AuthRepository.updateUserWithGithub(
+            existingUser.user_id,
+            githubUser.id, // Corrigido
+            githubUser.avatar_url
+          );
+          user = await AuthRepository.findUserByGithubId(githubUser.id); // Corrigido
+        } else {
+          // Validação de Domínio Corporativo 
+          const emailDomain = userEmail.split("@")[1];
+          if (emailDomain) {
+            const domainInfo = await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
+
+            if (domainInfo && domainInfo.status === "VERIFIED") {
+              const existingInvite = await OrganizationsRepository.checkExistingInvite(
+                domainInfo.organization_id,
+                userEmail
+              );
+
+              if (!existingInvite) {
+                throw new Error("Este endereço de e-mail pertence a um domínio corporativo restrito.");
+              }
+            }
+          }
+          const generatedRandomUsername = (username) => {
+            const cleanUsername = (username || `github_user_${githubUser.id}`)
+              .toLowerCase()
+              .replace(/[^a-z0-9_]/g, "")
+              .slice(0, 14);
+            const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+            return `${cleanUsername}_${randomSuffix}`;
+          };
+
+          // Criar novo utilizador (Fallback: se 'name' for nulo, usamos o 'login')
+          await AuthRepository.createUserWithGithub(
+            githubUser.id,
+            githubUser.name || githubUser.login,
+            generatedRandomUsername(githubUser.login),
+            userEmail,
+            githubUser.avatar_url
+          );
+          user = await AuthRepository.findUserByGithubId(githubUser.id); // Corrigido
+        }
+      }
+
+      if (!user) {
+        throw new Error("Falha catastrófica ao criar ou recuperar o utilizador");
+      }
+
+      // 5. Normalização e geração de sessão
+      const organization = normalizeOrganization(user.organization);
+      const defaultArea = normalizeDefaultArea(user.default_area);
+
+      const payload = {
+        userId: user.user_id,
+        username: user.username,
+        email: user.email,
+        plan_id: user.plan_id,
+        org_id: organization?.id || null,
+        org_unique_name: organization?.unique_name || null,
+        org_member_role: organization?.member_role || null,
+        org_default_area_id: defaultArea?.id || null,
+        org_default_area_slug: defaultArea?.slug || null,
+        org_default_area_role: defaultArea?.role || null,
+      };
+
+      const token = jwt.sign(payload, secretsManager(), {
+        algorithm: "HS256",
+        expiresIn: "24h",
+      });
+
+      setAuthCookie(res, req, token, {
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+
+      res.redirect(`${frontendURL}/app/home?auth=success`);
+    } catch (error) {
+      console.error("GitHub OAuth callback error:", error.message);
+      // O frontendURL já está garantido no início do método
+      res.redirect(`${frontendURL}/?error=auth_failed`);
+    }
+  }
+
+  /**
    * Finaliza a sessão do usuário via limpeza dos cookies de Auth.
    *
    * @param {import('express').Request} req O objeto de requisição do Express

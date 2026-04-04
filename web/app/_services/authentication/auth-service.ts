@@ -503,6 +503,11 @@ export const initiateGoogleLogin = (): void => {
   window.location.href = `${baseUrl}${API_ENDPOINTS.GOOGLE_AUTH}`;
 };
 
+export const initiateGithubLogin = (): void => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
+  window.location.href = `${baseUrl}${API_ENDPOINTS.GITHUB_AUTH}`;
+};
+
 export const updateUserData = async (
   userData: Partial<User> & { profilePicture?: File }
 ): Promise<Partial<User>> => {

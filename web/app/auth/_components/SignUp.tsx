@@ -54,7 +54,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
   const [isLoading, setIsLoading] = useState(false);
 
   const t = getTranslations(locale);
-  const { createUser, login, loginWithGoogle } = useAuth();
+  const { createUser, login, loginWithGoogle, loginWithGithub } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -221,9 +221,8 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
 
           <button
             type="button"
-            disabled
-            title="GitHub em breve"
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-[#24292f] py-2.5 text-sm font-medium text-white opacity-60"
+            onClick={loginWithGithub}
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-[#24292f] py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-[#1d2228] hover:shadow"
           >
             <GitHubIcon className="h-4 w-4" />
             GitHub

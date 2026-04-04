@@ -12,6 +12,7 @@ import {
   resetPassword,
   deleteUser,
   initiateGoogleLogin,
+  initiateGithubLogin,
   type User,
   type CreateUserData,
 } from "../_services/authentication/auth-service";
@@ -28,6 +29,7 @@ type AuthContextType = {
     password?: string
   ) => Promise<{ success: boolean; message?: string; data?: unknown }>;
   loginWithGoogle: () => void;
+  loginWithGithub: () => void;
   logout: () => void;
 
   // User Profile
@@ -147,6 +149,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initiateGoogleLogin();
   };
 
+  const loginWithGithub = () => {
+    initiateGithubLogin();
+  };
+
   const logout = async () => {
     try {
       // O logout avisa o backend para invalidar a sessão e limpar o cookie (Set-Cookie: expires=1970)
@@ -238,6 +244,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authenticated,
         login,
         loginWithGoogle,
+        loginWithGithub,
         logout,
         createUser,
         updateUser,
