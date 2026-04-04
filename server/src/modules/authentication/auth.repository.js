@@ -27,6 +27,8 @@ class AuthRepository {
         u.private_profile,
         u.phone_number,
         u.auth_with_google,
+        u.auth_with_github,
+        u.github_id,
         u.theme_mode,
         u.created_at,
         u.updated_at,
@@ -169,7 +171,7 @@ class AuthRepository {
     const query = `
       SELECT
         u.user_id, u.username, u.name, u.email, u.password,
-        u.avatar_url, u.auth_with_google, u.theme_mode,
+        u.avatar_url, u.auth_with_google, u.auth_with_github, u.github_id, u.theme_mode,
         u.private_profile, u.plan_id, u.created_at,
         
         (SELECT p.name FROM plans p WHERE p.plan_id = u.plan_id) AS plan_name,
@@ -222,7 +224,7 @@ class AuthRepository {
     const query = `
       SELECT
         u.user_id, u.username, u.name, u.email, u.password,
-        u.avatar_url, u.auth_with_google, u.theme_mode,
+        u.avatar_url, u.auth_with_google, u.auth_with_github, u.github_id, u.theme_mode,
         u.private_profile, u.plan_id, u.created_at,
         
         (SELECT p.name FROM plans p WHERE p.plan_id = u.plan_id) AS plan_name,
@@ -365,7 +367,7 @@ class AuthRepository {
  async updateUserWithGithub(userId, githubId, avatarUrl) {
     const query = `
       UPDATE users 
-      SET github_id = $1, auth_with_github = true, email_verified = true, email_verified_at = COALESCE(email_verified_at, NOW()), avatar_url = COALESCE(avatar_url, $2), updated_at = NOW() 
+      SET github_id = $1, auth_with_github = true, email_verified = true, email_verified_at = COALESCE(email_verified_at, NOW()), avatar_url = COALESCE($2, avatar_url), updated_at = NOW() 
       WHERE user_id = $3
       RETURNING *
     `;

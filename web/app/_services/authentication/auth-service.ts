@@ -229,6 +229,7 @@ interface BackendMeResponse {
       theme_mode?: string;
       private_profile?: boolean;
       auth_with_google?: boolean;
+      auth_with_github?: boolean;
     };
     user_organization: {
       id: string;
@@ -378,6 +379,8 @@ const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
 const mapMeResponseToUser = (data: BackendMeResponse): User => {
   const { user } = data;
   const organization = user.user_organization;
+  const currentPlan = user.current_plan;
+  const currentPlanUsage = user.current_plan_usage;
 
   return {
     // Profile
@@ -405,18 +408,18 @@ const mapMeResponseToUser = (data: BackendMeResponse): User => {
     org_member_since: organization?.member_since,
 
     // Plan
-    plan_id: user.current_plan.id,
-    plan_name: user.current_plan.plan_name,
-    plan_client_type: user.current_plan.client_type,
-    plan_details: user.current_plan.details,
+    plan_id: currentPlan?.id,
+    plan_name: currentPlan?.plan_name,
+    plan_client_type: currentPlan?.client_type,
+    plan_details: currentPlan?.details,
 
     // Usage
-    usage_plan_id: user.current_plan_usage.plan_id,
-    usage_plan_name: user.current_plan_usage.plan_name,
-    usage_client_type: user.current_plan_usage.client_type,
-    usage_period_start: user.current_plan_usage.period_start,
-    usage_period_end: user.current_plan_usage.period_end,
-    usage_details: user.current_plan_usage.details,
+    usage_plan_id: currentPlanUsage?.plan_id,
+    usage_plan_name: currentPlanUsage?.plan_name,
+    usage_client_type: currentPlanUsage?.client_type,
+    usage_period_start: currentPlanUsage?.period_start,
+    usage_period_end: currentPlanUsage?.period_end,
+    usage_details: currentPlanUsage?.details,
 
     // App Preferences
     usage_preference: user.usage_preference || {},

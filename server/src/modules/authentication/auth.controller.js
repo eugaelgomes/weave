@@ -422,19 +422,21 @@ class AuthController {
       });
 
       const emails = Array.isArray(emailsResponse.data) ? emailsResponse.data : [];
-      const primaryEmailObj = emails.find(
-        (e) => e.primary && e.verified
-      ) || emails[0];
+      const primaryEmailObj =
+        emails.find((e) => e.primary && e.verified) ||
+        emails.find((e) => e.verified) ||
+        emails[0];
 
       const userEmail = primaryEmailObj?.email;
+      const githubId = githubUser?.id ? String(githubUser.id) : null;
 
       // CORREÇÃO: A API do GitHub retorna a propriedade como 'id' (número), não 'github_id'.
-      if (!githubUser.id || !userEmail) {
+      if (!githubId || !userEmail) {
         throw new Error("Dados incompletos do utilizador no GitHub");
       }
 
       // 4. Fluxo de verificação no banco de dados
-      let user = await AuthRepository.findUserByGithubId(githubUser.id);
+      let user = await AuthRepository.findUserByGithubId(githubId);
 
       if (!user) {
         const existingUser = await AuthRepository.findUserByEmail(userEmail);
@@ -443,10 +445,10 @@ class AuthController {
           // Linkar conta existente com o novo provedor GitHub
           await AuthRepository.updateUserWithGithub(
             existingUser.user_id,
-            githubUser.id, // Corrigido
+            githubId,
             githubUser.avatar_url
           );
-          user = await AuthRepository.findUserByGithubId(githubUser.id); // Corrigido
+          user = await AuthRepository.findUserByGithubId(githubId);
         } else {
           // Validação de Domínio Corporativo 
           const emailDomain = userEmail.split("@")[1];
@@ -475,13 +477,13 @@ class AuthController {
 
           // Criar novo utilizador (Fallback: se 'name' for nulo, usamos o 'login')
           await AuthRepository.createUserWithGithub(
-            githubUser.id,
+            githubId,
             githubUser.name || githubUser.login,
             generatedRandomUsername(githubUser.login),
             userEmail,
             githubUser.avatar_url
           );
-          user = await AuthRepository.findUserByGithubId(githubUser.id); // Corrigido
+          user = await AuthRepository.findUserByGithubId(githubId);
         }
       }
 

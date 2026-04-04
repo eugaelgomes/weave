@@ -154,25 +154,25 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
           </div>
         </div>
 
-        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={loginWithGoogle}
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-neutral-200 hover:shadow-md focus:ring-2 focus:ring-slate-300 focus:outline-none"
-          >
-            <GoogleIcon className="h-4 w-4" />
-            Google
-          </button>
+<div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+  <button
+    type="button"
+    onClick={loginWithGoogle}
+    className="flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 hover:shadow-md active:translate-y-0 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-slate-300"
+  >
+    <GoogleIcon className="h-4 w-4" />
+    Google
+  </button>
 
-          <button
-            type="button"
-            onClick={loginWithGithub}
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-[#24292f] py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-[#1d2228] hover:shadow"
-          >
-            <GitHubIcon className="h-4 w-4" />
-            GitHub
-          </button>
-        </div>
+  <button
+    type="button"
+    onClick={loginWithGithub}
+    className="flex w-full items-center justify-center gap-2 rounded-md bg-[#24292f] py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:bg-[#1d2228] hover:shadow-md active:translate-y-0 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-slate-500"
+  >
+    <GitHubIcon className="h-4 w-4" />
+    GitHub
+  </button>
+</div>
 
         <button
           onClick={() => onNavigate("signup")}
