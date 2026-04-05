@@ -1,6 +1,7 @@
 export const ptBR = {
   signIn: {
     title: "Bem-vindo de volta!",
+    subtitle: "Workspace inteligente para quem pensa grande!",
     usernamePlaceholder: "Usuário ou E-mail",
     passwordPlaceholder: "Senha",
     forgotPassword: "Esqueceu a senha?",
@@ -8,6 +9,10 @@ export const ptBR = {
     orLoginWith: "ou entrar com",
     noAccount: "Não possui uma conta?",
     createAccount: "Crie uma agora!",
+    rightsReserved: "Todos os direitos reservados.",
+    copyright: "©",
+    terms: "Termos de Uso",
+    privacy: "Política de Privacidade",
   },
   signUp: {
     title: "Criar Conta",

@@ -10,11 +10,7 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
-export function ProtectedRoute({
-  children,
-  fallback,
-  redirectTo = "/auth/",
-}: ProtectedRouteProps) {
+export function ProtectedRoute({ children, fallback, redirectTo = "/auth/" }: ProtectedRouteProps) {
   const { authenticated, loading } = useAuth();
   const router = useRouter();
 

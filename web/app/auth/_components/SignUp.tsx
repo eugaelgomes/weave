@@ -191,7 +191,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center justify-center rounded-md bg-yellow-500 text-white shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] hover:bg-yellow-600 active:scale-95 sm:px-4 sm:py-1 disabled:opacity-50 disabled:pointer-events-none"
+              className="flex items-center justify-center rounded-md bg-yellow-500 text-white shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] hover:bg-yellow-600 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:px-4 sm:py-1"
             >
               {isLoading ? "Criando..." : t.signUp.submitButton}
             </button>

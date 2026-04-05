@@ -63,7 +63,10 @@ export default function RootLayout({
       <head>
         <Analytics />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
+      >
         <ThemeProvider>
           <AuthProviderClient>
             <LanguageProvider>{children}</LanguageProvider>

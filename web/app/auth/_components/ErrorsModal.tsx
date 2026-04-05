@@ -11,13 +11,7 @@ interface ErrorModalProps {
   locale?: LocaleKey;
 }
 
-export function ErrorModal({
-  isOpen,
-  onClose,
-  title,
-  message,
-  locale = "pt-br",
-}: ErrorModalProps) {
+export function ErrorModal({ isOpen, onClose, title, message, locale = "pt-br" }: ErrorModalProps) {
   const t = getTranslations(locale);
   const displayTitle = title || t.errors.defaultTitle;
 

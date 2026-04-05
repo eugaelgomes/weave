@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { User, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Link } from "lucide-react";
 import { getTranslations, LocaleKey } from "@/app/auth/_i18n";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { ErrorModal } from "./ErrorsModal";
@@ -77,7 +77,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
   };
 
   return (
-    <div className="flex w-full flex-col px-6 py-4 sm:px-8 sm:py-6">
+    <div className="flex w-full flex-col px-6 py-4 sm:px-8">
       <ErrorModal
         isOpen={!!error}
         onClose={() => setError(null)}
@@ -85,9 +85,12 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
         locale={locale}
       />
       <div className="mt-2">
-        <h1 className="mb-5 text-3xl leading-tight font-bold text-slate-950 sm:text-4xl">
-          {t.signIn.title}
-        </h1>
+        <div className="mb-6 flex flex-col gap-1.5 text-center">
+          {/*<h1 className="text-xl font-bold tracking-tight text-neutral-800 sm:text-2xl">
+            {t.signIn.title}
+          </h1>*/}
+          <p className="text-sm font-medium text-slate-500">{t.signIn.subtitle}</p>
+        </div>
 
         <form className="space-y-2" onSubmit={handleSubmit}>
           <div className="relative">
@@ -99,7 +102,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder={t.signIn.usernamePlaceholder}
-              className="w-full rounded-md bg-slate-100 py-2.5 pr-4 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+              className="w-full rounded-md border-2 border-neutral-800/10 bg-white py-2.5 pr-4 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
               disabled={isLoading}
             />
           </div>
@@ -113,7 +116,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t.signIn.passwordPlaceholder}
-              className="w-full rounded-md bg-slate-100 py-2.5 pr-10 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+              className="w-full rounded-md border-2 border-neutral-800/10 bg-white py-2.5 pr-10 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
               disabled={isLoading}
             />
             <button
@@ -129,7 +132,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
             <button
               type="button"
               onClick={() => onNavigate("forgot")}
-              className="text-xs font-medium text-yellow-600 transition-colors hover:text-yellow-500"
+              className="text-xs font-medium text-neutral-800/50 transition-colors hover:text-yellow-500"
             >
               {t.signIn.forgotPassword}
             </button>
@@ -154,25 +157,25 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
           </div>
         </div>
 
-<div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
-  <button
-    type="button"
-    onClick={loginWithGoogle}
-    className="flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 hover:shadow-md active:translate-y-0 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-slate-300"
-  >
-    <GoogleIcon className="h-4 w-4" />
-    Google
-  </button>
+        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={loginWithGoogle}
+            className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-neutral-800/10 bg-white py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 hover:shadow-md focus:ring-2 focus:ring-slate-300 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+          >
+            <GoogleIcon className="h-4 w-4" />
+            Google
+          </button>
 
-  <button
-    type="button"
-    onClick={loginWithGithub}
-    className="flex w-full items-center justify-center gap-2 rounded-md bg-[#24292f] py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:bg-[#1d2228] hover:shadow-md active:translate-y-0 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-slate-500"
-  >
-    <GitHubIcon className="h-4 w-4" />
-    GitHub
-  </button>
-</div>
+          <button
+            type="button"
+            onClick={loginWithGithub}
+            className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-neutral-800/10 bg-white py-2.5 text-sm font-bold text-[#171515] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:ring-slate-500 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+          >
+            <GitHubIcon className="h-4 w-4" />
+            GitHub
+          </button>
+        </div>
 
         <button
           onClick={() => onNavigate("signup")}
@@ -183,6 +186,22 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
             {t.signIn.createAccount}
           </span>
         </button>
+      </div>
+      <div className="mt-8 flex flex-col items-center gap-2 text-xs text-slate-400">
+        <div className="flex items-center gap-2">
+          <a href="/terms" className="transition-colors hover:text-slate-600 hover:underline">
+            {t.signIn.terms}
+          </a>
+          <span className="text-slate-300">|</span>
+          <a href="/privacy" className="transition-colors hover:text-slate-600 hover:underline">
+            {t.signIn.privacy}
+          </a>
+        </div>
+
+        {/*<p className="text-center">
+          {t.signIn.copyright} {new Date().getFullYear()} Weave Notes.
+          <span className="ml-1 block sm:inline">{t.signIn.rightsReserved}</span>
+        </p>*/}
       </div>
     </div>
   );

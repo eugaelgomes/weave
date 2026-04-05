@@ -11,7 +11,6 @@ export const locales = {
 export type LocaleKey = keyof typeof locales;
 export type NavigationTranslations = typeof ptBR;
 
-// Simple custom hook or utility for translations
 export function getTranslations(locale: LocaleKey): NavigationTranslations {
   return locales[locale] || locales["pt-br"];
 }

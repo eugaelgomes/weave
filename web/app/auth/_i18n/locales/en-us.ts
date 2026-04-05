@@ -1,6 +1,7 @@
 export const enUS = {
   signIn: {
     title: "Welcome Back!",
+    subtitle: "Workspace intelligent for those who think big!",
     usernamePlaceholder: "Username or Email",
     passwordPlaceholder: "Password",
     forgotPassword: "Forgot Password?",

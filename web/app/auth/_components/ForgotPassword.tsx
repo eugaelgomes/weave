@@ -54,46 +54,46 @@ export function ForgotPassword({ onNavigate, locale = "pt-br" }: Props) {
         locale={locale}
       />
       <div className="mt-2">
-        <h1 className="mb-5 text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
+        <h1 className="mb-5 text-3xl leading-tight font-bold text-slate-950 sm:text-4xl">
           {t.forgotPassword.title}
         </h1>
 
         {success ? (
-          <div className="rounded-md bg-green-50 p-4 mb-4 flex items-start">
-            <CheckCircle2 className="h-5 w-5 text-green-400 mt-0.5 mr-2" />
+          <div className="mb-4 flex items-start rounded-md bg-green-50 p-4">
+            <CheckCircle2 className="mt-0.5 mr-2 h-5 w-5 text-green-400" />
             <p className="text-sm text-green-800">{success}</p>
           </div>
         ) : (
           <form className="space-y-2" onSubmit={handleSubmit}>
-          {/* Email */}
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Mail className="h-4 w-4 text-slate-400" />
+            {/* Email */}
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                <Mail className="h-4 w-4 text-slate-400" />
+              </div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t.forgotPassword.emailPlaceholder}
+                className="w-full rounded-md bg-slate-100 py-2.5 pr-4 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+                disabled={isLoading}
+              />
             </div>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t.forgotPassword.emailPlaceholder}
-              className="w-full rounded-md bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              disabled={isLoading}
-            />
-          </div>
 
-          {/* Send Code Button Area */}
-          <div className="mt-2 flex items-center justify-between sm:mt-4">
-            <p className="max-w-[200px] text-[10px] leading-tight text-slate-500">
-              {t.forgotPassword.infoText}
-            </p>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="flex items-center justify-center rounded-md bg-yellow-500 px-4 py-2 text-white shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] hover:bg-yellow-600 active:scale-95 sm:py-1.5 disabled:opacity-50 disabled:pointer-events-none"
-            >
-              {isLoading ? "Enviando..." : t.forgotPassword.submitButton}
-            </button>
-          </div>
-        </form>
+            {/* Send Code Button Area */}
+            <div className="mt-2 flex items-center justify-between sm:mt-4">
+              <p className="max-w-[200px] text-[10px] leading-tight text-slate-500">
+                {t.forgotPassword.infoText}
+              </p>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="flex items-center justify-center rounded-md bg-yellow-500 px-4 py-2 text-white shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] hover:bg-yellow-600 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:py-1.5"
+              >
+                {isLoading ? "Enviando..." : t.forgotPassword.submitButton}
+              </button>
+            </div>
+          </form>
         )}
       </div>
 
