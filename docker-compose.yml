@@ -46,15 +46,15 @@ services:
         - action: rebuild
           path: ./web/package.json
 
-  # Blog / Landing (subdomínio)
-  blog:
+  # Discover / Landing (subdomínio)
+  discover:
     build:
-      context: ./blog
+      context: ./discover
       dockerfile: Dockerfile
     ports:
       - "3001:3001"
     volumes:
-      - ./blog:/app
+      - ./discover:/app
       - /app/node_modules
       - /app/.next
     environment:
@@ -66,10 +66,10 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./blog/app
+          path: ./discover/app
           target: /app/app
         - action: rebuild
-          path: ./blog/package.json
+          path: ./discover/package.json
 
   # Console Admin
   admin-console:

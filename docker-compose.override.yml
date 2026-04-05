@@ -36,9 +36,9 @@ services:
           ignore:
             - node_modules/
 
-  blog:
+  discover:
     build:
-      context: ./blog
+      context: ./discover
       dockerfile: Dockerfile.dev
     ports:
       - "3001:3001"
@@ -48,7 +48,7 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./blog
+          path: ./discover
           target: /app
           ignore:
             - node_modules/
