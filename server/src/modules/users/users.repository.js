@@ -25,7 +25,6 @@ class UserRepository {
       password,
       timezone,
       private_profile,
-      status,
       birth_date,
       phone_number,
       avatar_url,
@@ -39,13 +38,12 @@ class UserRepository {
       password, 
       timezone, 
       private_profile,
-      status,
       birth_date, 
       phone_number, 
       avatar_url,
       user_preference
     ) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING user_id, email, name, avatar_url, created_at;
   `;
 
@@ -56,7 +54,6 @@ class UserRepository {
       password,
       timezone,
       private_profile,
-      status,
       birth_date,
       phone_number,
       avatar_url,

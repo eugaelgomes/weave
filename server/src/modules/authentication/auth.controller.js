@@ -1,16 +1,70 @@
+/* eslint-disable sort-keys */
+/**
+ * Import libraries
+ */
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const { validationResult } = require("express-validator");
+
+/**
+ * Import repositories and utils
+ */
 const AuthRepository = require("@/modules/authentication/auth.repository");
 const OrganizationDomainsRepository = require("@/modules/organizations/repositories/domains.repository");
 const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
-const { setAuthCookie, clearAuthCookie } = require("@/utils/cookie-helper");
-
+const cookieHelper = require("@/utils/cookie-helper");
 const authLogs = require("@/utils/system_logs/auth-logs");
-const { secretsManager } = require("@/services/secrets");
-const { presignObjectFields } = require("@/utils/data/presign-storage-files");
+const storageFileUtils = require("@/utils/data/presign-storage-files");
 
+/**
+ * Import Utils
+ */
+const secretsService = require("@/services/secrets");
+
+/**
+ * Set authentication token cookie using environment-aware options.
+ *
+ * @type {typeof import("@/utils/cookie-helper").setAuthCookie}
+ */
+const setAuthCookie = cookieHelper.setAuthCookie;
+
+/**
+ * Clear authentication token cookie using environment-aware options.
+ *
+ * @type {typeof import("@/utils/cookie-helper").clearAuthCookie}
+ */
+const clearAuthCookie = cookieHelper.clearAuthCookie;
+
+/**
+ * Generate pre-signed URLs for configured object fields.
+ *
+ * @type {typeof import("@/utils/data/presign-storage-files").presignObjectFields}
+ */
+const presignObjectFields = storageFileUtils.presignObjectFields;
+
+/**
+ * Resolve JWT secret from runtime secrets manager.
+ *
+ * @type {typeof import("@/services/secrets").secretsManager}
+ */
+const secretsManager = secretsService.secretsManager;
+
+/**
+ * Normalize organization default-area raw data from repository shape
+ * into API response shape.
+ *
+ * @param {object | null | undefined} defaultAreaData Raw default-area object returned by repository
+ * @returns {{
+ *   id: string | null,
+ *   name: string | null,
+ *   slug: string | null,
+ *   role: string | null,
+ *   member_since: string | Date | null,
+ *   description: string | null,
+ *   properties: Record<string, unknown>
+ * } | null}
+ */
 const normalizeDefaultArea = (defaultAreaData) => {
   if (!defaultAreaData) {
     return null;
@@ -27,6 +81,19 @@ const normalizeDefaultArea = (defaultAreaData) => {
   };
 };
 
+/**
+ * Normalize organization raw data from repository shape into API response shape.
+ *
+ * @param {object | null | undefined} organizationData Raw organization object returned by repository
+ * @returns {{
+ *   id: string | null,
+ *   unique_name: string | null,
+ *   name: string | null,
+ *   logo_url: string | null,
+ *   member_role: string | null,
+ *   member_since: string | Date | null
+ * } | null}
+ */
 const normalizeOrganization = (organizationData) => {
   if (!organizationData) {
     return null;
@@ -44,13 +111,22 @@ const normalizeOrganization = (organizationData) => {
 
 class AuthController {
   /**
-   * Autenticação padrão de um usuário (Login tradicional com senha).
+   * Authenticate a user with login (username or email) and password.
    *
-   * @param {import('express').Request} req O objeto de requisição do Express contendo body: {username, password, clientLocalTime}
-   * @param {import('express').Response} res O objeto de resposta do Express
-   * @returns {Promise<import('express').Response>} Retorna os dados do usuário, JWT no cookie ou Status 401
+   * Flow:
+   * 1. Validate request payload
+   * 2. Resolve user by login
+   * 3. Enforce account constraints (email verification and provider flow)
+   * 4. Validate password hash
+   * 5. Issue JWT + HttpOnly auth cookie
+   * 6. Return normalized user data for client bootstrap
+   *
+   * @param {import('express').Request} req Express request object containing body: { login, password }
+   * @param {import('express').Response} res Express response object
+   * @returns {Promise<import('express').Response>} JSON response with auth/session data or an error status
    */
   async userSignin(req, res) {
+    // Login can be username or email, we will check in the repository
     const { login, password } = req.body;
     const username = login;
 
@@ -58,33 +134,36 @@ class AuthController {
 
     if (!errors.isEmpty()) {
       return res.status(400).json({
-        message: "Dados não podem ser nulos ou inválidos.",
+        message: "Auth data validation failed, please check it and try again.",
         errors: errors.array(),
       });
     }
 
     try {
-      // username: email ou username
+      // username: email or username
       const user = await AuthRepository.findUserByUsername(username);
 
       if (!user) {
         return res
           .status(401)
-          .json({ message: "Usuário/e-mail ou senha inválidos" });
+          .json({
+            message:
+              "Username/email or password invalid. Check it and try again.",
+          });
       }
 
-      // Conta Google sem senha definida — só pode logar via Google
+      // Account without password but with Google auth enabled - should login via Google flow
       if (user.auth_with_google && !user.password) {
         return res.status(401).json({
           message:
-            "Esta conta usa autenticação via Google. Por favor, faça login com o Google.",
+            "This account uses Google authentication. Please log in with Google.",
         });
       }
 
       const verifiedAccount = user.email_verified;
       if (!verifiedAccount) {
         return res.status(403).json({
-          message: "Por favor, verifique seu e-mail antes de fazer login.",
+          message: "Please verify your email before logging in.",
         });
       }
 
@@ -92,7 +171,9 @@ class AuthController {
       if (!comparePassword) {
         return res
           .status(401)
-          .json({ message: "Usuário/e-mail ou senha inválidos" });
+          .json({
+            message: "Username/password invalid. Check it and try again.",
+          });
       }
 
       const organization = normalizeOrganization(user.organization);
@@ -119,14 +200,10 @@ class AuthController {
       authLogs.createLog(user.user_id, "auth_login", req, "success");
 
       // Gerar URLs pré-assinadas para avatar e logo (válidas por 12h para coincidir com o token)
-      const protectedUser = await presignObjectFields(
-        user,
-        ["avatar_url"],
-        {
-          expiresIn: 12 * 60 * 60,
-          userId: user.user_id,
-        }
-      );
+      const protectedUser = await presignObjectFields(user, ["avatar_url"], {
+        expiresIn: 12 * 60 * 60,
+        userId: user.user_id,
+      });
       const protectedOrg = organization
         ? await presignObjectFields(organization, ["logo_url"], {
             expiresIn: 12 * 60 * 60,
@@ -391,7 +468,7 @@ class AuthController {
         },
         {
           headers: {
-            "Accept": "application/json",
+            Accept: "application/json",
           },
         }
       );
@@ -413,15 +490,20 @@ class AuthController {
       const githubUser = userResponse.data;
 
       // 3. Buscar e-mails do utilizador (garante a captura de e-mails privados)
-      const emailsResponse = await axios.get("https://api.github.com/user/emails", {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-          Accept: "application/vnd.github.v3+json",
-          "User-Agent": "Weave-Notes-App",
-        },
-      });
+      const emailsResponse = await axios.get(
+        "https://api.github.com/user/emails",
+        {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+            Accept: "application/vnd.github.v3+json",
+            "User-Agent": "Weave-Notes-App",
+          },
+        }
+      );
 
-      const emails = Array.isArray(emailsResponse.data) ? emailsResponse.data : [];
+      const emails = Array.isArray(emailsResponse.data)
+        ? emailsResponse.data
+        : [];
       const primaryEmailObj =
         emails.find((e) => e.primary && e.verified) ||
         emails.find((e) => e.verified) ||
@@ -450,19 +532,25 @@ class AuthController {
           );
           user = await AuthRepository.findUserByGithubId(githubId);
         } else {
-          // Validação de Domínio Corporativo 
+          // Validação de Domínio Corporativo
           const emailDomain = userEmail.split("@")[1];
           if (emailDomain) {
-            const domainInfo = await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
-
-            if (domainInfo && domainInfo.status === "VERIFIED") {
-              const existingInvite = await OrganizationsRepository.checkExistingInvite(
-                domainInfo.organization_id,
-                userEmail
+            const domainInfo =
+              await OrganizationDomainsRepository.findActiveByDomain(
+                emailDomain
               );
 
+            if (domainInfo && domainInfo.status === "VERIFIED") {
+              const existingInvite =
+                await OrganizationsRepository.checkExistingInvite(
+                  domainInfo.organization_id,
+                  userEmail
+                );
+
               if (!existingInvite) {
-                throw new Error("Este endereço de e-mail pertence a um domínio corporativo restrito.");
+                throw new Error(
+                  "Este endereço de e-mail pertence a um domínio corporativo restrito."
+                );
               }
             }
           }
@@ -488,7 +576,9 @@ class AuthController {
       }
 
       if (!user) {
-        throw new Error("Falha catastrófica ao criar ou recuperar o utilizador");
+        throw new Error(
+          "Falha catastrófica ao criar ou recuperar o utilizador"
+        );
       }
 
       // 5. Normalização e geração de sessão

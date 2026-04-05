@@ -12,6 +12,69 @@ interface Props {
   locale?: LocaleKey;
 }
 
+function TermsModal({
+  isOpen,
+  onClose,
+  onAccept,
+  locale = "pt-br",
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onAccept: () => void;
+  locale?: LocaleKey;
+}) {
+  if (!isOpen) return null;
+  const t = getTranslations(locale);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+        <h2 className="mb-4 text-xl font-bold text-slate-900">{t.signUp.termsModalTitle}</h2>
+        <div className="mb-6 max-h-60 overflow-y-auto rounded bg-slate-50 p-4 text-sm text-slate-700">
+          <p className="mb-2">
+            <strong>1. Aceitação</strong>
+            <br />
+            Estes Termos de Uso e Política de Privacidade regem o seu acesso e uso dos serviços.
+          </p>
+          <p className="mb-2">
+            <strong>2. Uso do Serviço</strong>
+            <br />
+            Você concorda em usar este serviço apenas para fins legais e de acordo com nossas
+            diretrizes.
+          </p>
+          <p className="mb-2">
+            <strong>3. Privacidade</strong>
+            <br />
+            Nós levamos sua privacidade a sério. Seus dados são armazenados de forma segura e não
+            compartilhados ilegalmente.
+          </p>
+          <p className="mt-4 text-xs text-slate-500 italic">
+            Ao clicar em aceitar, você concorda com todas as regras listadas acima.
+          </p>
+        </div>
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100"
+          >
+            {t.signUp.termsModalClose}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onAccept();
+              onClose();
+            }}
+            className="rounded bg-yellow-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-yellow-600"
+          >
+            {t.signUp.termsModalAccept}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
@@ -46,15 +109,19 @@ function GitHubIcon(props: React.SVGProps<SVGSVGElement>) {
 export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const t = getTranslations(locale);
-  const { createUser, login, loginWithGoogle, loginWithGithub } = useAuth();
+  const { createUser, loginWithGoogle, loginWithGithub } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,8 +129,14 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
     setError(null);
     setIsLoading(true);
 
-    if (!username || !email || !password || !confirmPassword) {
+    if (!name || !username || !email || !password || !confirmPassword) {
       setError("Por favor, preencha todos os campos.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!acceptTerms) {
+      setError("Você precisa aceitar os Termos de Uso e Política de Privacidade.");
       setIsLoading(false);
       return;
     }
@@ -74,7 +147,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
       return;
     }
 
-    const createResult = await createUser({ username, email, password });
+    const createResult = await createUser({ username, email, password, name } as any);
 
     if (!createResult.success) {
       setError(createResult.message || "Erro ao criar conta.");
@@ -82,17 +155,31 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
       return;
     }
 
-    const loginResult = await login(username, password);
-
-    if (!loginResult.success) {
-      setError(loginResult.message || "Conta criada, mas não foi possível entrar automaticamente.");
-      setIsLoading(false);
-      return;
-    }
-
-    router.push("/app");
+    setIsSuccess(true);
     setIsLoading(false);
   };
+
+  if (isSuccess) {
+    return (
+      <div className="flex w-full flex-col px-6 py-4 sm:px-8 sm:py-6">
+        <div className="mt-8 flex flex-col items-center text-center">
+          <div className="mb-4 rounded-full bg-green-100 p-3 text-green-600">
+            <Mail className="h-8 w-8" />
+          </div>
+          <h2 className="mb-2 text-2xl font-bold text-slate-900">{t.signUp.successTitle || "Conta criada com sucesso!"}</h2>
+          <p className="mb-8 text-sm text-slate-600">
+            {t.signUp.successMessage || "Por favor, verifique seu e-mail para ativar sua conta antes de fazer o login."}
+          </p>
+          <button
+            onClick={() => onNavigate("signin")}
+            className="w-full max-w-[200px] rounded-md bg-yellow-500 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-yellow-600 active:scale-95"
+          >
+            {t.signUp.loginNowCta || "Ir para o login"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full flex-col px-6 py-4 sm:px-8 sm:py-6">
@@ -102,12 +189,36 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
         message={error || ""}
         locale={locale}
       />
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={() => setAcceptTerms(true)}
+        locale={locale}
+      />
       <div className="mt-2">
-        <h1 className="mb-5 text-3xl leading-tight font-bold text-slate-950 sm:text-4xl">
-          {t.signUp.title}
-        </h1>
+        <div className="mb-6 flex flex-col gap-1.5 text-center">
+          {/*<h1 className="text-xl font-bold tracking-tight text-neutral-800 sm:text-2xl">
+            {t.signIn.title}
+          </h1>*/}
+          <p className="text-sm font-medium text-slate-500">{t.signUp.subtitle}</p>
+        </div>
 
-        <form className="space-y-2" onSubmit={handleSubmit}>
+        <form className="space-y-2" onSubmit={handleSubmit} autoComplete="off">
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+              <User className="h-4 w-4 text-slate-400" />
+            </div>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t.signUp.namePlaceholder || "Nome completo"}
+              autoComplete="off"
+              className="w-full rounded-md bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              disabled={isLoading}
+            />
+          </div>
+
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
               <User className="h-4 w-4 text-slate-400" />
@@ -117,7 +228,8 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder={t.signUp.usernamePlaceholder}
-              className="w-full rounded-md bg-slate-100 py-2.5 pr-4 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+              autoComplete="off"
+              className="w-full rounded-md bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
               disabled={isLoading}
             />
           </div>
@@ -131,7 +243,8 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t.forgotPassword?.emailPlaceholder || "Email"}
-              className="w-full rounded-md bg-slate-100 py-2.5 pr-4 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+              autoComplete="off"
+              className="w-full rounded-md bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
               disabled={isLoading}
             />
           </div>
@@ -145,7 +258,8 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t.signUp.passwordPlaceholder}
-              className="w-full rounded-md bg-slate-100 py-2.5 pr-10 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+              autoComplete="new-password"
+              className="w-full rounded-md bg-slate-100 py-2.5 pl-10 pr-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
               disabled={isLoading}
             />
             <button
@@ -168,7 +282,8 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder={t.signUp.confirmPasswordPlaceholder}
-              className="w-full rounded-md bg-slate-100 py-2.5 pr-10 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+              autoComplete="new-password"
+              className="w-full rounded-md bg-slate-100 py-2.5 pl-10 pr-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
               disabled={isLoading}
             />
             <button
@@ -182,16 +297,38 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             </button>
           </div>
 
-          <div className="mt-2 flex items-center justify-between sm:mt-4">
-            <p className="max-w-[200px] text-[10px] leading-tight text-slate-500">
-              {t.signUp.termsText1}
-              <span className="font-medium text-yellow-600">{t.signUp.termsText2}</span>
-              {t.signUp.termsText3}
-            </p>
+          <div className="mt-2 flex flex-col justify-between gap-4 sm:mt-4 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={acceptTerms}
+                onChange={(e) => setAcceptTerms(e.target.checked)}
+                className="h-6 w-6 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+              />
+              <label htmlFor="terms" className="text-[10px] leading-tight text-slate-500">
+                {t.signUp.termsText1}
+                <button
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
+                  className="font-medium text-yellow-600 hover:underline"
+                >
+                  {t.signUp.termsText2}
+                </button>
+                {t.signUp.termsText3}
+                <button
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
+                  className="font-medium text-yellow-600 hover:underline"
+                >
+                  {t.signUp.termsText4}
+                </button>
+              </label>
+            </div>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center justify-center rounded-md bg-yellow-500 text-white shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] hover:bg-yellow-600 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:px-4 sm:py-1"
+              className="flex w-full items-center justify-center rounded-md bg-yellow-500 py-2.5 text-sm font-medium text-white shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] hover:bg-yellow-600 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-[150px] sm:px-4 sm:py-1"
             >
               {isLoading ? "Criando..." : t.signUp.submitButton}
             </button>
