@@ -9,6 +9,10 @@ export const esES = {
     orLoginWith: "o entrar con",
     noAccount: "¿No tienes una cuenta?",
     createAccount: "¡Crea una ahora!",
+    rightsReserved: "Todos los derechos reservados.",
+    copyright: "©",
+    terms: "Términos de Uso",
+    privacy: "Política de Privacidad",
   },
   signUp: {
     title: "Crear Cuenta",

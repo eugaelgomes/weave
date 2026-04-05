@@ -9,6 +9,10 @@ export const enUS = {
     orLoginWith: "or sign in with",
     noAccount: "Don't have an account?",
     createAccount: "Create one now!",
+    rightsReserved: "All rights reserved.",
+    copyright: "©",
+    terms: "Terms of Use",
+    privacy: "Privacy Policy",
   },
   signUp: {
     title: "Create Account",
