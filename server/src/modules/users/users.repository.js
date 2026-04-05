@@ -1,6 +1,10 @@
 const { executeQuery } = require("@/database/connection");
 const { defaultAppPreferences } = require("@/modules/users/normalize");
 
+/**
+ * Users Repositories
+ * Responsable for all user related database queries, including creation, updates, and retrieval of user data.
+ */
 class UserRepository {
   /**
    * Cria um novo usuário no banco de dados.

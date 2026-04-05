@@ -1,16 +1,19 @@
+// Libraries
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
+
+// Utils & Services
 const spacesService = require("@/services/storage");
 const { presignObjectFields } = require("@/utils/data/presign-storage-files");
 
-// Repositórios
+// Repositories
 const UserRepository = require("@/modules/users/users.repository");
 const AuthRepository = require("@/modules/authentication/auth.repository");
 const OrganizationDomainsRepository = require("@/modules/organizations/repositories/domains.repository");
 const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 
-// Serviços de Email e Logs
+// Emails templates
 const welcomeMailModule = require("@/services/email/templates/welcome-mail");
 const {
   delete_account_notification,
@@ -24,7 +27,6 @@ const {
 const updateProfileLogs = require("@/utils/system_logs/update_profile-logs");
 const PlansManager = require("@/services/plans/manager");
 const { normalizeAppPreferences } = require("@/modules/users/normalize");
-const { stat } = require("fs");
 
 const { welcome_message } = welcomeMailModule;
 
@@ -144,8 +146,8 @@ class userController {
         username,
         email,
         password,
-        timezone = null,
-        private_profile = false,
+        timezone,
+        private_profile,
         birth_date = null,
         phone_number = null,
       } = req.body;

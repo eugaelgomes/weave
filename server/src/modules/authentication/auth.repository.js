@@ -1,5 +1,10 @@
 const { executeQuery } = require("@/database/connection");
 
+/**
+ * Authentication Repository
+ * All queries related to user authentication, login processes, and OAuth integrations are centralized here.
+ * This includes fetching user data for login, logging login attempts, and handling third-party OAuth user creation and linking.
+ */
 class AuthRepository {
   /**
    * Busca um usuário pelo nome de usuário ou e-mail.
