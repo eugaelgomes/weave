@@ -268,10 +268,17 @@ export interface LoginResponse {
 }
 
 export interface CreateUserData {
+  name?: string;
   username: string;
   email: string;
   password: string;
   user_name?: string;
+}
+
+export interface ActivateAccountPayload {
+  token?: string;
+  code?: string;
+  email?: string;
 }
 
 const normalizeStorageUrl = (value?: string | null): string => {
@@ -494,6 +501,17 @@ export const createUserService = async (
   } catch {
     return { message: text };
   }
+};
+
+export const activateAccountService = async (
+  payload: ActivateAccountPayload
+): Promise<{ message: string }> => {
+  const response = await apiClient.post(API_ENDPOINTS.ACTIVATE_ACCOUNT, payload);
+  const data = await handleResponse<{ message?: string }>(response);
+
+  return {
+    message: data?.message || "Conta ativada com sucesso",
+  };
 };
 
 export const logout = async (): Promise<void> => {

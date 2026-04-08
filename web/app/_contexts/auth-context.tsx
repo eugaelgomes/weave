@@ -6,6 +6,7 @@ import {
   logout as logoutService,
   getUserData as getUserDataService,
   createUserService,
+  activateAccountService,
   updateUserData,
   updatePassword,
   requestPasswordRecovery,
@@ -15,6 +16,7 @@ import {
   initiateGithubLogin,
   type User,
   type CreateUserData,
+  type ActivateAccountPayload,
 } from "../_services/authentication/auth-service";
 import { useTheme } from "./theme-context";
 
@@ -27,7 +29,7 @@ type AuthContextType = {
   login: (
     usernameOrPayload: string | { login: string; password: string },
     password?: string
-  ) => Promise<{ success: boolean; message?: string; data?: unknown }>;
+  ) => Promise<{ success: boolean; message?: string; data?: any }>;
   loginWithGoogle: () => void;
   loginWithGithub: () => void;
   logout: () => void;
@@ -35,6 +37,9 @@ type AuthContextType = {
   // User Profile
   createUser: (
     userData: CreateUserData | FormData
+  ) => Promise<{ success: boolean; message?: string }>;
+  activateAccount: (
+    payload: ActivateAccountPayload
   ) => Promise<{ success: boolean; message?: string }>;
   updateUser: (userData: Partial<User>) => Promise<{ success: boolean; message?: string }>;
   updateUserPassword: (
@@ -137,9 +142,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: true, data: response };
       }
       throw new Error("Resposta de login inválida");
-    } catch (err: unknown) {
+    } catch (err: any) {
       const message = err instanceof Error ? err.message : "Erro de conexão";
-      return { success: false, message };
+      const errorData = err?.data ? err.data : null;
+      return { success: false, message, data: errorData };
     } finally {
       setLoading(false);
     }
@@ -175,6 +181,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
     }
   };
+
+  const activateAccount = async (payload: ActivateAccountPayload) => {
+    try {
+      const { message } = await activateAccountService(payload);
+      return { success: true, message };
+    } catch (error) {
+      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+    }
+  };
+
   const updateUser = async (userData: Partial<User>) => {
     try {
       const updatedData = await updateUserData(userData);
@@ -247,6 +263,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginWithGithub,
         logout,
         createUser,
+        activateAccount,
         updateUser,
         updateUserPassword,
         recoverPassword,

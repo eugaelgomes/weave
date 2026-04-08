@@ -8,7 +8,10 @@ import { ErrorModal } from "./ErrorsModal";
 import { useRouter } from "next/navigation";
 
 interface Props {
-  onNavigate: (view: "signin" | "signup" | "forgot") => void;
+  onNavigate: (
+    view: "signin" | "signup" | "forgot" | "confirm" | "profile-settings",
+    payload?: { email?: string; password?: string }
+  ) => void;
   locale?: LocaleKey;
 }
 
@@ -28,8 +31,8 @@ function TermsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        <h2 className="mb-4 text-xl font-bold text-slate-900">{t.signUp.termsModalTitle}</h2>
-        <div className="mb-6 max-h-60 overflow-y-auto rounded bg-slate-50 p-4 text-sm text-slate-700">
+        <h2 className="text-brand-gray-900 mb-4 text-xl font-bold">{t.signUp.termsModalTitle}</h2>
+        <div className="bg-brand-gray-100 text-brand-gray-700 mb-6 max-h-60 overflow-y-auto rounded p-4 text-sm">
           <p className="mb-2">
             <strong>1. Aceitação</strong>
             <br />
@@ -47,7 +50,7 @@ function TermsModal({
             Nós levamos sua privacidade a sério. Seus dados são armazenados de forma segura e não
             compartilhados ilegalmente.
           </p>
-          <p className="mt-4 text-xs text-slate-500 italic">
+          <p className="text-brand-gray-500 mt-4 text-xs italic">
             Ao clicar em aceitar, você concorda com todas as regras listadas acima.
           </p>
         </div>
@@ -55,7 +58,7 @@ function TermsModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100"
+            className="text-brand-gray-600 hover:bg-brand-gray-200 rounded px-4 py-2 text-sm font-medium transition-colors"
           >
             {t.signUp.termsModalClose}
           </button>
@@ -65,7 +68,7 @@ function TermsModal({
               onAccept();
               onClose();
             }}
-            className="rounded bg-yellow-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-yellow-600"
+            className="bg-brand-blue-700 hover:bg-brand-blue-800 rounded px-4 py-2 text-sm font-medium text-white transition-colors"
           >
             {t.signUp.termsModalAccept}
           </button>
@@ -116,7 +119,6 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -155,31 +157,9 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
       return;
     }
 
-    setIsSuccess(true);
     setIsLoading(false);
+    onNavigate("confirm", { email, password });
   };
-
-  if (isSuccess) {
-    return (
-      <div className="flex w-full flex-col px-6 py-4 sm:px-8 sm:py-6">
-        <div className="mt-8 flex flex-col items-center text-center">
-          <div className="mb-4 rounded-full bg-green-100 p-3 text-green-600">
-            <Mail className="h-8 w-8" />
-          </div>
-          <h2 className="mb-2 text-2xl font-bold text-slate-900">{t.signUp.successTitle || "Conta criada com sucesso!"}</h2>
-          <p className="mb-8 text-sm text-slate-600">
-            {t.signUp.successMessage || "Por favor, verifique seu e-mail para ativar sua conta antes de fazer o login."}
-          </p>
-          <button
-            onClick={() => onNavigate("signin")}
-            className="w-full max-w-[200px] rounded-md bg-yellow-500 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-yellow-600 active:scale-95"
-          >
-            {t.signUp.loginNowCta || "Ir para o login"}
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex w-full flex-col px-6 py-4 sm:px-8 sm:py-6">
@@ -200,13 +180,13 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
           {/*<h1 className="text-xl font-bold tracking-tight text-neutral-800 sm:text-2xl">
             {t.signIn.title}
           </h1>*/}
-          <p className="text-sm font-medium text-slate-500">{t.signUp.subtitle}</p>
+          <p className="text-brand-gray-500 text-sm font-medium">{t.signUp.subtitle}</p>
         </div>
 
         <form className="space-y-2" onSubmit={handleSubmit} autoComplete="off">
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <User className="h-4 w-4 text-slate-400" />
+              <User className="text-brand-gray-400 h-4 w-4" />
             </div>
             <input
               type="text"
@@ -214,14 +194,14 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               onChange={(e) => setName(e.target.value)}
               placeholder={t.signUp.namePlaceholder || "Nome completo"}
               autoComplete="off"
-              className="w-full rounded-md bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
           </div>
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <User className="h-4 w-4 text-slate-400" />
+              <User className="text-brand-gray-400 h-4 w-4" />
             </div>
             <input
               type="text"
@@ -229,14 +209,14 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               onChange={(e) => setUsername(e.target.value)}
               placeholder={t.signUp.usernamePlaceholder}
               autoComplete="off"
-              className="w-full rounded-md bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
           </div>
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Mail className="h-4 w-4 text-slate-400" />
+              <Mail className="text-brand-gray-400 h-4 w-4" />
             </div>
             <input
               type="email"
@@ -244,14 +224,14 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t.forgotPassword?.emailPlaceholder || "Email"}
               autoComplete="off"
-              className="w-full rounded-md bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
           </div>
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Lock className="h-4 w-4 text-slate-400" />
+              <Lock className="text-brand-gray-400 h-4 w-4" />
             </div>
             <input
               type={showPassword ? "text" : "password"}
@@ -259,7 +239,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t.signUp.passwordPlaceholder}
               autoComplete="new-password"
-              className="w-full rounded-md bg-slate-100 py-2.5 pl-10 pr-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
             <button
@@ -267,7 +247,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               aria-label={showPassword ? "Hide password" : "Show password"}
               title={showPassword ? "Hide password" : "Show password"}
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600"
+              className="text-brand-gray-400 hover:text-brand-gray-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -275,7 +255,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Lock className="h-4 w-4 text-slate-400" />
+              <Lock className="text-brand-gray-400 h-4 w-4" />
             </div>
             <input
               type={showConfirmPassword ? "text" : "password"}
@@ -283,7 +263,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder={t.signUp.confirmPasswordPlaceholder}
               autoComplete="new-password"
-              className="w-full rounded-md bg-slate-100 py-2.5 pl-10 pr-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
             <button
@@ -291,7 +271,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
               title={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600"
+              className="text-brand-gray-400 hover:text-brand-gray-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
             >
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -304,14 +284,14 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
                 id="terms"
                 checked={acceptTerms}
                 onChange={(e) => setAcceptTerms(e.target.checked)}
-                className="h-6 w-6 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+                className="border-brand-gray-300 text-brand-blue-700 focus:ring-brand-blue-700 h-5 w-5 rounded"
               />
-              <label htmlFor="terms" className="text-[10px] leading-tight text-slate-500">
+              <label htmlFor="terms" className="text-brand-gray-500 text-[10px] leading-tight">
                 {t.signUp.termsText1}
                 <button
                   type="button"
                   onClick={() => setShowTermsModal(true)}
-                  className="font-medium text-yellow-600 hover:underline"
+                  className="text-brand-blue-700 font-medium hover:underline"
                 >
                   {t.signUp.termsText2}
                 </button>
@@ -319,7 +299,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
                 <button
                   type="button"
                   onClick={() => setShowTermsModal(true)}
-                  className="font-medium text-yellow-600 hover:underline"
+                  className="text-brand-blue-700 font-medium hover:underline"
                 >
                   {t.signUp.termsText4}
                 </button>
@@ -328,7 +308,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex w-full items-center justify-center rounded-md bg-yellow-500 py-2.5 text-sm font-medium text-white shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] hover:bg-yellow-600 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-[150px] sm:px-4 sm:py-1"
+              className="bg-brand-blue-700 shadow-brand-blue-700/20 hover:bg-brand-blue-800 flex w-full items-center justify-center rounded-md py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-[150px] sm:px-4 sm:py-1"
             >
               {isLoading ? "Criando..." : t.signUp.submitButton}
             </button>
@@ -339,10 +319,12 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
       <div className="mt-8 flex flex-col items-center">
         <div className="relative mb-6 w-full">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200"></div>
+            <div className="border-brand-gray-200 w-full border-t"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-2 text-slate-500">{t.signUp.orRegisterWith}</span>
+            <span className="bg-white text-brand-gray-500 px-2">
+              {t.signUp.orRegisterWith}
+            </span>
           </div>
         </div>
 
@@ -350,7 +332,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
           <button
             type="button"
             onClick={loginWithGoogle}
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+            className="border-brand-gray-200 text-brand-gray-700 hover:border-brand-gray-300 hover:bg-brand-gray-300 hover:text-brand-gray-900 focus:ring-brand-gray-300 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
           >
             <GoogleIcon className="h-4 w-4" />
             Google
@@ -359,7 +341,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
           <button
             type="button"
             onClick={loginWithGithub}
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-[#24292f] py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-[#1d2228] hover:shadow"
+            className="border-brand-gray-200 hover:bg-brand-gray-300 focus:ring-brand-gray-500 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold text-[#171515] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
           >
             <GitHubIcon className="h-4 w-4" />
             GitHub
@@ -368,10 +350,10 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
 
         <button
           onClick={() => onNavigate("signin")}
-          className="mt-8 text-sm font-medium text-slate-500"
+          className="text-brand-gray-500 mt-8 text-sm font-medium"
         >
           {t.signUp.alreadyHaveAccount}{" "}
-          <span className="font-semibold text-yellow-600 transition-colors hover:text-yellow-500">
+          <span className="text-brand-blue-700 hover:text-brand-blue-600 font-semibold transition-colors">
             {t.signUp.loginNow}
           </span>
         </button>

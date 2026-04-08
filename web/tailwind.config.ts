@@ -10,6 +10,32 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        "brand-blue": {
+          50: "#ECF9FF",
+          100: "#D4F1FF",
+          200: "#B2E7FF",
+          300: "#7DDBFF",
+          400: "#40C5FF",
+          500: "#14A8FF",
+          600: "#008FFF",
+          700: "#0082FF",
+          800: "#0065D1",
+          900: "#0855A0",
+          950: "#0A3461",
+        },
+        "brand-gray": {
+          50: "#f9fafb",
+          100: "#f3f4f6",
+          200: "#e5e7eb",
+          300: "#d1d5db",
+          400: "#9ca3af",
+          500: "#6b7280",
+          600: "#4b5563",
+          700: "#374151",
+          800: "#1f2937",
+          900: "#111827",
+          950: "#030712",
+        },
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {

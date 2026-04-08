@@ -1,5 +1,31 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-blue-50: #ecf9ff;
+  --color-brand-blue-100: #d4f1ff;
+  --color-brand-blue-200: #b2e7ff;
+  --color-brand-blue-300: #7ddbff;
+  --color-brand-blue-400: #40c5ff;
+  --color-brand-blue-500: #14a8ff;
+  --color-brand-blue-600: #008fff;
+  --color-brand-blue-700: #0082ff;
+  --color-brand-blue-800: #0065d1;
+  --color-brand-blue-900: #0855a0;
+  --color-brand-blue-950: #0a3461;
+
+  --color-brand-gray-50: #f9fafb;
+  --color-brand-gray-100: #f3f4f6;
+  --color-brand-gray-200: #e5e7eb;
+  --color-brand-gray-300: #d1d5db;
+  --color-brand-gray-400: #9ca3af;
+  --color-brand-gray-500: #6b7280;
+  --color-brand-gray-600: #4b5563;
+  --color-brand-gray-700: #374151;
+  --color-brand-gray-800: #1f2937;
+  --color-brand-gray-900: #111827;
+  --color-brand-gray-950: #030712;
+}
+
 @variant dark (&:where(.dark, .dark *));
 
 @layer base {

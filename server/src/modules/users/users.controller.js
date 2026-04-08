@@ -147,7 +147,7 @@ class userController {
         email,
         password,
         timezone,
-        private_profile,
+        private_profile = false,
         birth_date = null,
         phone_number = null,
       } = req.body;
@@ -261,10 +261,12 @@ class userController {
       }
 
       const activationToken = crypto.randomBytes(12).toString("hex");
+      const activationCode = Math.floor(100000 + Math.random() * 900000).toString();
       const currentDateTime = this._getCurrentDateTime();
       await UserRepository.createEmailActivationToken(
         userId,
         activationToken,
+        activationCode,
         currentDateTime
       );
 
@@ -276,14 +278,14 @@ class userController {
         // Não bloqueamos a criação do usuário por causa disso
       }
 
-      await welcome_message(name, email, username, activationToken);
+      await welcome_message(userName, email, username, activationToken, activationCode);
 
       return res.status(201).json({
         status: "OK",
-        message: `Welcome to Weave Notes ${name}! Check your email to activate your account.`,
+        message: `Welcome to Weave Notes ${userName}! Check your email to activate your account.`,
         user: {
           id: userId,
-          name,
+          name: userName,
           username,
           email,
           avatar_url: profileImageUrl,
@@ -818,21 +820,26 @@ class userController {
   }
 
   async activateAccount(req, res) {
-    const { token } = req.body;
+    const { token, code, email } = req.body;
 
-    if (!token) {
+    if (!token && (!code || !email)) {
       return res
         .status(400)
-        .json({ message: "Token de ativação é obrigatório" });
+        .json({ message: "Token de ativação ou código e email são obrigatórios" });
     }
 
     try {
-      const tokenRecord = await UserRepository.findEmailActivationToken(token);
+      let tokenRecord;
+      if (token) {
+        tokenRecord = await UserRepository.findEmailActivationToken(token);
+      } else {
+        tokenRecord = await UserRepository.findEmailActivationTokenByCodeAndEmail(code, email);
+      }
 
       if (!tokenRecord) {
         return res
           .status(400)
-          .json({ message: "Token de ativação inválido ou expirado" });
+          .json({ message: "Token ou código de ativação inválido ou expirado" });
       }
 
       // Verifica o email
@@ -844,8 +851,8 @@ class userController {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
 
-      // Desativa o token
-      await UserRepository.deactivateEmailToken(token);
+      // Desativa o token (funciona p/ token ou code pois deactivate usa id do registro)
+      await UserRepository.deactivateEmailToken(tokenRecord.token);
 
       return res.status(200).json({
         message: "Email verificado com sucesso",

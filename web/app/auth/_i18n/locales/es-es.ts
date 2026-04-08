@@ -33,7 +33,8 @@ export const esES = {
     termsModalAccept: "Aceptar Términos",
     termsModalClose: "Cerrar",
     successTitle: "¡Cuenta creada con éxito!",
-    successMessage: "Por favor, verifica tu correo electrónico para activar tu cuenta antes de iniciar sesión.",
+    successMessage:
+      "Por favor, verifica tu correo electrónico para activar tu cuenta antes de iniciar sesión.",
     loginNowCta: "Ir a iniciar sesión",
   },
   forgotPassword: {
@@ -47,5 +48,111 @@ export const esES = {
   errors: {
     defaultTitle: "Ocurrió un error",
     tryAgain: "Intentar de nuevo",
+  },
+  automation: {
+    title: "Gestión y Automatización",
+    subtitle: "Conecta tus procesos de forma eficiente",
+    workflows: "Flujos de Trabajo Inteligentes",
+    workflowsDesc: "Automatiza tareas repetitivas",
+    smartRules: "Reglas de Oro",
+    smartRulesDesc: "Condiciones y desencadenantes avanzados",
+    boardSync: "Sincronización de Tableros",
+    boardSyncDesc: "Estado actualizado en tiempo real",
+    connectors: "Conectores Integrados",
+    connectorsDesc: "Tu stack de herramientas unificado",
+    googleDesc: "Eventos y unidades sincronizados",
+    msDesc: "Documentos y equipos conectados",
+    slackDesc: "Notificaciones y comandos vía chat",
+    gitDesc: "Commits y PRs se convierten en actualizaciones",
+    aiAssist: "Weave AI",
+    aiAssistDesc: "Asistente para el refinamiento de flujos",
+  },
+  marketing: {
+    title: "Tu Workspace Inteligente",
+    subtitle:
+      "Todo lo que tú y tu equipo necesitan para organizar ideas, gestionar proyectos colaborativos y escalar la productividad.",
+    features: {
+      access: {
+        title: "Acceso y Personalización",
+        desc: "Inicio de sesión con Google SSO, panel centralizado y personalización con temas claro y oscuro.",
+      },
+      projects: {
+        title: "Proyectos y Metodologías",
+        desc: "Soporte nativo para Scrum y Kanban, con vistas de lista, calendario y línea de tiempo.",
+      },
+      notes: {
+        title: "Notas en Bloques",
+        desc: "Editor modular con drag-and-drop. Organiza ideas y enlaza tareas a proyectos.",
+      },
+      collaboration: {
+        title: "Colaboración y Organizaciones",
+        desc: "Gestión de áreas por sectores, niveles de acceso estrictos y seguridad activa por dominio.",
+      },
+      ai: {
+        title: "Productividad e Inteligencia",
+        desc: "Asistente Weave AI integrado, sincronización con Google Calendar y notificaciones en tiempo real.",
+      },
+      security: {
+        title: "Gobernanza y Seguridad",
+        desc: "Cifrado de datos, gestión inteligente de planes, límites de uso y opciones de respaldo.",
+      },
+    },
+  },
+  profileSettings: {
+    title: "Finaliza tu perfil",
+    subtitle: "Este paso es opcional y puede cambiarse despues en ajustes.",
+    save: "Guardar y continuar",
+    skip: "Omitir por ahora",
+    saving: "Guardando...",
+    themeLabel: "Tema",
+    themeOptions: {
+      light: "Claro",
+      dark: "Oscuro",
+    },
+    interfaceLanguageLabel: "Idioma de la interfaz",
+    interfaceLanguageOptions: {
+      "pt-BR": "Portugues (BR)",
+      "en-US": "English (US)",
+      "es-ES": "Espanol (ES)",
+    },
+    densityLabel: "Densidad",
+    densityOptions: {
+      compact: "Compacta",
+      comfortable: "Confortable",
+      spacious: "Espaciosa",
+    },
+    privateProfile: "Perfil privado",
+    aiSection: "IA",
+    aiOptions: {
+      enabled: "Activar IA",
+      autoSuggestions: "Sugerencias automaticas",
+      contextAwareAssistance: "Asistencia con contexto",
+    },
+    notificationsSection: "Notificaciones",
+    notificationOptions: {
+      push: "Push",
+      email: "Correo",
+      sound: "Sonido",
+      browser: "Navegador",
+      projectUpdates: "Actualizaciones de proyectos",
+      mentionsAndComments: "Menciones y comentarios",
+      collaborationInvites: "Invitaciones de colaboracion",
+    },
+    saveError: "Error al guardar configuraciones.",
+  },
+  confirmAccount: {
+    title: "Cuenta creada con exito!",
+    subtitle:
+      "Por favor, verifica tu correo electronico para activar tu cuenta antes de iniciar sesion.",
+    sectionTitle: "Verificacion de cuenta",
+    emailPlaceholder: "Tu correo",
+    codePlaceholder: "Codigo de 6 digitos",
+    confirmButton: "Confirmar",
+    validating: "Validando...",
+    missingDataError: "Ingresa el codigo de 6 digitos y el correo para activar tu cuenta.",
+    activationError: "No fue posible activar la cuenta.",
+    successMessage: "Cuenta activada con exito.",
+    setupProfile: "Configurar perfil y preferencias (opcional)",
+    skipAndEnter: "Omitir paso y entrar",
   },
 };

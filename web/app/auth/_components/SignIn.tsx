@@ -8,7 +8,10 @@ import { ErrorModal } from "./ErrorsModal";
 import { useRouter } from "next/navigation";
 
 interface Props {
-  onNavigate: (view: "signin" | "signup" | "forgot") => void;
+  onNavigate: (
+    view: "signin" | "signup" | "forgot" | "confirm" | "profile-settings",
+    payload?: { email?: string; password?: string }
+  ) => void;
   locale?: LocaleKey;
 }
 
@@ -67,7 +70,11 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
     const result = await login(username, password);
 
     if (!result.success) {
-      setError(result.message || "Ocorreu um erro ao fazer login.");
+      if (result.data?.error_code === "EMAIL_NOT_VERIFIED") {
+        onNavigate("confirm", { email: result.data.email, password });
+      } else {
+        setError(result.message || "Ocorreu um erro ao fazer login.");
+      }
       setIsLoading(false);
       return;
     }
@@ -89,40 +96,40 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
           {/*<h1 className="text-xl font-bold tracking-tight text-neutral-800 sm:text-2xl">
             {t.signIn.title}
           </h1>*/}
-          <p className="text-sm font-medium text-slate-500">{t.signIn.subtitle}</p>
+          <p className="text-brand-gray-500 text-sm font-medium">{t.signIn.subtitle}</p>
         </div>
 
         <form className="space-y-2" onSubmit={handleSubmit}>
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <User className="h-4 w-4 text-slate-400" />
+              <User className="text-brand-gray-400 h-4 w-4" />
             </div>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder={t.signIn.usernamePlaceholder}
-              className="w-full rounded-md border-2 border-neutral-800/10 bg-white py-2.5 pr-4 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
           </div>
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Lock className="h-4 w-4 text-slate-400" />
+              <Lock className="text-brand-gray-400 h-4 w-4" />
             </div>
             <input
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t.signIn.passwordPlaceholder}
-              className="w-full rounded-md border-2 border-neutral-800/10 bg-white py-2.5 pr-10 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600"
+              className="text-brand-gray-400 hover:text-brand-gray-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -132,16 +139,16 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
             <button
               type="button"
               onClick={() => onNavigate("forgot")}
-              className="text-xs font-medium text-neutral-800/50 transition-colors hover:text-yellow-500"
+              className="text-brand-gray-500 hover:text-brand-blue-700 text-xs font-medium transition-colors"
             >
               {t.signIn.forgotPassword}
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center justify-center rounded-md bg-yellow-500 text-white shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] hover:bg-yellow-600 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:px-4 sm:py-1"
+              className="bg-brand-blue-700 shadow-brand-blue-700/20 hover:bg-brand-blue-800 flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
             >
-              {isLoading ? "Entrando..." : t.signIn.submitButton}
+              {isLoading ? "running..." : t.signIn.submitButton}
             </button>
           </div>
         </form>
@@ -150,10 +157,10 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
       <div className="mt-8 flex flex-col items-center">
         <div className="relative mb-6 w-full">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200"></div>
+            <div className="border-brand-gray-200 w-full border-t"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-2 text-slate-500">{t.signIn.orLoginWith}</span>
+            <span className="text-brand-gray-500 bg-white px-2">{t.signIn.orLoginWith}</span>
           </div>
         </div>
 
@@ -161,7 +168,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
           <button
             type="button"
             onClick={loginWithGoogle}
-            className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-neutral-800/10 bg-white py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 hover:shadow-md focus:ring-2 focus:ring-slate-300 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+            className="border-brand-gray-200 text-brand-gray-700 hover:border-brand-gray-300 hover:bg-brand-gray-300 hover:text-brand-gray-900 focus:ring-brand-gray-300 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
           >
             <GoogleIcon className="h-4 w-4" />
             Google
@@ -170,7 +177,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
           <button
             type="button"
             onClick={loginWithGithub}
-            className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-neutral-800/10 bg-white py-2.5 text-sm font-bold text-[#171515] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:ring-slate-500 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+            className="border-brand-gray-200 text-brand-gray-700 hover:border-brand-gray-300 hover:bg-brand-gray-300 hover:text-brand-gray-900 focus:ring-brand-gray-300 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
           >
             <GitHubIcon className="h-4 w-4" />
             GitHub
@@ -179,21 +186,24 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
 
         <button
           onClick={() => onNavigate("signup")}
-          className="mt-8 text-sm font-medium text-slate-500 transition-colors duration-200 hover:text-slate-700"
+          className="text-brand-gray-500 hover:text-brand-gray-700 mt-8 text-xs font-medium transition-colors duration-200"
         >
           {t.signIn.noAccount}{" "}
-          <span className="font-semibold text-yellow-600 transition-colors duration-200 hover:text-yellow-500">
+          <span className="text-brand-blue-700 hover:text-brand-blue-600 font-semibold transition-colors duration-200">
             {t.signIn.createAccount}
           </span>
         </button>
       </div>
-      <div className="mt-8 flex flex-col items-center gap-2 text-xs text-slate-400">
+      <div className="text-brand-gray-400 mt-8 flex flex-col items-center gap-2 text-xs">
         <div className="flex items-center gap-2">
-          <a href="/terms" className="transition-colors hover:text-slate-600 hover:underline">
+          <a href="/terms" className="hover:text-brand-gray-600 transition-colors hover:underline">
             {t.signIn.terms}
           </a>
-          <span className="text-slate-300">|</span>
-          <a href="/privacy" className="transition-colors hover:text-slate-600 hover:underline">
+          <span className="text-brand-gray-300">|</span>
+          <a
+            href="/privacy"
+            className="hover:text-brand-gray-600 transition-colors hover:underline"
+          >
             {t.signIn.privacy}
           </a>
         </div>

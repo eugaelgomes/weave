@@ -163,6 +163,8 @@ class AuthController {
       const verifiedAccount = user.email_verified;
       if (!verifiedAccount) {
         return res.status(403).json({
+          error_code: "EMAIL_NOT_VERIFIED",
+          email: user.email,
           message: "Please verify your email before logging in.",
         });
       }

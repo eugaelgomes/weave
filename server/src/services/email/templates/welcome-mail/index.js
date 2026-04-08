@@ -2,12 +2,13 @@ const { MailService } = require("@/services/email/config/index");
 
 const contactEmail = process.env.CONTACT_EMAIL || "contact@gaelgomes.dev";
 
-async function welcome_message(nome, email, username, activationToken) {
+async function welcome_message(nome, email, username, activationToken, code) {
   const env = process.env.NODE_ENV || "development";
+  const encodedEmail = encodeURIComponent(email);
   const activationLink =
     env === "production"
-      ? `${process.env.FRONTEND_URL}/auth/activate?token=${activationToken}`
-      : `${process.env.FRONTEND_URL}/auth/activate?token=${activationToken}`;
+      ? `${process.env.FRONTEND_URL}/auth/?view=confirm&token=${activationToken}&email=${encodedEmail}`
+      : `${process.env.FRONTEND_URL}/auth/?view=confirm&token=${activationToken}&email=${encodedEmail}`;
 
   try {
     const mailOptions = {
@@ -170,9 +171,12 @@ async function welcome_message(nome, email, username, activationToken) {
           ⚠️ Este link expira em 7 dias
         </div>
 
-        <p>Caso o botão não funcione, utilize o token abaixo na página de ativação:</p>
+        <p>Você também pode usar o código de 6 dígitos abaixo na tela de verificação:</p>
+        <div style="font-size: 24px; font-weight: bold; text-align: center; letter-spacing: 4px; color: #eab308; margin: 20px 0;">${code}</div>
+
+        <p>Ou, caso prefira, copie e cole o token na página de ativação:</p>
         
-        <div class="token-box">${activationToken}</div>
+        <div class="token-box" style="word-break: break-all; text-align: center; background: #e5e5e5; padding: 10px; border-radius: 4px; color: #525252;">${activationToken}</div>
         
         <div class="info-box">
           <p>Nome de usuário: <strong>${username}</strong></p>
