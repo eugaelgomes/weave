@@ -57,7 +57,7 @@ export default function AuthPage() {
         </div>
       </div>
 
-      <div className="flex w-full items-center justify-center bg-white p-4 sm:p-8 lg:w-1/2">
+      <div className="flex min-h-[100dvh] w-full items-center justify-center bg-white p-4 sm:p-8 lg:min-h-0 lg:w-1/2">
         <div className="relative z-10 w-full max-w-[440px] overflow-hidden">
           <ErrorModal
             isOpen={!!error}

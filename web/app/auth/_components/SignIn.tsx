@@ -164,7 +164,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
           </div>
         </div>
 
-        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid w-full gap-3 grid-cols-2">
           <button
             type="button"
             onClick={loginWithGoogle}

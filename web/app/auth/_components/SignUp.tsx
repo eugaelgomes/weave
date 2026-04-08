@@ -5,7 +5,75 @@ import { User, Lock, Eye, EyeOff, Mail } from "lucide-react";
 import { getTranslations, LocaleKey } from "@/app/auth/_i18n";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { ErrorModal } from "./ErrorsModal";
-import { useRouter } from "next/navigation";
+
+interface SignUpFields {
+  name: string;
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  acceptTerms: boolean;
+}
+
+type SignUpFieldErrors = Partial<Record<keyof SignUpFields, string>>;
+
+const NAME_REGEX = /^[\p{L}\s]+$/u;
+const USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateSignUpFields(fields: SignUpFields): SignUpFieldErrors {
+  const errors: SignUpFieldErrors = {};
+
+  const trimmedName = fields.name.trim();
+  const trimmedUsername = fields.username.trim();
+  const trimmedEmail = fields.email.trim();
+
+  if (!trimmedName) {
+    errors.name = "Nome é obrigatório.";
+  } else if (!NAME_REGEX.test(trimmedName)) {
+    errors.name = "Apenas letras e espaços são permitidos.";
+  } else if (trimmedName.length < 1 || trimmedName.length > 100) {
+    errors.name = "O nome não pode estar vazio ou ser muito longo.";
+  }
+
+  if (!trimmedUsername) {
+    errors.username = "Nome de usuário é obrigatório.";
+  } else if (!USERNAME_REGEX.test(trimmedUsername)) {
+    errors.username = "Apenas letras, números, ., - ou _ são permitidos.";
+  } else if (trimmedUsername.length < 6 || trimmedUsername.length > 18) {
+    errors.username = "O nome de usuário deve ter entre 6 e 18 caracteres.";
+  }
+
+  if (!trimmedEmail) {
+    errors.email = "E-mail é obrigatório.";
+  } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+    errors.email = "E-mail inválido.";
+  }
+
+  const hasMinLength = fields.password.length >= 8;
+  const hasLowercase = /[a-z]/.test(fields.password);
+  const hasUppercase = /[A-Z]/.test(fields.password);
+  const hasNumber = /\d/.test(fields.password);
+
+  if (!fields.password) {
+    errors.password = "Senha é obrigatória.";
+  } else if (!(hasMinLength && hasLowercase && hasUppercase && hasNumber)) {
+    errors.password =
+      "A senha deve conter no mínimo 8 caracteres, incluindo letras maiúsculas, minúsculas e números.";
+  }
+
+  if (!fields.confirmPassword) {
+    errors.confirmPassword = "Confirme sua senha.";
+  } else if (fields.password !== fields.confirmPassword) {
+    errors.confirmPassword = "As senhas não coincidem.";
+  }
+
+  if (!fields.acceptTerms) {
+    errors.acceptTerms = "Você precisa aceitar os Termos de Uso e Política de Privacidade.";
+  }
+
+  return errors;
+}
 
 interface Props {
   onNavigate: (
@@ -121,35 +189,71 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<SignUpFieldErrors>({});
+  const [touchedFields, setTouchedFields] = useState(
+    {} as Partial<Record<keyof SignUpFields, boolean>>
+  );
 
   const t = getTranslations(locale);
   const { createUser, loginWithGoogle, loginWithGithub } = useAuth();
-  const router = useRouter();
+
+  const getNextFields = (override?: Partial<SignUpFields>): SignUpFields => ({
+    name,
+    username,
+    email,
+    password,
+    confirmPassword,
+    acceptTerms,
+    ...override,
+  });
+
+  const validateFields = (override?: Partial<SignUpFields>) => {
+    const nextErrors = validateSignUpFields(getNextFields(override));
+    setFieldErrors(nextErrors);
+    return nextErrors;
+  };
+
+  const markFieldAsTouched = (field: keyof SignUpFields) => {
+    setTouchedFields((prev) => ({ ...prev, [field]: true }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
-    if (!name || !username || !email || !password || !confirmPassword) {
-      setError("Por favor, preencha todos os campos.");
+    const allFieldsTouched: Partial<Record<keyof SignUpFields, boolean>> = {
+      name: true,
+      username: true,
+      email: true,
+      password: true,
+      confirmPassword: true,
+      acceptTerms: true,
+    };
+    setTouchedFields(allFieldsTouched);
+
+    const currentValidationErrors = validateFields();
+    if (Object.keys(currentValidationErrors).length > 0) {
+      const firstError =
+        currentValidationErrors.name ||
+        currentValidationErrors.username ||
+        currentValidationErrors.email ||
+        currentValidationErrors.password ||
+        currentValidationErrors.confirmPassword ||
+        currentValidationErrors.acceptTerms ||
+        "Por favor, confira os campos e tente novamente.";
+
+      setError(firstError);
       setIsLoading(false);
       return;
     }
 
-    if (!acceptTerms) {
-      setError("Você precisa aceitar os Termos de Uso e Política de Privacidade.");
-      setIsLoading(false);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("As senhas não coincidem.");
-      setIsLoading(false);
-      return;
-    }
-
-    const createResult = await createUser({ username, email, password, name } as any);
+    const createResult = await createUser({
+      username: username.trim().toLowerCase(),
+      email: email.trim(),
+      password,
+      name: name.trim(),
+    });
 
     if (!createResult.success) {
       setError(createResult.message || "Erro ao criar conta.");
@@ -172,7 +276,12 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
       <TermsModal
         isOpen={showTermsModal}
         onClose={() => setShowTermsModal(false)}
-        onAccept={() => setAcceptTerms(true)}
+        onAccept={() => {
+          setAcceptTerms(true);
+          if (touchedFields.acceptTerms) {
+            validateFields({ acceptTerms: true });
+          }
+        }}
         locale={locale}
       />
       <div className="mt-2">
@@ -191,13 +300,30 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                setName(nextValue);
+                if (touchedFields.name) {
+                  validateFields({ name: nextValue });
+                }
+              }}
+              onBlur={() => {
+                markFieldAsTouched("name");
+                validateFields();
+              }}
               placeholder={t.signUp.namePlaceholder || "Nome completo"}
               autoComplete="off"
-              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className={`text-brand-gray-900 placeholder:text-brand-gray-400 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
+                touchedFields.name && fieldErrors.name
+                  ? "border-red-400 focus:ring-red-500"
+                  : "border-brand-gray-200 focus:ring-brand-blue-700"
+              }`}
               disabled={isLoading}
             />
           </div>
+          {touchedFields.name && fieldErrors.name && (
+            <p className="text-xs text-red-600">{fieldErrors.name}</p>
+          )}
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -206,13 +332,30 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <input
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                const nextValue = e.target.value.toLowerCase();
+                setUsername(nextValue);
+                if (touchedFields.username) {
+                  validateFields({ username: nextValue });
+                }
+              }}
+              onBlur={() => {
+                markFieldAsTouched("username");
+                validateFields();
+              }}
               placeholder={t.signUp.usernamePlaceholder}
               autoComplete="off"
-              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className={`text-brand-gray-900 placeholder:text-brand-gray-400 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
+                touchedFields.username && fieldErrors.username
+                  ? "border-red-400 focus:ring-red-500"
+                  : "border-brand-gray-200 focus:ring-brand-blue-700"
+              }`}
               disabled={isLoading}
             />
           </div>
+          {touchedFields.username && fieldErrors.username && (
+            <p className="text-xs text-red-600">{fieldErrors.username}</p>
+          )}
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -221,13 +364,30 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                setEmail(nextValue);
+                if (touchedFields.email) {
+                  validateFields({ email: nextValue });
+                }
+              }}
+              onBlur={() => {
+                markFieldAsTouched("email");
+                validateFields();
+              }}
               placeholder={t.forgotPassword?.emailPlaceholder || "Email"}
               autoComplete="off"
-              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className={`text-brand-gray-900 placeholder:text-brand-gray-400 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
+                touchedFields.email && fieldErrors.email
+                  ? "border-red-400 focus:ring-red-500"
+                  : "border-brand-gray-200 focus:ring-brand-blue-700"
+              }`}
               disabled={isLoading}
             />
           </div>
+          {touchedFields.email && fieldErrors.email && (
+            <p className="text-xs text-red-600">{fieldErrors.email}</p>
+          )}
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -236,10 +396,24 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <input
               type={showPassword ? "text" : "password"}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                setPassword(nextValue);
+                if (touchedFields.password || touchedFields.confirmPassword) {
+                  validateFields({ password: nextValue });
+                }
+              }}
+              onBlur={() => {
+                markFieldAsTouched("password");
+                validateFields();
+              }}
               placeholder={t.signUp.passwordPlaceholder}
               autoComplete="new-password"
-              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className={`text-brand-gray-900 placeholder:text-brand-gray-400 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
+                touchedFields.password && fieldErrors.password
+                  ? "border-red-400 focus:ring-red-500"
+                  : "border-brand-gray-200 focus:ring-brand-blue-700"
+              }`}
               disabled={isLoading}
             />
             <button
@@ -252,6 +426,9 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+          {touchedFields.password && fieldErrors.password && (
+            <p className="text-xs text-red-600">{fieldErrors.password}</p>
+          )}
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -260,10 +437,24 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <input
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                setConfirmPassword(nextValue);
+                if (touchedFields.confirmPassword) {
+                  validateFields({ confirmPassword: nextValue });
+                }
+              }}
+              onBlur={() => {
+                markFieldAsTouched("confirmPassword");
+                validateFields();
+              }}
               placeholder={t.signUp.confirmPasswordPlaceholder}
               autoComplete="new-password"
-              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className={`text-brand-gray-900 placeholder:text-brand-gray-400 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
+                touchedFields.confirmPassword && fieldErrors.confirmPassword
+                  ? "border-red-400 focus:ring-red-500"
+                  : "border-brand-gray-200 focus:ring-brand-blue-700"
+              }`}
               disabled={isLoading}
             />
             <button
@@ -276,6 +467,9 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+          {touchedFields.confirmPassword && fieldErrors.confirmPassword && (
+            <p className="text-xs text-red-600">{fieldErrors.confirmPassword}</p>
+          )}
 
           <div className="mt-2 flex flex-col justify-between gap-4 sm:mt-4 sm:flex-row sm:items-center">
             <div className="flex items-center gap-2">
@@ -283,7 +477,12 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
                 type="checkbox"
                 id="terms"
                 checked={acceptTerms}
-                onChange={(e) => setAcceptTerms(e.target.checked)}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  markFieldAsTouched("acceptTerms");
+                  setAcceptTerms(checked);
+                  validateFields({ acceptTerms: checked });
+                }}
                 className="border-brand-gray-300 text-brand-blue-700 focus:ring-brand-blue-700 h-5 w-5 rounded"
               />
               <label htmlFor="terms" className="text-brand-gray-500 text-[10px] leading-tight">
@@ -305,6 +504,9 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
                 </button>
               </label>
             </div>
+            {touchedFields.acceptTerms && fieldErrors.acceptTerms && (
+              <p className="text-xs text-red-600">{fieldErrors.acceptTerms}</p>
+            )}
             <button
               type="submit"
               disabled={isLoading}
@@ -322,13 +524,11 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <div className="border-brand-gray-200 w-full border-t"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-white text-brand-gray-500 px-2">
-              {t.signUp.orRegisterWith}
-            </span>
+            <span className="text-brand-gray-500 bg-white px-2">{t.signUp.orRegisterWith}</span>
           </div>
         </div>
 
-        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid w-full grid-cols-2 gap-3">
           <button
             type="button"
             onClick={loginWithGoogle}
