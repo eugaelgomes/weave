@@ -54,7 +54,7 @@ export default function ViewTypeSelector({
               title={option.description}
               className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
                 isSelected
-                  ? "border-yellow-500 bg-yellow-500/10 text-yellow-600 dark:border-yellow-500 dark:bg-yellow-500/20 dark:text-yellow-400"
+                  ? "border-yellow-500 bg-brand-primary-700/10 text-yellow-600 dark:border-yellow-500 dark:bg-brand-primary-700/20 dark:text-yellow-400"
                   : "border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600 dark:hover:bg-neutral-700"
               }`}
             >

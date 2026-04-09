@@ -343,7 +343,7 @@ const NotesWithPagination = () => {
               onClick={toggleSelectionMode}
               className={`flex h-7 items-center justify-center rounded px-1.5 transition-colors ${
                 selectionMode
-                  ? "bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-500"
+                  ? "bg-yellow-50 text-yellow-600 dark:bg-brand-primary-700/10 dark:text-brand-primary-700"
                   : "text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
               }`}
               title="Modo de seleção"
@@ -390,7 +390,7 @@ const NotesWithPagination = () => {
                 selectedTags.length > 0 ||
                 selectedCollaborators.length > 0 ||
                 selectedProjects.length > 0
-                  ? "border-yellow-500 bg-yellow-50 text-yellow-700 dark:border-yellow-500/30 dark:bg-yellow-500/10 dark:text-yellow-500"
+                  ? "border-yellow-500 bg-yellow-50 text-yellow-700 dark:border-yellow-500/30 dark:bg-brand-primary-700/10 dark:text-brand-primary-700"
                   : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200"
               }`}
             >
@@ -399,7 +399,7 @@ const NotesWithPagination = () => {
               {(selectedTags.length > 0 ||
                 selectedCollaborators.length > 0 ||
                 selectedProjects.length > 0) && (
-                <span className="flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-yellow-500 px-1 text-[8px] font-bold text-white">
+                <span className="flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-brand-primary-700 px-1 text-[8px] font-bold text-white">
                   {selectedTags.length + selectedCollaborators.length + selectedProjects.length}
                 </span>
               )}
@@ -407,7 +407,7 @@ const NotesWithPagination = () => {
 
             <button
               onClick={handleCreateNote}
-              className="flex h-7 shrink-0 items-center gap-1 rounded-md bg-yellow-500 px-2.5 text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-neutral-800 active:scale-95 dark:bg-yellow-500 dark:text-neutral-950 dark:hover:bg-neutral-200"
+              className="flex h-7 shrink-0 items-center gap-1 rounded-md bg-brand-primary-700 px-2.5 text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-neutral-800 active:scale-95 dark:bg-brand-primary-700 dark:text-neutral-950 dark:hover:bg-neutral-200"
             >
               <Plus size={13} />
               <span className="hidden sm:inline">Criar</span>
@@ -554,21 +554,21 @@ const NotesWithPagination = () => {
 
       {/* =================== BARRA DE AÇÕES EM LOTE =================== */}
       {selectionMode && selectedNotes.size > 0 && (
-        <div className="animate-in slide-in-from-top-2 mt-2 flex flex-col gap-2 rounded-md border border-yellow-500/30 bg-yellow-50 p-2 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-yellow-500/20 dark:bg-yellow-500/10">
+        <div className="animate-in slide-in-from-top-2 mt-2 flex flex-col gap-2 rounded-md border border-yellow-500/30 bg-yellow-50 p-2 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-yellow-500/20 dark:bg-brand-primary-700/10">
           <div className="flex items-center gap-2">
-            <FiCheckSquare size={14} className="shrink-0 text-yellow-600 dark:text-yellow-500" />
-            <span className="text-xs font-medium text-yellow-900 dark:text-yellow-500">
+            <FiCheckSquare size={14} className="shrink-0 text-yellow-600 dark:text-brand-primary-700" />
+            <span className="text-xs font-medium text-yellow-900 dark:text-brand-primary-700">
               {selectedNotes.size} nota(s) selecionada(s)
             </span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={selectAllNotes}
-              className="text-[11px] font-medium text-yellow-700 underline hover:text-yellow-800 dark:text-yellow-500 dark:hover:text-yellow-400"
+              className="text-[11px] font-medium text-yellow-700 underline hover:text-yellow-800 dark:text-brand-primary-700 dark:hover:text-yellow-400"
             >
               {selectedNotes.size === notes.length ? "Desmarcar" : "Selecionar todas"}
             </button>
-            <div className="h-3 w-px bg-yellow-300 dark:bg-yellow-500/30"></div>
+            <div className="h-3 w-px bg-yellow-300 dark:bg-brand-primary-700/30"></div>
             <button
               onClick={handleBulkDelete}
               className="flex items-center gap-1 rounded bg-red-500 px-2 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-red-600"
@@ -631,7 +631,7 @@ const NotesWithPagination = () => {
                     key={note.id}
                     className={`group relative transition-all ${
                       isSelected
-                        ? "bg-yellow-50/80 dark:bg-yellow-500/10"
+                        ? "bg-yellow-50/80 dark:bg-brand-primary-700/10"
                         : "hover:bg-neutral-50/50 dark:hover:bg-neutral-900/40"
                     }`}
                   >
@@ -641,7 +641,7 @@ const NotesWithPagination = () => {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleNoteSelection(note.id)}
-                          className="h-4 w-4 cursor-pointer rounded border-neutral-300 text-yellow-500 transition-colors focus:ring-2 focus:ring-yellow-500 focus:ring-offset-0 dark:border-neutral-600 dark:bg-neutral-800 dark:checked:bg-yellow-500"
+                          className="h-4 w-4 cursor-pointer rounded border-neutral-300 text-brand-primary-700 transition-colors focus:ring-2 focus:ring-yellow-500 focus:ring-offset-0 dark:border-neutral-600 dark:bg-neutral-800 dark:checked:bg-brand-primary-700"
                         />
                       </div>
                     )}
@@ -668,7 +668,7 @@ const NotesWithPagination = () => {
                               {note.title || "Sem título"}
                             </h3>
                             {new Date(note.created_at).getTime() > Date.now() - 86400000 && (
-                              <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-yellow-500"></span>
+                              <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-primary-700"></span>
                             )}
                           </div>
                           <div className="flex items-center gap-1.5 overflow-hidden">
@@ -761,7 +761,7 @@ const NotesWithPagination = () => {
                               {note.title || "Sem título"}
                             </h3>
                             {new Date(note.created_at).getTime() > Date.now() - 86400000 && (
-                              <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-yellow-500"></span>
+                              <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-primary-700"></span>
                             )}
                           </div>
                           <p className="truncate text-[10px] text-neutral-400 dark:text-neutral-500">
@@ -875,7 +875,7 @@ const NotesWithPagination = () => {
                 selectedProjects.length > 0) && (
                 <button
                   onClick={clearFilters}
-                  className="rounded-md bg-yellow-50 px-3 py-1.5 text-[11px] font-bold text-yellow-700 transition-colors hover:bg-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-500 dark:hover:bg-yellow-500/20"
+                  className="rounded-md bg-yellow-50 px-3 py-1.5 text-[11px] font-bold text-yellow-700 transition-colors hover:bg-yellow-100 dark:bg-brand-primary-700/10 dark:text-brand-primary-700 dark:hover:bg-brand-primary-700/20"
                 >
                   Limpar filtros ativos
                 </button>

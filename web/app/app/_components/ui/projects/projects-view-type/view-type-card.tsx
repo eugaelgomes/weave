@@ -28,14 +28,14 @@ export default function ViewTypeCard({
       disabled={disabled}
       className={`flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
         selected
-          ? "border-yellow-500 bg-yellow-500/10 ring-2 ring-yellow-500/20 dark:border-yellow-500 dark:bg-yellow-500/20"
+          ? "border-yellow-500 bg-brand-primary-700/10 ring-2 ring-yellow-500/20 dark:border-yellow-500 dark:bg-brand-primary-700/20"
           : "border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:border-neutral-600 dark:hover:bg-neutral-700"
       } ${className}`}
     >
       <div
         className={`flex h-12 w-12 items-center justify-center rounded-lg ${
           selected
-            ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
+            ? "bg-brand-primary-700/20 text-yellow-600 dark:text-yellow-400"
             : "bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-400"
         }`}
       >

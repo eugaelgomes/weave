@@ -55,7 +55,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
             <div className="flex items-center gap-1.5 truncate">
               <LayoutDashboard
                 className={`h-3.5 w-3.5 flex-shrink-0 ${
-                  isDashboard ? "text-yellow-500" : "text-neutral-400"
+                  isDashboard ? "text-brand-primary-700" : "text-neutral-400"
                 }`}
               />
               <span className="truncate">Painel de Notas</span>
@@ -87,7 +87,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
                   <div className="flex min-w-0 items-center gap-1.5">
                     <FileText
                       className={`h-3.5 w-3.5 flex-shrink-0 ${
-                        isActive ? "text-yellow-500" : "text-neutral-400"
+                        isActive ? "text-brand-primary-700" : "text-neutral-400"
                       }`}
                     />
                     <span className="truncate">{note.title}</span>

@@ -531,8 +531,8 @@ export default function CreateEventModal({
                   </div>
                   <div>
                     <h3 className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
-                      Conectar evento com <span className="text-yellow-500">Google Calendar</span> |{" "}
-                      <span className="text-yellow-500">Meet</span>
+                      Conectar evento com <span className="text-brand-primary-700">Google Calendar</span> |{" "}
+                      <span className="text-brand-primary-700">Meet</span>
                     </h3>
                     {!googleConnected && (
                       <button

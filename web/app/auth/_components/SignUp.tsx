@@ -99,8 +99,8 @@ function TermsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        <h2 className="text-brand-gray-900 mb-4 text-xl font-bold">{t.signUp.termsModalTitle}</h2>
-        <div className="bg-brand-gray-100 text-brand-gray-700 mb-6 max-h-60 overflow-y-auto rounded p-4 text-sm">
+        <h2 className="text-brand-secondary-900 mb-4 text-xl font-bold">{t.signUp.termsModalTitle}</h2>
+        <div className="bg-brand-secondary-100 text-brand-secondary-700 mb-6 max-h-60 overflow-y-auto rounded p-4 text-sm">
           <p className="mb-2">
             <strong>1. Aceitação</strong>
             <br />
@@ -118,7 +118,7 @@ function TermsModal({
             Nós levamos sua privacidade a sério. Seus dados são armazenados de forma segura e não
             compartilhados ilegalmente.
           </p>
-          <p className="text-brand-gray-500 mt-4 text-xs italic">
+          <p className="text-brand-secondary-500 mt-4 text-xs italic">
             Ao clicar em aceitar, você concorda com todas as regras listadas acima.
           </p>
         </div>
@@ -126,7 +126,7 @@ function TermsModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-brand-gray-600 hover:bg-brand-gray-200 rounded px-4 py-2 text-sm font-medium transition-colors"
+            className="text-brand-secondary-600 hover:bg-brand-secondary-200 rounded px-4 py-2 text-sm font-medium transition-colors"
           >
             {t.signUp.termsModalClose}
           </button>
@@ -136,7 +136,7 @@ function TermsModal({
               onAccept();
               onClose();
             }}
-            className="bg-brand-blue-700 hover:bg-brand-blue-800 rounded px-4 py-2 text-sm font-medium text-white transition-colors"
+            className="bg-brand-primary-700 hover:bg-brand-primary-800 rounded px-4 py-2 text-sm font-medium text-white transition-colors"
           >
             {t.signUp.termsModalAccept}
           </button>
@@ -289,13 +289,13 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
           {/*<h1 className="text-xl font-bold tracking-tight text-neutral-800 sm:text-2xl">
             {t.signIn.title}
           </h1>*/}
-          <p className="text-brand-gray-500 text-sm font-medium">{t.signUp.subtitle}</p>
+          <p className="text-brand-secondary-500 text-sm font-medium">{t.signUp.subtitle}</p>
         </div>
 
         <form className="space-y-2" onSubmit={handleSubmit} autoComplete="off">
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <User className="text-brand-gray-400 h-4 w-4" />
+              <User className="text-brand-secondary-400 h-4 w-4" />
             </div>
             <input
               type="text"
@@ -313,10 +313,10 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               }}
               placeholder={t.signUp.namePlaceholder || "Nome completo"}
               autoComplete="off"
-              className={`text-brand-gray-900 placeholder:text-brand-gray-400 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
+              className={`text-brand-secondary-900 placeholder:text-brand-secondary-400 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
                 touchedFields.name && fieldErrors.name
                   ? "border-red-400 focus:ring-red-500"
-                  : "border-brand-gray-200 focus:ring-brand-blue-700"
+                  : "border-brand-secondary-200 focus:ring-brand-primary-700"
               }`}
               disabled={isLoading}
             />
@@ -327,7 +327,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <User className="text-brand-gray-400 h-4 w-4" />
+              <User className="text-brand-secondary-400 h-4 w-4" />
             </div>
             <input
               type="text"
@@ -345,10 +345,10 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               }}
               placeholder={t.signUp.usernamePlaceholder}
               autoComplete="off"
-              className={`text-brand-gray-900 placeholder:text-brand-gray-400 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
+              className={`text-brand-secondary-900 placeholder:text-brand-secondary-400 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
                 touchedFields.username && fieldErrors.username
                   ? "border-red-400 focus:ring-red-500"
-                  : "border-brand-gray-200 focus:ring-brand-blue-700"
+                  : "border-brand-secondary-200 focus:ring-brand-primary-700"
               }`}
               disabled={isLoading}
             />
@@ -359,7 +359,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Mail className="text-brand-gray-400 h-4 w-4" />
+              <Mail className="text-brand-secondary-400 h-4 w-4" />
             </div>
             <input
               type="email"
@@ -377,10 +377,10 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               }}
               placeholder={t.forgotPassword?.emailPlaceholder || "Email"}
               autoComplete="off"
-              className={`text-brand-gray-900 placeholder:text-brand-gray-400 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
+              className={`text-brand-secondary-900 placeholder:text-brand-secondary-400 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
                 touchedFields.email && fieldErrors.email
                   ? "border-red-400 focus:ring-red-500"
-                  : "border-brand-gray-200 focus:ring-brand-blue-700"
+                  : "border-brand-secondary-200 focus:ring-brand-primary-700"
               }`}
               disabled={isLoading}
             />
@@ -391,7 +391,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Lock className="text-brand-gray-400 h-4 w-4" />
+              <Lock className="text-brand-secondary-400 h-4 w-4" />
             </div>
             <input
               type={showPassword ? "text" : "password"}
@@ -409,10 +409,10 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               }}
               placeholder={t.signUp.passwordPlaceholder}
               autoComplete="new-password"
-              className={`text-brand-gray-900 placeholder:text-brand-gray-400 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
+              className={`text-brand-secondary-900 placeholder:text-brand-secondary-400 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
                 touchedFields.password && fieldErrors.password
                   ? "border-red-400 focus:ring-red-500"
-                  : "border-brand-gray-200 focus:ring-brand-blue-700"
+                  : "border-brand-secondary-200 focus:ring-brand-primary-700"
               }`}
               disabled={isLoading}
             />
@@ -421,7 +421,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               aria-label={showPassword ? "Hide password" : "Show password"}
               title={showPassword ? "Hide password" : "Show password"}
               onClick={() => setShowPassword(!showPassword)}
-              className="text-brand-gray-400 hover:text-brand-gray-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
+              className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -432,7 +432,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Lock className="text-brand-gray-400 h-4 w-4" />
+              <Lock className="text-brand-secondary-400 h-4 w-4" />
             </div>
             <input
               type={showConfirmPassword ? "text" : "password"}
@@ -450,10 +450,10 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               }}
               placeholder={t.signUp.confirmPasswordPlaceholder}
               autoComplete="new-password"
-              className={`text-brand-gray-900 placeholder:text-brand-gray-400 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
+              className={`text-brand-secondary-900 placeholder:text-brand-secondary-400 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
                 touchedFields.confirmPassword && fieldErrors.confirmPassword
                   ? "border-red-400 focus:ring-red-500"
-                  : "border-brand-gray-200 focus:ring-brand-blue-700"
+                  : "border-brand-secondary-200 focus:ring-brand-primary-700"
               }`}
               disabled={isLoading}
             />
@@ -462,7 +462,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
               title={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="text-brand-gray-400 hover:text-brand-gray-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
+              className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
             >
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -483,14 +483,14 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
                   setAcceptTerms(checked);
                   validateFields({ acceptTerms: checked });
                 }}
-                className="border-brand-gray-300 text-brand-blue-700 focus:ring-brand-blue-700 h-5 w-5 rounded"
+                className="border-brand-secondary-300 text-brand-primary-700 focus:ring-brand-primary-700 h-5 w-5 rounded"
               />
-              <label htmlFor="terms" className="text-brand-gray-500 text-[10px] leading-tight">
+              <label htmlFor="terms" className="text-brand-secondary-500 text-[10px] leading-tight">
                 {t.signUp.termsText1}
                 <button
                   type="button"
                   onClick={() => setShowTermsModal(true)}
-                  className="text-brand-blue-700 font-medium hover:underline"
+                  className="text-brand-primary-700 font-medium hover:underline"
                 >
                   {t.signUp.termsText2}
                 </button>
@@ -498,7 +498,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
                 <button
                   type="button"
                   onClick={() => setShowTermsModal(true)}
-                  className="text-brand-blue-700 font-medium hover:underline"
+                  className="text-brand-primary-700 font-medium hover:underline"
                 >
                   {t.signUp.termsText4}
                 </button>
@@ -510,7 +510,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-brand-blue-700 shadow-brand-blue-700/20 hover:bg-brand-blue-800 flex w-full items-center justify-center rounded-md py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-[150px] sm:px-4 sm:py-1"
+              className="bg-brand-primary-700 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center rounded-md py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-[150px] sm:px-4 sm:py-1"
             >
               {isLoading ? "Criando..." : t.signUp.submitButton}
             </button>
@@ -521,10 +521,10 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
       <div className="mt-8 flex flex-col items-center">
         <div className="relative mb-6 w-full">
           <div className="absolute inset-0 flex items-center">
-            <div className="border-brand-gray-200 w-full border-t"></div>
+            <div className="border-brand-secondary-200 w-full border-t"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="text-brand-gray-500 bg-white px-2">{t.signUp.orRegisterWith}</span>
+            <span className="text-brand-secondary-500 bg-white px-2">{t.signUp.orRegisterWith}</span>
           </div>
         </div>
 
@@ -532,7 +532,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
           <button
             type="button"
             onClick={loginWithGoogle}
-            className="border-brand-gray-200 text-brand-gray-700 hover:border-brand-gray-300 hover:bg-brand-gray-300 hover:text-brand-gray-900 focus:ring-brand-gray-300 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
           >
             <GoogleIcon className="h-4 w-4" />
             Google
@@ -541,7 +541,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
           <button
             type="button"
             onClick={loginWithGithub}
-            className="border-brand-gray-200 hover:bg-brand-gray-300 focus:ring-brand-gray-500 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold text-[#171515] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+            className="border-brand-secondary-200 hover:bg-brand-secondary-300 focus:ring-brand-secondary-500 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold text-[#171515] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
           >
             <GitHubIcon className="h-4 w-4" />
             GitHub
@@ -550,10 +550,10 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
 
         <button
           onClick={() => onNavigate("signin")}
-          className="text-brand-gray-500 mt-8 text-sm font-medium"
+          className="text-brand-secondary-500 mt-8 text-sm font-medium"
         >
           {t.signUp.alreadyHaveAccount}{" "}
-          <span className="text-brand-blue-700 hover:text-brand-blue-600 font-semibold transition-colors">
+          <span className="text-brand-primary-700 hover:text-brand-primary-600 font-semibold transition-colors">
             {t.signUp.loginNow}
           </span>
         </button>

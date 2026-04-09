@@ -88,7 +88,7 @@ export function ForgotPassword({ onNavigate, locale = "pt-br" }: Props) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex items-center justify-center rounded-md bg-yellow-500 px-4 py-2 text-white shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] hover:bg-yellow-600 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:py-1.5"
+                className="flex items-center justify-center rounded-md bg-brand-primary-700 px-4 py-2 text-white shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] hover:bg-yellow-600 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:py-1.5"
               >
                 {isLoading ? "Enviando..." : t.forgotPassword.submitButton}
               </button>
@@ -103,7 +103,7 @@ export function ForgotPassword({ onNavigate, locale = "pt-br" }: Props) {
           className="mt-8 text-sm font-medium text-slate-500"
         >
           {t.forgotPassword.rememberedPassword}{" "}
-          <span className="font-semibold text-yellow-600 transition-colors hover:text-yellow-500">
+          <span className="font-semibold text-yellow-600 transition-colors hover:text-brand-primary-700">
             {t.forgotPassword.loginNow}
           </span>
         </button>

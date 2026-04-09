@@ -55,7 +55,7 @@ const STATUS_CONFIG = {
     label: "Pausado",
     icon: PauseCircle,
     color: "text-yellow-600 dark:text-yellow-400",
-    bg: "bg-yellow-50 dark:bg-yellow-500/10",
+    bg: "bg-yellow-50 dark:bg-brand-primary-700/10",
     border: "border-yellow-200 dark:border-yellow-500/20",
   },
   archived: {
@@ -129,7 +129,7 @@ export default function ProjectsCarousel({
           </p>
           <Link
             href={emptyActionHref}
-            className="inline-flex items-center gap-1.5 rounded bg-yellow-500 px-3 py-1.5 text-[10px] font-medium text-neutral-950 transition-colors hover:bg-yellow-600"
+            className="inline-flex items-center gap-1.5 rounded bg-brand-primary-700 px-3 py-1.5 text-[10px] font-medium text-neutral-950 transition-colors hover:bg-yellow-600"
           >
             <Folder className="h-3 w-3" /> {emptyActionText}
           </Link>
@@ -223,7 +223,7 @@ export default function ProjectsCarousel({
                                 project.complexity === "alta"
                                   ? "text-red-500 dark:text-red-400"
                                   : project.complexity === "media"
-                                    ? "text-yellow-500 dark:text-yellow-400"
+                                    ? "text-brand-primary-700 dark:text-yellow-400"
                                     : "text-green-500 dark:text-green-400"
                               }`}
                             />
@@ -321,7 +321,7 @@ export default function ProjectsCarousel({
                   onClick={() => scrollToSlide(index)}
                   className={`h-1 rounded-full transition-all ${
                     currentSlide === index
-                      ? "w-4 bg-yellow-500"
+                      ? "w-4 bg-brand-primary-700"
                       : "w-1 bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-700 dark:hover:bg-neutral-600"
                   }`}
                   aria-label={`Ir para projeto ${index + 1}`}

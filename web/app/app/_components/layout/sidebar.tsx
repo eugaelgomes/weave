@@ -158,7 +158,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
       {/* Header mobile */}
       <div className="flex items-center justify-between border-b border-neutral-200 p-3 lg:hidden dark:border-neutral-800">
         <div className="flex items-center gap-2">
-          <Book className="h-3.5 w-3.5 text-yellow-500" />
+          <Book className="h-3.5 w-3.5 text-brand-primary-700" />
           <h2 className="text-xs font-bold tracking-wider text-neutral-700 dark:text-neutral-200">
             Menu
           </h2>
@@ -176,12 +176,12 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
         {/* Toggle collapse desktop only */}
         <div className="flex items-center px-2 py-1.5">
           {!isCollapsed && (
-            <h2 className="text-[10px] font-bold tracking-wider text-yellow-500 uppercase">Menu</h2>
+            <h2 className="text-[10px] font-bold tracking-wider text-brand-primary-700 uppercase">Menu</h2>
           )}
           {toggleCollapse && (
             <button
               onClick={toggleCollapse}
-              className="ml-auto hidden rounded-md p-1 text-yellow-500 hover:bg-neutral-100 lg:block dark:hover:bg-neutral-800"
+              className="ml-auto hidden rounded-md p-1 text-brand-primary-700 hover:bg-neutral-100 lg:block dark:hover:bg-neutral-800"
               title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
             >
               {isCollapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
@@ -212,24 +212,24 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                     }}
                     className={`flex items-center rounded-md px-2 py-2 text-sm font-medium transition duration-200 ${
                       active
-                        ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-500"
+                        ? "bg-brand-primary-700/10 text-yellow-600 dark:text-brand-primary-700"
                         : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-white"
                     }`}
                   >
                     <div className="flex items-center gap-2">
                       <Icon
                         className={`h-4 w-4 ${
-                          active ? "text-yellow-500" : "text-neutral-500 dark:text-neutral-500"
+                          active ? "text-brand-primary-700" : "text-neutral-500 dark:text-neutral-500"
                         }`}
                       />
                       {!isCollapsed && <span className="truncate">{item.label}</span>}
                       {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
-                        <span className="ml-auto flex h-4 min-w-[18px] items-center justify-center rounded-full bg-yellow-500 px-1 text-[9px] font-bold text-white">
+                        <span className="ml-auto flex h-4 min-w-[18px] items-center justify-center rounded-full bg-brand-primary-700 px-1 text-[9px] font-bold text-white">
                           {item.badge > 99 ? "99+" : item.badge}
                         </span>
                       )}
                       {isCollapsed && item.badge !== undefined && item.badge > 0 && (
-                        <span className="ml-1 flex h-1.5 w-1.5 rounded-full bg-yellow-500" />
+                        <span className="ml-1 flex h-1.5 w-1.5 rounded-full bg-brand-primary-700" />
                       )}
                     </div>
 
@@ -256,14 +256,14 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                               onClick={handleLinkClick}
                               className={`flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium transition duration-200 ${
                                 isSubActive
-                                  ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-500"
+                                  ? "bg-brand-primary-700/10 text-yellow-600 dark:text-brand-primary-700"
                                   : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900"
                               }`}
                             >
                               <SubIcon
                                 className={`size-2.5 ${
                                   isSubActive
-                                    ? "text-yellow-500"
+                                    ? "text-brand-primary-700"
                                     : "text-neutral-500 opacity-70 dark:text-neutral-500"
                                 }`}
                               />
@@ -284,7 +284,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
               <div className="my-2 h-px w-full bg-neutral-200 dark:bg-neutral-800" />
 
               <div>
-                <h2 className="mb-1.5 px-2 text-[10px] font-bold tracking-wider text-yellow-500 uppercase">
+                <h2 className="mb-1.5 px-2 text-[10px] font-bold tracking-wider text-brand-primary-700 uppercase">
                   {t.nav.recentAccess}
                 </h2>
 
@@ -315,7 +315,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                             <ItemIcon
                               className={`size-3.5 ${
                                 isItemActive
-                                  ? "text-yellow-500"
+                                  ? "text-brand-primary-700"
                                   : "text-neutral-400 dark:text-neutral-500"
                               }`}
                             />

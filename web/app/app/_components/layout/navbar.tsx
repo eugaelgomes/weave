@@ -219,7 +219,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                 className="flex min-w-0 items-center"
                 aria-label={t.nav.backToHome}
               >
-                <span className="truncate text-base font-bold text-yellow-500 sm:text-lg">
+                <span className="truncate text-base font-bold text-brand-primary-700 sm:text-lg">
                   Weave
                 </span>
               </Link>
@@ -258,7 +258,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                   type="button"
                 >
                   <Search
-                    className="h-4 w-4 text-neutral-400 group-hover:text-yellow-500"
+                    className="h-4 w-4 text-neutral-400 group-hover:text-brand-primary-700"
                     strokeWidth={2}
                   />
                   <span className="flex-1 text-left text-sm text-neutral-500 dark:text-neutral-500">

@@ -68,7 +68,7 @@ export default function ChatWidget({
       {/* Header */}
       <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-yellow-500/10 text-yellow-600">
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-primary-700/10 text-yellow-600">
             <Sparkles className="h-4 w-4" />
           </div>
           <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{title}</h3>
@@ -161,7 +161,7 @@ export default function ChatWidget({
           <button
             onClick={handleSend}
             disabled={!input.trim() || isTyping}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-yellow-500 text-white transition-all hover:bg-yellow-600 disabled:opacity-50"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brand-primary-700 text-white transition-all hover:bg-yellow-600 disabled:opacity-50"
           >
             <Send className="h-3.5 w-3.5" />
           </button>

@@ -108,7 +108,7 @@ const BadgeNode = ({ node, isChild = false, isLast = false }: any) => {
         )}
 
         <div className="flex items-start gap-3 rounded-md border border-neutral-800/10 bg-white px-2 py-1.5 transition-colors hover:bg-slate-100/50">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-yellow-200/60 bg-white/80 text-yellow-500 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-yellow-200/60 bg-white/80 text-brand-primary-700 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
             <Icon className="h-4 w-4" />
           </div>
           <div className="flex flex-col">

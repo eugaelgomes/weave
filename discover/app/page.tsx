@@ -75,13 +75,13 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-x-hidden selection:bg-yellow-500/30 selection:text-yellow-900 dark:text-neutral-50 dark:selection:bg-yellow-500/40 dark:selection:text-yellow-100">
+    <div className="relative flex min-h-screen flex-col overflow-x-hidden selection:bg-brand-primary-700/30 selection:text-yellow-900 dark:text-neutral-50 dark:selection:bg-brand-primary-700/40 dark:selection:text-yellow-100">
       <BackgroundMinimal />
       <Navbar ctaLabel={t.navbar.cta} ctaHref="/auth/signup" />
 
       <section className="flex flex-col items-center justify-center px-6 pt-32 pb-16 text-center">
         <div className="mx-auto max-w-4xl">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-yellow-300/50 bg-yellow-50/50 px-4 py-1.5 text-xs font-bold text-yellow-700 backdrop-blur-sm dark:border-yellow-500/20 dark:bg-yellow-500/10 dark:text-yellow-400">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-yellow-300/50 bg-yellow-50/50 px-4 py-1.5 text-xs font-bold text-yellow-700 backdrop-blur-sm dark:border-yellow-500/20 dark:bg-brand-primary-700/10 dark:text-yellow-400">
             <HiSparkles className="h-3.5 w-3.5" />
             <span>{t.home.badge}</span>
           </div>
@@ -144,7 +144,7 @@ export default function HomePage() {
               <div className="grid grid-cols-2 gap-y-4 gap-x-8">
                 {secondaryFeatures.map((sf, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm font-bold text-neutral-700 dark:text-neutral-300">
-                    <div className="h-1.5 w-1.5 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]" />
+                    <div className="h-1.5 w-1.5 rounded-full bg-brand-primary-700 shadow-[0_0_8px_rgba(234,179,8,0.5)]" />
                     {sf.title}
                   </div>
                 ))}
@@ -152,7 +152,7 @@ export default function HomePage() {
             </div>
             <div className="flex-1 grid grid-cols-2 gap-4 w-full">
               <div className="aspect-square rounded-3xl bg-white/50 dark:bg-neutral-800/30 flex flex-col p-6 items-center justify-center text-center group cursor-default transition-transform hover:scale-[1.02]">
-                <FiZap className="h-8 w-8 text-yellow-500 mb-3 group-hover:scale-110 transition-transform" />
+                <FiZap className="h-8 w-8 text-brand-primary-700 mb-3 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-black uppercase tracking-widest text-neutral-400">{t.home.mission.cards.fast}</span>
               </div>
               <div className="aspect-square rounded-3xl bg-white/50 dark:bg-neutral-800/30 flex flex-col p-6 items-center justify-center text-center group cursor-default transition-transform hover:scale-[1.02]">

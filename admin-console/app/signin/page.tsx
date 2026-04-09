@@ -41,7 +41,7 @@ export default function LoginPage() {
 
         {/* Header */}
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-yellow-500">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-primary-700">
             <HiSparkles className="h-5 w-5 text-white" />
           </div>
           <div>
@@ -56,7 +56,7 @@ export default function LoginPage() {
           {/* Email */}
           <div className="group relative">
             <label htmlFor="email" className="sr-only">E-mail</label>
-            <FaEnvelope className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-300 transition-colors group-focus-within:text-yellow-500" />
+            <FaEnvelope className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-300 transition-colors group-focus-within:text-brand-primary-700" />
             <input
               id="email"
               name="email"
@@ -73,7 +73,7 @@ export default function LoginPage() {
           {/* Password */}
           <div className="group relative">
             <label htmlFor="password" className="sr-only">Senha</label>
-            <FaLock className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-300 transition-colors group-focus-within:text-yellow-500" />
+            <FaLock className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-300 transition-colors group-focus-within:text-brand-primary-700" />
             <input
               id="password"
               name="password"
@@ -90,7 +90,7 @@ export default function LoginPage() {
               onClick={() => setShowPassword((v) => !v)}
               tabIndex={-1}
               aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-300 transition-colors hover:text-yellow-500"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-300 transition-colors hover:text-brand-primary-700"
             >
               {showPassword ? <FaEyeSlash className="h-3.5 w-3.5" /> : <FaEye className="h-3.5 w-3.5" />}
             </button>
@@ -100,7 +100,7 @@ export default function LoginPage() {
           <div className="flex justify-end">
             <button
               type="button"
-              className="text-xs text-neutral-400 transition-colors hover:text-yellow-500"
+              className="text-xs text-neutral-400 transition-colors hover:text-brand-primary-700"
             >
               Esqueceu a senha?
             </button>
@@ -118,7 +118,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="group mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-yellow-500 py-2.5 text-sm font-semibold text-white transition-all hover:bg-yellow-400 focus:outline-none focus:ring-3 focus:ring-yellow-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+            className="group mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-primary-700 py-2.5 text-sm font-semibold text-white transition-all hover:bg-yellow-400 focus:outline-none focus:ring-3 focus:ring-yellow-500/30 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? (
               <>

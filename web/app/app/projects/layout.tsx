@@ -67,7 +67,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                   <div className="flex items-center gap-1.5 truncate">
                     <LayoutDashboard
                       className={`h-3.5 w-3.5 flex-shrink-0 ${
-                        isDashboard ? "text-yellow-500" : "text-neutral-400"
+                        isDashboard ? "text-brand-primary-700" : "text-neutral-400"
                       }`}
                     />
                     <span className="truncate">Dashboard</span>
@@ -117,7 +117,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                         <div className="flex min-w-0 items-center gap-1.5">
                           <Folder
                             className={`h-3.5 w-3.5 flex-shrink-0 ${
-                              isActive ? "text-yellow-500" : "text-neutral-400"
+                              isActive ? "text-brand-primary-700" : "text-neutral-400"
                             }`}
                           />
                           <span className="truncate">{project.title}</span>
@@ -152,7 +152,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                               >
                                 <FolderOpen
                                   className={`h-3 w-3 flex-shrink-0 ${
-                                    isSubActive ? "text-yellow-500" : "text-neutral-400"
+                                    isSubActive ? "text-brand-primary-700" : "text-neutral-400"
                                   }`}
                                 />
                                 <span className="truncate">{sub.title}</span>

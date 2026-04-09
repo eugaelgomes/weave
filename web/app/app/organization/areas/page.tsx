@@ -1139,7 +1139,7 @@ const Modal = ({ open, title, description, onClose, children }: ModalProps) => {
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 rounded-full p-2 text-neutral-500 transition-all hover:bg-yellow-50 hover:text-yellow-600 focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:outline-none dark:hover:bg-yellow-900/20 dark:hover:text-yellow-500"
+          className="absolute top-4 right-4 z-10 rounded-full p-2 text-neutral-500 transition-all hover:bg-yellow-50 hover:text-yellow-600 focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:outline-none dark:hover:bg-yellow-900/20 dark:hover:text-brand-primary-700"
           aria-label="Fechar modal"
         >
           <X className="h-5 w-5" />
@@ -1149,7 +1149,7 @@ const Modal = ({ open, title, description, onClose, children }: ModalProps) => {
         <div className="p-6 pb-2">
           <div className="mb-1 flex items-center gap-2">
             {/* Opcional: Um pequeno detalhe visual antes do título */}
-            <div className="h-4 w-1 rounded-full bg-yellow-500" />
+            <div className="h-4 w-1 rounded-full bg-brand-primary-700" />
             <h2 className="text-lg leading-none font-bold tracking-tight text-neutral-900 dark:text-white">
               {title}
             </h2>

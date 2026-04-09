@@ -47,7 +47,7 @@ function StatCard({
   return (
     <div className="rounded-sm border border-neutral-200 bg-white px-3 py-2 text-neutral-700 dark:border-neutral-800 dark:bg-neutral-950">
       <div className="flex items-center gap-1 text-[9px] font-semibold tracking-[0.35em] text-neutral-500 uppercase">
-        <Icon className="h-3 w-3 text-yellow-500" />
+        <Icon className="h-3 w-3 text-brand-primary-700" />
         {label}
       </div>
       <div className="mt-1 text-xl font-semibold text-neutral-900 dark:text-neutral-50">
@@ -74,7 +74,7 @@ function ProviderFilter({
       className={cn(
         "inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-[10px] font-medium transition",
         selected
-          ? "border-yellow-500 bg-yellow-500/90 text-neutral-900"
+          ? "border-yellow-500 bg-brand-primary-700/90 text-neutral-900"
           : "border-neutral-200 text-neutral-500 hover:text-neutral-900"
       )}
     >
@@ -108,7 +108,7 @@ function AgentCard({ agent, onClick }: { agent: Agent; onClick: () => void }) {
             {agent.description || "Sem descrição"}
           </p>
         </div>
-        <Sparkles className="h-4 w-4 text-yellow-500" />
+        <Sparkles className="h-4 w-4 text-brand-primary-700" />
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] text-neutral-500">
@@ -183,7 +183,7 @@ export default function AgentsOverviewPage() {
           </button>
           <button
             onClick={() => router.push("/app/weave-ai/agent/new")}
-            className="inline-flex items-center gap-1 rounded-sm border border-yellow-500 bg-yellow-500/90 px-2 py-1 text-[10px] font-semibold text-neutral-900"
+            className="inline-flex items-center gap-1 rounded-sm border border-yellow-500 bg-brand-primary-700/90 px-2 py-1 text-[10px] font-semibold text-neutral-900"
           >
             <Plus className="h-3 w-3" />
             New Agent
@@ -250,13 +250,13 @@ export default function AgentsOverviewPage() {
 
       {filteredAgents.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center rounded-sm border border-dashed border-neutral-300 bg-white p-6 text-center text-[11px] dark:border-neutral-800 dark:bg-neutral-950">
-          <Sparkles className="mb-2 h-6 w-6 text-yellow-500" />
+          <Sparkles className="mb-2 h-6 w-6 text-brand-primary-700" />
           <p className="text-neutral-500 dark:text-neutral-400">
             Nenhum agente encontrado. Ajuste os filtros ou crie um novo assistente personalizado.
           </p>
           <Link
             href="/app/weave-ai/agent/new"
-            className="mt-3 inline-flex items-center gap-1 rounded-sm border border-yellow-500 bg-yellow-500/95 px-3 py-1 text-[10px] font-semibold text-neutral-900"
+            className="mt-3 inline-flex items-center gap-1 rounded-sm border border-yellow-500 bg-brand-primary-700/95 px-3 py-1 text-[10px] font-semibold text-neutral-900"
           >
             <Plus className="h-3 w-3" /> Criar agente
           </Link>

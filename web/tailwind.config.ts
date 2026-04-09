@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        "brand-blue": {
+        "brand-primary": {
           50: "#ECF9FF",
           100: "#D4F1FF",
           200: "#B2E7FF",
@@ -23,7 +23,7 @@ const config: Config = {
           900: "#0855A0",
           950: "#0A3461",
         },
-        "brand-gray": {
+        "brand-secondary": {
           50: "#f9fafb",
           100: "#f3f4f6",
           200: "#e5e7eb",

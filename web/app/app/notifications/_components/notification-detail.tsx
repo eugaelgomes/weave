@@ -59,7 +59,7 @@ const getIconColor = (type: NotificationType) => {
     case "note_shared":
       return "text-purple-500";
     case "ai_action":
-      return "text-yellow-500";
+      return "text-brand-primary-700";
     case "job_action":
       return "text-slate-500";
     default:

@@ -70,7 +70,7 @@ export default function UsersPage() {
         </div>
         <button
           type="submit"
-          className="rounded-lg bg-yellow-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-yellow-400"
+          className="rounded-lg bg-brand-primary-700 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-yellow-400"
         >
           Buscar
         </button>
@@ -105,7 +105,7 @@ export default function UsersPage() {
             {loading ? (
               <tr>
                 <td colSpan={4} className="px-4 py-8 text-center">
-                  <FaSpinner className="mx-auto h-6 w-6 animate-spin text-yellow-500" />
+                  <FaSpinner className="mx-auto h-6 w-6 animate-spin text-brand-primary-700" />
                 </td>
               </tr>
             ) : users.length === 0 ? (

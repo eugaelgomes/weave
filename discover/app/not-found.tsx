@@ -13,12 +13,12 @@ export default function NotFound() {
       
       <div className="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] dark:bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)]" />
       
-      <div className="absolute left-1/2 top-1/2 -z-10 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-400 opacity-20 blur-[100px] dark:bg-yellow-500/10" />
+      <div className="absolute left-1/2 top-1/2 -z-10 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-400 opacity-20 blur-[100px] dark:bg-brand-primary-700/10" />
 
       <div className="relative z-10 w-full max-w-md text-center">
         
         <div className="mb-6 flex flex-col items-center justify-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-yellow-200 bg-yellow-100/50 text-yellow-600 shadow-sm backdrop-blur-sm dark:border-yellow-900/50 dark:bg-yellow-900/20 dark:text-yellow-500">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-yellow-200 bg-yellow-100/50 text-yellow-600 shadow-sm backdrop-blur-sm dark:border-yellow-900/50 dark:bg-yellow-900/20 dark:text-brand-primary-700">
             <FaCompass className="h-8 w-8 animate-pulse" />
           </div>
           <h1 className="text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-neutral-800 to-neutral-400 dark:from-neutral-100 dark:to-neutral-600">
@@ -44,7 +44,7 @@ export default function NotFound() {
 
           <Link
             href="/"
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-yellow-500 px-6 text-sm font-bold text-neutral-950 transition-all hover:bg-yellow-400 hover:shadow-md sm:w-auto"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-brand-primary-700 px-6 text-sm font-bold text-neutral-950 transition-all hover:bg-yellow-400 hover:shadow-md sm:w-auto"
           >
             <FaHome className="h-3.5 w-3.5" />
             Ir para o Início

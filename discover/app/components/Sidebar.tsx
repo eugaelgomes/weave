@@ -25,7 +25,7 @@ export default function Sidebar({ sections }: SidebarProps) {
       <nav className="space-y-8">
         {/* Main Links */}
         <div>
-          <h3 className="mb-4 text-sm font-semibold tracking-wider text-yellow-500 dark:text-yellow-500">
+          <h3 className="mb-4 text-sm font-semibold tracking-wider text-brand-primary-700 dark:text-brand-primary-700">
             Documentos
           </h3>
           <ul className="space-y-2">
@@ -49,7 +49,7 @@ export default function Sidebar({ sections }: SidebarProps) {
         {/* Section Anchors */}
         {sections.length > 0 && (
           <div>
-            <h3 className="mb-4 text-sm font-semibold tracking-wider text-yellow-500 dark:text-yellow-500">
+            <h3 className="mb-4 text-sm font-semibold tracking-wider text-brand-primary-700 dark:text-brand-primary-700">
               Nesta página
             </h3>
             <ul className="border-l border-neutral-200 space-y-2 dark:border-neutral-800">

@@ -33,7 +33,7 @@ const getNotificationIcon = (type: NotificationType) => {
     case "note_shared":
       return <FileText className="h-4 w-4 text-purple-500" />;
     case "ai_action":
-      return <Bot className="h-4 w-4 text-yellow-500" />;
+      return <Bot className="h-4 w-4 text-brand-primary-700" />;
     case "job_action":
       return <Briefcase className="h-4 w-4 text-slate-500" />;
     default:

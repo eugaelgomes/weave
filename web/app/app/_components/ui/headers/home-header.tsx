@@ -28,7 +28,7 @@ export function HomeHeader() {
     <BaseHeader
       leftContent={
         <>
-          <span className="text-yellow-500">{t.greeting.hello}</span>{" "}
+          <span className="text-brand-primary-700">{t.greeting.hello}</span>{" "}
           {getFirstAndLastUserName(userName)}!
         </>
       }

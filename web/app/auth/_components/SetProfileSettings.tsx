@@ -112,7 +112,7 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
       <div className="mt-2 space-y-2">
         <div className="text-center">
           <h2 className="text-lg font-bold text-neutral-800">{profileT.title}</h2>
-          <p className="text-brand-gray-500 mt-1 text-xs">{profileT.subtitle}</p>
+          <p className="text-brand-secondary-500 mt-1 text-xs">{profileT.subtitle}</p>
         </div>
 
         <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-2">
@@ -271,7 +271,7 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
             type="button"
             onClick={handleSave}
             disabled={isLoading}
-            className="bg-brand-blue-700 hover:bg-brand-blue-800 w-full rounded-md px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50 sm:w-auto"
+            className="bg-brand-primary-700 hover:bg-brand-primary-800 w-full rounded-md px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50 sm:w-auto"
           >
             {isLoading ? profileT.saving : profileT.save}
           </button>
@@ -299,7 +299,7 @@ function ToggleButton({ label, checked, onChange, disabled = false }: ToggleButt
       <span className="truncate pr-1 text-left">{label}</span>
       <span
         className={`relative h-4 w-7 shrink-0 rounded-full transition-colors ${
-          checked ? "bg-brand-blue-700" : "bg-slate-300"
+          checked ? "bg-brand-primary-700" : "bg-slate-300"
         }`}
       >
         <span

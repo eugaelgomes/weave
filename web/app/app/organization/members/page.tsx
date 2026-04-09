@@ -55,7 +55,7 @@ const UserAvatar = ({ user, size = "sm" }: { user?: AvatarUser; size?: "sm" | "m
 
 const Badge = ({ role }: { role: string }) => {
   const styles = {
-    super_admin: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-400",
+    super_admin: "bg-brand-primary-700/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-400",
     admin: "bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400",
     member: "bg-neutral-500/10 text-neutral-700 border-neutral-500/20 dark:text-neutral-300",
     guest:
@@ -89,7 +89,7 @@ const ModalBase = ({ isOpen, onClose, title, children, footer }: any) => {
           onClick={onClose}
           title="Fechar modal"
           aria-label="Fechar modal"
-          className="absolute top-4 right-4 z-10 rounded-full p-2 text-neutral-500 hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-500"
+          className="absolute top-4 right-4 z-10 rounded-full p-2 text-neutral-500 hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-900/20 dark:hover:text-brand-primary-700"
         >
           <X className="h-5 w-5" />
         </button>
@@ -135,7 +135,7 @@ const InviteModal = ({ isOpen, onClose, onInvite, loading }: any) => {
           <button
             onClick={handleSubmit}
             disabled={loading || !email}
-            className="rounded-md bg-yellow-500 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-600 disabled:opacity-50"
+            className="rounded-md bg-brand-primary-700 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-600 disabled:opacity-50"
           >
             {loading ? "Enviando..." : "Enviar Convite"}
           </button>
@@ -202,7 +202,7 @@ const RoleManageModal = ({ isOpen, onClose, onUpdate, loading, currentMember }: 
           <button
             onClick={() => onUpdate(currentMember.id, role)}
             disabled={loading || role === currentMember?.membership?.role}
-            className="rounded-md bg-yellow-500 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-600 disabled:opacity-50"
+            className="rounded-md bg-brand-primary-700 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-600 disabled:opacity-50"
           >
             {loading ? "Salvando..." : "Salvar Alterações"}
           </button>
@@ -338,7 +338,7 @@ export default function MembersPage() {
         {userCanManage && (
           <button
             onClick={() => setShowInviteModal(true)}
-            className="flex items-center gap-2 rounded-md bg-yellow-500 px-4 py-2.5 text-sm font-semibold text-neutral-950 shadow-sm transition-all hover:bg-yellow-600 active:scale-95"
+            className="flex items-center gap-2 rounded-md bg-brand-primary-700 px-4 py-2.5 text-sm font-semibold text-neutral-950 shadow-sm transition-all hover:bg-yellow-600 active:scale-95"
           >
             <Plus className="h-4 w-4" /> <span>Convidar Membro</span>
           </button>
@@ -412,7 +412,7 @@ export default function MembersPage() {
                           <div className="flex items-center gap-2 font-semibold text-neutral-900 dark:text-white">
                             {member.name || "Usuário"}{" "}
                             {isCurrentUser && (
-                              <span className="rounded bg-yellow-100 px-1.5 py-0.5 text-[10px] text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500">
+                              <span className="rounded bg-yellow-100 px-1.5 py-0.5 text-[10px] text-yellow-800 dark:bg-yellow-900/30 dark:text-brand-primary-700">
                                 VOCÊ
                               </span>
                             )}

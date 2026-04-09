@@ -23,7 +23,7 @@ export default function Footer() {
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="text-yellow-500 hover:underline"
+            className="text-brand-primary-700 hover:underline"
           >
             Weave Notes
           </a>
