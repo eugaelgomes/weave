@@ -328,7 +328,7 @@ const NotesWithPagination = () => {
   return (
     <div className="flex h-full flex-col space-y-2">
       {/* =================== HEADER / TOOLBAR =================== */}
-      <div className="flex flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="flex flex-col border-b border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-950">
         {/* Linha Única: Título, Busca e Ações */}
         <div className="flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
           {/* Lado Esquerdo: Registros & Check */}
@@ -421,7 +421,7 @@ const NotesWithPagination = () => {
             <div className="flex flex-col gap-4 sm:gap-6">
               {/* Tags Group */}
               <div className="space-y-3">
-                <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
+                <span className="text-[10px] font-semibold tracking-wider text-neutral-500 ">
                   Tags ({availableTags.length})
                 </span>
                 <div className="flex flex-wrap gap-2">
@@ -450,7 +450,7 @@ const NotesWithPagination = () => {
 
               {/* Colaboradores Group */}
               <div className="space-y-3">
-                <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
+                <span className="text-[10px] font-semibold tracking-wider text-neutral-500 ">
                   Colaboradores ({availableCollaborators.length})
                 </span>
                 <div className="flex flex-wrap gap-2">
@@ -479,7 +479,7 @@ const NotesWithPagination = () => {
               {/* Projetos Group - Só exibe se houver projetos */}
               {availableProjects.length > 0 && (
                 <div className="space-y-3">
-                  <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
+                  <span className="text-[10px] font-semibold tracking-wider text-neutral-500 ">
                     Projetos ({availableProjects.length})
                   </span>
                   <div className="flex flex-wrap gap-2">
@@ -504,7 +504,7 @@ const NotesWithPagination = () => {
               <div className="space-y-3 border-t border-neutral-100 pt-4 sm:pt-6 dark:border-neutral-800">
                 <div className="flex items-center justify-between">
                   <div className="w-full space-y-3 sm:w-auto sm:min-w-[240px]">
-                    <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
+                    <span className="text-[10px] font-semibold tracking-wider text-neutral-500 ">
                       Ordenação
                     </span>
                     <div className="flex gap-2">
@@ -595,7 +595,7 @@ const NotesWithPagination = () => {
         <div className="flex w-full flex-col">
           {/* Headers da Lista - Visível apenas em desktop */}
           {notes.length > 0 && !showFullSkeleton && (
-            <div className="sticky top-0 z-20 hidden grid-cols-12 gap-3 border-b border-neutral-100 bg-neutral-50/95 px-4 py-2 text-[10px] font-bold tracking-widest text-neutral-400 uppercase backdrop-blur-sm sm:grid dark:border-neutral-800 dark:bg-neutral-900/95">
+            <div className="sticky top-0 z-20 hidden grid-cols-12 gap-3 border-b border-neutral-100 bg-neutral-50/95 px-4 py-2 text-[10px] font-bold tracking-widest text-neutral-400  backdrop-blur-sm sm:grid dark:border-neutral-800 dark:bg-neutral-900/95">
               <div className="col-span-5 flex items-center">Detalhes da Nota</div>
               <div className="col-span-2 flex items-center">Projeto</div>
               <div className="col-span-2 flex items-center">Tags</div>

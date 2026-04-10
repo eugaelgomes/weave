@@ -38,7 +38,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
   const currentNoteId = !isDashboard ? pathname.split("/app/notes/")[1] : null;
   const sidebarContent = (
     <div className="p-2.5">
-      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500  dark:text-neutral-400">
         Menu
       </h2>
 
@@ -65,7 +65,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
         </li>
       </ul>
 
-      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500  dark:text-neutral-400">
         Notas Recentes
       </h2>
 
@@ -115,7 +115,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
 
       <div className="flex flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
         <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 md:hidden dark:border-neutral-800">
-          <span className="text-xs font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+          <span className="text-xs font-semibold tracking-wider text-neutral-500  dark:text-neutral-400">
             Navegação
           </span>
           <button
@@ -162,7 +162,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
 
           <div className="ml-auto flex h-full w-[80%] max-w-xs flex-col border-l border-neutral-200 bg-white shadow-xl dark:border-neutral-800 dark:bg-neutral-950">
             <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 dark:border-neutral-800">
-              <span className="text-xs font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+              <span className="text-xs font-semibold tracking-wider text-neutral-500  dark:text-neutral-400">
                 Menu de Notas
               </span>
               <button
