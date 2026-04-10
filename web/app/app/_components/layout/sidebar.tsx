@@ -154,7 +154,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
   ];
 
   return (
-    <div className="flex h-full flex-col bg-neutral-50 text-neutral-600 dark:bg-neutral-950 dark:text-neutral-400">
+    <div className="flex h-full flex-col bg-white text-neutral-600 dark:bg-brand-secondary-950 dark:text-neutral-400">
       {/* Header mobile */}
       <div className="flex items-center justify-between border-b border-neutral-200 p-3 lg:hidden dark:border-neutral-800">
         <div className="flex items-center gap-2">
@@ -174,14 +174,16 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
 
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Toggle collapse desktop only */}
-        <div className="flex items-center px-2 py-1.5">
+        <div className={`flex items-center py-1.5 ${isCollapsed ? "justify-center" : "px-2"}`}>
           {!isCollapsed && (
-            <h2 className="text-[10px] font-bold tracking-wider text-brand-primary-700 uppercase">Menu</h2>
+            <h2 className="text-[10px] font-bold tracking-wider text-brand-primary-700 ">Menu</h2>
           )}
           {toggleCollapse && (
             <button
               onClick={toggleCollapse}
-              className="ml-auto hidden rounded-md p-1 text-brand-primary-700 hover:bg-neutral-100 lg:block dark:hover:bg-neutral-800"
+              className={`hidden rounded-md p-1 text-brand-primary-700 hover:bg-neutral-100 lg:block dark:hover:bg-neutral-800 ${
+                isCollapsed ? "" : "ml-auto"
+              }`}
               title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
             >
               {isCollapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
@@ -210,11 +212,12 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                         handleLinkClick();
                       }
                     }}
-                    className={`flex items-center rounded-md px-2 py-2 text-sm font-medium transition duration-200 ${
+                    title={isCollapsed ? item.label : undefined}
+                    className={`flex items-center rounded-md py-2 text-sm font-medium transition duration-200 ${
                       active
                         ? "bg-brand-primary-700/10 text-yellow-600 dark:text-brand-primary-700"
                         : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-white"
-                    }`}
+                    } ${isCollapsed ? "justify-center px-0" : "px-2"}`}
                   >
                     <div className="flex items-center gap-2">
                       <Icon
@@ -284,7 +287,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
               <div className="my-2 h-px w-full bg-neutral-200 dark:bg-neutral-800" />
 
               <div>
-                <h2 className="mb-1.5 px-2 text-[10px] font-bold tracking-wider text-brand-primary-700 uppercase">
+                <h2 className="mb-1.5 px-2 text-[10px] font-bold tracking-wider text-brand-primary-700 ">
                   {t.nav.recentAccess}
                 </h2>
 
@@ -306,20 +309,20 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                             href={path}
                             onClick={handleLinkClick}
                             title={item.title}
-                            className={`group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition duration-200 ${
+                            className={`group flex items-center gap-2 rounded-md px-2 py-1.5 transition duration-200 ${
                               isItemActive
                                 ? "bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-white"
                                 : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900"
                             }`}
                           >
                             <ItemIcon
-                              className={`size-3.5 ${
+                              className={`shrink-0 h-3.5 w-3.5 ${
                                 isItemActive
                                   ? "text-brand-primary-700"
                                   : "text-neutral-400 dark:text-neutral-500"
                               }`}
                             />
-                            <span className="truncate text-sm">{item.title}</span>
+                            <span className="truncate text-xs">{item.title}</span>
                           </Link>
                         </li>
                       );

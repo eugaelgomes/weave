@@ -153,3 +153,72 @@ export async function createInternalCalendarEvent(
   const data = (await res.json()) as { event: InternalCalendarEvent };
   return data.event;
 }
+
+export async function updateInternalCalendarEvent(
+  eventId: string,
+  payload: Partial<CreateInternalCalendarEventPayload>
+): Promise<InternalCalendarEvent> {
+  const res = await apiClient.patch(API_ENDPOINTS.CALENDAR_EVENT_BY_ID(eventId), payload);
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || "Falha ao atualizar evento");
+  }
+
+  const data = (await res.json()) as { event: InternalCalendarEvent };
+  return data.event;
+}
+
+export interface GoogleCalendar {
+  id: string;
+  summary: string;
+  description?: string;
+  timeZone?: string;
+  primary?: boolean;
+}
+
+export interface GoogleCalendarSetting {
+  id: string;
+  value: string;
+}
+
+export interface FreeBusyResponse {
+  [calendarId: string]: {
+    busy: { start: string; end: string }[];
+  }
+}
+
+export async function fetchGoogleCalendarSettings(): Promise<{ settings: GoogleCalendarSetting[] }> {
+  const res = await apiClient.get(API_ENDPOINTS.GOOGLE_CALENDAR_SETTINGS);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || "Falha ao buscar configurações do Google Calendar");
+  }
+  return res.json();
+}
+
+export async function fetchGoogleCalendarsList(): Promise<{ calendars: GoogleCalendar[] }> {
+  const res = await apiClient.get(API_ENDPOINTS.GOOGLE_CALENDAR_LIST);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || "Falha ao buscar calendários do Google");
+  }
+  return res.json();
+}
+
+export async function fetchGoogleFreeBusy(
+  timeMin: string,
+  timeMax: string,
+  items?: { id: string }[]
+): Promise<{ freebusy: FreeBusyResponse }> {
+  const res = await apiClient.post(API_ENDPOINTS.GOOGLE_CALENDAR_FREEBUSY, {
+    timeMin,
+    timeMax,
+    items
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || "Falha ao verificar disponibilidade (Free/Busy)");
+  }
+  return res.json();
+}

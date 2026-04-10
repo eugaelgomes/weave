@@ -7,7 +7,7 @@ import {
   searchUsers as searchUsersService,
   type User as SearchUser,
 } from "@/app/_services/notes-service/notes-service";
-import { useCalendar } from "@/app/_contexts/calendar-context";
+import { useCalendar, type UnifiedCalendarEvent } from "@/app/_contexts/calendar-context";
 import { type InternalCalendarEvent } from "@/app/_services/calendar-service/calendar-service";
 
 /**
@@ -19,6 +19,7 @@ interface CreateEventModalProps {
   onCreated?: (event: InternalCalendarEvent) => void;
   defaultDate?: Date | null;
   googleConnected?: boolean;
+  eventToEdit?: UnifiedCalendarEvent | null;
 }
 
 /**
@@ -37,6 +38,7 @@ interface FormState {
   syncWithGoogle: boolean;
   createMeetLink: boolean;
   attendeesQuery: string;
+  googleCalendarId: string;
 }
 
 // Regex para validação de e-mails de convidados
@@ -116,6 +118,7 @@ const initialState = (baseDate?: Date | null): FormState => {
     syncWithGoogle: false,
     createMeetLink: false,
     attendeesQuery: "",
+    googleCalendarId: "primary",
   };
 };
 
@@ -183,34 +186,73 @@ export default function CreateEventModal({
   onCreated,
   defaultDate,
   googleConnected = false,
+  eventToEdit = null,
 }: CreateEventModalProps) {
-  const { createEvent, connectGoogleCalendar } = useCalendar();
+  const { createEvent, updateEvent, connectGoogleCalendar, getGoogleCalendarsList, checkGoogleFreeBusy } = useCalendar();
   const [form, setForm] = useState<FormState>(() => initialState(defaultDate));
   const [isSaving, setIsSaving] = useState(false);
   const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
   const [attendeeResults, setAttendeeResults] = useState<SearchUser[]>([]);
   const [isSearchingAttendees, setIsSearchingAttendees] = useState(false);
+  const [availableCalendars, setAvailableCalendars] = useState<{id: string, summary: string}[]>([]);
+  const [freebusyStatus, setFreebusyStatus] = useState<"free" | "busy" | null>(null);
+  const [checkingFreebusy, setCheckingFreebusy] = useState(false);
 
-  // Resetar formulário ao abrir o modal
+  // Resetar formulário ou carregar evento existente ao abrir o modal
   useEffect(() => {
     if (!isOpen) return;
-    setForm(initialState(defaultDate));
-    setSelectedAttendees([]);
+
+    if (eventToEdit) {
+      const hasGoogleSync = !!eventToEdit.googleEventId || eventToEdit.source === "google";
+      const startDate = new Date(eventToEdit.start!);
+      const endDate = eventToEdit.end ? new Date(eventToEdit.end) : startDate;
+
+      setForm({
+        title: eventToEdit.title,
+        description: eventToEdit.description || "",
+        location: eventToEdit.location || "",
+        startDate: toDateInputValue(startDate),
+        startTime: toTimeInputValue(startDate),
+        endDate: toDateInputValue(endDate),
+        endTime: toTimeInputValue(endDate),
+        isAllDay: eventToEdit.allDay || false,
+        syncWithGoogle: hasGoogleSync,
+        createMeetLink: (eventToEdit as any).create_google_meet || false,
+        attendeesQuery: "",
+        googleCalendarId: (eventToEdit as any).google_calendar_id || "primary",
+      });
+
+      setSelectedAttendees((eventToEdit as any).attendees || []);
+    } else {
+      setForm(initialState(defaultDate));
+      setSelectedAttendees([]);
+    }
+    
     setAttendeeResults([]);
-  }, [isOpen, defaultDate]);
+    setFreebusyStatus(null);
+  }, [isOpen, defaultDate, eventToEdit]);
 
   // Desativar features Google caso o usuário desconecte a conta durante o uso
   useEffect(() => {
-    if (googleConnected) return;
+    if (googleConnected) {
+      if (isOpen) {
+        getGoogleCalendarsList().then(cals => {
+          setAvailableCalendars(cals);
+        }).catch(() => {});
+      }
+      return;
+    }
     setForm((prev) => ({
       ...prev,
       syncWithGoogle: false,
       createMeetLink: false,
       attendeesQuery: "",
+      googleCalendarId: "primary",
     }));
     setSelectedAttendees([]);
     setAttendeeResults([]);
-  }, [googleConnected]);
+    setAvailableCalendars([]);
+  }, [googleConnected, isOpen, getGoogleCalendarsList]);
 
   useEffect(() => {
     if (!isOpen || !googleConnected || !form.syncWithGoogle) {
@@ -354,8 +396,54 @@ export default function CreateEventModal({
     });
   };
 
+
+  const handleCheckFreebusy = async () => {
+    if (!form.syncWithGoogle || !googleConnected) return;
+    
+    const start = form.isAllDay
+      ? combineDateTime(form.startDate, "00:00")
+      : combineDateTime(form.startDate, form.startTime);
+
+    const end = form.isAllDay
+      ? combineDateTime(form.endDate, "23:59")
+      : combineDateTime(form.endDate, form.endTime);
+
+    if (end <= start) {
+      toast.error("O período precisa ser válido antes de verificar a disponibilidade");
+      return;
+    }
+
+    try {
+      setCheckingFreebusy(true);
+      setFreebusyStatus(null);
+      const items = [{ id: form.googleCalendarId }];
+      selectedAttendees.forEach(email => items.push({ id: email }));
+      
+      const freebusy = await checkGoogleFreeBusy(start.toISOString(), end.toISOString(), items);
+      
+      let isBusy = false;
+      Object.keys(freebusy).forEach(id => {
+        if (freebusy[id].busy && freebusy[id].busy.length > 0) {
+          isBusy = true;
+        }
+      });
+      
+      setFreebusyStatus(isBusy ? "busy" : "free");
+      if (isBusy) {
+        toast.warning("Atenção: Existem conflitos de horário neste período.");
+      } else {
+        toast.success("O horário está livre para todos.");
+      }
+    } catch (err) {
+      toast.error("Erro ao checar disponibilidade.");
+    } finally {
+      setCheckingFreebusy(false);
+    }
+  };
+
   /**
    * Validação e Submissão para API
+
    */
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -390,7 +478,8 @@ export default function CreateEventModal({
 
     try {
       setIsSaving(true);
-      const created = await createEvent({
+      
+      const payload = {
         title,
         description: form.description.trim() || undefined,
         location: form.location.trim() || undefined,
@@ -400,14 +489,23 @@ export default function CreateEventModal({
         sync_with_google: form.syncWithGoogle,
         create_google_meet: form.syncWithGoogle && form.createMeetLink,
         attendees: form.syncWithGoogle ? attendees : [],
-      });
+        google_calendar_id: form.syncWithGoogle ? form.googleCalendarId : undefined,
+      };
 
-      toast.success("Evento criado com sucesso");
-      onCreated?.(created);
+      let result;
+      if (eventToEdit?.id && eventToEdit.source === "internal") {
+        result = await updateEvent(eventToEdit.id, payload);
+        toast.success("Evento atualizado com sucesso");
+      } else {
+        result = await createEvent(payload);
+        toast.success("Evento criado com sucesso");
+      }
+      
+      onCreated?.(result);
       onClose();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro interno no servidor.";
-      toast.error(message || "Não foi possível criar o evento");
+      toast.error(message || `Não foi possível ${eventToEdit ? 'atualizar' : 'criar'} o evento`);
     } finally {
       setIsSaving(false);
     }
@@ -572,6 +670,35 @@ export default function CreateEventModal({
                   }
                 >
                   <div className="flex flex-col gap-2 rounded-md border border-neutral-200 bg-white p-2.5 shadow-sm dark:border-neutral-700/60 dark:bg-neutral-900">
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <svg viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg" className="text-neutral-500">
+                          <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z" fill="currentColor"/>
+                        </svg>
+                        <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                          Calendário Base
+                        </span>
+                      </div>
+                      <select
+                        value={form.googleCalendarId}
+                        onChange={(e) => handleChange("googleCalendarId", e.target.value)}
+                        disabled={isSaving || !googleConnected || availableCalendars.length === 0}
+                        className="w-full rounded-md border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-xs text-neutral-800 transition-colors focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200 dark:focus:bg-neutral-900"
+                      >
+                        {availableCalendars.length === 0 ? (
+                          <option value="primary">Carregando calendários...</option>
+                        ) : (
+                          availableCalendars.map((cal) => (
+                            <option key={cal.id} value={cal.id} title={cal.summary}>
+                              {cal.summary.length > 30 ? cal.summary.substring(0, 30) + '...' : cal.summary}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                    </div>
+
+                    <div className="my-0.5 h-px bg-neutral-100 dark:bg-neutral-800" />
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Video size={14} className="text-emerald-600 dark:text-emerald-500" />
@@ -683,6 +810,31 @@ export default function CreateEventModal({
                         Dica: Insira e-mails externos e pressione <strong>Enter</strong>. Convites
                         serão disparados via Google.
                       </p>
+
+                      {form.syncWithGoogle && (
+                        <div className="mt-2 flex flex-col gap-2">
+                          <button
+                            type="button"
+                            onClick={handleCheckFreebusy}
+                            disabled={isSaving || checkingFreebusy || selectedAttendees.length === 0}
+                            className="flex w-full items-center justify-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
+                          >
+                            {checkingFreebusy ? "Verificando..." : "Verificar Disponibilidade"}
+                          </button>
+                          
+                          {freebusyStatus === "free" && (
+                            <div className="flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
+                              <span className="flex-shrink-0">✓</span> Todos disponíveis neste horário
+                            </div>
+                          )}
+                          
+                          {freebusyStatus === "busy" && (
+                            <div className="flex items-center gap-1.5 rounded-md bg-orange-50 px-2 py-1.5 text-[11px] font-medium text-orange-700 dark:bg-orange-900/20 dark:text-orange-400">
+                              <span className="flex-shrink-0">⚠</span> Há conflito de horários (ou não têm permissão para ver)
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -734,7 +886,7 @@ export default function CreateEventModal({
               className="inline-flex min-w-[90px] items-center justify-center gap-1.5 rounded-md bg-neutral-900 px-4 py-1.5 text-xs font-medium text-white shadow-sm transition-all hover:bg-neutral-800 hover:shadow disabled:cursor-not-allowed disabled:opacity-70 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
             >
               {isSaving ? <Loader2 size={12} className="animate-spin" /> : null}
-              {isSaving ? "Salvando" : "Salvar"}
+              {isSaving ? "Salvando" : eventToEdit ? "Atualizar" : "Salvar"}
             </button>
           </div>
         </form>

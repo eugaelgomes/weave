@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
+import { useLanguage } from "@/app/_contexts/language-context";
 
 const PagesFooter = () => {
+  const { t } = useLanguage();
   const blogUrl = process.env.NEXT_PUBLIC_BLOG_URL || "https://discover.weavenotes.app";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://weavenotes.app";
   const currentYear = new Date().getFullYear();
@@ -10,7 +12,7 @@ const PagesFooter = () => {
   const linkClass = "hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors";
 
   return (
-    <div className="flex flex-col items-center justify-between gap-4 rounded-md border border-neutral-200/50 bg-neutral-50/50 px-4 py-2.5 shadow-sm backdrop-blur-sm sm:flex-row dark:border-neutral-800/50 dark:bg-neutral-950/50">
+    <div className="flex flex-col items-center justify-between gap-4 rounded-md border border-neutral-200/50 bg-white/50 px-4 py-2.5 shadow-sm backdrop-blur-sm sm:flex-row dark:border-neutral-800/50 dark:bg-brand-secondary-950/50">
       {/* Copyright & Brand */}
       <div className="text-[11px] font-medium text-neutral-400 dark:text-neutral-500">
         &copy; {currentYear}{" "}
@@ -18,7 +20,7 @@ const PagesFooter = () => {
           href={blogUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-bold text-amber-600/70 transition-colors hover:text-amber-600 dark:text-amber-500/40 dark:hover:text-amber-500"
+          className="font-bold text-brand-primary-400 transition-colors hover:text-brand-primary-600 dark:text-brand-primary-500/40 dark:hover:text-brand-primary-500"
         >
           Weave Notes
         </a>
@@ -31,7 +33,7 @@ const PagesFooter = () => {
           rel="noopener noreferrer"
           className={linkClass}
         >
-          Privacidade
+          {t.footer.privacy}
         </a>
         <a
           href={`${blogUrl}/terms`}
@@ -39,10 +41,10 @@ const PagesFooter = () => {
           rel="noopener noreferrer"
           className={linkClass}
         >
-          Termos
+          {t.footer.terms}
         </a>
         <a href={`${blogUrl}/docs`} target="_blank" rel="noopener noreferrer" className={linkClass}>
-          Documentações
+          {t.footer.docs}
         </a>
         <a
           href={`${appUrl}/support/`}
@@ -50,7 +52,7 @@ const PagesFooter = () => {
           rel="noopener noreferrer"
           className={linkClass}
         >
-          Ajuda
+          {t.footer.help}
         </a>
       </div>
     </div>

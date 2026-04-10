@@ -51,13 +51,13 @@ export default function AuthPage() {
 
   return (
     <div className="relative flex h-[100dvh] w-full flex-col text-slate-950 lg:flex-row">
-      <div className="bg-brand-secondary-200 border-brand-secondary-200 relative z-10 hidden flex-col items-center justify-center overflow-hidden rounded-2xl border-r-2 p-8 shadow-xl lg:flex lg:w-[45%] xl:w-1/2">
+      <div className="bg-brand-secondary-200 border-brand-secondary-200 relative z-10 hidden flex-col items-center justify-center overflow-hidden rounded-r-xl border-r-2 p-8 shadow-xl lg:flex lg:w-[45%] xl:w-1/2">
         <div className="mx-auto mt-4 w-full origin-top scale-95 transform lg:scale-100">
           <AuthMarketing />
         </div>
       </div>
 
-      <div className="flex w-full items-center justify-center bg-white p-4 sm:p-8 lg:w-1/2">
+      <div className="flex flex-1 w-full items-center justify-center bg-white p-4 sm:p-8 lg:w-1/2">
         <div className="relative z-10 w-full max-w-[440px] overflow-hidden">
           <ErrorModal
             isOpen={!!error}

@@ -1,5 +1,5 @@
 const express = require("express");
-const calendarEventsController = require("@/modules/calendar-events/calendar-events.controller");
+const calendarEventsController = require("@/modules/calendar-events/controllers/calendar-events.controller");
 const { verifyToken } = require("@/middlewares/verify-token");
 const {
   highTrafficLimiter,
@@ -40,4 +40,23 @@ router.delete(
   calendarEventsController.deleteEvent.bind(calendarEventsController)
 );
 
+
+
+router.get(
+  "/google/settings",
+  highTrafficLimiter,
+  calendarEventsController.getGoogleCalendarSettings.bind(calendarEventsController)
+);
+
+router.get(
+  "/google/calendars",
+  highTrafficLimiter,
+  calendarEventsController.listGoogleCalendars.bind(calendarEventsController)
+);
+
+router.post(
+  "/google/freebusy",
+  highTrafficLimiter,
+  calendarEventsController.checkFreeBusy.bind(calendarEventsController)
+);
 module.exports = router;

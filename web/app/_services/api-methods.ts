@@ -111,6 +111,9 @@ export const API_ENDPOINTS = {
   // Internal Calendar Events
   CALENDAR_EVENTS: "/calendar-events",
   CALENDAR_EVENT_BY_ID: (id: string) => `/calendar-events/${id}`,
+  GOOGLE_CALENDAR_SETTINGS: "/calendar-events/google/settings",
+  GOOGLE_CALENDAR_LIST: "/calendar-events/google/calendars",
+  GOOGLE_CALENDAR_FREEBUSY: "/calendar-events/google/freebusy",
 
   // Internal API Tokens
   API_TOKENS_SCOPES: "/api-tokens/scopes",

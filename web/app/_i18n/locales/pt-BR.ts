@@ -57,6 +57,7 @@ const ptBR = {
 
   navbar: {
     accountSettings: "Configurações da Conta",
+    searchPlaceholder: "Buscar notas, projetos...",
     theme: "Tema",
     light: "Claro",
     dark: "Escuro",
@@ -109,6 +110,13 @@ const ptBR = {
     deleteAccountCritical: "Erro crítico ao tentar deletar conta.",
     language: "Idioma",
     languageDescription: "Escolha o idioma da interface.",
+  },
+
+  footer: {
+    privacy: "Privacidade",
+    terms: "Termos",
+    docs: "Documentações",
+    help: "Ajuda",
   },
 };
 

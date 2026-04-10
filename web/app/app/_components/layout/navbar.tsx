@@ -80,7 +80,7 @@ const MenuContent = ({ user, logout, onClose, onToggleTheme, theme, t }: MenuCon
         onClick={onClose}
         className="rounded-md px-4 py-3 text-sm font-medium text-neutral-700 hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/5"
       >
-        Configurações da Conta
+        {t.navbar.accountSettings}
       </Link>
 
       <button
@@ -108,7 +108,7 @@ const MenuContent = ({ user, logout, onClose, onToggleTheme, theme, t }: MenuCon
         onClick={onClose}
         className="rounded-md px-4 py-3 text-sm font-medium text-neutral-700 hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/5"
       >
-        Sobre o Sistema
+        {t.navbar.aboutSystem}
       </a>
 
       <div className="my-1 h-px bg-black/5 dark:bg-white/5" />
@@ -199,7 +199,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
 
   return (
     <>
-      <nav className="sticky top-0 z-40 w-full bg-neutral-50/90 backdrop-blur-md dark:bg-neutral-950/90 print:hidden">
+      <nav className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md dark:bg-brand-secondary-950/90 print:hidden">
         <div className="mx-auto w-full max-w-[1920px] px-2">
           <div className="flex h-12 items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
@@ -232,7 +232,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                     title={`Saiba mais sobre ${user.org_name}`}
                     className="flex items-center gap-2 rounded-md transition-opacity hover:opacity-80"
                   >
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded">
                       <Image
                         src={user.org_logo_url || "/default-org-icon.png"}
                         alt={`Logo da ${user.org_name}`}
@@ -262,7 +262,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                     strokeWidth={2}
                   />
                   <span className="flex-1 text-left text-sm text-neutral-500 dark:text-neutral-500">
-                    Buscar notas, projetos...
+                    {t.navbar.searchPlaceholder}
                   </span>
                   <div className="flex items-center gap-1 rounded border border-neutral-300 bg-neutral-50 px-1.5 py-0.5 text-[10px] font-medium text-neutral-400 dark:border-neutral-700 dark:bg-neutral-900">
                     <span>⌘</span>K

@@ -59,6 +59,7 @@ const esES: TranslationKeys = {
 
   navbar: {
     accountSettings: "Configuración de la Cuenta",
+    searchPlaceholder: "Buscar notas, proyectos...",
     theme: "Tema",
     light: "Claro",
     dark: "Oscuro",
@@ -112,6 +113,13 @@ const esES: TranslationKeys = {
     deleteAccountCritical: "Error crítico al intentar eliminar cuenta.",
     language: "Idioma",
     languageDescription: "Elija el idioma de la interfaz.",
+  },
+
+  footer: {
+    privacy: "Privacidad",
+    terms: "Términos",
+    docs: "Documentación",
+    help: "Ayuda",
   },
 };
 

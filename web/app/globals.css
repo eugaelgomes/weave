@@ -8,22 +8,22 @@
   --color-brand-primary-400: #FFCA0D;
   --color-brand-primary-50: #F0B100;
   --color-brand-primary-600: #D18900;
-  --color-brand-primary-700: #A66002;
+  --color-brand-primary-700: #FFD500;
   --color-brand-primary-800: #894B0A;
   --color-brand-primary-900: #743D0F;
   --color-brand-primary-950: #441F04;
 
-  --color-brand-secondary-50: #f9fafb;
-  --color-brand-secondary-100: #f3f4f6;
-  --color-brand-secondary-200: #e5e7eb;
-  --color-brand-secondary-300: #d1d5db;
-  --color-brand-secondary-400: #9ca3af;
-  --color-brand-secondary-500: #6b7280;
-  --color-brand-secondary-600: #4b5563;
-  --color-brand-secondary-700: #374151;
-  --color-brand-secondary-800: #1f2937;
-  --color-brand-secondary-900: #111827;
-  --color-brand-secondary-950: #030712;
+--color-brand-secondary-50: #fafafa;
+--color-brand-secondary-100: #f5f5f5;
+--color-brand-secondary-200: #e5e5e5;
+--color-brand-secondary-300: #d4d4d4;
+--color-brand-secondary-400: #a3a3a3;
+--color-brand-secondary-500: #737373;
+--color-brand-secondary-600: #525252;
+--color-brand-secondary-700: #404040;
+--color-brand-secondary-800: #262626;
+--color-brand-secondary-900: #171717;
+--color-brand-secondary-950: #0a0a0a;
 }
 
 @variant dark (&:where(.dark, .dark *));

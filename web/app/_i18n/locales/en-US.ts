@@ -59,6 +59,7 @@ const enUS: TranslationKeys = {
 
   navbar: {
     accountSettings: "Account Settings",
+    searchPlaceholder: "Search notes, projects...",
     theme: "Theme",
     light: "Light",
     dark: "Dark",
@@ -112,6 +113,13 @@ const enUS: TranslationKeys = {
     deleteAccountCritical: "Critical error trying to delete account.",
     language: "Language",
     languageDescription: "Choose the interface language.",
+  },
+
+  footer: {
+    privacy: "Privacy",
+    terms: "Terms",
+    docs: "Documentation",
+    help: "Help",
   },
 };
 

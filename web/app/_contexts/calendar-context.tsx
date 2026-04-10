@@ -5,14 +5,21 @@ import { useAuth } from "./auth-context";
 import {
   connectGoogleCalendar as connectGoogleCalendarService,
   createInternalCalendarEvent,
+  updateInternalCalendarEvent,
   disconnectGoogleCalendar as disconnectGoogleCalendarService,
   fetchGoogleCalendarEvents,
   fetchGoogleCalendarStatus,
   fetchInternalCalendarEvents,
   subscribeGoogleCalendarUpdates,
+  fetchGoogleCalendarSettings,
+  fetchGoogleCalendarsList,
+  fetchGoogleFreeBusy,
   type CreateInternalCalendarEventPayload,
   type GoogleCalendarEvent,
   type InternalCalendarEvent,
+  type GoogleCalendar,
+  type GoogleCalendarSetting,
+  type FreeBusyResponse,
 } from "@/app/_services/calendar-service/calendar-service";
 
 export type CalendarEventSource = "google" | "internal";
@@ -35,6 +42,10 @@ interface CalendarContextType {
   connectGoogleCalendar: () => void;
   disconnectGoogleCalendar: () => Promise<void>;
   createEvent: (payload: CreateInternalCalendarEventPayload) => Promise<InternalCalendarEvent>;
+  updateEvent: (eventId: string, payload: Partial<CreateInternalCalendarEventPayload>) => Promise<InternalCalendarEvent>;
+  getGoogleCalendarSettings: () => Promise<GoogleCalendarSetting[]>;
+  getGoogleCalendarsList: () => Promise<GoogleCalendar[]>;
+  checkGoogleFreeBusy: (timeMin: string, timeMax: string, items?: { id: string }[]) => Promise<FreeBusyResponse>;
 }
 
 const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
@@ -192,6 +203,31 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     [runLoadEvents]
   );
 
+  const updateEvent = useCallback(
+    async (eventId: string, payload: Partial<CreateInternalCalendarEventPayload>): Promise<InternalCalendarEvent> => {
+      setCreating(true);
+      setError(null);
+
+      try {
+        const updatedEvent = await updateInternalCalendarEvent(eventId, payload);
+
+        const activeYear =
+          lastRequestedYearRef.current ?? new Date(updatedEvent.start_time).getFullYear();
+        fetchedYearsRef.current.delete(String(activeYear));
+        await runLoadEvents(activeYear, true);
+
+        return updatedEvent;
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Falha ao atualizar evento";
+        setError(message);
+        throw err;
+      } finally {
+        setCreating(false);
+      }
+    },
+    [runLoadEvents]
+  );
+
   const connectGoogleCalendar = useCallback(() => {
     connectGoogleCalendarService();
   }, []);
@@ -201,6 +237,21 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     setGoogleConnected(false);
     setCalendarEvents((prev) => prev.filter((event) => event.source !== "google"));
     fetchedYearsRef.current.clear();
+  }, []);
+
+  const getGoogleCalendarSettings = useCallback(async () => {
+    const { settings } = await fetchGoogleCalendarSettings();
+    return settings;
+  }, []);
+
+  const getGoogleCalendarsList = useCallback(async () => {
+    const { calendars } = await fetchGoogleCalendarsList();
+    return calendars;
+  }, []);
+
+  const checkGoogleFreeBusy = useCallback(async (timeMin: string, timeMax: string, items?: { id: string }[]) => {
+    const { freebusy } = await fetchGoogleFreeBusy(timeMin, timeMax, items);
+    return freebusy;
   }, []);
 
   useEffect(() => {
@@ -251,6 +302,10 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         connectGoogleCalendar,
         disconnectGoogleCalendar,
         createEvent,
+        updateEvent,
+        getGoogleCalendarSettings,
+        getGoogleCalendarsList,
+        checkGoogleFreeBusy,
       }}
     >
       {children}
