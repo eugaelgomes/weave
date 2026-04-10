@@ -1,5 +1,6 @@
 const express = require("express");
 const calendarEventsController = require("@/modules/calendar-events/controllers/calendar-events.controller");
+const eventInvitesController = require("@/modules/calendar-events/controllers/event-invites.controller");
 const { verifyToken } = require("@/middlewares/verify-token");
 const {
   highTrafficLimiter,
@@ -40,7 +41,30 @@ router.delete(
   calendarEventsController.deleteEvent.bind(calendarEventsController)
 );
 
+// Event Invites Endpoints
+router.get(
+  "/:eventId/invites",
+  highTrafficLimiter,
+  eventInvitesController.listEventInvites.bind(eventInvitesController)
+);
 
+router.post(
+  "/:eventId/invites",
+  standardTrafficLimiter,
+  eventInvitesController.createInvite.bind(eventInvitesController)
+);
+
+router.patch(
+  "/:eventId/invites/:inviteId",
+  standardTrafficLimiter,
+  eventInvitesController.updateInvite.bind(eventInvitesController)
+);
+
+router.delete(
+  "/:eventId/invites/:inviteId",
+  standardTrafficLimiter,
+  eventInvitesController.deleteInvite.bind(eventInvitesController)
+);
 
 router.get(
   "/google/settings",

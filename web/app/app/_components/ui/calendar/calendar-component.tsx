@@ -193,6 +193,7 @@ export function CalendarPreview({
     loadEventsForYear,
     refreshEventsForYear,
     connectGoogleCalendar,
+    fetchEventInvites,
   } = useCalendar();
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -201,9 +202,26 @@ export function CalendarPreview({
   const [viewEventModal, setViewEventModal] = useState<UnifiedCalendarEvent | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<UnifiedCalendarEvent | null>(null);
+  const [viewEventInvites, setViewEventInvites] = useState<any[]>([]);
 
-  // Ref para controlar o scroll do calendário
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!viewEventModal) {
+      setViewEventInvites([]);
+      return;
+    }
+    
+    if (viewEventModal.source === "internal" && viewEventModal.internalId) {
+      fetchEventInvites(viewEventModal.internalId).then(setContentViewEventInvites).catch(() => setViewEventInvites([]));
+    } else if (viewEventModal.source === "google") {
+      setViewEventInvites((viewEventModal as any).attendees?.map((email: string) => ({ email, status: "TENTATIVE" })) || []);
+    }
+  }, [viewEventModal, fetchEventInvites]);
+  
+  const setContentViewEventInvites = (data: any[]) => {
+      setViewEventInvites(data);
+  };
 
   const userPreferences = useMemo(() => {
     return (user?.usage_preference as UserPreferences) || {};
@@ -534,6 +552,10 @@ export function CalendarPreview({
                     return (
                       <div
                         key={`week-allday-${dayIndex}-${idx}`}
+                        onClick={(evt) => {
+                          evt.stopPropagation();
+                          setViewEventModal(event.data);
+                        }}
                         className={`truncate rounded border-l-[3px] px-1 py-0.5 text-left text-[9px] font-medium ${colors.bg} ${colors.border} ${colors.text}`}
                       >
                         {title}
@@ -619,11 +641,12 @@ export function CalendarPreview({
                   setSelectedDate(selectedWithTime);
                   setIsCreateModalOpen(true);
                 }}
-                className={`relative z-10 transition-colors ${
+                className={`relative z-10 h-full transition-colors ${
                   isToday
                     ? "bg-yellow-50/20 dark:bg-yellow-900/5"
                     : "hover:bg-neutral-50/40 dark:hover:bg-neutral-900/20"
                 }`}
+                style={{ height: `${TOTAL_GRID_HEIGHT}px` }}
               >
                 {positionedEvents.map((pe, idx) => {
                   const { event, startMin, endMin, column, totalColumns } = pe;
@@ -645,7 +668,7 @@ export function CalendarPreview({
                       key={`week-positioned-${dayIndex}-${idx}`}
                       onClick={(evt) => {
                         evt.stopPropagation();
-                        setSelectedDate(date);
+                        setViewEventModal(event.data);
                       }}
                       className={`absolute z-20 cursor-pointer overflow-hidden rounded-md border-l-4 px-1.5 py-1 transition-all hover:z-30 hover:shadow-lg ${colors.bg} ${colors.border} ${colors.hover}`}
                       style={{
@@ -769,6 +792,10 @@ export function CalendarPreview({
                   return (
                     <div
                       key={`allday-${idx}`}
+                      onClick={(evt) => {
+                        evt.stopPropagation();
+                        setViewEventModal(event.data);
+                      }}
                       className={`cursor-pointer rounded-md border-l-[3px] px-2 py-0.5 text-[10px] font-medium transition-colors sm:text-xs ${colors.bg} ${colors.border} ${colors.text} ${colors.hover}`}
                     >
                       {title}
@@ -837,6 +864,10 @@ export function CalendarPreview({
               return (
                 <div
                   key={`positioned-${idx}`}
+                  onClick={(evt) => {
+                    evt.stopPropagation();
+                    setViewEventModal(event.data);
+                  }}
                   className={`absolute cursor-pointer overflow-hidden rounded-md border-l-4 px-2 py-1 transition-all hover:z-20 hover:shadow-lg ${colors.bg} ${colors.border} ${colors.hover}`}
                   style={{
                     top: `${top}px`,

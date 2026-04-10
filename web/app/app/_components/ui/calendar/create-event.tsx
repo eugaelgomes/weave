@@ -8,7 +8,7 @@ import {
   type User as SearchUser,
 } from "@/app/_services/notes-service/notes-service";
 import { useCalendar, type UnifiedCalendarEvent } from "@/app/_contexts/calendar-context";
-import { type InternalCalendarEvent } from "@/app/_services/calendar-service/calendar-service";
+import { type InternalCalendarEvent, type InternalCalendarEventInvite } from "@/app/_services/calendar-service/calendar-service";
 
 /**
  * Propriedades do Modal de Criação de Eventos
@@ -188,7 +188,7 @@ export default function CreateEventModal({
   googleConnected = false,
   eventToEdit = null,
 }: CreateEventModalProps) {
-  const { createEvent, updateEvent, connectGoogleCalendar, getGoogleCalendarsList, checkGoogleFreeBusy } = useCalendar();
+  const { createEvent, updateEvent, createEventInvite, updateEventInvite, deleteEventInvite, fetchEventInvites, connectGoogleCalendar, getGoogleCalendarsList, checkGoogleFreeBusy } = useCalendar();
   const [form, setForm] = useState<FormState>(() => initialState(defaultDate));
   const [isSaving, setIsSaving] = useState(false);
   const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
@@ -197,12 +197,22 @@ export default function CreateEventModal({
   const [availableCalendars, setAvailableCalendars] = useState<{id: string, summary: string}[]>([]);
   const [freebusyStatus, setFreebusyStatus] = useState<"free" | "busy" | null>(null);
   const [checkingFreebusy, setCheckingFreebusy] = useState(false);
+  const [localInvites, setLocalInvites] = useState<InternalCalendarEventInvite[]>([]);
 
   // Resetar formulário ou carregar evento existente ao abrir o modal
   useEffect(() => {
     if (!isOpen) return;
 
     if (eventToEdit) {
+      if (eventToEdit.source === "internal" && eventToEdit.internalId) {
+        fetchEventInvites(eventToEdit.internalId).then((invites) => {
+          setLocalInvites(invites);
+          setSelectedAttendees(mergeUniqueEmails([], invites.map(i => i.email)));
+        }).catch(() => {
+           setLocalInvites([]);
+        });
+      }
+      
       const hasGoogleSync = !!eventToEdit.googleEventId || eventToEdit.source === "google";
       const startDate = new Date(eventToEdit.start!);
       const endDate = eventToEdit.end ? new Date(eventToEdit.end) : startDate;
@@ -222,15 +232,18 @@ export default function CreateEventModal({
         googleCalendarId: (eventToEdit as any).google_calendar_id || "primary",
       });
 
-      setSelectedAttendees((eventToEdit as any).attendees || []);
+      if (eventToEdit.source === "google") {
+        setSelectedAttendees((eventToEdit as any).attendees || []);
+      }
     } else {
       setForm(initialState(defaultDate));
       setSelectedAttendees([]);
+      setLocalInvites([]);
     }
     
     setAttendeeResults([]);
     setFreebusyStatus(null);
-  }, [isOpen, defaultDate, eventToEdit]);
+  }, [isOpen, defaultDate, eventToEdit, fetchEventInvites]);
 
   // Desativar features Google caso o usuário desconecte a conta durante o uso
   useEffect(() => {
@@ -255,18 +268,15 @@ export default function CreateEventModal({
   }, [googleConnected, isOpen, getGoogleCalendarsList]);
 
   useEffect(() => {
-    if (!isOpen || !googleConnected || !form.syncWithGoogle) {
+    if (!isOpen) return;
+
+    if (form.attendeesQuery.length < 3) {
       setAttendeeResults([]);
       setIsSearchingAttendees(false);
       return;
     }
 
     const term = form.attendeesQuery.trim();
-    if (term.length < 3) {
-      setAttendeeResults([]);
-      setIsSearchingAttendees(false);
-      return;
-    }
 
     const timeout = setTimeout(async () => {
       try {
@@ -290,7 +300,7 @@ export default function CreateEventModal({
     }, 300);
 
     return () => clearTimeout(timeout);
-  }, [form.attendeesQuery, form.syncWithGoogle, googleConnected, isOpen, selectedAttendees]);
+  }, [form.attendeesQuery, isOpen, selectedAttendees]);
 
   // Acessibilidade: Fechar modal ao pressionar ESC
   useEffect(() => {
@@ -496,9 +506,30 @@ export default function CreateEventModal({
       if (eventToEdit?.id && eventToEdit.source === "internal") {
         result = await updateEvent(eventToEdit.id, payload);
         toast.success("Evento atualizado com sucesso");
+        
+        // Handling Event Invites (Creation / Update sync for existing internal)
+        if (!form.syncWithGoogle || googleConnected) {
+           for (const email of attendees) {
+              const alreadyExists = localInvites.find(i => i.email === email);
+              if (!alreadyExists) {
+                  await createEventInvite(eventToEdit.id, { email });
+              }
+           }
+           for (const inv of localInvites) {
+              if (!attendees.includes(inv.email)) {
+                  await deleteEventInvite(eventToEdit.id, inv.id);
+              }
+           }
+        }
       } else {
         result = await createEvent(payload);
         toast.success("Evento criado com sucesso");
+
+        if (!form.syncWithGoogle || googleConnected) {
+           for (const email of attendees) {
+              await createEventInvite(result.id, { email });
+           }
+        }
       }
       
       onCreated?.(result);
@@ -511,7 +542,7 @@ export default function CreateEventModal({
     }
   };
 
-  return (
+return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
@@ -533,7 +564,6 @@ export default function CreateEventModal({
             <X size={14} />
           </button>
         </div>
-
         <form onSubmit={handleSubmit} className="flex max-h-[85vh] flex-col">
           {/* Header do Formulário (Título) */}
           <div className="shrink-0 border-b border-transparent px-5 pt-5 pb-3">
@@ -619,10 +649,84 @@ export default function CreateEventModal({
               </div>
             </div>
 
-            {/* Integração Google (Progressive Disclosure) */}
-            <div className="flex flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-800/30">
+            {/* Integração Google */}
+            <div className="flex flex-col gap-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-800/30">
+              
+              <div className="flex flex-col gap-2">
+                 <div className="flex items-center gap-2">
+                    <Users size={14} className="text-neutral-500" />
+                    <span className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
+                      Adicionar convidados
+                    </span>
+                 </div>
+                 {/* Input de Convidados */}
+                 <div className="relative">
+                  <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-neutral-300 bg-neutral-50 p-1 focus-within:border-blue-500 focus-within:bg-white focus-within:ring-1 focus-within:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-within:bg-neutral-900">
+                    {selectedAttendees.map((email) => (
+                      <span
+                        key={email}
+                        className="flex max-w-full items-center gap-1 overflow-hidden rounded bg-blue-100 px-1.5 pt-[1px] pb-[1.5px] text-[10px] sm:text-xs font-medium tracking-tight text-blue-800/90 [word-break:keep-all] dark:bg-blue-900/30 dark:text-blue-300"
+                      >
+                        <span className="truncate" title={email}>
+                          {email}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeAttendee(email)}
+                          disabled={isSaving}
+                          className="shrink-0 p-0.5"
+                        >
+                          <X size={10} />
+                        </button>
+                      </span>
+                    ))}
+                    <input
+                      name="attendeesQuery"
+                      type="text"
+                      value={form.attendeesQuery}
+                      onChange={(e) => handleChange("attendeesQuery", e.target.value)}
+                      onKeyDown={handleAttendeesKeyDown}
+                      placeholder={selectedAttendees.length === 0 ? "E.g. fulano@weave.com" : ""}
+                      disabled={isSaving}
+                      className="min-w-[120px] flex-1 border-none bg-transparent px-1 py-1 text-xs text-neutral-800 placeholder-neutral-400 focus:outline-none dark:text-neutral-200 dark:placeholder-neutral-500"
+                    />
+                  </div>
+
+                  {/* Autocomplete Dropdown */}
+                  {attendeeResults.length > 0 && (
+                    <ul className="absolute top-full left-0 z-50 mt-1 max-h-40 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white py-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
+                      {attendeeResults.map((user) => (
+                        <li
+                          key={user.id}
+                          className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            addAttendee(user.email);
+                          }}
+                        >
+                          {user.avatar_url ? (
+                            <img src={user.avatar_url} alt={user.name} className="h-6 w-6 rounded-full object-cover" />
+                          ) : (
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-medium text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                              {user.name ? user.name.charAt(0).toUpperCase() : '?'}
+                            </div>
+                          )}
+                          <div className="flex flex-col overflow-hidden">
+                            <span className="truncate font-medium text-neutral-800 dark:text-neutral-200">
+                              {user.name}
+                            </span>
+                            <span className="truncate text-[10px] text-neutral-500">{user.email}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                 
+              </div>
+
               {/* Header de Integração */}
-              <div className="flex items-center justify-between p-1">
+              <div className="flex items-center justify-between p-1 mt-2 border-t border-neutral-200 pt-2 dark:border-neutral-800">
                 <div className="flex items-center gap-2">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
                     <GoogleLogoIcon />
@@ -650,7 +754,7 @@ export default function CreateEventModal({
                 />
               </div>
 
-              {/* Sub-card do Google Meet e Convidados (Animação Sanfona) */}
+              {/* Sub-card do Google Meet e Calendarios (Animação Sanfona) */}
               <div
                 className={`grid transition-all duration-300 ease-in-out ${
                   form.syncWithGoogle
@@ -658,19 +762,11 @@ export default function CreateEventModal({
                     : "grid-rows-[0fr] opacity-0"
                 }`}
               >
-                {/* CORREÇÃO AQUI: 
-                  Classe dinâmica que permite 'overflow-visible' se o usuário estiver 
-                  pesquisando ou se houver resultados. Isso deixa o Dropdown "vazar".
-                */}
                 <div
-                  className={
-                    isSearchingAttendees || attendeeResults.length > 0
-                      ? "overflow-visible"
-                      : "overflow-hidden"
-                  }
+                  className="overflow-hidden"
                 >
                   <div className="flex flex-col gap-2 rounded-md border border-neutral-200 bg-white p-2.5 shadow-sm dark:border-neutral-700/60 dark:bg-neutral-900">
-                    <div className="flex flex-col gap-1.5">
+                    <div className={(form.syncWithGoogle && googleConnected) ? "flex flex-col gap-1.5" : "hidden"}>
                       <div className="flex items-center gap-2">
                         <svg viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg" className="text-neutral-500">
                           <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z" fill="currentColor"/>
@@ -698,148 +794,51 @@ export default function CreateEventModal({
                     </div>
 
                     <div className="my-0.5 h-px bg-neutral-100 dark:bg-neutral-800" />
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Video size={14} className="text-emerald-600 dark:text-emerald-500" />
-                        <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                          Google Meet
-                        </span>
-                      </div>
-                      <Toggle
-                        checked={form.createMeetLink}
-                        onChange={(v) => handleChange("createMeetLink", v)}
-                        disabled={isSaving || !googleConnected}
-                      />
-                    </div>
-
-                    <div className="my-0.5 h-px bg-neutral-100 dark:bg-neutral-800" />
-
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
+                    
+                    <div className={(form.syncWithGoogle && googleConnected) ? "flex items-center justify-between mb-2" : "hidden"}>
                         <div className="flex items-center gap-2">
-                          <Users size={14} className="text-blue-600 dark:text-blue-500" />
+                          <Video size={14} className="text-neutral-500" />
                           <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                            Convidados
+                            Adicionar link do Google Meet
                           </span>
                         </div>
-                        {selectedAttendees.length > 0 && (
-                          <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
-                            {selectedAttendees.length} adicionado(s)
-                          </span>
-                        )}
+                        <Toggle
+                          checked={form.createMeetLink}
+                          onChange={(v) => handleChange("createMeetLink", v)}
+                          disabled={isSaving || !googleConnected}
+                        />
                       </div>
 
-                      {/* Faux Input (Container que imita um input mas engloba as tags e o campo real) */}
-                      <div className="relative">
-                        <div
-                          className={`flex min-h-[34px] w-full flex-wrap items-center gap-1.5 rounded-md border bg-neutral-50 px-2 py-1.5 transition-colors dark:bg-neutral-950 ${
-                            isSaving || !googleConnected
-                              ? "border-neutral-200 opacity-50 dark:border-neutral-800"
-                              : "border-neutral-300 focus-within:border-blue-500 focus-within:bg-white focus-within:ring-1 focus-within:ring-blue-500 dark:border-neutral-700 dark:focus-within:bg-neutral-900"
-                          }`}
+                      <div className={(form.syncWithGoogle && googleConnected) ? "flex items-center justify-between" : "hidden"}>
+                        <div className="flex items-center gap-2">
+                          <Users size={14} className="text-emerald-600 dark:text-emerald-500" />
+                          <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                            Checar disponbilidade (Google)
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleCheckFreebusy}
+                          disabled={isSaving || checkingFreebusy || selectedAttendees.length === 0}
+                          className="flex items-center justify-center rounded-md bg-blue-100 px-2 py-1 text-[10px] font-medium tracking-tight text-blue-800 transition-colors hover:bg-blue-200 disabled:opacity-50 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
                         >
-                          {/* Pills de usuários selecionados */}
-                          {selectedAttendees.map((email) => (
-                            <span
-                              key={email}
-                              className="group flex max-w-full items-center gap-1 rounded bg-blue-100/60 py-0.5 pr-1 pl-2 text-[11px] font-medium text-blue-700 transition-colors hover:bg-blue-200/60 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
-                            >
-                              <span className="max-w-[140px] truncate sm:max-w-[200px]">
-                                {email}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => removeAttendee(email)}
-                                className="flex h-3.5 w-3.5 items-center justify-center rounded-sm text-blue-500 transition-colors hover:bg-blue-300 hover:text-blue-800 dark:text-blue-400 dark:hover:bg-blue-800 dark:hover:text-blue-200"
-                                aria-label={`Remover ${email}`}
-                              >
-                                <X size={10} />
-                              </button>
-                            </span>
-                          ))}
-
-                          {/* Input Real (Transparente e flexível) */}
-                          <input
-                            type="text"
-                            value={form.attendeesQuery}
-                            onChange={(event) => handleChange("attendeesQuery", event.target.value)}
-                            onKeyDown={handleAttendeesKeyDown}
-                            placeholder={
-                              selectedAttendees.length === 0
-                                ? "Pesquise ou adicione com Enter"
-                                : "Adicionar mais..."
-                            }
-                            className="min-w-[120px] flex-1 bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 focus:outline-none dark:text-neutral-200"
-                            disabled={isSaving || !googleConnected}
-                          />
-                        </div>
-
-                        {/* Dropdown de Resultados com z-[100] garantido */}
-                        {(isSearchingAttendees || attendeeResults.length > 0) && (
-                          <div className="animate-in fade-in zoom-in-95 slide-in-from-top-1 custom-scrollbar absolute top-full left-0 z-[100] mt-1.5 max-h-48 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white py-1 shadow-xl dark:border-neutral-700 dark:bg-neutral-900">
-                            {isSearchingAttendees ? (
-                              <div className="flex items-center gap-2 px-3 py-2 text-[11px] text-neutral-500">
-                                <Loader2 size={12} className="animate-spin text-blue-500" />{" "}
-                                Buscando usuários...
-                              </div>
-                            ) : (
-                              attendeeResults.map((user) => (
-                                <button
-                                  key={`${user.id}-${user.email}`}
-                                  type="button"
-                                  onClick={() => addAttendee(user.email)}
-                                  className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                                >
-                                  <div className="flex flex-col overflow-hidden">
-                                    <span className="truncate text-xs font-medium text-neutral-700 dark:text-neutral-200">
-                                      {user.name || user.username || "Usuário"}
-                                    </span>
-                                    <span className="truncate text-[10px] text-neutral-500 dark:text-neutral-400">
-                                      {user.email}
-                                    </span>
-                                  </div>
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        )}
+                          {checkingFreebusy ? <Loader2 size={12} className="animate-spin" /> : "Verificar"}
+                        </button>
                       </div>
-
-                      <p className="text-[10px] leading-relaxed text-neutral-500 dark:text-neutral-400">
-                        Dica: Insira e-mails externos e pressione <strong>Enter</strong>. Convites
-                        serão disparados via Google.
-                      </p>
-
-                      {form.syncWithGoogle && (
-                        <div className="mt-2 flex flex-col gap-2">
-                          <button
-                            type="button"
-                            onClick={handleCheckFreebusy}
-                            disabled={isSaving || checkingFreebusy || selectedAttendees.length === 0}
-                            className="flex w-full items-center justify-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
-                          >
-                            {checkingFreebusy ? "Verificando..." : "Verificar Disponibilidade"}
-                          </button>
-                          
-                          {freebusyStatus === "free" && (
-                            <div className="flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
-                              <span className="flex-shrink-0">✓</span> Todos disponíveis neste horário
-                            </div>
-                          )}
-                          
-                          {freebusyStatus === "busy" && (
-                            <div className="flex items-center gap-1.5 rounded-md bg-orange-50 px-2 py-1.5 text-[11px] font-medium text-orange-700 dark:bg-orange-900/20 dark:text-orange-400">
-                              <span className="flex-shrink-0">⚠</span> Há conflito de horários (ou não têm permissão para ver)
-                            </div>
-                          )}
+                      
+                      {freebusyStatus && (
+                        <div className={`mt-1 rounded border px-2 py-1.5 text-[11px] ${
+                          freebusyStatus === "busy" 
+                            ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400" 
+                            : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400"
+                        }`}>
+                          {freebusyStatus === "busy" ? "Existem conflitos na agenda de pelo menos um participante." : "Horário livre para todos os participantes."}
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
             {/* Localização e Descrição (Ghost Inputs com Ícones) */}
             <div className="space-y-3 px-1 pt-1">

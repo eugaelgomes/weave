@@ -188,6 +188,33 @@ export interface FreeBusyResponse {
   }
 }
 
+export interface InternalCalendarEventInvite {
+  id: string;
+  event_id: string;
+  user_id: string | null;
+  email: string;
+  role: "ORGANIZER" | "REQUIRED" | "OPTIONAL" | "RESOURCE";
+  status: "PENDING" | "ACCEPTED" | "DECLINED" | "TENTATIVE";
+  external_guest_id: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted: boolean;
+  deleted_at: string | null;
+}
+
+export interface CreateCalendarEventInvitePayload {
+  email: string;
+  role?: "ORGANIZER" | "REQUIRED" | "OPTIONAL" | "RESOURCE";
+  status?: "PENDING" | "ACCEPTED" | "DECLINED" | "TENTATIVE";
+  userId?: string;
+  externalGuestId?: string;
+}
+
+export interface UpdateCalendarEventInvitePayload {
+  role?: "ORGANIZER" | "REQUIRED" | "OPTIONAL" | "RESOURCE";
+  status?: "PENDING" | "ACCEPTED" | "DECLINED" | "TENTATIVE";
+}
+
 export async function fetchGoogleCalendarSettings(): Promise<{ settings: GoogleCalendarSetting[] }> {
   const res = await apiClient.get(API_ENDPOINTS.GOOGLE_CALENDAR_SETTINGS);
   if (!res.ok) {
@@ -221,4 +248,43 @@ export async function fetchGoogleFreeBusy(
     throw new Error(body.error || "Falha ao verificar disponibilidade (Free/Busy)");
   }
   return res.json();
+}
+
+export async function fetchEventInvites(eventId: string): Promise<InternalCalendarEventInvite[]> {
+  const res = await apiClient.get(API_ENDPOINTS.CALENDAR_EVENT_INVITES(eventId));
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || "Falha ao buscar convites do evento");
+  }
+  return res.json() as Promise<InternalCalendarEventInvite[]>;
+}
+
+export async function createEventInvite(eventId: string, payload: CreateCalendarEventInvitePayload): Promise<InternalCalendarEventInvite> {
+  const res = await apiClient.post(API_ENDPOINTS.CALENDAR_EVENT_INVITES(eventId), payload);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || "Falha ao criar convite do evento");
+  }
+  return res.json() as Promise<InternalCalendarEventInvite>;
+}
+
+export async function updateEventInvite(
+  eventId: string,
+  inviteId: string,
+  payload: UpdateCalendarEventInvitePayload
+): Promise<InternalCalendarEventInvite> {
+  const res = await apiClient.patch(API_ENDPOINTS.CALENDAR_EVENT_INVITE_BY_ID(eventId, inviteId), payload);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || "Falha ao atualizar convite do evento");
+  }
+  return res.json() as Promise<InternalCalendarEventInvite>;
+}
+
+export async function deleteEventInvite(eventId: string, inviteId: string): Promise<void> {
+  const res = await apiClient.delete(API_ENDPOINTS.CALENDAR_EVENT_INVITE_BY_ID(eventId, inviteId));
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || "Falha ao deletar convite do evento");
+  }
 }
