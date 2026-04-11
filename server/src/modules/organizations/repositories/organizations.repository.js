@@ -79,6 +79,17 @@ class OrganizationsRepository {
          WHERE pm.user_id = u1.user_id
            AND pm.deleted = false 
            AND p.deleted = false) as projects,
+        (SELECT COALESCE(json_agg(json_build_object(
+           'area_id', a.id::text,
+           'area_name', a.area_name,
+           'role', am.role
+         )), '[]'::json)
+         FROM organizations_areas_members am
+         JOIN organizations_areas a ON a.id = am.area_id
+         WHERE am.user_id = u1.user_id
+           AND am.deleted = false 
+           AND a.deleted = false
+           AND am.organization_id = $1) as areas,
         (SELECT ul.created_at as last_login_at
          FROM users_logs ul
          WHERE ul.user_id = u1.user_id 

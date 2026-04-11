@@ -48,6 +48,11 @@ export interface OrganizationMember {
       project_name: string;
       role: string;
     }>;
+    areas: Array<{
+      area_id: string;
+      area_name: string;
+      role: string;
+    }>;
     last_login_at: string | null;
   };
   invited_by: {

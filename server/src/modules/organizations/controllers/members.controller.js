@@ -187,6 +187,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
             activity: {
               notes_count: parseInt(member.notes_count, 10) || 0,
               projects: member.projects || [],
+              areas: member.areas || [],
               last_login_at: member.last_login_at || null,
             },
             invited_by: member.invited_by
