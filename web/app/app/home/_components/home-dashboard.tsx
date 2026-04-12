@@ -105,7 +105,7 @@ export default function HighDensityDashboard() {
   ];
 
   return (
-    <div className="flex h-full flex-col rounded-md bg-neutral-200 p-4 dark:bg-neutral-950">
+    <div className="flex h-full flex-col rounded-md bg-neutral-200 p-4 dark:bg-neutral-800">
       {/* Header Compacto */}
       <header className="mb-4 flex items-center justify-between">
         <div>
@@ -131,7 +131,7 @@ export default function HighDensityDashboard() {
           {aiInsights.map((insight) => (
             <div
               key={insight.id}
-              className="flex items-start gap-2 rounded-lg border border-neutral-200 bg-white p-2 shadow-sm transition-all hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700"
+              className="flex items-start gap-2 rounded-lg border border-neutral-200 bg-white p-2 shadow-sm transition-all hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-800 dark:hover:border-neutral-700"
             >
               {insight.type === "warning" && (
                 <AlertCircle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
@@ -169,7 +169,7 @@ export default function HighDensityDashboard() {
           {projectsMap.map((project) => (
             <div
               key={project.id}
-              className="rounded-lg border border-neutral-200 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-950"
+              className="rounded-lg border border-neutral-200 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-800"
             >
               <div className="mb-2 flex items-center gap-1.5">
                 <FolderKanban className="h-3.5 w-3.5 text-brand-primary-700 dark:text-yellow-400" />

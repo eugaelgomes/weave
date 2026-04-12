@@ -9,9 +9,11 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 // Internal Components
+import getStorageUrl from "@/app/_utils/get-storage-url";
 import { ImageEditModal } from "./_components/ui-elements";
 import { SettingsForm } from "./_components/settings-form";
-import { OrganizationOverview } from "./_components/overview";
+import { OrganizationOverview } from "./_components/header";
+import { OrganizationHeader } from "../../_components/ui/headers/organization-header";
 
 const OrganizationPage = () => {
   const { user } = useAuth();
@@ -23,6 +25,8 @@ const OrganizationPage = () => {
     isOwner,
     createOrganization,
     updateOrganization,
+    uploadLogo,
+    uploadBanner,
     updateProperties,
     deleteOrganization,
     restoreOrganization,
@@ -94,13 +98,16 @@ const OrganizationPage = () => {
     }
   };
 
-  const handleUpdateImage = async (url: string) => {
+  const handleUpdateImage = async (file: File) => {
     if (!editingImage) return;
 
     try {
-      await updateOrganization({
-        [editingImage === "logo" ? "logo_url" : "banner_url"]: url,
-      });
+      if (editingImage === "logo") {
+        await uploadLogo(file);
+      } else {
+        await uploadBanner(file);
+      }
+
       toast.success(`${editingImage === "logo" ? "Logo" : "Banner"} atualizado com sucesso`);
       setEditingImage(null);
     } catch (error) {
@@ -236,42 +243,48 @@ const OrganizationPage = () => {
   }
 
   return (
-    <div className="fade-in animate-in mx-auto space-y-2 duration-500">
-      <OrganizationOverview
-        organization={organization}
-        stats={stats}
-        userIsOwner={userIsOwner}
-        setEditingImage={setEditingImage}
-        setIsEditingInfo={setIsEditingInfo}
-        isEditingInfo={isEditingInfo}
-        handleUpdateInfo={handleUpdateInfo}
-        formData={formData}
-        setFormData={setFormData}
-      />
+    <div className="flex min-h-screen w-full flex-col space-y-2">
+      <OrganizationHeader />
 
-      {/* Single Column Layout */}
-      <div>
-        <SettingsForm
-          localProps={localProps}
+      <div className="fade-in animate-in space-y-2 duration-500">
+        <OrganizationOverview
           organization={organization}
           stats={stats}
           userIsOwner={userIsOwner}
-          handlePropertyChange={handlePropertyChange}
-          handleDeleteOrganization={handleDeleteOrganization}
-          isDeleting={isDeleting}
+          setEditingImage={setEditingImage}
+          setIsEditingInfo={setIsEditingInfo}
+          isEditingInfo={isEditingInfo}
+          handleUpdateInfo={handleUpdateInfo}
+          formData={formData}
+          setFormData={setFormData}
+        />
+
+        {/* Single Column Layout */}
+        <div>
+          <SettingsForm
+            localProps={localProps}
+            organization={organization}
+            stats={stats}
+            userIsOwner={userIsOwner}
+            handlePropertyChange={handlePropertyChange}
+            handleDeleteOrganization={handleDeleteOrganization}
+            isDeleting={isDeleting}
+          />
+        </div>
+
+        <ImageEditModal
+          isOpen={!!editingImage}
+          title={editingImage === "logo" ? "Editar Logo" : "Editar Banner"}
+          currentUrl={
+            editingImage === "logo"
+              ? getStorageUrl(organization?.logo_url || "")
+              : getStorageUrl(organization?.banner_url || "")
+          }
+          onClose={() => setEditingImage(null)}
+          onSave={handleUpdateImage}
+          loading={loading}
         />
       </div>
-
-      <ImageEditModal
-        isOpen={!!editingImage}
-        title={editingImage === "logo" ? "Editar Logo" : "Editar Banner"}
-        currentUrl={
-          editingImage === "logo" ? organization?.logo_url || "" : organization?.banner_url || ""
-        }
-        onClose={() => setEditingImage(null)}
-        onSave={handleUpdateImage}
-        loading={loading}
-      />
     </div>
   );
 };

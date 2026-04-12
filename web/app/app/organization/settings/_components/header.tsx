@@ -35,7 +35,7 @@ export function OrganizationOverview({
         <div className="relative h-48 w-full bg-zinc-100 dark:bg-zinc-900">
           {organization?.banner_url ? (
             <img
-              src={organization.banner_url}
+              src={getStorageUrl(organization.banner_url)}
               alt="Banner"
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
@@ -59,7 +59,7 @@ export function OrganizationOverview({
               <div className="h-24 w-24 overflow-hidden rounded-md border-4 border-white bg-zinc-50 shadow-md dark:border-zinc-950 dark:bg-zinc-900">
                 {organization?.logo_url ? (
                   <img
-                    src={organization.logo_url}
+                    src={getStorageUrl(organization.logo_url)}
                     alt="Logo"
                     className="h-full w-full object-cover"
                   />

@@ -798,8 +798,8 @@ export const uploadOrganizationLogo = async (
     formData.append("userId", userId);
   }
 
-  const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_LOGO, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+  const response = await apiClient.put(API_ENDPOINTS.ORGANIZATIONS_LOGO, formData, {
+    // handled implicitly
   });
 
   const data = await handleResponse<{
@@ -828,8 +828,8 @@ export const uploadOrganizationBanner = async (
     formData.append("userId", userId);
   }
 
-  const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_BANNER, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+  const response = await apiClient.put(API_ENDPOINTS.ORGANIZATIONS_BANNER, formData, {
+    // "Content-Type": "multipart/form-data" handled automatically when passing FormData
   });
 
   const data = await handleResponse<{

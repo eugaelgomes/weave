@@ -6,6 +6,8 @@ import {
   fetchOrganization as fetchOrganizationService,
   createOrganization as createOrganizationService,
   updateOrganization as updateOrganizationService,
+  uploadOrganizationLogo as uploadOrganizationLogoService,
+  uploadOrganizationBanner as uploadOrganizationBannerService,
   updateOrganizationProperties as updateOrganizationPropertiesService,
   deleteOrganization as deleteOrganizationService,
   restoreOrganization as restoreOrganizationService,
@@ -81,6 +83,8 @@ export interface OrganizationContextType {
   refreshOrganization: () => Promise<void>;
   createOrganization: (organizationData: CreateOrganizationData) => Promise<Organization | null>;
   updateOrganization: (organizationData: UpdateOrganizationData) => Promise<Organization | null>;
+  uploadLogo: (file: File) => Promise<Organization | null>;
+  uploadBanner: (file: File) => Promise<Organization | null>;
   updateProperties: (properties: OrganizationProperties) => Promise<Organization | null>;
   deleteOrganization: () => Promise<boolean>;
   restoreOrganization: () => Promise<Organization | null>;
@@ -246,6 +250,44 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         return updatedOrg;
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Erro ao atualizar organização");
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // 3. ATUALIZAR LOGO
+  const uploadLogo = useCallback(
+    async (file: File): Promise<Organization | null> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const updatedOrg = await uploadOrganizationLogoService(file);
+        setOrganization(updatedOrg);
+        return updatedOrg;
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Erro ao atualizar logo");
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // 3. ATUALIZAR BANNER
+  const uploadBanner = useCallback(
+    async (file: File): Promise<Organization | null> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const updatedOrg = await uploadOrganizationBannerService(file);
+        setOrganization(updatedOrg);
+        return updatedOrg;
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Erro ao atualizar banner");
         return null;
       } finally {
         setLoading(false);
@@ -744,6 +786,8 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     refreshOrganization,
     createOrganization,
     updateOrganization,
+    uploadLogo,
+    uploadBanner,
     updateProperties,
     deleteOrganization,
     restoreOrganization,

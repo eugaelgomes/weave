@@ -140,17 +140,38 @@ export const ImageEditModal = ({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (url: string) => void;
+  onSave: (fileOrUrl: string | File) => void;
   title: string;
   currentUrl: string;
   loading: boolean;
 }) => {
-  const [url, setUrl] = React.useState(currentUrl);
+  const [file, setFile] = React.useState<File | null>(null);
+  const [preview, setPreview] = React.useState<string>(currentUrl || "");
+
+  // Update effect if currentUrl changes from outside
+  React.useEffect(() => {
+    setPreview(currentUrl || "");
+    setFile(null);
+  }, [currentUrl, isOpen]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      setPreview(URL.createObjectURL(selectedFile));
+    }
+  };
+
+  const handleSave = () => {
+    if (file) {
+      onSave(file);
+    }
+  };
 
   if (!isOpen) return null;
 
   return (
-    <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm duration-200">
+    <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm duration-200">
       <div className="w-full max-w-sm rounded-md border border-zinc-200 bg-neutral-50 p-5 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>
@@ -162,33 +183,29 @@ export const ImageEditModal = ({
           </button>
         </div>
 
-        <div className="mb-4 flex h-32 items-center justify-center rounded-md border border-dashed border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-          {url ? (
+        <div className="relative mb-4 flex h-32 items-center justify-center overflow-hidden rounded-md border border-dashed border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
+          {preview ? (
             <img
-              src={url}
+              src={preview}
               alt="Preview"
               className="h-full w-full rounded-md object-contain object-center p-2"
             />
           ) : (
             <div className="flex flex-col items-center text-zinc-400">
               <Camera className="mb-2 h-6 w-6" />
-              <span className="text-xs">Preview</span>
+              <span className="text-xs">Faça upload de uma imagem</span>
             </div>
           )}
+          
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+          />
         </div>
 
         <div className="space-y-3">
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-zinc-500">URL da Imagem</label>
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="w-full rounded-md border border-zinc-200 bg-neutral-50 px-3 py-2 text-sm outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
-              autoFocus
-              placeholder="https://..."
-            />
-          </div>
           <div className="flex justify-end gap-2 pt-2">
             <button
               onClick={onClose}
@@ -197,8 +214,8 @@ export const ImageEditModal = ({
               Cancelar
             </button>
             <button
-              onClick={() => onSave(url)}
-              disabled={loading}
+              onClick={handleSave}
+              disabled={loading || !file}
               className="flex items-center gap-2 rounded-md bg-zinc-900 px-4 py-2 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
             >
               {loading ? (
@@ -206,7 +223,7 @@ export const ImageEditModal = ({
               ) : (
                 <Save className="h-3 w-3" />
               )}
-              Salvar Alterações
+              Salvar
             </button>
           </div>
         </div>

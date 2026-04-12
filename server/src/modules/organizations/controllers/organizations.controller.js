@@ -162,6 +162,7 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(201).json({
         status: "OK",
+        success: true,
         message: "Organization created successfully",
         data: newOrganization,
       });
@@ -308,6 +309,7 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
+        success: true,
         message: "Organization updated successfully",
         data: updatedOrg,
       });
@@ -373,6 +375,7 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
+        success: true,
         message: "Properties updated successfully",
         data: updatedOrg,
       });
@@ -425,6 +428,7 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
+        success: true,
         message: "Organization deleted successfully",
         data: deletedOrg,
       });
@@ -473,6 +477,7 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
+        success: true,
         message: "Organization restored successfully",
         data: restoredOrg,
       });
@@ -528,9 +533,10 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
+        success: true,
         message: "Logo updated successfully",
         data: {
-          organization: updatedOrg,
+          organization: orgDataResponse(updatedOrg),
           upload: {
             path: result.key,
             filename: result.fileName,
@@ -589,8 +595,9 @@ class OrganizationsController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
+        success: true,
         message: "Banner updated successfully",
-        organization_data: {
+        data: {
           organization: orgDataResponse(updatedOrg),
           upload: {
             path: result.key,
