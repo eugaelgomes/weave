@@ -38,11 +38,7 @@ interface NavigationItem {
   path: string;
   icon: LucideIcon;
   label: string;
-  subItems?: {
-    path: string;
-    icon: LucideIcon;
-    label: string;
-  }[];
+  subItems?: NavigationItem[];
   badge?: number;
 }
 
@@ -61,6 +57,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
     const itemsWithSubs = [
       { path: "/app/weave-ai/chat", checkPath: "/app/weave-ai" },
       { path: "/app/organization", checkPath: "/app/organization" },
+      { path: "/app/organization/members", checkPath: "/app/organization/members" },
     ];
 
     itemsWithSubs.forEach(({ path, checkPath }) => {
@@ -143,7 +140,15 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
             label: t.nav.organization,
             subItems: [
               { path: "/app/organization/settings", icon: Settings, label: t.nav.settings },
-              { path: "/app/organization/members", icon: UsersRound, label: t.nav.members },
+              { 
+                path: "/app/organization/members", 
+                icon: UsersRound, 
+                label: t.nav.members,
+                subItems: [
+                  { path: "/app/organization/members/list", icon: Users, label: t.nav.list || "Lista" },
+                  { path: "/app/organization/members/invites", icon: MessageSquare, label: t.nav.invites || "Convites" },
+                ]
+              },
               { path: "/app/organization/areas", icon: Workflow, label: t.nav.areas },
               { path: "/app/organization/projects", icon: Network, label: t.nav.projects },
             ],
@@ -251,27 +256,80 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                         const SubIcon = subItem.icon;
                         const isSubActive =
                           pathname === subItem.path || pathname.startsWith(`${subItem.path}/`);
+                        const hasSubSubItems = subItem.subItems && subItem.subItems.length > 0;
+                        const isSubExpanded = !isCollapsed && expandedItems[subItem.path];
+                        const linkHref = isCollapsed && hasSubSubItems ? subItem.subItems![0].path : subItem.path;
 
                         return (
                           <li key={subItem.path}>
                             <Link
-                              href={subItem.path}
-                              onClick={handleLinkClick}
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium transition duration-200 ${
-                                isSubActive
+                              href={linkHref}
+                              onClick={(e) => {
+                                if (hasSubSubItems && !isCollapsed) {
+                                  e.preventDefault();
+                                  toggleExpand(subItem.path);
+                                } else {
+                                  handleLinkClick();
+                                }
+                              }}
+                              className={`flex items-center rounded-md px-2 py-1 text-sm font-medium transition duration-200 ${
+                                isSubActive && !hasSubSubItems
                                   ? "bg-brand-primary-700/10 text-yellow-600 dark:text-brand-primary-700"
                                   : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900"
                               }`}
                             >
-                              <SubIcon
-                                className={`size-2.5 ${
-                                  isSubActive
-                                    ? "text-brand-primary-700"
-                                    : "text-neutral-500 opacity-70 dark:text-neutral-500"
-                                }`}
-                              />
-                              <span className="truncate text-sm">{subItem.label}</span>
+                              <div className="flex items-center gap-2">
+                                <SubIcon
+                                  className={`size-2.5 ${
+                                    isSubActive && !hasSubSubItems
+                                      ? "text-brand-primary-700"
+                                      : "text-neutral-500 opacity-70 dark:text-neutral-500"
+                                  }`}
+                                />
+                                <span className="truncate text-sm">{subItem.label}</span>
+                              </div>
+
+                              {!isCollapsed && hasSubSubItems && (
+                                <ChevronRight
+                                  className={`ml-auto size-3 transition-transform ${
+                                    isSubExpanded ? "rotate-90" : ""
+                                  }`}
+                                />
+                              )}
                             </Link>
+
+                            {!isCollapsed && hasSubSubItems && isSubExpanded && (
+                              <ul className="mt-1 space-y-1 pl-4">
+                                {subItem.subItems!.map((subSubItem) => {
+                                  const SubSubIcon = subSubItem.icon;
+                                  const isSubSubActive =
+                                    pathname === subSubItem.path || pathname.startsWith(`${subSubItem.path}/`);
+
+                                  return (
+                                    <li key={subSubItem.path}>
+                                      <Link
+                                        href={subSubItem.path}
+                                        onClick={handleLinkClick}
+                                        className={`flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium transition duration-200 ${
+                                          isSubSubActive
+                                            ? "bg-brand-primary-700/10 text-yellow-600 dark:text-brand-primary-700"
+                                            : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900"
+                                        }`}
+                                      >
+                                        <SubSubIcon
+                                          className={`size-2.5 ${
+                                            isSubSubActive
+                                              ? "text-brand-primary-700"
+                                              : "text-neutral-500 opacity-70 dark:text-neutral-500"
+                                          }`}
+                                        />
+                                        <span className="truncate text-xs">{subSubItem.label}</span>
+                                      </Link>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            )}
                           </li>
                         );
                       })}

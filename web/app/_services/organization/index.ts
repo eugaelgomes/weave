@@ -620,7 +620,15 @@ export const removeAreaMember = async (
 
 // --- Membros e Convites ---
 
-export const fetchOrganizationMembers = async (userId?: string): Promise<OrganizationMember[]> => {
+export interface OrganizationMembersData {
+  count: number;
+  count_by_role: Record<string, number>;
+  count_by_status: Record<string, number>;
+  count_by_suspended: Record<string, number>;
+  list_org_members: OrganizationMember[];
+}
+
+export const fetchOrganizationMembers = async (userId?: string): Promise<OrganizationMembersData | null> => {
   try {
     const url = userId
       ? `${API_ENDPOINTS.ORGANIZATIONS_MEMBERS}?userId=${userId}`
@@ -629,16 +637,26 @@ export const fetchOrganizationMembers = async (userId?: string): Promise<Organiz
     const response = await apiClient.get(url);
     const data = await handleResponse<{
       status?: string;
+      count?: number;
+      count_by_role?: Record<string, number>;
+      count_by_status?: Record<string, number>;
+      count_by_suspended?: Record<string, number>;
       list_org_members?: Array<{ member_data: OrganizationMember }>;
     }>(response);
 
     if (data.status === "OK" && data.list_org_members) {
-      return data.list_org_members.map((item) => item.member_data);
+      return {
+        count: data.count || 0,
+        count_by_role: data.count_by_role || {},
+        count_by_status: data.count_by_status || {},
+        count_by_suspended: data.count_by_suspended || {},
+        list_org_members: data.list_org_members.map((item) => item.member_data),
+      };
     }
-    return [];
+    return null;
   } catch (error) {
     console.error("Erro ao buscar membros:", error);
-    return [];
+    return null;
   }
 };
 

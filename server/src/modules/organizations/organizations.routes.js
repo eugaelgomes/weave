@@ -169,9 +169,9 @@ router.get(
   organizationMembersController.getMembers.bind(organizationMembersController)
 );
 
-router.post(
-  "/members",
-  organizationMembersController.addMember.bind(organizationMembersController)
+router.patch(
+  "/members/:memberId",
+  organizationMembersController.updateMemberRole.bind(organizationMembersController)
 );
 
 router.delete(

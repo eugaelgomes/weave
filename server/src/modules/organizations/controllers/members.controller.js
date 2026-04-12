@@ -1,8 +1,16 @@
+/**
+ * @typedef {import('express').Request} Request
+ * @typedef {import('express').Response} Response
+ * @typedef {import('./base-controller').AuthenticatedRequest} AuthenticatedRequest
+ */
+
 const OrganizationsBaseController = require("./base-controller");
 const UserRepository = require("@/modules/users/users.repository");
 const NotificationsRepository = require("@/modules/notifications/notifications.repository");
+const areasRepository = require("@/modules/organizations/repositories/areas.repository");
 const spacesService = require("@/services/storage");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const {
   send_organization_invite,
 } = require("@/services/email/templates/invite-member/mail");
@@ -12,85 +20,56 @@ const { validRoles } = require("../normalizer");
 class OrganizationMembersController extends OrganizationsBaseController {
   constructor() {
     super();
+    this.areasRepository = areasRepository;
   }
 
-  async addMember(req, res) {
+
+  /**
+   * Update a member's role in the organization
+   * @param {Request & AuthenticatedRequest} req
+   * @param {Response} res
+   * @returns {Promise<void|Response>}
+   */
+  async updateMemberRole(req, res) {
     try {
-      const userId = this._validateAuthentication(req, res);
-      if (!userId) return;
+      const authUserId = this._validateAuthentication(req, res);
+      if (!authUserId) return;
 
-      const { memberId, role = "member" } = req.body;
-
-      if (!memberId) {
-        return res
-          .status(400)
-          .json({ success: false, error: "memberId é obrigatório" });
-      }
+      const { memberId } = req.params;
+      const { role } = req.body;
 
       if (!validRoles.includes(role)) {
-        return res.status(400).json({
-          success: false,
-          error: "Role deve ser 'super_admin', 'admin', 'member' ou 'guest'",
-        });
+        return res.status(400).json({ error: "Invalid role" });
       }
 
-      const currentOrg = await this._getUserOrganization(userId);
+      const currentOrg = await this._getUserOrganization(authUserId);
       if (!currentOrg) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+        return res.status(404).json({ error: "Organization not found" });
       }
 
-      const isMember = await this.organizationsRepository.isMember(
-        currentOrg.id,
-        memberId
-      );
-      if (isMember) {
-        return res.status(400).json({
-          success: false,
-          error: "Usuário já é membro da organização",
-        });
+      if (currentOrg.user_id === memberId) {
+        return res.status(400).json({ error: "Cannot change the organization owner's role" });
       }
 
-      const newMember =
-        await this.organizationsRepository.addOrganizationMember(
-          currentOrg.id,
-          memberId,
-          role,
-          "active",
-          userId
-        );
-
-      await NotificationsRepository.createNotification({
-        userId: memberId,
-        actorId: userId,
-        type: "organization_action",
-        entityType: "organization",
-        entityId: currentOrg.id,
-        title: `Você foi adicionado à organização ${currentOrg.org_name}`,
-        content: {
-          action: "member_added",
-          role: role,
-          organization_id: currentOrg.id,
-          organization_name: currentOrg.org_name,
-          triggered_by: userId,
-        },
-      });
+      await this.organizationsRepository.updateMemberRole(currentOrg.id, memberId, role);
 
       res.status(200).json({
         status: "OK",
-        message: "Membro adicionado com sucesso",
-        data: newMember,
+        message: "Role updated successfully",
+        data: { role },
       });
     } catch (error) {
-      console.error("Erro ao adicionar membro:", error);
-      res.status(400).json({
-        success: false,
-        error: error.message || "Erro ao adicionar membro",
-      });
+      console.error("Error updating member role:", error);
+      res.status(500).json({ error: "Error updating member role" });
     }
   }
 
+  /**
+   * Remove a member from the organization
+   * @param {Request & AuthenticatedRequest} req
+   * @param {Response} res
+   * @returns {Promise<void|Response>}
+   */
   async removeMember(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -102,13 +81,13 @@ class OrganizationMembersController extends OrganizationsBaseController {
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       if (currentOrg.user_id === parseInt(memberId, 10)) {
         return res.status(400).json({
           success: false,
-          error: "Não é possível remover o proprietário da organização",
+          error: "Cannot remove the organization owner",
         });
       }
 
@@ -120,23 +99,29 @@ class OrganizationMembersController extends OrganizationsBaseController {
       if (!removed) {
         return res
           .status(404)
-          .json({ success: false, error: "Membro não encontrado" });
+          .json({ success: false, error: "Member not found" });
       }
 
       res.status(200).json({
         status: "OK",
-        message: "Membro removido com sucesso",
+        message: "Member removed successfully",
         data: removed,
       });
     } catch (error) {
-      console.error("Erro ao remover membro:", error);
+      console.error("Error removing member:", error);
       res.status(400).json({
         success: false,
-        error: error.message || "Erro ao remover membro",
+        error: error.message || "Error removing member",
       });
     }
   }
 
+  /**
+   * Get all members of the organization
+   * @param {Request & AuthenticatedRequest} req
+   * @param {Response} res
+   * @returns {Promise<void|Response>}
+   */
   async getMembers(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -146,7 +131,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const members = await this.organizationsRepository.getOrganizationMembers(
@@ -202,74 +187,72 @@ class OrganizationMembersController extends OrganizationsBaseController {
         })),
       });
     } catch (error) {
-      console.error("Erro ao buscar membros:", error);
+      console.error("Error fetching members:", error);
       res
         .status(500)
-        .json({ status: "ERROR", error: "Erro ao buscar membros" });
+        .json({ status: "ERROR", error: "Error fetching members" });
     }
   }
 
+  /**
+   * Invite a new member to the organization
+   * @param {Request & AuthenticatedRequest} req
+   * @param {Response} res
+   * @returns {Promise<void|Response>}
+   */
   async inviteMember(req, res) {
     try {
-      const userId = this._validateAuthentication(req, res);
-      if (!userId) return;
+      const authUserId = this._validateAuthentication(req, res);
+      if (!authUserId) return;
 
-      const { email, role = "member", name, username } = req.body;
+      const { email, role = "member", name, username, area_id } = req.body;
 
       if (!email) {
-        return res.status(400).json({ error: "Email é obrigatório" });
+        return res.status(400).json({ error: "Email is required" });
       }
 
       if (!validRoles.includes(role)) {
         return res.status(400).json({
-          error:
-            "Cargo inválido. Roles válidas: super_admin, admin, member, guest",
+          error: "Invalid role. Valid roles: super_admin, admin, member, guest",
         });
       }
 
-      const currentOrg = await this._getUserOrganization(userId);
+      const currentOrg = await this._getUserOrganization(authUserId);
       if (!currentOrg) {
-        return res.status(404).json({ error: "Organização não encontrada" });
+        return res.status(404).json({ error: "Organization not found" });
       }
 
-      const existingUser = await UserRepository.findByUsernameOrEmail(
-        "",
-        email
-      );
-      if (existingUser.length > 0) {
-        const isMember = await this.organizationsRepository.isMember(
-          currentOrg.id,
-          existingUser[0].user_id
-        );
+      let areaExists = false;
+      if (area_id) {
+        const area = await this.areasRepository.getAreaById(area_id, currentOrg.id);
+        if (!area) return res.status(404).json({ error: "Area not found" });
+        areaExists = true;
+      }
+
+      const existingUsers = await UserRepository.findByUsernameOrEmail("", email);
+      const targetUser = existingUsers.find((u) => u.email === email);
+
+      if (targetUser) {
+        const isMember = await this.organizationsRepository.isMember(currentOrg.id, targetUser.user_id);
         if (isMember) {
-          return res
-            .status(400)
-            .json({ error: "Este usuário já é membro da organização" });
+          return res.status(400).json({ error: "This user is already a member of the organization" });
         }
       }
 
-      const existingInvite =
-        await this.organizationsRepository.checkExistingInvite(
-          currentOrg.id,
-          email
-        );
-      if (existingInvite) {
-        return res
-          .status(400)
-          .json({ error: "Já existe um convite pendente para este email" });
-      }
-
+      // Create invite in invite_org_members table
+      const usedName = name || email.split("@")[0];
       const invite = await this.organizationsRepository.createOrgInvite(
         currentOrg.id,
         email,
         role,
-        userId,
-        name,
-        username
+        authUserId,
+        usedName,
+        username || null
       );
 
-      const inviter = await UserRepository.findById(userId);
+      const inviter = await UserRepository.findById(authUserId);
 
+      // Send the invite email
       const emailResult = await send_organization_invite(
         email,
         currentOrg.org_name,
@@ -282,220 +265,141 @@ class OrganizationMembersController extends OrganizationsBaseController {
         console.warn("Failed to send invite email:", emailResult.error);
       }
 
-      if (existingUser && existingUser.length > 0) {
-        const targetUser = existingUser[0];
-        await NotificationsRepository.createNotification({
-          userId: targetUser.user_id,
-          actorId: userId,
-          type: "organization_invite",
-          entityType: "organization",
-          entityId: currentOrg.id,
-          title: `Você foi convidado para a organização ${currentOrg.org_name}`,
-          content: {
-            action: "invite_sent",
-            invite_id: invite.invite_id,
-            role: role,
-            inviter_id: userId,
-            inviter_name: inviter.name || inviter.username || null,
-            organization_id: currentOrg.id,
-            organization_name: currentOrg.org_name,
-            invitee_email: email,
-            invitee_name: targetUser.name || targetUser.username || null,
-          },
-        });
-      }
-
       res.status(201).json({
         status: "OK",
-        message: "Convite enviado com sucesso",
+        message: "Invite sent successfully.",
         data: {
           invite_id: invite.invite_id,
           email: invite.email,
           role: invite.role,
           expires_at: invite.expires_at,
+          area_id,
         },
       });
     } catch (error) {
-      console.error("Erro ao convidar membro:", error);
-      res.status(500).json({ error: "Erro ao enviar convite" });
+      console.error("Error inviting member:", error);
+      res.status(500).json({ error: "Error processing member" });
     }
   }
 
+  /**
+   * Accept an organization invite
+   * @param {Request & AuthenticatedRequest} req
+   * @param {Response} res
+   * @returns {Promise<void|Response>}
+   */
   async acceptInvite(req, res) {
     try {
       const { token, name, username, password } = req.body;
-      const userId = req.user?.userId;
+      const authUserId = req.user?.userId;
 
       if (!token) {
-        return res.status(400).json({ error: "Token é obrigatório" });
+        return res.status(400).json({ error: "Token is required" });
       }
 
-      const invite =
-        await this.organizationsRepository.findOrgInviteByToken(token);
+      const invite = await this.organizationsRepository.findOrgInviteByToken(token);
       if (!invite) {
-        return res.status(400).json({ error: "Convite inválido ou expirado" });
+        return res.status(400).json({ error: "Invalid or expired invite" });
       }
 
-      if (userId) {
-        const isMember = await this.organizationsRepository.isMember(
-          invite.org_id,
-          userId
-        );
-        if (isMember) {
-          return res
-            .status(400)
-            .json({ error: "Você já é membro desta organização" });
+      const existingUsers = await UserRepository.findByUsernameOrEmail("", invite.email);
+      let targetUser = existingUsers.find((u) => u.email === invite.email);
+
+      let targetUserId;
+
+      if (!targetUser) {
+        // User doesn't exist, we must create them now
+        if (!name || !username || !password) {
+          return res.status(400).json({
+            error: "Name, username and password are required to accept the invite and create your account",
+          });
         }
 
+        const usernameCheck = await UserRepository.findByUsernameOrEmail(username, "");
+        if (usernameCheck.some((u) => u.username === username)) {
+          return res.status(400).json({ error: "Username is already in use" });
+        }
+
+        const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        const createdUser = await UserRepository.createUser({
+          name,
+          username,
+          email: invite.email,
+          password: hashedPassword,
+          private_profile: false,
+        });
+        
+        targetUserId = createdUser[0].user_id;
+        await UserRepository.verifyUserEmail(targetUserId);
+
+        if (req.file && req.file.buffer) {
+          try {
+            const saveResult = await spacesService.uploadProfileImage(
+              req.file.buffer,
+              req.file.mimetype,
+              targetUserId
+            );
+            if (saveResult.success) {
+              await UserRepository.updateProfileImage(targetUserId, saveResult.key);
+            }
+          } catch (imageError) {
+            console.error("Error uploading image:", imageError);
+          }
+        }
+      } else {
+        // User already exists
+        targetUserId = targetUser.user_id;
+
+        if (authUserId && authUserId !== targetUserId) {
+          return res.status(403).json({ error: "You are logged in with a different account than the invited one." });
+        }
+
+        if (!targetUser.email_verified && password) {
+          // Verify their email if it wasn't, perhaps update their account
+          const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
+          const hashedPassword = await bcrypt.hash(password, saltRounds);
+          await UserRepository.updateUserPassword(targetUserId, hashedPassword);
+          await UserRepository.verifyUserEmail(targetUserId);
+        }
+      }
+
+      await this.organizationsRepository.verifyOrgInvite(invite.invite_id);
+
+      const isMember = await this.organizationsRepository.isMember(invite.org_id, targetUserId);
+      if (!isMember) {
         await this.organizationsRepository.addOrganizationMember(
           invite.org_id,
-          userId,
+          targetUserId,
           invite.role,
           "active",
           invite.invited_by
         );
-
-        await this.organizationsRepository.verifyOrgInvite(invite.invite_id);
-
-        return res.status(200).json({
-          status: "OK",
-          message: "Convite aceito com sucesso",
-          data: {
-            organization: {
-              id: invite.org_id,
-              name: invite.org_name,
-              unique_name: invite.org_unique_name,
-            },
-            role: invite.role,
-          },
-        });
       }
 
-      if (!name || !username || !password) {
-        return res.status(400).json({
-          error:
-            "Nome, usuário e senha são obrigatórios para aceitar o convite",
-        });
-      }
-
-      if (!invite.email) {
-        return res.status(400).json({ error: "Convite sem email associado" });
-      }
-
-      const existingUsers = await UserRepository.findByUsernameOrEmail(
-        username,
-        invite.email
-      );
-
-      if (existingUsers.some((user) => user.email === invite.email)) {
-        return res.status(400).json({
-          error: "Email já cadastrado. Faça login para aceitar o convite.",
-        });
-      }
-
-      if (existingUsers.some((user) => user.username === username)) {
-        return res
-          .status(400)
-          .json({ error: "Nome de usuário já está em uso" });
-      }
-
-      const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-      const createdAt = new Date().toISOString().slice(0, 19).replace("T", " ");
-
-      const newUser = await UserRepository.createUser(
-        name,
-        username,
-        invite.email,
-        hashedPassword,
-        null,
-        createdAt
-      );
-
-      const newUserId = newUser[0].user_id;
-      let profileImageUrl = null;
-
-      if (req.file && req.file.buffer) {
-        try {
-          const saveResult = await spacesService.uploadProfileImage(
-            req.file.buffer,
-            req.file.mimetype,
-            newUserId
-          );
-
-          if (saveResult.success) {
-            profileImageUrl = saveResult.key;
-
-            const updateResult = await UserRepository.updateProfileImage(
-              newUserId,
-              profileImageUrl
-            );
-
-            if (!(updateResult && updateResult.length > 0)) {
-              console.error(
-                `Falha ao atualizar avatar URL para usuário ${newUserId}`
-              );
-            }
-          } else {
-            console.error("Failed to upload to Digital Ocean Spaces");
-          }
-        } catch (imageError) {
-          console.error("Erro ao fazer upload da imagem:", imageError);
-        }
-      }
-
-      await UserRepository.verifyUserEmail(newUserId);
-
-      await this.organizationsRepository.addOrganizationMember(
-        invite.org_id,
-        newUserId,
-        invite.role,
-        "active",
-        invite.invited_by
-      );
-
-      await this.organizationsRepository.verifyOrgInvite(invite.invite_id);
-
-      await NotificationsRepository.createNotification({
-        userId: invite.invited_by,
-        actorId: newUserId,
-        type: "organization_invite",
-        entityType: "organization",
-        entityId: invite.org_id,
-        title: `${name} aceitou seu convite para a organização.`,
-        content: {
-          action: "invite_accepted",
-          invite_id: invite.invite_id,
-          new_member_id: newUserId,
-          organization_id: invite.org_id,
-        },
-      });
-
-      const mailResult = await welcome_message(name, invite.email, username);
-      if (!mailResult.success) {
-        console.warn("Welcome email not sent:", mailResult.error);
-      }
-
-      return res.status(201).json({
+      res.status(200).json({
         status: "OK",
-        message: "Conta criada e convite aceito com sucesso",
+        message: "Account activated and invite accepted successfully!",
         data: {
-          user_id: newUserId,
-          avatar_url: profileImageUrl,
           organization: {
             id: invite.org_id,
             name: invite.org_name,
-            unique_name: invite.org_unique_name,
           },
           role: invite.role,
         },
       });
     } catch (error) {
-      console.error("Erro ao aceitar convite:", error);
-      res.status(500).json({ error: "Erro ao aceitar convite" });
+      console.error("Error accepting invite:", error);
+      res.status(500).json({ error: "Error accepting invite" });
     }
   }
-
+  /**
+   * Get all invites of the organization
+   * @param {Request & AuthenticatedRequest} req
+   * @param {Response} res
+   * @returns {Promise<void|Response>}
+   */
   async getPendingInvites(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -503,10 +407,10 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
       const currentOrg = await this._getUserOrganization(userId);
       if (!currentOrg) {
-        return res.status(404).json({ error: "Organização não encontrada" });
+        return res.status(404).json({ error: "Organization not found" });
       }
 
-      const invites = await this.organizationsRepository.getPendingOrgInvites(
+      const invites = await this.organizationsRepository.getAllOrgInvites(
         currentOrg.id
       );
 
@@ -515,11 +419,17 @@ class OrganizationMembersController extends OrganizationsBaseController {
         data: invites,
       });
     } catch (error) {
-      console.error("Erro ao buscar convites:", error);
-      res.status(500).json({ error: "Erro ao buscar convites pendentes" });
+      console.error("Error fetching invites:", error);
+      res.status(500).json({ error: "Error fetching invites" });
     }
   }
 
+  /**
+   * Cancel a pending invite
+   * @param {Request & AuthenticatedRequest} req
+   * @param {Response} res
+   * @returns {Promise<void|Response>}
+   */
   async cancelInvite(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -530,7 +440,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const invite =
         await this.organizationsRepository.findOrgInviteByToken(invite_id);
       if (!invite) {
-        return res.status(404).json({ error: "Convite não encontrado" });
+        return res.status(404).json({ error: "Invite not found" });
       }
 
       const isMember = await this.organizationsRepository.isMember(
@@ -540,18 +450,18 @@ class OrganizationMembersController extends OrganizationsBaseController {
       if (!isMember) {
         return res
           .status(403)
-          .json({ error: "Sem permissão para cancelar este convite" });
+          .json({ error: "No permission to cancel this invite" });
       }
 
       await this.organizationsRepository.deleteOrgInvite(invite_id);
 
       res.status(200).json({
         status: "OK",
-        message: "Convite cancelado com sucesso",
+        message: "Invite canceled successfully",
       });
     } catch (error) {
-      console.error("Erro ao cancelar convite:", error);
-      res.status(500).json({ error: "Erro ao cancelar convite" });
+      console.error("Error canceling invite:", error);
+      res.status(500).json({ error: "Error canceling invite" });
     }
   }
 }

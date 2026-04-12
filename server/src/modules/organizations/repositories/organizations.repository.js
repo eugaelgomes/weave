@@ -375,6 +375,15 @@ class OrganizationsRepository {
     return results[0];
   }
 
+  async getAllOrgInvites(org_id) {
+    const query = `
+      SELECT * FROM invite_org_members
+      WHERE org_id = $1 
+      ORDER BY created_at DESC;
+    `;
+    return await executeQuery(query, [org_id]);
+  }
+
   async getPendingOrgInvites(org_id) {
     const query = `
       SELECT * FROM invite_org_members

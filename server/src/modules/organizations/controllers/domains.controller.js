@@ -1,3 +1,9 @@
+/**
+ * @typedef {import('express').Request} Request
+ * @typedef {import('express').Response} Response
+ * @typedef {import('./base-controller').AuthenticatedRequest} AuthenticatedRequest
+ */
+
 const crypto = require("crypto");
 
 const OrganizationsBaseController = require("./base-controller");
@@ -60,9 +66,9 @@ class OrganizationDomainsController extends OrganizationsBaseController {
 
   /**
    * List all domains for authenticated user's organization.
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   * @returns {Object} JSON response with domains array or error
+   * @param {Request & AuthenticatedRequest} req - Express request object
+   * @param {Response} res - Express response object
+   * @returns {Promise<void|Response>} JSON response with domains array or error
    */
   async listDomains(req, res) {
     try {
@@ -73,7 +79,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const domains = await this.domainRepository.listByOrganization(
@@ -96,9 +102,9 @@ class OrganizationDomainsController extends OrganizationsBaseController {
   /**
    * Register a new domain for the organization.
    * Validates domain name uniqueness and generates verification token.
-   * @param {Object} req - Express request object with domain_name in body
-   * @param {Object} res - Express response object
-   * @returns {Object} JSON response with created domain data or validation error
+   * @param {Request & AuthenticatedRequest} req - Express request object with domain_name in body
+   * @param {Response} res - Express response object
+   * @returns {Promise<void|Response>} JSON response with created domain data or validation error
    */
   async createDomain(req, res) {
     try {
@@ -109,7 +115,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const { domain_name: domainName } = req.body;
@@ -174,9 +180,9 @@ class OrganizationDomainsController extends OrganizationsBaseController {
   /**
    * Verify domain ownership via DNS TXT record.
    * Checks if verification token exists in domain's DNS records.
-   * @param {Object} req - Express request object with domainId in params
-   * @param {Object} res - Express response object
-   * @returns {Object} JSON response with verification result and DNS check details
+   * @param {Request & AuthenticatedRequest} req - Express request object with domainId in params
+   * @param {Response} res - Express response object
+   * @returns {Promise<void|Response>} JSON response with verification result and DNS check details
    */
   async verifyDomain(req, res) {
     try {
@@ -187,7 +193,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const { domainId } = req.params;
@@ -196,7 +202,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!domain || domain.organization_id !== organization.id) {
         return res
           .status(404)
-          .json({ success: false, error: "Domínio não encontrado" });
+          .json({ success: false, error: "Domain not found" });
       }
 
       const { isVerified, checkedHosts } = await verifyDomainToken(
@@ -251,9 +257,9 @@ class OrganizationDomainsController extends OrganizationsBaseController {
   /**
    * Delete a domain from the organization.
    * Prevents deletion if SSO is enabled for the domain.
-   * @param {Object} req - Express request object with domainId in params
-   * @param {Object} res - Express response object
-   * @returns {Object} JSON response with deletion status and updated organization domains
+   * @param {Request & AuthenticatedRequest} req - Express request object with domainId in params
+   * @param {Response} res - Express response object
+   * @returns {Promise<void|Response>} JSON response with deletion status and updated organization domains
    */
   async deleteDomain(req, res) {
     try {
@@ -264,7 +270,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const { domainId } = req.params;
@@ -273,7 +279,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!domain || domain.organization_id !== organization.id) {
         return res
           .status(404)
-          .json({ success: false, error: "Domínio não encontrado" });
+          .json({ success: false, error: "Domain not found" });
       }
 
       if (domain.sso_enabled) {
@@ -304,9 +310,9 @@ class OrganizationDomainsController extends OrganizationsBaseController {
   /**
    * Update SSO (SAML) configuration for a verified domain.
    * Enables or disables SAML-based authentication for domain users.
-   * @param {Object} req - Express request object with domainId in params and SSO config in body
-   * @param {Object} res - Express response object
-   * @returns {Object} JSON response with updated domain configuration or validation error
+   * @param {Request & AuthenticatedRequest} req - Express request object with domainId in params and SSO config in body
+   * @param {Response} res - Express response object
+   * @returns {Promise<void|Response>} JSON response with updated domain configuration or validation error
    */
   async updateSsoSettings(req, res) {
     try {
@@ -317,7 +323,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const { domainId } = req.params;
@@ -326,7 +332,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!domain || domain.organization_id !== organization.id) {
         return res
           .status(404)
-          .json({ success: false, error: "Domínio não encontrado" });
+          .json({ success: false, error: "Domain not found" });
       }
 
       if (domain.status !== "VERIFIED") {

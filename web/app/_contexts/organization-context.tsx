@@ -38,6 +38,7 @@ import {
   type UpdateOrganizationAreaInput,
   type AddAreaMemberInput,
   type UpdateAreaMemberInput,
+  type OrganizationMembersData,
 } from "../_services/organization";
 
 export type {
@@ -46,6 +47,7 @@ export type {
   OrganizationMember,
   OrganizationAreaMemberRole,
   OrganizationAreaProperties,
+  OrganizationMembersData,
 } from "../_services/organization";
 
 export interface OrganizationStats {
@@ -61,6 +63,7 @@ export interface OrganizationContextType {
   // Estado
   organization: Organization | null;
   members: OrganizationMember[];
+  memberStats: Omit<OrganizationMembersData, "list_org_members"> | null;
   invites: OrganizationInvite[];
   areas: OrganizationArea[];
   areaMembers: Record<string, OrganizationAreaMember[]>;
@@ -134,6 +137,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   // Estados
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [members, setMembers] = useState<OrganizationMember[]>([]);
+  const [memberStats, setMemberStats] = useState<Omit<OrganizationMembersData, "list_org_members"> | null>(null);
   const [invites, setInvites] = useState<OrganizationInvite[]>([]);
   const [areas, setAreas] = useState<OrganizationArea[]>([]);
   const [areaMembers, setAreaMembers] = useState<Record<string, OrganizationAreaMember[]>>({});
@@ -166,11 +170,23 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
           fetchMembersService(),
           fetchInvitesService(),
         ]);
-        setMembers(membersData);
+        if (membersData) {
+          setMembers(membersData.list_org_members);
+          setMemberStats({
+            count: membersData.count,
+            count_by_role: membersData.count_by_role,
+            count_by_status: membersData.count_by_status,
+            count_by_suspended: membersData.count_by_suspended,
+          });
+        } else {
+          setMembers([]);
+          setMemberStats(null);
+        }
         setInvites(invitesData);
         setAreasFetched(false);
       } else {
         setMembers([]);
+        setMemberStats(null);
         setInvites([]);
         setAreas([]);
         setAreaMembers({});
@@ -712,6 +728,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const value: OrganizationContextType = {
     organization,
     members,
+    memberStats,
     invites,
     areas,
     areaMembers,
