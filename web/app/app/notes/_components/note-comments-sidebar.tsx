@@ -84,24 +84,32 @@ export function NoteCommentsSidebarTrigger({
   const { comments } = useNoteComments();
   const count = comments.length;
 
+  const label = "Ver ou criar comentários";
+
   return (
     <button
       type="button"
       onClick={onToggle}
       aria-expanded={open}
-      title={open ? "Fechar comentários" : "Abrir comentários"}
-      className={`relative flex h-8 w-8 items-center justify-center rounded-md transition-all hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+      title={open ? "Fechar comentários" : label}
+      aria-label={open ? "Fechar comentários" : label}
+      className={`relative flex w-full min-w-0 max-w-full items-center gap-2 rounded-md py-1.5 pr-2 pl-1.5 text-left transition-all hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
         open
           ? "dark:text-brand-primary-700 text-yellow-600"
           : "text-neutral-500 dark:text-neutral-400"
       }`}
     >
-      <MessageCircle size={15} />
-      {count > 0 && (
-        <span className="dark:bg-brand-primary-700 absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-yellow-600 px-0.5 text-[9px] font-bold text-white">
-          {count > 99 ? "99+" : count}
-        </span>
-      )}
+      <span className="relative inline-flex h-8 w-8 flex-shrink-0 items-center justify-center">
+        <MessageCircle size={15} />
+        {count > 0 && (
+          <span className="dark:bg-brand-primary-700 absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-yellow-600 px-0.5 text-[9px] font-bold text-white">
+            {count > 99 ? "99+" : count}
+          </span>
+        )}
+      </span>
+      <span className="min-w-0 truncate text-[11px] leading-snug font-medium sm:max-w-[15rem] sm:text-xs">
+        {open ? "Fechar comentários" : label}
+      </span>
     </button>
   );
 }
@@ -260,7 +268,7 @@ export function NoteCommentsSidebar({ canComment, onClose }: NoteCommentsSidebar
       >
         <div className="rounded-lg border border-neutral-200 bg-neutral-50/90 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-900/50">
           <div className="flex items-start gap-2.5">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-xs font-semibold text-neutral-600 dark:bg-neutral-700 dark:text-neutral-200">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-xs  text-neutral-600 dark:bg-neutral-700 dark:text-neutral-200">
               {c.user_avatar_url ? (
                 <Image
                   src={getStorageUrl(c.user_avatar_url)}
@@ -426,13 +434,13 @@ export function NoteCommentsSidebar({ canComment, onClose }: NoteCommentsSidebar
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950">
-      <div className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-neutral-200 px-3 py-2.5 dark:border-neutral-800">
+      <div className="flex flex-shrink-0 items-center justify-between gap-2 border rounded-md border-neutral-200 px-3 py-1 dark:border-neutral-800">
         <div className="flex min-w-0 items-center gap-2">
           <MessageCircle
             size={16}
             className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-600"
           />
-          <h2 className="truncate text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+          <h2 className="truncate text-sm  text-neutral-900 dark:text-neutral-100">
             Comentários
           </h2>
         </div>
@@ -542,7 +550,7 @@ export function NoteCommentsSidebar({ canComment, onClose }: NoteCommentsSidebar
               <button
                 type="submit"
                 disabled={submitting || (!draft.trim() && pendingFiles.length === 0)}
-                className="dark:bg-brand-primary-700 inline-flex items-center gap-1 rounded-md bg-yellow-600 px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                className="dark:bg-brand-primary-700 inline-flex items-center gap-1 rounded-md bg-yellow-600 px-2.5 py-1.5 text-xs  text-white disabled:opacity-50"
               >
                 {submitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                 {replyingTo ? "Responder" : "Publicar"}

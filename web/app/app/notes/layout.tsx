@@ -5,23 +5,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../../_contexts/auth-context";
 import { useNotes } from "../../_contexts/notes-context";
-import { NotesShellProvider, useNotesShell } from "../../_contexts/notes-shell-context";
 import { FileText, ChevronRight, LayoutDashboard, Menu, X } from "lucide-react";
 import { NotesHeader } from "../_components/ui/headers/notes-header";
+import { NoteCommentsPanelProvider, useNoteCommentsPanel } from "../../_contexts/note-comments-panel-context";
 
 function NotesLayoutContent({ children }: { children: React.ReactNode }) {
   const { loading: notesLoading, getRecentNotes } = useNotes();
   const pathname = usePathname();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
-  const { leftNavCollapsedForComments, setLeftNavCollapsedForComments } = useNotesShell();
+  const { commentsPanelOpen, setCommentsPanelOpen } = useNoteCommentsPanel();
 
   React.useEffect(() => {
     setIsMobileSidebarOpen(false);
-  }, [pathname]);
-
-  React.useEffect(() => {
-    setLeftNavCollapsedForComments(false);
-  }, [pathname, setLeftNavCollapsedForComments]);
+    setCommentsPanelOpen(false);
+  }, [pathname, setCommentsPanelOpen]);
 
   const recentNotes = getRecentNotes ? getRecentNotes().slice(0, 10) : [];
 
@@ -129,7 +126,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
           {/* SIDEBAR LATERAL — recolhe no desktop quando o painel de comentários está aberto */}
           <div
             className={`hidden w-full flex-shrink-0 overflow-y-auto border-b border-neutral-200 bg-neutral-50 md:border-r md:border-b-0 dark:border-neutral-800 dark:bg-neutral-900/30 ${
-              leftNavCollapsedForComments ? "md:hidden" : "md:block md:w-[180px]"
+              commentsPanelOpen ? "md:hidden" : "md:block md:w-[180px]"
             }`}
           >
             {sidebarContent}
@@ -194,8 +191,8 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <NotesShellProvider>
+    <NoteCommentsPanelProvider>
       <NotesLayoutContent>{children}</NotesLayoutContent>
-    </NotesShellProvider>
+    </NoteCommentsPanelProvider>
   );
 }

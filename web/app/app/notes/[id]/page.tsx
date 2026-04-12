@@ -52,12 +52,12 @@ import {
 } from "@dnd-kit/sortable";
 // CSS transform utility handled manually
 import { useNotes } from "@/app/_contexts/notes-context";
-import { useNotesShell } from "@/app/_contexts/notes-shell-context";
+import { useNoteCommentsPanel } from "@/app/_contexts/note-comments-panel-context";
 import { NoteCommentsProvider } from "@/app/_contexts/note-comments-context";
 import {
   NoteCommentsSidebar,
   NoteCommentsSidebarTrigger,
-} from "@/app/_components/notes/note-comments-sidebar";
+} from "@/app/app/notes/_components/note-comments-sidebar";
 import {
   Note,
   Block,
@@ -708,15 +708,8 @@ const NoteDetail = () => {
 
   // Estados para modais e funcionalidades
   const [showShareModal, setShowShareModal] = useState(false);
-  const [commentsSidebarOpen, setCommentsSidebarOpen] = useState(false);
-  const { setLeftNavCollapsedForComments } = useNotesShell();
-
-  React.useEffect(() => {
-    setLeftNavCollapsedForComments(commentsSidebarOpen);
-    return () => {
-      setLeftNavCollapsedForComments(false);
-    };
-  }, [commentsSidebarOpen, setLeftNavCollapsedForComments]);
+  const { commentsPanelOpen: commentsSidebarOpen, setCommentsPanelOpen: setCommentsSidebarOpen } =
+    useNoteCommentsPanel();
 
   const [showTagModal, setShowTagModal] = useState(false);
   const [showBlockTypeSelector, setShowBlockTypeSelector] = useState(false);
@@ -1435,6 +1428,98 @@ const NoteDetail = () => {
   const canUseNoteComments =
     !note.access || Boolean(note.access.canEdit || note.access.isCollaborator);
 
+  const hasNoteHero = Boolean(note.properties?.banner?.path || note.properties?.color);
+
+  const IconPropsToolbar = () => (
+    <div className="group/props mb-3 flex items-center gap-3">
+      {note.properties?.icon?.path ? (
+        <div className="group relative">
+          <div className="h-14 w-14 overflow-hidden rounded-md border-2 border-white bg-white shadow-md dark:border-neutral-900 dark:bg-neutral-900">
+            <Image
+              src={getStorageUrl(note.properties.icon.path)}
+              alt="Ícone"
+              width={56}
+              height={56}
+              className="h-full w-full object-cover"
+            />
+          </div>
+          {note.access?.canEdit && (
+            <div className="absolute -top-1 -right-1 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+              <button
+                onClick={() => iconInputRef.current?.click()}
+                className="rounded-full bg-neutral-800/70 p-1 text-white backdrop-blur-sm hover:bg-neutral-800"
+                title="Trocar ícone"
+              >
+                <ImagePlus size={10} />
+              </button>
+              <button
+                onClick={handleRemoveIcon}
+                className="rounded-full bg-neutral-800/70 p-1 text-white backdrop-blur-sm hover:bg-red-500"
+                title="Remover ícone"
+              >
+                <X size={10} />
+              </button>
+            </div>
+          )}
+        </div>
+      ) : null}
+      {note.access?.canEdit && (
+        <div
+          className={`flex items-center gap-1 transition-opacity ${
+            note.properties?.icon?.path && note.properties?.banner?.path
+              ? "opacity-0 group-hover/props:opacity-100"
+              : ""
+          }`}
+        >
+          <button
+            onClick={() => filesInputRef.current?.click()}
+            className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+            title="Adicionar arquivos"
+          >
+            <FileText size={12} />
+            Arquivos
+          </button>
+          {!note.properties?.icon?.path && (
+            <button
+              onClick={() => iconInputRef.current?.click()}
+              className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+              title="Adicionar ícone"
+            >
+              <ImagePlus size={12} />
+              Ícone
+            </button>
+          )}
+          {!note.properties?.banner?.path && (
+            <button
+              onClick={() => bannerInputRef.current?.click()}
+              className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+              title="Adicionar banner"
+            >
+              <ImagePlus size={12} />
+              Banner
+            </button>
+          )}
+          <button
+            onClick={() => setShowTagModal(true)}
+            className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+            title="Gerenciar tags"
+          >
+            <Tag size={12} />
+            Tags
+          </button>
+          <button
+            onClick={() => setShowRelationModal(true)}
+            className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+            title="Gerenciar relações"
+          >
+            <Link size={12} />
+            Relações
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <NoteCommentsProvider noteId={note.id}>
       <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-neutral-50 shadow-sm dark:bg-neutral-950">
@@ -1450,39 +1535,25 @@ const NoteDetail = () => {
             </button>
 
             <div className="flex items-center gap-2">
-              {/* Status de salvamento */}
-
-              <div className="flex items-center gap-3">
-                {isSaving ? (
-                  /* Indicador de Salvamento Ativo */
-                  <div className="bg-brand-primary-700/10 flex animate-pulse items-center gap-1.5 rounded-full border border-yellow-500/20 px-3 py-1">
-                    <Loader2
-                      size={13}
-                      className="dark:text-brand-primary-700 animate-spin text-yellow-600"
-                    />
-                    <span className="dark:text-brand-primary-700 text-[11px] font-semibold tracking-wider text-yellow-700 uppercase">
-                      Sincronizando
-                    </span>
-                  </div>
-                ) : (
-                  /* Data da última atualização - Só aparece quando não está salvando */
-                  note.updated_at && (
-                    <div className="flex items-center gap-1.5 text-xs text-neutral-500 transition-opacity duration-300 ease-in-out">
-                      <Clock size={12} className="text-neutral-400" />
-                      <span className="font-medium">Editado em {formatDate(note.updated_at)}</span>
+              {isSaving && (
+                <>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-brand-primary-700/10 flex animate-pulse items-center gap-1.5 rounded-full border border-yellow-500/20 px-3 py-1">
+                      <Loader2
+                        size={13}
+                        className="dark:text-brand-primary-700 animate-spin text-yellow-600"
+                      />
+                      <span className="dark:text-brand-primary-700 text-[11px] font-semibold tracking-wider text-yellow-700 uppercase">
+                        Sincronizando
+                      </span>
                     </div>
-                  )
-                )}
-              </div>
-
-              <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
+                  </div>
+                  <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
+                </>
+              )}
 
               {/* Ações */}
               <div className="flex items-center gap-0.5">
-                <NoteCommentsSidebarTrigger
-                  open={commentsSidebarOpen}
-                  onToggle={() => setCommentsSidebarOpen((v) => !v)}
-                />
                 {note.access?.canShare && (
                   <button
                     onClick={() => setShowShareModal(true)}
@@ -1599,9 +1670,9 @@ const NoteDetail = () => {
           </div>
         </div>
 
-        {/* =================== CONTEÚDO PRINCIPAL + SIDEBAR COMENTÁRIOS =================== */}
-        <div className="flex min-h-0 flex-1 flex-row overflow-hidden">
-          <div className="no-scrollbar flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+        {/* =================== CONTEÚDO: banner cheio; abaixo = corpo | comentários =================== */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden">
+          <div className="no-scrollbar flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-visible">
             {/* Hidden file inputs */}
             <input
               ref={iconInputRef}
@@ -1625,199 +1696,150 @@ const NoteDetail = () => {
               onChange={handleFilesUpload}
             />
 
-            {/* Banner */}
+            {/* Banner em largura total; ícone “encosta” no hero com absolute (evita corte por overflow) */}
             {note.properties?.banner?.path ? (
-              <div className="group relative h-52 w-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
-                <Image
-                  src={getStorageUrl(note.properties.banner.path)}
-                  alt="Banner"
-                  fill
-                  sizes="100vw"
-                  className="object-cover"
-                />
-                {note.access?.canEdit && (
-                  <div className="absolute right-3 bottom-3 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button
-                      onClick={() => bannerInputRef.current?.click()}
-                      className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-black/70"
-                    >
-                      Trocar
-                    </button>
-                    <button
-                      onClick={handleRemoveBanner}
-                      className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-red-500/80"
-                    >
-                      Remover
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : note.properties?.color ? (
-              <div className="h-28 w-full" style={{ backgroundColor: note.properties.color }} />
-            ) : null}
-
-            <div className="w-full px-4 py-6 sm:px-6">
-              {/* Ícone e ações de propriedades */}
-              <div
-                className={`group/props mb-3 flex items-center gap-3 ${
-                  note.properties?.banner?.path || note.properties?.color
-                    ? "relative z-10 -mt-12"
-                    : ""
-                }`}
-              >
-                {note.properties?.icon?.path ? (
-                  <div className="group relative">
-                    <div className="h-14 w-14 overflow-hidden rounded-md border-2 border-white bg-white shadow-md dark:border-neutral-900 dark:bg-neutral-900">
-                      <Image
-                        src={getStorageUrl(note.properties.icon.path)}
-                        alt="Ícone"
-                        width={56}
-                        height={56}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
+              <div className="w-full shrink-0 overflow-visible pb-6">
+                <div className="relative w-full">
+                  <div className="group relative z-0 h-52 w-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+                    <Image
+                      src={getStorageUrl(note.properties.banner.path)}
+                      alt="Banner"
+                      fill
+                      sizes="100vw"
+                      className="object-cover"
+                    />
                     {note.access?.canEdit && (
-                      <div className="absolute -top-1 -right-1 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="absolute right-3 bottom-3 z-20 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
                         <button
-                          onClick={() => iconInputRef.current?.click()}
-                          className="rounded-full bg-neutral-800/70 p-1 text-white backdrop-blur-sm hover:bg-neutral-800"
-                          title="Trocar ícone"
+                          onClick={() => bannerInputRef.current?.click()}
+                          className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-black/70"
                         >
-                          <ImagePlus size={10} />
+                          Trocar
                         </button>
                         <button
-                          onClick={handleRemoveIcon}
-                          className="rounded-full bg-neutral-800/70 p-1 text-white backdrop-blur-sm hover:bg-red-500"
-                          title="Remover ícone"
+                          onClick={handleRemoveBanner}
+                          className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-red-500/80"
                         >
-                          <X size={10} />
+                          Remover
                         </button>
                       </div>
                     )}
                   </div>
-                ) : null}
-                {note.access?.canEdit && (
-                  <div
-                    className={`flex items-center gap-1 transition-opacity ${
-                      note.properties?.icon?.path && note.properties?.banner?.path
-                        ? "opacity-0 group-hover/props:opacity-100"
-                        : ""
-                    }`}
-                  >
-                    <button
-                      onClick={() => filesInputRef.current?.click()}
-                      className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                      title="Adicionar arquivos"
-                    >
-                      <FileText size={12} />
-                      Arquivos
-                    </button>
-                    {!note.properties?.icon?.path && (
-                      <button
-                        onClick={() => iconInputRef.current?.click()}
-                        className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                        title="Adicionar ícone"
-                      >
-                        <ImagePlus size={12} />
-                        Ícone
-                      </button>
-                    )}
-                    {!note.properties?.banner?.path && (
-                      <button
-                        onClick={() => bannerInputRef.current?.click()}
-                        className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                        title="Adicionar banner"
-                      >
-                        <ImagePlus size={12} />
-                        Banner
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setShowTagModal(true)}
-                      className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                      title="Gerenciar tags"
-                    >
-                      <Tag size={12} />
-                      Tags
-                    </button>
-                    <button
-                      onClick={() => setShowRelationModal(true)}
-                      className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                      title="Gerenciar relações"
-                    >
-                      <Link size={12} />
-                      Relações
-                    </button>
+                  {/* top-full = base do banner (só h-52); -translate-y-7 = metade do ícone h-14 sobre o banner */}
+                  <div className="pointer-events-none absolute inset-x-0 top-full z-30 flex -translate-y-7 justify-start px-4 sm:px-6">
+                    <div className="pointer-events-auto min-w-0">
+                      <IconPropsToolbar />
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
+            ) : note.properties?.color ? (
+              <div className="w-full shrink-0 overflow-visible pb-12">
+                <div className="relative w-full">
+                  <div
+                    className="relative z-0 h-28 w-full"
+                    style={{ backgroundColor: note.properties.color }}
+                  />
+                  <div className="pointer-events-none absolute inset-x-0 top-full z-30 flex -translate-y-7 justify-start px-4 sm:px-6">
+                    <div className="pointer-events-auto min-w-0">
+                      <IconPropsToolbar />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
 
-              {/* Título */}
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                {!hasNoteHero ? (
+                  <div className="shrink-0 px-4 pt-6 sm:px-6">
+                    <IconPropsToolbar />
+                  </div>
+                ) : null}
+
+                <div
+                  className={`no-scrollbar min-h-0 flex-1 overflow-y-auto px-4 pb-6 sm:px-6 ${
+                    hasNoteHero ? "pt-2 sm:pt-4" : ""
+                  }`}
+                >
+              {/* Título + comentários */}
               <div className="mb-4">
-                <textarea
-                  ref={(el) => {
-                    if (el) {
-                      el.style.height = "auto";
-                      el.style.height = `${el.scrollHeight}px`;
-                    }
-                  }}
-                  value={editingTitle}
-                  onChange={(e) => {
-                    setEditingTitle(e.target.value);
-                    const el = e.target;
-                    el.style.height = "auto";
-                    el.style.height = `${el.scrollHeight}px`;
-                  }}
-                  onBlur={async () => {
-                    if (note && editingTitle !== note.title) {
-                      setIsSaving(true);
-                      try {
-                        const updated = await updateNote(note.id, { title: editingTitle });
-                        if (updated) setNote(updated);
-                      } catch (error) {
-                        console.error("Erro ao salvar título:", error);
-                      } finally {
-                        setIsSaving(false);
-                      }
-                    }
-                  }}
-                  placeholder="Título da nota..."
-                  rows={1}
-                  className="w-full resize-none overflow-hidden bg-transparent text-xl font-bold text-neutral-900 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-100 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
-                />
-                <textarea
-                  ref={(el) => {
-                    if (el) {
-                      el.style.height = "auto";
-                      el.style.height = `${el.scrollHeight}px`;
-                    }
-                  }}
-                  value={editingDescription}
-                  onChange={(e) => {
-                    setEditingDescription(e.target.value);
-                    const el = e.target;
-                    el.style.height = "auto";
-                    el.style.height = `${el.scrollHeight}px`;
-                  }}
-                  onBlur={async () => {
-                    if (note && editingDescription !== (note.description || "")) {
-                      setIsSaving(true);
-                      try {
-                        const updated = await updateNote(note.id, {
-                          description: editingDescription,
-                        });
-                        if (updated) setNote(updated);
-                      } catch (error) {
-                        console.error("Erro ao salvar descrição:", error);
-                      } finally {
-                        setIsSaving(false);
-                      }
-                    }
-                  }}
-                  placeholder="Adicionar descrição..."
-                  rows={1}
-                  className="w-full resize-none overflow-hidden bg-transparent text-sm text-neutral-600 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-400 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
-                />
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <textarea
+                      ref={(el) => {
+                        if (el) {
+                          el.style.height = "auto";
+                          el.style.height = `${el.scrollHeight}px`;
+                        }
+                      }}
+                      value={editingTitle}
+                      onChange={(e) => {
+                        setEditingTitle(e.target.value);
+                        const el = e.target;
+                        el.style.height = "auto";
+                        el.style.height = `${el.scrollHeight}px`;
+                      }}
+                      onBlur={async () => {
+                        if (note && editingTitle !== note.title) {
+                          setIsSaving(true);
+                          try {
+                            const updated = await updateNote(note.id, { title: editingTitle });
+                            if (updated) setNote(updated);
+                          } catch (error) {
+                            console.error("Erro ao salvar título:", error);
+                          } finally {
+                            setIsSaving(false);
+                          }
+                        }
+                      }}
+                      placeholder="Título da nota..."
+                      rows={1}
+                      className="w-full resize-none overflow-hidden bg-transparent text-xl font-bold text-neutral-900 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-100 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
+                    />
+                    <textarea
+                      ref={(el) => {
+                        if (el) {
+                          el.style.height = "auto";
+                          el.style.height = `${el.scrollHeight}px`;
+                        }
+                      }}
+                      value={editingDescription}
+                      onChange={(e) => {
+                        setEditingDescription(e.target.value);
+                        const el = e.target;
+                        el.style.height = "auto";
+                        el.style.height = `${el.scrollHeight}px`;
+                      }}
+                      onBlur={async () => {
+                        if (note && editingDescription !== (note.description || "")) {
+                          setIsSaving(true);
+                          try {
+                            const updated = await updateNote(note.id, {
+                              description: editingDescription,
+                            });
+                            if (updated) setNote(updated);
+                          } catch (error) {
+                            console.error("Erro ao salvar descrição:", error);
+                          } finally {
+                            setIsSaving(false);
+                          }
+                        }
+                      }}
+                      placeholder="Adicionar descrição..."
+                      rows={1}
+                      className="w-full resize-none overflow-hidden bg-transparent text-sm text-neutral-600 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-400 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
+                    />
+                  </div>
+                  {canUseNoteComments ? (
+                    <div className="mt-0.5 min-w-0 max-w-[46%] shrink sm:max-w-[min(18rem,48%)]">
+                      <NoteCommentsSidebarTrigger
+                        open={commentsSidebarOpen}
+                        onToggle={() => setCommentsSidebarOpen((v) => !v)}
+                      />
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
               {/* Meta informações */}
@@ -2186,6 +2208,24 @@ const NoteDetail = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Criado / editado — última linha dos metadados editáveis */}
+                {(note.created_at || note.updated_at) && (
+                  <div className="flex items-start gap-1.5 border-t border-neutral-100 pt-3 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+                    <Clock size={12} className="mt-0.5 shrink-0 text-neutral-400" />
+                    <p className="min-w-0 font-medium text-neutral-600 dark:text-neutral-300">
+                      {note.created_at ? (
+                        <span>Criado em {formatDate(note.created_at)}</span>
+                      ) : null}
+                      {note.created_at && note.updated_at ? (
+                        <span className="text-neutral-400 dark:text-neutral-500"> · </span>
+                      ) : null}
+                      {note.updated_at ? (
+                        <span>Editado em {formatDate(note.updated_at)}</span>
+                      ) : null}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* =================== BLOCOS =================== */}
@@ -2292,25 +2332,21 @@ const NoteDetail = () => {
                   </div>
                 </div>
               )}
+                </div>
+              </div>
+
+              {commentsSidebarOpen && canUseNoteComments ? (
+                <aside className="flex w-full shrink-0 flex-col border-t border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950 md:h-full md:w-[380px] md:max-w-[42%] md:flex-shrink-0 md:border-t-0 md:border-l">
+                  <div className="flex h-[min(22rem,52dvh)] w-full min-h-[260px] max-h-[480px] flex-col overflow-hidden md:h-full md:max-h-none md:min-h-0 md:flex-1">
+                    <NoteCommentsSidebar
+                      canComment={canUseNoteComments}
+                      onClose={() => setCommentsSidebarOpen(false)}
+                    />
+                  </div>
+                </aside>
+              ) : null}
             </div>
           </div>
-
-          {commentsSidebarOpen && (
-            <>
-              <button
-                type="button"
-                className="fixed inset-0 z-[44] bg-black/40 md:hidden"
-                aria-label="Fechar painel de comentários"
-                onClick={() => setCommentsSidebarOpen(false)}
-              />
-              <aside className="fixed inset-y-0 right-0 z-[45] flex h-full min-h-0 w-full max-w-[420px] flex-col border-l border-neutral-200 bg-white shadow-2xl md:static md:z-0 md:max-w-[380px] md:flex-shrink-0 md:self-stretch md:shadow-none dark:border-neutral-800 dark:bg-neutral-950">
-                <NoteCommentsSidebar
-                  canComment={canUseNoteComments}
-                  onClose={() => setCommentsSidebarOpen(false)}
-                />
-              </aside>
-            </>
-          )}
         </div>
 
         {/* =================== MODAL DE COMPARTILHAMENTO =================== */}
