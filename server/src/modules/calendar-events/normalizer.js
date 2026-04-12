@@ -77,21 +77,15 @@ const normalizeCreatePayload = (body, creatorId) => {
   const location =
     typeof body?.location === "string" ? body.location.trim() : null;
 
-  const organizationId =
-    body?.organization_id || body?.organizationId || null;
+  const organizationId = body?.organization_id || body?.organizationId || null;
   const noteId = body?.note_id || body?.noteId || null;
   const projectId = body?.project_id || body?.projectId || null;
 
   const startTime = parseDate(body?.start_time || body?.startTime);
   const endTime = parseDate(body?.end_time || body?.endTime);
-  const lastSyncedAt = parseDate(
-    body?.last_synced_at || body?.lastSyncedAt
-  );
+  const lastSyncedAt = parseDate(body?.last_synced_at || body?.lastSyncedAt);
 
-  const isAllDay = extractBoolean(
-    body?.is_all_day ?? body?.isAllDay,
-    false
-  );
+  const isAllDay = extractBoolean(body?.is_all_day ?? body?.isAllDay, false);
   const isFromNoteRaw = extractBoolean(
     body?.is_from_note ?? body?.isFromNote,
     !!noteId
@@ -101,9 +95,7 @@ const normalizeCreatePayload = (body, creatorId) => {
     !!projectId
   );
 
-  const syncStatus = parseSyncStatus(
-    body?.sync_status || body?.syncStatus
-  );
+  const syncStatus = parseSyncStatus(body?.sync_status || body?.syncStatus);
   const syncWithGoogle = extractBoolean(
     body?.sync_with_google ?? body?.syncWithGoogle,
     false
@@ -112,9 +104,7 @@ const normalizeCreatePayload = (body, creatorId) => {
     body?.create_google_meet ?? body?.createGoogleMeet,
     false
   );
-  const attendees = normalizeAttendees(
-    body?.attendees || body?.guests || []
-  );
+  const attendees = normalizeAttendees(body?.attendees || body?.guests || []);
 
   return {
     attendees,
@@ -315,18 +305,11 @@ const normalizeUpdateFields = (body) => {
   }
 
   if (body?.sync_status !== undefined || body?.syncStatus !== undefined) {
-    fields.sync_status = parseSyncStatus(
-      body?.sync_status || body?.syncStatus
-    );
+    fields.sync_status = parseSyncStatus(body?.sync_status || body?.syncStatus);
   }
 
-  if (
-    body?.last_synced_at !== undefined ||
-    body?.lastSyncedAt !== undefined
-  ) {
-    const parsed = parseDate(
-      body?.last_synced_at || body?.lastSyncedAt
-    );
+  if (body?.last_synced_at !== undefined || body?.lastSyncedAt !== undefined) {
+    const parsed = parseDate(body?.last_synced_at || body?.lastSyncedAt);
     fields.last_synced_at = parsed;
   }
 

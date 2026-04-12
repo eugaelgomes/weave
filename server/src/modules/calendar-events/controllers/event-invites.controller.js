@@ -21,7 +21,9 @@ class EventInvitesController {
       });
 
       if (!event) {
-        return res.status(404).json({ error: "Evento não encontrado ou acesso restrito" });
+        return res
+          .status(404)
+          .json({ error: "Evento não encontrado ou acesso restrito" });
       }
 
       this._validateInvitePayload(req.body);
@@ -37,8 +39,11 @@ class EventInvitesController {
 
       return res.status(201).json(newInvite);
     } catch (error) {
-      if (error.code === "23505") { // unique violation
-        return res.status(409).json({ error: "Este email já foi convidado para o evento." });
+      if (error.code === "23505") {
+        // unique violation
+        return res
+          .status(409)
+          .json({ error: "Este email já foi convidado para o evento." });
       }
       if (error.message.includes("E-mail é obrigatório")) {
         return res.status(400).json({ error: error.message });
@@ -88,7 +93,9 @@ class EventInvitesController {
       // Check if invite exists for this event
       const invite = await eventInvitesRepository.getInviteById(inviteId);
       if (!invite || invite.event_id !== eventId) {
-        return res.status(404).json({ error: "Convite não encontrado no evento" });
+        return res
+          .status(404)
+          .json({ error: "Convite não encontrado no evento" });
       }
 
       const updatedInvite = await eventInvitesRepository.updateInvite({
@@ -120,7 +127,9 @@ class EventInvitesController {
 
       const invite = await eventInvitesRepository.getInviteById(inviteId);
       if (!invite || invite.event_id !== eventId) {
-        return res.status(404).json({ error: "Convite não encontrado no evento" });
+        return res
+          .status(404)
+          .json({ error: "Convite não encontrado no evento" });
       }
 
       await eventInvitesRepository.deleteInvite(inviteId);

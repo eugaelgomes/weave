@@ -16,6 +16,10 @@ class SpacesService {
       BANNERS: "banners",
       FILES: "files",
     },
+    NOTES_COMMENTS_FILES: {
+      ROOT: "notes-comments-files",
+      FILES: "files",
+    },
     PROJECTS: {
       ROOT: "projects",
       ICONS: "icons",
@@ -320,6 +324,35 @@ class SpacesService {
       userFolder,
       noteFolder,
       NOTES.FILES
+    );
+    return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
+  }
+
+  /**
+   * Anexos de comentários em notas.
+   * Estrutura: notes-comments-files/{userId}/{noteId}/files/{arquivo}
+   */
+  async uploadNoteCommentFile(
+    fileBuffer,
+    mimeType,
+    noteId,
+    userId,
+    originalName = null
+  ) {
+    const { NOTES_COMMENTS_FILES } = SpacesService.FOLDER_PATHS;
+    const ext = this.getFileExtensionFromMimeType(mimeType);
+    const safeOriginalName = originalName
+      ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_")
+      : `file${ext}`;
+
+    const fileName = `${uuidv4()}_${safeOriginalName}`;
+    const userFolder = `userId_${userId}`;
+    const noteFolder = `noteId_${noteId}`;
+    const folderPath = this.buildKey(
+      NOTES_COMMENTS_FILES.ROOT,
+      userFolder,
+      noteFolder,
+      NOTES_COMMENTS_FILES.FILES
     );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }

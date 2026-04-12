@@ -3,7 +3,7 @@ const { executeQuery, rowCount } = require("@/database/connection");
 class TaskPrioritiesRepository {
   /**
    * Cria uma nova prioridade de tarefas (Task Priority).
-   * 
+   *
    * @param {Object} params
    * @param {string|null} [params.projectId=null]
    * @param {string|null} [params.orgId=null]
@@ -39,7 +39,7 @@ class TaskPrioritiesRepository {
 
   /**
    * Busca as prioridades (Task Priorities) por contexto de projeto ou organização.
-   * 
+   *
    * @param {Object} params
    * @param {string|null} [params.projectId=null]
    * @param {string|null} [params.orgId=null]
@@ -60,7 +60,7 @@ class TaskPrioritiesRepository {
 
   /**
    * Atualiza os dados de uma prioridade existente.
-   * 
+   *
    * @param {string} priorityId
    * @param {Object} params
    * @param {string|null} [params.projectId=null]
@@ -71,7 +71,10 @@ class TaskPrioritiesRepository {
    * @param {number} [params.updates.level]
    * @returns {Promise<any>}
    */
-  async updatePriority(priorityId, { projectId = null, orgId = null, updates }) {
+  async updatePriority(
+    priorityId,
+    { projectId = null, orgId = null, updates }
+  ) {
     const { name, color, level } = updates;
     const query = `
       UPDATE task_priorities
@@ -98,7 +101,7 @@ class TaskPrioritiesRepository {
     return result[0];
   }
 
-    /**
+  /**
    * Remove de forma lógica (soft delete) uma prioridade de tarefas.
    *
    * @param {string} priorityId
@@ -108,7 +111,10 @@ class TaskPrioritiesRepository {
    * @param {string} params.deletedBy User ID responsável pela deleção
    * @returns {Promise<any>}
    */
-  async deletePriority(priorityId, { projectId = null, orgId = null, deletedBy }) {
+  async deletePriority(
+    priorityId,
+    { projectId = null, orgId = null, deletedBy }
+  ) {
     const query = `
       UPDATE task_priorities
       SET deleted = true, deleted_at = now(), deleted_by = $1

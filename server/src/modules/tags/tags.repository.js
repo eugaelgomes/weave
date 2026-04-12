@@ -3,7 +3,7 @@ const { executeQuery, rowCount } = require("@/database/connection");
 class TagsRepository {
   /**
    * Cria uma nova tag associada a um projeto ou organização.
-   * 
+   *
    * @param {Object} params
    * @param {string|null} [params.projectId=null] ID do projeto
    * @param {string|null} [params.orgId=null] ID da organização
@@ -30,7 +30,7 @@ class TagsRepository {
 
   /**
    * Busca tags de um projeto ou organização.
-   * 
+   *
    * @param {Object} params
    * @param {string|null} [params.projectId=null] ID do projeto
    * @param {string|null} [params.orgId=null] ID da organização
@@ -51,7 +51,7 @@ class TagsRepository {
 
   /**
    * Atualiza uma tag existente.
-   * 
+   *
    * @param {string} tagId ID da tag
    * @param {Object} params
    * @param {string|null} [params.projectId=null] ID do projeto
@@ -88,7 +88,7 @@ class TagsRepository {
 
   /**
    * Exclui (soft delete) uma tag do sistema.
-   * 
+   *
    * @param {string} tagId ID da tag a deletar
    * @param {Object} params
    * @param {string|null} [params.projectId=null] ID do projeto
@@ -107,7 +107,12 @@ class TagsRepository {
         )
       RETURNING *;
     `;
-    const result = await executeQuery(query, [deletedBy, tagId, projectId, orgId]);
+    const result = await executeQuery(query, [
+      deletedBy,
+      tagId,
+      projectId,
+      orgId,
+    ]);
     return result[0];
   }
 }

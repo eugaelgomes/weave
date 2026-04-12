@@ -4,7 +4,10 @@ const { verifyToken } = require("@/middlewares/verify-token");
 const { authLimiter } = require("@/middlewares/request-limiters");
 const toString = require("@/utils/data/stringfy");
 
-const AuthController = require("@/modules/authentication/auth.controller");
+const SigninController = require("@/modules/authentication/controllers/signin.controller");
+const GoogleOauthController = require("@/modules/authentication/controllers/google-oauth.controller");
+const GithubOauthController = require("@/modules/authentication/controllers/github-oauth.controller");
+const LogoutController = require("@/modules/authentication/controllers/logout.controller");
 const { loginValidation } = require("@/utils/data/input-validation");
 
 const router = express.Router();
@@ -14,34 +17,29 @@ router.post(
   authLimiter,
   loginValidation(),
   toString,
-  AuthController.userSignin.bind(AuthController)
+  SigninController.userSignin.bind(SigninController)
 );
 
 router.get(
   "/signin/sso/google",
-  AuthController.googleAuth.bind(AuthController)
+  GoogleOauthController.googleAuth.bind(GoogleOauthController)
 );
 
 router.get(
   "/signin/sso/google/callback",
-  AuthController.googleCallback.bind(AuthController)
+  GoogleOauthController.googleCallback.bind(GoogleOauthController)
 );
 
 router.get(
   "/signin/sso/github",
-  AuthController.githubAuth.bind(AuthController)
+  GithubOauthController.githubAuth.bind(GithubOauthController)
 );
 
 router.get(
   "/signin/sso/github/callback",
-  AuthController.githubCallback.bind(AuthController)
+  GithubOauthController.githubCallback.bind(GithubOauthController)
 );
 
-router.post("/logout", verifyToken, AuthController.logout.bind(AuthController));
-
-//router.post(
-//  "/refresh",
-//  AuthController.refreshToken.bind(AuthController)
-//);
+router.post("/logout", verifyToken, LogoutController.logout.bind(LogoutController));
 
 module.exports = router;

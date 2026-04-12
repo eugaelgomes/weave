@@ -1,5 +1,8 @@
 const express = require("express");
-const userController = require("@/modules/users/users.controller");
+const CreateUsersController = require("@/modules/users/controllers/create-users.controller");
+const DeleteUsersController = require("@/modules/users/controllers/delete-users.controller");
+const SearchUsersController = require("@/modules/users/controllers/search-users.controllers");
+const UserDataController = require("@/modules/users/controllers/user-data.controller");
 const {
   structuralLimiter,
   standardTrafficLimiter,
@@ -18,20 +21,20 @@ router.post(
   upload.single("profileImage"),
   validateCompressedImageSize,
   inputValidation(),
-  userController.createUser.bind(userController)
+  CreateUsersController.createUser.bind(CreateUsersController)
 );
 
 router.post(
   "/activate-account",
   standardTrafficLimiter,
-  userController.activateAccount.bind(userController)
+  CreateUsersController.activateAccount.bind(CreateUsersController)
 );
 
 router.get(
   "/me",
   verifyToken,
   highTrafficLimiter,
-  userController.getProfile.bind(userController)
+  UserDataController.getProfile.bind(UserDataController)
 );
 
 router.put(
@@ -40,34 +43,34 @@ router.put(
   standardTrafficLimiter,
   upload.single("profilePicture"),
   validateCompressedImageSize,
-  userController.updateProfile.bind(userController)
+  UserDataController.updateProfile.bind(UserDataController)
 );
 
 router.get("/search", verifyToken, highTrafficLimiter, (req, res, next) => {
-  userController.searchUsers(req, res, next);
+  SearchUsersController.searchUsers(req, res, next);
 });
 
 router.get(
   "/my-profile-image",
   verifyToken,
-  userController.getProfileImage.bind(userController)
+  UserDataController.getProfileImage.bind(UserDataController)
 );
 
 router.get(
   "/my-profile-image-info",
   verifyToken,
-  userController.getProfileImageInfo.bind(userController)
+  UserDataController.getProfileImageInfo.bind(UserDataController)
 );
 
 router.delete(
   "/delete-my-account",
   verifyToken,
-  userController.requestDeleteUser.bind(userController)
+  DeleteUsersController.requestDeleteUser.bind(DeleteUsersController)
 );
 
 router.post(
   "/confirm-delete-account",
-  userController.confirmDeleteUser.bind(userController)
+  DeleteUsersController.confirmDeleteUser.bind(DeleteUsersController)
 );
 
 module.exports = router;

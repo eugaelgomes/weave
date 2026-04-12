@@ -227,10 +227,10 @@ class OrganizationDomainsController extends OrganizationsBaseController {
           verified: true,
         });
 
-        /**
-         * Update member role to super_admin if domain verification is successful and user is not already a super_admin.
-         */
-        await this.organizationsRepository.updateMemberRole(
+      /**
+       * Update member role to super_admin if domain verification is successful and user is not already a super_admin.
+       */
+      await this.organizationsRepository.updateMemberRole(
         organization.id,
         userId,
         "super_admin"

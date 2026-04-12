@@ -117,10 +117,7 @@ class CalendarEventsController {
 
       const organizationId =
         req.query.organization_id || req.query.organizationId;
-      const includeDeleted = extractBoolean(
-        req.query.include_deleted,
-        false
-      );
+      const includeDeleted = extractBoolean(req.query.include_deleted, false);
       const from = parseDate(req.query.from);
       const to = parseDate(req.query.to);
 
@@ -198,11 +195,9 @@ class CalendarEventsController {
       }
 
       if (!Object.keys(fields).length) {
-        return res
-          .status(400)
-          .json({
-            error: "Nenhum campo valido foi informado para atualizacao",
-          });
+        return res.status(400).json({
+          error: "Nenhum campo valido foi informado para atualizacao",
+        });
       }
 
       const current = await this.calendarEventsRepository.getEventById({
@@ -281,11 +276,14 @@ class CalendarEventsController {
       if (!creatorId) return;
 
       const tokens = await webhooksRepository.getGoogleTokens(creatorId);
-      if (!tokens) return res.status(400).json({ error: "Google Calendar não conectado" });
+      if (!tokens)
+        return res.status(400).json({ error: "Google Calendar não conectado" });
 
       const { calendar } = googleService.getCalendarClientWithAuth({
         access_token: tokens.access_token,
-        expiry_date: tokens.expires_at ? new Date(tokens.expires_at).getTime() : null,
+        expiry_date: tokens.expires_at
+          ? new Date(tokens.expires_at).getTime()
+          : null,
         refresh_token: tokens.refresh_token,
       });
 
@@ -302,11 +300,14 @@ class CalendarEventsController {
       if (!creatorId) return;
 
       const tokens = await webhooksRepository.getGoogleTokens(creatorId);
-      if (!tokens) return res.status(400).json({ error: "Google Calendar não conectado" });
+      if (!tokens)
+        return res.status(400).json({ error: "Google Calendar não conectado" });
 
       const { calendar } = googleService.getCalendarClientWithAuth({
         access_token: tokens.access_token,
-        expiry_date: tokens.expires_at ? new Date(tokens.expires_at).getTime() : null,
+        expiry_date: tokens.expires_at
+          ? new Date(tokens.expires_at).getTime()
+          : null,
         refresh_token: tokens.refresh_token,
       });
 
@@ -323,11 +324,14 @@ class CalendarEventsController {
       if (!creatorId) return;
 
       const tokens = await webhooksRepository.getGoogleTokens(creatorId);
-      if (!tokens) return res.status(400).json({ error: "Google Calendar não conectado" });
+      if (!tokens)
+        return res.status(400).json({ error: "Google Calendar não conectado" });
 
       const { calendar } = googleService.getCalendarClientWithAuth({
         access_token: tokens.access_token,
-        expiry_date: tokens.expires_at ? new Date(tokens.expires_at).getTime() : null,
+        expiry_date: tokens.expires_at
+          ? new Date(tokens.expires_at).getTime()
+          : null,
         refresh_token: tokens.refresh_token,
       });
 
@@ -336,14 +340,13 @@ class CalendarEventsController {
         requestBody: {
           timeMin,
           timeMax,
-          items: items || [{ id: 'primary' }]
-        }
+          items: items || [{ id: "primary" }],
+        },
       });
       return res.status(200).json({ freebusy: data.calendars });
     } catch (error) {
       next(error);
     }
   }
-
 }
 module.exports = new CalendarEventsController();

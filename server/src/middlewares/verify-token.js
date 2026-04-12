@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const ApiTokensRepository = require("../modules/api-tokens/api-tokens.repository");
+const LookupApiTokensRepository = require("@/modules/api-tokens/repositories/lookup-api-tokens.repository");
 
 const APPLICATION_SECRET_KEY = process.env.SECRET_KEY;
 
@@ -38,7 +38,7 @@ const verifyToken = async (req, res, next) => {
 
       // Busca e valida as regras de negócio do API Token
       const tokenRecord =
-        await ApiTokensRepository.getTokenByKeyPrefix(keyPrefix);
+        await LookupApiTokensRepository.getTokenByKeyPrefix(keyPrefix);
 
       if (!tokenRecord) {
         return res
@@ -112,11 +112,9 @@ const verifyToken = async (req, res, next) => {
   }
 
   if (!token) {
-    return res
-      .status(401)
-      .json({
-        message: "Acesso negado. Token de sessão ou API não fornecido.",
-      });
+    return res.status(401).json({
+      message: "Acesso negado. Token de sessão ou API não fornecido.",
+    });
   }
 
   try {

@@ -6,7 +6,11 @@
 
 const notesRepository = require("@/modules/notes/notes.repository");
 const projectsRepository = require("@/modules/projects/projects.repository");
-const userRepository = require("@/modules/users/users.repository");
+const CreateUsersRepository = require("@/modules/users/repositories/create-users.repository");
+const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
+const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
+const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
+const DeleteUsersRepository = require("@/modules/users/repositories/delete-users.repository");
 const chatRepository = require("@/modules/weave-ai/weave-ai.repository");
 
 /**
@@ -49,7 +53,7 @@ function getWeekNumber(date) {
  */
 async function getUserContext(userId) {
   try {
-    const user = await userRepository.getUserById(userId);
+    const user = await SearchUsersRepository.getUserById(userId);
 
     if (!user) {
       return null;

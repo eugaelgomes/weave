@@ -3,10 +3,10 @@ const tagsRepository = require("./tags.repository");
 class TagsController {
   /**
    * Cria uma tag.
-   * 
-   * @param {import('express').Request} req 
-   * @param {import('express').Response} res 
-   * @param {import('express').NextFunction} next 
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
    */
   async createTag(req, res, next) {
     try {
@@ -33,10 +33,10 @@ class TagsController {
 
   /**
    * Busca tags filtrando por projeto ou organização.
-   * 
-   * @param {import('express').Request} req 
-   * @param {import('express').Response} res 
-   * @param {import('express').NextFunction} next 
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
    */
   async getTags(req, res, next) {
     try {
@@ -53,10 +53,10 @@ class TagsController {
 
   /**
    * Atualiza dados de uma tag existente.
-   * 
-   * @param {import('express').Request} req 
-   * @param {import('express').Response} res 
-   * @param {import('express').NextFunction} next 
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
    */
   async updateTag(req, res, next) {
     try {
@@ -80,10 +80,10 @@ class TagsController {
 
   /**
    * Deleta uma tag logicamente do banco de dados (soft delete).
-   * 
-   * @param {import('express').Request} req 
-   * @param {import('express').Response} res 
-   * @param {import('express').NextFunction} next 
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
    */
   async deleteTag(req, res, next) {
     try {

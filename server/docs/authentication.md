@@ -4,12 +4,12 @@ Módulo responsável por login, logout e autenticação OAuth (Google).
 
 ## Rotas
 
-| Método | Rota                                   | Auth | Middleware                                      | Descrição                         |
-| ------ | -------------------------------------- | ---- | ----------------------------------------------- | --------------------------------- |
+| Método | Rota                            | Auth | Middleware                                      | Descrição                         |
+| ------ | ------------------------------- | ---- | ----------------------------------------------- | --------------------------------- |
 | POST   | `/api/auth`                     | Não  | `requestLimiter`, `loginValidation`, `toString` | Login com email/username + senha  |
 | GET    | `/api/auth/sso/google`          | Não  | —                                               | Redireciona para OAuth2 do Google |
 | GET    | `/api/auth/sso/google/callback` | Não  | —                                               | Callback do Google OAuth2         |
-| POST   | `/api/auth/logout`                     | Sim  | `verifyToken`                                   | Encerra sessão e limpa cookie     |
+| POST   | `/api/auth/logout`              | Sim  | `verifyToken`                                   | Encerra sessão e limpa cookie     |
 
 ## Fluxo de Login (Credentials)
 

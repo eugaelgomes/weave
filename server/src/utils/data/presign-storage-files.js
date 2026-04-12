@@ -1,7 +1,10 @@
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const spacesService = require("../../services/storage");
-const { assertFileAccess, StorageAccessError } = require("@/services/storage/access-control");
+const {
+  assertFileAccess,
+  StorageAccessError,
+} = require("@/services/storage/access-control");
 
 const spacesHostname = (() => {
   try {
@@ -17,6 +20,8 @@ const SPACES_PREFIXES = [
   spacesService.constructor?.FOLDER_PATHS?.BACKUPS || "backups",
   spacesService.constructor?.FOLDER_PATHS?.IMAGES || "images",
   spacesService.constructor?.FOLDER_PATHS?.NOTES?.ROOT || "notes",
+  spacesService.constructor?.FOLDER_PATHS?.NOTES_COMMENTS_FILES?.ROOT ||
+    "notes-comments-files",
   spacesService.constructor?.FOLDER_PATHS?.PROJECTS?.ROOT || "projects",
   spacesService.constructor?.FOLDER_PATHS?.USERS_CONTENT?.ROOT ||
     "users-content",

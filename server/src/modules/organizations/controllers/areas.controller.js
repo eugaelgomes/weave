@@ -1,6 +1,10 @@
 const OrganizationsBaseController = require("./base-controller");
 const areasRepository = require("@/modules/organizations/repositories/areas.repository");
-const usersRepository = require("@/modules/users/users.repository");
+const CreateUsersRepository = require("@/modules/users/repositories/create-users.repository");
+const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
+const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
+const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
+const DeleteUsersRepository = require("@/modules/users/repositories/delete-users.repository");
 const { normalizeOrganizationName } = require("../normalizer");
 
 const AREA_MEMBER_ROLES = ["manager", "editor", "viewer"];
@@ -9,7 +13,6 @@ class OrganizationAreasController extends OrganizationsBaseController {
   constructor() {
     super();
     this.areasRepository = areasRepository;
-    this.usersRepository = usersRepository;
   }
 
   _getUserOrganizationRole(req) {
@@ -470,7 +473,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
         });
       }
 
-      const targetUser = await this.usersRepository.findById(user_id);
+      const targetUser = await this.SearchUsersRepository.findById(user_id);
       if (!targetUser) {
         return res
           .status(404)

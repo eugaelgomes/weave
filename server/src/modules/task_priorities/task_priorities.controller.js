@@ -3,10 +3,10 @@ const taskPrioritiesRepository = require("./task_priorities.repository");
 class TaskPrioritiesController {
   /**
    * Cria uma prioridade de tarefa.
-   * 
-   * @param {import('express').Request} req 
-   * @param {import('express').Response} res 
-   * @param {import('express').NextFunction} next 
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
    */
   async createPriority(req, res, next) {
     try {
@@ -34,10 +34,10 @@ class TaskPrioritiesController {
 
   /**
    * Busca lista de prioridades de tarefa de um projeto ou organização.
-   * 
-   * @param {import('express').Request} req 
-   * @param {import('express').Response} res 
-   * @param {import('express').NextFunction} next 
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
    */
   async getPriorities(req, res, next) {
     try {
@@ -54,10 +54,10 @@ class TaskPrioritiesController {
 
   /**
    * Atualiza dados de uma prioridade já existente.
-   * 
-   * @param {import('express').Request} req 
-   * @param {import('express').Response} res 
-   * @param {import('express').NextFunction} next 
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
    */
   async updatePriority(req, res, next) {
     try {
@@ -84,10 +84,10 @@ class TaskPrioritiesController {
 
   /**
    * Remove uma prioridade de maneira lógica.
-   * 
-   * @param {import('express').Request} req 
-   * @param {import('express').Response} res 
-   * @param {import('express').NextFunction} next 
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
    */
   async deletePriority(req, res, next) {
     try {

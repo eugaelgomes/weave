@@ -1,11 +1,11 @@
 /**
  * @typedef {import('express').Request} Request
  * @typedef {import('express').Response} Response
- * 
+ *
  * @typedef {Object} AuthenticatedRequest
  * @property {Object} [user]
  * @property {string} user.userId
- * 
+ *
  * @typedef {Object} OrganizationData
  * @property {string} org_name
  * @property {string[]} [org_domains]

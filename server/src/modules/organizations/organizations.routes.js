@@ -171,7 +171,9 @@ router.get(
 
 router.patch(
   "/members/:memberId",
-  organizationMembersController.updateMemberRole.bind(organizationMembersController)
+  organizationMembersController.updateMemberRole.bind(
+    organizationMembersController
+  )
 );
 
 router.delete(
