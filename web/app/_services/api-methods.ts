@@ -46,6 +46,10 @@ export const API_ENDPOINTS = {
   NOTES: "/notes",
   NOTES_STATS: "/notes/stats",
   NOTES_BY_ID: (id: string) => `/notes/${id}`,
+  NOTES_COMMENTS: (noteId: string) => `/notes/${noteId}/comments`,
+  NOTES_COMMENT_ATTACHMENTS: (noteId: string) => `/notes/${noteId}/comments/attachments`,
+  NOTES_COMMENT_BY_ID: (noteId: string, commentId: string) =>
+    `/notes/${noteId}/comments/${commentId}`,
   NOTES_SEARCH: "/notes/search",
   NOTES_EXPORT: "/notes/export",
 
@@ -224,8 +228,13 @@ export async function handleResponse<T = unknown>(response: Response): Promise<T
     try {
       if (contentType?.includes("application/json")) {
         errorData = await response.json();
-        if (typeof errorData === "object" && errorData !== null && "message" in errorData) {
-          errorMessage = (errorData as { message: string }).message;
+        if (typeof errorData === "object" && errorData !== null) {
+          const obj = errorData as { message?: unknown; error?: unknown };
+          if (typeof obj.message === "string") {
+            errorMessage = obj.message;
+          } else if (typeof obj.error === "string") {
+            errorMessage = obj.error;
+          }
         }
       } else {
         errorMessage = (await response.text()) || errorMessage;

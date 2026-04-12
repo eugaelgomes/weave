@@ -52,6 +52,12 @@ import {
 } from "@dnd-kit/sortable";
 // CSS transform utility handled manually
 import { useNotes } from "@/app/_contexts/notes-context";
+import { useNotesShell } from "@/app/_contexts/notes-shell-context";
+import { NoteCommentsProvider } from "@/app/_contexts/note-comments-context";
+import {
+  NoteCommentsSidebar,
+  NoteCommentsSidebarTrigger,
+} from "@/app/_components/notes/note-comments-sidebar";
 import {
   Note,
   Block,
@@ -349,7 +355,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
               onClick={handleToggleDone}
               className={`mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-all ${
                 block.done
-                  ? "border-yellow-500 bg-brand-primary-700 text-white"
+                  ? "bg-brand-primary-700 border-yellow-500 text-white"
                   : "border-neutral-300 hover:border-yellow-500 dark:border-neutral-600 dark:hover:border-yellow-500"
               }`}
             >
@@ -385,7 +391,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
       case "list":
         return (
           <div className="flex items-start gap-3">
-            <span className="mt-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand-primary-700" />
+            <span className="bg-brand-primary-700 mt-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full" />
             {!isEditing && localText && hasLinks(localText) ? (
               <div
                 onClick={() => setIsEditing(true)}
@@ -499,7 +505,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
       >
         <button
           {...dragHandleProps}
-          className="cursor-grab rounded p-0.5 text-neutral-300 hover:bg-neutral-100 hover:text-brand-primary-700 active:cursor-grabbing dark:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-brand-primary-700"
+          className="hover:text-brand-primary-700 dark:hover:text-brand-primary-700 cursor-grab rounded p-0.5 text-neutral-300 hover:bg-neutral-100 active:cursor-grabbing dark:text-neutral-600 dark:hover:bg-neutral-800"
           title="Arrastar para reordenar"
         >
           <GripVertical size={14} />
@@ -546,7 +552,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
               }}
               className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
             >
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-yellow-50 text-yellow-600 dark:bg-brand-primary-700/10 dark:text-brand-primary-700">
+              <div className="dark:bg-brand-primary-700/10 dark:text-brand-primary-700 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-yellow-50 text-yellow-600">
                 <option.icon size={14} />
               </div>
               <div>
@@ -587,7 +593,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
 
 // =================== SKELETON ===================
 const NoteDetailSkeleton = () => (
-  <div className="flex h-full flex-col">
+  <div className="flex min-h-0 flex-1 flex-col">
     {/* Header skeleton */}
     <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-950">
       <div className="mx-auto flex max-w-4xl items-center justify-between">
@@ -652,7 +658,7 @@ const BlockTypeSelector: React.FC<BlockTypeSelectorProps> = ({ onSelect, onClose
           }}
           className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
         >
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-yellow-50 text-yellow-600 dark:bg-brand-primary-700/10 dark:text-brand-primary-700">
+          <div className="dark:bg-brand-primary-700/10 dark:text-brand-primary-700 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-yellow-50 text-yellow-600">
             <option.icon size={14} />
           </div>
           <div>
@@ -702,6 +708,16 @@ const NoteDetail = () => {
 
   // Estados para modais e funcionalidades
   const [showShareModal, setShowShareModal] = useState(false);
+  const [commentsSidebarOpen, setCommentsSidebarOpen] = useState(false);
+  const { setLeftNavCollapsedForComments } = useNotesShell();
+
+  React.useEffect(() => {
+    setLeftNavCollapsedForComments(commentsSidebarOpen);
+    return () => {
+      setLeftNavCollapsedForComments(false);
+    };
+  }, [commentsSidebarOpen, setLeftNavCollapsedForComments]);
+
   const [showTagModal, setShowTagModal] = useState(false);
   const [showBlockTypeSelector, setShowBlockTypeSelector] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -910,7 +926,7 @@ const NoteDetail = () => {
     }
   };
 
-  const handleRemoveColor = async () => {
+  const _handleRemoveColor = async () => {
     if (!note) return;
     const previousColor = note.properties?.color || "";
     // Otimista
@@ -1395,7 +1411,7 @@ const NoteDetail = () => {
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center p-6">
+      <div className="flex min-h-[50vh] flex-1 items-center justify-center p-6">
         <div className="max-w-md rounded-md border border-neutral-200 bg-white p-8 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/10">
             <span className="text-xl">⚠️</span>
@@ -1416,1172 +1432,1224 @@ const NoteDetail = () => {
     );
   }
 
+  const canUseNoteComments =
+    !note.access || Boolean(note.access.canEdit || note.access.isCollaborator);
+
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-neutral-50 shadow-sm dark:bg-neutral-950">
-      {/* =================== HEADER =================== */}
-      <div className="flex-shrink-0 border-b border-neutral-200 bg-neutral-50 px-2 dark:border-neutral-800 dark:bg-neutral-950">
-        <div className="mx-auto flex w-full items-center justify-between">
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-neutral-600 transition-all hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-            title="Go back to notes list"
-          >
-            <ArrowLeft size={16} />
-          </button>
+    <NoteCommentsProvider noteId={note.id}>
+      <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-neutral-50 shadow-sm dark:bg-neutral-950">
+        {/* =================== HEADER =================== */}
+        <div className="flex-shrink-0 border-b border-neutral-200 bg-neutral-50 px-2 dark:border-neutral-800 dark:bg-neutral-950">
+          <div className="mx-auto flex w-full items-center justify-between">
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-neutral-600 transition-all hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+              title="Go back to notes list"
+            >
+              <ArrowLeft size={16} />
+            </button>
 
-          <div className="flex items-center gap-2">
-            {/* Status de salvamento */}
+            <div className="flex items-center gap-2">
+              {/* Status de salvamento */}
 
-            <div className="flex items-center gap-3">
-              {isSaving ? (
-                /* Indicador de Salvamento Ativo */
-                <div className="flex animate-pulse items-center gap-1.5 rounded-full border border-yellow-500/20 bg-brand-primary-700/10 px-3 py-1">
-                  <Loader2
-                    size={13}
-                    className="animate-spin text-yellow-600 dark:text-brand-primary-700"
-                  />
-                  <span className="text-[11px] font-semibold tracking-wider text-yellow-700 uppercase dark:text-brand-primary-700">
-                    Sincronizando
-                  </span>
-                </div>
-              ) : (
-                /* Data da última atualização - Só aparece quando não está salvando */
-                note.updated_at && (
-                  <div className="flex items-center gap-1.5 text-xs text-neutral-500 transition-opacity duration-300 ease-in-out">
-                    <Clock size={12} className="text-neutral-400" />
-                    <span className="font-medium">Editado em {formatDate(note.updated_at)}</span>
+              <div className="flex items-center gap-3">
+                {isSaving ? (
+                  /* Indicador de Salvamento Ativo */
+                  <div className="bg-brand-primary-700/10 flex animate-pulse items-center gap-1.5 rounded-full border border-yellow-500/20 px-3 py-1">
+                    <Loader2
+                      size={13}
+                      className="dark:text-brand-primary-700 animate-spin text-yellow-600"
+                    />
+                    <span className="dark:text-brand-primary-700 text-[11px] font-semibold tracking-wider text-yellow-700 uppercase">
+                      Sincronizando
+                    </span>
                   </div>
-                )
-              )}
-            </div>
-
-            <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
-
-            {/* Ações */}
-            <div className="flex items-center gap-0.5">
-              {note.access?.canShare && (
-                <button
-                  onClick={() => setShowShareModal(true)}
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-brand-primary-700"
-                  title="Compartilhar nota"
-                >
-                  <Share2 size={15} />
-                </button>
-              )}
-
-              {note.access?.canDelete && (
-                <button
-                  onClick={handleDelete}
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-all hover:bg-red-50 hover:text-red-500 dark:text-neutral-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                  title="Deletar nota"
-                >
-                  <Trash2 size={15} />
-                </button>
-              )}
-            </div>
-
-            <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
-
-            {/*Botão de paleta de cores*/}
-            <div className="relative">
-              <button
-                onClick={() => setShowColorPicker(!showColorPicker)}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-brand-primary-700"
-                title="Adicionar cor"
-              >
-                <Palette size={15} />
-              </button>
-              {showColorPicker && (
-                <div className="absolute top-full right-0 z-20 mt-1 w-56 rounded-md border border-neutral-200 bg-white p-3 shadow-xl dark:border-neutral-700 dark:bg-neutral-900">
-                  <div className="mb-2 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                    Escolha uma cor
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      "#F6821F",
-                      "#EF4444",
-                      "#F59E0B",
-                      "#10B981",
-                      "#3B82F6",
-                      "#8B5CF6",
-                      "#EC4899",
-                      "#06B6D4",
-                      "#84CC16",
-                      "#F97316",
-                    ].map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => handleChangeColor(c)}
-                        className={`h-6 w-6 rounded-full border-2 transition-all hover:scale-110 ${
-                          note.properties?.color === c
-                            ? "border-neutral-900 dark:border-white"
-                            : "border-transparent hover:border-neutral-400 dark:hover:border-neutral-500"
-                        }`}
-                        style={{ backgroundColor: c }}
-                        title={c}
-                      />
-                    ))}
-                  </div>
-                  <div className="mt-2.5 border-t border-neutral-100 pt-2.5 dark:border-neutral-800">
-                    <div className="mb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                      Cor personalizada
+                ) : (
+                  /* Data da última atualização - Só aparece quando não está salvando */
+                  note.updated_at && (
+                    <div className="flex items-center gap-1.5 text-xs text-neutral-500 transition-opacity duration-300 ease-in-out">
+                      <Clock size={12} className="text-neutral-400" />
+                      <span className="font-medium">Editado em {formatDate(note.updated_at)}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={note.properties?.color || "#F6821F"}
-                        onChange={(e) => handleChangeColor(e.target.value)}
-                        className="h-8 w-8 cursor-pointer rounded border border-neutral-200 bg-transparent p-0.5 dark:border-neutral-700"
-                        title="Escolher cor"
-                      />
-                      <div className="relative flex-1">
-                        <span className="absolute top-1/2 left-2 -translate-y-1/2 text-xs font-medium text-neutral-400 dark:text-neutral-500">
-                          #
-                        </span>
+                  )
+                )}
+              </div>
+
+              <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
+
+              {/* Ações */}
+              <div className="flex items-center gap-0.5">
+                <NoteCommentsSidebarTrigger
+                  open={commentsSidebarOpen}
+                  onToggle={() => setCommentsSidebarOpen((v) => !v)}
+                />
+                {note.access?.canShare && (
+                  <button
+                    onClick={() => setShowShareModal(true)}
+                    className="dark:hover:text-brand-primary-700 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                    title="Compartilhar nota"
+                  >
+                    <Share2 size={15} />
+                  </button>
+                )}
+
+                {note.access?.canDelete && (
+                  <button
+                    onClick={handleDelete}
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-all hover:bg-red-50 hover:text-red-500 dark:text-neutral-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                    title="Deletar nota"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                )}
+              </div>
+
+              <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
+
+              {/*Botão de paleta de cores*/}
+              <div className="relative">
+                <button
+                  onClick={() => setShowColorPicker(!showColorPicker)}
+                  className="dark:hover:text-brand-primary-700 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                  title="Adicionar cor"
+                >
+                  <Palette size={15} />
+                </button>
+                {showColorPicker && (
+                  <div className="absolute top-full right-0 z-20 mt-1 w-56 rounded-md border border-neutral-200 bg-white p-3 shadow-xl dark:border-neutral-700 dark:bg-neutral-900">
+                    <div className="mb-2 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                      Escolha uma cor
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        "#F6821F",
+                        "#EF4444",
+                        "#F59E0B",
+                        "#10B981",
+                        "#3B82F6",
+                        "#8B5CF6",
+                        "#EC4899",
+                        "#06B6D4",
+                        "#84CC16",
+                        "#F97316",
+                      ].map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => handleChangeColor(c)}
+                          className={`h-6 w-6 rounded-full border-2 transition-all hover:scale-110 ${
+                            note.properties?.color === c
+                              ? "border-neutral-900 dark:border-white"
+                              : "border-transparent hover:border-neutral-400 dark:hover:border-neutral-500"
+                          }`}
+                          style={{ backgroundColor: c }}
+                          title={c}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-2.5 border-t border-neutral-100 pt-2.5 dark:border-neutral-800">
+                      <div className="mb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                        Cor personalizada
+                      </div>
+                      <div className="flex items-center gap-2">
                         <input
-                          type="text"
-                          maxLength={6}
-                          placeholder="HEX"
-                          defaultValue={(note.properties?.color || "").replace("#", "")}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              const val = (e.target as HTMLInputElement).value.trim();
+                          type="color"
+                          value={note.properties?.color || "#F6821F"}
+                          onChange={(e) => handleChangeColor(e.target.value)}
+                          className="h-8 w-8 cursor-pointer rounded border border-neutral-200 bg-transparent p-0.5 dark:border-neutral-700"
+                          title="Escolher cor"
+                        />
+                        <div className="relative flex-1">
+                          <span className="absolute top-1/2 left-2 -translate-y-1/2 text-xs font-medium text-neutral-400 dark:text-neutral-500">
+                            #
+                          </span>
+                          <input
+                            type="text"
+                            maxLength={6}
+                            placeholder="HEX"
+                            defaultValue={(note.properties?.color || "").replace("#", "")}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                const val = (e.target as HTMLInputElement).value.trim();
+                                if (/^[0-9A-Fa-f]{3,6}$/.test(val)) {
+                                  handleChangeColor(`#${val}`);
+                                }
+                              }
+                            }}
+                            onBlur={(e) => {
+                              const val = e.target.value.trim();
                               if (/^[0-9A-Fa-f]{3,6}$/.test(val)) {
                                 handleChangeColor(`#${val}`);
                               }
-                            }
-                          }}
-                          onBlur={(e) => {
-                            const val = e.target.value.trim();
-                            if (/^[0-9A-Fa-f]{3,6}$/.test(val)) {
-                              handleChangeColor(`#${val}`);
-                            }
-                          }}
-                          className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-1.5 pr-2 pl-5 font-mono text-xs text-neutral-700 uppercase placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
-                        />
+                            }}
+                            className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-1.5 pr-2 pl-5 font-mono text-xs text-neutral-700 uppercase placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                          />
+                        </div>
                       </div>
                     </div>
+                    <button
+                      onClick={() => setShowColorPicker(false)}
+                      className="mt-2 w-full rounded-md px-2 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
+                    >
+                      Fechar
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setShowColorPicker(false)}
-                    className="mt-2 w-full rounded-md px-2 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
-                  >
-                    Fechar
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* =================== CONTEÚDO PRINCIPAL =================== */}
-      <div className="no-scrollbar flex-1 overflow-y-auto">
-        {/* Hidden file inputs */}
-        <input
-          ref={iconInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleIconUpload}
-        />
-        <input
-          ref={bannerInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleBannerUpload}
-        />
-        <input
-          ref={filesInputRef}
-          type="file"
-          multiple
-          className="hidden"
-          onChange={handleFilesUpload}
-        />
-
-        {/* Banner */}
-        {note.properties?.banner?.path ? (
-          <div className="group relative h-52 w-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
-            <Image
-              src={getStorageUrl(note.properties.banner.path)}
-              alt="Banner"
-              fill
-              sizes="100vw"
-              className="object-cover"
+        {/* =================== CONTEÚDO PRINCIPAL + SIDEBAR COMENTÁRIOS =================== */}
+        <div className="flex min-h-0 flex-1 flex-row overflow-hidden">
+          <div className="no-scrollbar flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+            {/* Hidden file inputs */}
+            <input
+              ref={iconInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleIconUpload}
             />
-            {note.access?.canEdit && (
-              <div className="absolute right-3 bottom-3 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-                <button
-                  onClick={() => bannerInputRef.current?.click()}
-                  className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-black/70"
-                >
-                  Trocar
-                </button>
-                <button
-                  onClick={handleRemoveBanner}
-                  className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-red-500/80"
-                >
-                  Remover
-                </button>
-              </div>
-            )}
-          </div>
-        ) : note.properties?.color ? (
-          <div className="h-28 w-full" style={{ backgroundColor: note.properties.color }} />
-        ) : null}
+            <input
+              ref={bannerInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleBannerUpload}
+            />
+            <input
+              ref={filesInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleFilesUpload}
+            />
 
-        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8">
-          {/* Ícone e ações de propriedades */}
-          <div
-            className={`group/props mb-3 flex items-center gap-3 ${
-              note.properties?.banner?.path || note.properties?.color ? "relative z-10 -mt-12" : ""
-            }`}
-          >
-            {note.properties?.icon?.path ? (
-              <div className="group relative">
-                <div className="h-14 w-14 overflow-hidden rounded-md border-2 border-white bg-white shadow-md dark:border-neutral-900 dark:bg-neutral-900">
-                  <Image
-                    src={getStorageUrl(note.properties.icon.path)}
-                    alt="Ícone"
-                    width={56}
-                    height={56}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
+            {/* Banner */}
+            {note.properties?.banner?.path ? (
+              <div className="group relative h-52 w-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+                <Image
+                  src={getStorageUrl(note.properties.banner.path)}
+                  alt="Banner"
+                  fill
+                  sizes="100vw"
+                  className="object-cover"
+                />
                 {note.access?.canEdit && (
-                  <div className="absolute -top-1 -right-1 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="absolute right-3 bottom-3 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
-                      onClick={() => iconInputRef.current?.click()}
-                      className="rounded-full bg-neutral-800/70 p-1 text-white backdrop-blur-sm hover:bg-neutral-800"
-                      title="Trocar ícone"
+                      onClick={() => bannerInputRef.current?.click()}
+                      className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-black/70"
                     >
-                      <ImagePlus size={10} />
+                      Trocar
                     </button>
                     <button
-                      onClick={handleRemoveIcon}
-                      className="rounded-full bg-neutral-800/70 p-1 text-white backdrop-blur-sm hover:bg-red-500"
-                      title="Remover ícone"
+                      onClick={handleRemoveBanner}
+                      className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-red-500/80"
                     >
-                      <X size={10} />
+                      Remover
                     </button>
                   </div>
                 )}
               </div>
+            ) : note.properties?.color ? (
+              <div className="h-28 w-full" style={{ backgroundColor: note.properties.color }} />
             ) : null}
-            {note.access?.canEdit && (
+
+            <div className="w-full px-4 py-6 sm:px-6">
+              {/* Ícone e ações de propriedades */}
               <div
-                className={`flex items-center gap-1 transition-opacity ${
-                  note.properties?.icon?.path && note.properties?.banner?.path
-                    ? "opacity-0 group-hover/props:opacity-100"
+                className={`group/props mb-3 flex items-center gap-3 ${
+                  note.properties?.banner?.path || note.properties?.color
+                    ? "relative z-10 -mt-12"
                     : ""
                 }`}
               >
-                <button
-                  onClick={() => filesInputRef.current?.click()}
-                  className="flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700"
-                  title="Adicionar arquivos"
-                >
-                  <FileText size={12} />
-                  Arquivos
-                </button>
-                {!note.properties?.icon?.path && (
-                  <button
-                    onClick={() => iconInputRef.current?.click()}
-                    className="flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700"
-                    title="Adicionar ícone"
-                  >
-                    <ImagePlus size={12} />
-                    Ícone
-                  </button>
-                )}
-                {!note.properties?.banner?.path && (
-                  <button
-                    onClick={() => bannerInputRef.current?.click()}
-                    className="flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700"
-                    title="Adicionar banner"
-                  >
-                    <ImagePlus size={12} />
-                    Banner
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowTagModal(true)}
-                  className="flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700"
-                  title="Gerenciar tags"
-                >
-                  <Tag size={12} />
-                  Tags
-                </button>
-                <button
-                  onClick={() => setShowRelationModal(true)}
-                  className="flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700"
-                  title="Gerenciar relações"
-                >
-                  <Link size={12} />
-                  Relações
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Título */}
-          <div className="mb-4">
-            <textarea
-              ref={(el) => {
-                if (el) {
-                  el.style.height = "auto";
-                  el.style.height = `${el.scrollHeight}px`;
-                }
-              }}
-              value={editingTitle}
-              onChange={(e) => {
-                setEditingTitle(e.target.value);
-                const el = e.target;
-                el.style.height = "auto";
-                el.style.height = `${el.scrollHeight}px`;
-              }}
-              onBlur={async () => {
-                if (note && editingTitle !== note.title) {
-                  setIsSaving(true);
-                  try {
-                    const updated = await updateNote(note.id, { title: editingTitle });
-                    if (updated) setNote(updated);
-                  } catch (error) {
-                    console.error("Erro ao salvar título:", error);
-                  } finally {
-                    setIsSaving(false);
-                  }
-                }
-              }}
-              placeholder="Título da nota..."
-              rows={1}
-              className="w-full resize-none overflow-hidden bg-transparent text-xl font-bold text-neutral-900 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-100 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
-            />
-            <textarea
-              ref={(el) => {
-                if (el) {
-                  el.style.height = "auto";
-                  el.style.height = `${el.scrollHeight}px`;
-                }
-              }}
-              value={editingDescription}
-              onChange={(e) => {
-                setEditingDescription(e.target.value);
-                const el = e.target;
-                el.style.height = "auto";
-                el.style.height = `${el.scrollHeight}px`;
-              }}
-              onBlur={async () => {
-                if (note && editingDescription !== (note.description || "")) {
-                  setIsSaving(true);
-                  try {
-                    const updated = await updateNote(note.id, { description: editingDescription });
-                    if (updated) setNote(updated);
-                  } catch (error) {
-                    console.error("Erro ao salvar descrição:", error);
-                  } finally {
-                    setIsSaving(false);
-                  }
-                }
-              }}
-              placeholder="Adicionar descrição..."
-              rows={1}
-              className="w-full resize-none overflow-hidden bg-transparent text-sm text-neutral-600 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-400 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
-            />
-          </div>
-
-          {/* Meta informações */}
-          <div className="mb-6 flex flex-col gap-3 border-b border-neutral-100 pb-4 dark:border-neutral-800">
-            {/* Tags */}
-            <div className="flex items-center gap-2 overflow-x-auto">
-              <Tag className="flex-shrink-0 text-yellow-400 dark:text-brand-primary-700" size={13} />
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">Tags</span>
-              <div className="flex flex-wrap gap-1.5">
-                {note.tags && note.tags.length > 0 && (
-                  <>
-                    {(showAllTags ? note.tags : note.tags.slice(0, 3)).map((tag, index) => {
-                      const colors = getTagColor(tag);
-                      return (
-                        <span
-                          key={index}
-                          className={`group flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-xs font-medium transition-colors ${colors.bg} ${colors.text} ${colors.border}`}
+                {note.properties?.icon?.path ? (
+                  <div className="group relative">
+                    <div className="h-14 w-14 overflow-hidden rounded-md border-2 border-white bg-white shadow-md dark:border-neutral-900 dark:bg-neutral-900">
+                      <Image
+                        src={getStorageUrl(note.properties.icon.path)}
+                        alt="Ícone"
+                        width={56}
+                        height={56}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    {note.access?.canEdit && (
+                      <div className="absolute -top-1 -right-1 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                        <button
+                          onClick={() => iconInputRef.current?.click()}
+                          className="rounded-full bg-neutral-800/70 p-1 text-white backdrop-blur-sm hover:bg-neutral-800"
+                          title="Trocar ícone"
                         >
-                          {tag}
+                          <ImagePlus size={10} />
+                        </button>
+                        <button
+                          onClick={handleRemoveIcon}
+                          className="rounded-full bg-neutral-800/70 p-1 text-white backdrop-blur-sm hover:bg-red-500"
+                          title="Remover ícone"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+                {note.access?.canEdit && (
+                  <div
+                    className={`flex items-center gap-1 transition-opacity ${
+                      note.properties?.icon?.path && note.properties?.banner?.path
+                        ? "opacity-0 group-hover/props:opacity-100"
+                        : ""
+                    }`}
+                  >
+                    <button
+                      onClick={() => filesInputRef.current?.click()}
+                      className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                      title="Adicionar arquivos"
+                    >
+                      <FileText size={12} />
+                      Arquivos
+                    </button>
+                    {!note.properties?.icon?.path && (
+                      <button
+                        onClick={() => iconInputRef.current?.click()}
+                        className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                        title="Adicionar ícone"
+                      >
+                        <ImagePlus size={12} />
+                        Ícone
+                      </button>
+                    )}
+                    {!note.properties?.banner?.path && (
+                      <button
+                        onClick={() => bannerInputRef.current?.click()}
+                        className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                        title="Adicionar banner"
+                      >
+                        <ImagePlus size={12} />
+                        Banner
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowTagModal(true)}
+                      className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                      title="Gerenciar tags"
+                    >
+                      <Tag size={12} />
+                      Tags
+                    </button>
+                    <button
+                      onClick={() => setShowRelationModal(true)}
+                      className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                      title="Gerenciar relações"
+                    >
+                      <Link size={12} />
+                      Relações
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Título */}
+              <div className="mb-4">
+                <textarea
+                  ref={(el) => {
+                    if (el) {
+                      el.style.height = "auto";
+                      el.style.height = `${el.scrollHeight}px`;
+                    }
+                  }}
+                  value={editingTitle}
+                  onChange={(e) => {
+                    setEditingTitle(e.target.value);
+                    const el = e.target;
+                    el.style.height = "auto";
+                    el.style.height = `${el.scrollHeight}px`;
+                  }}
+                  onBlur={async () => {
+                    if (note && editingTitle !== note.title) {
+                      setIsSaving(true);
+                      try {
+                        const updated = await updateNote(note.id, { title: editingTitle });
+                        if (updated) setNote(updated);
+                      } catch (error) {
+                        console.error("Erro ao salvar título:", error);
+                      } finally {
+                        setIsSaving(false);
+                      }
+                    }
+                  }}
+                  placeholder="Título da nota..."
+                  rows={1}
+                  className="w-full resize-none overflow-hidden bg-transparent text-xl font-bold text-neutral-900 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-100 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
+                />
+                <textarea
+                  ref={(el) => {
+                    if (el) {
+                      el.style.height = "auto";
+                      el.style.height = `${el.scrollHeight}px`;
+                    }
+                  }}
+                  value={editingDescription}
+                  onChange={(e) => {
+                    setEditingDescription(e.target.value);
+                    const el = e.target;
+                    el.style.height = "auto";
+                    el.style.height = `${el.scrollHeight}px`;
+                  }}
+                  onBlur={async () => {
+                    if (note && editingDescription !== (note.description || "")) {
+                      setIsSaving(true);
+                      try {
+                        const updated = await updateNote(note.id, {
+                          description: editingDescription,
+                        });
+                        if (updated) setNote(updated);
+                      } catch (error) {
+                        console.error("Erro ao salvar descrição:", error);
+                      } finally {
+                        setIsSaving(false);
+                      }
+                    }
+                  }}
+                  placeholder="Adicionar descrição..."
+                  rows={1}
+                  className="w-full resize-none overflow-hidden bg-transparent text-sm text-neutral-600 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-400 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
+                />
+              </div>
+
+              {/* Meta informações */}
+              <div className="mb-6 flex flex-col gap-3 border-b border-neutral-100 pb-4 dark:border-neutral-800">
+                {/* Tags */}
+                <div className="flex items-center gap-2 overflow-x-auto">
+                  <Tag
+                    className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                    size={13}
+                  />
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">Tags</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {note.tags && note.tags.length > 0 && (
+                      <>
+                        {(showAllTags ? note.tags : note.tags.slice(0, 3)).map((tag, index) => {
+                          const colors = getTagColor(tag);
+                          return (
+                            <span
+                              key={index}
+                              className={`group flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-xs font-medium transition-colors ${colors.bg} ${colors.text} ${colors.border}`}
+                            >
+                              {tag}
+                              {note.access?.canEdit && (
+                                <button
+                                  onClick={() => handleRemoveTag(tag)}
+                                  className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                                  title="Remover tag"
+                                >
+                                  <X size={10} />
+                                </button>
+                              )}
+                            </span>
+                          );
+                        })}
+                        {note.tags.length > 3 && (
+                          <button
+                            onClick={() => setShowAllTags(!showAllTags)}
+                            className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                          >
+                            {showAllTags ? "Ver menos" : `+${note.tags.length - 3}`}
+                          </button>
+                        )}
+                      </>
+                    )}
+                    {note.access?.canEdit && (
+                      <button
+                        onClick={() => setShowTagModal(true)}
+                        className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                        title="Adicionar tag"
+                      >
+                        <Plus size={10} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Colaboradores */}
+                <div className="flex items-center gap-2 overflow-x-auto">
+                  <Users
+                    className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                    size={13}
+                  />
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">Collabs</span>
+                  <div className="flex items-center gap-1.5">
+                    {note.collaborators && note.collaborators.length > 0 && (
+                      <>
+                        <div className="flex -space-x-1.5">
+                          {(showAllCollabs
+                            ? note.collaborators
+                            : note.collaborators.slice(0, 3)
+                          ).map((collab, index) => {
+                            const displayName = getCollaboratorDisplayName(collab);
+                            const avatarUrl = getCollaboratorAvatarUrl(collab);
+
+                            return (
+                              <div
+                                key={index}
+                                className="group relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-200 ring-0 transition-all hover:z-10 hover:ring-2 hover:ring-yellow-500/30 dark:border-neutral-900 dark:bg-neutral-700"
+                                title={displayName}
+                              >
+                                {avatarUrl ? (
+                                  <Image
+                                    width={28}
+                                    height={28}
+                                    src={avatarUrl}
+                                    alt={displayName}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-300">
+                                    {displayName.charAt(0).toUpperCase()}
+                                  </span>
+                                )}
+
+                                {note.access?.canShare && (
+                                  <button
+                                    onClick={() => handleRemoveCollaborator(collab)}
+                                    className="absolute inset-0 flex items-center justify-center rounded-full bg-red-500/80 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                    title="Remover colaborador"
+                                  >
+                                    <X size={10} />
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {note.collaborators.length > 3 && (
+                          <button
+                            onClick={() => setShowAllCollabs(!showAllCollabs)}
+                            className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                          >
+                            {showAllCollabs ? "Ver menos" : `+${note.collaborators.length - 3}`}
+                          </button>
+                        )}
+                      </>
+                    )}
+                    {note.access?.canShare && (
+                      <button
+                        onClick={() => setShowShareModal(true)}
+                        className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                        title="Adicionar colaborador"
+                      >
+                        <Plus size={10} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Relações */}
+                <div className="flex items-center gap-2 overflow-x-auto">
+                  <Link
+                    className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                    size={13}
+                  />
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">Relações</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(showAllRelations ? relatedNotesData : relatedNotesData.slice(0, 3)).map(
+                      (relNote) => (
+                        <span
+                          key={relNote!.id}
+                          className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
+                        >
+                          <button
+                            onClick={() => router.push(`/app/notes/${relNote!.id}`)}
+                            className="inline-flex items-center gap-1.5 truncate"
+                          >
+                            {relNote!.properties?.icon?.path ? (
+                              <Image
+                                src={getStorageUrl(relNote!.properties.icon.path)}
+                                alt=""
+                                width={12}
+                                height={12}
+                                className="flex-shrink-0 rounded"
+                              />
+                            ) : null}
+                            <span className="max-w-[120px] truncate">
+                              {relNote!.title || "Nota sem título"}
+                            </span>
+                          </button>
                           {note.access?.canEdit && (
                             <button
-                              onClick={() => handleRemoveTag(tag)}
+                              onClick={() => handleRemoveRelation(relNote!.id)}
                               className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
-                              title="Remover tag"
+                              title="Remover relação"
                             >
                               <X size={10} />
                             </button>
                           )}
                         </span>
-                      );
-                    })}
-                    {note.tags.length > 3 && (
+                      )
+                    )}
+                    {relatedNotesData.length > 3 && (
                       <button
-                        onClick={() => setShowAllTags(!showAllTags)}
-                        className="rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-brand-primary-700"
+                        onClick={() => setShowAllRelations(!showAllRelations)}
+                        className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                       >
-                        {showAllTags ? "Ver menos" : `+${note.tags.length - 3}`}
+                        {showAllRelations ? "Ver menos" : `+${relatedNotesData.length - 3}`}
                       </button>
                     )}
-                  </>
-                )}
-                {note.access?.canEdit && (
-                  <button
-                    onClick={() => setShowTagModal(true)}
-                    className="rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:text-brand-primary-700"
-                    title="Adicionar tag"
-                  >
-                    <Plus size={10} />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Colaboradores */}
-            <div className="flex items-center gap-2 overflow-x-auto">
-              <Users className="flex-shrink-0 text-yellow-400 dark:text-brand-primary-700" size={13} />
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">Collabs</span>
-              <div className="flex items-center gap-1.5">
-                {note.collaborators && note.collaborators.length > 0 && (
-                  <>
-                    <div className="flex -space-x-1.5">
-                      {(showAllCollabs ? note.collaborators : note.collaborators.slice(0, 3)).map(
-                        (collab, index) => {
-                          const displayName = getCollaboratorDisplayName(collab);
-                          const avatarUrl = getCollaboratorAvatarUrl(collab);
-
-                          return (
-                            <div
-                              key={index}
-                              className="group relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-200 ring-0 transition-all hover:z-10 hover:ring-2 hover:ring-yellow-500/30 dark:border-neutral-900 dark:bg-neutral-700"
-                              title={displayName}
-                            >
-                              {avatarUrl ? (
-                                <Image
-                                  width={28}
-                                  height={28}
-                                  src={avatarUrl}
-                                  alt={displayName}
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-300">
-                                  {displayName.charAt(0).toUpperCase()}
-                                </span>
-                              )}
-
-                              {note.access?.canShare && (
-                                <button
-                                  onClick={() => handleRemoveCollaborator(collab)}
-                                  className="absolute inset-0 flex items-center justify-center rounded-full bg-red-500/80 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                                  title="Remover colaborador"
-                                >
-                                  <X size={10} />
-                                </button>
-                              )}
-                            </div>
-                          );
-                        }
-                      )}
-                    </div>
-                    {note.collaborators.length > 3 && (
+                    {note.access?.canEdit && (
                       <button
-                        onClick={() => setShowAllCollabs(!showAllCollabs)}
-                        className="rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-brand-primary-700"
-                      >
-                        {showAllCollabs ? "Ver menos" : `+${note.collaborators.length - 3}`}
-                      </button>
-                    )}
-                  </>
-                )}
-                {note.access?.canShare && (
-                  <button
-                    onClick={() => setShowShareModal(true)}
-                    className="rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:text-brand-primary-700"
-                    title="Adicionar colaborador"
-                  >
-                    <Plus size={10} />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Relações */}
-            <div className="flex items-center gap-2 overflow-x-auto">
-              <Link className="flex-shrink-0 text-yellow-400 dark:text-brand-primary-700" size={13} />
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">Relações</span>
-              <div className="flex flex-wrap gap-1.5">
-                {(showAllRelations ? relatedNotesData : relatedNotesData.slice(0, 3)).map(
-                  (relNote) => (
-                    <span
-                      key={relNote!.id}
-                      className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
-                    >
-                      <button
-                        onClick={() => router.push(`/app/notes/${relNote!.id}`)}
-                        className="inline-flex items-center gap-1.5 truncate"
-                      >
-                        {relNote!.properties?.icon?.path ? (
-                          <Image
-                            src={getStorageUrl(relNote!.properties.icon.path)}
-                            alt=""
-                            width={12}
-                            height={12}
-                            className="flex-shrink-0 rounded"
-                          />
-                        ) : null}
-                        <span className="max-w-[120px] truncate">
-                          {relNote!.title || "Nota sem título"}
-                        </span>
-                      </button>
-                      {note.access?.canEdit && (
-                        <button
-                          onClick={() => handleRemoveRelation(relNote!.id)}
-                          className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
-                          title="Remover relação"
-                        >
-                          <X size={10} />
-                        </button>
-                      )}
-                    </span>
-                  )
-                )}
-                {relatedNotesData.length > 3 && (
-                  <button
-                    onClick={() => setShowAllRelations(!showAllRelations)}
-                    className="rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-brand-primary-700"
-                  >
-                    {showAllRelations ? "Ver menos" : `+${relatedNotesData.length - 3}`}
-                  </button>
-                )}
-                {note.access?.canEdit && (
-                  <button
-                    onClick={() => setShowRelationModal(true)}
-                    className="rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:text-brand-primary-700"
-                    title="Adicionar relação"
-                  >
-                    <Plus size={10} />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* URLs */}
-            <div className="flex items-center gap-2 overflow-x-auto">
-              <Link2 className="flex-shrink-0 text-yellow-400 dark:text-brand-primary-700" size={13} />
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">URLs</span>
-              <div className="flex flex-wrap gap-1.5">
-                {note.properties?.urls &&
-                  (() => {
-                    const filteredUrls = note.properties.urls.filter(Boolean);
-                    const visibleUrls = showAllUrls ? filteredUrls : filteredUrls.slice(0, 3);
-                    return (
-                      <>
-                        {visibleUrls.map((url, index) => (
-                          <span
-                            key={index}
-                            className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
-                          >
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex max-w-[150px] items-center gap-1.5 truncate text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
-                            >
-                              <span className="truncate">{url.replace(/^https?:\/\//, "")}</span>
-                            </a>
-                            {note.access?.canEdit && (
-                              <button
-                                onClick={() => handleRemoveUrl(url)}
-                                className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
-                                title="Remover URL"
-                              >
-                                <X size={10} />
-                              </button>
-                            )}
-                          </span>
-                        ))}
-                        {filteredUrls.length > 3 && (
-                          <button
-                            onClick={() => setShowAllUrls(!showAllUrls)}
-                            className="rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-brand-primary-700"
-                          >
-                            {showAllUrls ? "Ver menos" : `+${filteredUrls.length - 3}`}
-                          </button>
-                        )}
-                      </>
-                    );
-                  })()}
-                {note.access?.canEdit && (
-                  <>
-                    {showUrlInput ? (
-                      <div className="flex items-center gap-1.5">
-                        <input
-                          type="url"
-                          value={newUrl}
-                          onChange={(e) => setNewUrl(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleAddUrl();
-                            }
-                            if (e.key === "Escape") {
-                              setShowUrlInput(false);
-                              setNewUrl("");
-                            }
-                          }}
-                          placeholder="https://..."
-                          className="w-40 rounded-md border border-neutral-200 bg-transparent px-2 py-0.5 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
-                          autoFocus
-                        />
-                        <button
-                          onClick={handleAddUrl}
-                          disabled={!newUrl.trim()}
-                          className="rounded-md bg-brand-primary-700 px-2 py-0.5 text-xs font-medium text-white transition-colors hover:bg-yellow-600 disabled:opacity-50 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
-                        >
-                          OK
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowUrlInput(false);
-                            setNewUrl("");
-                          }}
-                          className="text-neutral-400 transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"
-                          title="Cancelar"
-                        >
-                          <X size={10} />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setShowUrlInput(true)}
-                        className="rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:text-brand-primary-700"
-                        title="Adicionar URL"
+                        onClick={() => setShowRelationModal(true)}
+                        className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                        title="Adicionar relação"
                       >
                         <Plus size={10} />
                       </button>
                     )}
-                  </>
-                )}
-              </div>
-            </div>
+                  </div>
+                </div>
 
-            {/* Arquivos */}
-            <div className="flex items-center gap-2 overflow-x-auto">
-              <FileText className="flex-shrink-0 text-yellow-400 dark:text-brand-primary-700" size={13} />
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">Arquivos</span>
-              <div className="flex flex-wrap gap-1.5">
-                {note.properties?.files &&
-                  (() => {
-                    const filteredFiles = note.properties.files.filter((f) => f.path);
-                    const visibleFiles = showAllFiles ? filteredFiles : filteredFiles.slice(0, 3);
-                    return (
-                      <>
-                        {visibleFiles.map((file, index) => (
-                          <span
-                            key={file.id || index}
-                            className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
-                          >
-                            <a
-                              href={getStorageUrl(file.path)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex max-w-[120px] items-center gap-1.5 truncate hover:text-neutral-900 dark:hover:text-neutral-100"
-                            >
-                              <span className="truncate">{file.name || "Arquivo"}</span>
-                            </a>
-                            <a
-                              href={getStorageUrl(file.path)}
-                              download={file.name || "arquivo"}
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-neutral-400 opacity-100 transition-all hover:text-neutral-600 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
-                              title="Baixar arquivo"
-                            >
-                              <Download size={10} />
-                            </a>
-                            {note.access?.canEdit && (
-                              <button
-                                onClick={() => handleRemoveFile(file.id)}
-                                className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
-                                title="Remover arquivo"
+                {/* URLs */}
+                <div className="flex items-center gap-2 overflow-x-auto">
+                  <Link2
+                    className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                    size={13}
+                  />
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">URLs</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {note.properties?.urls &&
+                      (() => {
+                        const filteredUrls = note.properties.urls.filter(Boolean);
+                        const visibleUrls = showAllUrls ? filteredUrls : filteredUrls.slice(0, 3);
+                        return (
+                          <>
+                            {visibleUrls.map((url, index) => (
+                              <span
+                                key={index}
+                                className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
                               >
-                                <X size={10} />
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex max-w-[150px] items-center gap-1.5 truncate text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                                >
+                                  <span className="truncate">
+                                    {url.replace(/^https?:\/\//, "")}
+                                  </span>
+                                </a>
+                                {note.access?.canEdit && (
+                                  <button
+                                    onClick={() => handleRemoveUrl(url)}
+                                    className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                                    title="Remover URL"
+                                  >
+                                    <X size={10} />
+                                  </button>
+                                )}
+                              </span>
+                            ))}
+                            {filteredUrls.length > 3 && (
+                              <button
+                                onClick={() => setShowAllUrls(!showAllUrls)}
+                                className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                              >
+                                {showAllUrls ? "Ver menos" : `+${filteredUrls.length - 3}`}
                               </button>
                             )}
-                          </span>
-                        ))}
-                        {filteredFiles.length > 3 && (
+                          </>
+                        );
+                      })()}
+                    {note.access?.canEdit && (
+                      <>
+                        {showUrlInput ? (
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="url"
+                              value={newUrl}
+                              onChange={(e) => setNewUrl(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  handleAddUrl();
+                                }
+                                if (e.key === "Escape") {
+                                  setShowUrlInput(false);
+                                  setNewUrl("");
+                                }
+                              }}
+                              placeholder="https://..."
+                              className="w-40 rounded-md border border-neutral-200 bg-transparent px-2 py-0.5 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                              autoFocus
+                            />
+                            <button
+                              onClick={handleAddUrl}
+                              disabled={!newUrl.trim()}
+                              className="bg-brand-primary-700 rounded-md px-2 py-0.5 text-xs font-medium text-white transition-colors hover:bg-yellow-600 disabled:opacity-50 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
+                            >
+                              OK
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowUrlInput(false);
+                                setNewUrl("");
+                              }}
+                              className="text-neutral-400 transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"
+                              title="Cancelar"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ) : (
                           <button
-                            onClick={() => setShowAllFiles(!showAllFiles)}
-                            className="rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50 dark:hover:text-brand-primary-700"
+                            onClick={() => setShowUrlInput(true)}
+                            className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                            title="Adicionar URL"
                           >
-                            {showAllFiles ? "Ver menos" : `+${filteredFiles.length - 3}`}
+                            <Plus size={10} />
                           </button>
                         )}
                       </>
-                    );
-                  })()}
-                {note.access?.canEdit && (
-                  <button
-                    onClick={() => filesInputRef.current?.click()}
-                    className="rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:text-brand-primary-700"
-                    title="Adicionar arquivo"
-                  >
-                    <Plus size={10} />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+                    )}
+                  </div>
+                </div>
 
-          {/* =================== BLOCOS =================== */}
-          <div className="space-y-1 pl-0 sm:pl-6">
-            {blocks.length > 0 ? (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={blocks.map((b) => b.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {blocks.map((block) => (
-                    <SortableBlockComponent
-                      key={block.id}
-                      block={block}
-                      noteId={note.id}
-                      onUpdate={handleUpdateBlock}
-                      onDelete={handleDeleteBlock}
-                      onAddBlock={() => setShowBlockTypeSelector(true)}
-                      onAddBlockAfter={handleAddBlockAfter}
-                      onBackspaceEmpty={handleBackspaceEmpty}
-                      focusBlockId={focusBlockId}
-                      onFocused={() => setFocusBlockId(null)}
-                    />
-                  ))}
-                </SortableContext>
-
-                {/* Overlay para mostrar o item sendo arrastado */}
-                <DragOverlay>
-                  {activeBlock ? (
-                    <div className="rounded-md border border-yellow-500/30 bg-white px-3 py-2 shadow-xl dark:border-yellow-500/50 dark:bg-neutral-900">
-                      <BlockComponent
-                        block={activeBlock}
-                        noteId={note.id}
-                        onUpdate={handleUpdateBlock}
-                        onDelete={handleDeleteBlock}
-                        onAddBlock={() => {}}
-                        onAddBlockAfter={() => {}}
-                        isDragging={true}
-                      />
-                    </div>
-                  ) : null}
-                </DragOverlay>
-              </DndContext>
-            ) : (
-              <div className="flex min-h-[80px] flex-col items-center justify-center rounded-md px-4 py-4">
-                <div className="flex items-center gap-2 text-sm text-neutral-400 dark:text-neutral-500">
-                  <Loader2 size={14} className="animate-spin" />
-                  <span>Criando bloco...</span>
+                {/* Arquivos */}
+                <div className="flex items-center gap-2 overflow-x-auto">
+                  <FileText
+                    className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                    size={13}
+                  />
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">Arquivos</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {note.properties?.files &&
+                      (() => {
+                        const filteredFiles = note.properties.files.filter((f) => f.path);
+                        const visibleFiles = showAllFiles
+                          ? filteredFiles
+                          : filteredFiles.slice(0, 3);
+                        return (
+                          <>
+                            {visibleFiles.map((file, index) => (
+                              <span
+                                key={file.id || index}
+                                className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
+                              >
+                                <a
+                                  href={getStorageUrl(file.path)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex max-w-[120px] items-center gap-1.5 truncate hover:text-neutral-900 dark:hover:text-neutral-100"
+                                >
+                                  <span className="truncate">{file.name || "Arquivo"}</span>
+                                </a>
+                                <a
+                                  href={getStorageUrl(file.path)}
+                                  download={file.name || "arquivo"}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-neutral-400 opacity-100 transition-all hover:text-neutral-600 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
+                                  title="Baixar arquivo"
+                                >
+                                  <Download size={10} />
+                                </a>
+                                {note.access?.canEdit && (
+                                  <button
+                                    onClick={() => handleRemoveFile(file.id)}
+                                    className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                                    title="Remover arquivo"
+                                  >
+                                    <X size={10} />
+                                  </button>
+                                )}
+                              </span>
+                            ))}
+                            {filteredFiles.length > 3 && (
+                              <button
+                                onClick={() => setShowAllFiles(!showAllFiles)}
+                                className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                              >
+                                {showAllFiles ? "Ver menos" : `+${filteredFiles.length - 3}`}
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
+                    {note.access?.canEdit && (
+                      <button
+                        onClick={() => filesInputRef.current?.click()}
+                        className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                        title="Adicionar arquivo"
+                      >
+                        <Plus size={10} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Botão para adicionar novo bloco */}
-            {note.access?.canEdit && (
-              <div className="relative pt-4">
-                <button
-                  onClick={() => setShowBlockTypeSelector(!showBlockTypeSelector)}
-                  className="flex items-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-400 transition-all hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-700 dark:text-neutral-500 dark:hover:border-yellow-500/50 dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700"
-                >
-                  <Plus size={14} />
-                  Adicionar bloco
-                </button>
+              {/* =================== BLOCOS =================== */}
+              <div className="w-full space-y-1">
+                {blocks.length > 0 ? (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={blocks.map((b) => b.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {blocks.map((block) => (
+                        <SortableBlockComponent
+                          key={block.id}
+                          block={block}
+                          noteId={note.id}
+                          onUpdate={handleUpdateBlock}
+                          onDelete={handleDeleteBlock}
+                          onAddBlock={() => setShowBlockTypeSelector(true)}
+                          onAddBlockAfter={handleAddBlockAfter}
+                          onBackspaceEmpty={handleBackspaceEmpty}
+                          focusBlockId={focusBlockId}
+                          onFocused={() => setFocusBlockId(null)}
+                        />
+                      ))}
+                    </SortableContext>
 
-                {showBlockTypeSelector && (
-                  <BlockTypeSelector
-                    onSelect={(type) => handleAddBlock(type)}
-                    onClose={() => setShowBlockTypeSelector(false)}
-                  />
+                    {/* Overlay para mostrar o item sendo arrastado */}
+                    <DragOverlay>
+                      {activeBlock ? (
+                        <div className="rounded-md border border-yellow-500/30 bg-white px-3 py-2 shadow-xl dark:border-yellow-500/50 dark:bg-neutral-900">
+                          <BlockComponent
+                            block={activeBlock}
+                            noteId={note.id}
+                            onUpdate={handleUpdateBlock}
+                            onDelete={handleDeleteBlock}
+                            onAddBlock={() => {}}
+                            onAddBlockAfter={() => {}}
+                            isDragging={true}
+                          />
+                        </div>
+                      ) : null}
+                    </DragOverlay>
+                  </DndContext>
+                ) : (
+                  <div className="flex min-h-[80px] flex-col items-center justify-center rounded-md px-4 py-4">
+                    <div className="flex items-center gap-2 text-sm text-neutral-400 dark:text-neutral-500">
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Criando bloco...</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Botão para adicionar novo bloco */}
+                {note.access?.canEdit && (
+                  <div className="relative pt-4">
+                    <button
+                      onClick={() => setShowBlockTypeSelector(!showBlockTypeSelector)}
+                      className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-400 transition-all hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-700 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                    >
+                      <Plus size={14} />
+                      Adicionar bloco
+                    </button>
+
+                    {showBlockTypeSelector && (
+                      <BlockTypeSelector
+                        onSelect={(type) => handleAddBlock(type)}
+                        onClose={() => setShowBlockTypeSelector(false)}
+                      />
+                    )}
+                  </div>
                 )}
               </div>
-            )}
+
+              {/* Atalhos de teclado - visível apenas em desktop */}
+              {note.access?.canEdit && (
+                <div className="mt-10 hidden border-t border-neutral-100 pt-4 sm:block dark:border-neutral-800">
+                  <div className="flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500">
+                    <Save size={12} />
+                    <span>
+                      <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                        Enter
+                      </kbd>
+                      <span className="ml-1.5">novo bloco</span>
+                      <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
+                      <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                        Espaço
+                      </kbd>
+                      <span className="ml-1.5">ou</span>
+                      <kbd className="ml-1.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                        /
+                      </kbd>
+                      <span className="ml-1.5">em linha vazia para tipo de bloco</span>
+                      <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
+                      <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                        Shift+Enter
+                      </kbd>
+                      <span className="ml-1.5">nova linha</span>
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Atalhos de teclado - visível apenas em desktop */}
-          {note.access?.canEdit && (
-            <div className="mt-10 hidden border-t border-neutral-100 pt-4 sm:block dark:border-neutral-800">
-              <div className="flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500">
-                <Save size={12} />
-                <span>
-                  <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-                    Enter
-                  </kbd>
-                  <span className="ml-1.5">novo bloco</span>
-                  <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
-                  <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-                    Espaço
-                  </kbd>
-                  <span className="ml-1.5">ou</span>
-                  <kbd className="ml-1.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-                    /
-                  </kbd>
-                  <span className="ml-1.5">em linha vazia para tipo de bloco</span>
-                  <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
-                  <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-                    Shift+Enter
-                  </kbd>
-                  <span className="ml-1.5">nova linha</span>
-                </span>
-              </div>
-            </div>
+          {commentsSidebarOpen && (
+            <>
+              <button
+                type="button"
+                className="fixed inset-0 z-[44] bg-black/40 md:hidden"
+                aria-label="Fechar painel de comentários"
+                onClick={() => setCommentsSidebarOpen(false)}
+              />
+              <aside className="fixed inset-y-0 right-0 z-[45] flex h-full min-h-0 w-full max-w-[420px] flex-col border-l border-neutral-200 bg-white shadow-2xl md:static md:z-0 md:max-w-[380px] md:flex-shrink-0 md:self-stretch md:shadow-none dark:border-neutral-800 dark:bg-neutral-950">
+                <NoteCommentsSidebar
+                  canComment={canUseNoteComments}
+                  onClose={() => setCommentsSidebarOpen(false)}
+                />
+              </aside>
+            </>
           )}
         </div>
-      </div>
 
-      {/* =================== MODAL DE COMPARTILHAMENTO =================== */}
-      {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-          <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
-            {/* Handle para mobile */}
-            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
+        {/* =================== MODAL DE COMPARTILHAMENTO =================== */}
+        {showShareModal && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+            <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
+              {/* Handle para mobile */}
+              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
 
-            <div className="mb-5 flex items-center justify-between">
-              <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50 dark:bg-brand-primary-700/10">
-                  <UserPlus size={16} className="text-yellow-600 dark:text-brand-primary-700" />
-                </div>
-                Compartilhar Nota
-              </h3>
-              <button
-                onClick={() => setShowShareModal(false)}
-                className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                title="Fechar modal"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  Buscar usuário por email
-                </label>
-                <div className="relative">
-                  <Search
-                    className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-400"
-                    size={15}
-                  />
-                  <input
-                    type="email"
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      handleSearchUsers(e.target.value);
-                    }}
-                    placeholder="Digite o email do usuário..."
-                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-3 pr-4 pl-10 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
-                  />
-                  {isSearching && (
-                    <div className="absolute top-1/2 right-3 -translate-y-1/2">
-                      <Loader2
-                        size={15}
-                        className="animate-spin text-yellow-600 dark:text-brand-primary-700"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {searchResults.length > 0 && (
-                <div className="max-h-48 space-y-1.5 overflow-y-auto sm:max-h-36">
-                  {searchResults.map((user) => (
-                    <div
-                      key={user.id}
-                      className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 p-2.5 transition-colors hover:bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700"
-                    >
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100 dark:bg-brand-primary-700/20">
-                          <span className="text-xs font-bold text-yellow-700 dark:text-brand-primary-700">
-                            {(user.name || user.username).charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                            {user.name || user.username}
-                          </div>
-                          <div className="truncate text-xs text-neutral-500 dark:text-neutral-400">
-                            {user.email}
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleShareNote(user.id)}
-                        className="ml-2 flex-shrink-0 rounded-md bg-brand-primary-700 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
-                      >
-                        Adicionar
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-neutral-800">
+              <div className="mb-5 flex items-center justify-between">
+                <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
+                  <div className="dark:bg-brand-primary-700/10 flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50">
+                    <UserPlus size={16} className="dark:text-brand-primary-700 text-yellow-600" />
+                  </div>
+                  Compartilhar Nota
+                </h3>
                 <button
                   onClick={() => setShowShareModal(false)}
-                  className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  title="Fechar modal"
                 >
-                  Cancelar
+                  <X size={18} />
                 </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    Buscar usuário por email
+                  </label>
+                  <div className="relative">
+                    <Search
+                      className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-400"
+                      size={15}
+                    />
+                    <input
+                      type="email"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        handleSearchUsers(e.target.value);
+                      }}
+                      placeholder="Digite o email do usuário..."
+                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-3 pr-4 pl-10 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                    />
+                    {isSearching && (
+                      <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                        <Loader2
+                          size={15}
+                          className="dark:text-brand-primary-700 animate-spin text-yellow-600"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {searchResults.length > 0 && (
+                  <div className="max-h-48 space-y-1.5 overflow-y-auto sm:max-h-36">
+                    {searchResults.map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 p-2.5 transition-colors hover:bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                      >
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <div className="dark:bg-brand-primary-700/20 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100">
+                            <span className="dark:text-brand-primary-700 text-xs font-bold text-yellow-700">
+                              {(user.name || user.username).charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                              {user.name || user.username}
+                            </div>
+                            <div className="truncate text-xs text-neutral-500 dark:text-neutral-400">
+                              {user.email}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleShareNote(user.id)}
+                          className="bg-brand-primary-700 ml-2 flex-shrink-0 rounded-md px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
+                        >
+                          Adicionar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                  <button
+                    onClick={() => setShowShareModal(false)}
+                    className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* =================== MODAL DE RELAÇÕES =================== */}
-      {showRelationModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-          <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
-            {/* Handle para mobile */}
-            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
+        {/* =================== MODAL DE RELAÇÕES =================== */}
+        {showRelationModal && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+            <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
+              {/* Handle para mobile */}
+              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
 
-            <div className="mb-5 flex items-center justify-between">
-              <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50 dark:bg-brand-primary-700/10">
-                  <Link size={16} className="text-yellow-600 dark:text-brand-primary-700" />
-                </div>
-                Relações
-              </h3>
-              <button
-                onClick={() => {
-                  setShowRelationModal(false);
-                  setRelationSearchTerm("");
-                }}
-                className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                title="Fechar modal"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  Buscar notas
-                </label>
-                <div className="relative">
-                  <Search
-                    className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-400"
-                    size={15}
-                  />
-                  <input
-                    type="text"
-                    value={relationSearchTerm}
-                    onChange={(e) => setRelationSearchTerm(e.target.value)}
-                    placeholder="Pesquisar por título..."
-                    className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-3 pr-4 pl-10 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
-                    autoFocus
-                  />
-                </div>
-              </div>
-
-              <div className="max-h-64 space-y-1 overflow-y-auto sm:max-h-52">
-                {filteredRelationNotes.length > 0 ? (
-                  filteredRelationNotes.map((relNote) => {
-                    const isSelected = (note?.properties?.relations || []).includes(relNote.id);
-                    return (
-                      <button
-                        key={relNote.id}
-                        onClick={() => handleToggleRelation(relNote.id)}
-                        className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors sm:py-2 ${
-                          isSelected
-                            ? "bg-yellow-50 ring-1 ring-yellow-200 dark:bg-brand-primary-700/10 dark:ring-yellow-500/30"
-                            : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                        }`}
-                      >
-                        <div
-                          className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-all ${
-                            isSelected
-                              ? "border-yellow-500 bg-brand-primary-700 text-white"
-                              : "border-neutral-300 dark:border-neutral-600"
-                          }`}
-                        >
-                          {isSelected && <CheckSquare size={10} />}
-                        </div>
-                        <div className="flex min-w-0 flex-1 items-center gap-2">
-                          {relNote.properties?.icon?.path ? (
-                            <Image
-                              src={getStorageUrl(relNote.properties.icon.path)}
-                              alt=""
-                              width={20}
-                              height={20}
-                              className="flex-shrink-0 rounded"
-                            />
-                          ) : (
-                            <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded bg-neutral-100 dark:bg-neutral-800">
-                              <Type size={10} className="text-neutral-400" />
-                            </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                              {relNote.title || "Nota sem título"}
-                            </div>
-                            {relNote.tags && relNote.tags.length > 0 && (
-                              <div className="mt-0.5 flex gap-1 overflow-hidden">
-                                {relNote.tags.slice(0, 3).map((tag) => {
-                                  const colors = getTagColor(tag);
-                                  return (
-                                    <span
-                                      key={tag}
-                                      className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
-                                    >
-                                      {tag}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })
-                ) : (
-                  <div className="py-6 text-center text-sm text-neutral-400 dark:text-neutral-500">
-                    {relationSearchTerm ? "Nenhuma nota encontrada" : "Nenhuma nota disponível"}
+              <div className="mb-5 flex items-center justify-between">
+                <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
+                  <div className="dark:bg-brand-primary-700/10 flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50">
+                    <Link size={16} className="dark:text-brand-primary-700 text-yellow-600" />
                   </div>
-                )}
-              </div>
-
-              {/* Notas selecionadas */}
-              {(note?.properties?.relations || []).length > 0 && (
-                <div className="border-t border-neutral-100 pt-3 dark:border-neutral-800">
-                  <div className="mb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                    {(note?.properties?.relations || []).length} nota
-                    {(note?.properties?.relations || []).length !== 1 ? "s" : ""} relacionada
-                    {(note?.properties?.relations || []).length !== 1 ? "s" : ""}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                  Relações
+                </h3>
                 <button
                   onClick={() => {
                     setShowRelationModal(false);
                     setRelationSearchTerm("");
                   }}
-                  className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  title="Fechar modal"
                 >
-                  Fechar
+                  <X size={18} />
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* =================== MODAL DE TAGS =================== */}
-      {showTagModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-          <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
-            {/* Handle para mobile */}
-            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
-
-            <div className="mb-5 flex items-center justify-between">
-              <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50 dark:bg-brand-primary-700/10">
-                  <Tag size={16} className="text-yellow-600 dark:text-brand-primary-700" />
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    Buscar notas
+                  </label>
+                  <div className="relative">
+                    <Search
+                      className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-400"
+                      size={15}
+                    />
+                    <input
+                      type="text"
+                      value={relationSearchTerm}
+                      onChange={(e) => setRelationSearchTerm(e.target.value)}
+                      placeholder="Pesquisar por título..."
+                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-3 pr-4 pl-10 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                      autoFocus
+                    />
+                  </div>
                 </div>
-                Gerenciar Tags
-              </h3>
-              <button
-                onClick={() => setShowTagModal(false)}
-                className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                title="Fechar modal"
-              >
-                <X size={18} />
-              </button>
-            </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  Nova tag
-                </label>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <input
-                    type="text"
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="Digite o nome da tag..."
-                    className="flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-3 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddTag();
-                      }
-                    }}
-                  />
+                <div className="max-h-64 space-y-1 overflow-y-auto sm:max-h-52">
+                  {filteredRelationNotes.length > 0 ? (
+                    filteredRelationNotes.map((relNote) => {
+                      const isSelected = (note?.properties?.relations || []).includes(relNote.id);
+                      return (
+                        <button
+                          key={relNote.id}
+                          onClick={() => handleToggleRelation(relNote.id)}
+                          className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors sm:py-2 ${
+                            isSelected
+                              ? "dark:bg-brand-primary-700/10 bg-yellow-50 ring-1 ring-yellow-200 dark:ring-yellow-500/30"
+                              : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                          }`}
+                        >
+                          <div
+                            className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-all ${
+                              isSelected
+                                ? "bg-brand-primary-700 border-yellow-500 text-white"
+                                : "border-neutral-300 dark:border-neutral-600"
+                            }`}
+                          >
+                            {isSelected && <CheckSquare size={10} />}
+                          </div>
+                          <div className="flex min-w-0 flex-1 items-center gap-2">
+                            {relNote.properties?.icon?.path ? (
+                              <Image
+                                src={getStorageUrl(relNote.properties.icon.path)}
+                                alt=""
+                                width={20}
+                                height={20}
+                                className="flex-shrink-0 rounded"
+                              />
+                            ) : (
+                              <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded bg-neutral-100 dark:bg-neutral-800">
+                                <Type size={10} className="text-neutral-400" />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                                {relNote.title || "Nota sem título"}
+                              </div>
+                              {relNote.tags && relNote.tags.length > 0 && (
+                                <div className="mt-0.5 flex gap-1 overflow-hidden">
+                                  {relNote.tags.slice(0, 3).map((tag) => {
+                                    const colors = getTagColor(tag);
+                                    return (
+                                      <span
+                                        key={tag}
+                                        className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
+                                      >
+                                        {tag}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="py-6 text-center text-sm text-neutral-400 dark:text-neutral-500">
+                      {relationSearchTerm ? "Nenhuma nota encontrada" : "Nenhuma nota disponível"}
+                    </div>
+                  )}
+                </div>
+
+                {/* Notas selecionadas */}
+                {(note?.properties?.relations || []).length > 0 && (
+                  <div className="border-t border-neutral-100 pt-3 dark:border-neutral-800">
+                    <div className="mb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                      {(note?.properties?.relations || []).length} nota
+                      {(note?.properties?.relations || []).length !== 1 ? "s" : ""} relacionada
+                      {(note?.properties?.relations || []).length !== 1 ? "s" : ""}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-neutral-800">
                   <button
-                    onClick={handleAddTag}
-                    disabled={!newTag.trim()}
-                    className="flex items-center justify-center gap-1.5 rounded-md bg-brand-primary-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-50 sm:py-2.5 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
+                    onClick={() => {
+                      setShowRelationModal(false);
+                      setRelationSearchTerm("");
+                    }}
+                    className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                   >
-                    <Plus size={14} />
-                    Adicionar
+                    Fechar
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
 
-              {note && note.tags && note.tags.length > 0 && (
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    Tags existentes
-                  </label>
-                  <div className="flex max-h-32 flex-wrap gap-2 overflow-y-auto">
-                    {note.tags.map((tag, index) => {
-                      const colors = getTagColor(tag);
-                      return (
-                        <span
-                          key={index}
-                          className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${colors.bg} ${colors.text} ${colors.border}`}
-                        >
-                          {tag}
-                          <button
-                            onClick={() => handleRemoveTag(tag)}
-                            className="text-neutral-400 transition-colors hover:text-red-500 dark:text-neutral-500 dark:hover:text-red-400"
-                            title="Remover tag"
-                          >
-                            <X size={12} />
-                          </button>
-                        </span>
-                      );
-                    })}
+        {/* =================== MODAL DE TAGS =================== */}
+        {showTagModal && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+            <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
+              {/* Handle para mobile */}
+              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
+
+              <div className="mb-5 flex items-center justify-between">
+                <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
+                  <div className="dark:bg-brand-primary-700/10 flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50">
+                    <Tag size={16} className="dark:text-brand-primary-700 text-yellow-600" />
                   </div>
-                </div>
-              )}
-
-              <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                  Gerenciar Tags
+                </h3>
                 <button
                   onClick={() => setShowTagModal(false)}
-                  className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  title="Fechar modal"
                 >
-                  Fechar
+                  <X size={18} />
                 </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    Nova tag
+                  </label>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <input
+                      type="text"
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      placeholder="Digite o nome da tag..."
+                      className="flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-3 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddTag();
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={handleAddTag}
+                      disabled={!newTag.trim()}
+                      className="bg-brand-primary-700 flex items-center justify-center gap-1.5 rounded-md px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-50 sm:py-2.5 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
+                    >
+                      <Plus size={14} />
+                      Adicionar
+                    </button>
+                  </div>
+                </div>
+
+                {note && note.tags && note.tags.length > 0 && (
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                      Tags existentes
+                    </label>
+                    <div className="flex max-h-32 flex-wrap gap-2 overflow-y-auto">
+                      {note.tags.map((tag, index) => {
+                        const colors = getTagColor(tag);
+                        return (
+                          <span
+                            key={index}
+                            className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${colors.bg} ${colors.text} ${colors.border}`}
+                          >
+                            {tag}
+                            <button
+                              onClick={() => handleRemoveTag(tag)}
+                              className="text-neutral-400 transition-colors hover:text-red-500 dark:text-neutral-500 dark:hover:text-red-400"
+                              title="Remover tag"
+                            >
+                              <X size={12} />
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                  <button
+                    onClick={() => setShowTagModal(false)}
+                    className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  >
+                    Fechar
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </NoteCommentsProvider>
   );
 };
 

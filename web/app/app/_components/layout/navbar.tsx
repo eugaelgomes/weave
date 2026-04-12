@@ -241,7 +241,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                         className="object-contain"
                       />
                     </div>
-                    <span className="max-w-[120px] truncate text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    <span className="max-w-[180px] truncate text-sm font-medium text-neutral-700 dark:text-neutral-300">
                       {user.org_name}
                     </span>
                   </Link>

@@ -145,8 +145,8 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                 icon: UsersRound, 
                 label: t.nav.members,
                 subItems: [
-                  { path: "/app/organization/members/list", icon: Users, label: t.nav.list || "Lista" },
-                  { path: "/app/organization/members/invites", icon: MessageSquare, label: t.nav.invites || "Convites" },
+                  { path: "/app/organization/members/list", icon: Users, label: t.nav.list },
+                  { path: "/app/organization/members/invites", icon: MessageSquare, label: t.nav.invites },
                 ]
               },
               { path: "/app/organization/areas", icon: Workflow, label: t.nav.areas },

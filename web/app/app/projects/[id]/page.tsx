@@ -88,7 +88,7 @@ export default function ProjectViewPage() {
 
   if (loading) {
     return (
-      <div className="flex h-full min-h-[50vh] items-center justify-center">
+      <div className="flex min-h-[50vh] flex-1 items-center justify-center">
         <div className="border-primary-500 h-6 w-6 animate-spin rounded-full border-b-2"></div>
       </div>
     );
@@ -101,7 +101,7 @@ export default function ProjectViewPage() {
     isOwner || collaborators.some((c) => c.user_id === user?.id && c.permission === "admin");
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden bg-[#FAFAFA] dark:bg-[#0E0E11]">
+    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#FAFAFA] dark:bg-[#0E0E11]">
       <ProjectHeader
         project={project}
         stagesCount={stages.length}
@@ -118,8 +118,8 @@ export default function ProjectViewPage() {
 
       <ProjectFilters />
 
-      <div className="relative flex flex-1 overflow-hidden">
-        <main className="flex flex-1 flex-col overflow-hidden">
+      <div className="relative flex min-h-0 flex-1 overflow-hidden">
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {isEditing && (
             <ProjectEditor
               project={project}
@@ -131,7 +131,7 @@ export default function ProjectViewPage() {
             />
           )}
 
-          <div className="flex flex-1 flex-col overflow-hidden bg-white shadow-sm dark:bg-neutral-900/50">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white shadow-sm dark:bg-neutral-900/50">
             {activeView === "board" && (
               <ProjectBoard stages={stages} projectNotes={projectNotes} projectTags={projectTags} />
             )}

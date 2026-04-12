@@ -58,7 +58,7 @@ export default function ProjectBoard({ stages, projectNotes, projectTags }: Proj
 
   if (stages.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-neutral-400">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center text-neutral-400">
         <LayoutGrid className="mb-3 h-8 w-8 text-neutral-300 dark:text-neutral-700" />
         <p className="text-sm font-medium">Nenhum estágio configurado para este quadro.</p>
       </div>
@@ -66,7 +66,7 @@ export default function ProjectBoard({ stages, projectNotes, projectTags }: Proj
   }
 
   return (
-    <div className="flex h-full gap-4 overflow-x-auto overflow-y-hidden p-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-700">
+    <div className="flex h-full min-h-0 gap-4 overflow-x-auto overflow-y-hidden p-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-700">
       {stages
         .sort((a, b) => a.position - b.position)
         .map((stage) => {
@@ -76,7 +76,7 @@ export default function ProjectBoard({ stages, projectNotes, projectTags }: Proj
           return (
             <div
               key={stage.id}
-              className="flex w-[280px] flex-shrink-0 flex-col rounded-md bg-neutral-50/50 dark:bg-neutral-950/30"
+              className="flex h-full min-h-0 w-[280px] flex-shrink-0 flex-col rounded-md bg-neutral-50/50 dark:bg-neutral-950/30"
             >
               {/* Header da Coluna */}
               <div className="flex items-center justify-between p-3">

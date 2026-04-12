@@ -35,6 +35,8 @@ const ptBR = {
     organization: "Organização",
     settings: "Configurações",
     members: "Membros",
+    invites: "Convites",
+    list: "Lista",
     menu: "Menu",
     expandMenu: "Expandir menu",
     collapseMenu: "Recolher menu",
@@ -161,52 +163,7 @@ const ptBR = {
     removeSuccess: "Membro removido da organização.",
     removeError: "Erro ao remover membro."
   },
-
-  organizationMembers: {
-    title: "Gerenciamento de Equipe",
-    description: "Visualize e controle as permissões dos membros.",
-    inviteMember: "Convidar Membro",
-    searchPlaceholder: "Buscar por nome ou e-mail...",
-    membersCount: "membros",
-    member: "Membro",
-    guest: "Convidado",
-    admin: "Admin",
-    superAdmin: "Super Admin",
-    tableUser: "Usuário",
-    tableRole: "Função",
-    tableActions: "Ações",
-    you: "VOCÊ",
-    editRoleTitle: "Editar Função",
-    removeTitle: "Remover",
-    inviteModalTitle: "Convidar Novo Membro",
-    userEmail: "E-mail do Usuário",
-    accessLevel: "Nível de Acesso",
-    adminRole: "Administrador",
-    standardRole: "Membro Padrão",
-    guestRole: "Convidado",
-    cancel: "Cancelar",
-    sendInvite: "Enviar Convite",
-    sending: "Enviando...",
-    manageRoleTitle: "Gerenciar Nível de Acesso",
-    newLevel: "Novo Nível",
-    roleChangeWarning: "Avisaremos o usuário sobre a mudança de permissões.",
-    saveChanges: "Salvar Alterações",
-    saving: "Salvando...",
-    removeMemberTitle: "Remover Membro",
-    removeConfirmation: "Tem certeza que deseja remover {name} da organização? Eles perderão acesso a todos os projetos e notas internas.",
-    yesRemove: "Sim, remover membro",
-    removing: "Removendo...",
-    emptyState: "Crie uma organização para gerenciar membros.",
-    inviteSuccess: "Convite enviado para {email}",
-    inviteError: "Erro ao enviar convite.",
-    roleUpdateSuccess: "Função atualizada com sucesso.",
-    roleUpdateError: "Erro ao atualizar permissão.",
-    removeSuccess: "Membro removido da organização.",
-    removeError: "Erro ao remover membro."
-  },
 };
 export default ptBR;
-
-
 
 export type TranslationKeys = typeof ptBR;

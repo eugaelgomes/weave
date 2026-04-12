@@ -5,40 +5,31 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../../_contexts/auth-context";
 import { useNotes } from "../../_contexts/notes-context";
+import { NotesShellProvider, useNotesShell } from "../../_contexts/notes-shell-context";
 import { FileText, ChevronRight, LayoutDashboard, Menu, X } from "lucide-react";
 import { NotesHeader } from "../_components/ui/headers/notes-header";
 
-export default function NotesLayout({ children }: { children: React.ReactNode }) {
-  const { authenticated, loading: authLoading } = useAuth();
+function NotesLayoutContent({ children }: { children: React.ReactNode }) {
   const { loading: notesLoading, getRecentNotes } = useNotes();
   const pathname = usePathname();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
+  const { leftNavCollapsedForComments, setLeftNavCollapsedForComments } = useNotesShell();
 
-  if (authLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-yellow-500"></div>
-      </div>
-    );
-  }
+  React.useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [pathname]);
 
-  // Se não estiver autenticado, o AuthContext ou middleware deve lidar com o redirect
-  if (!authenticated) {
-    if (typeof window !== "undefined") {
-      window.location.href = "/auth/";
-    }
-    return null;
-  }
+  React.useEffect(() => {
+    setLeftNavCollapsedForComments(false);
+  }, [pathname, setLeftNavCollapsedForComments]);
 
-  // Pegar até 10 notas recentes a partir da listagem geral de notas ou do getRecentNotes
-  // Vou usar o `getRecentNotes` do hook!
   const recentNotes = getRecentNotes ? getRecentNotes().slice(0, 10) : [];
 
   const isDashboard = pathname === "/app/notes";
   const currentNoteId = !isDashboard ? pathname.split("/app/notes/")[1] : null;
   const sidebarContent = (
     <div className="p-2.5">
-      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500  dark:text-neutral-400">
+      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
         Menu
       </h2>
 
@@ -65,7 +56,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
         </li>
       </ul>
 
-      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500  dark:text-neutral-400">
+      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
         Notas Recentes
       </h2>
 
@@ -105,17 +96,13 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     </div>
   );
 
-  React.useEffect(() => {
-    setIsMobileSidebarOpen(false);
-  }, [pathname]);
-
   return (
-    <div className="flex h-[calc(100vh-5rem)] flex-col gap-2 md:px-0">
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-2 md:px-0">
       <NotesHeader />
 
-      <div className="flex flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
         <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 md:hidden dark:border-neutral-800">
-          <span className="text-xs font-semibold tracking-wider text-neutral-500  dark:text-neutral-400">
+          <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
             Navegação
           </span>
           <button
@@ -138,14 +125,18 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col md:flex-row">
-          {/* SIDEBAR LATERAL */}
-          <div className="hidden w-full flex-shrink-0 overflow-y-auto border-b border-neutral-200 bg-neutral-50 md:block md:w-[200px] md:border-r md:border-b-0 dark:border-neutral-800 dark:bg-neutral-900/30">
+        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+          {/* SIDEBAR LATERAL — recolhe no desktop quando o painel de comentários está aberto */}
+          <div
+            className={`hidden w-full flex-shrink-0 overflow-y-auto border-b border-neutral-200 bg-neutral-50 md:border-r md:border-b-0 dark:border-neutral-800 dark:bg-neutral-900/30 ${
+              leftNavCollapsedForComments ? "md:hidden" : "md:block md:w-[180px]"
+            }`}
+          >
             {sidebarContent}
           </div>
 
           {/* CONTEÚDO PRINCIPAL (Detail) */}
-          <div className="flex flex-1 flex-col overflow-y-auto bg-white dark:bg-neutral-950">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white dark:bg-neutral-950">
             {children}
           </div>
         </div>
@@ -162,7 +153,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
 
           <div className="ml-auto flex h-full w-[80%] max-w-xs flex-col border-l border-neutral-200 bg-white shadow-xl dark:border-neutral-800 dark:bg-neutral-950">
             <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 dark:border-neutral-800">
-              <span className="text-xs font-semibold tracking-wider text-neutral-500  dark:text-neutral-400">
+              <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
                 Menu de Notas
               </span>
               <button
@@ -181,5 +172,30 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
         </div>
       )}
     </div>
+  );
+}
+
+export default function NotesLayout({ children }: { children: React.ReactNode }) {
+  const { authenticated, loading: authLoading } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-yellow-500"></div>
+      </div>
+    );
+  }
+
+  if (!authenticated) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/auth/";
+    }
+    return null;
+  }
+
+  return (
+    <NotesShellProvider>
+      <NotesLayoutContent>{children}</NotesLayoutContent>
+    </NotesShellProvider>
   );
 }

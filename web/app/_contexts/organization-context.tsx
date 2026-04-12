@@ -141,7 +141,10 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   // Estados
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [members, setMembers] = useState<OrganizationMember[]>([]);
-  const [memberStats, setMemberStats] = useState<Omit<OrganizationMembersData, "list_org_members"> | null>(null);
+  const [memberStats, setMemberStats] = useState<Omit<
+    OrganizationMembersData,
+    "list_org_members"
+  > | null>(null);
   const [invites, setInvites] = useState<OrganizationInvite[]>([]);
   const [areas, setAreas] = useState<OrganizationArea[]>([]);
   const [areaMembers, setAreaMembers] = useState<Record<string, OrganizationAreaMember[]>>({});
@@ -259,42 +262,36 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   );
 
   // 3. ATUALIZAR LOGO
-  const uploadLogo = useCallback(
-    async (file: File): Promise<Organization | null> => {
-      setLoading(true);
-      setError(null);
-      try {
-        const updatedOrg = await uploadOrganizationLogoService(file);
-        setOrganization(updatedOrg);
-        return updatedOrg;
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Erro ao atualizar logo");
-        return null;
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+  const uploadLogo = useCallback(async (file: File): Promise<Organization | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedOrg = await uploadOrganizationLogoService(file);
+      setOrganization(updatedOrg);
+      return updatedOrg;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao atualizar logo");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // 3. ATUALIZAR BANNER
-  const uploadBanner = useCallback(
-    async (file: File): Promise<Organization | null> => {
-      setLoading(true);
-      setError(null);
-      try {
-        const updatedOrg = await uploadOrganizationBannerService(file);
-        setOrganization(updatedOrg);
-        return updatedOrg;
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Erro ao atualizar banner");
-        return null;
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+  const uploadBanner = useCallback(async (file: File): Promise<Organization | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedOrg = await uploadOrganizationBannerService(file);
+      setOrganization(updatedOrg);
+      return updatedOrg;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao atualizar banner");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // 3.1 ATUALIZAR PROPERTIES
   const updateProperties = useCallback(
@@ -359,9 +356,19 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       setLoading(true);
       try {
         await addMemberDirectlyService(memberId, role);
-        // Atualiza a lista local
         const updatedMembers = await fetchMembersService();
-        setMembers(updatedMembers);
+        if (updatedMembers) {
+          setMembers(updatedMembers.list_org_members);
+          setMemberStats({
+            count: updatedMembers.count,
+            count_by_role: updatedMembers.count_by_role,
+            count_by_status: updatedMembers.count_by_status,
+            count_by_suspended: updatedMembers.count_by_suspended,
+          });
+        } else {
+          setMembers([]);
+          setMemberStats(null);
+        }
         return true;
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Erro ao adicionar membro");

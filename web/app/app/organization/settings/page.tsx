@@ -98,14 +98,17 @@ const OrganizationPage = () => {
     }
   };
 
-  const handleUpdateImage = async (file: File) => {
+  const handleUpdateImage = async (fileOrUrl: string | File) => {
     if (!editingImage) return;
+    if (!(fileOrUrl instanceof File)) {
+      return;
+    }
 
     try {
       if (editingImage === "logo") {
-        await uploadLogo(file);
+        await uploadLogo(fileOrUrl);
       } else {
-        await uploadBanner(file);
+        await uploadBanner(fileOrUrl);
       }
 
       toast.success(`${editingImage === "logo" ? "Logo" : "Banner"} atualizado com sucesso`);

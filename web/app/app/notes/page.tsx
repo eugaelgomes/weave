@@ -326,7 +326,7 @@ const NotesWithPagination = () => {
   }
 
   return (
-    <div className="flex h-full flex-col space-y-2">
+    <div className="flex min-h-0 flex-1 flex-col space-y-2">
       {/* =================== HEADER / TOOLBAR =================== */}
       <div className="flex flex-col border-b border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-950">
         {/* Linha Única: Título, Busca e Ações */}
