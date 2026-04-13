@@ -749,6 +749,9 @@ const NoteDetail = () => {
   const [taskPriorities, setTaskPriorities] = useState<TaskPriority[]>([]);
   const [projectStages, setProjectStages] = useState<ProjectStage[]>([]);
 
+  /** Itens visíveis em colapso para tags, collabs, relações e URLs (toggle Ver mais / Ver menos) */
+  const META_LIST_PREVIEW_LIMIT = 2;
+
   // Refs para inputs de arquivo
   const iconInputRef = React.useRef<HTMLInputElement>(null);
   const bannerInputRef = React.useRef<HTMLInputElement>(null);
@@ -1987,12 +1990,13 @@ const NoteDetail = () => {
                     </div>
                   </div>
 
-                  {/* Meta informações — até 2/3 da largura; grelha 2 colunas com rótulo à esquerda e valor/campo à direita */}
-                  <div className="mb-6 flex w-full max-w-[66.666667%] flex-col gap-4 border-b border-neutral-100 pb-4 dark:border-neutral-800">
-                    <div className="grid grid-cols-1 gap-x-6 gap-y-4 lg:grid-cols-2 lg:items-start">
+                  {/* Meta informações — conteúdo até 2/3; linhas divisórias em largura total */}
+                  <div className="mb-6 flex w-full flex-col gap-4 pb-4">
+                    <div className="w-full max-w-[66.666667%]">
+                      <div className="grid grid-cols-1 gap-x-6 gap-y-4 lg:grid-cols-2 lg:items-center">
                       {(note.access?.canEdit || note.associated_project) && (
                         <>
-                          <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                          <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
                             <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                               <FolderKanban
                                 className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
@@ -2022,7 +2026,7 @@ const NoteDetail = () => {
                               ) : null}
                             </div>
                           </div>
-                          <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                          <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
                             <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                               <Kanban
                                 className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
@@ -2127,7 +2131,7 @@ const NoteDetail = () => {
                         note.priority_id ||
                         note.priority_name) && (
                         <>
-                          <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                          <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
                             <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                               <Calendar
                                 className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
@@ -2168,7 +2172,7 @@ const NoteDetail = () => {
                               )}
                             </div>
                           </div>
-                          <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                          <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
                             <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                               <Flag
                                 className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
@@ -2246,7 +2250,7 @@ const NoteDetail = () => {
                         </>
                       )}
 
-                      <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                      <div className="flex items-center min-w-0 flex-row gap-2 sm:gap-3">
                         <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                           <Users
                             className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
@@ -2260,7 +2264,7 @@ const NoteDetail = () => {
                               <div className="flex -space-x-1.5">
                                 {(showAllCollabs
                                   ? note.collaborators
-                                  : note.collaborators.slice(0, 3)
+                                  : note.collaborators.slice(0, META_LIST_PREVIEW_LIMIT)
                                 ).map((collab, index) => {
                                   const displayName = getCollaboratorDisplayName(collab);
                                   const avatarUrl = getCollaboratorAvatarUrl(collab);
@@ -2298,14 +2302,13 @@ const NoteDetail = () => {
                                   );
                                 })}
                               </div>
-                              {note.collaborators.length > 3 && (
+                              {note.collaborators.length > META_LIST_PREVIEW_LIMIT && (
                                 <button
+                                  type="button"
                                   onClick={() => setShowAllCollabs(!showAllCollabs)}
                                   className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                                 >
-                                  {showAllCollabs
-                                    ? "Ver menos"
-                                    : `+${note.collaborators.length - 3}`}
+                                  {showAllCollabs ? "Ver menos" : "Ver mais"}
                                 </button>
                               )}
                             </>
@@ -2323,7 +2326,7 @@ const NoteDetail = () => {
                       </div>
 
                       {/* Relações */}
-                      <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                      <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
                         <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                           <Link
                             className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
@@ -2332,7 +2335,10 @@ const NoteDetail = () => {
                           <span className="font-medium">Relações</span>
                         </div>
                         <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
-                          {(showAllRelations ? relatedNotesData : relatedNotesData.slice(0, 3)).map(
+                          {(showAllRelations
+                            ? relatedNotesData
+                            : relatedNotesData.slice(0, META_LIST_PREVIEW_LIMIT)
+                          ).map(
                             (relNote) => (
                               <span
                                 key={relNote!.id}
@@ -2367,12 +2373,13 @@ const NoteDetail = () => {
                               </span>
                             )
                           )}
-                          {relatedNotesData.length > 3 && (
+                          {relatedNotesData.length > META_LIST_PREVIEW_LIMIT && (
                             <button
+                              type="button"
                               onClick={() => setShowAllRelations(!showAllRelations)}
                               className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                             >
-                              {showAllRelations ? "Ver menos" : `+${relatedNotesData.length - 3}`}
+                              {showAllRelations ? "Ver menos" : "Ver mais"}
                             </button>
                           )}
                           {note.access?.canEdit && (
@@ -2388,8 +2395,8 @@ const NoteDetail = () => {
                       </div>
 
                       {/* Tags */}
-                      <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
-                        <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                      <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                        <div className="flex  shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                           <Tag
                             className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
                             size={13}
@@ -2399,7 +2406,10 @@ const NoteDetail = () => {
                         <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
                           {note.tags && note.tags.length > 0 && (
                             <>
-                              {(showAllTags ? note.tags : note.tags.slice(0, 3)).map(
+                              {(showAllTags
+                                ? note.tags
+                                : note.tags.slice(0, META_LIST_PREVIEW_LIMIT)
+                              ).map(
                                 (tag, index) => {
                                   const colors = getTagColor(tag);
                                   return (
@@ -2421,12 +2431,13 @@ const NoteDetail = () => {
                                   );
                                 }
                               )}
-                              {note.tags.length > 3 && (
+                              {note.tags.length > META_LIST_PREVIEW_LIMIT && (
                                 <button
+                                  type="button"
                                   onClick={() => setShowAllTags(!showAllTags)}
                                   className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                                 >
-                                  {showAllTags ? "Ver menos" : `+${note.tags.length - 3}`}
+                                  {showAllTags ? "Ver menos" : "Ver mais"}
                                 </button>
                               )}
                             </>
@@ -2444,7 +2455,7 @@ const NoteDetail = () => {
                       </div>
 
                       {/* URLs */}
-                      <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                      <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
                         <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                           <Link2
                             className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
@@ -2458,7 +2469,7 @@ const NoteDetail = () => {
                               const filteredUrls = note.properties.urls.filter(Boolean);
                               const visibleUrls = showAllUrls
                                 ? filteredUrls
-                                : filteredUrls.slice(0, 3);
+                                : filteredUrls.slice(0, META_LIST_PREVIEW_LIMIT);
                               return (
                                 <>
                                   {visibleUrls.map((url, index) => (
@@ -2487,12 +2498,13 @@ const NoteDetail = () => {
                                       )}
                                     </span>
                                   ))}
-                                  {filteredUrls.length > 3 && (
+                                  {filteredUrls.length > META_LIST_PREVIEW_LIMIT && (
                                     <button
+                                      type="button"
                                       onClick={() => setShowAllUrls(!showAllUrls)}
                                       className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                                     >
-                                      {showAllUrls ? "Ver menos" : `+${filteredUrls.length - 3}`}
+                                      {showAllUrls ? "Ver menos" : "Ver mais"}
                                     </button>
                                   )}
                                 </>
@@ -2553,7 +2565,7 @@ const NoteDetail = () => {
                       </div>
 
                       {/* Arquivos */}
-                      <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3 lg:col-span-2">
+                      <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3 lg:col-span-2">
                         <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                           <FileText
                             className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
@@ -2567,13 +2579,13 @@ const NoteDetail = () => {
                               const filteredFiles = note.properties.files.filter((f) => f.path);
                               const visibleFiles = showAllFiles
                                 ? filteredFiles
-                                : filteredFiles.slice(0, 3);
+                                : filteredFiles.slice(0, 2);
                               return (
                                 <>
                                   {visibleFiles.map((file, index) => (
                                     <span
                                       key={file.id || index}
-                                      className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
+                                      className="group flex items-center gap-1 rounded-md bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors  dark:bg-neutral-800 dark:text-neutral-300"
                                     >
                                       <a
                                         href={getStorageUrl(file.path)}
@@ -2587,7 +2599,7 @@ const NoteDetail = () => {
                                         href={getStorageUrl(file.path)}
                                         download={file.name || "arquivo"}
                                         onClick={(e) => e.stopPropagation()}
-                                        className="text-neutral-400 opacity-100 transition-all hover:text-neutral-600 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
+                                        className="text-neutral-400 opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
                                         title="Baixar arquivo"
                                       >
                                         <Download size={10} />
@@ -2595,7 +2607,7 @@ const NoteDetail = () => {
                                       {note.access?.canEdit && (
                                         <button
                                           onClick={() => handleRemoveFile(file.id)}
-                                          className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                                          className="ml-0.5 text-neutral-400 dark:text-neutral-500 dark:hover:text-red-400"
                                           title="Remover arquivo"
                                         >
                                           <X size={10} />
@@ -2626,24 +2638,37 @@ const NoteDetail = () => {
                         </div>
                       </div>
                     </div>
+                    </div>
 
-                    {/* Criado / editado — última linha dos metadados editáveis */}
+                    {/* Criado / editado — linha superior em largura total; texto limitado a 2/3 */}
                     {(note.created_at || note.updated_at) && (
-                      <div className="flex items-start gap-1.5 border-t border-neutral-100 pt-3 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-                        <Clock size={12} className="mt-0.5 shrink-0 text-neutral-400" />
-                        <p className="min-w-0 font-medium text-neutral-600 dark:text-neutral-300">
-                          {note.created_at ? (
-                            <span>Criado em {formatDate(note.created_at)}</span>
-                          ) : null}
-                          {note.created_at && note.updated_at ? (
-                            <span className="text-neutral-400 dark:text-neutral-500"> · </span>
-                          ) : null}
-                          {note.updated_at ? (
-                            <span>Editado em {formatDate(note.updated_at)}</span>
-                          ) : null}
-                        </p>
+                      <div className="flex w-full flex-col">
+                        <div
+                          className="w-full border-t border-neutral-100 dark:border-neutral-800"
+                          aria-hidden
+                        />
+                        <div className="flex w-full max-w-[66.666667%] items-start gap-1.5 pt-3 text-xs text-neutral-500 dark:text-neutral-400">
+                          <Clock size={12} className="mt-0.5 shrink-0 text-neutral-400" />
+                          <p className="min-w-0 font-medium text-neutral-600 dark:text-neutral-300">
+                            {note.created_at ? (
+                              <span>Criado em {formatDate(note.created_at)}</span>
+                            ) : null}
+                            {note.created_at && note.updated_at ? (
+                              <span className="text-neutral-400 dark:text-neutral-500"> · </span>
+                            ) : null}
+                            {note.updated_at ? (
+                              <span>Editado em {formatDate(note.updated_at)}</span>
+                            ) : null}
+                          </p>
+                        </div>
                       </div>
                     )}
+
+                    {/* Linha inferior entre metadados e blocos — largura total */}
+                    <div
+                      className="w-full border-b border-neutral-100 dark:border-neutral-800"
+                      aria-hidden
+                    />
                   </div>
 
                   {/* =================== BLOCOS =================== */}
@@ -2959,7 +2984,7 @@ const NoteDetail = () => {
                               </div>
                               {relNote.tags && relNote.tags.length > 0 && (
                                 <div className="mt-0.5 flex gap-1 overflow-hidden">
-                                  {relNote.tags.slice(0, 3).map((tag) => {
+                                  {relNote.tags.slice(0, 2).map((tag) => {
                                     const colors = getTagColor(tag);
                                     return (
                                       <span
