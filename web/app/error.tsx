@@ -18,7 +18,7 @@ export default function Error({ error, reset }: ErrorProps) {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 px-4">
       <div className="w-full max-w-md text-center">
         <div className="mb-8">
-          <FaExclamationTriangle className="mx-auto mb-4 h-16 w-16 text-brand-primary-700" />
+          <FaExclamationTriangle className="mx-auto mb-4 h-16 w-16 text-brand-primary-500" />
           <h1 className="mb-3 text-3xl font-bold text-neutral-100">Algo deu errado</h1>
           <p className="text-neutral-400">
             Ocorreu um erro inesperado. Tente recarregar a página ou voltar ao início.
@@ -28,7 +28,7 @@ export default function Error({ error, reset }: ErrorProps) {
         {process.env.NODE_ENV === "development" && (
           <div className="mb-6 rounded-md border border-neutral-800/50 bg-neutral-900/50 p-4 text-left">
             <p className="mb-2 text-xs text-neutral-500">Detalhes do erro (desenvolvimento):</p>
-            <code className="text-xs break-all text-brand-primary-700">{error.message}</code>
+            <code className="text-xs break-all text-brand-primary-500">{error.message}</code>
             {error.digest && <p className="mt-2 text-xs text-neutral-500">ID: {error.digest}</p>}
           </div>
         )}
@@ -36,7 +36,7 @@ export default function Error({ error, reset }: ErrorProps) {
         <div className="space-y-3">
           <button
             onClick={reset}
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-brand-primary-700/90 px-6 py-3 font-semibold text-neutral-950 transition-all hover:bg-brand-primary-700"
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-brand-primary-500/90 px-6 py-3 font-semibold text-neutral-950 transition-all hover:bg-brand-primary-500"
           >
             <FaRedo className="h-4 w-4" />
             Tentar Novamente
@@ -56,19 +56,19 @@ export default function Error({ error, reset }: ErrorProps) {
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <Link
               href="/app/home"
-              className="text-neutral-400 transition-colors hover:text-brand-primary-700"
+              className="text-neutral-400 transition-colors hover:text-brand-primary-500"
             >
               Início
             </Link>
             <Link
               href="/app/notes"
-              className="text-neutral-400 transition-colors hover:text-brand-primary-700"
+              className="text-neutral-400 transition-colors hover:text-brand-primary-500"
             >
               Notas
             </Link>
             <Link
               href="/app/settings"
-              className="text-neutral-400 transition-colors hover:text-brand-primary-700"
+              className="text-neutral-400 transition-colors hover:text-brand-primary-500"
             >
               Configurações
             </Link>

@@ -50,7 +50,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
               onClick={onLinkClick}
               className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                 active
-                  ? "bg-brand-primary-700 text-white shadow-sm"
+                  ? "bg-brand-primary-500 text-white shadow-sm"
                   : "text-neutral-700 hover:bg-yellow-50 hover:text-yellow-600"
               }`}
             >
@@ -58,7 +58,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                 className={`flex-shrink-0 transition-all duration-200 ${
                   active
                     ? "text-white"
-                    : "text-neutral-500 group-hover:text-brand-primary-700"
+                    : "text-neutral-500 group-hover:text-brand-primary-500"
                 } ${isCollapsed ? "mr-0 h-6 w-6" : "mr-3 h-5 w-5"}`}
               />
               {!isCollapsed && (

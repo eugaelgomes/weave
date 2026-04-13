@@ -106,7 +106,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
     <div className="flex w-full flex-col px-4 py-4">
       <div className="mt-8 flex flex-col items-center text-center">
         {/*<div className="bg-brand-primary-50 mb-6 flex h-12 w-12 items-center justify-center rounded-full">
-          <CheckCircle2 className="text-brand-primary-600 h-6 w-6" />
+          <CheckCircle2 className="text-brand-primary-500 h-6 w-6" />
         </div>
         */}
         <h1 className="mb-3 text-xl font-bold tracking-tight text-neutral-800">{confirmT.title}</h1>
@@ -156,7 +156,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
               type="button"
               onClick={() => void handleActivation()}
               disabled={isLoading || code.length < 6}
-              className="bg-brand-primary-700 shadow-brand-primary-700/20 hover:bg-brand-primary-800 mt-1 rounded-md px-4 py-2 text-xs font-semibold text-white shadow-lg disabled:opacity-50"
+              className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 mt-1 rounded-md px-4 py-2 text-xs font-semibold text-white shadow-lg disabled:opacity-50"
             >
               {isLoading ? confirmT.validating : confirmT.confirmButton}
             </button>
@@ -174,7 +174,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
             <button
               type="button"
               onClick={() => setShowProfileSetup(true)}
-              className="bg-brand-primary-700 hover:bg-brand-primary-800 rounded-md px-4 py-2 text-xs font-semibold text-white"
+              className="bg-brand-primary-500 hover:bg-brand-primary-800 rounded-md px-4 py-2 text-xs font-semibold text-white"
             >
               {confirmT.setupProfile}
             </button>
@@ -192,7 +192,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
           type="button"
           onClick={() => onNavigate("signin")}
           disabled={isLoading}
-          className="bg-brand-primary-700 shadow-brand-primary-700/20 hover:bg-brand-primary-800 group flex items-center justify-center gap-2 rounded-md px-4 py-2 font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95"
+          className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 group flex items-center justify-center gap-2 rounded-md px-4 py-2 font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95"
         >
           {t.signUp.loginNowCta}
           <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

@@ -108,7 +108,7 @@ export default function Navbar({
 
             <a
               href={fullCtaHref}
-              className="inline-flex h-9 items-center justify-center rounded-md bg-brand-primary-700 px-4 text-sm font-medium text-neutral-950 shadow-sm transition-colors hover:bg-yellow-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-500"
+              className="inline-flex h-9 items-center justify-center rounded-md bg-brand-primary-500 px-4 text-sm font-medium text-neutral-950 shadow-sm transition-colors hover:bg-yellow-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-500"
             >
               {ctaLabel || t.navbar.cta}
             </a>

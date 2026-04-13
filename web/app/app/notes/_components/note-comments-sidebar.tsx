@@ -381,14 +381,14 @@ export function NoteCommentsSidebarTrigger({
       aria-label={open ? "Fechar comentários" : label}
       className={`relative flex w-full max-w-full min-w-0 items-center gap-2 rounded-md py-1.5 pr-2 pl-1.5 text-left transition-all hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
         open
-          ? "dark:text-brand-primary-700 text-yellow-600"
+          ? "dark:text-brand-primary-500 text-yellow-600"
           : "text-neutral-500 dark:text-neutral-400"
       }`}
     >
       <span className="relative inline-flex h-8 w-8 flex-shrink-0 items-center justify-center">
         <MessageCircle size={15} />
         {count > 0 && (
-          <span className="dark:bg-brand-primary-700 absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-yellow-600 px-0.5 text-[9px] font-bold text-white">
+          <span className="dark:bg-brand-primary-500 absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-yellow-600 px-0.5 text-[9px] font-bold text-white">
             {count > 99 ? "99+" : count}
           </span>
         )}
@@ -740,7 +740,7 @@ export function NoteCommentsSidebar({
                       type="button"
                       onClick={() => void saveEdit()}
                       disabled={editSubmitting}
-                      className="dark:bg-brand-primary-700 rounded bg-yellow-600 px-2 py-1 text-[11px] font-medium text-white"
+                      className="dark:bg-brand-primary-500 rounded bg-yellow-600 px-2 py-1 text-[11px] font-medium text-white"
                     >
                       Salvar
                     </button>
@@ -772,7 +772,7 @@ export function NoteCommentsSidebar({
                             href={getStorageUrl(f.path)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="dark:hover:text-brand-primary-700 inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-600 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300"
+                            className="dark:hover:text-brand-primary-500 inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-600 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300"
                           >
                             <span className="max-w-[120px] truncate">{f.name}</span>
                             <Download size={10} />
@@ -793,7 +793,7 @@ export function NoteCommentsSidebar({
                       setReplyingTo(c);
                       setEditingId(null);
                     }}
-                    className="dark:hover:text-brand-primary-700 rounded-md p-1.5 text-neutral-400 hover:bg-neutral-200 hover:text-yellow-700 dark:hover:bg-neutral-800"
+                    className="dark:hover:text-brand-primary-500 rounded-md p-1.5 text-neutral-400 hover:bg-neutral-200 hover:text-yellow-700 dark:hover:bg-neutral-800"
                     title="Responder"
                   >
                     <CornerDownRight size={14} />
@@ -840,7 +840,7 @@ export function NoteCommentsSidebar({
         <div className="flex min-w-0 items-center gap-2">
           <MessageCircle
             size={16}
-            className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-600"
+            className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-600"
           />
           <h2 className="truncate text-sm text-neutral-900 dark:text-neutral-100">Comentários</h2>
         </div>
@@ -888,7 +888,7 @@ export function NoteCommentsSidebar({
       {canComment && (
         <div className="flex-shrink-0 border-t border-neutral-200 bg-neutral-50/80 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-900/30">
           {replyingTo && (
-            <div className="dark:border-brand-primary-700/40 dark:bg-brand-primary-700/10 mb-2 flex items-center justify-between gap-2 rounded-md border border-yellow-500/30 bg-yellow-50/80 px-2 py-1.5 text-[11px]">
+            <div className="dark:border-brand-primary-700/40 dark:bg-brand-primary-500/10 mb-2 flex items-center justify-between gap-2 rounded-md border border-yellow-500/30 bg-yellow-50/80 px-2 py-1.5 text-[11px]">
               <span className="truncate text-neutral-700 dark:text-neutral-200">
                 Respondendo a{" "}
                 <strong>
@@ -965,7 +965,7 @@ export function NoteCommentsSidebar({
               <button
                 type="submit"
                 disabled={submitting || (!draft.trim() && pendingFiles.length === 0)}
-                className="dark:bg-brand-primary-700 inline-flex items-center gap-1 rounded-md bg-yellow-600 px-2.5 py-1.5 text-xs text-white disabled:opacity-50"
+                className="dark:bg-brand-primary-500 inline-flex items-center gap-1 rounded-md bg-yellow-600 px-2.5 py-1.5 text-xs text-white disabled:opacity-50"
               >
                 {submitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                 {replyingTo ? "Responder" : "Publicar"}

@@ -35,7 +35,7 @@ export const IntegrationsSettings: React.FC<any> = () => {
       {/* --- Header --- */}
       <div className="flex items-center justify-between border-b border-neutral-100/60 px-4 py-2 dark:border-neutral-800/60">
         <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] text-neutral-500 dark:text-neutral-400">
-          <Plug className="h-3.5 w-3.5 text-brand-primary-700" />
+          <Plug className="h-3.5 w-3.5 text-brand-primary-500" />
           Integrações e Aplicações
         </h3>
       </div>
@@ -91,7 +91,7 @@ export const IntegrationsSettings: React.FC<any> = () => {
               ) : (
                 <button
                   onClick={connectGoogleCalendar}
-                  className="ml-auto rounded-md bg-brand-primary-700 px-4 py-1.5 text-[11px] font-bold text-white shadow-sm transition-all hover:bg-yellow-600 active:scale-95"
+                  className="ml-auto rounded-md bg-brand-primary-500 px-4 py-1.5 text-[11px] font-bold text-white shadow-sm transition-all hover:bg-yellow-600 active:scale-95"
                 >
                   Conectar
                 </button>

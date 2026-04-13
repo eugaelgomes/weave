@@ -271,7 +271,7 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
             type="button"
             onClick={handleSave}
             disabled={isLoading}
-            className="bg-brand-primary-700 hover:bg-brand-primary-800 w-full rounded-md px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50 sm:w-auto"
+            className="bg-brand-primary-500 hover:bg-brand-primary-800 w-full rounded-md px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50 sm:w-auto"
           >
             {isLoading ? profileT.saving : profileT.save}
           </button>
@@ -299,7 +299,7 @@ function ToggleButton({ label, checked, onChange, disabled = false }: ToggleButt
       <span className="truncate pr-1 text-left">{label}</span>
       <span
         className={`relative h-4 w-7 shrink-0 rounded-full transition-colors ${
-          checked ? "bg-brand-primary-700" : "bg-slate-300"
+          checked ? "bg-brand-primary-500" : "bg-slate-300"
         }`}
       >
         <span

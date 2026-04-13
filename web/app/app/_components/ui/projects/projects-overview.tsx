@@ -32,7 +32,7 @@ const statusLabels: Record<string, string> = {
 const statusColors: Record<string, string> = {
   open: "bg-cyan-500",
   in_progress: "bg-blue-500",
-  paused: "bg-brand-primary-700",
+  paused: "bg-brand-primary-500",
   completed: "bg-green-500",
   archived: "bg-neutral-400",
 };
@@ -68,7 +68,7 @@ const ProjectsOverview = () => {
     <div className="animate-in fade-in flex flex-col gap-4 duration-300">
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-neutral-100 pb-3 dark:border-neutral-900">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-yellow-400/10 text-brand-primary-700 dark:text-yellow-400">
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-yellow-400/10 text-brand-primary-500 dark:text-yellow-400">
           <BarChart2 className="h-3.5 w-3.5" />
         </div>
         <div>
@@ -118,7 +118,7 @@ const ProjectsOverview = () => {
         {/* Progresso Médio */}
         <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/30">
           <div className="mb-2 flex items-center gap-1.5">
-            <TrendingUp className="h-3.5 w-3.5 text-brand-primary-700" />
+            <TrendingUp className="h-3.5 w-3.5 text-brand-primary-500" />
             <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
               Progresso Médio
             </span>

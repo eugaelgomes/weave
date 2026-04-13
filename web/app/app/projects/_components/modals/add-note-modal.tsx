@@ -46,7 +46,7 @@ export default function AddNoteModal({
       <div className="relative z-10 w-full max-w-md rounded-xl border border-neutral-200 bg-white p-5 shadow-2xl dark:border-neutral-800 dark:bg-neutral-900">
         <header className="mb-4 flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-sm font-bold text-neutral-800 dark:text-neutral-100">
-            <FileText className="h-4 w-4 text-brand-primary-700" />
+            <FileText className="h-4 w-4 text-brand-primary-500" />
             Adicionar Nota ao Projeto
           </h3>
           <button
@@ -79,16 +79,16 @@ export default function AddNoteModal({
                     key={note.id}
                     onClick={() => handleAddNote(note.id)}
                     disabled={isAdding === note.id}
-                    className="group relative flex w-full flex-col gap-1.5 rounded-lg border border-neutral-200 bg-white p-3 text-left transition-all hover:border-yellow-500/50 hover:bg-yellow-50/30 disabled:opacity-60 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-yellow-500/30 dark:hover:bg-brand-primary-700/5"
+                    className="group relative flex w-full flex-col gap-1.5 rounded-lg border border-neutral-200 bg-white p-3 text-left transition-all hover:border-yellow-500/50 hover:bg-yellow-50/30 disabled:opacity-60 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-yellow-500/30 dark:hover:bg-brand-primary-500/5"
                   >
                     <div className="flex w-full items-start justify-between gap-2">
-                      <p className="text-xs font-semibold text-neutral-800 transition-colors group-hover:text-yellow-600 dark:text-neutral-200 dark:group-hover:text-brand-primary-700">
+                      <p className="text-xs font-semibold text-neutral-800 transition-colors group-hover:text-yellow-600 dark:text-neutral-200 dark:group-hover:text-brand-primary-500">
                         {note.title}
                       </p>
                       {isAdding === note.id ? (
-                        <FaSpinner className="h-3 w-3 animate-spin text-brand-primary-700" />
+                        <FaSpinner className="h-3 w-3 animate-spin text-brand-primary-500" />
                       ) : (
-                        <Plus className="h-3.5 w-3.5 text-neutral-400 opacity-0 transition-all group-hover:text-brand-primary-700 group-hover:opacity-100" />
+                        <Plus className="h-3.5 w-3.5 text-neutral-400 opacity-0 transition-all group-hover:text-brand-primary-500 group-hover:opacity-100" />
                       )}
                     </div>
 

@@ -35,7 +35,7 @@ import Image from "next/image";
 
 const ModelIcon = ({ provider }: { provider?: string }) => {
   if (provider === "perplexity") return <Globe className="h-3 w-3 text-blue-500" />;
-  return <Sparkles className="h-3 w-3 text-brand-primary-700" />;
+  return <Sparkles className="h-3 w-3 text-brand-primary-500" />;
 };
 
 /* -------------------------------- Componente Principal -------------------------------- */

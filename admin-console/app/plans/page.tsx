@@ -216,7 +216,7 @@ export default function PlansPage() {
                             <span className="font-medium text-neutral-900">{plan.name}</span>
                             {plan.personalized_for_client && (
                               <span className="inline-flex items-center gap-1 rounded-md bg-yellow-50 px-2 py-0.5 text-[10px] font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">
-                                <FaStar className="h-2.5 w-2.5 text-brand-primary-700" /> Personalizado
+                                <FaStar className="h-2.5 w-2.5 text-brand-primary-500" /> Personalizado
                               </span>
                             )}
                           </div>
@@ -326,7 +326,7 @@ export default function PlansPage() {
                               {/* Card de Features */}
                               <div className="rounded-md border border-neutral-200 bg-white p-5 shadow-sm space-y-4">
                                 <h4 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 border-b border-neutral-100 pb-3">
-                                  <FaStar className="h-4 w-4 text-brand-primary-700" />
+                                  <FaStar className="h-4 w-4 text-brand-primary-500" />
                                   Features do Tier
                                 </h4>
                                 <div className="space-y-3">

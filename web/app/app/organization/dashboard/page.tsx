@@ -51,8 +51,8 @@ const ProjectsPage = () => {
       <div className="border-b border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-950">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-brand-primary-700/10 p-2">
-              <Layers className="h-6 w-6 text-brand-primary-700" />
+            <div className="rounded-lg bg-brand-primary-500/10 p-2">
+              <Layers className="h-6 w-6 text-brand-primary-500" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
@@ -75,7 +75,7 @@ const ProjectsPage = () => {
                 className="h-10 w-full rounded-md border border-neutral-300 bg-white pr-4 pl-9 text-sm focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:w-64 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
               />
             </div>
-            <button className="flex h-10 items-center justify-center gap-2 rounded-md bg-brand-primary-700 px-4 text-sm font-medium text-white transition-colors hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:outline-none dark:focus:ring-offset-neutral-950">
+            <button className="flex h-10 items-center justify-center gap-2 rounded-md bg-brand-primary-500 px-4 text-sm font-medium text-white transition-colors hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:outline-none dark:focus:ring-offset-neutral-950">
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">Novo Projeto</span>
             </button>
@@ -103,7 +103,7 @@ const ProjectsPage = () => {
                   : "Crie o primeiro projeto da sua organização para começar a colaborar."}
               </p>
               {!searchTerm && (
-                <button className="inline-flex items-center justify-center gap-2 rounded-md bg-brand-primary-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-yellow-600">
+                <button className="inline-flex items-center justify-center gap-2 rounded-md bg-brand-primary-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-yellow-600">
                   <Plus className="h-4 w-4" />
                   Criar Primeiro Projeto
                 </button>
@@ -133,7 +133,7 @@ const ProjectsPage = () => {
                       </span>
                     </div>
 
-                    <h3 className="mb-2 line-clamp-1 text-base font-bold text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-100 dark:group-hover:text-brand-primary-700">
+                    <h3 className="mb-2 line-clamp-1 text-base font-bold text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-100 dark:group-hover:text-brand-primary-500">
                       {project.title}
                     </h3>
 
@@ -170,7 +170,7 @@ const ProjectsPage = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 text-sm font-medium text-yellow-600 opacity-0 transition-opacity group-hover:opacity-100 dark:text-brand-primary-700">
+                    <div className="flex items-center gap-1 text-sm font-medium text-yellow-600 opacity-0 transition-opacity group-hover:opacity-100 dark:text-brand-primary-500">
                       Acessar <ArrowRight className="h-4 w-4" />
                     </div>
                   </div>

@@ -121,7 +121,7 @@ export default function HighDensityDashboard() {
       {/* Row 1: Insights (Layout Horizontal) */}
       <section className="mb-4">
         <div className="mb-2 flex items-center gap-2">
-          <BrainCircuit className="h-3.5 w-3.5 text-brand-primary-700 dark:text-yellow-400" />
+          <BrainCircuit className="h-3.5 w-3.5 text-brand-primary-500 dark:text-yellow-400" />
           <h2 className="text-xs font-semibold tracking-wide text-neutral-700 dark:text-neutral-300">
             Insights Ativos
           </h2>
@@ -137,7 +137,7 @@ export default function HighDensityDashboard() {
                 <AlertCircle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
               )}
               {insight.type === "suggestion" && (
-                <TrendingUp className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-brand-primary-700" />
+                <TrendingUp className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-brand-primary-500" />
               )}
               {insight.type === "success" && (
                 <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-emerald-500" />
@@ -172,7 +172,7 @@ export default function HighDensityDashboard() {
               className="rounded-lg border border-neutral-200 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-800"
             >
               <div className="mb-2 flex items-center gap-1.5">
-                <FolderKanban className="h-3.5 w-3.5 text-brand-primary-700 dark:text-yellow-400" />
+                <FolderKanban className="h-3.5 w-3.5 text-brand-primary-500 dark:text-yellow-400" />
                 <h3 className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
                   {project.name}
                 </h3>
@@ -205,7 +205,7 @@ export default function HighDensityDashboard() {
                                 {task.status === "done" ? (
                                   <CheckCircle2 className="h-3 w-3 flex-shrink-0 text-emerald-500" />
                                 ) : task.status === "in_progress" ? (
-                                  <Clock className="h-3 w-3 flex-shrink-0 text-brand-primary-700" />
+                                  <Clock className="h-3 w-3 flex-shrink-0 text-brand-primary-500" />
                                 ) : (
                                   <div className="h-3 w-3 flex-shrink-0 rounded-full border border-neutral-300 dark:border-neutral-700" />
                                 )}

@@ -364,7 +364,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
               onClick={handleToggleDone}
               className={`mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-all ${
                 block.done
-                  ? "bg-brand-primary-700 border-yellow-500 text-white"
+                  ? "bg-brand-primary-500 border-yellow-500 text-white"
                   : "border-neutral-300 hover:border-yellow-500 dark:border-neutral-600 dark:hover:border-yellow-500"
               }`}
             >
@@ -400,7 +400,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
       case "list":
         return (
           <div className="flex items-start gap-3">
-            <span className="bg-brand-primary-700 mt-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full" />
+            <span className="bg-brand-primary-500 mt-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full" />
             {!isEditing && localText && hasLinks(localText) ? (
               <div
                 onClick={() => setIsEditing(true)}
@@ -514,7 +514,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
       >
         <button
           {...dragHandleProps}
-          className="hover:text-brand-primary-700 dark:hover:text-brand-primary-700 cursor-grab rounded p-0.5 text-neutral-300 hover:bg-neutral-100 active:cursor-grabbing dark:text-neutral-600 dark:hover:bg-neutral-800"
+          className="hover:text-brand-primary-500 dark:hover:text-brand-primary-500 cursor-grab rounded p-0.5 text-neutral-300 hover:bg-neutral-100 active:cursor-grabbing dark:text-neutral-600 dark:hover:bg-neutral-800"
           title="Arrastar para reordenar"
         >
           <GripVertical size={14} />
@@ -561,7 +561,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
               }}
               className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
             >
-              <div className="dark:bg-brand-primary-700/10 dark:text-brand-primary-700 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-yellow-50 text-yellow-600">
+              <div className="dark:bg-brand-primary-500/10 dark:text-brand-primary-500 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-yellow-50 text-yellow-600">
                 <option.icon size={14} />
               </div>
               <div>
@@ -667,7 +667,7 @@ const BlockTypeSelector: React.FC<BlockTypeSelectorProps> = ({ onSelect, onClose
           }}
           className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
         >
-          <div className="dark:bg-brand-primary-700/10 dark:text-brand-primary-700 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-yellow-50 text-yellow-600">
+          <div className="dark:bg-brand-primary-500/10 dark:text-brand-primary-500 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-yellow-50 text-yellow-600">
             <option.icon size={14} />
           </div>
           <div>
@@ -1621,7 +1621,7 @@ const NoteDetail = () => {
         >
           <button
             onClick={() => filesInputRef.current?.click()}
-            className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
             title="Adicionar arquivos"
           >
             <FileText size={12} />
@@ -1630,7 +1630,7 @@ const NoteDetail = () => {
           {!note.properties?.icon?.path && (
             <button
               onClick={() => iconInputRef.current?.click()}
-              className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+              className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
               title="Adicionar ícone"
             >
               <ImagePlus size={12} />
@@ -1640,7 +1640,7 @@ const NoteDetail = () => {
           {!note.properties?.banner?.path && (
             <button
               onClick={() => bannerInputRef.current?.click()}
-              className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+              className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
               title="Adicionar banner"
             >
               <ImagePlus size={12} />
@@ -1649,7 +1649,7 @@ const NoteDetail = () => {
           )}
           <button
             onClick={() => setShowTagModal(true)}
-            className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
             title="Gerenciar tags"
           >
             <Tag size={12} />
@@ -1657,7 +1657,7 @@ const NoteDetail = () => {
           </button>
           <button
             onClick={() => setShowRelationModal(true)}
-            className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
             title="Gerenciar relações"
           >
             <Link size={12} />
@@ -1686,12 +1686,12 @@ const NoteDetail = () => {
               {isSaving && (
                 <>
                   <div className="flex items-center gap-3">
-                    <div className="bg-brand-primary-700/10 flex animate-pulse items-center gap-1.5 rounded-full border border-yellow-500/20 px-3 py-1">
+                    <div className="bg-brand-primary-500/10 flex animate-pulse items-center gap-1.5 rounded-full border border-yellow-500/20 px-3 py-1">
                       <Loader2
                         size={13}
-                        className="dark:text-brand-primary-700 animate-spin text-yellow-600"
+                        className="dark:text-brand-primary-500 animate-spin text-yellow-600"
                       />
-                      <span className="dark:text-brand-primary-700 text-[11px] font-semibold tracking-wider text-yellow-700 uppercase">
+                      <span className="dark:text-brand-primary-500 text-[11px] font-semibold tracking-wider text-yellow-700 uppercase">
                         Sincronizando
                       </span>
                     </div>
@@ -1705,7 +1705,7 @@ const NoteDetail = () => {
                 {note.access?.canShare && (
                   <button
                     onClick={() => setShowShareModal(true)}
-                    className="dark:hover:text-brand-primary-700 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                    className="dark:hover:text-brand-primary-500 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800"
                     title="Compartilhar nota"
                   >
                     <Share2 size={15} />
@@ -1729,7 +1729,7 @@ const NoteDetail = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowColorPicker(!showColorPicker)}
-                  className="dark:hover:text-brand-primary-700 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                  className="dark:hover:text-brand-primary-500 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800"
                   title="Adicionar cor"
                 >
                   <Palette size={15} />
@@ -1999,7 +1999,7 @@ const NoteDetail = () => {
                           <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
                             <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                               <FolderKanban
-                                className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                                className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
                                 size={13}
                               />
                               <span className="font-medium">Projeto</span>
@@ -2029,7 +2029,7 @@ const NoteDetail = () => {
                           <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
                             <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                               <Kanban
-                                className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                                className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
                                 size={13}
                               />
                               <span className="font-medium">Estágio</span>
@@ -2134,7 +2134,7 @@ const NoteDetail = () => {
                           <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
                             <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                               <Calendar
-                                className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                                className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
                                 size={13}
                               />
                               <span className="font-medium">Prazo</span>
@@ -2175,7 +2175,7 @@ const NoteDetail = () => {
                           <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
                             <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                               <Flag
-                                className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                                className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
                                 size={13}
                               />
                               <span className="font-medium">Prioridade</span>
@@ -2253,7 +2253,7 @@ const NoteDetail = () => {
                       <div className="flex items-center min-w-0 flex-row gap-2 sm:gap-3">
                         <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                           <Users
-                            className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                            className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
                             size={13}
                           />
                           <span className="font-medium">Collabs</span>
@@ -2306,7 +2306,7 @@ const NoteDetail = () => {
                                 <button
                                   type="button"
                                   onClick={() => setShowAllCollabs(!showAllCollabs)}
-                                  className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                  className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                                 >
                                   {showAllCollabs ? "Ver menos" : "Ver mais"}
                                 </button>
@@ -2316,7 +2316,7 @@ const NoteDetail = () => {
                           {note.access?.canShare && (
                             <button
                               onClick={() => setShowShareModal(true)}
-                              className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                              className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
                               title="Adicionar colaborador"
                             >
                               <Plus size={10} />
@@ -2329,7 +2329,7 @@ const NoteDetail = () => {
                       <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
                         <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                           <Link
-                            className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                            className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
                             size={13}
                           />
                           <span className="font-medium">Relações</span>
@@ -2377,7 +2377,7 @@ const NoteDetail = () => {
                             <button
                               type="button"
                               onClick={() => setShowAllRelations(!showAllRelations)}
-                              className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                              className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                             >
                               {showAllRelations ? "Ver menos" : "Ver mais"}
                             </button>
@@ -2385,7 +2385,7 @@ const NoteDetail = () => {
                           {note.access?.canEdit && (
                             <button
                               onClick={() => setShowRelationModal(true)}
-                              className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                              className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
                               title="Adicionar relação"
                             >
                               <Plus size={10} />
@@ -2398,7 +2398,7 @@ const NoteDetail = () => {
                       <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
                         <div className="flex  shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                           <Tag
-                            className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                            className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
                             size={13}
                           />
                           <span className="font-medium">Tags</span>
@@ -2435,7 +2435,7 @@ const NoteDetail = () => {
                                 <button
                                   type="button"
                                   onClick={() => setShowAllTags(!showAllTags)}
-                                  className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                  className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                                 >
                                   {showAllTags ? "Ver menos" : "Ver mais"}
                                 </button>
@@ -2445,7 +2445,7 @@ const NoteDetail = () => {
                           {note.access?.canEdit && (
                             <button
                               onClick={() => setShowTagModal(true)}
-                              className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                              className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
                               title="Adicionar tag"
                             >
                               <Plus size={10} />
@@ -2458,7 +2458,7 @@ const NoteDetail = () => {
                       <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
                         <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                           <Link2
-                            className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                            className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
                             size={13}
                           />
                           <span className="font-medium">URLs</span>
@@ -2502,7 +2502,7 @@ const NoteDetail = () => {
                                     <button
                                       type="button"
                                       onClick={() => setShowAllUrls(!showAllUrls)}
-                                      className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                      className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                                     >
                                       {showAllUrls ? "Ver menos" : "Ver mais"}
                                     </button>
@@ -2535,7 +2535,7 @@ const NoteDetail = () => {
                                   <button
                                     onClick={handleAddUrl}
                                     disabled={!newUrl.trim()}
-                                    className="bg-brand-primary-700 rounded-md px-2 py-0.5 text-xs font-medium text-white transition-colors hover:bg-yellow-600 disabled:opacity-50 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
+                                    className="bg-brand-primary-500 rounded-md px-2 py-0.5 text-xs font-medium text-white transition-colors hover:bg-yellow-600 disabled:opacity-50 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
                                   >
                                     OK
                                   </button>
@@ -2553,7 +2553,7 @@ const NoteDetail = () => {
                               ) : (
                                 <button
                                   onClick={() => setShowUrlInput(true)}
-                                  className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                                  className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
                                   title="Adicionar URL"
                                 >
                                   <Plus size={10} />
@@ -2568,7 +2568,7 @@ const NoteDetail = () => {
                       <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3 lg:col-span-2">
                         <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                           <FileText
-                            className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                            className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
                             size={13}
                           />
                           <span className="font-medium">Arquivos</span>
@@ -2618,7 +2618,7 @@ const NoteDetail = () => {
                                   {filteredFiles.length > 3 && (
                                     <button
                                       onClick={() => setShowAllFiles(!showAllFiles)}
-                                      className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                      className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                                     >
                                       {showAllFiles ? "Ver menos" : `+${filteredFiles.length - 3}`}
                                     </button>
@@ -2629,7 +2629,7 @@ const NoteDetail = () => {
                           {note.access?.canEdit && (
                             <button
                               onClick={() => filesInputRef.current?.click()}
-                              className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                              className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
                               title="Adicionar arquivo"
                             >
                               <Plus size={10} />
@@ -2731,7 +2731,7 @@ const NoteDetail = () => {
                       <div className="relative pt-4">
                         <button
                           onClick={() => setShowBlockTypeSelector(!showBlockTypeSelector)}
-                          className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-400 transition-all hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-700 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                          className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-400 transition-all hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-700 dark:text-neutral-500 dark:hover:border-yellow-500/50"
                         >
                           <Plus size={14} />
                           Adicionar bloco
@@ -2803,8 +2803,8 @@ const NoteDetail = () => {
 
               <div className="mb-5 flex items-center justify-between">
                 <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
-                  <div className="dark:bg-brand-primary-700/10 flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50">
-                    <UserPlus size={16} className="dark:text-brand-primary-700 text-yellow-600" />
+                  <div className="dark:bg-brand-primary-500/10 flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50">
+                    <UserPlus size={16} className="dark:text-brand-primary-500 text-yellow-600" />
                   </div>
                   Compartilhar Nota
                 </h3>
@@ -2841,7 +2841,7 @@ const NoteDetail = () => {
                       <div className="absolute top-1/2 right-3 -translate-y-1/2">
                         <Loader2
                           size={15}
-                          className="dark:text-brand-primary-700 animate-spin text-yellow-600"
+                          className="dark:text-brand-primary-500 animate-spin text-yellow-600"
                         />
                       </div>
                     )}
@@ -2856,8 +2856,8 @@ const NoteDetail = () => {
                         className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 p-2.5 transition-colors hover:bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                       >
                         <div className="flex min-w-0 items-center gap-2.5">
-                          <div className="dark:bg-brand-primary-700/20 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100">
-                            <span className="dark:text-brand-primary-700 text-xs font-bold text-yellow-700">
+                          <div className="dark:bg-brand-primary-500/20 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100">
+                            <span className="dark:text-brand-primary-500 text-xs font-bold text-yellow-700">
                               {(user.name || user.username).charAt(0).toUpperCase()}
                             </span>
                           </div>
@@ -2872,7 +2872,7 @@ const NoteDetail = () => {
                         </div>
                         <button
                           onClick={() => handleShareNote(user.id)}
-                          className="bg-brand-primary-700 ml-2 flex-shrink-0 rounded-md px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
+                          className="bg-brand-primary-500 ml-2 flex-shrink-0 rounded-md px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
                         >
                           Adicionar
                         </button>
@@ -2903,8 +2903,8 @@ const NoteDetail = () => {
 
               <div className="mb-5 flex items-center justify-between">
                 <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
-                  <div className="dark:bg-brand-primary-700/10 flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50">
-                    <Link size={16} className="dark:text-brand-primary-700 text-yellow-600" />
+                  <div className="dark:bg-brand-primary-500/10 flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50">
+                    <Link size={16} className="dark:text-brand-primary-500 text-yellow-600" />
                   </div>
                   Relações
                 </h3>
@@ -2951,14 +2951,14 @@ const NoteDetail = () => {
                           onClick={() => handleToggleRelation(relNote.id)}
                           className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors sm:py-2 ${
                             isSelected
-                              ? "dark:bg-brand-primary-700/10 bg-yellow-50 ring-1 ring-yellow-200 dark:ring-yellow-500/30"
+                              ? "dark:bg-brand-primary-500/10 bg-yellow-50 ring-1 ring-yellow-200 dark:ring-yellow-500/30"
                               : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
                           }`}
                         >
                           <div
                             className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-all ${
                               isSelected
-                                ? "bg-brand-primary-700 border-yellow-500 text-white"
+                                ? "bg-brand-primary-500 border-yellow-500 text-white"
                                 : "border-neutral-300 dark:border-neutral-600"
                             }`}
                           >
@@ -3045,8 +3045,8 @@ const NoteDetail = () => {
 
               <div className="mb-5 flex items-center justify-between">
                 <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
-                  <div className="dark:bg-brand-primary-700/10 flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50">
-                    <Tag size={16} className="dark:text-brand-primary-700 text-yellow-600" />
+                  <div className="dark:bg-brand-primary-500/10 flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50">
+                    <Tag size={16} className="dark:text-brand-primary-500 text-yellow-600" />
                   </div>
                   Gerenciar Tags
                 </h3>
@@ -3081,7 +3081,7 @@ const NoteDetail = () => {
                     <button
                       onClick={handleAddTag}
                       disabled={!newTag.trim()}
-                      className="bg-brand-primary-700 flex items-center justify-center gap-1.5 rounded-md px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-50 sm:py-2.5 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
+                      className="bg-brand-primary-500 flex items-center justify-center gap-1.5 rounded-md px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-50 sm:py-2.5 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
                     >
                       <Plus size={14} />
                       Adicionar

@@ -158,7 +158,7 @@ export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
               <button
                 onClick={handleSave}
                 disabled={loading}
-                className="inline-flex h-5 items-center justify-center rounded-sm border border-yellow-500 bg-brand-primary-700/95 px-2 text-[9px] font-semibold text-neutral-900 disabled:opacity-50"
+                className="inline-flex h-5 items-center justify-center rounded-sm border border-yellow-500 bg-brand-primary-500/95 px-2 text-[9px] font-semibold text-neutral-900 disabled:opacity-50"
               >
                 {loading ? (
                   <Loader2 className="mr-1 h-3 w-3 animate-spin" />
@@ -176,14 +176,14 @@ export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
               {/* Identity Section */}
               <div className="rounded-sm border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
                 <div className="flex items-center gap-1 border-b border-neutral-100 px-2 py-1.5 text-[9px] font-semibold tracking-[0.3em] text-neutral-600 dark:border-neutral-800">
-                  <Bot className="h-3 w-3 text-brand-primary-700" />
+                  <Bot className="h-3 w-3 text-brand-primary-500" />
                   <span>Identity</span>
                 </div>
                 <div className="p-2">
                   <div className="flex items-center gap-2">
                     <button className="group relative flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-dashed border-neutral-300 bg-neutral-50 text-neutral-500 transition hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-900">
                       <Sparkles className="h-3 w-3" />
-                      <div className="absolute -right-1 -bottom-1 flex h-3 w-3 items-center justify-center rounded-full bg-brand-primary-700 text-[7px] font-bold text-neutral-900">
+                      <div className="absolute -right-1 -bottom-1 flex h-3 w-3 items-center justify-center rounded-full bg-brand-primary-500 text-[7px] font-bold text-neutral-900">
                         +
                       </div>
                     </button>
@@ -264,7 +264,7 @@ export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
               {/* Instructions Section */}
               <div className="flex flex-col rounded-sm border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
                 <div className="flex items-center gap-1 border-b border-neutral-100 px-2 py-1.5 text-[9px] font-semibold tracking-[0.3em] text-neutral-600 dark:border-neutral-800">
-                  <Settings2 className="h-3 w-3 text-brand-primary-700" />
+                  <Settings2 className="h-3 w-3 text-brand-primary-500" />
                   <span>Instructions</span>
                 </div>
                 <div className="relative">
@@ -287,7 +287,7 @@ export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
               {/* Model Config */}
               <div className="rounded-sm border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
                 <div className="flex items-center gap-1 border-b border-neutral-100 px-2 py-1.5 text-[9px] font-semibold tracking-[0.3em] text-neutral-600 dark:border-neutral-800">
-                  <BrainCircuit className="h-3 w-3 text-brand-primary-700" />
+                  <BrainCircuit className="h-3 w-3 text-brand-primary-500" />
                   <span>Model</span>
                 </div>
                 <div className="space-y-1.5 p-2">
@@ -328,11 +328,11 @@ export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
                                 setSelectedTools((prev) => prev.filter((id) => id !== cap.id));
                               }
                             }}
-                            className="h-3 w-3 rounded border-neutral-300 text-brand-primary-700 focus:ring-0 dark:border-neutral-700 dark:bg-neutral-950"
+                            className="h-3 w-3 rounded border-neutral-300 text-brand-primary-500 focus:ring-0 dark:border-neutral-700 dark:bg-neutral-950"
                           />
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
-                              <cap.icon className="h-3 w-3 text-brand-primary-700" />
+                              <cap.icon className="h-3 w-3 text-brand-primary-500" />
                               <span className="text-[10px] font-medium text-neutral-700 dark:text-neutral-300">
                                 {cap.label}
                               </span>
@@ -352,7 +352,7 @@ export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
               <div className="rounded-sm border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
                 <div className="flex items-center justify-between border-b border-neutral-100 px-2 py-1.5 text-[9px] font-semibold tracking-[0.3em] text-neutral-600 dark:border-neutral-800">
                   <div className="flex items-center gap-2">
-                    <FileText className="h-3 w-3 text-brand-primary-700" />
+                    <FileText className="h-3 w-3 text-brand-primary-500" />
                     Knowledge
                   </div>
                   <span className="text-[9px] font-bold text-neutral-400">
@@ -365,7 +365,7 @@ export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
                     onClick={() => fileInputRef.current?.click()}
                     className="group flex cursor-pointer flex-col items-center justify-center rounded-sm border border-dashed border-yellow-500/40 bg-yellow-50/40 py-2 text-[10px] text-neutral-600 transition hover:border-yellow-500 hover:text-neutral-900 dark:border-yellow-500/60 dark:bg-neutral-900"
                   >
-                    <Upload className="mb-1 h-3 w-3 text-brand-primary-700" />
+                    <Upload className="mb-1 h-3 w-3 text-brand-primary-500" />
                     <span className="font-medium">Add files</span>
                     <input
                       type="file"
@@ -384,7 +384,7 @@ export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
                           className="flex items-center justify-between rounded-sm border border-neutral-200 bg-white px-2 py-1 text-[10px] dark:border-neutral-800 dark:bg-neutral-950"
                         >
                           <div className="flex items-center gap-2 truncate">
-                            <FileText className="h-3 w-3 text-brand-primary-700" />
+                            <FileText className="h-3 w-3 text-brand-primary-500" />
                             <a
                               href={file.url}
                               target="_blank"
@@ -407,7 +407,7 @@ export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
                           className="group flex items-center justify-between rounded-sm border border-neutral-200 bg-white px-2 py-1 text-[10px] dark:border-neutral-800 dark:bg-neutral-950"
                         >
                           <div className="flex items-center gap-2 truncate">
-                            <FileText className="h-3 w-3 text-brand-primary-700" />
+                            <FileText className="h-3 w-3 text-brand-primary-500" />
                             <span className="truncate font-medium text-neutral-600 dark:text-neutral-300">
                               {file.name}
                             </span>

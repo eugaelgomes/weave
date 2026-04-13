@@ -18,7 +18,7 @@ const Badge = ({ role }: { role: string }) => {
   const { t } = useLanguage();
   const styles = {
     super_admin:
-      "bg-brand-primary-700/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-400",
+      "bg-brand-primary-500/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-400",
     admin: "bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400",
     member: "bg-neutral-500/10 text-neutral-700 border-neutral-500/20 dark:text-neutral-300",
     guest:
@@ -52,7 +52,7 @@ const ModalBase = ({ isOpen, onClose, title, children, footer }: any) => {
           onClick={onClose}
           title="Fechar modal"
           aria-label="Fechar modal"
-          className="dark:hover:text-brand-primary-700 absolute top-4 right-4 z-10 rounded-md p-1.5 text-neutral-500 hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-900/20"
+          className="dark:hover:text-brand-primary-500 absolute top-4 right-4 z-10 rounded-md p-1.5 text-neutral-500 hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-900/20"
         >
           <X className="h-4 w-4" />
         </button>
@@ -97,7 +97,7 @@ const InviteModal = ({ isOpen, onClose, onInvite, loading }: any) => {
           <button
             onClick={handleSubmit}
             disabled={loading || !email}
-            className="bg-brand-primary-700 rounded-md px-3 py-1.5 text-xs font-semibold text-black hover:bg-yellow-600 disabled:opacity-50"
+            className="bg-brand-primary-500 rounded-md px-3 py-1.5 text-xs font-semibold text-black hover:bg-yellow-600 disabled:opacity-50"
           >
             {loading ? t.organizationMembers.sending : t.organizationMembers.sendInvite}
           </button>
@@ -218,7 +218,7 @@ export default function InvitesPage() {
              {userCanManage && (
                 <button
                   onClick={() => setShowInviteModal(true)}
-                  className="bg-brand-primary-700 flex shrink-0 items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold text-neutral-950 shadow-sm transition-all hover:bg-yellow-600 active:scale-95"
+                  className="bg-brand-primary-500 flex shrink-0 items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold text-neutral-950 shadow-sm transition-all hover:bg-yellow-600 active:scale-95"
                 >
                   <Plus className="h-3.5 w-3.5" /> <span className="whitespace-nowrap">{t.organizationMembers.inviteMember}</span>
                 </button>

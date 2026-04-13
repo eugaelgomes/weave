@@ -9,6 +9,7 @@ import {
   createCompleteNote as createCompleteNoteService,
   updateNote as updateNoteService,
   deleteNote as deleteNoteService,
+  deleteNotes as deleteNotesService,
   fetchBlocks as fetchBlocksService,
   createBlock as createBlockService,
   updateBlock as updateBlockService,
@@ -79,6 +80,7 @@ export interface NotesContextType {
   createCompleteNote: (noteData: CreateNoteData) => Promise<Note | null>;
   updateNote: (noteId: string, noteData: UpdateNoteData) => Promise<Note | null>;
   deleteNote: (noteId: string) => Promise<boolean>;
+  deleteNotes: (noteIds: string[]) => Promise<boolean>;
 
   // Funções de dados derivados
   getRecentNotes: () => NoteOverview[];
@@ -345,6 +347,28 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     [user?.id, fetchNotes]
   );
 
+  const deleteNotes = useCallback(
+    async (noteIds: string[]): Promise<boolean> => {
+      if (!user?.id || noteIds.length === 0) return false;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        await deleteNotesService(noteIds);
+        await fetchNotes();
+        return true;
+      } catch (err: unknown) {
+        console.error("Erro ao deletar notas:", err);
+        setError(err instanceof Error ? err.message : "Erro ao deletar notas");
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user?.id, fetchNotes]
+  );
+
   // --- DADOS DERIVADOS ---
 
   const getRecentNotes = useCallback((): NoteOverview[] => {
@@ -564,6 +588,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     createCompleteNote,
     updateNote,
     deleteNote,
+    deleteNotes,
     getRecentNotes,
     getNotesByTag,
     getNotesStats,

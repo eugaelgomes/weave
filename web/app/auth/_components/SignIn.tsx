@@ -139,14 +139,14 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
             <button
               type="button"
               onClick={() => onNavigate("forgot")}
-              className="text-brand-secondary-500 hover:text-brand-primary-700 text-xs font-medium transition-colors"
+              className="text-brand-secondary-500 hover:text-brand-primary-500 text-xs font-medium transition-colors"
             >
               {t.signIn.forgotPassword}
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-brand-primary-700 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+              className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
             >
               {isLoading ? "running..." : t.signIn.submitButton}
             </button>
@@ -189,7 +189,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
           className="text-brand-secondary-500 hover:text-brand-secondary-700 mt-8 text-xs font-medium transition-colors duration-200"
         >
           {t.signIn.noAccount}{" "}
-          <span className="text-brand-primary-700 hover:text-brand-primary-600 font-semibold transition-colors duration-200">
+          <span className="text-brand-primary-500 hover:text-brand-primary-500 font-semibold transition-colors duration-200">
             {t.signIn.createAccount}
           </span>
         </button>

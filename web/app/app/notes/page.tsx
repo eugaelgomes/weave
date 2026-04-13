@@ -8,7 +8,7 @@ import { Search, Filter, Plus, X, SortAsc, RefreshCw, Loader2, Trash2 } from "lu
 import { toast } from "sonner";
 
 import { useNotes } from "../../_contexts/notes-context";
-import { deleteNotes } from "@/app/_services/notes-service/notes-service";
+import { useProjects } from "../../_contexts/projects-context";
 import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/_utils/collaborators";
 import { getTagColor } from "@/app/_utils/tag-colors";
 import Pagination from "../_components/ui/notes/pagination";
@@ -24,6 +24,110 @@ interface PaginationData {
 type SortBy = "updated_at" | "title" | "created_at";
 type SortOrder = "asc" | "desc";
 
+type DueDatePreset =
+  | "none"
+  | "this_week"
+  | "this_month"
+  | "this_quarter"
+  | "this_semester"
+  | "this_year";
+
+interface StageFilterOption {
+  id: string;
+  name: string;
+  projectId: string;
+  projectName: string;
+  color: string | null;
+}
+
+interface PriorityFilterOption {
+  id: string;
+  name: string;
+  projectId: string;
+  projectName: string;
+  colorHex: string | null;
+}
+
+function startOfLocalDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function endOfLocalDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+}
+
+function getDueDatePresetRange(preset: DueDatePreset): { start: Date; end: Date } | null {
+  if (preset === "none") return null;
+
+  const now = new Date();
+
+  switch (preset) {
+    case "this_week": {
+      const day = now.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + diffToMonday);
+      const start = startOfLocalDay(monday);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      const end = endOfLocalDay(sunday);
+      return { start, end };
+    }
+    case "this_month": {
+      const start = startOfLocalDay(new Date(now.getFullYear(), now.getMonth(), 1));
+      const end = endOfLocalDay(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+      return { start, end };
+    }
+    case "this_quarter": {
+      const q = Math.floor(now.getMonth() / 3);
+      const start = startOfLocalDay(new Date(now.getFullYear(), q * 3, 1));
+      const end = endOfLocalDay(new Date(now.getFullYear(), q * 3 + 3, 0));
+      return { start, end };
+    }
+    case "this_semester": {
+      const startMonth = now.getMonth() < 6 ? 0 : 6;
+      const endMonth = startMonth === 0 ? 5 : 11;
+      const start = startOfLocalDay(new Date(now.getFullYear(), startMonth, 1));
+      const end = endOfLocalDay(new Date(now.getFullYear(), endMonth + 1, 0));
+      return { start, end };
+    }
+    case "this_year": {
+      const start = startOfLocalDay(new Date(now.getFullYear(), 0, 1));
+      const end = endOfLocalDay(new Date(now.getFullYear(), 11, 31));
+      return { start, end };
+    }
+    default:
+      return null;
+  }
+}
+
+function dueDateInRange(due: string | null | undefined, range: { start: Date; end: Date }): boolean {
+  if (!due) return false;
+  const t = new Date(due).getTime();
+  if (Number.isNaN(t)) return false;
+  return t >= range.start.getTime() && t <= range.end.getTime();
+}
+
+const DUE_DATE_PRESETS: { id: DueDatePreset; label: string }[] = [
+  { id: "none", label: "Qualquer data" },
+  { id: "this_week", label: "Esta semana" },
+  { id: "this_month", label: "Este mês" },
+  { id: "this_quarter", label: "Este trimestre" },
+  { id: "this_semester", label: "Este semestre" },
+  { id: "this_year", label: "Este ano" },
+];
+
+function formatShortDate(date: string | null | undefined): string {
+  if (!date) return "—";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "—";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  }).format(parsed);
+}
+
 const NotesWithPagination = () => {
   const router = useRouter();
 
@@ -31,6 +135,12 @@ const NotesWithPagination = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedCollaborators, setSelectedCollaborators] = useState<string[]>([]);
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const [selectedStageIds, setSelectedStageIds] = useState<string[]>([]);
+  const [selectedPriorityIds, setSelectedPriorityIds] = useState<string[]>([]);
+  const [dueDatePreset, setDueDatePreset] = useState<DueDatePreset>("none");
+  const [stageOptions, setStageOptions] = useState<StageFilterOption[]>([]);
+  const [priorityOptions, setPriorityOptions] = useState<PriorityFilterOption[]>([]);
+  const [taxonomyLoading, setTaxonomyLoading] = useState(false);
   const [showFilters, setShowFilters] = useState<boolean>(false);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -42,9 +152,111 @@ const NotesWithPagination = () => {
   const [selectionMode, setSelectionMode] = useState<boolean>(false);
   const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
 
-  const { notes: allNotes, loading: isLoading, error, createNote, refreshNotes } = useNotes();
+  const {
+    notes: allNotes,
+    loading: isLoading,
+    error,
+    createNote,
+    refreshNotes,
+    deleteNotes,
+  } = useNotes();
+
+  const { projects, refreshProjects, getProjectStages, getTaskPriorities } = useProjects();
 
   const debouncedSearch = searchTerm;
+
+  React.useEffect(() => {
+    if (projects.length === 0) {
+      void refreshProjects();
+    }
+  }, [projects.length, refreshProjects]);
+
+  const projectsForFilter = React.useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    allNotes.forEach((note) => {
+      if (note.project_id && note.project_name) {
+        map.set(note.project_id, { id: note.project_id, name: note.project_name });
+      }
+    });
+    projects.forEach((p) => {
+      if (!map.has(p.id)) {
+        map.set(p.id, { id: p.id, name: p.title });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    );
+  }, [allNotes, projects]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const loadTaxonomy = async () => {
+      if (selectedProjects.length === 0) {
+        setStageOptions([]);
+        setPriorityOptions([]);
+        setSelectedStageIds([]);
+        setSelectedPriorityIds([]);
+        setTaxonomyLoading(false);
+        return;
+      }
+
+      setTaxonomyLoading(true);
+      const stages: StageFilterOption[] = [];
+      const priorities: PriorityFilterOption[] = [];
+
+      try {
+        for (const pid of selectedProjects) {
+          const projectName = projectsForFilter.find((p) => p.id === pid)?.name || "";
+
+          try {
+            const [sList, pList] = await Promise.all([
+              getProjectStages(pid),
+              getTaskPriorities(pid),
+            ]);
+
+            for (const st of sList) {
+              stages.push({
+                id: st.id,
+                name: st.name,
+                projectId: pid,
+                projectName,
+                color: st.color,
+              });
+            }
+            for (const pr of pList) {
+              if (pr.deleted === true) continue;
+              priorities.push({
+                id: pr.id,
+                name: pr.name,
+                projectId: pid,
+                projectName,
+                colorHex: pr.color_hex,
+              });
+            }
+          } catch {
+            /* já logado no contexto */
+          }
+        }
+
+        if (!cancelled) {
+          setStageOptions(stages);
+          setPriorityOptions(priorities);
+          setSelectedStageIds((prev) => prev.filter((id) => stages.some((s) => s.id === id)));
+          setSelectedPriorityIds((prev) => prev.filter((id) => priorities.some((p) => p.id === id)));
+        }
+      } finally {
+        if (!cancelled) {
+          setTaxonomyLoading(false);
+        }
+      }
+    };
+
+    void loadTaxonomy();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProjects, getProjectStages, getTaskPriorities, projectsForFilter]);
 
   // Filtragem e Ordenação
   const filteredNotes = React.useMemo(() => {
@@ -85,6 +297,27 @@ const NotesWithPagination = () => {
       );
     }
 
+    // Estágios (projeto associado)
+    if (selectedStageIds.length > 0) {
+      result = result.filter((note) => {
+        const sid = note.associated_project?.stage_id;
+        return sid && selectedStageIds.includes(sid);
+      });
+    }
+
+    // Prioridades
+    if (selectedPriorityIds.length > 0) {
+      result = result.filter(
+        (note) => note.priority_id && selectedPriorityIds.includes(note.priority_id)
+      );
+    }
+
+    // Vencimento (intervalo por preset)
+    const dueRange = getDueDatePresetRange(dueDatePreset);
+    if (dueRange) {
+      result = result.filter((note) => dueDateInRange(note.due_date, dueRange));
+    }
+
     // Ordenação
     result.sort((a, b) => {
       let aValue: string | Date = "";
@@ -120,6 +353,9 @@ const NotesWithPagination = () => {
     selectedTags,
     selectedCollaborators,
     selectedProjects,
+    selectedStageIds,
+    selectedPriorityIds,
+    dueDatePreset,
     sortBy,
     sortOrder,
   ]);
@@ -189,6 +425,24 @@ const NotesWithPagination = () => {
     });
   };
 
+  const handleStageToggle = (stageId: string) => {
+    setSelectedStageIds((prev) => {
+      const next = prev.includes(stageId) ? prev.filter((s) => s !== stageId) : [...prev, stageId];
+      setCurrentPage(1);
+      return next;
+    });
+  };
+
+  const handlePriorityToggle = (priorityId: string) => {
+    setSelectedPriorityIds((prev) => {
+      const next = prev.includes(priorityId)
+        ? prev.filter((p) => p !== priorityId)
+        : [...prev, priorityId];
+      setCurrentPage(1);
+      return next;
+    });
+  };
+
   const handleSortChange = (newSortBy: SortBy, newSortOrder: SortOrder = sortOrder) => {
     setSortBy(newSortBy);
     setSortOrder(newSortOrder);
@@ -200,6 +454,9 @@ const NotesWithPagination = () => {
     setSelectedTags([]);
     setSelectedCollaborators([]);
     setSelectedProjects([]);
+    setSelectedStageIds([]);
+    setSelectedPriorityIds([]);
+    setDueDatePreset("none");
     setCurrentPage(1);
     setShowFilters(false);
   };
@@ -268,16 +525,14 @@ const NotesWithPagination = () => {
     );
 
     if (confirmed) {
-      try {
-        const noteIds = Array.from(selectedNotes);
-        await deleteNotes(noteIds);
-        await refreshNotes();
-        setSelectedNotes(new Set());
-        setSelectionMode(false);
-      } catch (error) {
-        console.error("Erro ao excluir notas:", error);
+      const noteIds = Array.from(selectedNotes);
+      const ok = await deleteNotes(noteIds);
+      if (!ok) {
         alert("Erro ao excluir notas selecionadas.");
+        return;
       }
+      setSelectedNotes(new Set());
+      setSelectionMode(false);
     }
   };
 
@@ -293,19 +548,13 @@ const NotesWithPagination = () => {
     ),
   ].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
-  const availableProjects = React.useMemo(() => {
-    const projects = new Map<string, { id: string; name: string }>();
-
-    allNotes.forEach((note) => {
-      if (note.project_id && note.project_name) {
-        projects.set(note.project_id, { id: note.project_id, name: note.project_name });
-      }
-    });
-
-    return Array.from(projects.values()).sort((a, b) =>
-      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-    );
-  }, [allNotes]);
+  const activeFilterCount =
+    selectedTags.length +
+    selectedCollaborators.length +
+    selectedProjects.length +
+    selectedStageIds.length +
+    selectedPriorityIds.length +
+    (dueDatePreset !== "none" ? 1 : 0);
 
   // =================== RENDER ===================
 
@@ -343,7 +592,7 @@ const NotesWithPagination = () => {
               onClick={toggleSelectionMode}
               className={`flex h-7 items-center justify-center rounded px-1.5 transition-colors ${
                 selectionMode
-                  ? "bg-yellow-50 text-yellow-600 dark:bg-brand-primary-700/10 dark:text-brand-primary-700"
+                  ? "bg-yellow-50 text-yellow-600 dark:bg-brand-primary-500/10 dark:text-brand-primary-500"
                   : "text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
               }`}
               title="Modo de seleção"
@@ -386,28 +635,23 @@ const NotesWithPagination = () => {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex h-7 shrink-0 items-center gap-1.5 rounded-md border px-2 text-[11px] font-medium transition-colors ${
-                showFilters ||
-                selectedTags.length > 0 ||
-                selectedCollaborators.length > 0 ||
-                selectedProjects.length > 0
-                  ? "border-yellow-500 bg-yellow-50 text-yellow-700 dark:border-yellow-500/30 dark:bg-brand-primary-700/10 dark:text-brand-primary-700"
+                showFilters || activeFilterCount > 0
+                  ? "border-yellow-500 bg-yellow-50 text-yellow-700 dark:border-yellow-500/30 dark:bg-brand-primary-500/10 dark:text-brand-primary-500"
                   : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200"
               }`}
             >
               <Filter size={13} />
               <span className="hidden sm:inline">Filtrar</span>
-              {(selectedTags.length > 0 ||
-                selectedCollaborators.length > 0 ||
-                selectedProjects.length > 0) && (
-                <span className="flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-brand-primary-700 px-1 text-[8px] font-bold text-white">
-                  {selectedTags.length + selectedCollaborators.length + selectedProjects.length}
+              {activeFilterCount > 0 && (
+                <span className="flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-brand-primary-500 px-1 text-[8px] font-bold text-white">
+                  {activeFilterCount}
                 </span>
               )}
             </button>
 
             <button
               onClick={handleCreateNote}
-              className="flex h-7 shrink-0 items-center gap-1 rounded-md bg-brand-primary-700 px-2.5 text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-neutral-800 active:scale-95 dark:bg-brand-primary-700 dark:text-neutral-950 dark:hover:bg-neutral-200"
+              className="flex h-7 shrink-0 items-center gap-1 rounded-md bg-brand-primary-500 px-2.5 text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-neutral-800 active:scale-95 dark:bg-brand-primary-500 dark:text-neutral-950 dark:hover:bg-neutral-200"
             >
               <Plus size={13} />
               <span className="hidden sm:inline">Criar</span>
@@ -419,8 +663,163 @@ const NotesWithPagination = () => {
         {showFilters && (
           <div className="animate-in slide-in-from-top-1 mt-2 max-h-[60vh] overflow-y-auto border-t border-neutral-100 pt-3 dark:border-neutral-800">
             <div className="flex flex-col gap-4 sm:gap-6">
-              {/* Tags Group */}
-              <div className="space-y-3">
+              {/* Projetos */}
+              {projectsForFilter.length > 0 && (
+                <div className="space-y-3">
+                  <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
+                    Projetos ({projectsForFilter.length})
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {projectsForFilter.map((project) => (
+                      <button
+                        key={project.id}
+                        onClick={() => handleProjectToggle(project.id)}
+                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                          selectedProjects.includes(project.id)
+                            ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
+                            : "border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
+                        }`}
+                      >
+                        {project.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Estágios (após escolher projeto) */}
+              {selectedProjects.length > 0 && (
+                <div className="space-y-3 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                  <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
+                    Estágios
+                    {taxonomyLoading ? (
+                      <span className="ml-1 font-normal text-neutral-400">(carregando…)</span>
+                    ) : (
+                      <span className="ml-1 font-normal text-neutral-400">({stageOptions.length})</span>
+                    )}
+                  </span>
+                  {!taxonomyLoading && stageOptions.length === 0 && (
+                    <p className="text-xs text-neutral-400">Nenhum estágio neste(s) projeto(s).</p>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {stageOptions.map((st) => {
+                      const multi = selectedProjects.length > 1;
+                      const label = multi ? `${st.projectName}: ${st.name}` : st.name;
+                      return (
+                        <button
+                          key={`${st.projectId}-${st.id}`}
+                          type="button"
+                          title={label}
+                          onClick={() => handleStageToggle(st.id)}
+                          className={`max-w-full truncate rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                            selectedStageIds.includes(st.id)
+                              ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
+                              : "border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
+                          }`}
+                        >
+                          {multi ? (
+                            <>
+                              <span className="text-neutral-500 dark:text-neutral-400">
+                                {st.projectName}
+                              </span>
+                              <span className="mx-1 text-neutral-300 dark:text-neutral-600">·</span>
+                              <span>{st.name}</span>
+                            </>
+                          ) : (
+                            st.name
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Prioridades (após escolher projeto) */}
+              {selectedProjects.length > 0 && (
+                <div className="space-y-3 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                  <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
+                    Prioridades
+                    {taxonomyLoading ? (
+                      <span className="ml-1 font-normal text-neutral-400">(carregando…)</span>
+                    ) : (
+                      <span className="ml-1 font-normal text-neutral-400">
+                        ({priorityOptions.length})
+                      </span>
+                    )}
+                  </span>
+                  {!taxonomyLoading && priorityOptions.length === 0 && (
+                    <p className="text-xs text-neutral-400">Nenhuma prioridade neste(s) projeto(s).</p>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {priorityOptions.map((pr) => {
+                      const multi = selectedProjects.length > 1;
+                      return (
+                        <button
+                          key={`${pr.projectId}-${pr.id}`}
+                          type="button"
+                          onClick={() => handlePriorityToggle(pr.id)}
+                          className={`flex max-w-full items-center gap-1.5 truncate rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                            selectedPriorityIds.includes(pr.id)
+                              ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
+                              : "border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
+                          }`}
+                        >
+                          <span
+                            className="h-2 w-2 shrink-0 rounded-full ring-1 ring-neutral-900/15 dark:ring-white/20"
+                            style={{ backgroundColor: pr.colorHex || "#a3a3a3" }}
+                            aria-hidden
+                          />
+                          {multi ? (
+                            <>
+                              <span className="truncate text-neutral-500 dark:text-neutral-400">
+                                {pr.projectName}
+                              </span>
+                              <span className="text-neutral-300 dark:text-neutral-600">·</span>
+                              <span className="truncate">{pr.name}</span>
+                            </>
+                          ) : (
+                            <span className="truncate">{pr.name}</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Vencimento */}
+              <div className="space-y-3 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
+                  Vencimento
+                </span>
+                <p className="text-[11px] text-neutral-400">
+                  Filtra por data de vencimento da nota (notas sem vencimento ficam de fora quando um
+                  período está ativo).
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {DUE_DATE_PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => {
+                        setDueDatePreset(preset.id);
+                        setCurrentPage(1);
+                      }}
+                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                        dueDatePreset === preset.id
+                          ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
+                          : "border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-3 border-t border-neutral-100 pt-4 dark:border-neutral-800">
                 <span className="text-[10px] font-semibold tracking-wider text-neutral-500 ">
                   Tags ({availableTags.length})
                 </span>
@@ -448,7 +847,7 @@ const NotesWithPagination = () => {
                 </div>
               </div>
 
-              {/* Colaboradores Group */}
+              {/* Colaboradores */}
               <div className="space-y-3">
                 <span className="text-[10px] font-semibold tracking-wider text-neutral-500 ">
                   Colaboradores ({availableCollaborators.length})
@@ -475,30 +874,6 @@ const NotesWithPagination = () => {
                   )}
                 </div>
               </div>
-
-              {/* Projetos Group - Só exibe se houver projetos */}
-              {availableProjects.length > 0 && (
-                <div className="space-y-3">
-                  <span className="text-[10px] font-semibold tracking-wider text-neutral-500 ">
-                    Projetos ({availableProjects.length})
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {availableProjects.map((project) => (
-                      <button
-                        key={project.id}
-                        onClick={() => handleProjectToggle(project.id)}
-                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                          selectedProjects.includes(project.id)
-                            ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
-                            : "border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
-                        }`}
-                      >
-                        {project.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Ordenação */}
               <div className="space-y-3 border-t border-neutral-100 pt-4 sm:pt-6 dark:border-neutral-800">
@@ -535,10 +910,7 @@ const NotesWithPagination = () => {
               </div>
             </div>
 
-            {(searchTerm ||
-              selectedTags.length > 0 ||
-              selectedCollaborators.length > 0 ||
-              selectedProjects.length > 0) && (
+            {(searchTerm || activeFilterCount > 0) && (
               <div className="mt-4 flex justify-end border-t border-neutral-100 pt-3 dark:border-neutral-800">
                 <button
                   onClick={clearFilters}
@@ -554,21 +926,21 @@ const NotesWithPagination = () => {
 
       {/* =================== BARRA DE AÇÕES EM LOTE =================== */}
       {selectionMode && selectedNotes.size > 0 && (
-        <div className="animate-in slide-in-from-top-2 mt-2 flex flex-col gap-2 rounded-md border border-yellow-500/30 bg-yellow-50 p-2 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-yellow-500/20 dark:bg-brand-primary-700/10">
+        <div className="animate-in slide-in-from-top-2 mt-2 flex flex-col gap-2 rounded-md border border-yellow-500/30 bg-yellow-50 p-2 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-yellow-500/20 dark:bg-brand-primary-500/10">
           <div className="flex items-center gap-2">
-            <FiCheckSquare size={14} className="shrink-0 text-yellow-600 dark:text-brand-primary-700" />
-            <span className="text-xs font-medium text-yellow-900 dark:text-brand-primary-700">
+            <FiCheckSquare size={14} className="shrink-0 text-yellow-600 dark:text-brand-primary-500" />
+            <span className="text-xs font-medium text-yellow-900 dark:text-brand-primary-500">
               {selectedNotes.size} nota(s) selecionada(s)
             </span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={selectAllNotes}
-              className="text-[11px] font-medium text-yellow-700 underline hover:text-yellow-800 dark:text-brand-primary-700 dark:hover:text-yellow-400"
+              className="text-[11px] font-medium text-yellow-700 underline hover:text-yellow-800 dark:text-brand-primary-500 dark:hover:text-yellow-400"
             >
               {selectedNotes.size === notes.length ? "Desmarcar" : "Selecionar todas"}
             </button>
-            <div className="h-3 w-px bg-yellow-300 dark:bg-brand-primary-700/30"></div>
+            <div className="h-3 w-px bg-yellow-300 dark:bg-brand-primary-500/30"></div>
             <button
               onClick={handleBulkDelete}
               className="flex items-center gap-1 rounded bg-red-500 px-2 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-red-600"
@@ -590,24 +962,27 @@ const NotesWithPagination = () => {
       {/* =================== CONTEÚDO (LISTA) =================== */}
       <div
         id="notes-container"
-        className="flex-1 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-950"
+        className="flex-1 overflow-y-auto rounded-md  bg-white shadow-sm dark:bg-neutral-950"
       >
         <div className="flex w-full flex-col">
           {/* Headers da Lista - Visível apenas em desktop */}
           {notes.length > 0 && !showFullSkeleton && (
-            <div className="sticky top-0 z-20 hidden grid-cols-12 gap-3 border-b border-neutral-100 bg-neutral-50/95 px-4 py-2 text-[10px] font-bold tracking-widest text-neutral-400  backdrop-blur-sm sm:grid dark:border-neutral-800 dark:bg-neutral-900/95">
-              <div className="col-span-5 flex items-center">Detalhes da Nota</div>
-              <div className="col-span-2 flex items-center">Projeto</div>
-              <div className="col-span-2 flex items-center">Tags</div>
+            <div className="sticky top-0 z-20 hidden grid-cols-12 gap-2 border-b border-neutral-100 bg-neutral-50/95 px-3 py-1.5 text-[9px] font-bold tracking-wider text-neutral-400 backdrop-blur-sm sm:grid dark:border-neutral-800 dark:bg-neutral-900/95">
+              <div className="col-span-3 flex min-w-0 items-center">Nota</div>
+              <div className="col-span-2 flex min-w-0 items-center">Projeto</div>
+              <div className="col-span-2 flex min-w-0 items-center">Tags</div>
+              <div className="col-span-1 flex min-w-0 items-center">Estágio</div>
+              <div className="col-span-1 flex min-w-0 items-center">Prioridade</div>
+              <div className="col-span-1 flex min-w-0 items-center">Vencimento</div>
               <div className="col-span-1 flex items-center justify-center">Equipe</div>
-              <div className="col-span-2 flex items-center justify-end">Atualização</div>
+              <div className="col-span-1 flex items-center justify-end">Atualização</div>
             </div>
           )}
 
           {showFullSkeleton || showListSkeleton ? (
             <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
               {Array.from({ length: itemsPerPage }).map((_, i) => (
-                <div key={i} className="flex h-14 animate-pulse items-center gap-3 px-4 sm:h-12">
+                <div key={i} className="flex h-12 animate-pulse items-center gap-2 px-3 sm:h-10">
                   <div className="flex-1 space-y-2">
                     <div className="h-3.5 w-2/3 rounded bg-neutral-100 sm:w-1/3 dark:bg-neutral-800"></div>
                     <div className="h-2.5 w-1/2 rounded bg-neutral-50 dark:bg-neutral-900"></div>
@@ -631,7 +1006,7 @@ const NotesWithPagination = () => {
                     key={note.id}
                     className={`group relative transition-all ${
                       isSelected
-                        ? "bg-yellow-50/80 dark:bg-brand-primary-700/10"
+                        ? "bg-yellow-50/80 dark:bg-brand-primary-500/10"
                         : "hover:bg-neutral-50/50 dark:hover:bg-neutral-900/40"
                     }`}
                   >
@@ -641,7 +1016,7 @@ const NotesWithPagination = () => {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleNoteSelection(note.id)}
-                          className="h-4 w-4 cursor-pointer rounded border-neutral-300 text-brand-primary-700 transition-colors focus:ring-2 focus:ring-yellow-500 focus:ring-offset-0 dark:border-neutral-600 dark:bg-neutral-800 dark:checked:bg-brand-primary-700"
+                          className="h-4 w-4 cursor-pointer rounded border-neutral-300 text-brand-primary-500 transition-colors focus:ring-2 focus:ring-yellow-500 focus:ring-offset-0 dark:border-neutral-600 dark:bg-neutral-800 dark:checked:bg-brand-primary-500"
                         />
                       </div>
                     )}
@@ -657,21 +1032,37 @@ const NotesWithPagination = () => {
                     >
                       {/* === Layout Mobile (card compacto) === */}
                       <article
-                        className={`flex h-[60px] items-center justify-between gap-3 px-4 sm:hidden ${
+                        className={`flex min-h-[52px] flex-col justify-center gap-1 py-1.5 pr-3 pl-4 sm:hidden ${
                           selectionMode ? "pl-9" : ""
                         }`}
                       >
-                        {/* Coluna esquerda: título + descrição/tags */}
-                        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
-                          <div className="flex items-center gap-1.5">
-                            <h3 className="truncate text-[12px] font-bold text-neutral-800 dark:text-neutral-200">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                            <h3 className="truncate text-[11px] font-bold text-neutral-800 dark:text-neutral-200">
                               {note.title || "Sem título"}
                             </h3>
                             {new Date(note.created_at).getTime() > Date.now() - 86400000 && (
-                              <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-primary-700"></span>
+                              <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-primary-500"></span>
                             )}
                           </div>
-                          <div className="flex items-center gap-1.5 overflow-hidden">
+                          <span className="shrink-0 text-[9px] font-medium text-neutral-400 dark:text-neutral-500">
+                            {formatDate(note.updated_at)}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] text-neutral-500 dark:text-neutral-400">
+                          <span className="max-w-[42%] truncate" title={note.associated_project?.stage_name || undefined}>
+                            <span className="text-neutral-400 dark:text-neutral-500">Est. </span>
+                            {note.associated_project?.stage_name || "—"}
+                          </span>
+                          <span className="text-neutral-300 dark:text-neutral-600">·</span>
+                          <span className="max-w-[36%] truncate" title={note.priority_name || undefined}>
+                            {note.priority_name || "—"}
+                          </span>
+                          <span className="text-neutral-300 dark:text-neutral-600">·</span>
+                          <span className="shrink-0">{formatShortDate(note.due_date)}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1 overflow-hidden">
                             {note.tags && note.tags.length > 0 ? (
                               <>
                                 {note.tags.slice(0, 2).map((tag, i) => {
@@ -679,33 +1070,21 @@ const NotesWithPagination = () => {
                                   return (
                                     <span
                                       key={i}
-                                      className={`inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[9px] font-bold ${colors.bg} ${colors.text}`}
+                                      className={`inline-flex shrink-0 items-center rounded px-1 py-0.5 text-[8px] font-bold ${colors.bg} ${colors.text}`}
                                     >
                                       {tag}
                                     </span>
                                   );
                                 })}
                                 {note.tags.length > 2 && (
-                                  <span className="shrink-0 text-[9px] font-medium text-neutral-400">
+                                  <span className="shrink-0 text-[8px] font-medium text-neutral-400">
                                     +{note.tags.length - 2}
                                   </span>
                                 )}
                               </>
-                            ) : (
-                              <span className="truncate text-[10px] text-neutral-500 dark:text-neutral-400">
-                                {note.description || "Sem descrição..."}
-                              </span>
-                            )}
+                            ) : null}
                           </div>
-                        </div>
-
-                        {/* Coluna direita: colabs + data */}
-                        <div className="flex shrink-0 flex-col items-end justify-center gap-1.5">
-                          <span className="text-[10px] font-medium text-neutral-400 dark:text-neutral-500">
-                            {formatDate(note.updated_at)}
-                          </span>
-
-                          <div className="flex items-center gap-2">
+                          <div className="flex shrink-0 items-center gap-2">
                             {note.project_name && (
                               <div
                                 className="flex h-4 w-4 items-center justify-center rounded bg-blue-50 dark:bg-blue-900/20"
@@ -750,50 +1129,40 @@ const NotesWithPagination = () => {
 
                       {/* === Layout Desktop (grid row) === */}
                       <article
-                        className={`hidden h-11 items-center gap-3 px-4 sm:grid sm:grid-cols-12 ${
+                        className={`hidden h-9 items-center gap-2 px-3 sm:grid sm:grid-cols-12 ${
                           selectionMode ? "pl-10" : ""
                         }`}
                       >
-                        {/* Título e Descrição (Col-5) */}
-                        <div className="col-span-5 flex min-w-0 flex-col justify-center pr-2">
-                          <div className="flex items-center gap-2">
-                            <h3 className="truncate text-[12px] font-bold text-neutral-800 transition-colors group-hover:text-yellow-600 dark:text-neutral-200 dark:group-hover:text-yellow-400">
-                              {note.title || "Sem título"}
-                            </h3>
-                            {new Date(note.created_at).getTime() > Date.now() - 86400000 && (
-                              <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-primary-700"></span>
-                            )}
-                          </div>
-                          <p className="truncate text-[10px] text-neutral-400 dark:text-neutral-500">
-                            {note.description || "Sem descrição"}
-                          </p>
+                        <div className="col-span-3 flex min-w-0 items-center gap-1.5 pr-1">
+                          <h3 className="truncate text-[10px]  text-neutral-800 transition-colors group-hover:text-yellow-600 dark:text-neutral-200 dark:group-hover:text-yellow-400">
+                            {note.title || "Sem título"}
+                          </h3>
+                          {new Date(note.created_at).getTime() > Date.now() - 86400000 && (
+                            <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-primary-500"></span>
+                          )}
                         </div>
 
-                        {/* Projeto (Col-2) */}
                         <div className="col-span-2 flex min-w-0 items-center">
                           {note.project_name ? (
-                            <div className="flex items-center gap-1.5 truncate rounded-md bg-neutral-50 px-2 py-0.5 dark:bg-neutral-900">
-                              <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500"></div>
-                              <span className="truncate text-[10px] font-semibold text-neutral-600 dark:text-neutral-300">
+                            <div className="flex min-w-0 items-center gap-1 truncate rounded bg-neutral-50 px-1.5 py-0.5 dark:bg-neutral-900">
+                              <div className="h-1 w-1 shrink-0 rounded-full bg-blue-500"></div>
+                              <span className="truncate text-[9px]  text-neutral-600 dark:text-neutral-300">
                                 {note.project_name}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-[10px] text-neutral-300 dark:text-neutral-700">
-                              -
-                            </span>
+                            <span className="text-[9px] text-neutral-300 dark:text-neutral-700">—</span>
                           )}
                         </div>
 
-                        {/* Tags (Col-2) */}
-                        <div className="col-span-2 flex items-center overflow-hidden">
-                          <div className="flex flex-wrap gap-1">
+                        <div className="col-span-2 flex min-w-0 items-center overflow-hidden">
+                          <div className="flex min-w-0 flex-wrap gap-0.5">
                             {note.tags?.slice(0, 2).map((tag, i) => {
                               const colors = getTagColor(tag);
                               return (
                                 <span
                                   key={i}
-                                  className={`inline-flex max-w-[70px] items-center truncate rounded px-1.5 py-0.5 text-[9px] font-bold ${colors.bg} ${colors.text}`}
+                                  className={`inline-flex max-w-[64px] items-center truncate rounded px-1 py-0.5 text-[8px]  ${colors.bg} ${colors.text}`}
                                   title={tag}
                                 >
                                   {tag}
@@ -801,36 +1170,79 @@ const NotesWithPagination = () => {
                               );
                             })}
                             {(note.tags?.length || 0) > 2 && (
-                              <span className="text-[9px] font-medium text-neutral-400">
+                              <span className="text-[8px] font-medium text-neutral-400">
                                 +{note.tags!.length - 2}
                               </span>
                             )}
                           </div>
                         </div>
 
-                        {/* Colaboradores (Col-1) */}
+                        <div className="col-span-1 min-w-0">
+                          <span
+                            className="block truncate text-[9px] text-neutral-600 dark:text-neutral-300"
+                            title={note.associated_project?.stage_name || undefined}
+                          >
+                            {note.associated_project?.stage_name || "—"}
+                          </span>
+                        </div>
+
+                        <div className="col-span-1 flex min-w-0 items-center">
+                          {note.priority_name ? (
+                            <span
+                              className="inline-flex max-w-full items-center gap-1 truncate rounded px-1 py-0.5 text-[8px] font-medium text-neutral-900 dark:text-neutral-100"
+                              style={{
+                                borderLeftWidth: 2,
+                                borderLeftStyle: "solid",
+                                borderLeftColor: note.priority_color || "#ca8a04",
+                                backgroundColor: note.priority_color
+                                  ? `${note.priority_color}26`
+                                  : "rgba(234, 179, 8, 0.15)",
+                              }}
+                              title={note.priority_name}
+                            >
+                              <span
+                                className="h-1.5 w-1.5 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
+                                style={{ backgroundColor: note.priority_color || "#ca8a04" }}
+                                aria-hidden
+                              />
+                              <span className="truncate">{note.priority_name}</span>
+                            </span>
+                          ) : (
+                            <span className="text-[9px] text-neutral-300 dark:text-neutral-700">—</span>
+                          )}
+                        </div>
+
+                        <div className="col-span-1">
+                          <span
+                            className="text-[9px] text-neutral-600 dark:text-neutral-300"
+                            title={note.due_date ? formatDate(note.due_date) : undefined}
+                          >
+                            {formatShortDate(note.due_date)}
+                          </span>
+                        </div>
+
                         <div className="col-span-1 flex items-center justify-center">
                           {note.collaborators && note.collaborators.length > 0 ? (
-                            <div className="flex -space-x-1.5">
+                            <div className="flex -space-x-1">
                               {note.collaborators.slice(0, 3).map((c, i) => {
                                 const avatar = getCollaboratorAvatarUrl(c);
                                 const name = getCollaboratorDisplayName(c);
                                 return (
                                   <div
                                     key={i}
-                                    className="relative flex h-5 w-5 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-100 dark:border-neutral-950 dark:bg-neutral-800"
+                                    className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full border border-white bg-neutral-100 dark:border-neutral-950 dark:bg-neutral-800"
                                     title={name}
                                   >
                                     {avatar ? (
                                       <Image
                                         src={avatar}
                                         alt={name}
-                                        width={20}
-                                        height={20}
+                                        width={16}
+                                        height={16}
                                         className="h-full w-full object-cover"
                                       />
                                     ) : (
-                                      <span className="text-[8px] font-bold text-neutral-500">
+                                      <span className="text-[7px] font-bold text-neutral-500">
                                         {name.charAt(0)}
                                       </span>
                                     )}
@@ -839,16 +1251,16 @@ const NotesWithPagination = () => {
                               })}
                             </div>
                           ) : (
-                            <span className="text-[10px] text-neutral-300 dark:text-neutral-700">
-                              -
-                            </span>
+                            <span className="text-[9px] text-neutral-300 dark:text-neutral-700">—</span>
                           )}
                         </div>
 
-                        {/* Data (Col-2) */}
-                        <div className="col-span-2 flex items-center justify-end">
-                          <span className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-                            {formatDate(note.updated_at)}
+                        <div className="col-span-1 flex min-w-0 items-center justify-end">
+                          <span
+                            className="truncate text-right text-[9px] font-medium text-neutral-500 dark:text-neutral-400"
+                            title={formatDate(note.updated_at || note.created_at)}
+                          >
+                            {formatShortDate(note.updated_at || note.created_at)}
                           </span>
                         </div>
                       </article>
@@ -869,13 +1281,10 @@ const NotesWithPagination = () => {
               <p className="mt-1 mb-4 max-w-[250px] text-[11px] leading-relaxed text-neutral-500">
                 Ajuste os termos de busca ou remova os filtros atuais para ver mais resultados.
               </p>
-              {(searchTerm ||
-                selectedTags.length > 0 ||
-                selectedCollaborators.length > 0 ||
-                selectedProjects.length > 0) && (
+              {(searchTerm || activeFilterCount > 0) && (
                 <button
                   onClick={clearFilters}
-                  className="rounded-md bg-yellow-50 px-3 py-1.5 text-[11px] font-bold text-yellow-700 transition-colors hover:bg-yellow-100 dark:bg-brand-primary-700/10 dark:text-brand-primary-700 dark:hover:bg-brand-primary-700/20"
+                  className="rounded-md bg-yellow-50 px-3 py-1.5 text-[11px] font-bold text-yellow-700 transition-colors hover:bg-yellow-100 dark:bg-brand-primary-500/10 dark:text-brand-primary-500 dark:hover:bg-brand-primary-500/20"
                 >
                   Limpar filtros ativos
                 </button>

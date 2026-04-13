@@ -68,7 +68,7 @@ function TermsModal({
               onAccept();
               onClose();
             }}
-            className="bg-brand-primary-700 hover:bg-brand-primary-800 rounded px-4 py-2 text-sm font-medium text-white transition-colors"
+            className="bg-brand-primary-500 hover:bg-brand-primary-800 rounded px-4 py-2 text-sm font-medium text-white transition-colors"
           >
             {t.signUp.termsModalAccept}
           </button>
@@ -291,7 +291,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
                 <button
                   type="button"
                   onClick={() => setShowTermsModal(true)}
-                  className="text-brand-primary-700 font-medium hover:underline"
+                  className="text-brand-primary-500 font-medium hover:underline"
                 >
                   {t.signUp.termsText2}
                 </button>
@@ -299,7 +299,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
                 <button
                   type="button"
                   onClick={() => setShowTermsModal(true)}
-                  className="text-brand-primary-700 font-medium hover:underline"
+                  className="text-brand-primary-500 font-medium hover:underline"
                 >
                   {t.signUp.termsText4}
                 </button>
@@ -308,7 +308,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-brand-primary-700 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center rounded-md py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-[150px] sm:px-4 sm:py-1"
+              className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center rounded-md py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-[150px] sm:px-4 sm:py-1"
             >
               {isLoading ? "Criando..." : t.signUp.submitButton}
             </button>
@@ -353,7 +353,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
           className="text-brand-secondary-500 mt-8 text-sm font-medium"
         >
           {t.signUp.alreadyHaveAccount}{" "}
-          <span className="text-brand-primary-700 hover:text-brand-primary-600 font-semibold transition-colors">
+          <span className="text-brand-primary-500 hover:text-brand-primary-500 font-semibold transition-colors">
             {t.signUp.loginNow}
           </span>
         </button>

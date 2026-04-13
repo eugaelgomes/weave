@@ -223,7 +223,7 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
         {/* Header com seletor de view */}
         <div className="mb-2 flex flex-col gap-2 border-b border-neutral-200 pb-2 sm:mb-3 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800">
           <div className="flex items-center gap-1.5">
-            <div className="flex h-5 w-5 items-center justify-center rounded border border-yellow-400/20 bg-yellow-400/10 text-brand-primary-700 dark:text-yellow-400">
+            <div className="flex h-5 w-5 items-center justify-center rounded border border-yellow-400/20 bg-yellow-400/10 text-brand-primary-500 dark:text-yellow-400">
               <LayoutGrid className="h-3 w-3" />
             </div>
             <h2 className="font-mono text-[10px] font-bold tracking-widest text-neutral-500 uppercase dark:text-neutral-500">
@@ -258,7 +258,7 @@ const ProjectsDashboard = ({ projectId }: ProjectsDashboardProps) => {
                 title={view.label}
                 className={`flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium transition-all ${
                   activeView === view.value
-                    ? "bg-brand-primary-700/15 text-yellow-600 shadow-sm dark:bg-brand-primary-700/20 dark:text-yellow-400"
+                    ? "bg-brand-primary-500/15 text-yellow-600 shadow-sm dark:bg-brand-primary-500/20 dark:text-yellow-400"
                     : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                 }`}
               >

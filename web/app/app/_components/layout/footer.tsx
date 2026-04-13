@@ -20,7 +20,7 @@ const PagesFooter = () => {
           href={blogUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-bold text-brand-primary-400 transition-colors hover:text-brand-primary-600 dark:text-brand-primary-500/40 dark:hover:text-brand-primary-500"
+          className="font-bold text-brand-primary-500 transition-colors hover:text-brand-primary-500 dark:text-brand-primary-500/40 dark:hover:text-brand-primary-500"
         >
           Weave Notes
         </a>

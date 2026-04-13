@@ -22,7 +22,7 @@ function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
     <div className={cn("flex flex-col bg-white dark:bg-neutral-950", className)}>
       <div className="flex h-8 items-center justify-between border-b border-neutral-100 px-2 dark:border-neutral-900">
         <div className="flex items-center gap-1 text-[10px] font-semibold tracking-widest text-neutral-700 uppercase dark:text-neutral-200">
-          <Bot className="h-3 w-3 text-brand-primary-700" />
+          <Bot className="h-3 w-3 text-brand-primary-500" />
           Chat
         </div>
         {onLinkClick && (

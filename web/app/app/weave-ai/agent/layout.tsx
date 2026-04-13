@@ -22,7 +22,7 @@ function AgentSidebar({ className, onLinkClick }: AgentSidebarProps) {
     <div className={cn("flex flex-col bg-white dark:bg-neutral-950", className)}>
       <div className="flex h-8 items-center justify-between border-b border-neutral-100 px-2 dark:border-neutral-900">
         <div className="flex items-center gap-1 text-[10px] font-semibold tracking-widest text-neutral-700 dark:text-neutral-200">
-          <Bot className="h-3 w-3 text-brand-primary-700" />
+          <Bot className="h-3 w-3 text-brand-primary-500" />
           Agent Studio
         </div>
         {onLinkClick && (
@@ -42,7 +42,7 @@ function AgentSidebar({ className, onLinkClick }: AgentSidebarProps) {
               router.push("/app/weave-ai/agent/new");
               onLinkClick?.();
             }}
-            className="flex w-full items-center justify-center gap-1 rounded-sm border border-yellow-500 bg-brand-primary-700/95 px-2 py-1 text-[10px] font-semibold text-neutral-900 transition hover:bg-brand-primary-700"
+            className="flex w-full items-center justify-center gap-1 rounded-sm border border-yellow-500 bg-brand-primary-500/95 px-2 py-1 text-[10px] font-semibold text-neutral-900 transition hover:bg-brand-primary-500"
           >
             <Plus className="h-3 w-3" />
             New Agent

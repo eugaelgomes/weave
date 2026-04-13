@@ -403,7 +403,7 @@ export function CalendarPreview({
           ))}
         </div>
         <div
-          className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-700/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-700 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-700/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-700/60 grid flex-1 gap-1 overflow-y-auto [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
+          className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 grid flex-1 gap-1 overflow-y-auto [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
           style={{ gridTemplateColumns }}
         >
           {daysToRender.map((cellDate, idx) => {
@@ -427,14 +427,14 @@ export function CalendarPreview({
                   <span
                     className={`flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-medium sm:h-6 sm:w-6 sm:text-[10px] ${
                       isToday
-                        ? "bg-brand-primary-700 text-white shadow-sm"
+                        ? "bg-brand-primary-500 text-white shadow-sm"
                         : "text-neutral-600 dark:text-neutral-400"
                     }`}
                   >
                     {cellDate.getDate()}
                   </span>
                 </div>
-                <div className="custom-scrollbar [&::-webkit-scrollbar-thumb]:bg-brand-primary-700/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-700 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-700/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-700/60 flex flex-col gap-0.5 overflow-y-auto pr-1 sm:gap-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+                <div className="custom-scrollbar [&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 flex flex-col gap-0.5 overflow-y-auto pr-1 sm:gap-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
                   {dayEvents?.calendarEvents.map((e, i) => (
                     <CalendarEventChip key={`calendar-${i}`} event={e as UnifiedCalendarEvent} />
                   ))}
@@ -505,7 +505,7 @@ export function CalendarPreview({
     return (
       <div
         ref={scrollContainerRef}
-        className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-700/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-700 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-700/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-700/60 flex flex-1 flex-col overflow-x-hidden overflow-y-auto border-t border-neutral-200 bg-white [scrollbar-gutter:stable] dark:border-neutral-800 dark:bg-neutral-950 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
+        className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 flex flex-1 flex-col overflow-x-hidden overflow-y-auto border-t border-neutral-200 bg-white [scrollbar-gutter:stable] dark:border-neutral-800 dark:bg-neutral-950 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
       >
         {/* CABEÇALHO DA SEMANA (Diminuído altura e largura) */}
         <div className="sticky top-0 z-20 grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 border-b border-neutral-200 [--label-w:40px] sm:[--label-w:56px] dark:divide-neutral-800 dark:border-neutral-800">
@@ -537,7 +537,7 @@ export function CalendarPreview({
                   <span
                     className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold sm:h-5 sm:w-5 ${
                       isToday
-                        ? "bg-brand-primary-700 text-white"
+                        ? "bg-brand-primary-500 text-white"
                         : "text-neutral-700 dark:text-neutral-300"
                     }`}
                   >
@@ -777,7 +777,7 @@ export function CalendarPreview({
     return (
       <div
         ref={scrollContainerRef}
-        className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-700/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-700 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-700/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-700/60 flex-1 overflow-y-auto bg-white dark:bg-neutral-950 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
+        className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 flex-1 overflow-y-auto bg-white dark:bg-neutral-950 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
       >
         {allDayEvents.length > 0 && (
           <div className="border-b border-neutral-200 bg-neutral-50 px-1 py-1 dark:border-neutral-800 dark:bg-neutral-900/50">
@@ -946,7 +946,7 @@ export function CalendarPreview({
               }}
               className="group flex flex-col items-center justify-center bg-white p-2 hover:bg-neutral-50 sm:p-2 dark:bg-neutral-950 dark:hover:bg-neutral-900"
             >
-              <h4 className="group-hover:text-brand-primary-700 text-xs font-semibold text-neutral-700 sm:text-sm dark:text-neutral-300">
+              <h4 className="group-hover:text-brand-primary-500 text-xs font-semibold text-neutral-700 sm:text-sm dark:text-neutral-300">
                 {MONTH_NAMES[month]}
               </h4>
               <div className="mt-2 flex h-8 w-full items-end justify-center gap-1 opacity-60">

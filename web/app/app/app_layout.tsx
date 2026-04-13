@@ -11,11 +11,13 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   useEffect(() => {
     const savedState = localStorage.getItem("sidebar-collapsed");
-    if (savedState === "true") setIsCollapsed(true);
+    if (savedState !== null) {
+      setIsCollapsed(savedState === "true");
+    }
   }, []);
 
   useEffect(() => {
