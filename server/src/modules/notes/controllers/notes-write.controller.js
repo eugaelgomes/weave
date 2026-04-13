@@ -1,6 +1,7 @@
 const NotesBaseController = require("./base.controller");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
+const taskPrioritiesRepository = require("@/modules/task_priorities/task_priorities.repository");
 const { ALLOWED_NOTE_STATUSES } = require("@/utils/patterns/product-patterns");
 const spacesService = require("@/services/storage");
 
@@ -217,6 +218,8 @@ class NotesWriteController extends NotesBaseController {
         deleted,
         project_id,
         properties,
+        priority_id,
+        due_date,
       } = req.body;
 
       if (typeof properties === "string") {
@@ -250,6 +253,43 @@ class NotesWriteController extends NotesBaseController {
         userId
       );
 
+      if (priority_id !== undefined) {
+        const pid =
+          priority_id === null || priority_id === undefined || priority_id === ""
+            ? null
+            : String(priority_id);
+        if (pid) {
+          const tp = await taskPrioritiesRepository.findActiveById(pid);
+          if (!tp) {
+            return res.status(400).json({ error: "Prioridade inválida" });
+          }
+          const scopeOrg = note.scope_org_id || null;
+          const noteProjectId = note.project_id || null;
+          if (tp.project_id) {
+            if (tp.project_id !== noteProjectId) {
+              return res.status(400).json({
+                error: "Prioridade não pertence ao projeto desta nota",
+              });
+            }
+          } else if (tp.org_id) {
+            if (!scopeOrg || tp.org_id !== scopeOrg) {
+              return res.status(400).json({
+                error: "Prioridade não pertence à organização desta nota",
+              });
+            }
+          } else {
+            return res.status(400).json({ error: "Prioridade inválida" });
+          }
+        }
+      }
+
+      if (due_date !== undefined && due_date !== null && due_date !== "") {
+        const t = new Date(due_date).getTime();
+        if (Number.isNaN(t)) {
+          return res.status(400).json({ error: "due_date inválida" });
+        }
+      }
+
       // Apenas o proprietário pode marcar como deletado
       if (deleted !== undefined && !isOwner) {
         throw new Error("Apenas o proprietário pode excluir a nota");
@@ -269,7 +309,29 @@ class NotesWriteController extends NotesBaseController {
       if (tags !== undefined) updateData.tags = tags;
       if (status !== undefined) updateData.status = status;
       if (deleted !== undefined) updateData.deleted = deleted;
-      if (project_id !== undefined) updateData.project_id = project_id;
+      if (project_id !== undefined) {
+        const nextProjectId =
+          project_id === null || project_id === undefined || project_id === ""
+            ? null
+            : String(project_id);
+        updateData.project_id = nextProjectId;
+        const prevProjectId = note.project_id ? String(note.project_id) : null;
+        if (nextProjectId !== prevProjectId) {
+          updateData.project_stage_id = null;
+        }
+      }
+      if (priority_id !== undefined) {
+        updateData.priority_id =
+          priority_id === null || priority_id === undefined || priority_id === ""
+            ? null
+            : String(priority_id);
+      }
+      if (due_date !== undefined) {
+        updateData.due_date =
+          due_date === null || due_date === undefined || due_date === ""
+            ? null
+            : new Date(due_date).toISOString();
+      }
 
       // Processar properties (campos JSON) e arquivos enviados
       const propertiesUpdate = properties || {};
@@ -469,8 +531,8 @@ class NotesWriteController extends NotesBaseController {
         });
       }
 
-      // Formata e retorna a nota atualizada
-      const formattedNote = this._formatNoteResponse(updatedNote);
+      const refreshed = await this.notesRepository.getNoteById(id);
+      const formattedNote = this._formatNoteResponse(refreshed || updatedNote);
       formattedNote.access = {
         isOwner,
         isCollaborator,

@@ -276,6 +276,17 @@ export const manageProjectNote = async (
   return data.notes || [];
 };
 
+export const updateProjectNoteStage = async (
+  projectId: string,
+  noteId: string,
+  stageId: string
+): Promise<{ message: string; noteId: string; newStageId: string }> => {
+  const response = await apiClient.put(API_ENDPOINTS.PROJECTS_NOTE_STAGE(projectId, noteId), {
+    stageId,
+  });
+  return handleResponse<{ message: string; noteId: string; newStageId: string }>(response);
+};
+
 // --- STATS ---
 
 export interface ProjectDashboardStats {

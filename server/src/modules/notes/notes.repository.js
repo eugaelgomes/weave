@@ -15,6 +15,8 @@ module.exports = {
   getAllNotesWithPagination: (...args) =>
     readNotesRepository.getAllNotesWithPagination(...args),
   getNoteById: (...args) => readNotesRepository.getNoteById(...args),
+  findNotesForDueDateEveReminder: (...args) =>
+    readNotesRepository.findNotesForDueDateEveReminder(...args),
   getAllNotesStats: (...args) => readNotesRepository.getAllNotesStats(...args),
   processNotesWithSignedUrls: (...args) =>
     readNotesRepository.processNotesWithSignedUrls(...args),
@@ -36,4 +38,6 @@ module.exports = {
     noteCollaboratorsRepository.getCollaboratorsByNoteId(...args),
   isCollaborator: (...args) =>
     noteCollaboratorsRepository.isCollaborator(...args),
+  getActiveCollaboratorEmails: (...args) =>
+    noteCollaboratorsRepository.getActiveCollaboratorEmails(...args),
 };

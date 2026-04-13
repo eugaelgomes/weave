@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   CornerDownRight,
   Download,
+  FileText,
   Loader2,
   MessageCircle,
   Pencil,
@@ -12,6 +13,7 @@ import {
   RefreshCw,
   Send,
   Trash2,
+  UserRound,
   X,
 } from "lucide-react";
 import { useAuth } from "@/app/_contexts/auth-context";
@@ -22,6 +24,7 @@ import {
   type NoteComment,
   type NoteCommentFile,
 } from "@/app/_services/notes-comments-service/notes-comments-service";
+import type { User as MentionUser } from "@/app/_services/notes-service/notes-service";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 
 function formatCommentDate(iso: string): string {
@@ -74,6 +77,289 @@ function parseFiles(raw: unknown): NoteCommentFile[] {
   );
 }
 
+/** Tokens `@[rótulo](user:id)` e `@[nome](note-file:id)` salvos no texto do comentário. */
+const COMMENT_MENTION_TOKEN_RE = /@\[(.+?)\]\((user|note-file):([^)]+)\)/g;
+
+function sanitizeMentionLabel(raw: string): string {
+  const t = raw.replace(/[\[\]]/g, "").trim();
+  return t || "Usuário";
+}
+
+function makeUserMentionToken(u: MentionUser): string {
+  const label = sanitizeMentionLabel(u.name ?? u.username ?? u.email);
+  return `@[${label}](user:${u.id})`;
+}
+
+function makeNoteFileMentionToken(f: NoteCommentsEmbeddableFile): string {
+  const label = sanitizeMentionLabel(f.name || "arquivo");
+  return `@[${label}](note-file:${f.id})`;
+}
+
+function getAtMentionQuery(text: string, caret: number): { start: number; query: string } | null {
+  const left = text.slice(0, caret);
+  const at = left.lastIndexOf("@");
+  if (at < 0) {
+    return null;
+  }
+  const after = left.slice(at + 1);
+  if (after.includes("]")) {
+    return null;
+  }
+  if (/^\s/.test(after)) {
+    return null;
+  }
+  return { start: at, query: after };
+}
+
+export interface NoteCommentsEmbeddableFile {
+  id: string;
+  name: string;
+  path: string;
+  type?: string;
+}
+
+type AtMenuState = { field: "draft" | "edit"; start: number; query: string } | null;
+
+type AtPickItem =
+  | { type: "file"; file: NoteCommentsEmbeddableFile }
+  | { type: "user"; user: MentionUser };
+
+function CommentRichText({
+  text,
+  noteFiles,
+}: {
+  text: string;
+  noteFiles: NoteCommentsEmbeddableFile[];
+}) {
+  const fileById = useMemo(() => new Map(noteFiles.map((f) => [f.id, f])), [noteFiles]);
+  if (!text.includes("@[")) {
+    return <span className="whitespace-pre-wrap">{text}</span>;
+  }
+  const nodes: React.ReactNode[] = [];
+  const re = new RegExp(COMMENT_MENTION_TOKEN_RE.source, "g");
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let k = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) {
+      nodes.push(text.slice(last, m.index));
+    }
+    const [, label, kind, id] = m;
+    if (kind === "user") {
+      nodes.push(
+        <span
+          key={`m-${k++}`}
+          className="font-medium text-amber-800 dark:text-amber-200"
+          title="Menção"
+        >
+          @{sanitizeMentionLabel(label)}
+        </span>
+      );
+    } else {
+      const f = fileById.get(id);
+      const href = f?.path ? getStorageUrl(f.path) : undefined;
+      if (href) {
+        nodes.push(
+          <a
+            key={`m-${k++}`}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-sky-700 underline decoration-sky-700/40 underline-offset-2 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-200"
+          >
+            @{sanitizeMentionLabel(label)}
+          </a>
+        );
+      } else {
+        nodes.push(
+          <span key={`m-${k++}`} className="text-neutral-500 italic dark:text-neutral-400">
+            @{sanitizeMentionLabel(label)}
+          </span>
+        );
+      }
+    }
+    last = re.lastIndex;
+  }
+  if (last < text.length) {
+    nodes.push(text.slice(last));
+  }
+  return <span className="whitespace-pre-wrap">{nodes}</span>;
+}
+
+function CommentComposerTextarea({
+  field,
+  value,
+  onChangeValue,
+  activeAt,
+  setActiveAt,
+  atItems,
+  mentionHighlightIdx,
+  setMentionHighlightIdx,
+  onPickItem,
+  searchMentionUsers,
+  remoteMentionLoading,
+  textareaRef,
+  ...textareaProps
+}: Omit<
+  React.ComponentProps<"textarea">,
+  "value" | "onChange" | "onSelect" | "onBlur" | "onKeyDown" | "ref"
+> & {
+  field: "draft" | "edit";
+  value: string;
+  onChangeValue: (v: string) => void;
+  activeAt: AtMenuState;
+  setActiveAt: React.Dispatch<React.SetStateAction<AtMenuState>>;
+  atItems: AtPickItem[];
+  mentionHighlightIdx: number;
+  setMentionHighlightIdx: React.Dispatch<React.SetStateAction<number>>;
+  onPickItem: (item: AtPickItem) => void;
+  searchMentionUsers?: (query: string) => Promise<MentionUser[]>;
+  remoteMentionLoading: boolean;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+}) {
+  const syncAt = (text: string, caret: number) => {
+    const q = getAtMentionQuery(text, caret);
+    if (!q) {
+      setActiveAt(null);
+    } else {
+      setActiveAt({ field, start: q.start, query: q.query });
+    }
+  };
+
+  const tryPick = useCallback(() => {
+    if (atItems.length === 0) {
+      return false;
+    }
+    const item = atItems[Math.min(mentionHighlightIdx, atItems.length - 1)];
+    if (item) {
+      onPickItem(item);
+    }
+    return true;
+  }, [atItems, mentionHighlightIdx, onPickItem]);
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!activeAt || activeAt.field !== field) {
+      return;
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setActiveAt(null);
+      return;
+    }
+    if (atItems.length === 0) {
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setMentionHighlightIdx((i) => Math.min(i + 1, atItems.length - 1));
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setMentionHighlightIdx((i) => Math.max(i - 1, 0));
+      return;
+    }
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      tryPick();
+      return;
+    }
+    if (e.key === "Tab") {
+      e.preventDefault();
+      tryPick();
+      return;
+    }
+  };
+
+  const showMenu = Boolean(activeAt?.field === field);
+  const needsOrgHint = Boolean(
+    searchMentionUsers && activeAt?.field === field && activeAt.query.trim().length < 3
+  );
+  const showEmptyHint = showMenu && atItems.length === 0 && !remoteMentionLoading && !needsOrgHint;
+
+  return (
+    <div className="relative">
+      <textarea
+        {...textareaProps}
+        ref={textareaRef}
+        value={value}
+        onChange={(e) => {
+          onChangeValue(e.target.value);
+          syncAt(e.target.value, e.target.selectionStart ?? e.target.value.length);
+        }}
+        onSelect={(e) => {
+          const ta = e.target as HTMLTextAreaElement;
+          syncAt(ta.value, ta.selectionStart ?? ta.value.length);
+        }}
+        onBlur={() => {
+          window.setTimeout(() => setActiveAt(null), 180);
+        }}
+        onKeyDown={onKeyDown}
+      />
+      {showMenu &&
+        (atItems.length > 0 || needsOrgHint || remoteMentionLoading || showEmptyHint) && (
+          <div
+            className="absolute right-0 bottom-full z-20 mb-1 max-h-52 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white py-1 text-left text-xs shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
+            role="listbox"
+          >
+            {remoteMentionLoading && (
+              <div className="flex items-center gap-2 px-2 py-1.5 text-neutral-500">
+                <Loader2 size={12} className="animate-spin" /> Buscando…
+              </div>
+            )}
+            {needsOrgHint && (
+              <p className="border-b border-neutral-100 px-2 py-1.5 text-[11px] text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+                Digite pelo menos 3 caracteres após @ para buscar pessoas na organização.
+              </p>
+            )}
+            {atItems.map((item, idx) => (
+              <button
+                key={item.type === "file" ? `f-${item.file.id}` : `u-${item.user.id}`}
+                type="button"
+                role="option"
+                aria-selected={idx === mentionHighlightIdx ? "true" : "false"}
+                className={`flex w-full items-center gap-2 px-2 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+                  idx === mentionHighlightIdx ? "bg-neutral-100 dark:bg-neutral-800" : ""
+                }`}
+                onMouseDown={(ev) => ev.preventDefault()}
+                onClick={() => onPickItem(item)}
+                onMouseEnter={() => setMentionHighlightIdx(idx)}
+              >
+                {item.type === "file" ? (
+                  <>
+                    <FileText size={14} className="flex-shrink-0 text-sky-600 dark:text-sky-400" />
+                    <span className="min-w-0 truncate">{item.file.name}</span>
+                    <span className="flex-shrink-0 text-[10px] text-neutral-400">
+                      Arquivo da nota
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <UserRound
+                      size={14}
+                      className="flex-shrink-0 text-amber-600 dark:text-amber-400"
+                    />
+                    <span className="min-w-0 flex-1 truncate">
+                      {item.user.name?.trim() || item.user.username}
+                      <span className="block truncate text-[10px] font-normal text-neutral-500">
+                        {item.user.email}
+                      </span>
+                    </span>
+                  </>
+                )}
+              </button>
+            ))}
+            {showEmptyHint && (
+              <p className="px-2 py-1.5 text-[11px] text-neutral-400">
+                Nenhuma opção para esta busca.
+              </p>
+            )}
+          </div>
+        )}
+    </div>
+  );
+}
+
 export function NoteCommentsSidebarTrigger({
   open,
   onToggle,
@@ -93,7 +379,7 @@ export function NoteCommentsSidebarTrigger({
       aria-expanded={open}
       title={open ? "Fechar comentários" : label}
       aria-label={open ? "Fechar comentários" : label}
-      className={`relative flex w-full min-w-0 max-w-full items-center gap-2 rounded-md py-1.5 pr-2 pl-1.5 text-left transition-all hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+      className={`relative flex w-full max-w-full min-w-0 items-center gap-2 rounded-md py-1.5 pr-2 pl-1.5 text-left transition-all hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
         open
           ? "dark:text-brand-primary-700 text-yellow-600"
           : "text-neutral-500 dark:text-neutral-400"
@@ -117,9 +403,18 @@ export function NoteCommentsSidebarTrigger({
 export interface NoteCommentsSidebarProps {
   canComment: boolean;
   onClose: () => void;
+  /** Busca pessoas na organização ao digitar @ (não fica limitado a colaboradores da nota). */
+  searchMentionUsers?: (query: string) => Promise<MentionUser[]>;
+  /** Arquivos anexados à nota para embutir no texto com @. */
+  embeddableNoteFiles?: NoteCommentsEmbeddableFile[];
 }
 
-export function NoteCommentsSidebar({ canComment, onClose }: NoteCommentsSidebarProps) {
+export function NoteCommentsSidebar({
+  canComment,
+  onClose,
+  searchMentionUsers,
+  embeddableNoteFiles = [],
+}: NoteCommentsSidebarProps) {
   const { user } = useAuth();
   const {
     comments,
@@ -144,6 +439,102 @@ export function NoteCommentsSidebar({ canComment, onClose }: NoteCommentsSidebar
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
+  const draftTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const [activeAt, setActiveAt] = useState<AtMenuState>(null);
+  const [mentionHighlightIdx, setMentionHighlightIdx] = useState(0);
+  const [remoteMentionUsers, setRemoteMentionUsers] = useState<MentionUser[]>([]);
+  const [remoteMentionLoading, setRemoteMentionLoading] = useState(false);
+
+  useEffect(() => {
+    setMentionHighlightIdx(0);
+  }, [activeAt?.field, activeAt?.start, activeAt?.query]);
+
+  useEffect(() => {
+    if (!activeAt || !searchMentionUsers) {
+      setRemoteMentionUsers([]);
+      setRemoteMentionLoading(false);
+      return;
+    }
+    const q = activeAt.query.trim();
+    if (q.length < 3) {
+      setRemoteMentionUsers([]);
+      setRemoteMentionLoading(false);
+      return;
+    }
+    let cancelled = false;
+    const t = window.setTimeout(() => {
+      setRemoteMentionLoading(true);
+      void searchMentionUsers(q)
+        .then((rows) => {
+          if (!cancelled) {
+            setRemoteMentionUsers(Array.isArray(rows) ? rows : []);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setRemoteMentionUsers([]);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setRemoteMentionLoading(false);
+          }
+        });
+    }, 280);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [activeAt, searchMentionUsers]);
+
+  const atItems = useMemo((): AtPickItem[] => {
+    if (!activeAt) {
+      return [];
+    }
+    const q = activeAt.query.toLowerCase();
+    const files = embeddableNoteFiles
+      .filter((f) => (f.name || "").toLowerCase().includes(q))
+      .slice(0, 12)
+      .map((file) => ({ type: "file" as const, file }));
+    const out: AtPickItem[] = [...files];
+    if (searchMentionUsers && activeAt.query.trim().length >= 3) {
+      for (const u of remoteMentionUsers.slice(0, 12)) {
+        out.push({ type: "user", user: u });
+      }
+    }
+    return out;
+  }, [activeAt, embeddableNoteFiles, remoteMentionUsers, searchMentionUsers]);
+
+  const insertAtPick = useCallback(
+    (field: "draft" | "edit", item: AtPickItem) => {
+      const ta = field === "draft" ? draftTextareaRef.current : editTextareaRef.current;
+      const text = field === "draft" ? draft : editDraft;
+      if (!ta || !activeAt || activeAt.field !== field) {
+        return;
+      }
+      const token =
+        item.type === "file"
+          ? makeNoteFileMentionToken(item.file)
+          : makeUserMentionToken(item.user);
+      const before = text.slice(0, activeAt.start);
+      const after = text.slice(ta.selectionStart);
+      const next = `${before}${token} ${after}`;
+      const caret = before.length + token.length + 1;
+      if (field === "draft") {
+        setDraft(next);
+      } else {
+        setEditDraft(next);
+      }
+      setActiveAt(null);
+      window.requestAnimationFrame(() => {
+        ta.focus();
+        ta.setSelectionRange(caret, caret);
+      });
+    },
+    [activeAt, draft, editDraft]
+  );
 
   const tree = React.useMemo(() => buildCommentTree(comments), [comments]);
 
@@ -268,7 +659,7 @@ export function NoteCommentsSidebar({ canComment, onClose }: NoteCommentsSidebar
       >
         <div className="rounded-lg border border-neutral-200 bg-neutral-50/90 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-900/50">
           <div className="flex items-start gap-2.5">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-xs  text-neutral-600 dark:bg-neutral-700 dark:text-neutral-200">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-xs text-neutral-600 dark:bg-neutral-700 dark:text-neutral-200">
               {c.user_avatar_url ? (
                 <Image
                   src={getStorageUrl(c.user_avatar_url)}
@@ -293,10 +684,21 @@ export function NoteCommentsSidebar({ canComment, onClose }: NoteCommentsSidebar
 
               {isEditing ? (
                 <div className="space-y-2">
-                  <textarea
+                  <CommentComposerTextarea
+                    field="edit"
                     value={editDraft}
-                    onChange={(e) => setEditDraft(e.target.value)}
+                    onChangeValue={setEditDraft}
+                    activeAt={activeAt}
+                    setActiveAt={setActiveAt}
+                    atItems={atItems}
+                    mentionHighlightIdx={mentionHighlightIdx}
+                    setMentionHighlightIdx={setMentionHighlightIdx}
+                    onPickItem={(item) => insertAtPick("edit", item)}
+                    searchMentionUsers={searchMentionUsers}
+                    remoteMentionLoading={remoteMentionLoading}
+                    textareaRef={editTextareaRef}
                     rows={3}
+                    aria-label="Editar texto do comentário"
                     className="w-full resize-y rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-950"
                   />
                   <input
@@ -354,8 +756,8 @@ export function NoteCommentsSidebar({ canComment, onClose }: NoteCommentsSidebar
               ) : (
                 <>
                   {body ? (
-                    <p className="text-sm whitespace-pre-wrap text-neutral-700 dark:text-neutral-300">
-                      {body}
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                      <CommentRichText text={body} noteFiles={embeddableNoteFiles} />
                     </p>
                   ) : (
                     <p className="text-xs text-neutral-400 italic dark:text-neutral-500">
@@ -434,15 +836,13 @@ export function NoteCommentsSidebar({ canComment, onClose }: NoteCommentsSidebar
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950">
-      <div className="flex flex-shrink-0 items-center justify-between gap-2 border rounded-md border-neutral-200 px-3 py-1 dark:border-neutral-800">
+      <div className="flex flex-shrink-0 items-center justify-between gap-2 rounded-md border border-neutral-200 px-3 py-1 dark:border-neutral-800">
         <div className="flex min-w-0 items-center gap-2">
           <MessageCircle
             size={16}
             className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-600"
           />
-          <h2 className="truncate text-sm  text-neutral-900 dark:text-neutral-100">
-            Comentários
-          </h2>
+          <h2 className="truncate text-sm text-neutral-900 dark:text-neutral-100">Comentários</h2>
         </div>
         <div className="flex flex-shrink-0 items-center gap-1">
           <button
@@ -505,10 +905,25 @@ export function NoteCommentsSidebar({ canComment, onClose }: NoteCommentsSidebar
             </div>
           )}
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-2">
-            <textarea
+            <CommentComposerTextarea
+              field="draft"
               value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder={replyingTo ? "Sua resposta…" : "Escreva um comentário…"}
+              onChangeValue={setDraft}
+              activeAt={activeAt}
+              setActiveAt={setActiveAt}
+              atItems={atItems}
+              mentionHighlightIdx={mentionHighlightIdx}
+              setMentionHighlightIdx={setMentionHighlightIdx}
+              onPickItem={(item) => insertAtPick("draft", item)}
+              searchMentionUsers={searchMentionUsers}
+              remoteMentionLoading={remoteMentionLoading}
+              textareaRef={draftTextareaRef}
+              aria-label="Novo comentário"
+              placeholder={
+                replyingTo
+                  ? "Sua resposta… (@ para mencionar ou anexar arquivo da nota)"
+                  : "Escreva um comentário… (@ para mencionar ou anexar arquivo da nota)"
+              }
               rows={3}
               className="w-full resize-y rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
             />
@@ -550,7 +965,7 @@ export function NoteCommentsSidebar({ canComment, onClose }: NoteCommentsSidebar
               <button
                 type="submit"
                 disabled={submitting || (!draft.trim() && pendingFiles.length === 0)}
-                className="dark:bg-brand-primary-700 inline-flex items-center gap-1 rounded-md bg-yellow-600 px-2.5 py-1.5 text-xs  text-white disabled:opacity-50"
+                className="dark:bg-brand-primary-700 inline-flex items-center gap-1 rounded-md bg-yellow-600 px-2.5 py-1.5 text-xs text-white disabled:opacity-50"
               >
                 {submitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                 {replyingTo ? "Responder" : "Publicar"}

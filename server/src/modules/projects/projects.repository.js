@@ -246,11 +246,18 @@ class ProjectsRepository {
               COALESCE(
                 (
                   SELECT ROUND(
-                    (COUNT(*) FILTER (WHERE status = 'done')::numeric / 
-                    NULLIF(COUNT(*), 0)) * 100
+                    (
+                      COUNT(*) FILTER (WHERE EXISTS (
+                        SELECT 1 FROM project_stages ps
+                        WHERE ps.id = notes.project_stage_id
+                          AND ps.project_id = notes.project_id
+                          AND COALESCE((ps.properties->>'is_done')::boolean, false) = true
+                      ))::numeric
+                      / NULLIF(COUNT(*), 0)
+                    ) * 100
                   )::integer
                   FROM notes
-                  WHERE project_id = projects.id AND deleted = false
+                  WHERE notes.project_id = projects.id AND notes.deleted = false
                 ),
                 0
               )
@@ -694,7 +701,7 @@ class ProjectsRepository {
     const query = `
       WITH updated_note AS (
         UPDATE notes
-        SET project_id = $1::uuid, updated_at = NOW()
+        SET project_id = $1::uuid, project_stage_id = NULL, updated_at = NOW()
         WHERE id = $2::uuid
           AND project_id IS DISTINCT FROM $1::uuid
           AND (user_id = $3::uuid OR EXISTS (
@@ -710,11 +717,18 @@ class ProjectsRepository {
             'progress',
             COALESCE(
               (SELECT ROUND(
-                (COUNT(*) FILTER (WHERE status = 'done')::numeric / 
-                NULLIF(COUNT(*), 0)) * 100
+                (
+                  COUNT(*) FILTER (WHERE EXISTS (
+                    SELECT 1 FROM project_stages ps
+                    WHERE ps.id = n.project_stage_id
+                      AND ps.project_id = n.project_id
+                      AND COALESCE((ps.properties->>'is_done')::boolean, false) = true
+                  ))::numeric
+                  / NULLIF(COUNT(*), 0)
+                ) * 100
               )::integer
-              FROM notes
-              WHERE project_id = $1::uuid AND deleted = false),
+              FROM notes n
+              WHERE n.project_id = $1::uuid AND n.deleted = false),
               0
             )
           ),
@@ -762,7 +776,7 @@ class ProjectsRepository {
     const query = `
       WITH updated_note AS (
         UPDATE notes
-        SET project_id = NULL, updated_at = NOW()
+        SET project_id = NULL, project_stage_id = NULL, updated_at = NOW()
         WHERE id = $2::uuid AND project_id = $1::uuid
         RETURNING id
       ),
@@ -773,8 +787,15 @@ class ProjectsRepository {
             'progress',
             COALESCE(
               (SELECT ROUND(
-                (COUNT(*) FILTER (WHERE status = 'done')::numeric / 
-                NULLIF(COUNT(*), 0)) * 100
+                (
+                  COUNT(*) FILTER (WHERE EXISTS (
+                    SELECT 1 FROM project_stages ps
+                    WHERE ps.id = notes.project_stage_id
+                      AND ps.project_id = notes.project_id
+                      AND COALESCE((ps.properties->>'is_done')::boolean, false) = true
+                  ))::numeric
+                  / NULLIF(COUNT(*), 0)
+                ) * 100
               )::integer
               FROM notes
               WHERE project_id = $1::uuid AND deleted = false AND id != $2::uuid),
@@ -849,11 +870,18 @@ class ProjectsRepository {
           'progress',
           COALESCE(
             (SELECT ROUND(
-              (COUNT(*) FILTER (WHERE status = 'done')::numeric / 
-              NULLIF(COUNT(*), 0)) * 100
+              (
+                COUNT(*) FILTER (WHERE EXISTS (
+                  SELECT 1 FROM project_stages ps
+                  WHERE ps.id = n.project_stage_id
+                    AND ps.project_id = n.project_id
+                    AND COALESCE((ps.properties->>'is_done')::boolean, false) = true
+                ))::numeric
+                / NULLIF(COUNT(*), 0)
+              ) * 100
             )::integer
-            FROM notes
-            WHERE project_id = $1::uuid AND deleted = false),
+            FROM notes n
+            WHERE n.project_id = $1::uuid AND n.deleted = false),
             0
           )
         ),

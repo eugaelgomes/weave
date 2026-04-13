@@ -60,11 +60,14 @@ export const API_ENDPOINTS = {
   PROJECTS_STAGES: (projectId: string) => `/projects/${projectId}/stages`,
   PROJECTS_COLLABORATORS: (projectId: string) => `/projects/${projectId}/collaborators`,
   PROJECTS_NOTES: (projectId: string) => `/projects/${projectId}/notes`,
+  PROJECTS_NOTE_STAGE: (projectId: string, noteId: string) =>
+    `/projects/${projectId}/notes/${noteId}/stage`,
   PROJECTS_TAGS: (projectId: string) => `/projects/${projectId}/tags`,
   PROJECTS_TAG_BY_ID: (projectId: string, tagId: string) => `/projects/${projectId}/tags/${tagId}`,
   PROJECTS_TASK_PRIORITIES: (projectId: string) => `/projects/${projectId}/task-priorities`,
   PROJECTS_TASK_PRIORITY_BY_ID: (projectId: string, priorityId: string) =>
     `/projects/${projectId}/task-priorities/${priorityId}`,
+  ORGANIZATIONS_TASK_PRIORITIES: (orgId: string) => `/organizations/${orgId}/task-priorities`,
 
   // Backup
   BACKUP_REQUEST: "/backup/request",

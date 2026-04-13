@@ -113,6 +113,25 @@ class NoteCollaboratorsRepository extends BaseRepository {
     const results = await this.executeQuery(query, [noteId, userId]);
     return results.length > 0;
   }
+
+  /**
+   * E-mails de colaboradores ativos (para lembretes de prazo).
+   *
+   * @param {string} noteId
+   * @returns {Promise<Array<{ email: string; name: string | null }>>}
+   */
+  async getActiveCollaboratorEmails(noteId) {
+    const query = `
+      SELECT DISTINCT u.email, u.name
+      FROM note_collaborators nc
+      INNER JOIN users u ON nc.user_id = u.user_id
+      WHERE nc.note_id = $1
+        AND nc.removed = false
+        AND u.email IS NOT NULL
+        AND btrim(u.email) <> '';
+    `;
+    return await this.executeQuery(query, [noteId]);
+  }
 }
 
 module.exports = new NoteCollaboratorsRepository();

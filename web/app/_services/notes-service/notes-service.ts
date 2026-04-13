@@ -64,6 +64,9 @@ export interface Note {
   properties?: NoteProperties;
   tags?: string[];
   priority_id?: string | null;
+  priority_name?: string | null;
+  priority_color?: string | null;
+  due_date?: string | null;
   assigned_to?: string | null;
   deleted_by?: string | null;
   deleted?: boolean;
@@ -96,6 +99,18 @@ export interface Note {
     canDelete: boolean;
     canShare: boolean;
   };
+  associated_project?: {
+    id: string;
+    name: string;
+    stage_id?: string | null;
+    stage_name?: string | null;
+  } | null;
+  associated_organization?: {
+    id: string;
+    name: string;
+    unique_name?: string;
+    logo_url?: string | null;
+  } | null;
   // Propriedades unificadas do componente de UI
   owner_name?: string;
   owner_avatar_url?: string;
@@ -149,6 +164,8 @@ export interface UpdateNoteData {
   tags?: string[];
   status?: string;
   project_id?: string | null;
+  priority_id?: string | null;
+  due_date?: string | null;
   properties?: Partial<NoteProperties>;
   icon?: File;
   banner?: File;
@@ -249,6 +266,9 @@ export async function updateNote(noteId: string, noteData: UpdateNoteData): Prom
     if (noteData.tags !== undefined) formData.append("tags", JSON.stringify(noteData.tags));
     if (noteData.status !== undefined) formData.append("status", noteData.status);
     if (noteData.project_id !== undefined) formData.append("project_id", noteData.project_id ?? "");
+    if (noteData.priority_id !== undefined)
+      formData.append("priority_id", noteData.priority_id ?? "");
+    if (noteData.due_date !== undefined) formData.append("due_date", noteData.due_date ?? "");
     if (noteData.properties !== undefined)
       formData.append("properties", JSON.stringify(noteData.properties));
 
@@ -269,6 +289,8 @@ export async function updateNote(noteId: string, noteData: UpdateNoteData): Prom
     tags: noteData.tags,
     status: noteData.status,
     project_id: noteData.project_id,
+    priority_id: noteData.priority_id,
+    due_date: noteData.due_date,
     properties: noteData.properties,
   });
 

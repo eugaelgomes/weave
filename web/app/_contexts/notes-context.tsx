@@ -31,6 +31,13 @@ import {
 } from "../_services/notes-service/notes-service";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 
+export type {
+  Note,
+  Block,
+  UpdateNoteData,
+  User as SearchUser,
+} from "../_services/notes-service/notes-service";
+
 // Tipos específicos do contexto
 export interface NoteOverview {
   id: string;

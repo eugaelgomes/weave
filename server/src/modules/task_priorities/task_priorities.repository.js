@@ -2,6 +2,23 @@ const { executeQuery, rowCount } = require("@/database/connection");
 
 class TaskPrioritiesRepository {
   /**
+   * Busca prioridade ativa por id (escopo não filtrado — validar no serviço).
+   *
+   * @param {string} id
+   * @returns {Promise<{ id: string; project_id: string | null; org_id: string | null } | undefined>}
+   */
+  async findActiveById(id) {
+    const query = `
+      SELECT id, project_id, org_id
+      FROM task_priorities
+      WHERE id = $1 AND deleted = false
+      LIMIT 1;
+    `;
+    const rows = await executeQuery(query, [id]);
+    return rows[0];
+  }
+
+  /**
    * Cria uma nova prioridade de tarefas (Task Priority).
    *
    * @param {Object} params

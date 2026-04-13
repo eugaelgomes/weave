@@ -96,6 +96,7 @@ const routeRegistry = [
   { basePath: "/plans", handler: plansRoutes },
   { basePath: "/notifications", handler: notificationsRoutes },
   { basePath: "/projects", handler: projectsRoutes },
+  { basePath: "/task-priorities", handler: taskPrioritiesRoutes },
   { basePath: "/system-admins", handler: systemAdminsRoutes },
   { basePath: "/system-auth", handler: systemAuthRoutes },
   { basePath: "/users", handler: userRoutes },

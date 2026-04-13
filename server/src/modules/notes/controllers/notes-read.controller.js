@@ -63,6 +63,10 @@ class NotesReadController extends NotesBaseController {
             properties: note.properties || {},
             tags: note.tags || [] || null,
             status: note.status || null,
+            due_date: note.due_date ?? null,
+            priority_id: note.priority_id ?? null,
+            priority_name: note.priority_name ?? null,
+            priority_color: note.priority_color ?? null,
             created_at: note.created_at,
             updated_at: note.updated_at,
             deleted: note.deleted,
@@ -70,6 +74,8 @@ class NotesReadController extends NotesBaseController {
               ? {
                   id: note.project_id,
                   name: note.project_name,
+                  stage_id: note.project_stage_id || null,
+                  stage_name: note.project_stage_name || null,
                 }
               : null,
             associated_organization: note.org_id
@@ -132,6 +138,10 @@ class NotesReadController extends NotesBaseController {
         properties: note.properties || {},
         tags: note.tags || [] || null,
         status: note.status || null,
+        due_date: note.due_date ?? null,
+        priority_id: note.priority_id ?? null,
+        priority_name: note.priority_name ?? null,
+        priority_color: note.priority_color ?? null,
         created_at: note.created_at,
         updated_at: note.updated_at,
         deleted: note.deleted,
@@ -139,6 +149,8 @@ class NotesReadController extends NotesBaseController {
           ? {
               id: note.project_id,
               name: note.project_name,
+              stage_id: note.project_stage_id || null,
+              stage_name: note.project_stage_name || null,
             }
           : null,
         associated_organization: note.org_id

@@ -7,7 +7,7 @@ const router = Router({ mergeParams: true });
 router.use(verifyToken);
 
 router.post(
-  "/:project_id/task-priorities",
+  "/:project_id/create-priority",
   taskPrioritiesController.createPriority
 );
 router.get(

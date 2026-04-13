@@ -86,6 +86,11 @@ export const fetchTaskPriorities = async (projectId: string): Promise<TaskPriori
   return handleResponse<TaskPriority[]>(response);
 };
 
+export const fetchOrgTaskPriorities = async (orgId: string): Promise<TaskPriority[]> => {
+  const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_TASK_PRIORITIES(orgId));
+  return handleResponse<TaskPriority[]>(response);
+};
+
 export const createTaskPriority = async (
   projectId: string,
   priorityData: CreateTaskPriorityData

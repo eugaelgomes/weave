@@ -24,6 +24,7 @@ import {
   GripVertical,
   Save,
   Clock,
+  Calendar,
   Link2,
   FileText,
   ImagePlus,
@@ -31,6 +32,9 @@ import {
   Palette,
   Link,
   Users,
+  Kanban,
+  FolderKanban,
+  Flag,
 } from "lucide-react";
 import {
   DndContext,
@@ -51,19 +55,24 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 // CSS transform utility handled manually
-import { useNotes } from "@/app/_contexts/notes-context";
+import {
+  useNotes,
+  type Note,
+  type Block,
+  type UpdateNoteData,
+  type SearchUser,
+} from "@/app/_contexts/notes-context";
+import {
+  useProjects,
+  type ProjectStage,
+  type TaskPriority,
+} from "@/app/_contexts/projects-context";
 import { useNoteCommentsPanel } from "@/app/_contexts/note-comments-panel-context";
 import { NoteCommentsProvider } from "@/app/_contexts/note-comments-context";
 import {
   NoteCommentsSidebar,
   NoteCommentsSidebarTrigger,
 } from "@/app/app/notes/_components/note-comments-sidebar";
-import {
-  Note,
-  Block,
-  UpdateNoteData,
-  User as SearchUser,
-} from "@/app/_services/notes-service/notes-service";
 import {
   getCollaboratorDisplayName,
   getCollaboratorAvatarUrl,
@@ -696,6 +705,16 @@ const NoteDetail = () => {
     reorderBlocks: reorderBlocksService,
   } = useNotes();
 
+  const {
+    projects,
+    refreshProjects,
+    addNoteToProject,
+    getProjectStages,
+    updateProjectNoteStage,
+    getTaskPriorities,
+    getOrgTaskPriorities,
+  } = useProjects();
+
   const [note, setNote] = useState<Note | null>(null);
   const [blocks, setBlocks] = useState<(Block & { children?: Block[] })[]>([]);
   const [editingTitle, setEditingTitle] = useState("");
@@ -727,6 +746,8 @@ const NoteDetail = () => {
   const [showAllFiles, setShowAllFiles] = useState(false);
   const [showRelationModal, setShowRelationModal] = useState(false);
   const [relationSearchTerm, setRelationSearchTerm] = useState("");
+  const [taskPriorities, setTaskPriorities] = useState<TaskPriority[]>([]);
+  const [projectStages, setProjectStages] = useState<ProjectStage[]>([]);
 
   // Refs para inputs de arquivo
   const iconInputRef = React.useRef<HTMLInputElement>(null);
@@ -739,11 +760,80 @@ const NoteDetail = () => {
     setIsSaving(true);
     try {
       const updated = await updateNote(note.id, data);
-      if (updated) setNote(updated);
+      if (updated) {
+        setNote((prev) => (prev ? { ...prev, ...updated } : updated));
+      }
       return updated;
     } catch (err) {
       console.error("Erro ao atualizar nota:", err);
       return null;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const refreshNoteDetail = async () => {
+    if (!id) return;
+    try {
+      const fresh = await getNoteById(id);
+      if (fresh) {
+        setNote((prev) => (prev ? { ...prev, ...fresh } : fresh));
+        if (Array.isArray(fresh.blocks)) {
+          setBlocks(fresh.blocks as (Block & { children?: Block[] })[]);
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao recarregar a nota:", e);
+    }
+  };
+
+  const handleProjectAssignment = async (nextProjectId: string) => {
+    if (!note?.access?.canEdit) return;
+    const current = note.associated_project?.id ?? "";
+    if (nextProjectId === current) return;
+    if (nextProjectId === "") {
+      await saveAndApply({ project_id: null });
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await addNoteToProject(nextProjectId, note.id);
+      await refreshNoteDetail();
+    } catch (e) {
+      console.error(e);
+      window.alert(
+        "Não foi possível associar a nota ao projeto. Verifique se você participa do projeto e se pode editar esta nota."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleStageChange = async (nextStageId: string) => {
+    if (!note?.access?.canEdit || !note.associated_project?.id) return;
+    if (!nextStageId || nextStageId === (note.associated_project.stage_id ?? "")) return;
+    setIsSaving(true);
+    try {
+      await updateProjectNoteStage(note.associated_project.id, note.id, nextStageId);
+      const name =
+        projectStages.find((s) => s.id === nextStageId)?.name ??
+        note.associated_project.stage_name ??
+        "";
+      setNote((prev) =>
+        prev?.associated_project
+          ? {
+              ...prev,
+              associated_project: {
+                ...prev.associated_project,
+                stage_id: nextStageId,
+                stage_name: name,
+              },
+            }
+          : prev
+      );
+    } catch (e) {
+      console.error(e);
+      window.alert("Não foi possível atualizar o estágio da nota.");
     } finally {
       setIsSaving(false);
     }
@@ -970,6 +1060,61 @@ const NoteDetail = () => {
       loadNote();
     }
   }, [id, getNoteById]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadPriorities = async () => {
+      if (!note) {
+        setTaskPriorities([]);
+        return;
+      }
+      const projectId = note.associated_project?.id;
+      const orgId = note.associated_organization?.id;
+      try {
+        if (projectId) {
+          const list = await getTaskPriorities(projectId);
+          if (!cancelled) setTaskPriorities(list);
+        } else if (orgId) {
+          const list = await getOrgTaskPriorities(orgId);
+          if (!cancelled) setTaskPriorities(list);
+        } else if (!cancelled) {
+          setTaskPriorities([]);
+        }
+      } catch {
+        if (!cancelled) setTaskPriorities([]);
+      }
+    };
+    loadPriorities();
+    return () => {
+      cancelled = true;
+    };
+  }, [note, getTaskPriorities, getOrgTaskPriorities]);
+
+  useEffect(() => {
+    if (!note?.access?.canEdit) return;
+    void refreshProjects();
+  }, [note?.access?.canEdit, refreshProjects]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const projectId = note?.associated_project?.id;
+    if (!projectId) {
+      setProjectStages([]);
+      return;
+    }
+    (async () => {
+      try {
+        const stages = await getProjectStages(projectId);
+        const ordered = [...stages].sort((a, b) => a.position - b.position);
+        if (!cancelled) setProjectStages(ordered);
+      } catch {
+        if (!cancelled) setProjectStages([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [note?.associated_project?.id, getProjectStages]);
 
   // Auto-criar bloco parágrafo quando a nota não tem blocos
   useEffect(() => {
@@ -1762,585 +1907,860 @@ const NoteDetail = () => {
                     hasNoteHero ? "pt-2 sm:pt-4" : ""
                   }`}
                 >
-              {/* Título + comentários */}
-              <div className="mb-4">
-                <div className="flex items-start gap-2">
-                  <div className="min-w-0 flex-1">
-                    <textarea
-                      ref={(el) => {
-                        if (el) {
-                          el.style.height = "auto";
-                          el.style.height = `${el.scrollHeight}px`;
-                        }
-                      }}
-                      value={editingTitle}
-                      onChange={(e) => {
-                        setEditingTitle(e.target.value);
-                        const el = e.target;
-                        el.style.height = "auto";
-                        el.style.height = `${el.scrollHeight}px`;
-                      }}
-                      onBlur={async () => {
-                        if (note && editingTitle !== note.title) {
-                          setIsSaving(true);
-                          try {
-                            const updated = await updateNote(note.id, { title: editingTitle });
-                            if (updated) setNote(updated);
-                          } catch (error) {
-                            console.error("Erro ao salvar título:", error);
-                          } finally {
-                            setIsSaving(false);
-                          }
-                        }
-                      }}
-                      placeholder="Título da nota..."
-                      rows={1}
-                      className="w-full resize-none overflow-hidden bg-transparent text-xl font-bold text-neutral-900 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-100 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
-                    />
-                    <textarea
-                      ref={(el) => {
-                        if (el) {
-                          el.style.height = "auto";
-                          el.style.height = `${el.scrollHeight}px`;
-                        }
-                      }}
-                      value={editingDescription}
-                      onChange={(e) => {
-                        setEditingDescription(e.target.value);
-                        const el = e.target;
-                        el.style.height = "auto";
-                        el.style.height = `${el.scrollHeight}px`;
-                      }}
-                      onBlur={async () => {
-                        if (note && editingDescription !== (note.description || "")) {
-                          setIsSaving(true);
-                          try {
-                            const updated = await updateNote(note.id, {
-                              description: editingDescription,
-                            });
-                            if (updated) setNote(updated);
-                          } catch (error) {
-                            console.error("Erro ao salvar descrição:", error);
-                          } finally {
-                            setIsSaving(false);
-                          }
-                        }
-                      }}
-                      placeholder="Adicionar descrição..."
-                      rows={1}
-                      className="w-full resize-none overflow-hidden bg-transparent text-sm text-neutral-600 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-400 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
-                    />
-                  </div>
-                  {canUseNoteComments ? (
-                    <div className="mt-0.5 min-w-0 max-w-[46%] shrink sm:max-w-[min(18rem,48%)]">
-                      <NoteCommentsSidebarTrigger
-                        open={commentsSidebarOpen}
-                        onToggle={() => setCommentsSidebarOpen((v) => !v)}
-                      />
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              {/* Meta informações */}
-              <div className="mb-6 flex flex-col gap-3 border-b border-neutral-100 pb-4 dark:border-neutral-800">
-                {/* Tags */}
-                <div className="flex items-center gap-2 overflow-x-auto">
-                  <Tag
-                    className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
-                    size={13}
-                  />
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400">Tags</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {note.tags && note.tags.length > 0 && (
-                      <>
-                        {(showAllTags ? note.tags : note.tags.slice(0, 3)).map((tag, index) => {
-                          const colors = getTagColor(tag);
-                          return (
-                            <span
-                              key={index}
-                              className={`group flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-xs font-medium transition-colors ${colors.bg} ${colors.text} ${colors.border}`}
-                            >
-                              {tag}
-                              {note.access?.canEdit && (
-                                <button
-                                  onClick={() => handleRemoveTag(tag)}
-                                  className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
-                                  title="Remover tag"
-                                >
-                                  <X size={10} />
-                                </button>
-                              )}
-                            </span>
-                          );
-                        })}
-                        {note.tags.length > 3 && (
-                          <button
-                            onClick={() => setShowAllTags(!showAllTags)}
-                            className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
-                          >
-                            {showAllTags ? "Ver menos" : `+${note.tags.length - 3}`}
-                          </button>
-                        )}
-                      </>
-                    )}
-                    {note.access?.canEdit && (
-                      <button
-                        onClick={() => setShowTagModal(true)}
-                        className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                        title="Adicionar tag"
-                      >
-                        <Plus size={10} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Colaboradores */}
-                <div className="flex items-center gap-2 overflow-x-auto">
-                  <Users
-                    className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
-                    size={13}
-                  />
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400">Collabs</span>
-                  <div className="flex items-center gap-1.5">
-                    {note.collaborators && note.collaborators.length > 0 && (
-                      <>
-                        <div className="flex -space-x-1.5">
-                          {(showAllCollabs
-                            ? note.collaborators
-                            : note.collaborators.slice(0, 3)
-                          ).map((collab, index) => {
-                            const displayName = getCollaboratorDisplayName(collab);
-                            const avatarUrl = getCollaboratorAvatarUrl(collab);
-
-                            return (
-                              <div
-                                key={index}
-                                className="group relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-200 ring-0 transition-all hover:z-10 hover:ring-2 hover:ring-yellow-500/30 dark:border-neutral-900 dark:bg-neutral-700"
-                                title={displayName}
-                              >
-                                {avatarUrl ? (
-                                  <Image
-                                    width={28}
-                                    height={28}
-                                    src={avatarUrl}
-                                    alt={displayName}
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-300">
-                                    {displayName.charAt(0).toUpperCase()}
-                                  </span>
-                                )}
-
-                                {note.access?.canShare && (
-                                  <button
-                                    onClick={() => handleRemoveCollaborator(collab)}
-                                    className="absolute inset-0 flex items-center justify-center rounded-full bg-red-500/80 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                                    title="Remover colaborador"
-                                  >
-                                    <X size={10} />
-                                  </button>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                        {note.collaborators.length > 3 && (
-                          <button
-                            onClick={() => setShowAllCollabs(!showAllCollabs)}
-                            className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
-                          >
-                            {showAllCollabs ? "Ver menos" : `+${note.collaborators.length - 3}`}
-                          </button>
-                        )}
-                      </>
-                    )}
-                    {note.access?.canShare && (
-                      <button
-                        onClick={() => setShowShareModal(true)}
-                        className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                        title="Adicionar colaborador"
-                      >
-                        <Plus size={10} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Relações */}
-                <div className="flex items-center gap-2 overflow-x-auto">
-                  <Link
-                    className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
-                    size={13}
-                  />
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400">Relações</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(showAllRelations ? relatedNotesData : relatedNotesData.slice(0, 3)).map(
-                      (relNote) => (
-                        <span
-                          key={relNote!.id}
-                          className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
-                        >
-                          <button
-                            onClick={() => router.push(`/app/notes/${relNote!.id}`)}
-                            className="inline-flex items-center gap-1.5 truncate"
-                          >
-                            {relNote!.properties?.icon?.path ? (
-                              <Image
-                                src={getStorageUrl(relNote!.properties.icon.path)}
-                                alt=""
-                                width={12}
-                                height={12}
-                                className="flex-shrink-0 rounded"
-                              />
-                            ) : null}
-                            <span className="max-w-[120px] truncate">
-                              {relNote!.title || "Nota sem título"}
-                            </span>
-                          </button>
-                          {note.access?.canEdit && (
-                            <button
-                              onClick={() => handleRemoveRelation(relNote!.id)}
-                              className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
-                              title="Remover relação"
-                            >
-                              <X size={10} />
-                            </button>
-                          )}
-                        </span>
-                      )
-                    )}
-                    {relatedNotesData.length > 3 && (
-                      <button
-                        onClick={() => setShowAllRelations(!showAllRelations)}
-                        className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
-                      >
-                        {showAllRelations ? "Ver menos" : `+${relatedNotesData.length - 3}`}
-                      </button>
-                    )}
-                    {note.access?.canEdit && (
-                      <button
-                        onClick={() => setShowRelationModal(true)}
-                        className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                        title="Adicionar relação"
-                      >
-                        <Plus size={10} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* URLs */}
-                <div className="flex items-center gap-2 overflow-x-auto">
-                  <Link2
-                    className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
-                    size={13}
-                  />
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400">URLs</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {note.properties?.urls &&
-                      (() => {
-                        const filteredUrls = note.properties.urls.filter(Boolean);
-                        const visibleUrls = showAllUrls ? filteredUrls : filteredUrls.slice(0, 3);
-                        return (
-                          <>
-                            {visibleUrls.map((url, index) => (
-                              <span
-                                key={index}
-                                className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
-                              >
-                                <a
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex max-w-[150px] items-center gap-1.5 truncate text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
-                                >
-                                  <span className="truncate">
-                                    {url.replace(/^https?:\/\//, "")}
-                                  </span>
-                                </a>
-                                {note.access?.canEdit && (
-                                  <button
-                                    onClick={() => handleRemoveUrl(url)}
-                                    className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
-                                    title="Remover URL"
-                                  >
-                                    <X size={10} />
-                                  </button>
-                                )}
-                              </span>
-                            ))}
-                            {filteredUrls.length > 3 && (
-                              <button
-                                onClick={() => setShowAllUrls(!showAllUrls)}
-                                className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
-                              >
-                                {showAllUrls ? "Ver menos" : `+${filteredUrls.length - 3}`}
-                              </button>
-                            )}
-                          </>
-                        );
-                      })()}
-                    {note.access?.canEdit && (
-                      <>
-                        {showUrlInput ? (
-                          <div className="flex items-center gap-1.5">
-                            <input
-                              type="url"
-                              value={newUrl}
-                              onChange={(e) => setNewUrl(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.preventDefault();
-                                  handleAddUrl();
-                                }
-                                if (e.key === "Escape") {
-                                  setShowUrlInput(false);
-                                  setNewUrl("");
-                                }
-                              }}
-                              placeholder="https://..."
-                              className="w-40 rounded-md border border-neutral-200 bg-transparent px-2 py-0.5 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
-                              autoFocus
-                            />
-                            <button
-                              onClick={handleAddUrl}
-                              disabled={!newUrl.trim()}
-                              className="bg-brand-primary-700 rounded-md px-2 py-0.5 text-xs font-medium text-white transition-colors hover:bg-yellow-600 disabled:opacity-50 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
-                            >
-                              OK
-                            </button>
-                            <button
-                              onClick={() => {
-                                setShowUrlInput(false);
-                                setNewUrl("");
-                              }}
-                              className="text-neutral-400 transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"
-                              title="Cancelar"
-                            >
-                              <X size={10} />
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setShowUrlInput(true)}
-                            className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                            title="Adicionar URL"
-                          >
-                            <Plus size={10} />
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Arquivos */}
-                <div className="flex items-center gap-2 overflow-x-auto">
-                  <FileText
-                    className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
-                    size={13}
-                  />
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400">Arquivos</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {note.properties?.files &&
-                      (() => {
-                        const filteredFiles = note.properties.files.filter((f) => f.path);
-                        const visibleFiles = showAllFiles
-                          ? filteredFiles
-                          : filteredFiles.slice(0, 3);
-                        return (
-                          <>
-                            {visibleFiles.map((file, index) => (
-                              <span
-                                key={file.id || index}
-                                className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
-                              >
-                                <a
-                                  href={getStorageUrl(file.path)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex max-w-[120px] items-center gap-1.5 truncate hover:text-neutral-900 dark:hover:text-neutral-100"
-                                >
-                                  <span className="truncate">{file.name || "Arquivo"}</span>
-                                </a>
-                                <a
-                                  href={getStorageUrl(file.path)}
-                                  download={file.name || "arquivo"}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="text-neutral-400 opacity-100 transition-all hover:text-neutral-600 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
-                                  title="Baixar arquivo"
-                                >
-                                  <Download size={10} />
-                                </a>
-                                {note.access?.canEdit && (
-                                  <button
-                                    onClick={() => handleRemoveFile(file.id)}
-                                    className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
-                                    title="Remover arquivo"
-                                  >
-                                    <X size={10} />
-                                  </button>
-                                )}
-                              </span>
-                            ))}
-                            {filteredFiles.length > 3 && (
-                              <button
-                                onClick={() => setShowAllFiles(!showAllFiles)}
-                                className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
-                              >
-                                {showAllFiles ? "Ver menos" : `+${filteredFiles.length - 3}`}
-                              </button>
-                            )}
-                          </>
-                        );
-                      })()}
-                    {note.access?.canEdit && (
-                      <button
-                        onClick={() => filesInputRef.current?.click()}
-                        className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                        title="Adicionar arquivo"
-                      >
-                        <Plus size={10} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Criado / editado — última linha dos metadados editáveis */}
-                {(note.created_at || note.updated_at) && (
-                  <div className="flex items-start gap-1.5 border-t border-neutral-100 pt-3 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-                    <Clock size={12} className="mt-0.5 shrink-0 text-neutral-400" />
-                    <p className="min-w-0 font-medium text-neutral-600 dark:text-neutral-300">
-                      {note.created_at ? (
-                        <span>Criado em {formatDate(note.created_at)}</span>
-                      ) : null}
-                      {note.created_at && note.updated_at ? (
-                        <span className="text-neutral-400 dark:text-neutral-500"> · </span>
-                      ) : null}
-                      {note.updated_at ? (
-                        <span>Editado em {formatDate(note.updated_at)}</span>
-                      ) : null}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* =================== BLOCOS =================== */}
-              <div className="w-full space-y-1">
-                {blocks.length > 0 ? (
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext
-                      items={blocks.map((b) => b.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      {blocks.map((block) => (
-                        <SortableBlockComponent
-                          key={block.id}
-                          block={block}
-                          noteId={note.id}
-                          onUpdate={handleUpdateBlock}
-                          onDelete={handleDeleteBlock}
-                          onAddBlock={() => setShowBlockTypeSelector(true)}
-                          onAddBlockAfter={handleAddBlockAfter}
-                          onBackspaceEmpty={handleBackspaceEmpty}
-                          focusBlockId={focusBlockId}
-                          onFocused={() => setFocusBlockId(null)}
+                  {/* Título + comentários */}
+                  <div className="mb-4">
+                    <div className="flex items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <textarea
+                          ref={(el) => {
+                            if (el) {
+                              el.style.height = "auto";
+                              el.style.height = `${el.scrollHeight}px`;
+                            }
+                          }}
+                          value={editingTitle}
+                          onChange={(e) => {
+                            setEditingTitle(e.target.value);
+                            const el = e.target;
+                            el.style.height = "auto";
+                            el.style.height = `${el.scrollHeight}px`;
+                          }}
+                          onBlur={async () => {
+                            if (note && editingTitle !== note.title) {
+                              setIsSaving(true);
+                              try {
+                                const updated = await updateNote(note.id, { title: editingTitle });
+                                if (updated) setNote(updated);
+                              } catch (error) {
+                                console.error("Erro ao salvar título:", error);
+                              } finally {
+                                setIsSaving(false);
+                              }
+                            }
+                          }}
+                          placeholder="Título da nota..."
+                          rows={1}
+                          className="w-full resize-none overflow-hidden bg-transparent text-xl font-bold text-neutral-900 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-100 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
                         />
-                      ))}
-                    </SortableContext>
-
-                    {/* Overlay para mostrar o item sendo arrastado */}
-                    <DragOverlay>
-                      {activeBlock ? (
-                        <div className="rounded-md border border-yellow-500/30 bg-white px-3 py-2 shadow-xl dark:border-yellow-500/50 dark:bg-neutral-900">
-                          <BlockComponent
-                            block={activeBlock}
-                            noteId={note.id}
-                            onUpdate={handleUpdateBlock}
-                            onDelete={handleDeleteBlock}
-                            onAddBlock={() => {}}
-                            onAddBlockAfter={() => {}}
-                            isDragging={true}
+                        <textarea
+                          ref={(el) => {
+                            if (el) {
+                              el.style.height = "auto";
+                              el.style.height = `${el.scrollHeight}px`;
+                            }
+                          }}
+                          value={editingDescription}
+                          onChange={(e) => {
+                            setEditingDescription(e.target.value);
+                            const el = e.target;
+                            el.style.height = "auto";
+                            el.style.height = `${el.scrollHeight}px`;
+                          }}
+                          onBlur={async () => {
+                            if (note && editingDescription !== (note.description || "")) {
+                              setIsSaving(true);
+                              try {
+                                const updated = await updateNote(note.id, {
+                                  description: editingDescription,
+                                });
+                                if (updated) setNote(updated);
+                              } catch (error) {
+                                console.error("Erro ao salvar descrição:", error);
+                              } finally {
+                                setIsSaving(false);
+                              }
+                            }
+                          }}
+                          placeholder="Adicionar descrição..."
+                          rows={1}
+                          className="w-full resize-none overflow-hidden bg-transparent text-sm text-neutral-600 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-400 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
+                        />
+                      </div>
+                      {canUseNoteComments ? (
+                        <div className="mt-0.5 max-w-[46%] min-w-0 shrink sm:max-w-[min(18rem,48%)]">
+                          <NoteCommentsSidebarTrigger
+                            open={commentsSidebarOpen}
+                            onToggle={() => setCommentsSidebarOpen((v) => !v)}
                           />
                         </div>
                       ) : null}
-                    </DragOverlay>
-                  </DndContext>
-                ) : (
-                  <div className="flex min-h-[80px] flex-col items-center justify-center rounded-md px-4 py-4">
-                    <div className="flex items-center gap-2 text-sm text-neutral-400 dark:text-neutral-500">
-                      <Loader2 size={14} className="animate-spin" />
-                      <span>Criando bloco...</span>
                     </div>
                   </div>
-                )}
 
-                {/* Botão para adicionar novo bloco */}
-                {note.access?.canEdit && (
-                  <div className="relative pt-4">
-                    <button
-                      onClick={() => setShowBlockTypeSelector(!showBlockTypeSelector)}
-                      className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-400 transition-all hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-700 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                    >
-                      <Plus size={14} />
-                      Adicionar bloco
-                    </button>
+                  {/* Meta informações — até 2/3 da largura; grelha 2 colunas com rótulo à esquerda e valor/campo à direita */}
+                  <div className="mb-6 flex w-full max-w-[66.666667%] flex-col gap-4 border-b border-neutral-100 pb-4 dark:border-neutral-800">
+                    <div className="grid grid-cols-1 gap-x-6 gap-y-4 lg:grid-cols-2 lg:items-start">
+                      {(note.access?.canEdit || note.associated_project) && (
+                        <>
+                          <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                            <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                              <FolderKanban
+                                className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                                size={13}
+                              />
+                              <span className="font-medium">Projeto</span>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              {note.access?.canEdit ? (
+                                <select
+                                  aria-label="Projeto da nota"
+                                  className="w-full max-w-full cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
+                                  value={note.associated_project?.id ?? ""}
+                                  onChange={(e) => void handleProjectAssignment(e.target.value)}
+                                >
+                                  <option value="">Sem projeto</option>
+                                  {projects.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.title}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : note.associated_project ? (
+                                <span className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
+                                  {note.associated_project.name}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                          <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                            <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                              <Kanban
+                                className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                                size={13}
+                              />
+                              <span className="font-medium">Estágio</span>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              {note.associated_project ? (
+                                <>
+                                  {note.access?.canEdit && projectStages.length > 0 ? (
+                                    <div className="flex items-center gap-2">
+                                      <span
+                                        className="h-3 w-3 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
+                                        style={{
+                                          backgroundColor: (() => {
+                                            const sid = note.associated_project?.stage_id;
+                                            if (!sid) return "#a3a3a3";
+                                            const st = projectStages.find((s) => s.id === sid);
+                                            return st?.color || "#a3a3a3";
+                                          })(),
+                                        }}
+                                        title="Cor do estágio"
+                                        aria-hidden
+                                      />
+                                      <select
+                                        aria-label="Estágio da nota no projeto"
+                                        className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
+                                        value={note.associated_project.stage_id ?? ""}
+                                        onChange={(e) => void handleStageChange(e.target.value)}
+                                      >
+                                        <option value="">Escolha o estágio</option>
+                                        {note.associated_project.stage_id &&
+                                          !projectStages.some(
+                                            (s) => s.id === note.associated_project?.stage_id
+                                          ) && (
+                                            <option value={note.associated_project.stage_id}>
+                                              {note.associated_project.stage_name || "Estágio"}
+                                            </option>
+                                          )}
+                                        {projectStages.map((s) => (
+                                          <option key={s.id} value={s.id}>
+                                            {s.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  ) : (
+                                    <span
+                                      className="inline-flex max-w-full items-center gap-2 rounded-lg bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-700 dark:bg-neutral-800/55 dark:text-neutral-300"
+                                      style={(() => {
+                                        const sid = note.associated_project?.stage_id;
+                                        const st = sid
+                                          ? projectStages.find((s) => s.id === sid)
+                                          : undefined;
+                                        const c = st?.color || "#a3a3a3";
+                                        return {
+                                          borderLeftWidth: 3,
+                                          borderLeftStyle: "solid" as const,
+                                          borderLeftColor: c,
+                                          backgroundColor: st?.color ? `${st.color}26` : undefined,
+                                        };
+                                      })()}
+                                    >
+                                      <span
+                                        className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
+                                        style={{
+                                          backgroundColor: (() => {
+                                            const sid = note.associated_project?.stage_id;
+                                            if (!sid) return "#a3a3a3";
+                                            return (
+                                              projectStages.find((s) => s.id === sid)?.color ||
+                                              "#a3a3a3"
+                                            );
+                                          })(),
+                                        }}
+                                        aria-hidden
+                                      />
+                                      {note.associated_project.stage_name ||
+                                        (projectStages.length === 0
+                                          ? "Nenhuma coluna neste projeto"
+                                          : "—")}
+                                    </span>
+                                  )}
+                                </>
+                              ) : note.access?.canEdit ? (
+                                <p className="text-[10px] leading-snug text-neutral-400 dark:text-neutral-500">
+                                  O estágio só pode ser definido quando a nota está num projeto.
+                                </p>
+                              ) : (
+                                <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                                  —
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
 
-                    {showBlockTypeSelector && (
-                      <BlockTypeSelector
-                        onSelect={(type) => handleAddBlock(type)}
-                        onClose={() => setShowBlockTypeSelector(false)}
-                      />
+                      {(note.access?.canEdit ||
+                        note.due_date ||
+                        note.priority_id ||
+                        note.priority_name) && (
+                        <>
+                          <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                            <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                              <Calendar
+                                className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                                size={13}
+                              />
+                              <span className="font-medium">Prazo</span>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              {note.access?.canEdit ? (
+                                <input
+                                  type="datetime-local"
+                                  aria-label="Data e hora de prazo"
+                                  className="w-full max-w-full rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
+                                  value={
+                                    note.due_date
+                                      ? (() => {
+                                          const d = new Date(note.due_date);
+                                          const pad = (n: number) => String(n).padStart(2, "0");
+                                          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                                        })()
+                                      : ""
+                                  }
+                                  onChange={async (e) => {
+                                    const v = e.target.value;
+                                    if (!v) {
+                                      await saveAndApply({ due_date: null });
+                                      return;
+                                    }
+                                    await saveAndApply({ due_date: new Date(v).toISOString() });
+                                  }}
+                                />
+                              ) : (
+                                <span className="text-xs text-neutral-600 dark:text-neutral-300">
+                                  {note.due_date
+                                    ? new Date(note.due_date).toLocaleString("pt-BR")
+                                    : "Sem prazo definido"}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                            <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                              <Flag
+                                className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                                size={13}
+                              />
+                              <span className="font-medium">Prioridade</span>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              {note.access?.canEdit && taskPriorities.length > 0 ? (
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className="h-3 w-3 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
+                                    style={{
+                                      backgroundColor:
+                                        (note.priority_id &&
+                                          taskPriorities.find((p) => p.id === note.priority_id)
+                                            ?.color_hex) ||
+                                        note.priority_color ||
+                                        "#a3a3a3",
+                                    }}
+                                    title="Cor da prioridade"
+                                    aria-hidden
+                                  />
+                                  <select
+                                    aria-label="Prioridade da nota"
+                                    className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
+                                    value={note.priority_id ?? ""}
+                                    onChange={async (e) => {
+                                      const v = e.target.value;
+                                      await saveAndApply({
+                                        priority_id: v === "" ? null : v,
+                                      });
+                                    }}
+                                  >
+                                    <option value="">Sem prioridade</option>
+                                    {taskPriorities.map((p) => (
+                                      <option key={p.id} value={p.id}>
+                                        {p.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              ) : note.priority_name ? (
+                                <span
+                                  className="inline-flex w-fit max-w-full items-center gap-2 rounded-lg px-2 py-1 text-xs font-medium text-neutral-900 dark:text-neutral-100"
+                                  style={{
+                                    borderLeftWidth: 3,
+                                    borderLeftStyle: "solid",
+                                    borderLeftColor: note.priority_color || "#ca8a04",
+                                    backgroundColor: note.priority_color
+                                      ? `${note.priority_color}33`
+                                      : "rgba(234, 179, 8, 0.2)",
+                                  }}
+                                >
+                                  <span
+                                    className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
+                                    style={{
+                                      backgroundColor: note.priority_color || "#ca8a04",
+                                    }}
+                                    aria-hidden
+                                  />
+                                  {note.priority_name}
+                                </span>
+                              ) : note.access?.canEdit ? (
+                                <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                                  Nenhuma prioridade disponível neste âmbito
+                                </span>
+                              ) : (
+                                <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                                  Sem prioridade
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                        <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                          <Users
+                            className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                            size={13}
+                          />
+                          <span className="font-medium">Collabs</span>
+                        </div>
+                        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+                          {note.collaborators && note.collaborators.length > 0 && (
+                            <>
+                              <div className="flex -space-x-1.5">
+                                {(showAllCollabs
+                                  ? note.collaborators
+                                  : note.collaborators.slice(0, 3)
+                                ).map((collab, index) => {
+                                  const displayName = getCollaboratorDisplayName(collab);
+                                  const avatarUrl = getCollaboratorAvatarUrl(collab);
+
+                                  return (
+                                    <div
+                                      key={index}
+                                      className="group relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-200 ring-0 transition-all hover:z-10 hover:ring-2 hover:ring-yellow-500/30 dark:border-neutral-900 dark:bg-neutral-700"
+                                      title={displayName}
+                                    >
+                                      {avatarUrl ? (
+                                        <Image
+                                          width={28}
+                                          height={28}
+                                          src={avatarUrl}
+                                          alt={displayName}
+                                          className="h-full w-full object-cover"
+                                        />
+                                      ) : (
+                                        <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-300">
+                                          {displayName.charAt(0).toUpperCase()}
+                                        </span>
+                                      )}
+
+                                      {note.access?.canShare && (
+                                        <button
+                                          onClick={() => handleRemoveCollaborator(collab)}
+                                          className="absolute inset-0 flex items-center justify-center rounded-full bg-red-500/80 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                          title="Remover colaborador"
+                                        >
+                                          <X size={10} />
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              {note.collaborators.length > 3 && (
+                                <button
+                                  onClick={() => setShowAllCollabs(!showAllCollabs)}
+                                  className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                >
+                                  {showAllCollabs
+                                    ? "Ver menos"
+                                    : `+${note.collaborators.length - 3}`}
+                                </button>
+                              )}
+                            </>
+                          )}
+                          {note.access?.canShare && (
+                            <button
+                              onClick={() => setShowShareModal(true)}
+                              className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                              title="Adicionar colaborador"
+                            >
+                              <Plus size={10} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Relações */}
+                      <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                        <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                          <Link
+                            className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                            size={13}
+                          />
+                          <span className="font-medium">Relações</span>
+                        </div>
+                        <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                          {(showAllRelations ? relatedNotesData : relatedNotesData.slice(0, 3)).map(
+                            (relNote) => (
+                              <span
+                                key={relNote!.id}
+                                className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
+                              >
+                                <button
+                                  onClick={() => router.push(`/app/notes/${relNote!.id}`)}
+                                  className="inline-flex items-center gap-1.5 truncate"
+                                >
+                                  {relNote!.properties?.icon?.path ? (
+                                    <Image
+                                      src={getStorageUrl(relNote!.properties.icon.path)}
+                                      alt=""
+                                      width={12}
+                                      height={12}
+                                      className="flex-shrink-0 rounded"
+                                    />
+                                  ) : null}
+                                  <span className="max-w-[120px] truncate">
+                                    {relNote!.title || "Nota sem título"}
+                                  </span>
+                                </button>
+                                {note.access?.canEdit && (
+                                  <button
+                                    onClick={() => handleRemoveRelation(relNote!.id)}
+                                    className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                                    title="Remover relação"
+                                  >
+                                    <X size={10} />
+                                  </button>
+                                )}
+                              </span>
+                            )
+                          )}
+                          {relatedNotesData.length > 3 && (
+                            <button
+                              onClick={() => setShowAllRelations(!showAllRelations)}
+                              className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                            >
+                              {showAllRelations ? "Ver menos" : `+${relatedNotesData.length - 3}`}
+                            </button>
+                          )}
+                          {note.access?.canEdit && (
+                            <button
+                              onClick={() => setShowRelationModal(true)}
+                              className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                              title="Adicionar relação"
+                            >
+                              <Plus size={10} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Tags */}
+                      <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                        <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                          <Tag
+                            className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                            size={13}
+                          />
+                          <span className="font-medium">Tags</span>
+                        </div>
+                        <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                          {note.tags && note.tags.length > 0 && (
+                            <>
+                              {(showAllTags ? note.tags : note.tags.slice(0, 3)).map(
+                                (tag, index) => {
+                                  const colors = getTagColor(tag);
+                                  return (
+                                    <span
+                                      key={index}
+                                      className={`group flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-xs font-medium transition-colors ${colors.bg} ${colors.text} ${colors.border}`}
+                                    >
+                                      {tag}
+                                      {note.access?.canEdit && (
+                                        <button
+                                          onClick={() => handleRemoveTag(tag)}
+                                          className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                                          title="Remover tag"
+                                        >
+                                          <X size={10} />
+                                        </button>
+                                      )}
+                                    </span>
+                                  );
+                                }
+                              )}
+                              {note.tags.length > 3 && (
+                                <button
+                                  onClick={() => setShowAllTags(!showAllTags)}
+                                  className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                >
+                                  {showAllTags ? "Ver menos" : `+${note.tags.length - 3}`}
+                                </button>
+                              )}
+                            </>
+                          )}
+                          {note.access?.canEdit && (
+                            <button
+                              onClick={() => setShowTagModal(true)}
+                              className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                              title="Adicionar tag"
+                            >
+                              <Plus size={10} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* URLs */}
+                      <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3">
+                        <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                          <Link2
+                            className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                            size={13}
+                          />
+                          <span className="font-medium">URLs</span>
+                        </div>
+                        <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                          {note.properties?.urls &&
+                            (() => {
+                              const filteredUrls = note.properties.urls.filter(Boolean);
+                              const visibleUrls = showAllUrls
+                                ? filteredUrls
+                                : filteredUrls.slice(0, 3);
+                              return (
+                                <>
+                                  {visibleUrls.map((url, index) => (
+                                    <span
+                                      key={index}
+                                      className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
+                                    >
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex max-w-[150px] items-center gap-1.5 truncate text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                                      >
+                                        <span className="truncate">
+                                          {url.replace(/^https?:\/\//, "")}
+                                        </span>
+                                      </a>
+                                      {note.access?.canEdit && (
+                                        <button
+                                          onClick={() => handleRemoveUrl(url)}
+                                          className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                                          title="Remover URL"
+                                        >
+                                          <X size={10} />
+                                        </button>
+                                      )}
+                                    </span>
+                                  ))}
+                                  {filteredUrls.length > 3 && (
+                                    <button
+                                      onClick={() => setShowAllUrls(!showAllUrls)}
+                                      className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                    >
+                                      {showAllUrls ? "Ver menos" : `+${filteredUrls.length - 3}`}
+                                    </button>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          {note.access?.canEdit && (
+                            <>
+                              {showUrlInput ? (
+                                <div className="flex items-center gap-1.5">
+                                  <input
+                                    type="url"
+                                    value={newUrl}
+                                    onChange={(e) => setNewUrl(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleAddUrl();
+                                      }
+                                      if (e.key === "Escape") {
+                                        setShowUrlInput(false);
+                                        setNewUrl("");
+                                      }
+                                    }}
+                                    placeholder="https://..."
+                                    className="w-40 rounded-md border border-neutral-200 bg-transparent px-2 py-0.5 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={handleAddUrl}
+                                    disabled={!newUrl.trim()}
+                                    className="bg-brand-primary-700 rounded-md px-2 py-0.5 text-xs font-medium text-white transition-colors hover:bg-yellow-600 disabled:opacity-50 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
+                                  >
+                                    OK
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setShowUrlInput(false);
+                                      setNewUrl("");
+                                    }}
+                                    className="text-neutral-400 transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"
+                                    title="Cancelar"
+                                  >
+                                    <X size={10} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setShowUrlInput(true)}
+                                  className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                                  title="Adicionar URL"
+                                >
+                                  <Plus size={10} />
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Arquivos */}
+                      <div className="flex min-w-0 flex-row items-start gap-2 sm:gap-3 lg:col-span-2">
+                        <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                          <FileText
+                            className="dark:text-brand-primary-700 flex-shrink-0 text-yellow-400"
+                            size={13}
+                          />
+                          <span className="font-medium">Arquivos</span>
+                        </div>
+                        <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                          {note.properties?.files &&
+                            (() => {
+                              const filteredFiles = note.properties.files.filter((f) => f.path);
+                              const visibleFiles = showAllFiles
+                                ? filteredFiles
+                                : filteredFiles.slice(0, 3);
+                              return (
+                                <>
+                                  {visibleFiles.map((file, index) => (
+                                    <span
+                                      key={file.id || index}
+                                      className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
+                                    >
+                                      <a
+                                        href={getStorageUrl(file.path)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex max-w-[120px] items-center gap-1.5 truncate hover:text-neutral-900 dark:hover:text-neutral-100"
+                                      >
+                                        <span className="truncate">{file.name || "Arquivo"}</span>
+                                      </a>
+                                      <a
+                                        href={getStorageUrl(file.path)}
+                                        download={file.name || "arquivo"}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="text-neutral-400 opacity-100 transition-all hover:text-neutral-600 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
+                                        title="Baixar arquivo"
+                                      >
+                                        <Download size={10} />
+                                      </a>
+                                      {note.access?.canEdit && (
+                                        <button
+                                          onClick={() => handleRemoveFile(file.id)}
+                                          className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                                          title="Remover arquivo"
+                                        >
+                                          <X size={10} />
+                                        </button>
+                                      )}
+                                    </span>
+                                  ))}
+                                  {filteredFiles.length > 3 && (
+                                    <button
+                                      onClick={() => setShowAllFiles(!showAllFiles)}
+                                      className="dark:hover:text-brand-primary-700 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                    >
+                                      {showAllFiles ? "Ver menos" : `+${filteredFiles.length - 3}`}
+                                    </button>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          {note.access?.canEdit && (
+                            <button
+                              onClick={() => filesInputRef.current?.click()}
+                              className="dark:hover:text-brand-primary-700 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                              title="Adicionar arquivo"
+                            >
+                              <Plus size={10} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Criado / editado — última linha dos metadados editáveis */}
+                    {(note.created_at || note.updated_at) && (
+                      <div className="flex items-start gap-1.5 border-t border-neutral-100 pt-3 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+                        <Clock size={12} className="mt-0.5 shrink-0 text-neutral-400" />
+                        <p className="min-w-0 font-medium text-neutral-600 dark:text-neutral-300">
+                          {note.created_at ? (
+                            <span>Criado em {formatDate(note.created_at)}</span>
+                          ) : null}
+                          {note.created_at && note.updated_at ? (
+                            <span className="text-neutral-400 dark:text-neutral-500"> · </span>
+                          ) : null}
+                          {note.updated_at ? (
+                            <span>Editado em {formatDate(note.updated_at)}</span>
+                          ) : null}
+                        </p>
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
 
-              {/* Atalhos de teclado - visível apenas em desktop */}
-              {note.access?.canEdit && (
-                <div className="mt-10 hidden border-t border-neutral-100 pt-4 sm:block dark:border-neutral-800">
-                  <div className="flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500">
-                    <Save size={12} />
-                    <span>
-                      <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-                        Enter
-                      </kbd>
-                      <span className="ml-1.5">novo bloco</span>
-                      <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
-                      <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-                        Espaço
-                      </kbd>
-                      <span className="ml-1.5">ou</span>
-                      <kbd className="ml-1.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-                        /
-                      </kbd>
-                      <span className="ml-1.5">em linha vazia para tipo de bloco</span>
-                      <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
-                      <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-                        Shift+Enter
-                      </kbd>
-                      <span className="ml-1.5">nova linha</span>
-                    </span>
+                  {/* =================== BLOCOS =================== */}
+                  <div className="w-full space-y-1">
+                    {blocks.length > 0 ? (
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <SortableContext
+                          items={blocks.map((b) => b.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {blocks.map((block) => (
+                            <SortableBlockComponent
+                              key={block.id}
+                              block={block}
+                              noteId={note.id}
+                              onUpdate={handleUpdateBlock}
+                              onDelete={handleDeleteBlock}
+                              onAddBlock={() => setShowBlockTypeSelector(true)}
+                              onAddBlockAfter={handleAddBlockAfter}
+                              onBackspaceEmpty={handleBackspaceEmpty}
+                              focusBlockId={focusBlockId}
+                              onFocused={() => setFocusBlockId(null)}
+                            />
+                          ))}
+                        </SortableContext>
+
+                        {/* Overlay para mostrar o item sendo arrastado */}
+                        <DragOverlay>
+                          {activeBlock ? (
+                            <div className="rounded-md border border-yellow-500/30 bg-white px-3 py-2 shadow-xl dark:border-yellow-500/50 dark:bg-neutral-900">
+                              <BlockComponent
+                                block={activeBlock}
+                                noteId={note.id}
+                                onUpdate={handleUpdateBlock}
+                                onDelete={handleDeleteBlock}
+                                onAddBlock={() => {}}
+                                onAddBlockAfter={() => {}}
+                                isDragging={true}
+                              />
+                            </div>
+                          ) : null}
+                        </DragOverlay>
+                      </DndContext>
+                    ) : (
+                      <div className="flex min-h-[80px] flex-col items-center justify-center rounded-md px-4 py-4">
+                        <div className="flex items-center gap-2 text-sm text-neutral-400 dark:text-neutral-500">
+                          <Loader2 size={14} className="animate-spin" />
+                          <span>Criando bloco...</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Botão para adicionar novo bloco */}
+                    {note.access?.canEdit && (
+                      <div className="relative pt-4">
+                        <button
+                          onClick={() => setShowBlockTypeSelector(!showBlockTypeSelector)}
+                          className="dark:hover:bg-brand-primary-700/5 dark:hover:text-brand-primary-700 flex items-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-400 transition-all hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-700 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                        >
+                          <Plus size={14} />
+                          Adicionar bloco
+                        </button>
+
+                        {showBlockTypeSelector && (
+                          <BlockTypeSelector
+                            onSelect={(type) => handleAddBlock(type)}
+                            onClose={() => setShowBlockTypeSelector(false)}
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+
+                  {/* Atalhos de teclado - visível apenas em desktop */}
+                  {note.access?.canEdit && (
+                    <div className="mt-10 hidden border-t border-neutral-100 pt-4 sm:block dark:border-neutral-800">
+                      <div className="flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500">
+                        <Save size={12} />
+                        <span>
+                          <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                            Enter
+                          </kbd>
+                          <span className="ml-1.5">novo bloco</span>
+                          <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
+                          <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                            Espaço
+                          </kbd>
+                          <span className="ml-1.5">ou</span>
+                          <kbd className="ml-1.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                            /
+                          </kbd>
+                          <span className="ml-1.5">em linha vazia para tipo de bloco</span>
+                          <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
+                          <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                            Shift+Enter
+                          </kbd>
+                          <span className="ml-1.5">nova linha</span>
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {commentsSidebarOpen && canUseNoteComments ? (
-                <aside className="flex w-full shrink-0 flex-col border-t border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950 md:h-full md:w-[380px] md:max-w-[42%] md:flex-shrink-0 md:border-t-0 md:border-l">
-                  <div className="flex h-[min(22rem,52dvh)] w-full min-h-[260px] max-h-[480px] flex-col overflow-hidden md:h-full md:max-h-none md:min-h-0 md:flex-1">
+                <aside className="flex w-full shrink-0 flex-col border-t border-neutral-200 bg-white md:h-full md:w-[380px] md:max-w-[42%] md:flex-shrink-0 md:border-t-0 md:border-l dark:border-neutral-800 dark:bg-neutral-950">
+                  <div className="flex h-[min(22rem,52dvh)] max-h-[480px] min-h-[260px] w-full flex-col overflow-hidden md:h-full md:max-h-none md:min-h-0 md:flex-1">
                     <NoteCommentsSidebar
                       canComment={canUseNoteComments}
                       onClose={() => setCommentsSidebarOpen(false)}
+                      searchMentionUsers={searchUsers}
+                      embeddableNoteFiles={note.properties?.files ?? []}
                     />
                   </div>
                 </aside>

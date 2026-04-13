@@ -85,6 +85,7 @@ class NotesBaseController {
    * @returns {Object}
    */
   _formatNoteResponse(note, blocks = []) {
+    const projectId = note.project_id ? String(note.project_id) : null;
     return {
       id: note.id.toString(),
       title: note.title,
@@ -92,8 +93,22 @@ class NotesBaseController {
       properties: note.properties || {},
       tags: note.tags || [],
       status: note.status,
+      due_date: note.due_date ?? null,
+      priority_id: note.priority_id ?? null,
+      priority_name: note.priority_name ?? null,
+      priority_color: note.priority_color ?? null,
       created_at: note.created_at,
       updated_at: note.updated_at,
+      associated_project: projectId
+        ? {
+            id: projectId,
+            name: note.project_name || "",
+            stage_id: note.project_stage_id
+              ? String(note.project_stage_id)
+              : null,
+            stage_name: note.project_stage_name || null,
+          }
+        : null,
       blocks: blocks,
     };
   }

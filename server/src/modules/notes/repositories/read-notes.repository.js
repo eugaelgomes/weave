@@ -17,6 +17,7 @@ class ReadNotesRepository extends BaseRepository {
       n.created_at,
       n.updated_at,
       n.properties,
+      n.due_date,
 
       -- criador da nota
       u.name AS user_name,
@@ -87,6 +88,7 @@ class ReadNotesRepository extends BaseRepository {
         n.updated_at,
         n.deleted,
         n.properties,
+        n.due_date,
 
         -- criador da nota
         u.name as user_name,
@@ -200,6 +202,10 @@ class ReadNotesRepository extends BaseRepository {
         n.created_at,
         n.updated_at,
         n.deleted,
+        n.due_date,
+        tp.id AS priority_id,
+        tp.name AS priority_name,
+        tp.color_hex AS priority_color,
         -- criador da nota
         n.user_id::text,
         u.name as user_name,
@@ -292,6 +298,8 @@ class ReadNotesRepository extends BaseRepository {
         n.created_at,
         n.updated_at,
         n.deleted,
+        n.due_date,
+        COALESCE(n.org_id, p.org_id)::text AS scope_org_id,
         -- criador da nota
         n.user_id::text,
         u.name AS user_name,
@@ -301,6 +309,8 @@ class ReadNotesRepository extends BaseRepository {
         -- projeto associado
         n.project_id::text,
         p.title AS project_name,
+        n.project_stage_id::text,
+        pst.name AS project_stage_name,
 
         tp.id AS priority_id,
         tp.name AS priority_name,
@@ -329,6 +339,9 @@ class ReadNotesRepository extends BaseRepository {
     FROM notes n
     INNER JOIN users u ON n.user_id = u.user_id
     LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
+    LEFT JOIN project_stages pst
+      ON pst.id = n.project_stage_id
+      AND pst.project_id = n.project_id
     LEFT JOIN task_priorities tp ON n.priority_id = tp.id AND tp.deleted = false
     LEFT JOIN note_collaborators nc ON n.id = nc.note_id
     LEFT JOIN users c ON nc.user_id = c.user_id
@@ -340,7 +353,8 @@ class ReadNotesRepository extends BaseRepository {
         p.id,
         p.org_id,
         o.id,
-        tp.id
+        tp.id,
+        pst.id
     LIMIT 1;
     `;
     const results = await this.executeQuery(query, [noteId]);
@@ -427,6 +441,37 @@ class ReadNotesRepository extends BaseRepository {
 `;
     const results = await this.executeQuery(query, [userId]);
     return results[0];
+  }
+
+  /**
+   * Notas com prazo “amanhã” (UTC) que ainda não receberam o e-mail de véspera
+   * (controle em properties.due_reminder.eve_sent_for_due_epoch).
+   *
+   * @returns {Promise<Array<Record<string, unknown>>>}
+   */
+  async findNotesForDueDateEveReminder() {
+    const query = `
+      SELECT
+        n.id::text,
+        n.title,
+        n.due_date,
+        n.properties,
+        n.user_id::text,
+        u.email AS owner_email,
+        u.name AS owner_name
+      FROM notes n
+      INNER JOIN users u ON n.user_id = u.user_id
+      WHERE n.deleted = false
+        AND n.due_date IS NOT NULL
+        AND (n.due_date AT TIME ZONE 'UTC')::date =
+            ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date + INTERVAL '1 day')::date
+        AND (
+          NULLIF(btrim(n.properties #>> '{due_reminder,eve_sent_for_due_epoch}'), '') IS NULL
+          OR (NULLIF(btrim(n.properties #>> '{due_reminder,eve_sent_for_due_epoch}'), ''))::bigint
+            IS DISTINCT FROM (floor(extract(epoch FROM n.due_date)))::bigint
+        );
+    `;
+    return await this.executeQuery(query);
   }
 
   async processNotesWithSignedUrls(notes) {

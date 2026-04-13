@@ -13,6 +13,7 @@ import {
   fetchProjectNotes as fetchProjectNotesService,
   manageProjectNote as manageProjectNoteService,
   fetchProjectStages as fetchProjectStagesService,
+  updateProjectNoteStage as updateProjectNoteStageService,
   fetchProjectsStats as fetchProjectsStatsService,
   type Project,
   type SubProject,
@@ -32,6 +33,7 @@ import {
   updateProjectTag as updateProjectTagService,
   deleteProjectTag as deleteProjectTagService,
   fetchTaskPriorities as fetchTaskPrioritiesService,
+  fetchOrgTaskPriorities as fetchOrgTaskPrioritiesService,
   createTaskPriority as createTaskPriorityService,
   updateTaskPriority as updateTaskPriorityService,
   deleteTaskPriority as deleteTaskPriorityService,
@@ -44,6 +46,7 @@ import {
 } from "../_services/projects-service/project-taxonomy-service";
 
 // Tipos específicos do contexto / Overview
+export type { Project, ProjectStage } from "../_services/projects-service/projects-service";
 export type { ProjectDashboardStats, ProjectStatsFilters };
 export type {
   ProjectTag,
@@ -127,6 +130,7 @@ export interface ProjectsContextType {
   ) => Promise<ProjectTag | null>;
   deleteProjectTag: (projectId: string, tagId: string) => Promise<boolean>;
   getTaskPriorities: (projectId: string) => Promise<TaskPriority[]>;
+  getOrgTaskPriorities: (organizationId: string) => Promise<TaskPriority[]>;
   createTaskPriority: (
     projectId: string,
     data: CreateTaskPriorityData
@@ -157,6 +161,7 @@ export interface ProjectsContextType {
   addNoteToProject: (projectId: string, noteId: string) => Promise<boolean>;
   syncProjectNote: (projectId: string, noteId: string) => Promise<boolean>;
   removeNoteFromProject: (projectId: string, noteId: string) => Promise<boolean>;
+  updateProjectNoteStage: (projectId: string, noteId: string, stageId: string) => Promise<void>;
 }
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -503,6 +508,20 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     [user?.id]
   );
 
+  const getOrgTaskPriorities = useCallback(
+    async (organizationId: string): Promise<TaskPriority[]> => {
+      if (!user?.id) return [];
+
+      try {
+        return await fetchOrgTaskPrioritiesService(organizationId);
+      } catch (err: unknown) {
+        console.error("Erro ao buscar prioridades da organização:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
   const createTaskPriority = useCallback(
     async (projectId: string, data: CreateTaskPriorityData): Promise<TaskPriority | null> => {
       if (!user?.id) return null;
@@ -710,6 +729,20 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     [user?.id, fetchProjects]
   );
 
+  const updateProjectNoteStage = useCallback(
+    async (projectId: string, noteId: string, stageId: string): Promise<void> => {
+      if (!user?.id) return;
+
+      try {
+        await updateProjectNoteStageService(projectId, noteId, stageId);
+      } catch (err: unknown) {
+        console.error("Erro ao atualizar estágio da nota no projeto:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
   useEffect(() => {
     if (!user?.id) return;
 
@@ -751,6 +784,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     updateProjectTag,
     deleteProjectTag,
     getTaskPriorities,
+    getOrgTaskPriorities,
     createTaskPriority,
     updateTaskPriority,
     deleteTaskPriority,
@@ -762,6 +796,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     addNoteToProject,
     syncProjectNote,
     removeNoteFromProject,
+    updateProjectNoteStage,
   };
 
   return <ProjectsContext.Provider value={value}>{children}</ProjectsContext.Provider>;
