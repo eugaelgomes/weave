@@ -20,83 +20,83 @@ services:
         - action: rebuild
           path: ./server/package.json
   
-  # Frontend
-  web:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./web:/app
-      - /app/node_modules
-      - /app/.next
-    environment:
-      - NEXT_PUBLIC_API_URL=http://server:8080
-    depends_on:
-      - server
-    networks:
-      - app-network
-    command: npm start
-    develop:
-      watch:
-        - action: sync
-          path: ./web/app
-          target: /app/app
-        - action: rebuild
-          path: ./web/package.json
+  # # Frontend
+  # web:
+  #   build:
+  #     context: ./web
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./web:/app
+  #     - /app/node_modules
+  #     - /app/.next
+  #   environment:
+  #     - NEXT_PUBLIC_API_URL=http://server:8080
+  #   depends_on:
+  #     - server
+  #   networks:
+  #     - app-network
+  #   command: npm start
+  #   develop:
+  #     watch:
+  #       - action: sync
+  #         path: ./web/app
+  #         target: /app/app
+  #       - action: rebuild
+  #         path: ./web/package.json
 
-  # Discover / Landing (subdomínio)
-  discover:
-    build:
-      context: ./discover
-      dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
-    volumes:
-      - ./discover:/app
-      - /app/node_modules
-      - /app/.next
-    environment:
-      - NEXT_PUBLIC_APP_URL=http://localhost:3000
-      - NEXT_PUBLIC_BLOG_URL=http://localhost:3001
-    networks:
-      - app-network
-    command: npm run dev
-    develop:
-      watch:
-        - action: sync
-          path: ./discover/app
-          target: /app/app
-        - action: rebuild
-          path: ./discover/package.json
+  # # Discover / Landing (subdomínio)
+  # discover:
+  #   build:
+  #     context: ./discover
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3001:3001"
+  #   volumes:
+  #     - ./discover:/app
+  #     - /app/node_modules
+  #     - /app/.next
+  #   environment:
+  #     - NEXT_PUBLIC_APP_URL=http://localhost:3000
+  #     - NEXT_PUBLIC_BLOG_URL=http://localhost:3001
+  #   networks:
+  #     - app-network
+  #   command: npm run dev
+  #   develop:
+  #     watch:
+  #       - action: sync
+  #         path: ./discover/app
+  #         target: /app/app
+  #       - action: rebuild
+  #         path: ./discover/package.json
 
-  # Console Admin
-  admin-console:
-    build:
-      context: ./admin-console
-      dockerfile: Dockerfile
-    ports:
-      - "3003:3003"
-    volumes:
-      - ./admin-console:/app
-      - /app/node_modules
-      - /app/.next
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
-      - NEXT_PUBLIC_APP_URL=http://localhost:3003
-    depends_on:
-      - server
-    networks:
-      - app-network
-    command: npm run dev
-    develop:
-      watch:
-        - action: sync
-          path: ./admin-console/app
-          target: /app/app
-        - action: rebuild
-          path: ./admin-console/package.json
+  # # Console Admin
+  # admin-console:
+  #   build:
+  #     context: ./admin-console
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3003:3003"
+  #   volumes:
+  #     - ./admin-console:/app
+  #     - /app/node_modules
+  #     - /app/.next
+  #   environment:
+  #     - NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+  #     - NEXT_PUBLIC_APP_URL=http://localhost:3003
+  #   depends_on:
+  #     - server
+  #   networks:
+  #     - app-network
+  #   command: npm run dev
+  #   develop:
+  #     watch:
+  #       - action: sync
+  #         path: ./admin-console/app
+  #         target: /app/app
+  #       - action: rebuild
+  #         path: ./admin-console/package.json
 
 networks:
   app-network:
