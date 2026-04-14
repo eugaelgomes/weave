@@ -22,6 +22,7 @@ const { defaultAppPreferences } = require("@/modules/users/normalize");
  * @property {string|null|undefined} [birth_date]
  * @property {string|null|undefined} [phone_number]
  * @property {string|null|undefined} [avatar_url]
+ * @property {string|null|undefined} [plan_id]
  */
 
 /**
@@ -43,6 +44,7 @@ class CreateUsersRepository extends BaseRepository {
       birth_date,
       phone_number,
       avatar_url,
+      plan_id,
     } = userData;
 
     const query = `
@@ -56,9 +58,21 @@ class CreateUsersRepository extends BaseRepository {
       birth_date, 
       phone_number, 
       avatar_url,
-      user_preference
+      user_preference,
+      plan_id
     ) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+      COALESCE(
+        $11,
+        (
+          SELECT plan_id
+          FROM plans
+          WHERE LOWER(name) = 'starter' AND deleted = FALSE
+          LIMIT 1
+        )
+      )
+    )
     RETURNING user_id, email, name, avatar_url, created_at;
   `;
 
@@ -73,6 +87,7 @@ class CreateUsersRepository extends BaseRepository {
       phone_number,
       avatar_url,
       defaultAppPreferences,
+      plan_id || null,
     ]);
   }
 
@@ -85,8 +100,16 @@ class CreateUsersRepository extends BaseRepository {
   async createGithubUser(username, name, githubId) {
     const query = `
       INSERT INTO 
-        users (username, name, github_id) 
-      VALUES ($1, $2, $3)
+        users (username, name, github_id, plan_id) 
+      VALUES (
+        $1, $2, $3,
+        (
+          SELECT plan_id
+          FROM plans
+          WHERE LOWER(name) = 'starter' AND deleted = FALSE
+          LIMIT 1
+        )
+      )
       RETURNING user_id;
     `;
     return await executeQuery(query, [username, name, githubId]);

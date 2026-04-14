@@ -12,7 +12,6 @@ class MutateNotesRepository extends BaseRepository {
       "status",
       "priority_id",
       "due_date",
-      "assigned_to",
       "deleted_by",
       "deleted",
       "project_id",

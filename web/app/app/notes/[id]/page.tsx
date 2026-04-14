@@ -699,6 +699,7 @@ const NoteDetail = () => {
     searchUsers,
     removeCollaborator,
     notesOverview,
+    exportNoteAsPDF,
     createBlock,
     updateBlock: updateBlockService,
     deleteBlock: deleteBlockService,
@@ -739,6 +740,7 @@ const NoteDetail = () => {
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [newUrl, setNewUrl] = useState("");
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);
   const [showAllCollabs, setShowAllCollabs] = useState(false);
   const [showAllRelations, setShowAllRelations] = useState(false);
@@ -772,6 +774,34 @@ const NoteDetail = () => {
       return null;
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleExportNote = async () => {
+    if (!note || isExporting) return;
+
+    setIsExporting(true);
+    try {
+      const exported = await exportNoteAsPDF(note.id);
+      if (!exported) return;
+      const { blob, fileName } = exported;
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      console.error("Erro ao exportar nota:", err);
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : "Não foi possível exportar a nota agora. Tente novamente.";
+      window.alert(message);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -1726,7 +1756,9 @@ const NoteDetail = () => {
               <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
 
               {/*Botão de paleta de cores*/}
-              <div className="relative">
+              <div className="flex relative">
+
+
                 <button
                   onClick={() => setShowColorPicker(!showColorPicker)}
                   className="dark:hover:text-brand-primary-500 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800"
@@ -1813,6 +1845,18 @@ const NoteDetail = () => {
                     </button>
                   </div>
                 )}
+                                <button
+                  onClick={handleExportNote}
+                  disabled={isExporting}
+                  className="dark:hover:text-brand-primary-500 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 disabled:cursor-not-allowed disabled:opacity-60 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                  title="Exportar nota"
+                >
+                  {isExporting ? (
+                    <Loader2 size={15} className="animate-spin" />
+                  ) : (
+                    <Download size={15} />
+                  )}
+                </button>
               </div>
             </div>
           </div>

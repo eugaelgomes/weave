@@ -24,8 +24,8 @@ class CreateNotesRepository extends BaseRepository {
     assignedTo = null
   ) {
     const query = `
-      INSERT INTO notes (user_id, title, description, tags, status, project_id, properties, priority_id, assigned_to)
-      VALUES ($1, $2, $3, $4::uuid[], $5, $6, $7, $8, $9)
+      INSERT INTO notes (user_id, title, description, tags, status, project_id, properties, priority_id)
+      VALUES ($1, $2, $3, $4::uuid[], $5, $6, $7, $8)
       RETURNING *; 
     `;
     const results = await this.executeQuery(query, [
@@ -37,7 +37,6 @@ class CreateNotesRepository extends BaseRepository {
       projectId,
       JSON.stringify(DEFAULT_NOTE_PROPERTIES),
       priorityId,
-      assignedTo,
     ]);
     return results[0];
   }

@@ -520,15 +520,12 @@ class OrganizationMembersController extends OrganizationsBaseController {
       }
 
       const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
-      const areasPath = invite.area_id
-        ? `${frontendBase}/app/organization/areas?areaId=${invite.area_id}`
-        : `${frontendBase}/app/organization/areas`;
+      const homePath = `${frontendBase}/app/home`;
 
       const confirmEmail = await send_organization_invite_accepted(
         invite.email,
         invite.org_name,
-        invite.area_name || null,
-        areasPath
+        homePath
       );
       if (!confirmEmail.success) {
         console.warn("Failed to send invite-accepted email:", confirmEmail.error);

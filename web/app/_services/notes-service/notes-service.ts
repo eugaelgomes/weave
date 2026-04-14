@@ -433,6 +433,28 @@ export async function createCompleteNote(noteData: CreateNoteData): Promise<Note
   return await handleResponse<Note>(response);
 }
 
+export async function exportNoteAsPDF(noteId: string): Promise<{ blob: Blob; fileName: string }> {
+  const response = await apiClient.get(`${API_ENDPOINTS.NOTES_BY_ID(noteId)}/export/pdf`, {
+    headers: {
+      Accept: "application/pdf",
+    },
+  });
+
+  if (!response.ok) {
+    await handleResponse(response);
+  }
+
+  const blob = await response.blob();
+  const contentDisposition = response.headers.get("content-disposition") || "";
+  const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|")?([^\";]+)/i);
+  const parsedName = fileNameMatch?.[1] ? decodeURIComponent(fileNameMatch[1].replace(/"/g, "")) : "";
+
+  return {
+    blob,
+    fileName: parsedName || `nota-${noteId}.pdf`,
+  };
+}
+
 // --- Notes Stats API ---
 export interface NotesStatsResponse {
   totalNotes: number;

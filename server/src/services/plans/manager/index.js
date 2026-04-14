@@ -112,11 +112,20 @@ class PlansManager {
    *  Padrão de plano ao criar novo user
    */
   async setDefaultPlanForNewUser(userId) {
-    const planId = "afbee06b-18c8-4a15-972c-b94eccf763ec";
-    if (!planId) {
-      throw new Error("Default plan not found.");
+    const user = await PlansRepository.getUserAndPlan(userId);
+    if (!user) {
+      throw new Error("User not found.");
     }
-    return await PlansRepository.assignPlanToUser(userId, planId);
+    if (user.plan_id) {
+      return user;
+    }
+
+    const starterPlan = await PlansRepository.getPlanByName("starter");
+    if (!starterPlan) {
+      throw new Error("Default starter plan not found.");
+    }
+
+    return await PlansRepository.assignPlanToUser(userId, starterPlan.plan_id);
   }
 }
 

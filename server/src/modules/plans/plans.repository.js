@@ -24,6 +24,17 @@ class PlansRepository {
     return results[0];
   }
 
+  async getPlanByName(name) {
+    const query = `
+    SELECT plan_id, name, details, created_at
+    FROM plans
+    WHERE LOWER(name) = LOWER($1) AND deleted = FALSE
+    LIMIT 1
+      `;
+    const results = await executeQuery(query, [name]);
+    return results[0];
+  }
+
   async getUserAndPlan(userId) {
     const query = `
       SELECT u.user_id, u.plan_id, p.details as plan_details

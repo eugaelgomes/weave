@@ -66,8 +66,19 @@ class GoogleOauthRepository extends BaseRepository {
     const username = email.split("@")[0] + "_" + Date.now();
 
     const query = `
-      INSERT INTO users (google_id, name, email, username, auth_with_google, avatar_url, password, email_verified, email_verified_at)
-      VALUES ($1, $2, $3, $4, true, $5, '', true, NOW())
+      INSERT INTO users (
+        google_id, name, email, username, auth_with_google, avatar_url,
+        password, email_verified, email_verified_at, plan_id
+      )
+      VALUES (
+        $1, $2, $3, $4, true, $5, '', true, NOW(),
+        (
+          SELECT plan_id
+          FROM plans
+          WHERE LOWER(name) = 'starter' AND deleted = FALSE
+          LIMIT 1
+        )
+      )
       RETURNING user_id, username, name, email, avatar_url, auth_with_google, created_at;
     `;
 

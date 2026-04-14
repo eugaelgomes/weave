@@ -82,8 +82,19 @@ class GithubOauthRepository extends BaseRepository {
    */
   async createUserWithGithub(githubId, name, username, email, avatarUrl) {
     const query = `
-      INSERT INTO users (github_id, name, username, email, avatar_url, password, auth_with_github, email_verified, email_verified_at, created_at, updated_at) 
-      VALUES ($1, $2, $3, $4, $5, '', true, true, NOW(), NOW(), NOW()) 
+      INSERT INTO users (
+        github_id, name, username, email, avatar_url, password,
+        auth_with_github, email_verified, email_verified_at, created_at, updated_at, plan_id
+      ) 
+      VALUES (
+        $1, $2, $3, $4, $5, '', true, true, NOW(), NOW(), NOW(),
+        (
+          SELECT plan_id
+          FROM plans
+          WHERE LOWER(name) = 'starter' AND deleted = FALSE
+          LIMIT 1
+        )
+      ) 
       RETURNING *
     `;
     const results = await this.executeQuery(query, [

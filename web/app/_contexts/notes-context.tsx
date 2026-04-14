@@ -7,6 +7,7 @@ import {
   fetchNoteById as fetchNoteByIdService,
   createNote as createNoteService,
   createCompleteNote as createCompleteNoteService,
+  exportNoteAsPDF as exportNoteAsPDFService,
   updateNote as updateNoteService,
   deleteNote as deleteNoteService,
   deleteNotes as deleteNotesService,
@@ -81,6 +82,7 @@ export interface NotesContextType {
   updateNote: (noteId: string, noteData: UpdateNoteData) => Promise<Note | null>;
   deleteNote: (noteId: string) => Promise<boolean>;
   deleteNotes: (noteIds: string[]) => Promise<boolean>;
+  exportNoteAsPDF: (noteId: string) => Promise<{ blob: Blob; fileName: string } | null>;
 
   // Funções de dados derivados
   getRecentNotes: () => NoteOverview[];
@@ -144,6 +146,47 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     return cleanContent.length > 150 ? cleanContent.substring(0, 150) + "..." : cleanContent;
   };
 
+  const toOverview = useCallback(
+    (note: Note): NoteOverview => ({
+      id: note.id,
+      title: note.title || "Nota sem título",
+      properties: note.properties || {},
+      tags: note.tags || [],
+      lastModified: note.updated_at || note.created_at,
+      preview: extractPreview(note.description),
+      status: note.status || "sem_status",
+      collaboratorsCount: Array.isArray(note.collaborators) ? note.collaborators.length : 0,
+      collaborators: Array.isArray(note.collaborators) ? note.collaborators : [],
+      created_at: note.created_at,
+      updated_at: note.updated_at,
+      owner_name:
+        note.author?.name || note.author?.username || note.author?.email || note.name || note.email,
+      owner_avatar_url: getStorageUrl(note.author?.avatar_url || note.avatar_url || ""),
+    }),
+    []
+  );
+
+  const insertOrUpdateNoteLocally = useCallback(
+    (note: Note) => {
+      setNotes((prev) => {
+        const exists = prev.some((n) => n.id === note.id);
+        const next = [note, ...prev.filter((n) => n.id !== note.id)];
+        if (!exists) {
+          setNotesStats((current) => ({
+            ...current,
+            totalNotes: current.totalNotes + 1,
+          }));
+        }
+        return next;
+      });
+
+      const overview = toOverview(note);
+      setNotesOverview((prev) => [overview, ...prev.filter((n) => n.id !== note.id)]);
+      setLastFetch(new Date());
+    },
+    [toOverview]
+  );
+
   // 1. BUSCAR NOTAS (READ)
   const fetchNotes = useCallback(async () => {
     if (!user?.id) return;
@@ -160,26 +203,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       setNotes(notes);
 
       // Versão resumida para overview/carrossel
-      const overview: NoteOverview[] = notes.map((note: Note) => ({
-        id: note.id,
-        title: note.title || "Nota sem título",
-        properties: note.properties || {},
-        tags: note.tags || [],
-        lastModified: note.updated_at || note.created_at,
-        preview: extractPreview(note.description),
-        status: note.status || "sem_status",
-        collaboratorsCount: Array.isArray(note.collaborators) ? note.collaborators.length : 0,
-        collaborators: Array.isArray(note.collaborators) ? note.collaborators : [],
-        created_at: note.created_at,
-        updated_at: note.updated_at,
-        owner_name:
-          note.author?.name ||
-          note.author?.username ||
-          note.author?.email ||
-          note.name ||
-          note.email,
-        owner_avatar_url: getStorageUrl(note.author?.avatar_url || note.avatar_url || ""),
-      }));
+      const overview: NoteOverview[] = notes.map((note: Note) => toOverview(note));
 
       setNotesOverview(overview);
       setLastFetch(new Date());
@@ -210,7 +234,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, toOverview]);
 
   // 1.0.1. REFRESH MANUAL DE NOTAS
   const refreshNotes = useCallback(async () => {
@@ -238,22 +262,19 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     async (noteData: CreateNoteData): Promise<Note | null> => {
       if (!user?.id) return null;
 
-      setLoading(true);
       setError(null);
 
       try {
         const newNote = await createNoteService(noteData);
-        await fetchNotes(); // Atualiza a lista inteira após criar
+        insertOrUpdateNoteLocally(newNote);
         return newNote;
       } catch (err: unknown) {
         console.error("Erro ao criar nota:", err);
         setError(err instanceof Error ? err.message : "Erro ao criar nota");
         throw err; // Propaga o erro para ser tratado na UI
-      } finally {
-        setLoading(false);
       }
     },
-    [user?.id, fetchNotes]
+    [user?.id, insertOrUpdateNoteLocally]
   );
 
   // 2.1. CRIAR NOTA COMPLETA (CREATE COMPLETE)
@@ -261,22 +282,19 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     async (noteData: CreateNoteData): Promise<Note | null> => {
       if (!user?.id) return null;
 
-      setLoading(true);
       setError(null);
 
       try {
         const newNote = await createCompleteNoteService(noteData);
-        await fetchNotes(); // Atualiza a lista inteira após criar
+        insertOrUpdateNoteLocally(newNote);
         return newNote;
       } catch (err: unknown) {
         console.error("Erro ao criar nota completa:", err);
         setError(err instanceof Error ? err.message : "Erro ao criar nota completa");
         return null;
-      } finally {
-        setLoading(false);
       }
     },
-    [user?.id, fetchNotes]
+    [user?.id, insertOrUpdateNoteLocally]
   );
 
   // 3. ATUALIZAR NOTA (UPDATE)
@@ -367,6 +385,22 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       }
     },
     [user?.id, fetchNotes]
+  );
+
+  const exportNoteAsPDF = useCallback(
+    async (noteId: string): Promise<{ blob: Blob; fileName: string } | null> => {
+      if (!user?.id || !noteId) return null;
+
+      setError(null);
+      try {
+        return await exportNoteAsPDFService(noteId);
+      } catch (err: unknown) {
+        console.error("Erro ao exportar nota:", err);
+        setError(err instanceof Error ? err.message : "Erro ao exportar nota");
+        throw err;
+      }
+    },
+    [user?.id]
   );
 
   // --- DADOS DERIVADOS ---
@@ -589,6 +623,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     updateNote,
     deleteNote,
     deleteNotes,
+    exportNoteAsPDF,
     getRecentNotes,
     getNotesByTag,
     getNotesStats,
