@@ -1,25 +1,30 @@
 services:
-  # Backend
+  # Gateway de Segurança e SSL Automático
+  caddy:
+    image: caddy:2
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app-network
+
+  # Sua API Node.js
   server:
     build:
       context: ./server
       dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./server:/app
-      - /app/node_modules
+    restart: always
+    environment:
+      - NODE_ENV=production
     networks:
       - app-network
     command: npm start
-    develop:
-      watch:
-        - action: sync
-          path: ./server/src
-          target: /app/src
-        - action: rebuild
-          path: ./server/package.json
-  
+
   # # Frontend
   # web:
   #   build:
@@ -101,3 +106,7 @@ services:
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
