@@ -19,6 +19,8 @@ services:
       context: ./server
       dockerfile: Dockerfile
     restart: always
+    env_file:
+      - ./server/.env
     environment:
       - NODE_ENV=production
     networks:
