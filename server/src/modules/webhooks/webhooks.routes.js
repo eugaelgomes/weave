@@ -1,5 +1,6 @@
 const express = require("express");
-const webhooksController = require("./webhooks.controller");
+const GoogleOauthController = require("@/modules/webhooks/controllers/google-oauth.controller");
+const GoogleCalendarController = require("@/modules/webhooks/controllers/google-calendar.controller");
 const { verifyToken } = require("@/middlewares/verify-token");
 
 const router = express.Router();
@@ -7,41 +8,43 @@ const router = express.Router();
 router.get(
   "/google/auth",
   verifyToken,
-  webhooksController.googleAuth.bind(webhooksController)
+  GoogleOauthController.googleAuth.bind(GoogleOauthController)
 );
 
 router.get(
   "/google/callback",
-  webhooksController.googleCallback.bind(webhooksController)
+  GoogleOauthController.googleCallback.bind(GoogleOauthController)
 );
 
 router.post(
   "/google/calendar",
-  webhooksController.handleGoogleCalendarWebhook.bind(webhooksController)
+  GoogleCalendarController.handleGoogleCalendarWebhook.bind(
+    GoogleCalendarController
+  )
 );
 
 router.get(
   "/google/calendar/events",
   verifyToken,
-  webhooksController.getCalendarEvents.bind(webhooksController)
+  GoogleCalendarController.getCalendarEvents.bind(GoogleCalendarController)
 );
 
 router.get(
   "/google/calendar/stream",
   verifyToken,
-  webhooksController.streamCalendarEvents.bind(webhooksController)
+  GoogleCalendarController.streamCalendarEvents.bind(GoogleCalendarController)
 );
 
 router.get(
   "/google/calendar/status",
   verifyToken,
-  webhooksController.getCalendarStatus.bind(webhooksController)
+  GoogleCalendarController.getCalendarStatus.bind(GoogleCalendarController)
 );
 
 router.delete(
   "/google/calendar/disconnect",
   verifyToken,
-  webhooksController.disconnectCalendar.bind(webhooksController)
+  GoogleCalendarController.disconnectCalendar.bind(GoogleCalendarController)
 );
 
 module.exports = router;

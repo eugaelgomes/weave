@@ -1,6 +1,7 @@
-const tagsRepository = require("./tags.repository");
+const TagsRepository = require("@/modules/tags/repositories/tags.repository");
+const TagsBaseController = require("@/modules/tags/controllers/base.controller");
 
-class TagsController {
+class TagsController extends TagsBaseController {
   /**
    * Cria uma tag.
    *
@@ -10,15 +11,17 @@ class TagsController {
    */
   async createTag(req, res, next) {
     try {
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (userId == null) return;
+
       const { project_id, org_id } = req.params;
       const { name, color } = req.body;
-      const userId = req.user.userId;
 
       if (!name) {
         return res.status(400).json({ error: "Nome da tag é obrigatório" });
       }
 
-      const tag = await tagsRepository.createTag({
+      const tag = await TagsRepository.createTag({
         projectId: project_id || null,
         orgId: org_id || null,
         name,
@@ -41,7 +44,7 @@ class TagsController {
   async getTags(req, res, next) {
     try {
       const { project_id, org_id } = req.params;
-      const tags = await tagsRepository.getTags({
+      const tags = await TagsRepository.getTags({
         projectId: project_id || null,
         orgId: org_id || null,
       });
@@ -63,7 +66,7 @@ class TagsController {
       const { project_id, org_id, tag_id } = req.params;
       const { name, color } = req.body;
 
-      const tag = await tagsRepository.updateTag(tag_id, {
+      const tag = await TagsRepository.updateTag(tag_id, {
         projectId: project_id || null,
         orgId: org_id || null,
         updates: { name, color },
@@ -87,10 +90,12 @@ class TagsController {
    */
   async deleteTag(req, res, next) {
     try {
-      const { project_id, org_id, tag_id } = req.params;
-      const userId = req.user.userId;
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (userId == null) return;
 
-      const tag = await tagsRepository.deleteTag(tag_id, {
+      const { project_id, org_id, tag_id } = req.params;
+
+      const tag = await TagsRepository.deleteTag(tag_id, {
         projectId: project_id || null,
         orgId: org_id || null,
         deletedBy: userId,

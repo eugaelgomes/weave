@@ -27,7 +27,7 @@ const {
   formatContextForPrompt,
 } = require("@/services/weave-ai/context-reasoning/context-provider");
 const notesRepository = require("@/modules/notes/notes.repository");
-const projectsRepository = require("@/modules/projects/projects.repository");
+const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const { callAIProvider } = require("@/services/weave-ai/ai-service");
 const reasoningEngine = require("@/services/weave-ai/context-reasoning/reasoning-engine");
 

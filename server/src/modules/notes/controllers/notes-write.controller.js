@@ -1,7 +1,7 @@
 const NotesBaseController = require("./base.controller");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
-const taskPrioritiesRepository = require("@/modules/task_priorities/task_priorities.repository");
+const taskPrioritiesRepository = require("@/modules/task_priorities/repositories/task-priorities.repository");
 const { ALLOWED_NOTE_STATUSES } = require("@/utils/patterns/product-patterns");
 const spacesService = require("@/services/storage");
 

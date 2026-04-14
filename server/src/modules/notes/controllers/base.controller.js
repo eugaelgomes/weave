@@ -1,6 +1,6 @@
 const notesRepository = require("@/modules/notes/notes.repository");
 const blocksRepository = require("@/modules/notes/repositories/blocks.repository");
-const projectsRepository = require("@/modules/projects/projects.repository");
+const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 const {
   orgRoleHasPermission,

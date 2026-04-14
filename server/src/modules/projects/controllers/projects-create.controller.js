@@ -1,0 +1,245 @@
+const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
+const {
+  ALLOWED_PROJECT_STATUSES,
+} = require("@/utils/patterns/product-patterns");
+const PlanUsageManager = require("@/modules/plans/plans.controller");
+const PlansRepository = require("@/modules/plans/plans.repository");
+const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
+const { normalizeNewProject } = require("../normalizer");
+
+class ProjectsCreateController extends ProjectsCoreController {
+  /**
+   * POST /api/projects - Criar um novo projeto
+   * Cria um novo projeto para o usuário autenticado
+   */
+  async createProject(req, res, next) {
+    try {
+      const {
+        title,
+        description,
+        status,
+        properties,
+        methodology,
+        default_view,
+        org_id,
+        parent_project_id,
+      } = req.body;
+
+      // Validação de autenticação
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const getUserPlan = await PlansRepository.getUserAndPlan(userId);
+      const planDetails = await PlansRepository.getPlanById(
+        getUserPlan.plan_id
+      );
+
+      if (!usageRecord || !planDetails) {
+        return res.status(404).json({
+          error: "Configuração de plano não encontrada para este usuário.",
+        });
+      }
+
+      if (!planDetails.details) {
+        return res.status(500).json({
+          error: "Configuração de plano inválida",
+          message:
+            "O plano não possui configuração (details) no banco de dados.",
+        });
+      }
+
+      const getNestedValue = (obj, path) =>
+        path.split(".").reduce((acc, part) => acc && acc[part], obj);
+      const maxProjects = getNestedValue(
+        planDetails.details,
+        PLAN_PATHS.LIMITS.MAX_PROJECTS
+      );
+
+      if (maxProjects === undefined) {
+        return res.status(500).json({
+          error: "Configuração de plano inválida",
+          message: "O plano não possui limite de projetos configurado.",
+        });
+      }
+
+      const canCreate = PlanUsageManager.checkLimit(
+        planDetails.details,
+        usageRecord.usage_details,
+        USAGE_PATHS.SUMMARY.PROJECTS_TOTAL,
+        PLAN_PATHS.LIMITS.MAX_PROJECTS
+      );
+
+      if (!canCreate) {
+        return res.status(403).json({
+          error: "Limite de projetos atingido",
+          message: `Seu plano (${planDetails.name}) permite apenas ${maxProjects} projetos.`,
+        });
+      }
+
+      if (!title) {
+        throw new Error("Título é obrigatório");
+      }
+
+      const projectStatus =
+        status === undefined || status === null ? "open" : status;
+
+      if (!ALLOWED_PROJECT_STATUSES.includes(projectStatus)) {
+        return res.status(400).json({
+          error: `Status inválido. Permitidos: ${ALLOWED_PROJECT_STATUSES.join(", ")}`,
+        });
+      }
+
+      // 🟢 2. Valida as propriedades de UI/Design que o usuário enviou (color, icon, tags)
+      const userValidatedProps = properties
+        ? this._validateProperties(properties)
+        : {};
+
+      // 🟢 3. CHAMADA AO NORMALIZER
+      // Passamos os dados da requisição + as propriedades validadas pelo usuário
+      const payload = {
+        title,
+        description,
+        methodology,
+        default_view,
+        status: projectStatus,
+        parent_project_id,
+      };
+      const { projectData, stagesData } = normalizeNewProject(
+        payload,
+        userId,
+        org_id,
+        userValidatedProps // Injetamos as props do usuário para mesclar com as props de negócio
+      );
+
+      // 🟢 4. Persistência no banco de dados
+      // NOTA ARQUITETURAL: Como agora você tem projectData e stagesData,
+      // o método no Repository precisa salvar ambos usando uma Transaction SQL.
+      const result = await this.projectsRepository.createProjectWithStages(
+        projectData,
+        stagesData
+      );
+
+      if (!result || result.length === 0) {
+        throw new Error("Falha ao criar projeto");
+      }
+
+      // Incrementar o uso de projetos
+      await PlanUsageManager.consumeProjectCreation(usageRecord.id);
+
+      const newProject = result[0];
+
+      // Formatar e retornar o projeto criado
+      const formattedProject = this._formatProjectResponse(newProject);
+
+      // Opcional: Adicionar as stages à resposta para o front-end já renderizar o board
+      formattedProject.stages = result[0].stages || stagesData;
+
+      res.status(201).json(formattedProject);
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+  /**
+   * POST /api/projects/:projectId/collaborators - Adicionar colaborador
+   * Adiciona um usuário como colaborador do projeto
+   * @deprecated Use manageCollaborators com action: 'add'
+   */
+  async addCollaborator(req, res, next) {
+    try {
+      const { projectId } = req.params;
+      const { userId: collaboratorId, role = "viewer" } = req.body;
+
+      // Validação de autenticação
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      // Buscar/Criar registro de uso
+      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const getUserPlan = await PlansRepository.getUserAndPlan(userId);
+
+      // Buscar detalhes do plano
+      const planDetails = await PlansRepository.getPlanById(
+        getUserPlan.plan_id
+      );
+
+      if (!usageRecord || !planDetails) {
+        return res.status(404).json({
+          error: "Configuração de plano não encontrada para este usuário.",
+        });
+      }
+
+      const ctx = await this._getProjectOwnershipContext(projectId, userId);
+
+      // Validar limite de colaboradores por projeto
+      const collaborators = ctx.orgWide
+        ? await this.projectsRepository.getCollaboratorsWithOrgScope(
+            projectId,
+            ctx.membership.id
+          )
+        : await this.projectsRepository.getCollaborators(projectId, userId);
+      const currentCollaborators = collaborators[0]?.collaborators || [];
+      const maxCollaborators =
+        planDetails.details?.limits?.max_collaborators_per_project;
+
+      if (maxCollaborators && currentCollaborators.length >= maxCollaborators) {
+        return res.status(403).json({
+          error: "Limite de colaboradores atingido",
+          message: `Seu plano (${planDetails.name}) permite apenas ${maxCollaborators} colaboradores por projeto.`,
+        });
+      }
+
+      // Validação de dados obrigatórios
+      if (!collaboratorId) {
+        throw new Error("ID do colaborador é obrigatório");
+      }
+
+      // Validar role
+      const validRoles = ["admin", "viewer"];
+      if (!validRoles.includes(role)) {
+        throw new Error("Role inválido. Use 'admin' ou 'viewer'");
+      }
+
+      // Verificar se o usuário não está tentando adicionar a si mesmo
+      if (collaboratorId === userId) {
+        throw new Error("Você não pode adicionar a si mesmo como colaborador");
+      }
+
+      // Verificar se o colaborador já está ativo
+      const isAlreadyCollaborator =
+        await this.projectsRepository.isCollaborator(projectId, collaboratorId);
+
+      if (isAlreadyCollaborator) {
+        throw new Error("Usuário já é colaborador deste projeto");
+      }
+
+      const result = ctx.orgWide
+        ? await this.projectsRepository.addCollaboratorWithOrgManagement(
+            projectId,
+            ctx.membership.id,
+            userId,
+            collaboratorId,
+            role
+          )
+        : await this.projectsRepository.addCollaborator(
+            projectId,
+            userId,
+            collaboratorId,
+            role
+          );
+
+      if (!result || result.length === 0) {
+        throw new Error("Falha ao adicionar colaborador");
+      }
+
+      res.status(201).json({
+        message: "Colaborador adicionado com sucesso",
+        collaborators: result[0].collaborators,
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+}
+
+module.exports = new ProjectsCreateController();

@@ -1,5 +1,5 @@
 const { Router } = require("express");
-const tagsController = require("./tags.controller");
+const TagsController = require("@/modules/tags/controllers/tags.controller");
 const { verifyToken } = require("@/middlewares/verify-token");
 const { requireOrgPermission } = require("@/middlewares/require-org-permission");
 const { ORG_PERMISSIONS } = require("@/modules/organizations/organization-role-policy");
@@ -10,31 +10,39 @@ const requireManageTags = requireOrgPermission(ORG_PERMISSIONS.MANAGE_TAGS);
 
 router.use(verifyToken);
 
-router.post("/:project_id/tags", requireManageTags, tagsController.createTag);
-router.get("/:project_id/tags", tagsController.getTags);
+router.post(
+  "/:project_id/tags",
+  requireManageTags,
+  TagsController.createTag.bind(TagsController)
+);
+router.get("/:project_id/tags", TagsController.getTags.bind(TagsController));
 router.patch(
   "/:project_id/tags/:tag_id",
   requireManageTags,
-  tagsController.updateTag
+  TagsController.updateTag.bind(TagsController)
 );
 router.delete(
   "/:project_id/tags/:tag_id",
   requireManageTags,
-  tagsController.deleteTag
+  TagsController.deleteTag.bind(TagsController)
 );
 
 // Backward compatibility during migration from org-scoped tags to project-scoped tags.
-router.post("/:org_id/tags", requireManageTags, tagsController.createTag);
-router.get("/:org_id/tags", tagsController.getTags);
+router.post(
+  "/:org_id/tags",
+  requireManageTags,
+  TagsController.createTag.bind(TagsController)
+);
+router.get("/:org_id/tags", TagsController.getTags.bind(TagsController));
 router.patch(
   "/:org_id/tags/:tag_id",
   requireManageTags,
-  tagsController.updateTag
+  TagsController.updateTag.bind(TagsController)
 );
 router.delete(
   "/:org_id/tags/:tag_id",
   requireManageTags,
-  tagsController.deleteTag
+  TagsController.deleteTag.bind(TagsController)
 );
 
 module.exports = router;

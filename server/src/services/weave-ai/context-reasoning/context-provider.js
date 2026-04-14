@@ -5,7 +5,7 @@
  */
 
 const notesRepository = require("@/modules/notes/notes.repository");
-const projectsRepository = require("@/modules/projects/projects.repository");
+const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const CreateUsersRepository = require("@/modules/users/repositories/create-users.repository");
 const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");

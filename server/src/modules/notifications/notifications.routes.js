@@ -1,5 +1,8 @@
 const express = require("express");
-const notificationsController = require("@/modules/notifications/notifications.controller");
+const NotificationsListController = require("@/modules/notifications/controllers/notifications-list.controller");
+const NotificationsCreateController = require("@/modules/notifications/controllers/notifications-create.controller");
+const NotificationsUpdateController = require("@/modules/notifications/controllers/notifications-update.controller");
+const NotificationsDeleteController = require("@/modules/notifications/controllers/notifications-delete.controller");
 const { verifyToken } = require("@/middlewares/verify-token");
 const {
   highTrafficLimiter,
@@ -13,37 +16,45 @@ router.use(verifyToken);
 router.get(
   "/",
   highTrafficLimiter,
-  notificationsController.listNotifications.bind(notificationsController)
+  NotificationsListController.listNotifications.bind(NotificationsListController)
 );
 
 router.post(
   "/",
   standardTrafficLimiter,
-  notificationsController.createNotification.bind(notificationsController)
+  NotificationsCreateController.createNotification.bind(
+    NotificationsCreateController
+  )
 );
 
 router.patch(
   "/mark-all-read",
   standardTrafficLimiter,
-  notificationsController.markAllAsRead.bind(notificationsController)
+  NotificationsUpdateController.markAllAsRead.bind(NotificationsUpdateController)
 );
 
 router.patch(
   "/:notificationId/read",
   standardTrafficLimiter,
-  notificationsController.markNotificationRead.bind(notificationsController)
+  NotificationsUpdateController.markNotificationRead.bind(
+    NotificationsUpdateController
+  )
 );
 
 router.patch(
   "/:notificationId/trash",
   standardTrafficLimiter,
-  notificationsController.toggleTrashStatus.bind(notificationsController)
+  NotificationsUpdateController.toggleTrashStatus.bind(
+    NotificationsUpdateController
+  )
 );
 
 router.delete(
   "/:notificationId",
   standardTrafficLimiter,
-  notificationsController.deleteNotification.bind(notificationsController)
+  NotificationsDeleteController.deleteNotification.bind(
+    NotificationsDeleteController
+  )
 );
 
 module.exports = router;

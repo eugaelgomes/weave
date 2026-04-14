@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const BackupBaseController = require("./base.controller");
 const FetchBackupDataRepository = require("@/modules/backup/repositories/fetch-backup-data.repository");
 const BackupDownloadTokensRepository = require("@/modules/backup/repositories/backup-download-tokens.repository");
-const NotificationsRepository = require("@/modules/notifications/notifications.repository");
+const NotificationsRepository = require("@/modules/notifications/repositories/notifications.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const jobManager = require("@/services/jobs/index");
 const {

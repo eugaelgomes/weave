@@ -1,4 +1,4 @@
-const { executeQuery, rowCount } = require("@/database/connection");
+const { executeQuery } = require("@/database/connection");
 
 class TagsRepository {
   /**

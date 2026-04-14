@@ -1,5 +1,8 @@
 const express = require("express");
-const projectsController = require("@/modules/projects/projects.controller");
+const ProjectsReadController = require("@/modules/projects/controllers/projects-read.controller");
+const ProjectsCreateController = require("@/modules/projects/controllers/projects-create.controller");
+const ProjectsUpdateController = require("@/modules/projects/controllers/projects-update.controller");
+const ProjectsDeleteController = require("@/modules/projects/controllers/projects-delete.controller");
 const { verifyToken } = require("@/middlewares/verify-token");
 const { requireOrgPermission } = require("@/middlewares/require-org-permission");
 const { ORG_PERMISSIONS } = require("@/modules/organizations/organization-role-policy");
@@ -15,39 +18,40 @@ const requireManageProjects = requireOrgPermission(ORG_PERMISSIONS.MANAGE_PROJEC
 
 router.use(verifyToken);
 
-// Leitura de projetos (Alto fluxo)
 router.get(
   "/",
   highTrafficLimiter,
-  projectsController.getAllProjects.bind(projectsController)
+  ProjectsReadController.getAllProjects.bind(ProjectsReadController)
 );
 router.get(
   "/stats",
   highTrafficLimiter,
-  projectsController.getProjectStats.bind(projectsController)
+  ProjectsReadController.getProjectStats.bind(ProjectsReadController)
 );
 
-// Modificações (Fluxo moderado)
 router.post(
   "/",
   standardTrafficLimiter,
   requireManageProjects,
-  projectsController.createProject.bind(projectsController)
+  ProjectsCreateController.createProject.bind(ProjectsCreateController)
 );
 router.patch(
   "/:projectId",
   standardTrafficLimiter,
   requireManageProjects,
-  projectsController.updateProject.bind(projectsController)
+  ProjectsUpdateController.updateProject.bind(ProjectsUpdateController)
 );
 router.delete(
   "/:projectId",
   standardTrafficLimiter,
   requireManageProjects,
-  projectsController.deleteProject.bind(projectsController)
+  ProjectsDeleteController.deleteProject.bind(ProjectsDeleteController)
 );
 
-router.get("/:id", projectsController.getProjectById.bind(projectsController));
+router.get(
+  "/:id",
+  ProjectsReadController.getProjectById.bind(ProjectsReadController)
+);
 
 router.put(
   "/:id",
@@ -56,42 +60,45 @@ router.put(
     { maxCount: 1, name: "icon" },
     { maxCount: 10, name: "files" },
   ]),
-  projectsController.updateProject.bind(projectsController)
+  ProjectsUpdateController.updateProject.bind(ProjectsUpdateController)
 );
 
 router.delete(
   "/:id",
   requireManageProjects,
-  projectsController.deleteProject.bind(projectsController)
+  ProjectsDeleteController.deleteProject.bind(ProjectsDeleteController)
 );
 
-router.get("/:id", projectsController.getProjectById.bind(projectsController));
+router.get(
+  "/:id",
+  ProjectsReadController.getProjectById.bind(ProjectsReadController)
+);
 
 router.get(
   "/:id/stages",
-  projectsController.getProjectStages.bind(projectsController)
+  ProjectsReadController.getProjectStages.bind(ProjectsReadController)
 );
 
 router
   .route("/:projectId/collaborators")
-  .get(projectsController.getCollaborators.bind(projectsController))
+  .get(ProjectsReadController.getCollaborators.bind(ProjectsReadController))
   .put(
     requireManageProjects,
-    projectsController.manageCollaborators.bind(projectsController)
+    ProjectsUpdateController.manageCollaborators.bind(ProjectsUpdateController)
   );
 
 router
   .route("/:projectId/notes")
-  .get(projectsController.getAssociatedNotes.bind(projectsController))
+  .get(ProjectsReadController.getAssociatedNotes.bind(ProjectsReadController))
   .put(
     requireManageProjects,
-    projectsController.manageNotes.bind(projectsController)
+    ProjectsUpdateController.manageNotes.bind(ProjectsUpdateController)
   );
 
 router.put(
   "/:projectId/notes/:noteId/stage",
   requireManageProjects,
-  projectsController.updateNoteStage.bind(projectsController)
+  ProjectsUpdateController.updateNoteStage.bind(ProjectsUpdateController)
 );
 
 module.exports = router;

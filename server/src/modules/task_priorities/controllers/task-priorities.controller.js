@@ -1,6 +1,7 @@
-const taskPrioritiesRepository = require("./task_priorities.repository");
+const TaskPrioritiesRepository = require("@/modules/task_priorities/repositories/task-priorities.repository");
+const TaskPrioritiesBaseController = require("@/modules/task_priorities/controllers/base.controller");
 
-class TaskPrioritiesController {
+class TaskPrioritiesController extends TaskPrioritiesBaseController {
   /**
    * Cria uma prioridade de tarefa.
    *
@@ -10,15 +11,17 @@ class TaskPrioritiesController {
    */
   async createPriority(req, res, next) {
     try {
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (userId == null) return;
+
       const { project_id, org_id } = req.params;
       const { name, color, level } = req.body;
-      const userId = req.user.userId;
 
       if (!name || level === undefined) {
         return res.status(400).json({ error: "Nome e nível são obrigatórios" });
       }
 
-      const priority = await taskPrioritiesRepository.createPriority({
+      const priority = await TaskPrioritiesRepository.createPriority({
         projectId: project_id || null,
         orgId: org_id || null,
         name,
@@ -42,7 +45,7 @@ class TaskPrioritiesController {
   async getPriorities(req, res, next) {
     try {
       const { project_id, org_id } = req.params;
-      const priorities = await taskPrioritiesRepository.getPriorities({
+      const priorities = await TaskPrioritiesRepository.getPriorities({
         projectId: project_id || null,
         orgId: org_id || null,
       });
@@ -64,7 +67,7 @@ class TaskPrioritiesController {
       const { project_id, org_id, priority_id } = req.params;
       const { name, color, level } = req.body;
 
-      const priority = await taskPrioritiesRepository.updatePriority(
+      const priority = await TaskPrioritiesRepository.updatePriority(
         priority_id,
         {
           projectId: project_id || null,
@@ -91,10 +94,12 @@ class TaskPrioritiesController {
    */
   async deletePriority(req, res, next) {
     try {
-      const { project_id, org_id, priority_id } = req.params;
-      const userId = req.user.userId;
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (userId == null) return;
 
-      const priority = await taskPrioritiesRepository.deletePriority(
+      const { project_id, org_id, priority_id } = req.params;
+
+      const priority = await TaskPrioritiesRepository.deletePriority(
         priority_id,
         {
           projectId: project_id || null,

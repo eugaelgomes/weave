@@ -1,5 +1,5 @@
 const NotesBaseController = require("./base.controller");
-const NotificationsRepository = require("@/modules/notifications/notifications.repository");
+const NotificationsRepository = require("@/modules/notifications/repositories/notifications.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");

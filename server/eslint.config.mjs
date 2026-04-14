@@ -2,10 +2,19 @@ import globals from "globals";
 import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
 
-export default [
-  pluginJs.configs.recommended,
+/** Arquivos .js que o Babel trata como ESM (export) */
+const jsEsmModuleFiles = [
+  "src/utils/patterns/product-patterns.js",
+  "src/services/note_export/pdf.js",
+];
+
+export default tseslint.config(
+  {
+    ignores: ["dist/**", "node_modules/**"],
+  },
   {
     files: ["**/*.{js,mjs,cjs}"],
+    ...pluginJs.configs.recommended,
     languageOptions: {
       globals: {
         ...globals.node,
@@ -31,18 +40,31 @@ export default [
     },
   },
   {
-    files: ["**/*.ts"],
+    files: jsEsmModuleFiles,
     languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
       globals: {
         ...globals.node,
       },
-      ecmaVersion: 2022,
-      sourceType: "module",
     },
-    plugins: {
-      "@typescript-eslint": tseslint.plugin,
+  },
+  {
+    files: ["**/*.ts"],
+    extends: [
+      pluginJs.configs.recommended,
+      ...tseslint.configs.recommended,
+      ...tseslint.configs.recommendedTypeChecked,
+    ],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
     rules: {
+      // typescript-eslint 8.2 + ESLint 9.35+: opções do base `no-unused-expressions` incompatíveis
+      "@typescript-eslint/no-unused-expressions": "off",
       "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/no-unused-vars": [
         "warn",
@@ -55,7 +77,4 @@ export default [
       "sort-keys": ["warn", "asc", { caseSensitive: false, natural: true }],
     },
   },
-  {
-    ignores: ["dist/**", "node_modules/**"],
-  },
-];
+);

@@ -1,5 +1,5 @@
 const calendarEventsRepository = require("@/modules/calendar-events/repositories/calendar-events.repository");
-const webhooksRepository = require("@/modules/webhooks/webhooks.repository");
+const GoogleOauthTokensRepository = require("@/modules/webhooks/repositories/google-oauth-tokens.repository");
 const googleService = require("@/hooks/google/google-calendar");
 
 const {
@@ -30,7 +30,7 @@ class CalendarEventsController {
   }
 
   async _syncEventToGoogle(payload) {
-    const tokens = await webhooksRepository.getGoogleTokens(payload.creatorId);
+    const tokens = await GoogleOauthTokensRepository.getGoogleTokens(payload.creatorId);
     if (!tokens) {
       throw new Error("Google Calendar nao conectado");
     }
@@ -60,7 +60,7 @@ class CalendarEventsController {
       const newExpiry = refreshed.expiry_date
         ? new Date(refreshed.expiry_date)
         : null;
-      await webhooksRepository.updateGoogleAccessToken(
+      await GoogleOauthTokensRepository.updateGoogleAccessToken(
         payload.creatorId,
         refreshed.access_token,
         newExpiry
@@ -275,7 +275,7 @@ class CalendarEventsController {
       const creatorId = this._requireAuthentication(req, res);
       if (!creatorId) return;
 
-      const tokens = await webhooksRepository.getGoogleTokens(creatorId);
+      const tokens = await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
       if (!tokens)
         return res.status(400).json({ error: "Google Calendar não conectado" });
 
@@ -299,7 +299,7 @@ class CalendarEventsController {
       const creatorId = this._requireAuthentication(req, res);
       if (!creatorId) return;
 
-      const tokens = await webhooksRepository.getGoogleTokens(creatorId);
+      const tokens = await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
       if (!tokens)
         return res.status(400).json({ error: "Google Calendar não conectado" });
 
@@ -323,7 +323,7 @@ class CalendarEventsController {
       const creatorId = this._requireAuthentication(req, res);
       if (!creatorId) return;
 
-      const tokens = await webhooksRepository.getGoogleTokens(creatorId);
+      const tokens = await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
       if (!tokens)
         return res.status(400).json({ error: "Google Calendar não conectado" });
 
