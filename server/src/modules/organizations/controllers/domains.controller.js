@@ -118,6 +118,15 @@ class OrganizationDomainsController extends OrganizationsBaseController {
           .json({ success: false, error: "Organization not found" });
       }
 
+      if (
+        !this._ensureOrgPermission(
+          organization,
+          this._orgPermissions.MANAGE_DOMAINS,
+          res
+        )
+      )
+        return;
+
       const { domain_name: domainName } = req.body;
       if (!domainName) {
         return res.status(400).json({
@@ -196,6 +205,15 @@ class OrganizationDomainsController extends OrganizationsBaseController {
           .json({ success: false, error: "Organization not found" });
       }
 
+      if (
+        !this._ensureOrgPermission(
+          organization,
+          this._orgPermissions.MANAGE_DOMAINS,
+          res
+        )
+      )
+        return;
+
       const { domainId } = req.params;
       const domain = await this.domainRepository.findById(domainId);
 
@@ -273,6 +291,15 @@ class OrganizationDomainsController extends OrganizationsBaseController {
           .json({ success: false, error: "Organization not found" });
       }
 
+      if (
+        !this._ensureOrgPermission(
+          organization,
+          this._orgPermissions.MANAGE_DOMAINS,
+          res
+        )
+      )
+        return;
+
       const { domainId } = req.params;
       const domain = await this.domainRepository.findById(domainId);
 
@@ -325,6 +352,15 @@ class OrganizationDomainsController extends OrganizationsBaseController {
           .status(404)
           .json({ success: false, error: "Organization not found" });
       }
+
+      if (
+        !this._ensureOrgPermission(
+          organization,
+          this._orgPermissions.MANAGE_DOMAINS,
+          res
+        )
+      )
+        return;
 
       const { domainId } = req.params;
       const domain = await this.domainRepository.findById(domainId);

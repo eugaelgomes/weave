@@ -3,8 +3,82 @@ const {
   rowCount,
   getConnection,
 } = require("@/database/connection");
+const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
 
 class OrganizationsRepository {
+  /**
+   * Papel do utilizador na organização (organizations_members.role).
+   * @param {string} org_id
+   * @param {string} user_id
+   * @returns {Promise<string|null>}
+   */
+  async getMembershipRole(org_id, user_id) {
+    const query = `
+      SELECT role FROM organizations_members
+      WHERE org_id = $1 AND user_id = $2 AND deleted = false
+      LIMIT 1;
+    `;
+    const rows = await executeQuery(query, [org_id, user_id]);
+    return rows[0]?.role ?? null;
+  }
+
+  /**
+   * Organização ativa do utilizador com `member_role` para o motor de permissões.
+   * Usa membership; se só existir como owner legacy sem linha em members, usa fallback.
+   */
+  async getActiveOrganizationWithMembership(user_id) {
+    const query = `
+    SELECT
+      o.id,
+      o.user_id,
+      o.org_name,
+      o.unique_name,
+      o.logo_url,
+      o.banner_url,
+      o.description,
+      o.basic_properties AS properties,
+      o.org_domains,
+      o.deleted,
+      o.created_at,
+      o.updated_at,
+      o.settings,
+      o.plan AS plan_snapshot,
+      o.address,
+      o.delete_at,
+      o.deleted_by,
+      o.plan_id,
+      o.branding_properties,
+      o.integrations,
+      p.name as plan_name,
+      p.details as plan_details,
+      p.plan_value,
+      p.currency,
+      p.billing_cycle,
+      u.avatar_url,
+      u.name,
+      u.username,
+      u.email,
+      om.role AS member_role
+    FROM organizations_members om
+    INNER JOIN organizations o ON o.id = om.org_id AND o.deleted = false
+    LEFT JOIN plans p ON p.plan_id = o.plan_id
+    LEFT JOIN users u ON u.user_id = o.user_id
+    WHERE om.user_id = $1 AND om.deleted = false
+    ORDER BY om.created_at ASC
+    LIMIT 1;
+    `;
+    const rows = await executeQuery(query, [user_id]);
+    if (rows[0]) return rows[0];
+
+    const owned = (await this.getOrgsByUserId(user_id)).find((o) => !o.deleted);
+    if (!owned) return null;
+    const role = await this.getMembershipRole(owned.id, user_id);
+    return {
+      ...owned,
+      member_role: role || ORG_ROLES.SUPER_ADMIN,
+    };
+  }
+
   async getOrgsByUserId(user_id) {
     const query = `
     SELECT
@@ -296,17 +370,27 @@ class OrganizationsRepository {
     org_domains
   ) {
     const query = `
-      UPDATE organizations
-      SET user_id = $2,
-          org_name = $3,
+      UPDATE organizations o
+      SET org_name = $3,
           unique_name = $4,
           logo_url = $5,
           banner_url = $6,
           description = $7,
           basic_properties = $8::jsonb,
           deleted = $9,
-          org_domains = $10::text[]
-      WHERE id = $1 and user_id = $2
+          org_domains = $10::text[],
+          updated_at = NOW()
+      WHERE o.id = $1
+        AND (
+          o.user_id = $2
+          OR EXISTS (
+            SELECT 1 FROM organizations_members om
+            WHERE om.org_id = o.id
+              AND om.user_id = $2
+              AND om.deleted = false
+              AND om.role = 'super_admin'
+          )
+        )
       RETURNING
         id,
         user_id,
@@ -343,11 +427,16 @@ class OrganizationsRepository {
     role,
     invited_by,
     name = null,
-    username = null
+    username = null,
+    area_id = null,
+    area_member_role = null
   ) {
     const query = `
-      INSERT INTO invite_org_members (org_id, email, name, username, role, invited_by, expires_at)
-      VALUES ($1, $2, $3, $4, $5, $6, NOW() + INTERVAL '7 days')
+      INSERT INTO organization_invites_members (
+        org_id, email, name, username, role, invited_by, expires_at,
+        area_id, area_member_role
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, NOW() + INTERVAL '7 days', $7, $8)
       RETURNING *;
     `;
     const results = await executeQuery(query, [
@@ -357,15 +446,20 @@ class OrganizationsRepository {
       username,
       role,
       invited_by,
+      area_id,
+      area_member_role,
     ]);
     return results[0];
   }
 
   async findOrgInviteByToken(invite_id) {
     const query = `
-      SELECT i.*, o.org_name, o.unique_name as org_unique_name
-      FROM invite_org_members i
+      SELECT i.*, o.org_name, o.unique_name as org_unique_name,
+        a.area_name AS area_name
+      FROM organization_invites_members i
       JOIN organizations o ON o.id = i.org_id
+      LEFT JOIN organizations_areas a
+        ON a.id = i.area_id AND a.organization_id = i.org_id AND a.deleted = false
       WHERE i.invite_id = $1 
         AND i.deleted = false 
         AND i.invite_verified = false
@@ -377,7 +471,7 @@ class OrganizationsRepository {
 
   async getAllOrgInvites(org_id) {
     const query = `
-      SELECT * FROM invite_org_members
+      SELECT * FROM organization_invites_members
       WHERE org_id = $1 
       ORDER BY created_at DESC;
     `;
@@ -386,7 +480,7 @@ class OrganizationsRepository {
 
   async getPendingOrgInvites(org_id) {
     const query = `
-      SELECT * FROM invite_org_members
+      SELECT * FROM organization_invites_members
       WHERE org_id = $1 
         AND deleted = false 
         AND invite_verified = false
@@ -398,7 +492,7 @@ class OrganizationsRepository {
 
   async verifyOrgInvite(invite_id) {
     const query = `
-      UPDATE invite_org_members
+      UPDATE organization_invites_members
       SET invite_verified = true, updated_at = NOW()
       WHERE invite_id = $1
       RETURNING *;
@@ -409,7 +503,7 @@ class OrganizationsRepository {
 
   async deleteOrgInvite(invite_id) {
     const query = `
-      UPDATE invite_org_members
+      UPDATE organization_invites_members
       SET deleted = true, updated_at = NOW()
       WHERE invite_id = $1
       RETURNING *;
@@ -420,7 +514,7 @@ class OrganizationsRepository {
 
   async checkExistingInvite(org_id, email) {
     const query = `
-      SELECT * FROM invite_org_members
+      SELECT * FROM organization_invites_members
       WHERE org_id = $1 
         AND LOWER(email) = LOWER($2)
         AND deleted = false 
@@ -435,7 +529,7 @@ class OrganizationsRepository {
     const query = `
 WITH user_check AS (
     SELECT 1 FROM organizations_members 
-    WHERE org_id = $1 AND user_id = $3 AND role IN ('super_admin', 'admin')
+    WHERE org_id = $1 AND user_id = $3 AND role = 'super_admin' AND deleted = false
 )
 UPDATE organizations
 SET logo_url = $2, updated_at = NOW()
@@ -450,7 +544,7 @@ RETURNING *;
     const query = `
 WITH user_check AS (
     SELECT 1 FROM organizations_members 
-    WHERE org_id = $1 AND user_id = $3 AND role IN ('super_admin', 'admin')
+    WHERE org_id = $1 AND user_id = $3 AND role = 'super_admin' AND deleted = false
 )
 UPDATE organizations
 SET banner_url = $2, updated_at = NOW()

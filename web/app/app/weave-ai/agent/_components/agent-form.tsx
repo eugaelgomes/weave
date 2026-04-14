@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bot,
@@ -17,8 +17,10 @@ import {
   X,
   Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useAgent } from "@/app/_contexts/agent-context";
 import { Agent, CreateAgentData } from "@/app/_services/ai-agent-service/agent-service";
+import { cn } from "@/lib/utils";
 
 const AI_MODELS = [
   { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash", provider: "Google", providerId: "gemini" },
@@ -34,27 +36,53 @@ const AI_MODELS = [
 const CAPABILITIES = [
   {
     id: "web_search",
-    label: "Web Search",
+    label: "Busca na web",
     icon: Globe,
-    description: "Internet access for current info.",
+    description: "Acesso à internet para informações atuais.",
   },
   {
     id: "code_interpreter",
-    label: "Code Interpreter",
+    label: "Interpretador de código",
     icon: Code2,
-    description: "Execute Python code and analysis.",
+    description: "Executar e analisar código (ex.: Python).",
   },
   {
     id: "image_generation",
-    label: "Image Generation",
+    label: "Geração de imagens",
     icon: ImageIcon,
-    description: "Generate images from text.",
+    description: "Criar imagens a partir de texto.",
   },
 ];
+
+const INSTRUCTIONS_MAX = 4000;
 
 interface AgentFormProps {
   initialData?: Agent;
   isEditing?: boolean;
+}
+
+function SectionTitle({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="border-b border-neutral-100 px-4 py-3 dark:border-neutral-800">
+      <div className="flex items-start gap-2">
+        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-primary-500/12 text-brand-primary-600 dark:text-brand-primary-400">
+          <Icon className="h-4 w-4" />
+        </div>
+        <div>
+          <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-50">{title}</h2>
+          {description ? <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">{description}</p> : null}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
@@ -83,11 +111,17 @@ export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
     if (e.target.files && e.target.files.length > 0) {
       setFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
     }
+    e.target.value = "";
   };
 
   const handleSave = async () => {
-    if (!name || !description || !instructions) {
-      alert("Please fill in all required fields");
+    if (!name.trim() || !description.trim() || !instructions.trim()) {
+      toast.error("Preencha nome, descrição e instruções.");
+      return;
+    }
+
+    if (instructions.length > INSTRUCTIONS_MAX) {
+      toast.error(`Instruções ultrapassam ${INSTRUCTIONS_MAX} caracteres.`);
       return;
     }
 
@@ -95,12 +129,12 @@ export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
     try {
       const selectedModel = AI_MODELS.find((m) => m.id === modelId);
       const data: CreateAgentData = {
-        name,
-        description,
-        instructions,
-        role,
-        tone,
-        language,
+        name: name.trim(),
+        description: description.trim(),
+        instructions: instructions.trim(),
+        role: role.trim() || "assistant",
+        tone: tone.trim() || "professional",
+        language: language.trim() || "pt-BR",
         tags: tags
           .split(",")
           .map((t) => t.trim())
@@ -113,15 +147,16 @@ export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
 
       if (isEditing && initialData?.id) {
         await updateAgent(initialData.id, data);
+        toast.success("Agente atualizado.");
         router.refresh();
         return;
-      } else {
-        const newAgent = await createAgent(data);
-        router.push(`/app/weave-ai/agent/${newAgent.id}`);
       }
+      const newAgent = await createAgent(data);
+      toast.success("Agente criado.");
+      router.push(`/app/weave-ai/agent/${newAgent.id}`);
     } catch (error) {
       console.error("Error saving agent:", error);
-      alert("Failed to save agent");
+      toast.error("Não foi possível salvar o agente. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -132,299 +167,290 @@ export function AgentForm({ initialData, isEditing = false }: AgentFormProps) {
       router.push(`/app/weave-ai/agent/${initialData.id}`);
       return;
     }
-
     router.push("/app/weave-ai/agent");
   };
 
+  const inputClass =
+    "h-9 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100";
+
   return (
-    <div className="flex h-full flex-col bg-white dark:bg-neutral-950">
-      <div className="custom-scrollbar flex-1 overflow-y-auto px-2 py-1">
-        <div className="mx-auto w-full max-w-4xl space-y-1.5">
-          <div className="flex items-center justify-between rounded-sm border border-l-2 border-neutral-200 border-yellow-500/80 bg-neutral-50 px-2 py-1.5 text-[10px] dark:border-neutral-800 dark:bg-neutral-900">
-            <div className="flex flex-col">
-              <h1 className="text-[11px] font-semibold tracking-[0.3em] text-neutral-800 dark:text-neutral-100">
-                {isEditing ? "Edit Agent" : "New Agent"}
-              </h1>
-              <p className="text-[9px] text-neutral-500">Configure assistant identity and logic.</p>
-            </div>
-            <div className="flex gap-1">
-              <button
-                onClick={handleCancel}
-                className="inline-flex h-5 items-center justify-center rounded-sm border border-neutral-200 bg-white px-2 text-[9px] font-medium text-neutral-600 hover:text-yellow-600 dark:border-neutral-800 dark:bg-neutral-950"
-              >
-                <X className="mr-1 h-3 w-3" />
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={loading}
-                className="inline-flex h-5 items-center justify-center rounded-sm border border-yellow-500 bg-brand-primary-500/95 px-2 text-[9px] font-semibold text-neutral-900 disabled:opacity-50"
-              >
-                {loading ? (
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                ) : (
-                  <Save className="mr-1 h-3 w-3" />
-                )}
-                {isEditing ? "Update" : "Save"}
-              </button>
+    <div className="flex min-h-full flex-col bg-neutral-50/60 dark:bg-neutral-950">
+      <header className="sticky top-0 z-10 border-b border-neutral-200/90 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-950/95">
+        <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wider text-brand-primary-600 dark:text-brand-primary-400">
+              {isEditing ? "Editar agente" : "Novo agente"}
+            </p>
+            <h1 className="truncate text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+              {isEditing ? name || "Agente" : "Configurar assistente"}
+            </h1>
+            <p className="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
+              Identidade, comportamento, modelo e arquivos de apoio.
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
+            >
+              <X className="h-4 w-4" />
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={loading}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-primary-500 px-4 py-2 text-sm font-semibold text-neutral-900 shadow-sm transition hover:bg-brand-primary-400 disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {isEditing ? "Salvar alterações" : "Criar agente"}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-6">
+        <div className="mx-auto w-full max-w-5xl space-y-6">
+          <div className="rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+            <SectionTitle
+              icon={Bot}
+              title="Identidade"
+              description="Como o agente se apresenta e em que contexto deve ajudar."
+            />
+            <div className="p-4">
+              <div className="mb-4 flex gap-4">
+                <div
+                  className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl border border-dashed border-neutral-300 bg-neutral-50 text-neutral-400 dark:border-neutral-600 dark:bg-neutral-900"
+                  title="Avatar opcional — em breve"
+                >
+                  <Sparkles className="h-5 w-5 text-brand-primary-500" />
+                  <span className="mt-0.5 text-[9px] font-medium uppercase tracking-wide">Logo</span>
+                </div>
+                <p className="self-center text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+                  O nome e a descrição aparecem na lista de agentes. Use a função (papel) para lembrar a si e à equipe para que serve.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300">Nome do agente *</label>
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className={inputClass}
+                    placeholder="Ex.: Analista de dados"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300">Descrição curta *</label>
+                  <input
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className={inputClass}
+                    placeholder="Uma linha sobre o que ele faz"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300">Papel / função</label>
+                  <input
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className={inputClass}
+                    placeholder="Ex.: Assistente de vendas"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300">Tom</label>
+                  <input
+                    value={tone}
+                    onChange={(e) => setTone(e.target.value)}
+                    className={inputClass}
+                    placeholder="Ex.: Profissional, direto"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300">Idioma</label>
+                  <input
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className={inputClass}
+                    placeholder="pt-BR, en-US…"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300">Tags</label>
+                  <input
+                    value={tags}
+                    onChange={(e) => setTags(e.target.value)}
+                    className={inputClass}
+                    placeholder="Separadas por vírgula: vendas, crm, b2b"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-1.5 lg:grid-cols-12">
-            {/* Left: Identity & Core Logic */}
-            <div className="space-y-1.5 lg:col-span-7">
-              {/* Identity Section */}
-              <div className="rounded-sm border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
-                <div className="flex items-center gap-1 border-b border-neutral-100 px-2 py-1.5 text-[9px] font-semibold tracking-[0.3em] text-neutral-600 dark:border-neutral-800">
-                  <Bot className="h-3 w-3 text-brand-primary-500" />
-                  <span>Identity</span>
-                </div>
-                <div className="p-2">
-                  <div className="flex items-center gap-2">
-                    <button className="group relative flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-dashed border-neutral-300 bg-neutral-50 text-neutral-500 transition hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-900">
-                      <Sparkles className="h-3 w-3" />
-                      <div className="absolute -right-1 -bottom-1 flex h-3 w-3 items-center justify-center rounded-full bg-brand-primary-500 text-[7px] font-bold text-neutral-900">
-                        +
-                      </div>
-                    </button>
-                    <div className="flex-1 space-y-1">
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <div className="space-y-0.5">
-                          <label className="text-[8px] font-semibold tracking-widest text-neutral-400">
-                            Agent Name
-                          </label>
-                          <input
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="flex h-6 w-full rounded-sm border border-neutral-200 bg-neutral-50 px-1.5 text-[10px] focus:border-yellow-500 focus:bg-white focus:outline-none dark:border-neutral-800 dark:bg-neutral-900"
-                            placeholder="Data Analyst..."
-                          />
-                        </div>
-                        <div className="space-y-0.5">
-                          <label className="text-[8px] font-semibold tracking-widest text-neutral-400">
-                            Short Description
-                          </label>
-                          <input
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            className="flex h-6 w-full rounded-sm border border-neutral-200 bg-neutral-50 px-1.5 text-[10px] focus:border-yellow-500 focus:bg-white focus:outline-none dark:border-neutral-800 dark:bg-neutral-900"
-                            placeholder="Help with stats..."
-                          />
-                        </div>
-                        <div className="space-y-0.5">
-                          <label className="text-[8px] font-semibold tracking-widest text-neutral-400">
-                            Role
-                          </label>
-                          <input
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                            className="flex h-6 w-full rounded-sm border border-neutral-200 bg-neutral-50 px-1.5 text-[10px] focus:border-yellow-500 focus:bg-white focus:outline-none dark:border-neutral-800 dark:bg-neutral-900"
-                            placeholder="Assistant, Coding Expert..."
-                          />
-                        </div>
-                        <div className="space-y-0.5">
-                          <label className="text-[8px] font-semibold tracking-widest text-neutral-400">
-                            Tone
-                          </label>
-                          <input
-                            value={tone}
-                            onChange={(e) => setTone(e.target.value)}
-                            className="flex h-6 w-full rounded-sm border border-neutral-200 bg-neutral-50 px-1.5 text-[10px] focus:border-yellow-500 focus:bg-white focus:outline-none dark:border-neutral-800 dark:bg-neutral-900"
-                            placeholder="Professional, Friendly..."
-                          />
-                        </div>
-                        <div className="space-y-0.5">
-                          <label className="text-[8px] font-semibold tracking-widest text-neutral-400">
-                            Language
-                          </label>
-                          <input
-                            value={language}
-                            onChange={(e) => setLanguage(e.target.value)}
-                            className="flex h-6 w-full rounded-sm border border-neutral-200 bg-neutral-50 px-1.5 text-[10px] focus:border-yellow-500 focus:bg-white focus:outline-none dark:border-neutral-800 dark:bg-neutral-900"
-                            placeholder="pt-BR, en-US..."
-                          />
-                        </div>
-                        <div className="space-y-0.5">
-                          <label className="text-[8px] font-semibold tracking-widest text-neutral-400">
-                            Tags (comma separated)
-                          </label>
-                          <input
-                            value={tags}
-                            onChange={(e) => setTags(e.target.value)}
-                            className="flex h-6 w-full rounded-sm border border-neutral-200 bg-neutral-50 px-1.5 text-[10px] focus:border-yellow-500 focus:bg-white focus:outline-none dark:border-neutral-800 dark:bg-neutral-900"
-                            placeholder="stats, data, python..."
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+          <div className="rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+            <SectionTitle
+              icon={Settings2}
+              title="Instruções do sistema"
+              description="Regras, limites e estilo de resposta. Quanto mais específico, melhor o resultado."
+            />
+            <div className="p-4">
+              <textarea
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                className="min-h-[220px] w-full resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm leading-relaxed text-neutral-900 placeholder:text-neutral-400 focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+                placeholder="Ex.: Você ajuda a equipe a redigir e-mails claros. Sempre confirme o tom desejado antes de sugerir o texto final. Não invente dados de clientes."
+              />
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                <span>Markdown é aceito onde o canal de uso permitir.</span>
+                <span
+                  className={cn(
+                    "tabular-nums",
+                    instructions.length > INSTRUCTIONS_MAX ? "font-semibold text-red-600 dark:text-red-400" : ""
+                  )}
+                >
+                  {instructions.length} / {INSTRUCTIONS_MAX}
+                </span>
               </div>
+            </div>
+          </div>
 
-              {/* Instructions Section */}
-              <div className="flex flex-col rounded-sm border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
-                <div className="flex items-center gap-1 border-b border-neutral-100 px-2 py-1.5 text-[9px] font-semibold tracking-[0.3em] text-neutral-600 dark:border-neutral-800">
-                  <Settings2 className="h-3 w-3 text-brand-primary-500" />
-                  <span>Instructions</span>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+              <SectionTitle icon={BrainCircuit} title="Modelo e ferramentas" description="Motor de inferência e capacidades opcionais." />
+              <div className="space-y-4 p-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="agent-model-select" className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                    Modelo
+                  </label>
+                  <select
+                    id="agent-model-select"
+                    value={modelId}
+                    onChange={(e) => setModelId(e.target.value)}
+                    className={cn(inputClass, "cursor-pointer")}
+                  >
+                    {AI_MODELS.map((model) => (
+                      <option key={model.id} value={model.id}>
+                        {model.name} — {model.provider}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <div className="relative">
-                  <textarea
-                    value={instructions}
-                    onChange={(e) => setInstructions(e.target.value)}
-                    className="min-h-[180px] w-full resize-none bg-transparent px-2 py-1.5 text-[10px] leading-relaxed text-neutral-800 placeholder:text-neutral-400 focus:outline-none dark:text-neutral-200"
-                    placeholder="Define personality, tone, and specific constraints..."
-                  ></textarea>
-                  <div className="flex items-center justify-between border-t border-neutral-100 bg-neutral-50 px-2 py-1 text-[9px] text-neutral-400 dark:border-neutral-800 dark:bg-neutral-900/50">
-                    <span>Markdown supported</span>
-                    <span className="font-mono">{instructions.length} / 4000</span>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300">Ferramentas</label>
+                  <div className="space-y-2">
+                    {CAPABILITIES.map((cap) => (
+                      <label
+                        key={cap.id}
+                        className="flex cursor-pointer gap-3 rounded-lg border border-neutral-200 bg-neutral-50/80 p-3 transition hover:border-brand-primary-500/40 hover:bg-white dark:border-neutral-800 dark:bg-neutral-900/60 dark:hover:border-brand-primary-500/35 dark:hover:bg-neutral-900"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedTools.includes(cap.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedTools((prev) => [...prev, cap.id]);
+                            } else {
+                              setSelectedTools((prev) => prev.filter((id) => id !== cap.id));
+                            }
+                          }}
+                          className="mt-1 h-4 w-4 rounded border-neutral-300 text-brand-primary-500 focus:ring-brand-primary-500 dark:border-neutral-600"
+                        />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <cap.icon className="h-4 w-4 text-brand-primary-600 dark:text-brand-primary-400" />
+                            <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{cap.label}</span>
+                          </div>
+                          <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">{cap.description}</p>
+                        </div>
+                      </label>
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right: Model & Knowledge */}
-            <div className="space-y-1.5 lg:col-span-5">
-              {/* Model Config */}
-              <div className="rounded-sm border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
-                <div className="flex items-center gap-1 border-b border-neutral-100 px-2 py-1.5 text-[9px] font-semibold tracking-[0.3em] text-neutral-600 dark:border-neutral-800">
-                  <BrainCircuit className="h-3 w-3 text-brand-primary-500" />
-                  <span>Model</span>
-                </div>
-                <div className="space-y-1.5 p-2">
-                  <div className="space-y-0.5">
-                    <label className="text-[8px] font-semibold tracking-widest text-neutral-400">
-                      Inference Engine
-                    </label>
-                    <select
-                      value={modelId}
-                      onChange={(e) => setModelId(e.target.value)}
-                      className="flex h-6 w-full rounded-sm border border-neutral-200 bg-neutral-50 px-1.5 text-[10px] focus:border-yellow-500 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900"
-                    >
-                      {AI_MODELS.map((model) => (
-                        <option key={model.id} value={model.id}>
-                          {model.name} — {model.provider}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+            <div className="rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+              <SectionTitle
+                icon={FileText}
+                title="Base de conhecimento"
+                description="PDFs e documentos usados como contexto (até 5 arquivos, 5 MB cada no envio)."
+              />
+              <div className="space-y-3 p-4">
+                <input
+                  type="file"
+                  multiple
+                  className="sr-only"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  aria-label="Selecionar arquivos para a base de conhecimento"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50/50 px-4 py-8 text-sm text-neutral-600 transition hover:border-brand-primary-500/50 hover:bg-brand-primary-500/5 dark:border-neutral-600 dark:bg-neutral-900/40 dark:text-neutral-300"
+                >
+                  <Upload className="h-6 w-6 text-brand-primary-500" />
+                  <span className="font-medium text-neutral-800 dark:text-neutral-100">Arraste ou clique para adicionar arquivos</span>
+                  <span className="text-xs text-neutral-500">Novos arquivos são enviados ao salvar</span>
+                </button>
 
-                  <div className="space-y-0.5 pt-1">
-                    <label className="text-[8px] font-semibold tracking-widest text-neutral-400">
-                      Capabilities
-                    </label>
-                    <div className="space-y-0.5">
-                      {CAPABILITIES.map((cap) => (
-                        <label
-                          key={cap.id}
-                          className="flex cursor-pointer items-center gap-2 rounded-sm border border-neutral-200 bg-neutral-50/70 px-2 py-1 text-[10px] transition hover:border-yellow-500 hover:bg-yellow-50 dark:border-neutral-800 dark:bg-neutral-900"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedTools.includes(cap.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedTools((prev) => [...prev, cap.id]);
-                              } else {
-                                setSelectedTools((prev) => prev.filter((id) => id !== cap.id));
-                              }
-                            }}
-                            className="h-3 w-3 rounded border-neutral-300 text-brand-primary-500 focus:ring-0 dark:border-neutral-700 dark:bg-neutral-950"
-                          />
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <cap.icon className="h-3 w-3 text-brand-primary-500" />
-                              <span className="text-[10px] font-medium text-neutral-700 dark:text-neutral-300">
-                                {cap.label}
-                              </span>
-                            </div>
-                            <p className="truncate text-[9px] text-neutral-400">
-                              {cap.description}
-                            </p>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Knowledge Base */}
-              <div className="rounded-sm border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
-                <div className="flex items-center justify-between border-b border-neutral-100 px-2 py-1.5 text-[9px] font-semibold tracking-[0.3em] text-neutral-600 dark:border-neutral-800">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-3 w-3 text-brand-primary-500" />
-                    Knowledge
-                  </div>
-                  <span className="text-[9px] font-bold text-neutral-400">
-                    {files.length + existingFiles.length} ITEMS
-                  </span>
-                </div>
-
-                <div className="space-y-1.5 p-2">
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="group flex cursor-pointer flex-col items-center justify-center rounded-sm border border-dashed border-yellow-500/40 bg-yellow-50/40 py-2 text-[10px] text-neutral-600 transition hover:border-yellow-500 hover:text-neutral-900 dark:border-yellow-500/60 dark:bg-neutral-900"
-                  >
-                    <Upload className="mb-1 h-3 w-3 text-brand-primary-500" />
-                    <span className="font-medium">Add files</span>
-                    <input
-                      type="file"
-                      multiple
-                      className="hidden"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                    />
-                  </div>
-
-                  {existingFiles.length > 0 && (
-                    <div className="custom-scrollbar max-h-[120px] space-y-0.5 overflow-y-auto pr-1">
+                {existingFiles.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-medium text-neutral-500 dark:text-neutral-400">Já no agente</p>
+                    <ul className="custom-scrollbar max-h-40 space-y-2 overflow-y-auto">
                       {existingFiles.map((file, i) => (
-                        <div
+                        <li
                           key={`existing-${i}`}
-                          className="flex items-center justify-between rounded-sm border border-neutral-200 bg-white px-2 py-1 text-[10px] dark:border-neutral-800 dark:bg-neutral-950"
+                          className="flex items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-neutral-800 dark:bg-neutral-950"
                         >
-                          <div className="flex items-center gap-2 truncate">
-                            <FileText className="h-3 w-3 text-brand-primary-500" />
+                          <div className="flex min-w-0 items-center gap-2">
+                            <FileText className="h-4 w-4 shrink-0 text-brand-primary-500" />
                             <a
                               href={file.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="truncate font-medium text-neutral-600 hover:underline dark:text-neutral-300"
+                              className="truncate font-medium text-neutral-700 underline-offset-2 hover:underline dark:text-neutral-200"
                             >
                               {file.name}
                             </a>
                           </div>
-                        </div>
+                        </li>
                       ))}
-                    </div>
-                  )}
+                    </ul>
+                  </div>
+                )}
 
-                  {files.length > 0 && (
-                    <div className="custom-scrollbar max-h-[120px] space-y-0.5 overflow-y-auto pr-1">
+                {files.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-medium text-neutral-500 dark:text-neutral-400">Novos (pendentes de envio)</p>
+                    <ul className="custom-scrollbar max-h-40 space-y-2 overflow-y-auto">
                       {files.map((file, i) => (
-                        <div
+                        <li
                           key={i}
-                          className="group flex items-center justify-between rounded-sm border border-neutral-200 bg-white px-2 py-1 text-[10px] dark:border-neutral-800 dark:bg-neutral-950"
+                          className="group flex items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-neutral-800 dark:bg-neutral-950"
                         >
-                          <div className="flex items-center gap-2 truncate">
-                            <FileText className="h-3 w-3 text-brand-primary-500" />
-                            <span className="truncate font-medium text-neutral-600 dark:text-neutral-300">
-                              {file.name}
-                            </span>
+                          <div className="flex min-w-0 items-center gap-2">
+                            <FileText className="h-4 w-4 shrink-0 text-brand-primary-500" />
+                            <span className="truncate font-medium text-neutral-700 dark:text-neutral-200">{file.name}</span>
                           </div>
                           <button
-                            onClick={() =>
-                              setFiles((prev) => prev.filter((_, index) => index !== i))
-                            }
-                            className="text-neutral-400 opacity-0 transition-all group-hover:opacity-100 hover:text-red-500"
+                            type="button"
+                            onClick={() => setFiles((prev) => prev.filter((_, index) => index !== i))}
+                            className="rounded-md p-1.5 text-neutral-400 opacity-70 transition hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                            aria-label="Remover arquivo"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
-                        </div>
+                        </li>
                       ))}
-                    </div>
-                  )}
-                </div>
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
           </div>

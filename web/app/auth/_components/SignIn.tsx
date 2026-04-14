@@ -6,10 +6,17 @@ import { getTranslations, LocaleKey } from "@/app/auth/_i18n";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { ErrorModal } from "./ErrorsModal";
 import { useRouter } from "next/navigation";
+import { consumeInvitePostLoginPath } from "@/app/_utils/post-login-redirect";
 
 interface Props {
   onNavigate: (
-    view: "signin" | "signup" | "forgot" | "confirm" | "profile-settings",
+    view:
+      | "signin"
+      | "signup"
+      | "forgot"
+      | "confirm"
+      | "profile-settings"
+      | "accept-invite",
     payload?: { email?: string; password?: string }
   ) => void;
   locale?: LocaleKey;
@@ -79,7 +86,8 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
       return;
     }
 
-    router.push("/app");
+    const nextPath = consumeInvitePostLoginPath();
+    router.push(nextPath || "/app");
     setIsLoading(false);
   };
 

@@ -9,7 +9,13 @@ import { useRouter } from "next/navigation";
 
 interface Props {
   onNavigate: (
-    view: "signin" | "signup" | "forgot" | "confirm" | "profile-settings",
+    view:
+      | "signin"
+      | "signup"
+      | "forgot"
+      | "confirm"
+      | "profile-settings"
+      | "accept-invite",
     payload?: { email?: string; password?: string }
   ) => void;
   locale?: LocaleKey;

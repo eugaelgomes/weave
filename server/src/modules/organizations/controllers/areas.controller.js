@@ -15,13 +15,38 @@ class OrganizationAreasController extends OrganizationsBaseController {
     this.areasRepository = areasRepository;
   }
 
-  _getUserOrganizationRole(req) {
-    return req.user?.org_member_role || null;
+  /** Papel em `organizations_members` (alinhado ao motor de permissões). */
+  _canManageOrgStructure(organization) {
+    return this._orgRoleHasPermission(
+      organization,
+      this._orgPermissions.MANAGE_AREAS
+    );
   }
 
-  _isOrganizationAdmin(req) {
-    const role = this._getUserOrganizationRole(req);
-    return role === "super_admin" || role === "admin";
+  async _userIsAreaManager(organization, areaId, userId) {
+    const member = await this.areasRepository.getAreaMember(
+      areaId,
+      organization.id,
+      userId
+    );
+    return member?.role === "manager";
+  }
+
+  /**
+   * admin/super_admin com MANAGE_AREAS ou gestor da área.
+   * @returns {Promise<boolean>}
+   */
+  async _requireAreaWriteAccess(res, organization, areaId, userId) {
+    if (this._canManageOrgStructure(organization)) return true;
+    if (await this._userIsAreaManager(organization, areaId, userId)) {
+      return true;
+    }
+    res.status(403).json({
+      error:
+        "Permissão insuficiente. É necessário administrador da organização ou gestor da área.",
+      success: false,
+    });
+    return false;
   }
 
   _normalizeSlug(areaName, providedSlug) {
@@ -161,12 +186,13 @@ class OrganizationAreasController extends OrganizationsBaseController {
       } = req.body;
 
       const isSubArea = parent_area_id !== null && parent_area_id !== undefined;
-      const isOrgAdmin = this._isOrganizationAdmin(req);
+      const canOrgStructure = this._canManageOrgStructure(organization);
 
-      if (!isSubArea && !isOrgAdmin) {
+      if (!isSubArea && !canOrgStructure) {
         return res.status(403).json({
+          error:
+            "Somente administradores da organização podem criar áreas principais",
           success: false,
-          error: "Somente administradores podem criar áreas principais",
         });
       }
 
@@ -180,7 +206,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (isSubArea) {
         await this._getParentArea(organization.id, parent_area_id);
 
-        if (!isOrgAdmin) {
+        if (!canOrgStructure) {
           const member = await this.areasRepository.getAreaMember(
             parent_area_id,
             organization.id,
@@ -257,6 +283,17 @@ class OrganizationAreasController extends OrganizationsBaseController {
         return res
           .status(404)
           .json({ success: false, error: "Área não encontrada" });
+      }
+
+      if (
+        !(await this._requireAreaWriteAccess(
+          res,
+          organization,
+          areaId,
+          userId
+        ))
+      ) {
+        return;
       }
 
       const {
@@ -378,6 +415,17 @@ class OrganizationAreasController extends OrganizationsBaseController {
           .json({ success: false, error: "Área não encontrada" });
       }
 
+      if (
+        !(await this._requireAreaWriteAccess(
+          res,
+          organization,
+          areaId,
+          userId
+        ))
+      ) {
+        return;
+      }
+
       const deletedArea = await this.areasRepository.softDeleteArea(
         areaId,
         organization.id
@@ -458,6 +506,17 @@ class OrganizationAreasController extends OrganizationsBaseController {
         return res
           .status(404)
           .json({ success: false, error: "Área não encontrada" });
+      }
+
+      if (
+        !(await this._requireAreaWriteAccess(
+          res,
+          organization,
+          areaId,
+          userId
+        ))
+      ) {
+        return;
       }
 
       const { user_id, role = "viewer" } = req.body;
@@ -557,6 +616,17 @@ class OrganizationAreasController extends OrganizationsBaseController {
           .json({ success: false, error: "Área não encontrada" });
       }
 
+      if (
+        !(await this._requireAreaWriteAccess(
+          res,
+          organization,
+          areaId,
+          userId
+        ))
+      ) {
+        return;
+      }
+
       const existingMember = await this.areasRepository.getAreaMember(
         areaId,
         organization.id,
@@ -612,6 +682,17 @@ class OrganizationAreasController extends OrganizationsBaseController {
         return res
           .status(404)
           .json({ success: false, error: "Área não encontrada" });
+      }
+
+      if (
+        !(await this._requireAreaWriteAccess(
+          res,
+          organization,
+          areaId,
+          userId
+        ))
+      ) {
+        return;
       }
 
       const existingMember = await this.areasRepository.getAreaMember(

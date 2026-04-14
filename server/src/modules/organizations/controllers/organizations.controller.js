@@ -9,6 +9,7 @@ const {
   getDefaultOrganizationProperties,
   orgDataResponse,
 } = require("../normalizer");
+const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
 
 /**
  * Controller for organization management.
@@ -206,6 +207,7 @@ class OrganizationsController extends OrganizationsBaseController {
           logo_url: organization.logo_url,
           banner_url: organization.banner_url,
           description: organization.description,
+          member_role: organization.member_role ?? null,
         },
         properties: organization.properties,
         org_domains: organization.org_domains || [],
@@ -260,6 +262,26 @@ class OrganizationsController extends OrganizationsBaseController {
           .json({ success: false, error: "Organization not found" });
       }
 
+      const P = this._orgPermissions;
+      const body = req.body || {};
+      const touchesDomains = Object.prototype.hasOwnProperty.call(
+        body,
+        "org_domains"
+      );
+      const touchesBrand = [
+        "org_name",
+        "unique_name",
+        "logo_url",
+        "banner_url",
+        "description",
+        "properties",
+      ].some((k) => Object.prototype.hasOwnProperty.call(body, k));
+
+      if (touchesDomains && !this._ensureOrgPermission(currentOrg, P.MANAGE_DOMAINS, res))
+        return;
+      if (touchesBrand && !this._ensureOrgPermission(currentOrg, P.MANAGE_BRAND, res))
+        return;
+
       let updatedUniqueName = currentOrg.unique_name;
 
       if (org_name && org_name !== currentOrg.org_name) {
@@ -306,6 +328,14 @@ class OrganizationsController extends OrganizationsBaseController {
         currentOrg.deleted,
         validatedDomains
       );
+
+      if (!updatedOrg) {
+        return res.status(403).json({
+          success: false,
+          error: "Insufficient permissions to update organization",
+          code: "ORG_FORBIDDEN",
+        });
+      }
 
       res.status(200).json({
         status: "OK",
@@ -355,6 +385,15 @@ class OrganizationsController extends OrganizationsBaseController {
           .json({ success: false, error: "Organization not found" });
       }
 
+      if (
+        !this._ensureOrgPermission(
+          currentOrg,
+          this._orgPermissions.MANAGE_BRAND,
+          res
+        )
+      )
+        return;
+
       const updatedProperties = updateOrganizationProperties(
         currentOrg.properties,
         properties
@@ -372,6 +411,14 @@ class OrganizationsController extends OrganizationsBaseController {
         currentOrg.deleted,
         currentOrg.org_domains
       );
+
+      if (!updatedOrg) {
+        return res.status(403).json({
+          success: false,
+          error: "Insufficient permissions to update organization",
+          code: "ORG_FORBIDDEN",
+        });
+      }
 
       res.status(200).json({
         status: "OK",
@@ -413,6 +460,15 @@ class OrganizationsController extends OrganizationsBaseController {
           .json({ success: false, error: "Organization not found" });
       }
 
+      if (
+        !this._ensureOrgPermission(
+          currentOrg,
+          this._orgPermissions.MANAGE_ORG_LIFECYCLE,
+          res
+        )
+      )
+        return;
+
       const deletedOrg = await this.organizationsRepository.updateOrg(
         currentOrg.id,
         userId,
@@ -425,6 +481,14 @@ class OrganizationsController extends OrganizationsBaseController {
         true,
         currentOrg.org_domains
       );
+
+      if (!deletedOrg) {
+        return res.status(403).json({
+          success: false,
+          error: "Insufficient permissions to delete organization",
+          code: "ORG_FORBIDDEN",
+        });
+      }
 
       res.status(200).json({
         status: "OK",
@@ -462,6 +526,25 @@ class OrganizationsController extends OrganizationsBaseController {
         });
       }
 
+      const memberRole =
+        await this.organizationsRepository.getMembershipRole(
+          organization.id,
+          userId
+        );
+      const orgWithRole = {
+        ...organization,
+        member_role: memberRole || ORG_ROLES.SUPER_ADMIN,
+      };
+
+      if (
+        !this._ensureOrgPermission(
+          orgWithRole,
+          this._orgPermissions.MANAGE_ORG_LIFECYCLE,
+          res
+        )
+      )
+        return;
+
       const restoredOrg = await this.organizationsRepository.updateOrg(
         organization.id,
         userId,
@@ -474,6 +557,14 @@ class OrganizationsController extends OrganizationsBaseController {
         false,
         organization.org_domains
       );
+
+      if (!restoredOrg) {
+        return res.status(403).json({
+          success: false,
+          error: "Insufficient permissions to restore organization",
+          code: "ORG_FORBIDDEN",
+        });
+      }
 
       res.status(200).json({
         status: "OK",
@@ -513,6 +604,15 @@ class OrganizationsController extends OrganizationsBaseController {
           .json({ success: false, error: "Organization not found" });
       }
 
+      if (
+        !this._ensureOrgPermission(
+          currentOrg,
+          this._orgPermissions.MANAGE_BRAND,
+          res
+        )
+      )
+        return;
+
       const result = await spacesService.uploadOrganizationLogo(
         req.file.buffer,
         req.file.mimetype,
@@ -530,6 +630,14 @@ class OrganizationsController extends OrganizationsBaseController {
         result.key,
         userId
       );
+
+      if (!updatedOrg) {
+        return res.status(403).json({
+          success: false,
+          error: "Insufficient permissions to update logo",
+          code: "ORG_FORBIDDEN",
+        });
+      }
 
       res.status(200).json({
         status: "OK",
@@ -575,6 +683,15 @@ class OrganizationsController extends OrganizationsBaseController {
           .json({ success: false, error: "Organization not found" });
       }
 
+      if (
+        !this._ensureOrgPermission(
+          currentOrg,
+          this._orgPermissions.MANAGE_BRAND,
+          res
+        )
+      )
+        return;
+
       const result = await spacesService.uploadOrganizationBanner(
         req.file.buffer,
         req.file.mimetype,
@@ -592,6 +709,14 @@ class OrganizationsController extends OrganizationsBaseController {
         result.key,
         userId
       );
+
+      if (!updatedOrg) {
+        return res.status(403).json({
+          success: false,
+          error: "Insufficient permissions to update banner",
+          code: "ORG_FORBIDDEN",
+        });
+      }
 
       res.status(200).json({
         status: "OK",

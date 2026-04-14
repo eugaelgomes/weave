@@ -221,8 +221,12 @@ export interface UpdateOrganizationData {
 export interface InviteMemberData {
   email: string;
   role: "admin" | "member" | "guest";
-  name?: string;
+  name: string;
   username?: string;
+  /** Área da organização à qual o convidado será vinculado ao aceitar */
+  area_id?: string | null;
+  /** Papel na área: manager | editor | viewer */
+  area_member_role?: "manager" | "editor" | "viewer";
 }
 
 export interface AcceptInviteData {
@@ -230,6 +234,18 @@ export interface AcceptInviteData {
   name?: string;
   username?: string;
   password?: string;
+}
+
+export interface OrganizationInvitePreview {
+  org_name: string;
+  email: string;
+  role: string;
+  expires_at: string;
+  has_account: boolean;
+  invited_name?: string | null;
+  area_id?: string | null;
+  area_name?: string | null;
+  area_member_role?: string | null;
 }
 
 // --- Helpers de Transformação ---
@@ -620,6 +636,11 @@ export const removeAreaMember = async (
 
 // --- Membros e Convites ---
 
+/** Respostas da API usam `status: "OK"` ou `success: true` */
+function isApiSuccess(data: { status?: string; success?: boolean }): boolean {
+  return data.status === "OK" || data.success === true;
+}
+
 export interface OrganizationMembersData {
   count: number;
   count_by_role: Record<string, number>;
@@ -685,11 +706,14 @@ export const inviteMember = async (
 ): Promise<{ message: string }> => {
   const payload = { ...inviteData, userId };
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_INVITES, payload);
-  const data = await handleResponse<{ success?: boolean; message?: string; error?: string }>(
-    response
-  );
+  const data = await handleResponse<{
+    status?: string;
+    success?: boolean;
+    message?: string;
+    error?: string;
+  }>(response);
 
-  if (!data.success) {
+  if (!isApiSuccess(data)) {
     throw new Error(data.error || "Erro ao enviar convite");
   }
   return { message: data.message || "Convite enviado com sucesso" };
@@ -702,9 +726,13 @@ export const fetchPendingInvites = async (userId?: string): Promise<Organization
       : API_ENDPOINTS.ORGANIZATIONS_INVITES;
 
     const response = await apiClient.get(url);
-    const data = await handleResponse<{ success?: boolean; data?: OrganizationInvite[] }>(response);
+    const data = await handleResponse<{
+      status?: string;
+      success?: boolean;
+      data?: OrganizationInvite[];
+    }>(response);
 
-    if (data.success && data.data) {
+    if (isApiSuccess(data) && Array.isArray(data.data)) {
       return data.data;
     }
     return [];
@@ -720,19 +748,41 @@ export const cancelInvite = async (inviteId: string, userId?: string): Promise<v
     : `${API_ENDPOINTS.ORGANIZATIONS_INVITES}/${inviteId}`;
 
   const response = await apiClient.delete(url);
-  const data = await handleResponse<{ success?: boolean; error?: string }>(response);
+  const data = await handleResponse<{ status?: string; success?: boolean; error?: string }>(
+    response
+  );
 
-  if (!data.success) {
+  if (!isApiSuccess(data)) {
     throw new Error(data.error || "Erro ao cancelar convite");
   }
+};
+
+export const previewOrganizationInvite = async (
+  token: string
+): Promise<OrganizationInvitePreview> => {
+  const response = await apiClient.get(
+    `${API_ENDPOINTS.ORGANIZATIONS_INVITES}/preview?token=${encodeURIComponent(token)}`
+  );
+  const data = await handleResponse<{ status?: string; data?: OrganizationInvitePreview }>(
+    response
+  );
+  if (!data.data) {
+    throw new Error("Resposta inválida do servidor");
+  }
+  return data.data;
 };
 
 export const acceptInvite = async (acceptData: AcceptInviteData, userId?: string): Promise<any> => {
   const payload = { ...acceptData, userId };
   const response = await apiClient.post(`${API_ENDPOINTS.ORGANIZATIONS_INVITES}/accept`, payload);
-  const data = await handleResponse<{ success?: boolean; data?: any; error?: string }>(response);
+  const data = await handleResponse<{
+    success?: boolean;
+    status?: string;
+    data?: any;
+    error?: string;
+  }>(response);
 
-  if (!data.success) {
+  if (data.status !== "OK" && data.success !== true) {
     throw new Error(data.error || "Erro ao aceitar convite");
   }
   return data.data;

@@ -13,13 +13,15 @@ async function send_organization_invite(
   role
 ) {
   const env = process.env.NODE_ENV || "development";
-  const acceptInviteLink = `${process.env.FRONTEND_URL}/organization/accept-invite?token=${inviteToken}`;
+  const acceptInviteLink = `${process.env.FRONTEND_URL}/auth?invite_token=${inviteToken}`;
 
   const roleTranslation = {
     owner: "Proprietário",
     admin: "Administrador",
     member: "Membro",
     viewer: "Visualizador",
+    guest: "Convidado",
+    super_admin: "Super administrador",
   };
 
   const translatedRole = roleTranslation[role] || role;

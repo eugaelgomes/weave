@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useOrganization } from "@/app/_contexts/organization-context";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
+import type { OrganizationArea } from "@/app/_services/organization";
 import {
   Plus,
   X,
   Mail,
   ChevronDown,
+  User,
+  Layers3,
 } from "lucide-react";
 import { OrganizationHeader } from "@/app/app/_components/ui/headers/organization-header";
 
@@ -72,14 +75,60 @@ const ModalBase = ({ isOpen, onClose, title, children, footer }: any) => {
   );
 };
 
-const InviteModal = ({ isOpen, onClose, onInvite, loading }: any) => {
+type InviteFormPayload = {
+  email: string;
+  name: string;
+  role: "admin" | "member" | "guest";
+  area_id?: string;
+  area_member_role?: "manager" | "editor" | "viewer";
+};
+
+const InviteModal = ({
+  isOpen,
+  onClose,
+  onInvite,
+  loading,
+  areas,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onInvite: (payload: InviteFormPayload) => void;
+  loading: boolean;
+  areas: OrganizationArea[];
+}) => {
   const { t } = useLanguage();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "member" | "guest">("member");
+  const [areaId, setAreaId] = useState("");
+  const [areaRole, setAreaRole] = useState<"manager" | "editor" | "viewer">("editor");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setName("");
+    setEmail("");
+    setRole("member");
+    setAreaId("");
+    setAreaRole("editor");
+  }, [isOpen]);
 
   const handleSubmit = () => {
-    if (email) onInvite(email, role);
+    const trimmedEmail = email.trim();
+    const trimmedName = name.trim();
+    if (!trimmedEmail || !trimmedName) return;
+    const payload: InviteFormPayload = {
+      email: trimmedEmail,
+      name: trimmedName,
+      role,
+    };
+    if (areaId) {
+      payload.area_id = areaId;
+      payload.area_member_role = areaRole;
+    }
+    onInvite(payload);
   };
+
+  const canSubmit = Boolean(email.trim() && name.trim());
 
   return (
     <ModalBase
@@ -96,7 +145,7 @@ const InviteModal = ({ isOpen, onClose, onInvite, loading }: any) => {
           </button>
           <button
             onClick={handleSubmit}
-            disabled={loading || !email}
+            disabled={loading || !canSubmit}
             className="bg-brand-primary-500 rounded-md px-3 py-1.5 text-xs font-semibold text-black hover:bg-yellow-600 disabled:opacity-50"
           >
             {loading ? t.organizationMembers.sending : t.organizationMembers.sendInvite}
@@ -105,6 +154,22 @@ const InviteModal = ({ isOpen, onClose, onInvite, loading }: any) => {
       }
     >
       <div className="space-y-4">
+        <div>
+          <label className="mb-1 text-[10px] font-semibold text-neutral-500">
+            {t.organizationMembers.inviteeFullName}
+          </label>
+          <div className="relative">
+            <User className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nome"
+              autoComplete="name"
+              className="w-full rounded-md border border-neutral-300 py-1.5 pr-2 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+            />
+          </div>
+        </div>
         <div>
           <label className="mb-1 text-[10px] font-semibold text-neutral-500">
             {t.organizationMembers.userEmail}
@@ -127,7 +192,7 @@ const InviteModal = ({ isOpen, onClose, onInvite, loading }: any) => {
           <div className="relative">
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value as any)}
+              onChange={(e) => setRole(e.target.value as "admin" | "member" | "guest")}
               className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
             >
               <option value="admin">{t.organizationMembers.adminRole}</option>
@@ -137,6 +202,48 @@ const InviteModal = ({ isOpen, onClose, onInvite, loading }: any) => {
             <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
           </div>
         </div>
+        <div>
+          <label className="mb-1 text-[10px] font-semibold text-neutral-500">
+            {t.organizationMembers.areaOptional}
+          </label>
+          <div className="relative">
+            <Layers3 className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+            <select
+              value={areaId}
+              onChange={(e) => setAreaId(e.target.value)}
+              className="w-full appearance-none rounded-md border border-neutral-300 py-1.5 pr-8 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+            >
+              <option value="">{t.organizationMembers.areaNone}</option>
+              {areas.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.area_name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+          </div>
+        </div>
+        {areaId ? (
+          <div>
+            <label className="mb-1 text-[10px] font-semibold text-neutral-500">
+              {t.organizationMembers.areaRoleLabel}
+            </label>
+            <div className="relative">
+              <select
+                value={areaRole}
+                onChange={(e) =>
+                  setAreaRole(e.target.value as "manager" | "editor" | "viewer")
+                }
+                className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+              >
+                <option value="manager">{t.organizationMembers.areaManager}</option>
+                <option value="editor">{t.organizationMembers.areaEditor}</option>
+                <option value="viewer">{t.organizationMembers.areaViewer}</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+            </div>
+          </div>
+        ) : null}
       </div>
     </ModalBase>
   );
@@ -151,6 +258,8 @@ export default function InvitesPage() {
     inviteMember,
     cancelInvite,
     canManageMembers,
+    areas,
+    fetchAreas,
   } = useOrganization();
 
   const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -164,11 +273,28 @@ export default function InvitesPage() {
     setTimeout(() => setStatus(null), 4000);
   };
 
-  const handleInvite = async (email: string, role: any) => {
+  useEffect(() => {
+    if (showInviteModal) fetchAreas(true).catch(() => {});
+  }, [showInviteModal, fetchAreas]);
+
+  const handleInvite = async (payload: InviteFormPayload) => {
     setLoadingAction(true);
     try {
-      await inviteMember({ email, role });
-      showFeedback("success", t.organizationMembers.inviteSuccess.replace("{email}", email));
+      const result = await inviteMember({
+        email: payload.email,
+        role: payload.role,
+        name: payload.name,
+        area_id: payload.area_id,
+        area_member_role: payload.area_member_role,
+      });
+      if (!result.success) {
+        showFeedback("error", result.message || t.organizationMembers.inviteError);
+        return;
+      }
+      showFeedback(
+        "success",
+        t.organizationMembers.inviteSuccess.replace("{email}", payload.email)
+      );
       setShowInviteModal(false);
     } catch (err: any) {
       showFeedback("error", err.message || t.organizationMembers.inviteError);
@@ -180,7 +306,11 @@ export default function InvitesPage() {
   const handleCancelInvite = async (inviteId: string) => {
     setLoadingAction(true);
     try {
-      await cancelInvite(inviteId);
+      const ok = await cancelInvite(inviteId);
+      if (!ok) {
+        showFeedback("error", "Erro ao cancelar convite.");
+        return;
+      }
       showFeedback("success", "Convite cancelado com sucesso");
     } catch (err: any) {
       showFeedback("error", err.message || "Erro ao cancelar convite.");
@@ -268,6 +398,7 @@ export default function InvitesPage() {
         onClose={() => setShowInviteModal(false)}
         onInvite={handleInvite}
         loading={loadingAction}
+        areas={areas}
       />
     </div>
   );

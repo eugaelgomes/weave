@@ -18,8 +18,12 @@ const crypto = require("crypto");
 const {
   send_organization_invite,
 } = require("@/services/email/templates/invite-member/mail");
-const { welcome_message } = require("@/services/email/templates/welcome-mail");
+const {
+  send_organization_invite_accepted,
+} = require("@/services/email/templates/invite-member/invite-accepted");
 const { validRoles } = require("../normalizer");
+
+const AREA_MEMBER_ROLES = ["manager", "editor", "viewer"];
 
 class OrganizationMembersController extends OrganizationsBaseController {
   constructor() {
@@ -214,15 +218,26 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const authUserId = this._validateAuthentication(req, res);
       if (!authUserId) return;
 
-      const { email, role = "member", name, username, area_id } = req.body;
+      const {
+        email,
+        role = "member",
+        name,
+        username,
+        area_id,
+        area_member_role,
+      } = req.body;
 
       if (!email) {
         return res.status(400).json({ error: "Email is required" });
       }
 
+      if (!name || typeof name !== "string" || !name.trim()) {
+        return res.status(400).json({ error: "Name is required" });
+      }
+
       if (!validRoles.includes(role)) {
         return res.status(400).json({
-          error: "Invalid role. Valid roles: super_admin, admin, member, guest",
+          error: "Invalid role. Valid roles: admin, member, guest",
         });
       }
 
@@ -231,14 +246,29 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return res.status(404).json({ error: "Organization not found" });
       }
 
-      let areaExists = false;
+      let resolvedAreaMemberRole = null;
       if (area_id) {
         const area = await this.areasRepository.getAreaById(
           area_id,
           currentOrg.id
         );
         if (!area) return res.status(404).json({ error: "Area not found" });
-        areaExists = true;
+        resolvedAreaMemberRole = area_member_role || "editor";
+        if (!AREA_MEMBER_ROLES.includes(resolvedAreaMemberRole)) {
+          return res.status(400).json({
+            error: "Invalid area_member_role. Use: manager, editor, viewer",
+          });
+        }
+      }
+
+      const pending = await this.organizationsRepository.checkExistingInvite(
+        currentOrg.id,
+        email
+      );
+      if (pending) {
+        return res.status(400).json({
+          error: "There is already a pending invite for this email",
+        });
       }
 
       const existingUsers = await SearchUsersRepository.findByUsernameOrEmail(
@@ -261,15 +291,16 @@ class OrganizationMembersController extends OrganizationsBaseController {
         }
       }
 
-      // Create invite in invite_org_members table
-      const usedName = name || email.split("@")[0];
+      const usedName = name.trim();
       const invite = await this.organizationsRepository.createOrgInvite(
         currentOrg.id,
         email,
         role,
         authUserId,
         usedName,
-        username || null
+        username || null,
+        area_id || null,
+        resolvedAreaMemberRole
       );
 
       const inviter = await SearchUsersRepository.findById(authUserId);
@@ -295,12 +326,58 @@ class OrganizationMembersController extends OrganizationsBaseController {
           email: invite.email,
           role: invite.role,
           expires_at: invite.expires_at,
-          area_id,
+          area_id: invite.area_id || null,
+          area_member_role: invite.area_member_role || null,
         },
       });
     } catch (error) {
       console.error("Error inviting member:", error);
       res.status(500).json({ error: "Error processing member" });
+    }
+  }
+
+  /**
+   * Public: load invite details for the accept-invite UI (token is the secret).
+   * @param {Request} req
+   * @param {Response} res
+   * @returns {Promise<void|Response>}
+   */
+  async previewInvite(req, res) {
+    try {
+      const token = req.query.token;
+      if (!token || typeof token !== "string") {
+        return res.status(400).json({ error: "Token is required" });
+      }
+
+      const invite =
+        await this.organizationsRepository.findOrgInviteByToken(token);
+      if (!invite) {
+        return res.status(400).json({ error: "Invalid or expired invite" });
+      }
+
+      const existingUsers = await SearchUsersRepository.findByUsernameOrEmail(
+        "",
+        invite.email
+      );
+      const has_account = existingUsers.some((u) => u.email === invite.email);
+
+      return res.status(200).json({
+        status: "OK",
+        data: {
+          org_name: invite.org_name,
+          email: invite.email,
+          role: invite.role,
+          expires_at: invite.expires_at,
+          has_account,
+          invited_name: invite.name || null,
+          area_id: invite.area_id || null,
+          area_name: invite.area_name || null,
+          area_member_role: invite.area_member_role || null,
+        },
+      });
+    } catch (error) {
+      console.error("Error previewing invite:", error);
+      res.status(500).json({ error: "Error loading invite" });
     }
   }
 
@@ -422,6 +499,41 @@ class OrganizationMembersController extends OrganizationsBaseController {
         );
       }
 
+      if (invite.area_id) {
+        const areaRole = invite.area_member_role || "editor";
+        if (AREA_MEMBER_ROLES.includes(areaRole)) {
+          const existingAreaMember = await this.areasRepository.getAreaMember(
+            invite.area_id,
+            invite.org_id,
+            targetUserId
+          );
+          if (!existingAreaMember) {
+            await this.areasRepository.addAreaMember(
+              invite.area_id,
+              invite.org_id,
+              targetUserId,
+              areaRole,
+              invite.invited_by
+            );
+          }
+        }
+      }
+
+      const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+      const areasPath = invite.area_id
+        ? `${frontendBase}/app/organization/areas?areaId=${invite.area_id}`
+        : `${frontendBase}/app/organization/areas`;
+
+      const confirmEmail = await send_organization_invite_accepted(
+        invite.email,
+        invite.org_name,
+        invite.area_name || null,
+        areasPath
+      );
+      if (!confirmEmail.success) {
+        console.warn("Failed to send invite-accepted email:", confirmEmail.error);
+      }
+
       res.status(200).json({
         status: "OK",
         message: "Account activated and invite accepted successfully!",
@@ -431,6 +543,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
             name: invite.org_name,
           },
           role: invite.role,
+          area_id: invite.area_id || null,
         },
       });
     } catch (error) {

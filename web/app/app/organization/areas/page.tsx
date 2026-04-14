@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import clsx from "clsx";
 import {
@@ -125,6 +126,10 @@ const createEmptyMemberForm = (): AddMemberFormState => ({
 // --- Page Component ---
 
 export default function AreasPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const {
     organization,
     hasOrganization,
@@ -171,6 +176,24 @@ export default function AreasPage() {
       return areas[0].id;
     });
   }, [areas]);
+
+  // Foco vindo do fluxo de convite (?areaId=...)
+  useEffect(() => {
+    const focusId = searchParams.get("areaId");
+    if (!focusId || !areas.length) return;
+    if (!areas.some((a) => a.id === focusId)) return;
+    setSelectedAreaId(focusId);
+    requestAnimationFrame(() => {
+      document.getElementById(`area-node-${focusId}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    });
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("areaId");
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [areas, searchParams, pathname, router]);
 
   const treeRoots = useMemo(() => buildTree(areas), [areas]);
   const selectedArea = useMemo(
@@ -670,6 +693,7 @@ const TreeNodeView = ({
         )}
 
         <div
+          id={`area-node-${node.area.id}`}
           draggable
           onDragStart={handleDragStart}
           onDrop={handleDrop}

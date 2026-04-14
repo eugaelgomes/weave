@@ -20,6 +20,12 @@ const validateImages = require("@/utils/image-validator");
 
 const router = express.Router();
 
+router.get(
+  "/invites/preview",
+  standardTrafficLimiter,
+  organizationMembersController.previewInvite.bind(organizationMembersController)
+);
+
 router.post(
   "/invites/accept",
   standardTrafficLimiter,

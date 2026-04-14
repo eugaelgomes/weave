@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SignIn } from "./_components/SignIn";
 import { SignUp } from "./_components/SignUp";
 import { ForgotPassword } from "./_components/ForgotPassword";
@@ -10,8 +10,15 @@ import Image from "next/image";
 
 import { AuthMarketing } from "./_components/AuthMarketing";
 import { ConfirmCreateAccount } from "./_components/ConfirmCreateAccount";
+import { AcceptOrganizationInviteModal } from "./_components/AcceptOrganizationInviteModal";
 
-export type AuthView = "signin" | "signup" | "forgot" | "confirm" | "profile-settings";
+export type AuthView =
+  | "signin"
+  | "signup"
+  | "forgot"
+  | "confirm"
+  | "profile-settings"
+  | "accept-invite";
 
 export interface PendingAuthData {
   email?: string;
@@ -19,7 +26,9 @@ export interface PendingAuthData {
 }
 
 export default function AuthPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const inviteToken = searchParams.get("invite_token");
   const [currentView, setCurrentView] = useState<AuthView>("signin");
   const [pendingEmail, setPendingEmail] = useState<string>("");
   const [pendingAuth, setPendingAuth] = useState<PendingAuthData>({});
@@ -36,6 +45,12 @@ export default function AuthPage() {
   };
 
   useEffect(() => {
+    const invite = searchParams.get("invite_token");
+    if (invite) {
+      setCurrentView("accept-invite");
+      return;
+    }
+
     const view = searchParams.get("view");
     const token = searchParams.get("token");
     const code = searchParams.get("code");
@@ -46,7 +61,10 @@ export default function AuthPage() {
       if (queryEmail) {
         setPendingEmail(queryEmail);
       }
+      return;
     }
+
+    setCurrentView((prev) => (prev === "accept-invite" ? "signin" : prev));
   }, [searchParams]);
 
   return (
@@ -57,7 +75,7 @@ export default function AuthPage() {
         </div>
       </div>
 
-      <div className="flex flex-1 w-full items-center justify-center bg-white p-4 sm:p-8 lg:w-1/2">
+      <div className="flex w-full flex-1 items-center justify-center bg-white p-4 sm:p-8 lg:w-1/2">
         <div className="relative z-10 w-full max-w-[440px] overflow-hidden">
           <ErrorModal
             isOpen={!!error}
@@ -85,6 +103,13 @@ export default function AuthPage() {
             {currentView === "signin" && <SignIn onNavigate={handleNavigate} />}
             {currentView === "signup" && <SignUp onNavigate={handleNavigate} />}
             {currentView === "forgot" && <ForgotPassword onNavigate={handleNavigate} />}
+            {currentView === "accept-invite" && (
+              <AcceptOrganizationInviteModal
+                isOpen={!!inviteToken}
+                token={inviteToken ?? ""}
+                onClose={() => router.replace("/auth/")}
+              />
+            )}
             {currentView === "confirm" && (
               <ConfirmCreateAccount
                 onNavigate={handleNavigate}
