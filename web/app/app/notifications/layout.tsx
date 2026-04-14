@@ -35,7 +35,7 @@ function NotificationSidebar({ className, onLinkClick }: SidebarProps) {
   ];
 
   return (
-    <div className={cn("flex flex-col bg-white dark:bg-neutral-950", className)}>
+    <div className={cn("flex flex-col", className)}>
       {/* Cabeçalho da Sidebar */}
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-neutral-100 px-4 dark:border-neutral-800/60">
         <div className="flex items-center gap-2 text-[11px] font-bold tracking-[0.1em] text-neutral-800 uppercase dark:text-neutral-200">
@@ -91,42 +91,67 @@ export default function NotificationsLayout({ children }: { children: React.Reac
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-neutral-50/50 dark:bg-neutral-950">
-      {/* Header Mobile / Global */}
-      <NotificationHeader
-        className="shrink-0 border-b border-neutral-200 bg-white dark:border-neutral-800/60 dark:bg-neutral-950"
-        titleSuffix={
+    <div className="flex h-[calc(100vh-5rem)] flex-col gap-2">
+      {/* Header Global */}
+      <NotificationHeader className="border-b border-neutral-200/90 pb-2 dark:border-neutral-800" />
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        
+        {/* Cabeçalho mobile padronizado */}
+        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-neutral-800 dark:bg-neutral-950">
+          <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
+            Navegação
+          </span>
           <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="ml-2 rounded-md p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 active:bg-neutral-200 lg:hidden dark:hover:bg-neutral-800 dark:active:bg-neutral-700"
+            type="button"
+            aria-expanded={isSidebarOpen}
+            onClick={() => setIsSidebarOpen((prev) => !prev)}
+            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
           >
-            <Menu className="h-4 w-4" />
+            {isSidebarOpen ? (
+              <>
+                <X className="h-3.5 w-3.5" />
+                Fechar menu
+              </>
+            ) : (
+              <>
+                <Menu className="h-3.5 w-3.5" />
+                Abrir menu
+              </>
+            )}
           </button>
-        }
-      />
+        </div>
 
-      <div className="relative mt-2 flex min-h-0 flex-1 overflow-hidden rounded-md shadow shadow-md">
-        {/* Mobile Overlay */}
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-neutral-950/40 backdrop-blur-sm transition-opacity duration-300 lg:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
+        {/* Layout Flexbox com Gap (Desktop) */}
+        <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
+          
+          {/* SIDEBAR LATERAL — Painel flutuante gerido puramente por Flexbox */}
+          <NotificationSidebar className="hidden w-64 shrink-0 md:flex md:flex-col md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:md:border-neutral-800 dark:md:bg-neutral-900/50" />
 
-        {/* Sidebar */}
-        <NotificationSidebar
-          className={cn(
-            "absolute inset-y-0 left-0 z-50 w-64 border-r border-neutral-200 shadow-2xl transition-transform duration-300 ease-in-out lg:static lg:block lg:shadow-none dark:border-neutral-800/60",
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          {/* Modal Mobile Overlay */}
+          {isSidebarOpen && (
+            <div className="fixed inset-0 z-50 flex md:hidden">
+              <button
+                type="button"
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                aria-label="Fechar menu"
+                onClick={() => setIsSidebarOpen(false)}
+              />
+              <NotificationSidebar
+                className="relative z-10 h-full w-[min(20rem,100%)] bg-white shadow-xl dark:bg-neutral-950"
+                onLinkClick={() => setIsSidebarOpen(false)}
+              />
+            </div>
           )}
-          onLinkClick={() => setIsSidebarOpen(false)}
-        />
 
-        {/* Main Content */}
-        <main className="flex flex-1 flex-col overflow-y-auto dark:bg-neutral-950/30">
-          <div className="mx-auto flex h-full w-full max-w-5xl flex-col">{children}</div>
-        </main>
+          {/* CONTEÚDO PRINCIPAL (Notificações Detail) */}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-50 md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:bg-neutral-950 dark:md:border-neutral-800">
+            {/* O container interno mantém a largura máxima de 5xl como original */}
+            <div className="custom-scrollbar mx-auto flex h-full w-full max-w-5xl flex-col overflow-y-auto">
+              {children}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

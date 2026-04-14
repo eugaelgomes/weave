@@ -24,6 +24,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
 
   const isDashboard = pathname === "/app/notes";
   const currentNoteId = !isDashboard ? pathname.split("/app/notes/")[1] : null;
+  
   const sidebarContent = (
     <div className="p-2.5">
       <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
@@ -97,8 +98,8 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-0 w-full flex-1 flex-col gap-2 md:px-0">
       <NotesHeader />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
-        <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 md:hidden dark:border-neutral-800">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-neutral-800 dark:bg-neutral-950">
           <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
             Navegação
           </span>
@@ -122,10 +123,11 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-          {/* SIDEBAR LATERAL — recolhe no desktop quando o painel de comentários está aberto */}
+        <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
+          
+          {/* SIDEBAR LATERAL — Altura dinâmica da Viewport + Sticky + Overflow */}
           <div
-            className={`hidden w-full flex-shrink-0 overflow-y-auto border-b border-neutral-200 bg-neutral-50 md:border-r md:border-b-0 dark:border-neutral-800 dark:bg-neutral-900/30 ${
+            className={`hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-sm md:sticky  md:h-[calc(100vh-auto)] dark:border-neutral-800 dark:bg-neutral-900/50 ${
               commentsPanelOpen ? "md:hidden" : "md:block md:w-[180px]"
             }`}
           >
@@ -133,7 +135,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* CONTEÚDO PRINCIPAL (Detail) */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white dark:bg-neutral-950">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:bg-neutral-950 md:dark:border-neutral-800">
             {children}
           </div>
         </div>

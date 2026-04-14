@@ -49,135 +49,137 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
 
   const sidebarContent = (
     <div className="p-2.5">
-            <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-              Menu
-            </h2>
+      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
+        Menu
+      </h2>
 
-            <ul className="mb-4 space-y-0.5">
-              <li>
+      <ul className="mb-4 space-y-0.5">
+        <li>
+          <Link
+            href="/app/projects"
+            className={`group flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs transition-all ${
+              isDashboard
+                ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
+                : "text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800/50"
+            }`}
+          >
+            <div className="flex items-center gap-1.5 truncate">
+              <LayoutDashboard
+                className={`h-3.5 w-3.5 flex-shrink-0 ${
+                  isDashboard ? "text-brand-primary-500" : "text-neutral-400"
+                }`}
+              />
+              <span className="truncate">Dashboard</span>
+            </div>
+            {isDashboard && <ChevronRight className="h-3 w-3 text-neutral-400" />}
+          </Link>
+        </li>
+      </ul>
+
+      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
+        Meus Projetos
+      </h2>
+
+      <ul className="space-y-0.5">
+        {recentProjects.map((project) => {
+          const isActive = currentProjectId === project.id;
+          const hasSubprojects = project.subprojects && project.subprojects.length > 0;
+          const isExpanded = expandedProjects.includes(project.id);
+
+          return (
+            <li key={project.id} className="flex flex-col">
+              <div className="flex w-full min-w-0 items-center">
+                <div className="flex w-5 flex-shrink-0 items-center justify-center">
+                  {hasSubprojects && (
+                    <button
+                      onClick={(e) => toggleProject(e, project.id)}
+                      className="rounded p-0.5 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                      aria-label={isExpanded ? "Recolher projeto" : "Expandir projeto"}
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronRight className="h-3 w-3" />
+                      )}
+                    </button>
+                  )}
+                </div>
+
                 <Link
-                  href="/app/projects"
-                  className={`group flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs transition-all ${
-                    isDashboard
+                  href={`/app/projects/${project.id}`}
+                  className={`group flex min-w-0 flex-1 items-center justify-between rounded-md px-2 py-1.5 text-xs transition-all ${
+                    isActive
                       ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
                       : "text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800/50"
                   }`}
                 >
-                  <div className="flex items-center gap-1.5 truncate">
-                    <LayoutDashboard
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <Folder
                       className={`h-3.5 w-3.5 flex-shrink-0 ${
-                        isDashboard ? "text-brand-primary-500" : "text-neutral-400"
+                        isActive ? "text-brand-primary-500" : "text-neutral-400"
                       }`}
                     />
-                    <span className="truncate">Dashboard</span>
+                    <span className="truncate">{project.title}</span>
                   </div>
-                  {isDashboard && <ChevronRight className="h-3 w-3 text-neutral-400" />}
                 </Link>
-              </li>
-            </ul>
+              </div>
 
-            <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-              Meus Projetos
-            </h2>
+              {/* Subprojetos com as guias visuais em Amarelo */}
+              {hasSubprojects && isExpanded && (
+                <ul className="relative mt-1 ml-[17px] flex flex-col pl-4">
+                  {project.subprojects?.map((sub, index) => {
+                    const isSubActive = currentProjectId === sub.id;
+                    const isLast = index === project.subprojects!.length - 1;
 
-            <ul className="space-y-0.5">
-              {recentProjects.map((project) => {
-                const isActive = currentProjectId === project.id;
-                const hasSubprojects = project.subprojects && project.subprojects.length > 0;
-                const isExpanded = expandedProjects.includes(project.id);
-
-                return (
-                  <li key={project.id} className="flex flex-col">
-                    <div className="flex w-full min-w-0 items-center">
-                      <div className="flex w-5 flex-shrink-0 items-center justify-center">
-                        {hasSubprojects && (
-                          <button
-                            onClick={(e) => toggleProject(e, project.id)}
-                            className="rounded p-0.5 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                            aria-label={isExpanded ? "Recolher projeto" : "Expandir projeto"}
-                          >
-                            {isExpanded ? (
-                              <ChevronDown className="h-3 w-3" />
-                            ) : (
-                              <ChevronRight className="h-3 w-3" />
-                            )}
-                          </button>
+                    return (
+                      <li key={sub.id} className="relative">
+                        {/* Linha vertical contínua amarela (oculta no último nó) */}
+                        {!isLast && (
+                          <div className="absolute top-0 bottom-0 -left-4 border-l border-yellow-500/50 dark:border-yellow-500/50" />
                         )}
-                      </div>
 
-                      <Link
-                        href={`/app/projects/${project.id}`}
-                        className={`group flex min-w-0 flex-1 items-center justify-between rounded-md px-2 py-1.5 text-xs transition-all ${
-                          isActive
-                            ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
-                            : "text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800/50"
-                        }`}
-                      >
-                        <div className="flex min-w-0 items-center gap-1.5">
-                          <Folder
-                            className={`h-3.5 w-3.5 flex-shrink-0 ${
-                              isActive ? "text-brand-primary-500" : "text-neutral-400"
+                        {/* Cotovelo arredondado amarelo ligando ao link atual */}
+                        <div className="absolute top-0 -left-4 h-[15px] w-4 rounded-bl-md border-b border-l border-yellow-500/50 dark:border-yellow-500/50" />
+
+                        <Link
+                          href={`/app/projects/${sub.id}`}
+                          className={`group mb-0.5 ml-1 flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] transition-all ${
+                            isSubActive
+                              ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
+                              : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-300"
+                          }`}
+                        >
+                          <FolderOpen
+                            className={`h-3 w-3 flex-shrink-0 ${
+                              isSubActive ? "text-brand-primary-500" : "text-neutral-400"
                             }`}
                           />
-                          <span className="truncate">{project.title}</span>
-                        </div>
-                      </Link>
-                    </div>
-
-                    {/* Subprojetos com as guias visuais em Amarelo */}
-                    {hasSubprojects && isExpanded && (
-                      <ul className="relative mt-1 ml-[17px] flex flex-col pl-4">
-                        {project.subprojects?.map((sub, index) => {
-                          const isSubActive = currentProjectId === sub.id;
-                          const isLast = index === project.subprojects!.length - 1;
-
-                          return (
-                            <li key={sub.id} className="relative">
-                              {/* Linha vertical contínua amarela (oculta no último nó) */}
-                              {!isLast && (
-                                <div className="absolute top-0 bottom-0 -left-4 border-l border-yellow-500/50 dark:border-yellow-500/50" />
-                              )}
-
-                              {/* Cotovelo arredondado amarelo ligando ao link atual */}
-                              <div className="absolute top-0 -left-4 h-[15px] w-4 rounded-bl-md border-b border-l border-yellow-500/50 dark:border-yellow-500/50" />
-
-                              <Link
-                                href={`/app/projects/${sub.id}`}
-                                className={`group mb-0.5 ml-1 flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] transition-all ${
-                                  isSubActive
-                                    ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
-                                    : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-300"
-                                }`}
-                              >
-                                <FolderOpen
-                                  className={`h-3 w-3 flex-shrink-0 ${
-                                    isSubActive ? "text-brand-primary-500" : "text-neutral-400"
-                                  }`}
-                                />
-                                <span className="truncate">{sub.title}</span>
-                              </Link>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </li>
-                );
-              })}
-
-              {recentProjects.length === 0 && (
-                <li className="list-none px-2 text-xs text-neutral-400 italic">Nenhum projeto encontrado.</li>
+                          <span className="truncate">{sub.title}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
-            </ul>
+            </li>
+          );
+        })}
+
+        {recentProjects.length === 0 && (
+          <li className="list-none px-2 text-xs text-neutral-400 italic">Nenhum projeto encontrado.</li>
+        )}
+      </ul>
     </div>
   );
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col">
-      <ProjectsHeader className="mb-2" />
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-2 md:px-0">
+      <ProjectsHeader />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
-        <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 md:hidden dark:border-neutral-800">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        
+        {/* Cabeçalho mobile */}
+        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-neutral-800 dark:bg-neutral-950">
           <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
             Navegação
           </span>
@@ -201,12 +203,16 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
           </button>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-          <div className="hidden w-full flex-shrink-0 overflow-y-auto border-b border-neutral-200 bg-neutral-50 md:block md:w-[180px] md:border-r md:border-b-0 dark:border-neutral-800 dark:bg-neutral-900/30">
+        {/* Layout Flexbox com Gap (Desktop) */}
+        <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
+          
+          {/* SIDEBAR LATERAL — Altura dinâmica da Viewport + Sticky + Overflow interno */}
+          <div className="hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-sm md:sticky md:block md:h-[calc(100vh-auto)] md:w-[180px] dark:border-neutral-800 dark:bg-neutral-900/50">
             {sidebarContent}
           </div>
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white dark:bg-neutral-950">
+          {/* CONTEÚDO PRINCIPAL (Detail) */}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:bg-neutral-950 md:dark:border-neutral-800">
             {children}
           </div>
         </div>

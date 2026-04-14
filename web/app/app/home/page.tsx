@@ -11,7 +11,7 @@ import { useLanguage } from "@/app/_contexts/language-context";
 // Utils & Components
 
 import { HomeHeader } from "../_components/ui/headers/home-header";
-import { CalendarPreview } from "../_components/ui/calendar/calendar-component";
+import { CalendarPreview } from "../calendar/_components/calendar-component";
 import NotesCarousel from "./_components/notes-carousel";
 import ProjectsCarousel from "./_components/project-carousel";
 import HomeDashboard from "./_components/home-dashboard";

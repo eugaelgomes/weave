@@ -136,42 +136,63 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] flex-col gap-3">
+    <div className="flex h-[calc(100vh-5rem)] flex-col gap-2">
       <WeaveAIHeader className="border-b border-neutral-200/90 pb-2 dark:border-neutral-800" />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-950 md:flex-row">
-        <AgentSidebar className="hidden w-60 shrink-0 md:flex md:flex-col" />
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        
+        {/* Cabeçalho mobile padronizado */}
+        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-neutral-800 dark:bg-neutral-950">
+          <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
+            Navegação
+          </span>
+          <button
+            type="button"
+            aria-expanded={isMobileMenuOpen}
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
+          >
+            {isMobileMenuOpen ? (
+              <>
+                <X className="h-3.5 w-3.5" />
+                Fechar menu
+              </>
+            ) : (
+              <>
+                <Menu className="h-3.5 w-3.5" />
+                Abrir menu
+              </>
+            )}
+          </button>
+        </div>
 
-        {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-50 flex md:hidden">
-            <button
-              type="button"
-              className="absolute inset-0 bg-black/40"
-              aria-label="Fechar menu"
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-            <AgentSidebar
-              className="relative z-10 h-full w-[min(20rem,100%)] shadow-xl"
-              onLinkClick={() => setIsMobileMenuOpen(false)}
-            />
+        {/* Layout Flexbox com Gap (Desktop) */}
+        <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
+          
+          {/* SIDEBAR LATERAL — Painel flutuante gerido puramente por Flexbox */}
+          <AgentSidebar className="hidden w-60 shrink-0 md:flex md:flex-col md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:md:border-neutral-800 dark:md:bg-neutral-900/50" />
+
+          {/* Modal Mobile */}
+          {isMobileMenuOpen && (
+            <div className="fixed inset-0 z-50 flex md:hidden">
+              <button
+                type="button"
+                className="absolute inset-0 bg-black/40"
+                aria-label="Fechar menu"
+                onClick={() => setIsMobileMenuOpen(false)}
+              />
+              <AgentSidebar
+                className="relative z-10 h-full w-[min(20rem,100%)] shadow-xl"
+                onLinkClick={() => setIsMobileMenuOpen(false)}
+              />
+            </div>
+          )}
+
+          {/* CONTEÚDO PRINCIPAL (Detail) */}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:bg-neutral-950 dark:md:border-neutral-800">
+            <div className="custom-scrollbar min-h-0 flex-1 overflow-auto">{children}</div>
           </div>
-        )}
-
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <div className="flex h-12 shrink-0 items-center gap-2 border-b border-neutral-200 px-3 md:hidden dark:border-neutral-800">
-            <button
-              type="button"
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="rounded-lg p-2 text-neutral-600 transition hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-900"
-              aria-label="Abrir menu"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Agentes</span>
-          </div>
-
-          <div className="custom-scrollbar min-h-0 flex-1 overflow-auto">{children}</div>
-        </main>
+        </div>
       </div>
     </div>
   );

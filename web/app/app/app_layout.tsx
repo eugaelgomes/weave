@@ -50,7 +50,7 @@ const Layout = ({ children }: LayoutProps) => {
         <aside
           className={`hidden ${
             isCollapsed ? "lg:w-[70px]" : "lg:w-[180px]"
-          } flex-col bg-white lg:flex dark:bg-brand-secondary-950`}
+          } flex-col bg-white transition-all duration-300 lg:flex dark:bg-brand-secondary-950`}
         >
           <Sidebar
             onLinkClick={closeSidebar}
@@ -79,14 +79,13 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
         )}
 
-        <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <div className="min-h-0 flex-1 overflow-y-auto scroll-smooth rounded-tl-lg border-t border-l border-neutral-200 bg-white dark:border-neutral-800 dark:bg-brand-secondary-950 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent">
-            <div className="mx-auto flex min-h-full w-full flex-col bg-brand-secondary-100 px-2 py-2 dark:bg-brand-secondary-950/60">
-              <div className="animate-in fade-in slide-in-from-bottom-2 flex min-h-0 flex-1 flex-col space-y-2 duration-500">
-                <div className="flex min-h-0 flex-1 flex-col">{children}</div>
-                <PagesFooter />
-              </div>
+        <main className="min-h-0 flex-1 overflow-y-auto scroll-smooth  rounded-tl-md border-t-2 border-l border-neutral-200 bg-brand-secondary-100 p-2 dark:border-neutral-800 dark:bg-brand-secondary-950/60 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent">
+          <div className="animate-in fade-in slide-in-from-bottom-2 flex min-h-full flex-col gap-2 duration-500">
+            <div className="flex flex-1 flex-col min-h-0 min-w-0">
+              {children}
             </div>
+            
+            <PagesFooter />
           </div>
         </main>
       </div>

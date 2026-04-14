@@ -12,7 +12,7 @@ const PagesFooter = () => {
   const linkClass = "hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors";
 
   return (
-    <div className="flex flex-col items-center justify-between gap-4 rounded-md border border-neutral-200/50 bg-white/50 px-4 py-2.5 shadow-sm backdrop-blur-sm sm:flex-row dark:border-neutral-800/50 dark:bg-brand-secondary-950/50">
+    <div className="flex flex-col items-center justify-between gap-4 rounded-md border border-neutral-200/50 bg-white/50 px-4 py-2 shadow-sm backdrop-blur-sm sm:flex-row dark:border-neutral-800/50 dark:bg-brand-secondary-950/50">
       {/* Copyright & Brand */}
       <div className="text-[11px] font-medium text-neutral-400 dark:text-neutral-500">
         &copy; {currentYear}{" "}
