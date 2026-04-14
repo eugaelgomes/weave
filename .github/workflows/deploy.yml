@@ -56,9 +56,16 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
+            
+            REPO_URL="https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+            
             if [ ! -d "${{ secrets.SERVER_APP_DIR }}" ]; then
-              git clone https://github.com/${{ github.repository }}.git "${{ secrets.SERVER_APP_DIR }}"
+              git clone $REPO_URL "${{ secrets.SERVER_APP_DIR }}"
+              cd "${{ secrets.SERVER_APP_DIR }}"
+            else
+              cd "${{ secrets.SERVER_APP_DIR }}"
+              git remote set-url origin $REPO_URL
+              git pull origin main
             fi
-            cd "${{ secrets.SERVER_APP_DIR }}"
-            git pull origin main
+            
             docker compose up -d --build
