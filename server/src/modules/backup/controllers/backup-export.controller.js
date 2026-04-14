@@ -8,7 +8,7 @@ const SearchUsersRepository = require("@/modules/users/repositories/search-users
 const jobManager = require("@/services/jobs/index");
 const {
   sendBackupEmail,
-} = require("@/services/email/templates/backup/backup-notification");
+} = require("@/services/email/templates/backup-notification");
 const PlansRepository = require("@/modules/plans/plans.repository");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");

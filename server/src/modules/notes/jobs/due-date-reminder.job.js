@@ -1,6 +1,6 @@
 const notesRepository = require("@/modules/notes/notes.repository");
 const mutateNotesRepository = require("@/modules/notes/repositories/mutate-notes.repository");
-const { sendDueReminderEmail } = require("@/services/email/templates/notes/due-reminder/send-due-reminder");
+const { sendDueReminderEmail } = require("@/services/email/templates/due-reminder");
 
 /**
  * Envia e-mails de véspera (prazo amanhã em UTC) e marca controle em properties.

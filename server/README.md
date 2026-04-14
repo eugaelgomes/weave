@@ -32,7 +32,7 @@ src/
 │   └── weave-ai/
 ├── services/
 │   ├── db/             # Pool PostgreSQL (executeQuery, rowCount)
-│   ├── email/          # Nodemailer + templates
+│   ├── email/          # Resend + templates
 │   ├── jobs/           # Tarefas agendadas (iniciam no boot)
 │   ├── note_export/    # Exportação de notas (PDF)
 │   ├── patterns/       # Padrões de produto
@@ -92,8 +92,7 @@ docker compose up server --build
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`     | OAuth Google                                                  |
 | `GOOGLE_REDIRECT_URI`                           | URI de callback OAuth Google                                  |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`     | OAuth GitHub (em dev)                                         |
-| `EMAIL_HOSTNAME` / `EMAIL_PORT`                 | SMTP host e porta                                             |
-| `EMAIL_USERNAME` / `EMAIL_PASSWORD`             | Credenciais SMTP                                              |
+| `RESEND_API_KEY`                                | Chave da API do Resend para envio de emails                   |
 | `DO_SPACES_ENDPOINT`                            | Endpoint DO Spaces (ex:`https://nyc3.digitaloceanspaces.com`) |
 | `DO_SPACES_ACCESS_KEY` / `DO_SPACES_SECRET_KEY` | Credenciais S3/DO                                             |
 | `DO_SPACES_BUCKET_NAME` / `DO_SPACES_REGION`    | Bucket e região                                               |
@@ -195,7 +194,7 @@ if (!note) throw new Error('Nota não encontrada');
 | `passport` / `passport-google-oauth20` | OAuth Google               |
 | `pg`                                   | Cliente PostgreSQL         |
 | `connect-pg-simple`                    | Sessões no PostgreSQL      |
-| `nodemailer`                           | Envio de emails via SMTP   |
+| `resend`                               | Envio de emails transacional |
 | `@aws-sdk/client-s3`                   | Upload para S3/DO Spaces   |
 | `@google/generative-ai`                | Google Gemini AI           |
 | `multer`                               | Upload de arquivos         |

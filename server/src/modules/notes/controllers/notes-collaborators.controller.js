@@ -5,7 +5,7 @@ const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
 const {
   collabMail,
-} = require("@/services/email/templates/notes/invite/collab-notification");
+} = require("@/services/email/templates/note-collab-notification");
 
 /**
  * Colaboradores em notas.

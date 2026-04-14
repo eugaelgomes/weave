@@ -9,7 +9,7 @@ const PlansRepository = require("@/modules/plans/plans.repository");
 const { PLAN_PATHS } = require("@/services/plans/plan-paths");
 const {
   inviteProjectMember,
-} = require("@/services/email/templates/projects/add-person");
+} = require("@/services/email/templates/project-add-person");
 const spacesService = require("@/services/storage");
 
 class ProjectsUpdateController extends ProjectsCoreController {

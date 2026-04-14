@@ -3,10 +3,10 @@ const SearchUsersRepository = require("@/modules/users/repositories/search-users
 const DeleteUsersRepository = require("@/modules/users/repositories/delete-users.repository");
 const {
   delete_account_notification,
-} = require("@/services/email/templates/delete-account/deleted-account-message");
+} = require("@/services/email/templates/delete-account-message");
 const {
   delete_account_request,
-} = require("@/services/email/templates/delete-account/delete-account-request");
+} = require("@/services/email/templates/delete-account-request");
 const crypto = require("crypto");
 
 /**

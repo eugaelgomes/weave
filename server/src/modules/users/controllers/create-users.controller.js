@@ -10,8 +10,7 @@ const CreateUsersRepository = require("@/modules/users/repositories/create-users
 const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
-const welcomeMailModule = require("@/services/email/templates/welcome-mail");
-const { welcome_message } = welcomeMailModule;
+const { welcome_message } = require("@/services/email/templates/welcome-mail");
 const PlansManager = require("@/services/plans/manager");
 
 const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;

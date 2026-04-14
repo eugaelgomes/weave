@@ -142,17 +142,15 @@ Conexões são liberadas automaticamente no `finally` de `executeQuery` e `rowCo
 
 ### 4.2 Email (`src/services/email/config/index.js`)
 
-Transporter Nodemailer com singleton pattern.
+Cliente Resend com singleton pattern.
 
-**Variáveis de Ambiente:** `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USERNAME`, `EMAIL_PASSWORD`
+**Variáveis de Ambiente:** `RESEND_API_KEY`, `EMAIL_FROM`
 
-**Configuração do transporter:**
+**Configuração do serviço:**
 
-- `secure`: true apenas se porta 465
-- Connection pool: `pool: true`, `maxConnections: 5`, `maxMessages: 100`
-- Rate limiting: `rateDelta: 1000`, `rateLimit: 10`
-- Verifica conexão SMTP no boot (reset do singleton se falhar)
-- Cleanup do transporter no SIGTERM
+- Mantém interface `sendMail` compatível para os templates existentes
+- Normaliza destinatários (`to`, `cc`, `bcc`, `replyTo`) para o formato esperado pelo Resend
+- Falha cedo quando faltam variáveis obrigatórias
 
 **Templates disponíveis** (`src/services/email/templates/`):
 
@@ -244,7 +242,7 @@ Valida credenciais no construtor — lança erro se incompletas.
 | -------------------- | ----------------------- |
 | `express`            | Framework HTTP          |
 | `pg`                 | Cliente PostgreSQL      |
-| `nodemailer`         | Envio de emails SMTP    |
+| `resend`             | Envio de emails transacional |
 | `@aws-sdk/client-s3` | Storage S3-compatible   |
 | `module-alias`       | Path aliases            |
 | `helmet`             | Headers de segurança    |
@@ -285,7 +283,7 @@ src/
 │   └── weave-ai/
 ├── services/
 │   ├── db/                     # Pool PostgreSQL
-│   ├── email/                  # Nodemailer + templates
+│   ├── email/                  # Resend + templates
 │   ├── jobs/                   # Job manager com persistência
 │   ├── storage/                # Digital Ocean Spaces (S3)
 │   ├── secrets/                # Gerenciamento de chaves

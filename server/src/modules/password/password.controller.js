@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const { validationResult } = require("express-validator");
 const PasswordRepository = require("@/modules/password/password.repository");
-const mail_rescue_pass = require("@/services/email/templates/users-access/rescue-password");
+const { mail_rescue_pass } = require("@/services/email/templates/rescue-password");
 
 class PasswordController {
   // FORGOT PASSWORD
@@ -42,8 +42,15 @@ class PasswordController {
       const emailResult = await mail_rescue_pass(email, token, userExists.name);
 
       if (!emailResult.success) {
+        console.error(
+          "Forgot password email provider error:",
+          emailResult.error || "unknown"
+        );
         return res.status(500).json({
-          message: "Error sending email. Please try again.",
+          message:
+            process.env.NODE_ENV === "development"
+              ? `Error sending email: ${emailResult.error || "unknown error"}`
+              : "Error sending email. Please try again.",
         });
       }
 

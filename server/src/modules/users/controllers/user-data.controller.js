@@ -9,7 +9,7 @@ const UserTokensRepository = require("@/modules/users/repositories/user-tokens.r
 const { presignObjectFields } = require("@/utils/data/presign-storage-files");
 const {
   sendEmailChangeValidation,
-} = require("@/services/email/templates/users-access/reset-password");
+} = require("@/services/email/templates/reset-password");
 const updateProfileLogs = require("@/utils/system_logs/update_profile-logs");
 const { normalizeAppPreferences } = require("@/modules/users/normalize");
 

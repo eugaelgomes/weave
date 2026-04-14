@@ -17,10 +17,10 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const {
   send_organization_invite,
-} = require("@/services/email/templates/invite-member/mail");
+} = require("@/services/email/templates/invite-member");
 const {
   send_organization_invite_accepted,
-} = require("@/services/email/templates/invite-member/invite-accepted");
+} = require("@/services/email/templates/invite-member-accepted");
 const { validRoles } = require("../normalizer");
 
 const AREA_MEMBER_ROLES = ["manager", "editor", "viewer"];
