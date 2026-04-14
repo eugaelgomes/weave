@@ -34,6 +34,9 @@ class NotesReadController extends NotesBaseController {
         sortOrder: sortOrder.toLowerCase(),
       };
 
+      const orgWideOrganizationId =
+        await this._getOrgWideNotesScopeOrganizationId(userId);
+
       let result;
 
       if (
@@ -42,12 +45,15 @@ class NotesReadController extends NotesBaseController {
         req.query.search ||
         req.query.tags
       ) {
-        result = await this.notesRepository.getAllNotesWithPagination(
-          userId,
-          paginationOptions
-        );
+        result = await this.notesRepository.getAllNotesWithPagination(userId, {
+          ...paginationOptions,
+          orgWideOrganizationId,
+        });
       } else {
-        const notes = await this.notesRepository.getAllNotesFormatted(userId);
+        const notes = await this.notesRepository.getAllNotesFormatted(
+          userId,
+          orgWideOrganizationId
+        );
         result = { notes, pagination: null };
       }
 
@@ -121,10 +127,12 @@ class NotesReadController extends NotesBaseController {
       if (!userId) return;
 
       // Validação de acesso à nota (proprietário ou colaborador)
-      const { note, isOwner, isCollaborator } = await this._validateNoteAccess(
-        id,
-        userId
-      );
+      const {
+        note,
+        isOwner,
+        isCollaborator,
+        hasOrgProjectAccess,
+      } = await this._validateNoteAccess(id, userId);
 
       // Buscar blocos da nota
       const blocks = await this.blocksRepository.getBlocksByNoteId(id);
@@ -173,9 +181,10 @@ class NotesReadController extends NotesBaseController {
         access: {
           isOwner,
           isCollaborator,
-          canEdit: isOwner || isCollaborator,
-          canDelete: isOwner,
-          canShare: isOwner,
+          hasOrgProjectAccess,
+          canEdit: isOwner || isCollaborator || hasOrgProjectAccess,
+          canDelete: isOwner || hasOrgProjectAccess,
+          canShare: isOwner || hasOrgProjectAccess,
         },
       };
 
@@ -190,7 +199,12 @@ class NotesReadController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const stats = await this.notesRepository.getAllNotesStats(userId);
+      const orgWideOrganizationId =
+        await this._getOrgWideNotesScopeOrganizationId(userId);
+      const stats = await this.notesRepository.getAllNotesStats(
+        userId,
+        orgWideOrganizationId
+      );
 
       const formattedStats = {
         totalNotes: parseInt(stats.total_notes) || 0,

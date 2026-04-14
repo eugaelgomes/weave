@@ -199,6 +199,166 @@ class ProjectsRepository {
     return executeQuery(query, [projectId, userId]);
   }
 
+  /** Lista raízes de projeto de toda a organização (admin / super_admin). */
+  async getAllProjectsInOrganization(organizationId) {
+    const query = `
+      SELECT 
+        p.id::text,
+        p.user_id::text,
+        p.parent_project_id::text,
+        p.title,
+        p.description,
+        p.properties,
+        p.projects_files,
+        p.status,
+        p.created_at,
+        p.updated_at,
+        p.deleted,
+        u.username AS owner_username,
+        u.email AS owner_email,
+        u.name AS owner_name,
+        u.avatar_url AS owner_avatar_url,
+        p.org_id as organization_id,
+        o.org_name as organization_name,
+        o.unique_name as organization_unique_name,
+        o.logo_url as organization_logo_url,
+        COALESCE(
+          jsonb_agg(
+            DISTINCT jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', cu.name,
+              'username', cu.username,
+              'email', cu.email,
+              'avatar_url', cu.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
+          '[]'::jsonb
+        ) AS collaborators,
+        COALESCE(
+          (SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', n.id::text,
+              'title', n.title,
+              'description', n.description,
+              'tags', n.tags,
+              'status', n.status,
+              'created_at', n.created_at,
+              'updated_at', n.updated_at,
+              'created_by', jsonb_build_object(
+                'user_id', n.user_id::text,
+                'username', nu.username
+              )
+            )
+          ) FROM notes n
+          JOIN users nu ON nu.user_id = n.user_id
+          WHERE n.project_id = p.id AND n.deleted = false),
+          '[]'::jsonb
+        ) AS associated_notes,
+        COALESCE(
+          (SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', sp.id::text,
+              'title', sp.title,
+              'description', sp.description,
+              'status', sp.status,
+              'properties', sp.properties,
+              'created_at', sp.created_at,
+              'updated_at', sp.updated_at
+            )
+          ) FROM projects sp
+          WHERE sp.parent_project_id = p.id AND sp.deleted = false),
+          '[]'::jsonb
+        ) AS subprojects
+      FROM projects p
+      JOIN users u ON u.user_id = p.user_id
+      LEFT JOIN organizations o ON o.id = p.org_id
+      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN users cu ON cu.user_id = pm.user_id
+      WHERE p.deleted = false
+        AND p.parent_project_id IS NULL
+        AND p.org_id = $1::uuid
+      GROUP BY p.id, u.username, u.email, u.name, u.avatar_url, o.org_name, o.unique_name, o.logo_url
+      ORDER BY p.created_at DESC;
+    `;
+    return executeQuery(query, [organizationId]);
+  }
+
+  /** Detalhe de projeto desde que pertença à organização (sem ser dono/membro). */
+  async getProjectByIdWithOrgScope(projectId, organizationId) {
+    const query = `
+      SELECT 
+        p.id::text,
+        p.user_id::text,
+        p.title,
+        p.description,
+        p.properties,
+        p.projects_files,
+        p.status,
+        p.created_at,
+        p.updated_at,
+        p.deleted,
+        u.username AS owner_username,
+        u.email AS owner_email,
+        u.name AS owner_name,
+        u.avatar_url AS owner_avatar_url,
+        p.org_id as organization_id,
+        o.org_name as organization_name,
+        o.unique_name as organization_unique_name,
+        o.logo_url as organization_logo_url,
+        COALESCE(
+          jsonb_agg(
+            DISTINCT jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', cu.name,
+              'username', cu.username,
+              'email', cu.email,
+              'avatar_url', cu.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
+          '[]'::jsonb
+        ) AS collaborators,
+        COALESCE(
+          (SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', n.id::text,
+              'title', n.title,
+              'description', n.description,
+              'tags', n.tags,
+              'status', n.status,
+              'created_at', n.created_at,
+              'updated_at', n.updated_at,
+              'created_by', jsonb_build_object(
+                'user_id', n.user_id::text,
+                'username', nu.username
+              )
+            )
+          ) FROM notes n
+          JOIN users nu ON nu.user_id = n.user_id
+          WHERE n.project_id = p.id AND n.deleted = false),
+          '[]'::jsonb
+        ) AS associated_notes
+      FROM projects p
+      JOIN users u ON u.user_id = p.user_id
+      LEFT JOIN organizations o ON o.id = p.org_id
+      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN users cu ON cu.user_id = pm.user_id
+      WHERE p.id = $1::uuid
+        AND p.deleted = false
+        AND p.org_id = $2::uuid
+      GROUP BY p.id, u.username, u.email, u.name, u.avatar_url, o.org_name, o.unique_name, o.logo_url
+      LIMIT 1;
+    `;
+    return executeQuery(query, [projectId, organizationId]);
+  }
+
   async getProjectsWithUserInfo(userId) {
     const query = `
       SELECT 
@@ -311,6 +471,96 @@ class ProjectsRepository {
     `;
 
     return executeQuery(query, [projectId, userId]);
+  }
+
+  async updateProjectInOrganization(projectId, organizationId, updates) {
+    const allowedFields = [
+      "title",
+      "description",
+      "status",
+      "properties",
+      "projects_files",
+    ];
+
+    const keys = Object.keys(updates).filter((k) => allowedFields.includes(k));
+
+    if (keys.length === 0) {
+      throw new Error("Nenhum campo válido para atualizar.");
+    }
+
+    const setQuery = keys
+      .map((key, index) => {
+        if (key === "properties") {
+          return `${key} = jsonb_strip_nulls(
+            COALESCE(properties, '{}'::jsonb) || $${index + 3}::jsonb || jsonb_build_object(
+              'progress', 
+              COALESCE(
+                (
+                  SELECT ROUND(
+                    (
+                      COUNT(*) FILTER (WHERE EXISTS (
+                        SELECT 1 FROM project_stages ps
+                        WHERE ps.id = notes.project_stage_id
+                          AND ps.project_id = notes.project_id
+                          AND COALESCE((ps.properties->>'is_done')::boolean, false) = true
+                      ))::numeric
+                      / NULLIF(COUNT(*), 0)
+                    ) * 100
+                  )::integer
+                  FROM notes
+                  WHERE notes.project_id = projects.id AND notes.deleted = false
+                ),
+                0
+              )
+            )
+          )`;
+        }
+        if (key === "projects_files") {
+          return `${key} = COALESCE(projects_files, '[]'::jsonb) || $${index + 3}::jsonb`;
+        }
+        return `${key} = $${index + 3}`;
+      })
+      .join(", ");
+
+    const query = `
+      UPDATE projects
+      SET ${setQuery}, updated_at = NOW()
+      WHERE id = $1 AND org_id = $2::uuid AND deleted = false
+      RETURNING 
+        id::text,
+        user_id::text,
+        title,
+        description,
+        properties,
+        projects_files,
+        status,
+        created_at,
+        updated_at,
+        deleted;
+    `;
+
+    const values = [
+      projectId,
+      organizationId,
+      ...keys.map((k) =>
+        k === "properties" || k === "projects_files"
+          ? JSON.stringify(updates[k])
+          : updates[k]
+      ),
+    ];
+
+    return executeQuery(query, values);
+  }
+
+  async deleteProjectInOrganization(projectId, organizationId) {
+    const query = `
+      UPDATE projects
+      SET deleted = true, updated_at = NOW()
+      WHERE id = $1 AND org_id = $2::uuid AND deleted = false
+      RETURNING id::text, user_id::text;
+    `;
+
+    return executeQuery(query, [projectId, organizationId]);
   }
 
   /**
@@ -546,6 +796,235 @@ class ProjectsRepository {
     `;
 
     return executeQuery(query, [projectId, userId]);
+  }
+
+  async getCollaboratorsWithOrgScope(projectId, organizationId) {
+    const query = `
+      SELECT 
+        p.id::text,
+        p.user_id::text,
+        COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', u.name,
+              'username', u.username,
+              'email', u.email,
+              'avatar_url', u.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
+          '[]'::jsonb
+        ) AS collaborators
+      FROM projects p
+      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN users u ON u.user_id = pm.user_id
+      WHERE p.id = $1::uuid
+        AND p.org_id = $2::uuid
+        AND p.deleted = false
+      GROUP BY p.id;
+    `;
+
+    return executeQuery(query, [projectId, organizationId]);
+  }
+
+  async addCollaboratorWithOrgManagement(
+    projectId,
+    organizationId,
+    actingUserId,
+    collaboratorUserId,
+    role = "viewer"
+  ) {
+    const query = `
+      WITH inserted_member AS (
+        INSERT INTO projects_members (project_id, user_id, role, added_by)
+        SELECT $1::uuid, $4::uuid, $5, $3::uuid
+        FROM projects p
+        WHERE p.id = $1::uuid AND p.org_id = $2::uuid AND p.deleted = false
+        RETURNING *
+      )
+      SELECT 
+        p.id::text,
+        COALESCE(
+          jsonb_agg(
+            DISTINCT jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', u.name,
+              'username', u.username,
+              'email', u.email,
+              'avatar_url', u.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
+          '[]'::jsonb
+        ) AS collaborators
+      FROM projects p
+      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN users u ON u.user_id = pm.user_id
+      WHERE p.id = $1::uuid
+      GROUP BY p.id;
+    `;
+
+    return executeQuery(query, [
+      projectId,
+      organizationId,
+      actingUserId,
+      collaboratorUserId,
+      role,
+    ]);
+  }
+
+  async removeCollaboratorWithOrgManagement(
+    projectId,
+    organizationId,
+    collaboratorUserId
+  ) {
+    const query = `
+      WITH deleted_member AS (
+        UPDATE projects_members
+        SET deleted = true, updated_at = NOW()
+        WHERE project_id = $1::uuid
+          AND user_id = $3::uuid
+          AND EXISTS (
+            SELECT 1 FROM projects
+            WHERE id = $1::uuid AND org_id = $2::uuid AND deleted = false
+          )
+        RETURNING *
+      )
+      SELECT 
+        p.id::text,
+        COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', u.name,
+              'username', u.username,
+              'email', u.email,
+              'avatar_url', u.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
+          '[]'::jsonb
+        ) AS collaborators
+      FROM projects p
+      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN users u ON u.user_id = pm.user_id
+      WHERE p.id = $1::uuid
+      GROUP BY p.id;
+    `;
+
+    return executeQuery(query, [projectId, organizationId, collaboratorUserId]);
+  }
+
+  async updateCollaboratorPermissionWithOrgManagement(
+    projectId,
+    organizationId,
+    collaboratorUserId,
+    newRole
+  ) {
+    const query = `
+      WITH updated_member AS (
+        UPDATE projects_members
+        SET role = $4, updated_at = NOW()
+        WHERE project_id = $1::uuid
+          AND user_id = $3::uuid
+          AND deleted = false
+          AND EXISTS (
+            SELECT 1 FROM projects
+            WHERE id = $1::uuid AND org_id = $2::uuid AND deleted = false
+          )
+        RETURNING *
+      )
+      SELECT 
+        p.id::text,
+        COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', u.name,
+              'username', u.username,
+              'email', u.email,
+              'avatar_url', u.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
+          '[]'::jsonb
+        ) AS collaborators
+      FROM projects p
+      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN users u ON u.user_id = pm.user_id
+      WHERE p.id = $1::uuid
+      GROUP BY p.id;
+    `;
+
+    return executeQuery(query, [
+      projectId,
+      organizationId,
+      collaboratorUserId,
+      newRole,
+    ]);
+  }
+
+  async updateCollaboratorSuspensionWithOrgManagement(
+    projectId,
+    organizationId,
+    collaboratorUserId,
+    suspended
+  ) {
+    const query = `
+      WITH updated_member AS (
+        UPDATE projects_members
+        SET suspended = $4, updated_at = NOW()
+        WHERE project_id = $1::uuid
+          AND user_id = $3::uuid
+          AND deleted = false
+          AND EXISTS (
+            SELECT 1 FROM projects WHERE id = $1::uuid AND org_id = $2::uuid AND deleted = false
+          )
+        RETURNING project_id
+      )
+      SELECT 
+        COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', u.name,
+              'username', u.username,
+              'email', u.email,
+              'avatar_url', u.avatar_url,
+              'role', pm.role,
+              'added_at', pm.created_at,
+              'added_by', pm.added_by::text,
+              'suspended', pm.suspended
+            )
+          ) FILTER (WHERE pm.id IS NOT NULL),
+          '[]'::jsonb
+        ) AS collaborators
+      FROM projects_members pm
+      JOIN users u ON pm.user_id = u.user_id
+      WHERE pm.project_id = $1::uuid
+        AND pm.deleted = false
+      GROUP BY pm.project_id;
+    `;
+
+    return executeQuery(query, [
+      projectId,
+      organizationId,
+      collaboratorUserId,
+      suspended,
+    ]);
   }
 
   async updateCollaboratorPermission(
@@ -822,6 +1301,251 @@ class ProjectsRepository {
     return executeQuery(query, [projectId, noteId, userId]);
   }
 
+  async addNoteToProjectWithOrgScope(projectId, noteId, userId, organizationId) {
+    const query = `
+      WITH updated_note AS (
+        UPDATE notes
+        SET project_id = $1::uuid, project_stage_id = NULL, updated_at = NOW()
+        WHERE id = $2::uuid
+          AND project_id IS DISTINCT FROM $1::uuid
+          AND (user_id = $3::uuid OR EXISTS (
+            SELECT 1 FROM note_collaborators nc 
+            WHERE nc.note_id = $2::uuid AND nc.user_id = $3::uuid AND nc.removed = false
+          ))
+        RETURNING id::text
+      ),
+      updated_project AS (
+        UPDATE projects
+        SET 
+          properties = COALESCE(properties, '{}'::jsonb) || jsonb_build_object(
+            'progress',
+            COALESCE(
+              (SELECT ROUND(
+                (
+                  COUNT(*) FILTER (WHERE EXISTS (
+                    SELECT 1 FROM project_stages ps
+                    WHERE ps.id = n.project_stage_id
+                      AND ps.project_id = n.project_id
+                      AND COALESCE((ps.properties->>'is_done')::boolean, false) = true
+                  ))::numeric
+                  / NULLIF(COUNT(*), 0)
+                ) * 100
+              )::integer
+              FROM notes n
+              WHERE n.project_id = $1::uuid AND n.deleted = false),
+              0
+            )
+          ),
+          updated_at = NOW()
+        WHERE id = $1::uuid
+          AND (
+            EXISTS (
+              SELECT 1 FROM projects p_org
+              WHERE p_org.id = $1::uuid AND p_org.org_id = $4::uuid AND p_org.deleted = false
+            )
+            OR (user_id = $3::uuid OR EXISTS (
+              SELECT 1 FROM projects_members pm
+              WHERE pm.project_id = $1::uuid
+                AND pm.user_id = $3::uuid
+                AND pm.deleted = false
+                AND pm.suspended = false
+            ))
+          )
+          AND deleted = false
+          AND EXISTS (SELECT 1 FROM updated_note)
+        RETURNING id::text
+      )
+      SELECT up.id,
+        COALESCE(
+          (SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', n.id::text,
+              'title', n.title,
+              'description', n.description,
+              'tags', n.tags,
+              'status', n.status,
+              'created_at', n.created_at,
+              'updated_at', n.updated_at,
+              'created_by', jsonb_build_object(
+                'user_id', n.user_id::text,
+                'username', nu.username
+              )
+            )
+          ) FROM notes n
+          JOIN users nu ON nu.user_id = n.user_id
+          WHERE n.project_id = $1::uuid AND n.deleted = false),
+          '[]'::jsonb
+        ) AS associated_notes
+      FROM updated_project up;
+    `;
+
+    return executeQuery(query, [projectId, noteId, userId, organizationId]);
+  }
+
+  async removeNoteFromProjectWithOrgScope(
+    projectId,
+    noteId,
+    userId,
+    organizationId
+  ) {
+    const query = `
+      WITH updated_note AS (
+        UPDATE notes
+        SET project_id = NULL, project_stage_id = NULL, updated_at = NOW()
+        WHERE id = $2::uuid AND project_id = $1::uuid
+        RETURNING id
+      ),
+      updated_project AS (
+        UPDATE projects
+        SET 
+          properties = COALESCE(properties, '{}'::jsonb) || jsonb_build_object(
+            'progress',
+            COALESCE(
+              (SELECT ROUND(
+                (
+                  COUNT(*) FILTER (WHERE EXISTS (
+                    SELECT 1 FROM project_stages ps
+                    WHERE ps.id = notes.project_stage_id
+                      AND ps.project_id = notes.project_id
+                      AND COALESCE((ps.properties->>'is_done')::boolean, false) = true
+                  ))::numeric
+                  / NULLIF(COUNT(*), 0)
+                ) * 100
+              )::integer
+              FROM notes
+              WHERE project_id = $1::uuid AND deleted = false AND id != $2::uuid),
+              0
+            )
+          ),
+          updated_at = NOW()
+        WHERE id = $1::uuid
+          AND (
+            EXISTS (
+              SELECT 1 FROM projects p_org
+              WHERE p_org.id = $1::uuid AND p_org.org_id = $4::uuid AND p_org.deleted = false
+            )
+            OR (user_id = $3::uuid OR EXISTS (
+              SELECT 1 FROM projects_members pm
+              WHERE pm.project_id = $1::uuid
+                AND pm.user_id = $3::uuid
+                AND pm.deleted = false
+                AND pm.suspended = false
+                AND pm.role = 'admin'
+            ))
+          )
+          AND deleted = false
+          AND EXISTS (SELECT 1 FROM updated_note)
+        RETURNING id::text
+      )
+      SELECT * FROM updated_project;
+    `;
+
+    return executeQuery(query, [projectId, noteId, userId, organizationId]);
+  }
+
+  async getAssociatedNotesWithOrgScope(projectId, organizationId) {
+    const query = `
+      SELECT 
+        n.id::text,
+        n.user_id::text,
+        n.title,
+        n.description,
+        n.tags,
+        n.status,
+        n.project_stage_id::text,
+        n.created_at,
+        n.updated_at,
+        nu.username AS created_by_username
+      FROM notes n
+      JOIN users nu ON nu.user_id = n.user_id
+      WHERE n.project_id = $1::uuid
+        AND n.deleted = false
+        AND EXISTS (
+          SELECT 1 FROM projects p
+          WHERE p.id = $1::uuid
+            AND p.org_id = $2::uuid
+            AND p.deleted = false
+        )
+      ORDER BY n.updated_at DESC;
+    `;
+
+    return executeQuery(query, [projectId, organizationId]);
+  }
+
+  async updateNoteInProjectWithOrgScope(
+    projectId,
+    noteId,
+    userId,
+    organizationId
+  ) {
+    const query = `
+      UPDATE projects
+      SET 
+        properties = COALESCE(properties, '{}'::jsonb) || jsonb_build_object(
+          'progress',
+          COALESCE(
+            (SELECT ROUND(
+              (
+                COUNT(*) FILTER (WHERE EXISTS (
+                  SELECT 1 FROM project_stages ps
+                  WHERE ps.id = n.project_stage_id
+                    AND ps.project_id = n.project_id
+                    AND COALESCE((ps.properties->>'is_done')::boolean, false) = true
+                ))::numeric
+                / NULLIF(COUNT(*), 0)
+              ) * 100
+            )::integer
+            FROM notes n
+            WHERE n.project_id = $1::uuid AND n.deleted = false),
+            0
+          )
+        ),
+        updated_at = NOW()
+      WHERE id = $1::uuid
+        AND EXISTS (
+          SELECT 1 FROM notes WHERE id = $2::uuid AND project_id = $1::uuid AND deleted = false
+        )
+        AND (
+          EXISTS (
+            SELECT 1 FROM projects p_org
+            WHERE p_org.id = $1::uuid AND p_org.org_id = $4::uuid AND p_org.deleted = false
+          )
+          OR (user_id = $3::uuid OR EXISTS (
+            SELECT 1 FROM projects_members pm
+            WHERE pm.project_id = $1::uuid
+              AND pm.user_id = $3::uuid
+              AND pm.deleted = false
+              AND pm.suspended = false
+          ))
+        )
+        AND deleted = false
+      RETURNING 
+        id::text,
+        COALESCE(
+          (SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', n.id::text,
+              'title', n.title,
+              'description', n.description,
+              'tags', n.tags,
+              'status', n.status,
+              'created_at', n.created_at,
+              'updated_at', n.updated_at,
+              'created_by', jsonb_build_object(
+                'user_id', n.user_id::text,
+                'username', nu.username
+              )
+            )
+          ) FROM notes n
+          JOIN users nu ON nu.user_id = n.user_id
+          WHERE n.project_id = $1::uuid AND n.deleted = false),
+          '[]'::jsonb
+        ) AS associated_notes;
+    `;
+
+    return executeQuery(query, [projectId, noteId, userId, organizationId]);
+  }
+
   async getAssociatedNotes(projectId, userId) {
     const query = `
       SELECT 
@@ -984,6 +1708,125 @@ class ProjectsRepository {
             p.methodology,
             p.properties,
             CASE WHEN p.user_id = $1::uuid THEN 'owned' ELSE 'collaborating' END AS ownership
+          FROM projects p
+          WHERE ${whereClause}
+        ),
+        overview AS (
+          SELECT
+            COUNT(*)                                                      AS total,
+            COUNT(*) FILTER (WHERE ownership = 'owned')                  AS owned,
+            COUNT(*) FILTER (WHERE ownership = 'collaborating')          AS collaborating,
+            COUNT(*) FILTER (WHERE status IN ('open','in_progress'))     AS active,
+            COUNT(*) FILTER (WHERE status = 'open')                      AS open,
+            COUNT(*) FILTER (WHERE status = 'in_progress')               AS in_progress,
+            COUNT(*) FILTER (WHERE status = 'paused')                    AS paused,
+            COUNT(*) FILTER (WHERE status = 'completed')                 AS completed,
+            COUNT(*) FILTER (WHERE status = 'archived')                  AS archived
+          FROM user_projects
+        ),
+        methodology_stats AS (
+          SELECT
+            COUNT(*) FILTER (WHERE methodology = 'kanban')    AS kanban,
+            COUNT(*) FILTER (WHERE methodology = 'scrum')     AS scrum,
+            COUNT(*) FILTER (WHERE methodology = 'waterfall') AS waterfall,
+            COUNT(*) FILTER (WHERE methodology = 'custom')    AS custom
+          FROM user_projects
+        ),
+        progress_stats AS (
+          SELECT
+            COALESCE(ROUND(AVG((properties->>'progress')::numeric), 1), 0)      AS average,
+            COUNT(*) FILTER (WHERE (properties->>'progress')::numeric >= 80)    AS near_completion,
+            COUNT(*) FILTER (
+              WHERE properties->>'progress' IS NULL
+                 OR (properties->>'progress')::numeric = 0
+            )                                                                    AS not_started
+          FROM user_projects
+        ),
+        notes_stats AS (
+          SELECT
+            COUNT(*)                                         AS total,
+            COUNT(*) FILTER (WHERE n.status = 'visible')    AS visible,
+            COUNT(*) FILTER (WHERE n.status = 'archived')   AS archived,
+            COUNT(*) FILTER (WHERE n.status = 'secure')     AS secure
+          FROM notes n
+          WHERE n.project_id IN (SELECT id FROM user_projects)
+            AND n.deleted = false
+        ),
+        tasks_stats AS (
+          SELECT
+            COUNT(*)                               AS total,
+            COUNT(*) FILTER (WHERE b.done = true)  AS done,
+            COUNT(*) FILTER (WHERE b.done = false) AS pending
+          FROM blocks b
+          JOIN notes n ON n.id = b.note_id
+          WHERE n.project_id IN (SELECT id FROM user_projects)
+            AND n.deleted = false
+            AND b.deleted = false
+            AND b.type = 'todo'
+        )
+      SELECT
+        row_to_json(o.*)   AS overview,
+        row_to_json(m.*)   AS methodology,
+        row_to_json(ps.*)  AS progress,
+        row_to_json(ns.*)  AS notes,
+        row_to_json(ts.*)  AS tasks
+      FROM overview o, methodology_stats m, progress_stats ps, notes_stats ns, tasks_stats ts;
+    `;
+
+    return executeQuery(query, params);
+  }
+
+  async getProjectStatsForOrganization(organizationId, userId, filters = {}) {
+    const { status, methodology, from, to, parent_only = true } = filters;
+
+    const conditions = [
+      "p.deleted = false",
+      "p.active = true",
+      "p.org_id = $1::uuid",
+    ];
+
+    const params = [organizationId, userId];
+    let paramIndex = 3;
+
+    if (status) {
+      conditions.push(`p.status = $${paramIndex}::project_status`);
+      params.push(status);
+      paramIndex++;
+    }
+
+    if (methodology) {
+      conditions.push(`p.methodology = $${paramIndex}::project_methodology`);
+      params.push(methodology);
+      paramIndex++;
+    }
+
+    if (from) {
+      conditions.push(`p.created_at >= $${paramIndex}::timestamptz`);
+      params.push(from);
+      paramIndex++;
+    }
+
+    if (to) {
+      conditions.push(`p.created_at <= $${paramIndex}::timestamptz`);
+      params.push(to);
+      paramIndex++;
+    }
+
+    if (parent_only) {
+      conditions.push("p.parent_project_id IS NULL");
+    }
+
+    const whereClause = conditions.join("\n        AND ");
+
+    const query = `
+      WITH
+        user_projects AS (
+          SELECT
+            p.id,
+            p.status,
+            p.methodology,
+            p.properties,
+            CASE WHEN p.user_id = $2::uuid THEN 'owned' ELSE 'collaborating' END AS ownership
           FROM projects p
           WHERE ${whereClause}
         ),

@@ -4,7 +4,7 @@ const BaseRepository = require("./base.repository");
  * Leitura de notas, estatísticas e processamento de URLs.
  */
 class ReadNotesRepository extends BaseRepository {
-  async getAllNotesByUserId(userId) {
+  async getAllNotesByUserId(userId, orgWideOrganizationId = null) {
     const query = `
     SELECT 
       n.id::text,
@@ -67,14 +67,24 @@ class ReadNotesRepository extends BaseRepository {
           SELECT 1 FROM note_collaborators nc2
           WHERE nc2.note_id = n.id AND nc2.user_id = $1
         )
+        OR (
+          $2::uuid IS NOT NULL
+          AND n.project_id IS NOT NULL
+          AND EXISTS (
+            SELECT 1 FROM projects p_org
+            WHERE p_org.id = n.project_id
+              AND p_org.org_id = $2::uuid
+              AND p_org.deleted = false
+          )
+        )
       )
     ORDER BY n.updated_at DESC;
     `;
-    const results = await this.executeQuery(query, [userId]);
+    const results = await this.executeQuery(query, [userId, orgWideOrganizationId]);
     return await this.processNotesWithSignedUrls(results);
   }
 
-  async getAllNotesFormatted(userId) {
+  async getAllNotesFormatted(userId, orgWideOrganizationId = null) {
     const query = `
       SELECT 
         n.id::text,
@@ -127,15 +137,30 @@ class ReadNotesRepository extends BaseRepository {
     LEFT JOIN task_priorities tp ON n.priority_id = tp.id AND tp.deleted = false
       LEFT JOIN note_collaborators nc ON n.id = nc.note_id
       LEFT JOIN users c ON nc.user_id = c.user_id
-      WHERE (n.user_id = $1 OR EXISTS (
+      WHERE (
+        n.user_id = $1 OR EXISTS (
           SELECT 1 FROM note_collaborators nc2 
           WHERE nc2.note_id = n.id AND nc2.user_id = $1
-      ))
+        )
+        OR (
+          $2::uuid IS NOT NULL
+          AND n.project_id IS NOT NULL
+          AND EXISTS (
+            SELECT 1 FROM projects p_org
+            WHERE p_org.id = n.project_id
+              AND p_org.org_id = $2::uuid
+              AND p_org.deleted = false
+          )
+        )
+      )
         AND n.deleted = false
       GROUP BY n.id, u.user_id, p.id, tp.id
       ORDER BY n.updated_at DESC;
     `;
-    const results = await this.executeQuery(query, [userId]);
+    const results = await this.executeQuery(query, [
+      userId,
+      orgWideOrganizationId,
+    ]);
     return await this.processNotesWithSignedUrls(results);
   }
 
@@ -159,16 +184,21 @@ class ReadNotesRepository extends BaseRepository {
       tags = [],
       sortBy = "updated_at",
       sortOrder = "desc",
+      orgWideOrganizationId = null,
     } = options;
 
     const offset = (page - 1) * limit;
 
     const whereConditions = [
-      `(n.user_id = $1 OR EXISTS (SELECT 1 FROM note_collaborators nc2 WHERE nc2.note_id = n.id AND nc2.user_id = $1))`,
+      `(n.user_id = $1 OR EXISTS (SELECT 1 FROM note_collaborators nc2 WHERE nc2.note_id = n.id AND nc2.user_id = $1)
+        OR ($2::uuid IS NOT NULL AND n.project_id IS NOT NULL AND EXISTS (
+          SELECT 1 FROM projects p_org
+          WHERE p_org.id = n.project_id AND p_org.org_id = $2::uuid AND p_org.deleted = false
+        )))`,
       `n.deleted = false`,
     ];
-    const queryParams = [userId];
-    let paramIndex = 2;
+    const queryParams = [userId, orgWideOrganizationId];
+    let paramIndex = 3;
 
     if (search && search.trim()) {
       whereConditions.push(`(
@@ -365,7 +395,7 @@ class ReadNotesRepository extends BaseRepository {
     return null;
   }
 
-  async getAllNotesStats(userId) {
+  async getAllNotesStats(userId, orgWideOrganizationId = null) {
     const query = `
     WITH user_scope_notes AS (
         SELECT 
@@ -376,13 +406,25 @@ class ReadNotesRepository extends BaseRepository {
             (EXISTS (SELECT 1 FROM note_collaborators nc WHERE nc.note_id = n.id)) AS is_shared
         FROM notes n
         WHERE 
-            (n.user_id = $1
+            (
+            n.user_id = $1
              OR EXISTS (
                 SELECT 1
                 FROM note_collaborators nc
                 WHERE nc.note_id = n.id
                   AND nc.user_id = $1
-            ))
+            )
+            OR (
+              $2::uuid IS NOT NULL
+              AND n.project_id IS NOT NULL
+              AND EXISTS (
+                SELECT 1 FROM projects p_org
+                WHERE p_org.id = n.project_id
+                  AND p_org.org_id = $2::uuid
+                  AND p_org.deleted = false
+              )
+            )
+            )
             AND n.deleted = false 
     ),
     all_tags_unnested AS (
@@ -439,7 +481,10 @@ class ReadNotesRepository extends BaseRepository {
             FROM user_scope_notes
         ) AS activity_metrics
 `;
-    const results = await this.executeQuery(query, [userId]);
+    const results = await this.executeQuery(query, [
+      userId,
+      orgWideOrganizationId,
+    ]);
     return results[0];
   }
 

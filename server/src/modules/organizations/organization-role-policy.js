@@ -12,6 +12,8 @@ const ORG_ROLES = Object.freeze({
 
 /** Permissões atómicas (ações sensíveis). */
 const ORG_PERMISSIONS = Object.freeze({
+  /** Ver/editar/gestão de qualquer projeto com org_id = organização ativa (admin / super_admin) */
+  ACCESS_ALL_ORG_PROJECTS: "access_all_org_projects",
   /** Estrutura de áreas; super_admin (papel em DB), alinhado a gestores de área no controlador */
   MANAGE_AREAS: "manage_areas",
   /** Alterar plano / billing da organização (quando existir endpoint self-service) */
@@ -36,6 +38,7 @@ const ORG_PERMISSIONS = Object.freeze({
 const PERMISSIONS_BY_ROLE = Object.freeze({
   [ORG_ROLES.SUPER_ADMIN]: Object.values(ORG_PERMISSIONS),
   [ORG_ROLES.ADMIN]: [
+    ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS,
     ORG_PERMISSIONS.MANAGE_AREAS,
     ORG_PERMISSIONS.MANAGE_PROJECTS,
     ORG_PERMISSIONS.MANAGE_TAGS,

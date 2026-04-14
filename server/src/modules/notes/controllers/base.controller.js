@@ -1,5 +1,11 @@
 const notesRepository = require("@/modules/notes/notes.repository");
 const blocksRepository = require("@/modules/notes/repositories/blocks.repository");
+const projectsRepository = require("@/modules/projects/projects.repository");
+const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
+const {
+  orgRoleHasPermission,
+  ORG_PERMISSIONS,
+} = require("@/modules/organizations/organization-role-policy");
 
 /**
  * Base dos controllers de notas: autenticação, acesso e formatação.
@@ -19,6 +25,43 @@ class NotesBaseController {
     }
 
     return userId;
+  }
+
+  _canAccessAllOrganizationProjects(membership) {
+    if (!membership?.id) return false;
+    return orgRoleHasPermission(
+      membership.member_role,
+      ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS
+    );
+  }
+
+  /**
+   * Nota associada a projeto da organização ativa e utilizador com ACCESS_ALL_ORG_PROJECTS.
+   * @param {Object} note — linha de getNoteById
+   * @param {string} userId
+   */
+  async _hasOrgWideAccessToProjectNote(note, userId) {
+    if (!note?.project_id) return false;
+    const membership =
+      await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    if (!this._canAccessAllOrganizationProjects(membership) || !membership.id) {
+      return false;
+    }
+    const rows = await projectsRepository.getProjectByIdWithOrgScope(
+      String(note.project_id),
+      membership.id
+    );
+    return Boolean(rows?.length);
+  }
+
+  /** Org ativa quando o utilizador pode ver todas as notas dos projetos dessa org (via `project_id`). */
+  async _getOrgWideNotesScopeOrganizationId(userId) {
+    const membership =
+      await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    if (this._canAccessAllOrganizationProjects(membership) && membership.id) {
+      return membership.id;
+    }
+    return null;
   }
 
   /**
@@ -46,11 +89,29 @@ class NotesBaseController {
       userId
     );
 
-    if (!isOwner && !isCollaborator) {
-      throw new Error("Acesso negado");
+    if (isOwner || isCollaborator) {
+      return {
+        hasOrgProjectAccess: false,
+        isCollaborator,
+        isOwner,
+        note,
+      };
     }
 
-    return { note, isOwner, isCollaborator };
+    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(
+      note,
+      userId
+    );
+    if (hasOrgProjectAccess) {
+      return {
+        hasOrgProjectAccess: true,
+        isCollaborator: false,
+        isOwner: false,
+        note,
+      };
+    }
+
+    throw new Error("Acesso negado");
   }
 
   /**
@@ -71,11 +132,19 @@ class NotesBaseController {
       throw new Error("Nota não encontrada");
     }
 
-    if (note.user_id !== userId) {
-      throw new Error("Acesso negado");
+    if (note.user_id === userId) {
+      return note;
     }
 
-    return note;
+    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(
+      note,
+      userId
+    );
+    if (hasOrgProjectAccess) {
+      return note;
+    }
+
+    throw new Error("Acesso negado");
   }
 
   /**

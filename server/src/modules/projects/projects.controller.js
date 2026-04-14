@@ -1,4 +1,9 @@
 const projectsRepository = require("@/modules/projects/projects.repository");
+const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
+const {
+  orgRoleHasPermission,
+  ORG_PERMISSIONS,
+} = require("@/modules/organizations/organization-role-policy");
 const NotificationsRepository = require("@/modules/notifications/notifications.repository");
 const {
   ALLOWED_PROJECT_STATUSES,
@@ -144,32 +149,61 @@ class ProjectsController {
     return userId;
   }
 
+  _canAccessAllOrganizationProjects(membership) {
+    if (!membership?.id) return false;
+    return orgRoleHasPermission(
+      membership.member_role,
+      ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS
+    );
+  }
+
   /**
-   * Valida e verifica propriedade do projeto
+   * Dono do projeto ou admin/super_admin com acesso a todos os projetos da org ativa.
+   * @returns {Promise<{ project: Object, orgWide: boolean, membership: Object }>}
+   */
+  async _getProjectOwnershipContext(projectId, userId) {
+    if (!projectId) {
+      throw new Error("ID do projeto é obrigatório");
+    }
+
+    const membership =
+      await organizationsRepository.getActiveOrganizationWithMembership(userId);
+
+    if (this._canAccessAllOrganizationProjects(membership)) {
+      const rows = await this.projectsRepository.getProjectByIdWithOrgScope(
+        projectId,
+        membership.id
+      );
+      if (!rows?.length) {
+        throw new Error("Projeto não encontrado");
+      }
+      return { membership, orgWide: true, project: rows[0] };
+    }
+
+    const rows = await this.projectsRepository.getProjectById(
+      projectId,
+      userId
+    );
+    if (!rows?.length) {
+      throw new Error("Projeto não encontrado");
+    }
+    return { membership, orgWide: false, project: rows[0] };
+  }
+
+  /**
+   * Valida e verifica propriedade do projeto (ou gestão org-wide).
    * @param {string} projectId - ID do projeto
    * @param {string} userId - ID do usuário
    * @returns {Object} - Projeto encontrado
    * @throws {Error} - Se projeto não existir ou não pertencer ao usuário
    */
   async _validateProjectOwnership(projectId, userId) {
-    if (!projectId) {
-      throw new Error("ID do projeto é obrigatório");
-    }
-
-    const result = await this.projectsRepository.getProjectById(
-      projectId,
-      userId
-    );
-
-    if (!result || result.length === 0) {
-      throw new Error("Projeto não encontrado");
-    }
-
-    return result[0];
+    const ctx = await this._getProjectOwnershipContext(projectId, userId);
+    return ctx.project;
   }
 
   /**
-   * Valida se o usuário tem acesso ao projeto (como dono ou colaborador)
+   * Valida se o usuário tem acesso ao projeto (dono/colaborador ou admin org na mesma org_id).
    * @param {string} projectId - ID do projeto
    * @param {string} userId - ID do usuário
    * @returns {Object} - Projeto encontrado com dados completos
@@ -178,6 +212,20 @@ class ProjectsController {
   async _validateProjectAccess(projectId, userId) {
     if (!projectId) {
       throw new Error("ID do projeto é obrigatório");
+    }
+
+    const membership =
+      await organizationsRepository.getActiveOrganizationWithMembership(userId);
+
+    if (this._canAccessAllOrganizationProjects(membership)) {
+      const rows = await this.projectsRepository.getProjectByIdWithOrgScope(
+        projectId,
+        membership.id
+      );
+      if (!rows?.length) {
+        throw new Error("Projeto não encontrado ou você não tem acesso");
+      }
+      return rows[0];
     }
 
     const result = await this.projectsRepository.getProjectByIdWithAccess(
@@ -252,8 +300,15 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Buscar projetos completos
-      const projects = await this.projectsRepository.getAllProjects(userId);
+      const membership =
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+
+      const projects =
+        this._canAccessAllOrganizationProjects(membership) && membership.id
+          ? await this.projectsRepository.getAllProjectsInOrganization(
+              membership.id
+            )
+          : await this.projectsRepository.getAllProjects(userId);
 
       // Formatar projetos com todos os dados
       const formattedProjects = projects.map((project) => ({
@@ -561,8 +616,8 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Validação de propriedade do projeto
-      const currentProject = await this._validateProjectOwnership(id, userId);
+      const ctx = await this._getProjectOwnershipContext(id, userId);
+      const currentProject = ctx.project;
 
       // Validar status se fornecido
       if (status !== undefined && !ALLOWED_PROJECT_STATUSES.includes(status)) {
@@ -651,12 +706,13 @@ class ProjectsController {
         });
       }
 
-      // Atualização do projeto
-      const result = await this.projectsRepository.updateProject(
-        id,
-        userId,
-        updates
-      );
+      const result = ctx.orgWide
+        ? await this.projectsRepository.updateProjectInOrganization(
+            id,
+            ctx.membership.id,
+            updates
+          )
+        : await this.projectsRepository.updateProject(id, userId, updates);
 
       if (!result || result.length === 0) {
         return res.status(400).json({
@@ -689,14 +745,17 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Buscar o registro de uso
-      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const ctx = await this._getProjectOwnershipContext(id, userId);
+      const usageRecord = await PlanUsageManager.managePlanUsage(
+        ctx.project.user_id
+      );
 
-      // Validação de propriedade do projeto
-      await this._validateProjectOwnership(id, userId);
-
-      // Exclusão do projeto (soft delete)
-      const result = await this.projectsRepository.deleteProject(id, userId);
+      const result = ctx.orgWide
+        ? await this.projectsRepository.deleteProjectInOrganization(
+            id,
+            ctx.membership.id
+          )
+        : await this.projectsRepository.deleteProject(id, userId);
 
       if (!result || result.length === 0) {
         throw new Error("Falha ao deletar projeto");
@@ -742,8 +801,8 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar se o projeto existe e pertence ao usuário
-      const project = await this._validateProjectOwnership(projectId, userId);
+      const ctx = await this._getProjectOwnershipContext(projectId, userId);
+      const project = ctx.project;
 
       // Validação de dados obrigatórios
       // Permitir action null se suspended for fornecido
@@ -775,10 +834,15 @@ class ProjectsController {
         }
 
         // Validar limite de colaboradores por projeto
-        const collaborators = await this.projectsRepository.getCollaborators(
-          projectId,
-          userId
-        );
+        const collaborators = ctx.orgWide
+          ? await this.projectsRepository.getCollaboratorsWithOrgScope(
+              projectId,
+              ctx.membership.id
+            )
+          : await this.projectsRepository.getCollaborators(
+              projectId,
+              userId
+            );
         const currentCollaborators = collaborators[0]?.collaborators || [];
         const maxCollaborators =
           planDetails.details?.limits?.max_collaborators_per_project;
@@ -802,7 +866,7 @@ class ProjectsController {
         suspended !== null && !action ? "suspend" : action;
 
       switch (effectiveAction) {
-        case "add":
+        case "add": {
           // Validar role
           const validRoles = ["admin", "viewer", "member"];
           if (!validRoles.includes(role)) {
@@ -839,22 +903,34 @@ class ProjectsController {
             throw new Error("Usuário já é colaborador deste projeto");
           }
 
-          result = await this.projectsRepository.addCollaborator(
-            projectId,
-            userId,
-            collaboratorId,
-            role
-          );
+          result = ctx.orgWide
+            ? await this.projectsRepository.addCollaboratorWithOrgManagement(
+                projectId,
+                ctx.membership.id,
+                userId,
+                collaboratorId,
+                role
+              )
+            : await this.projectsRepository.addCollaborator(
+                projectId,
+                userId,
+                collaboratorId,
+                role
+              );
           message = "Colaborador adicionado com sucesso";
 
           // Enviar email de notificação usando dados do repository
           try {
             // Buscar dados completos do projeto com owner
-            const projectWithOwner =
-              await this.projectsRepository.getProjectByIdWithAccess(
-                projectId,
-                userId
-              );
+            const projectWithOwner = ctx.orgWide
+              ? await this.projectsRepository.getProjectByIdWithOrgScope(
+                  projectId,
+                  ctx.membership.id
+                )
+              : await this.projectsRepository.getProjectByIdWithAccess(
+                  projectId,
+                  userId
+                );
 
             // Encontrar o colaborador recém-adicionado no array de collaborators do projeto
             const addedCollaborator =
@@ -917,8 +993,9 @@ class ProjectsController {
             console.error("Erro ao preparar email de convite:", emailError);
           }
           break;
+        }
 
-        case "update":
+        case "update": {
           // Validar role
           if (!role || !["admin", "viewer"].includes(role)) {
             throw new Error("Role inválido. Use 'admin' ou 'viewer'");
@@ -934,12 +1011,19 @@ class ProjectsController {
             throw new Error("Usuário não é colaborador deste projeto");
           }
 
-          result = await this.projectsRepository.updateCollaboratorPermission(
-            projectId,
-            userId,
-            collaboratorId,
-            role
-          );
+          result = ctx.orgWide
+            ? await this.projectsRepository.updateCollaboratorPermissionWithOrgManagement(
+                projectId,
+                ctx.membership.id,
+                collaboratorId,
+                role
+              )
+            : await this.projectsRepository.updateCollaboratorPermission(
+                projectId,
+                userId,
+                collaboratorId,
+                role
+              );
           message = "Role atualizado com sucesso";
 
           await NotificationsRepository.createNotification({
@@ -956,8 +1040,9 @@ class ProjectsController {
             },
           });
           break;
+        }
 
-        case "remove":
+        case "remove": {
           // Verificar se o colaborador existe
           const exists = await this.projectsRepository.isCollaborator(
             projectId,
@@ -968,15 +1053,22 @@ class ProjectsController {
             throw new Error("Usuário não é colaborador deste projeto");
           }
 
-          result = await this.projectsRepository.removeCollaborator(
-            projectId,
-            userId,
-            collaboratorId
-          );
+          result = ctx.orgWide
+            ? await this.projectsRepository.removeCollaboratorWithOrgManagement(
+                projectId,
+                ctx.membership.id,
+                collaboratorId
+              )
+            : await this.projectsRepository.removeCollaborator(
+                projectId,
+                userId,
+                collaboratorId
+              );
           message = "Colaborador removido com sucesso";
           break;
+        }
 
-        case "suspend":
+        case "suspend": {
           // Verificar se o colaborador existe (independente de estar suspenso ou não)
           const existsInProject =
             await this.projectsRepository.isCollaboratorInProject(
@@ -988,16 +1080,24 @@ class ProjectsController {
             throw new Error("Usuário não é colaborador deste projeto");
           }
 
-          result = await this.projectsRepository.updateCollaboratorSuspension(
-            projectId,
-            userId,
-            collaboratorId,
-            suspended
-          );
+          result = ctx.orgWide
+            ? await this.projectsRepository.updateCollaboratorSuspensionWithOrgManagement(
+                projectId,
+                ctx.membership.id,
+                collaboratorId,
+                suspended
+              )
+            : await this.projectsRepository.updateCollaboratorSuspension(
+                projectId,
+                userId,
+                collaboratorId,
+                suspended
+              );
           message = suspended
             ? "Colaborador suspenso com sucesso"
             : "Suspensão removida com sucesso";
           break;
+        }
       }
 
       if (!result || result.length === 0) {
@@ -1043,14 +1143,15 @@ class ProjectsController {
         });
       }
 
-      // Verificar se o projeto existe e pertence ao usuário
-      await this._validateProjectOwnership(projectId, userId);
+      const ctx = await this._getProjectOwnershipContext(projectId, userId);
 
       // Validar limite de colaboradores por projeto
-      const collaborators = await this.projectsRepository.getCollaborators(
-        projectId,
-        userId
-      );
+      const collaborators = ctx.orgWide
+        ? await this.projectsRepository.getCollaboratorsWithOrgScope(
+            projectId,
+            ctx.membership.id
+          )
+        : await this.projectsRepository.getCollaborators(projectId, userId);
       const currentCollaborators = collaborators[0]?.collaborators || [];
       const maxCollaborators =
         planDetails.details?.limits?.max_collaborators_per_project;
@@ -1086,13 +1187,20 @@ class ProjectsController {
         throw new Error("Usuário já é colaborador deste projeto");
       }
 
-      // Adicionar colaborador
-      const result = await this.projectsRepository.addCollaborator(
-        projectId,
-        userId,
-        collaboratorId,
-        role
-      );
+      const result = ctx.orgWide
+        ? await this.projectsRepository.addCollaboratorWithOrgManagement(
+            projectId,
+            ctx.membership.id,
+            userId,
+            collaboratorId,
+            role
+          )
+        : await this.projectsRepository.addCollaborator(
+            projectId,
+            userId,
+            collaboratorId,
+            role
+          );
 
       if (!result || result.length === 0) {
         throw new Error("Falha ao adicionar colaborador");
@@ -1119,8 +1227,7 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar se o projeto existe e pertence ao usuário
-      await this._validateProjectOwnership(projectId, userId);
+      const ctx = await this._getProjectOwnershipContext(projectId, userId);
 
       // Verificar se o colaborador existe no projeto
       const isCollaborator = await this.projectsRepository.isCollaborator(
@@ -1132,12 +1239,17 @@ class ProjectsController {
         throw new Error("Usuário não é colaborador deste projeto");
       }
 
-      // Remover colaborador
-      const result = await this.projectsRepository.removeCollaborator(
-        projectId,
-        userId,
-        collaboratorId
-      );
+      const result = ctx.orgWide
+        ? await this.projectsRepository.removeCollaboratorWithOrgManagement(
+            projectId,
+            ctx.membership.id,
+            collaboratorId
+          )
+        : await this.projectsRepository.removeCollaborator(
+            projectId,
+            userId,
+            collaboratorId
+          );
 
       if (!result || result.length === 0) {
         throw new Error("Falha ao remover colaborador");
@@ -1163,8 +1275,22 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar acesso ao projeto (dono ou colaborador)
-      const project = await this._validateProjectAccess(projectId, userId);
+      const membership =
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+
+      let project;
+      if (this._canAccessAllOrganizationProjects(membership) && membership.id) {
+        const rows = await this.projectsRepository.getProjectByIdWithOrgScope(
+          projectId,
+          membership.id
+        );
+        if (!rows?.length) {
+          throw new Error("Projeto não encontrado ou você não tem acesso");
+        }
+        project = rows[0];
+      } else {
+        project = await this._validateProjectAccess(projectId, userId);
+      }
 
       const collaborators = project.collaborators || [];
 
@@ -1189,8 +1315,7 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar se o projeto existe e pertence ao usuário
-      await this._validateProjectOwnership(projectId, userId);
+      const ctx = await this._getProjectOwnershipContext(projectId, userId);
 
       // Validar role
       const validRoles = ["admin", "viewer"];
@@ -1208,13 +1333,19 @@ class ProjectsController {
         throw new Error("Usuário não é colaborador deste projeto");
       }
 
-      // Atualizar role
-      const result = await this.projectsRepository.updateCollaboratorPermission(
-        projectId,
-        userId,
-        collaboratorId,
-        role
-      );
+      const result = ctx.orgWide
+        ? await this.projectsRepository.updateCollaboratorPermissionWithOrgManagement(
+            projectId,
+            ctx.membership.id,
+            collaboratorId,
+            role
+          )
+        : await this.projectsRepository.updateCollaboratorPermission(
+            projectId,
+            userId,
+            collaboratorId,
+            role
+          );
 
       if (!result || result.length === 0) {
         throw new Error("Falha ao atualizar role");
@@ -1256,34 +1387,64 @@ class ProjectsController {
         throw new Error("ID da nota é obrigatório");
       }
 
+      const membership =
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+      const orgWide = this._canAccessAllOrganizationProjects(membership);
+
+      await this._validateProjectAccess(projectId, userId);
+
       let result;
       let message;
 
       switch (action) {
         case "add":
-          result = await this.projectsRepository.addNoteToProject(
-            projectId,
-            noteId,
-            userId
-          );
+          result =
+            orgWide && membership.id
+              ? await this.projectsRepository.addNoteToProjectWithOrgScope(
+                  projectId,
+                  noteId,
+                  userId,
+                  membership.id
+                )
+              : await this.projectsRepository.addNoteToProject(
+                  projectId,
+                  noteId,
+                  userId
+                );
           message = "Nota adicionada ao projeto com sucesso";
           break;
 
         case "sync":
-          result = await this.projectsRepository.updateNoteInProject(
-            projectId,
-            noteId,
-            userId
-          );
+          result =
+            orgWide && membership.id
+              ? await this.projectsRepository.updateNoteInProjectWithOrgScope(
+                  projectId,
+                  noteId,
+                  userId,
+                  membership.id
+                )
+              : await this.projectsRepository.updateNoteInProject(
+                  projectId,
+                  noteId,
+                  userId
+                );
           message = "Nota sincronizada com sucesso";
           break;
 
         case "remove":
-          result = await this.projectsRepository.removeNoteFromProject(
-            projectId,
-            noteId,
-            userId
-          );
+          result =
+            orgWide && membership.id
+              ? await this.projectsRepository.removeNoteFromProjectWithOrgScope(
+                  projectId,
+                  noteId,
+                  userId,
+                  membership.id
+                )
+              : await this.projectsRepository.removeNoteFromProject(
+                  projectId,
+                  noteId,
+                  userId
+                );
           message = "Nota removida do projeto com sucesso";
           break;
       }
@@ -1322,12 +1483,25 @@ class ProjectsController {
         throw new Error("ID da nota é obrigatório");
       }
 
-      // Adicionar nota ao projeto
-      const result = await this.projectsRepository.addNoteToProject(
-        projectId,
-        noteId,
-        userId
-      );
+      const membership =
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+      const orgWide = this._canAccessAllOrganizationProjects(membership);
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const result =
+        orgWide && membership.id
+          ? await this.projectsRepository.addNoteToProjectWithOrgScope(
+              projectId,
+              noteId,
+              userId,
+              membership.id
+            )
+          : await this.projectsRepository.addNoteToProject(
+              projectId,
+              noteId,
+              userId
+            );
 
       if (!result || result.length === 0) {
         throw new Error(
@@ -1356,12 +1530,25 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Remover nota do projeto
-      const result = await this.projectsRepository.removeNoteFromProject(
-        projectId,
-        noteId,
-        userId
-      );
+      const membership =
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+      const orgWide = this._canAccessAllOrganizationProjects(membership);
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const result =
+        orgWide && membership.id
+          ? await this.projectsRepository.removeNoteFromProjectWithOrgScope(
+              projectId,
+              noteId,
+              userId,
+              membership.id
+            )
+          : await this.projectsRepository.removeNoteFromProject(
+              projectId,
+              noteId,
+              userId
+            );
 
       if (!result || result.length === 0) {
         throw new Error(
@@ -1389,14 +1576,20 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar acesso ao projeto (dono ou colaborador)
-      const project = await this._validateProjectAccess(projectId, userId);
+      await this._validateProjectAccess(projectId, userId);
 
-      // Buscar notas diretamente da tabela notes via project_id
-      const notes = await this.projectsRepository.getAssociatedNotes(
-        projectId,
-        userId
-      );
+      const membership =
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+      const notes =
+        this._canAccessAllOrganizationProjects(membership) && membership.id
+          ? await this.projectsRepository.getAssociatedNotesWithOrgScope(
+              projectId,
+              membership.id
+            )
+          : await this.projectsRepository.getAssociatedNotes(
+              projectId,
+              userId
+            );
 
       res.status(200).json({
         notes: notes,
@@ -1418,12 +1611,25 @@ class ProjectsController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Atualizar nota no projeto
-      const result = await this.projectsRepository.updateNoteInProject(
-        projectId,
-        noteId,
-        userId
-      );
+      const membership =
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+      const orgWide = this._canAccessAllOrganizationProjects(membership);
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const result =
+        orgWide && membership.id
+          ? await this.projectsRepository.updateNoteInProjectWithOrgScope(
+              projectId,
+              noteId,
+              userId,
+              membership.id
+            )
+          : await this.projectsRepository.updateNoteInProject(
+              projectId,
+              noteId,
+              userId
+            );
 
       if (!result || result.length === 0) {
         throw new Error(
@@ -1479,10 +1685,17 @@ class ProjectsController {
 
       filters.parent_only = req.query.parent_only !== "false";
 
-      const result = await this.projectsRepository.getProjectStats(
-        userId,
-        filters
-      );
+      const membership =
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+
+      const result =
+        this._canAccessAllOrganizationProjects(membership) && membership.id
+          ? await this.projectsRepository.getProjectStatsForOrganization(
+              membership.id,
+              userId,
+              filters
+            )
+          : await this.projectsRepository.getProjectStats(userId, filters);
       const row = result[0];
 
       const tasks = row.tasks;

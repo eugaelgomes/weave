@@ -248,10 +248,12 @@ class NotesWriteController extends NotesBaseController {
       if (!userId) return;
 
       // Validação de acesso à nota (proprietário ou colaborador pode editar)
-      const { note, isOwner, isCollaborator } = await this._validateNoteAccess(
-        id,
-        userId
-      );
+      const {
+        note,
+        isOwner,
+        isCollaborator,
+        hasOrgProjectAccess,
+      } = await this._validateNoteAccess(id, userId);
 
       if (priority_id !== undefined) {
         const pid =
@@ -290,8 +292,7 @@ class NotesWriteController extends NotesBaseController {
         }
       }
 
-      // Apenas o proprietário pode marcar como deletado
-      if (deleted !== undefined && !isOwner) {
+      if (deleted !== undefined && !isOwner && !hasOrgProjectAccess) {
         throw new Error("Apenas o proprietário pode excluir a nota");
       }
 
@@ -536,9 +537,10 @@ class NotesWriteController extends NotesBaseController {
       formattedNote.access = {
         isOwner,
         isCollaborator,
-        canEdit: isOwner || isCollaborator,
-        canDelete: isOwner,
-        canShare: isOwner,
+        hasOrgProjectAccess,
+        canEdit: isOwner || isCollaborator || hasOrgProjectAccess,
+        canDelete: isOwner || hasOrgProjectAccess,
+        canShare: isOwner || hasOrgProjectAccess,
       };
       res.status(200).json(formattedNote);
     } catch (error) {
