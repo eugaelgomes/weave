@@ -148,6 +148,17 @@ export async function research(query: string, recencyFilter?: string): Promise<a
   return await handleResponse(response);
 }
 
+export interface AgentProviderResponse {
+  name: string;
+  models: Record<string, string>;
+}
+
+export async function fetchAgentProviders(): Promise<AgentProviderResponse[]> {
+  const response = await apiClient.get(API_ENDPOINTS.AGENTS_PROVIDERS);
+  const data = await handleResponse<{ providers: AgentProviderResponse[] }>(response);
+  return data.providers;
+}
+
 export async function listAgents(): Promise<Agent[]> {
   const response = await apiClient.get(API_ENDPOINTS.AGENTS);
   const data = await handleResponse<{ agents: Agent[] }>(response);

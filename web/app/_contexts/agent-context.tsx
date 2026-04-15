@@ -9,15 +9,19 @@ import {
   deleteAgent as deleteAgentService,
   shareAgent as shareAgentService,
   getAgentById,
+  fetchAgentProviders,
   type Agent,
   type CreateAgentData,
+  type AgentProviderResponse,
 } from "../_services/ai-agent-service/agent-service";
 
 interface AgentContextType {
   agents: Agent[];
+  agentProviders: AgentProviderResponse[];
   loading: boolean;
   error: string | null;
   loadAgents: () => Promise<void>;
+  loadProviders: () => Promise<void>;
   createAgent: (data: CreateAgentData) => Promise<Agent>;
   updateAgent: (id: string, data: Partial<CreateAgentData>) => Promise<Agent>;
   deleteAgent: (id: string) => Promise<void>;
@@ -25,13 +29,26 @@ interface AgentContextType {
   getAgent: (id: string) => Promise<Agent>;
 }
 
+export type { Agent, CreateAgentData, AgentProviderResponse };
+
 const AgentContext = createContext<AgentContextType | undefined>(undefined);
 
 export function AgentProvider({ children }: { children: React.ReactNode }) {
   const { authenticated } = useAuth();
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [agentProviders, setAgentProviders] = useState<AgentProviderResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const loadProviders = useCallback(async () => {
+    if (!authenticated) return;
+    try {
+      const data = await fetchAgentProviders();
+      setAgentProviders(data);
+    } catch (err: any) {
+      console.error("Failed to load agent providers:", err);
+    }
+  }, [authenticated]);
 
   const loadAgents = useCallback(async () => {
     if (!authenticated) return;
@@ -129,16 +146,19 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (authenticated) {
       loadAgents(); // Initial load
+      loadProviders();
     }
-  }, [authenticated, loadAgents]);
+  }, [authenticated, loadAgents, loadProviders]);
 
   return (
     <AgentContext.Provider
       value={{
         agents,
+        agentProviders,
         loading,
         error,
         loadAgents,
+        loadProviders,
         createAgent,
         updateAgent,
         deleteAgent,

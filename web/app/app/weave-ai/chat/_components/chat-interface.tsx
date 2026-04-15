@@ -26,8 +26,7 @@ import { useChat } from "@/app/_contexts/chat-context";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useNotes } from "@/app/_contexts/notes-context";
 import { useProjects } from "@/app/_contexts/projects-context";
-
-import type { AIModel } from "@/app/_services/ai-agent-service/agent-service";
+import { type AIModel } from "@/app/_contexts/chat-context";
 import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
 

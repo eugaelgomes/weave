@@ -70,6 +70,7 @@ function normalizeAgentData(data) {
       system_instructions: {
         rules: [],
         context: instructions || "",
+        format: "markdown",
         objectives: [],
       },
     },
@@ -172,8 +173,10 @@ function mergeAgentUpdates(existingPersonality = {}, updates = {}) {
   if (updates.name !== undefined) next.metadata.name = updates.name;
   if (updates.description !== undefined)
     next.metadata.description = updates.description;
-  if (updates.instructions !== undefined)
+  if (updates.instructions !== undefined) {
     next.behavior.system_instructions.context = updates.instructions;
+    next.behavior.system_instructions.format = "markdown";
+  }
   if (updates.role !== undefined) next.persona.role = updates.role;
   if (updates.tone !== undefined) next.persona.tone = updates.tone;
   if (updates.language !== undefined) next.persona.language = updates.language;

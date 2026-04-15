@@ -1,8 +1,8 @@
 const express = require("express");
 const multer = require("multer");
 
-const aiController = require("./weave-ai.controller");
-const agentController = require("./weave-ai.agents.controller");
+const aiController = require("./controllers/chat.controller");
+const agentController = require("./controllers/agents.controller");
 const { verifyToken } = require("@/middlewares/verify-token");
 const { requireOrgPermission } = require("@/middlewares/require-org-permission");
 const { ORG_PERMISSIONS } = require("@/modules/organizations/organization-role-policy");

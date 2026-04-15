@@ -31,6 +31,8 @@ export interface ChatContextType {
   setCurrentSession: (session: ChatSession | null) => void;
 }
 
+export type { AIModel, ChatMessage, SendMessageData, ChatSession };
+
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {

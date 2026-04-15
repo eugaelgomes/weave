@@ -21,8 +21,7 @@ function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
   return (
     <div className={cn("flex flex-col", className)}>
       <div className="flex h-10 items-center justify-between border-b border-neutral-100 px-3 md:h-12 dark:border-neutral-800">
-        <div className="flex items-center gap-1.5 text-[10px] font-semibold tracking-widest text-neutral-700 uppercase dark:text-neutral-200">
-          <Bot className="h-4 w-4 text-brand-primary-500" />
+        <div className="flex items-center gap-1.5 text-[10px] font-semibold tracking-widest text-neutral-700  dark:text-neutral-200">
           Histórico
         </div>
         {onLinkClick && (
@@ -55,7 +54,7 @@ function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
         <div className="space-y-3">
           <div>
             <div className="mb-1.5 flex items-center justify-between px-1.5">
-              <h3 className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+              <h3 className="text-[10px] font-bold tracking-wider text-neutral-500  dark:text-neutral-400">
                 Suas Conversas
               </h3>
             </div>

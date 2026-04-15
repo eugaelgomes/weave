@@ -1,6 +1,6 @@
 "use client";
 
-import { AgentForm } from "../_components/agent-form";
+import { AgentForm } from "../[id]/page";
 
 export default function NewAgentPage() {
   return <AgentForm />;

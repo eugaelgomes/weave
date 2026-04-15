@@ -1,12 +1,12 @@
 /* eslint-disable sort-keys */
 const axios = require("axios");
-const agentRepository = require("@/modules/weave-ai/weave-ai.repository");
+const agentRepository = require("@/modules/weave-ai/repositories/agents.repository");
 const {
   normalizeAgentData,
   formatAgentResponse,
   mergeAgentUpdates,
   ensureArrayField,
-} = require("@/modules/weave-ai/normalizer");
+} = require("@/modules/weave-ai/normalize");
 const spacesService = require("@/services/storage");
 
 const { LLM_MODELS, LLM_PROVIDERS } = require("@/services/llms/constants");

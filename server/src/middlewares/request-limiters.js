@@ -41,11 +41,11 @@ const structuralLimiter = rateLimit({
 /**
  * Rotas de IA e Operações de Backup/Upload Pesados
  * Weave-IA, Backups, Uploads Grandes
- * 15 requisições a cada 10 minutos
+ * 150 requisições a cada 10 minutos
  */
 const heavyOperationLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 15,
+  max: 150,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many failed attempts. Please try again later." },

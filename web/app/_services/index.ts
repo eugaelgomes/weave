@@ -144,11 +144,13 @@ export {
   analyzeNote,
   analyzeProject,
   research,
+  fetchAgentProviders,
   type AIModel,
   type ChatMessage,
   type ChatSession,
   type SendMessageData,
   type GenerateContentData,
+  type AgentProviderResponse,
 } from "./ai-agent-service/agent-service";
 
 // API Client e Endpoints

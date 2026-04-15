@@ -11,7 +11,7 @@ const UserDataRepository = require("@/modules/users/repositories/user-data.repos
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 const DeleteUsersRepository = require("@/modules/users/repositories/delete-users.repository");
-const chatRepository = require("@/modules/weave-ai/weave-ai.repository");
+const chatRepository = require("@/modules/weave-ai/repositories/chat.repository");
 
 /**
  * Obtém informações temporais atualizadas

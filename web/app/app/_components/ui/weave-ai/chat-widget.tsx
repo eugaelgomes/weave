@@ -4,9 +4,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, Sparkles, RefreshCw, MessageSquare } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useChat } from "@/app/_contexts/chat-context";
+import { useChat, type AIModel } from "@/app/_contexts/chat-context";
 import { useAuth } from "@/app/_contexts/auth-context";
-import type { AIModel } from "@/app/_services/ai-agent-service/agent-service";
 
 interface ChatWidgetProps {
   title?: string;
