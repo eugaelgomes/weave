@@ -42,22 +42,22 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-white dark:bg-brand-secondary-950">
+    <div className="dark:bg-brand-secondary-950 flex h-screen flex-col bg-white">
       <Navbar onToggleSidebar={toggleSidebar} />
 
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
         {/* Desktop Sidebar */}
-        <aside
+        <div
           className={`hidden ${
-            isCollapsed ? "lg:w-[70px]" : "lg:w-[180px]"
-          } flex-col bg-white transition-all duration-300 lg:flex dark:bg-brand-secondary-950`}
+            isCollapsed ? "lg:w-[70px]" : "lg:w-[160px]"
+          } dark:bg-brand-secondary-950 flex-col bg-white transition-all duration-300 lg:flex`}
         >
           <Sidebar
             onLinkClick={closeSidebar}
             isCollapsed={isCollapsed}
             toggleCollapse={toggleCollapse}
           />
-        </aside>
+        </div>
 
         {/* Mobile Centered Sidebar Modal */}
         {sidebarOpen && (
@@ -79,15 +79,13 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
         )}
 
-        <main className="min-h-0 flex-1 overflow-y-auto scroll-smooth  rounded-tl-md border-t-2 border-l border-neutral-200 bg-brand-secondary-100 p-2 dark:border-neutral-800 dark:bg-brand-secondary-950/60 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent">
+        <div className="bg-brand-secondary-100 md:mr-2 md:mb-2 dark:bg-brand-secondary-950/60 min-h-0 flex-1 overflow-y-auto scroll-smooth rounded-md border-t-2 border border-neutral-200 p-2 dark:border-neutral-800 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent">
           <div className="animate-in fade-in slide-in-from-bottom-2 flex min-h-full flex-col gap-2 duration-500">
-            <div className="flex flex-1 flex-col min-h-0 min-w-0">
-              {children}
-            </div>
-            
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
+
             <PagesFooter />
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );

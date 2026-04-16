@@ -5,14 +5,7 @@ import { useOrganization } from "@/app/_contexts/organization-context";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import type { OrganizationArea } from "@/app/_services/organization";
-import {
-  Plus,
-  X,
-  Mail,
-  ChevronDown,
-  User,
-  Layers3,
-} from "lucide-react";
+import { Plus, X, Mail, ChevronDown, User, Layers3 } from "lucide-react";
 import { OrganizationHeader } from "@/app/app/_components/ui/headers/organization-header";
 
 // --- UI Components ---
@@ -231,9 +224,7 @@ const InviteModal = ({
             <div className="relative">
               <select
                 value={areaRole}
-                onChange={(e) =>
-                  setAreaRole(e.target.value as "manager" | "editor" | "viewer")
-                }
+                onChange={(e) => setAreaRole(e.target.value as "manager" | "editor" | "viewer")}
                 className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
               >
                 <option value="manager">{t.organizationMembers.areaManager}</option>
@@ -342,56 +333,72 @@ export default function InvitesPage() {
         </div>
       </div>
 
-        <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 mt-4">
-          <div className="flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-neutral-800">
-             <h2 className="text-sm font-bold text-neutral-900 dark:text-white">Convites Pendentes</h2>
-             {userCanManage && (
-                <button
-                  onClick={() => setShowInviteModal(true)}
-                  className="bg-brand-primary-500 flex shrink-0 items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold text-neutral-950 shadow-sm transition-all hover:bg-yellow-600 active:scale-95"
-                >
-                  <Plus className="h-3.5 w-3.5" /> <span className="whitespace-nowrap">{t.organizationMembers.inviteMember}</span>
-                </button>
-             )}
-          </div>
-          <div className="flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900 mt-2">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-neutral-50/50 dark:bg-neutral-950/50">
+      <div className="mt-4 flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-neutral-800">
+          <h2 className="text-sm font-bold text-neutral-900 dark:text-white">Convites Pendentes</h2>
+          {userCanManage && (
+            <button
+              onClick={() => setShowInviteModal(true)}
+              className="bg-brand-primary-500 flex shrink-0 items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold text-neutral-950 shadow-sm transition-all hover:bg-yellow-600 active:scale-95"
+            >
+              <Plus className="h-3.5 w-3.5" />{" "}
+              <span className="whitespace-nowrap">{t.organizationMembers.inviteMember}</span>
+            </button>
+          )}
+        </div>
+        <div className="mt-2 flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-neutral-50/50 dark:bg-neutral-950/50">
+                <tr>
+                  <th className="px-4 py-3 text-[10px] font-bold tracking-wider text-neutral-500">
+                    Email
+                  </th>
+                  <th className="px-4 py-3 text-[10px] font-bold tracking-wider text-neutral-500">
+                    Nível
+                  </th>
+                  <th className="px-4 py-3 text-right text-[10px] font-bold tracking-wider text-neutral-500">
+                    {t.organizationMembers.tableActions}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
+                {invites?.length === 0 ? (
                   <tr>
-                    <th className="px-4 py-3 text-[10px] font-bold tracking-wider text-neutral-500">Email</th>
-                    <th className="px-4 py-3 text-[10px] font-bold tracking-wider text-neutral-500">Nível</th>
-                    <th className="px-4 py-3 text-right text-[10px] font-bold tracking-wider text-neutral-500">{t.organizationMembers.tableActions}</th>
+                    <td colSpan={3} className="px-4 py-6 text-center text-xs text-neutral-500">
+                      Nenhum convite pendente
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-                  {invites?.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="px-4 py-6 text-center text-xs text-neutral-500">Nenhum convite pendente</td>
-                    </tr>
-                  ) : invites?.map((invite) => (
-                    <tr key={invite.invite_id} className="group transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+                ) : (
+                  invites?.map((invite) => (
+                    <tr
+                      key={invite.invite_id}
+                      className="group transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
+                    >
                       <td className="px-4 py-3 font-medium dark:text-white">{invite.email}</td>
-                      <td className="px-4 py-3"><Badge role={invite.role} /></td>
+                      <td className="px-4 py-3">
+                        <Badge role={invite.role} />
+                      </td>
                       <td className="px-4 py-3 text-right">
                         {userCanManage && (
                           <button
                             onClick={() => handleCancelInvite(invite.invite_id)}
                             disabled={loadingAction}
-                            className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 ml-auto flex items-center justify-end"
+                            className="ml-auto flex items-center justify-end text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                             title="Cancelar Convite"
                           >
-                             Cancelar
+                            Cancelar
                           </button>
                         )}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
+      </div>
 
       <InviteModal
         isOpen={showInviteModal}

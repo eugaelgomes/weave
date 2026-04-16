@@ -159,7 +159,8 @@ const ptBR = {
     saveChanges: "Salvar Alterações",
     saving: "Salvando...",
     removeMemberTitle: "Remover Membro",
-    removeConfirmation: "Tem certeza que deseja remover {name} da organização? Eles perderão acesso a todos os projetos e notas internas.",
+    removeConfirmation:
+      "Tem certeza que deseja remover {name} da organização? Eles perderão acesso a todos os projetos e notas internas.",
     yesRemove: "Sim, remover membro",
     removing: "Removendo...",
     emptyState: "Crie uma organização para gerenciar membros.",
@@ -168,7 +169,7 @@ const ptBR = {
     roleUpdateSuccess: "Função atualizada com sucesso.",
     roleUpdateError: "Erro ao atualizar permissão.",
     removeSuccess: "Membro removido da organização.",
-    removeError: "Erro ao remover membro."
+    removeError: "Erro ao remover membro.",
   },
 };
 export default ptBR;

@@ -49,13 +49,27 @@ interface CalendarContextType {
   connectGoogleCalendar: () => void;
   disconnectGoogleCalendar: () => Promise<void>;
   createEvent: (payload: CreateInternalCalendarEventPayload) => Promise<InternalCalendarEvent>;
-  updateEvent: (eventId: string, payload: Partial<CreateInternalCalendarEventPayload>) => Promise<InternalCalendarEvent>;
+  updateEvent: (
+    eventId: string,
+    payload: Partial<CreateInternalCalendarEventPayload>
+  ) => Promise<InternalCalendarEvent>;
   getGoogleCalendarSettings: () => Promise<GoogleCalendarSetting[]>;
   getGoogleCalendarsList: () => Promise<GoogleCalendar[]>;
-  checkGoogleFreeBusy: (timeMin: string, timeMax: string, items?: { id: string }[]) => Promise<FreeBusyResponse>;
+  checkGoogleFreeBusy: (
+    timeMin: string,
+    timeMax: string,
+    items?: { id: string }[]
+  ) => Promise<FreeBusyResponse>;
   fetchEventInvites: (eventId: string) => Promise<InternalCalendarEventInvite[]>;
-  createEventInvite: (eventId: string, payload: CreateCalendarEventInvitePayload) => Promise<InternalCalendarEventInvite>;
-  updateEventInvite: (eventId: string, inviteId: string, payload: UpdateCalendarEventInvitePayload) => Promise<InternalCalendarEventInvite>;
+  createEventInvite: (
+    eventId: string,
+    payload: CreateCalendarEventInvitePayload
+  ) => Promise<InternalCalendarEventInvite>;
+  updateEventInvite: (
+    eventId: string,
+    inviteId: string,
+    payload: UpdateCalendarEventInvitePayload
+  ) => Promise<InternalCalendarEventInvite>;
   deleteEventInvite: (eventId: string, inviteId: string) => Promise<void>;
 }
 
@@ -215,7 +229,10 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateEvent = useCallback(
-    async (eventId: string, payload: Partial<CreateInternalCalendarEventPayload>): Promise<InternalCalendarEvent> => {
+    async (
+      eventId: string,
+      payload: Partial<CreateInternalCalendarEventPayload>
+    ): Promise<InternalCalendarEvent> => {
       setCreating(true);
       setError(null);
 
@@ -260,22 +277,31 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     return calendars;
   }, []);
 
-  const checkGoogleFreeBusy = useCallback(async (timeMin: string, timeMax: string, items?: { id: string }[]) => {
-    const { freebusy } = await fetchGoogleFreeBusy(timeMin, timeMax, items);
-    return freebusy;
-  }, []);
+  const checkGoogleFreeBusy = useCallback(
+    async (timeMin: string, timeMax: string, items?: { id: string }[]) => {
+      const { freebusy } = await fetchGoogleFreeBusy(timeMin, timeMax, items);
+      return freebusy;
+    },
+    []
+  );
 
   const handleFetchEventInvites = useCallback(async (eventId: string) => {
     return await fetchEventInvites(eventId);
   }, []);
 
-  const handleCreateEventInvite = useCallback(async (eventId: string, payload: CreateCalendarEventInvitePayload) => {
-    return await createEventInvite(eventId, payload);
-  }, []);
+  const handleCreateEventInvite = useCallback(
+    async (eventId: string, payload: CreateCalendarEventInvitePayload) => {
+      return await createEventInvite(eventId, payload);
+    },
+    []
+  );
 
-  const handleUpdateEventInvite = useCallback(async (eventId: string, inviteId: string, payload: UpdateCalendarEventInvitePayload) => {
-    return await updateEventInvite(eventId, inviteId, payload);
-  }, []);
+  const handleUpdateEventInvite = useCallback(
+    async (eventId: string, inviteId: string, payload: UpdateCalendarEventInvitePayload) => {
+      return await updateEventInvite(eventId, inviteId, payload);
+    },
+    []
+  );
 
   const handleDeleteEventInvite = useCallback(async (eventId: string, inviteId: string) => {
     return await deleteEventInvite(eventId, inviteId);

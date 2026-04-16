@@ -21,7 +21,7 @@ function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
   return (
     <div className={cn("flex flex-col", className)}>
       <div className="flex h-10 items-center justify-between border-b border-neutral-100 px-3 md:h-12 dark:border-neutral-800">
-        <div className="flex items-center gap-1.5 text-[10px] font-semibold tracking-widest text-neutral-700  dark:text-neutral-200">
+        <div className="flex items-center gap-1.5 text-[10px] font-semibold tracking-widest text-neutral-700 dark:text-neutral-200">
           Histórico
         </div>
         {onLinkClick && (
@@ -54,7 +54,7 @@ function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
         <div className="space-y-3">
           <div>
             <div className="mb-1.5 flex items-center justify-between px-1.5">
-              <h3 className="text-[10px] font-bold tracking-wider text-neutral-500  dark:text-neutral-400">
+              <h3 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
                 Suas Conversas
               </h3>
             </div>
@@ -105,7 +105,6 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
       <WeaveAIHeader className="border-b border-yellow-500/80 pb-1" />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        
         {/* Cabeçalho mobile padronizado */}
         <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-neutral-800 dark:bg-neutral-950">
           <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
@@ -133,7 +132,6 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
 
         {/* Layout Flexbox com Gap (Desktop) */}
         <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
-          
           {/* SIDEBAR LATERAL — Painel flutuante gerido puramente por Flexbox (sem heights artificiais) */}
           <ChatSidebar className="hidden w-56 shrink-0 md:flex md:flex-col md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:md:border-neutral-800 dark:md:bg-neutral-900/50" />
 
@@ -154,7 +152,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
           )}
 
           {/* CONTEÚDO PRINCIPAL (Chat Area) */}
-          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-50 md:rounded-md md:border md:border-neutral-200 md:shadow-sm md:bg-white dark:bg-neutral-950 dark:md:border-neutral-800">
+          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-50 md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:bg-neutral-950 dark:md:border-neutral-800">
             <div className="custom-scrollbar flex-1 overflow-auto text-neutral-900 dark:text-neutral-100">
               {children}
             </div>

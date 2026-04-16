@@ -185,7 +185,7 @@ export interface GoogleCalendarSetting {
 export interface FreeBusyResponse {
   [calendarId: string]: {
     busy: { start: string; end: string }[];
-  }
+  };
 }
 
 export interface InternalCalendarEventInvite {
@@ -215,7 +215,9 @@ export interface UpdateCalendarEventInvitePayload {
   status?: "PENDING" | "ACCEPTED" | "DECLINED" | "TENTATIVE";
 }
 
-export async function fetchGoogleCalendarSettings(): Promise<{ settings: GoogleCalendarSetting[] }> {
+export async function fetchGoogleCalendarSettings(): Promise<{
+  settings: GoogleCalendarSetting[];
+}> {
   const res = await apiClient.get(API_ENDPOINTS.GOOGLE_CALENDAR_SETTINGS);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -241,7 +243,7 @@ export async function fetchGoogleFreeBusy(
   const res = await apiClient.post(API_ENDPOINTS.GOOGLE_CALENDAR_FREEBUSY, {
     timeMin,
     timeMax,
-    items
+    items,
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -259,7 +261,10 @@ export async function fetchEventInvites(eventId: string): Promise<InternalCalend
   return res.json() as Promise<InternalCalendarEventInvite[]>;
 }
 
-export async function createEventInvite(eventId: string, payload: CreateCalendarEventInvitePayload): Promise<InternalCalendarEventInvite> {
+export async function createEventInvite(
+  eventId: string,
+  payload: CreateCalendarEventInvitePayload
+): Promise<InternalCalendarEventInvite> {
   const res = await apiClient.post(API_ENDPOINTS.CALENDAR_EVENT_INVITES(eventId), payload);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -273,7 +278,10 @@ export async function updateEventInvite(
   inviteId: string,
   payload: UpdateCalendarEventInvitePayload
 ): Promise<InternalCalendarEventInvite> {
-  const res = await apiClient.patch(API_ENDPOINTS.CALENDAR_EVENT_INVITE_BY_ID(eventId, inviteId), payload);
+  const res = await apiClient.patch(
+    API_ENDPOINTS.CALENDAR_EVENT_INVITE_BY_ID(eventId, inviteId),
+    payload
+  );
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || "Falha ao atualizar convite do evento");

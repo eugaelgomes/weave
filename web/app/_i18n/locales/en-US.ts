@@ -162,7 +162,8 @@ const enUS: TranslationKeys = {
     saveChanges: "Save Changes",
     saving: "Saving...",
     removeMemberTitle: "Remove Member",
-    removeConfirmation: "Are you sure you want to remove {name} from the organization? They will lose access to all internal projects and notes.",
+    removeConfirmation:
+      "Are you sure you want to remove {name} from the organization? They will lose access to all internal projects and notes.",
     yesRemove: "Yes, remove member",
     removing: "Removing...",
     emptyState: "Create an organization to manage members.",
@@ -171,7 +172,7 @@ const enUS: TranslationKeys = {
     roleUpdateSuccess: "Role updated successfully.",
     roleUpdateError: "Error updating permission.",
     removeSuccess: "Member removed from the organization.",
-    removeError: "Error removing member."
+    removeError: "Error removing member.",
   },
 };
 export default enUS;

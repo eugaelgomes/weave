@@ -7,7 +7,10 @@ import { useAuth } from "../../_contexts/auth-context";
 import { useNotes } from "../../_contexts/notes-context";
 import { FileText, ChevronRight, LayoutDashboard, Menu, X } from "lucide-react";
 import { NotesHeader } from "../_components/ui/headers/notes-header";
-import { NoteCommentsPanelProvider, useNoteCommentsPanel } from "../../_contexts/note-comments-panel-context";
+import {
+  NoteCommentsPanelProvider,
+  useNoteCommentsPanel,
+} from "../../_contexts/note-comments-panel-context";
 
 function NotesLayoutContent({ children }: { children: React.ReactNode }) {
   const { loading: notesLoading, getRecentNotes } = useNotes();
@@ -24,7 +27,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
 
   const isDashboard = pathname === "/app/notes";
   const currentNoteId = !isDashboard ? pathname.split("/app/notes/")[1] : null;
-  
+
   const sidebarContent = (
     <div className="p-2.5">
       <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
@@ -124,10 +127,9 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
-          
           {/* SIDEBAR LATERAL — Altura dinâmica da Viewport + Sticky + Overflow */}
           <div
-            className={`hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-sm md:sticky  md:h-[calc(100vh-auto)] dark:border-neutral-800 dark:bg-neutral-900/50 ${
+            className={`hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-sm md:sticky md:h-[calc(100vh-auto)] dark:border-neutral-800 dark:bg-neutral-900/50 ${
               commentsPanelOpen ? "md:hidden" : "md:block md:w-[180px]"
             }`}
           >

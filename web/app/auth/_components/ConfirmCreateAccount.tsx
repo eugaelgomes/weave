@@ -9,13 +9,7 @@ import { SetProfileSettings } from "./SetProfileSettings";
 
 interface Props {
   onNavigate: (
-    view:
-      | "signin"
-      | "signup"
-      | "forgot"
-      | "confirm"
-      | "profile-settings"
-      | "accept-invite",
+    view: "signin" | "signup" | "forgot" | "confirm" | "profile-settings" | "accept-invite",
     payload?: { email?: string; password?: string }
   ) => void;
   email?: string;

@@ -66,25 +66,27 @@ function AgentCard({ agent, onOpen }: { agent: Agent; onOpen: () => void }) {
       className={cn(
         "group flex h-full flex-col rounded-md border border-neutral-200 bg-white p-4 text-left shadow-sm transition",
         "hover:border-brand-primary-500/40 hover:shadow-md",
-        "dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-brand-primary-500/35"
+        "dark:hover:border-brand-primary-500/35 dark:border-neutral-800 dark:bg-neutral-950"
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <span
             className={cn(
-              "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ring-1 ring-inset",
+              "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase ring-1 ring-inset",
               meta.chip
             )}
           >
             {meta.label}
           </span>
-          <h3 className="mt-2 text-sm font-semibold text-neutral-900 dark:text-neutral-50">{agent.name}</h3>
+          <h3 className="mt-2 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
+            {agent.name}
+          </h3>
           <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">
             {agent.description || "Sem descrição — adicione uma para orientar o uso do agente."}
           </p>
         </div>
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-brand-primary-600 transition group-hover:bg-brand-primary-500/15 dark:bg-neutral-900 dark:text-brand-primary-400">
+        <div className="text-brand-primary-600 group-hover:bg-brand-primary-500/15 dark:text-brand-primary-400 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-neutral-100 transition dark:bg-neutral-900">
           <Sparkles className="h-3.5 w-3.5" />
         </div>
       </div>
@@ -107,8 +109,10 @@ function AgentCard({ agent, onOpen }: { agent: Agent; onOpen: () => void }) {
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3 dark:border-neutral-800">
-        <span className="min-w-0 truncate text-[11px] text-neutral-400 dark:text-neutral-500">{tagLine || "Sem tags"}</span>
-        <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-brand-primary-600 dark:text-brand-primary-400">
+        <span className="min-w-0 truncate text-[11px] text-neutral-400 dark:text-neutral-500">
+          {tagLine || "Sem tags"}
+        </span>
+        <span className="text-brand-primary-600 dark:text-brand-primary-400 inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold">
           Abrir
           <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
         </span>
@@ -157,16 +161,31 @@ export default function AgentsOverviewPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar agente..."
-              className="h-8 w-full rounded-md border border-neutral-200 bg-neutral-50/50 pr-3 pl-8 text-xs text-neutral-900 placeholder:text-neutral-400 focus:border-brand-primary-500 focus:outline-none focus:ring-1 focus:ring-brand-primary-500/50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100"
+              className="focus:border-brand-primary-500 focus:ring-brand-primary-500/50 h-8 w-full rounded-md border border-neutral-200 bg-neutral-50/50 pr-3 pl-8 text-xs text-neutral-900 placeholder:text-neutral-400 focus:ring-1 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100"
             />
           </div>
 
           <div className="hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
 
           <div className="flex items-center gap-1.5">
-            <ProviderChip id="all" label="Todos" selected={providerFilter === "all"} onSelect={setProviderFilter} />
-            <ProviderChip id="gemini" label="Gemini" selected={providerFilter === "gemini"} onSelect={setProviderFilter} />
-            <ProviderChip id="perplexity" label="Perplexity" selected={providerFilter === "perplexity"} onSelect={setProviderFilter} />
+            <ProviderChip
+              id="all"
+              label="Todos"
+              selected={providerFilter === "all"}
+              onSelect={setProviderFilter}
+            />
+            <ProviderChip
+              id="gemini"
+              label="Gemini"
+              selected={providerFilter === "gemini"}
+              onSelect={setProviderFilter}
+            />
+            <ProviderChip
+              id="perplexity"
+              label="Perplexity"
+              selected={providerFilter === "perplexity"}
+              onSelect={setProviderFilter}
+            />
           </div>
         </div>
 
@@ -194,7 +213,7 @@ export default function AgentsOverviewPage() {
           <button
             type="button"
             onClick={() => router.push("/app/weave-ai/agent/new")}
-            className="flex h-8 items-center gap-1.5 rounded-md bg-brand-primary-500 px-3 text-xs font-semibold text-neutral-900 shadow-sm transition hover:bg-brand-primary-400"
+            className="bg-brand-primary-500 hover:bg-brand-primary-400 flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold text-neutral-900 shadow-sm transition"
           >
             <Plus className="h-3.5 w-3.5" />
             Criar Agente
@@ -207,7 +226,9 @@ export default function AgentsOverviewPage() {
           <div className="flex h-12 w-12 items-center justify-center rounded-md bg-neutral-100 text-neutral-400 dark:bg-neutral-900 dark:text-neutral-500">
             <Search className="h-5 w-5" />
           </div>
-          <h2 className="mt-4 text-sm font-semibold text-neutral-900 dark:text-neutral-100">Nenhum agente encontrado</h2>
+          <h2 className="mt-4 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+            Nenhum agente encontrado
+          </h2>
           <p className="mt-1 max-w-sm text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
             {agents.length === 0
               ? "Crie seu primeiro agente com instruções personalizadas para iniciar."
@@ -217,7 +238,11 @@ export default function AgentsOverviewPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredAgents.map((agent) => (
-            <AgentCard key={agent.id} agent={agent} onOpen={() => router.push(`/app/weave-ai/agent/${agent.id}`)} />
+            <AgentCard
+              key={agent.id}
+              agent={agent}
+              onOpen={() => router.push(`/app/weave-ai/agent/${agent.id}`)}
+            />
           ))}
         </div>
       )}

@@ -110,7 +110,7 @@ const Pagination = ({
               onClick={() => handlePageClick(page)}
               className={`flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-medium transition-all ${
                 page === currentPage
-                  ? "border border-yellow-200 bg-yellow-50 text-yellow-600 shadow-sm dark:border-neutral-800 dark:bg-brand-primary-500/10 dark:text-brand-primary-500"
+                  ? "dark:bg-brand-primary-500/10 dark:text-brand-primary-500 border border-yellow-200 bg-yellow-50 text-yellow-600 shadow-sm dark:border-neutral-800"
                   : "text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
               }`}
             >

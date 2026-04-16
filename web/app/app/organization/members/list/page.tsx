@@ -26,7 +26,7 @@ import {
   Edit2,
   ChevronDown,
   Ban,
-  Filter
+  Filter,
 } from "lucide-react";
 import { OrganizationHeader } from "@/app/app/_components/ui/headers/organization-header";
 import getStorageUrl from "@/app/_utils/get-storage-url";
@@ -300,9 +300,7 @@ const InviteModal = ({
             <div className="relative">
               <select
                 value={areaRole}
-                onChange={(e) =>
-                  setAreaRole(e.target.value as "manager" | "editor" | "viewer")
-                }
+                onChange={(e) => setAreaRole(e.target.value as "manager" | "editor" | "viewer")}
                 className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
               >
                 <option value="manager">{t.organizationMembers.areaManager}</option>
@@ -404,7 +402,7 @@ export default function MembersPage() {
     fetchAreas,
   } = useOrganization();
 
-    const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
   const [filterArea, setFilterArea] = useState("all");
   const [filterProject, setFilterProject] = useState("all");
@@ -589,8 +587,7 @@ export default function MembersPage() {
         </div>
       </div>
 
-
-                {/* Bloco de Filtros Refinado */}
+      {/* Bloco de Filtros Refinado */}
       <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
           <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-end xl:w-auto">

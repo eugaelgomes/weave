@@ -98,7 +98,7 @@ export default function NotesCarousel({
           </p>
           <Link
             href={emptyActionHref}
-            className="inline-flex items-center gap-1.5 rounded bg-brand-primary-500 px-3 py-1.5 text-[10px] font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600"
+            className="bg-brand-primary-500 inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-[10px] font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600"
           >
             <FileText className="h-3 w-3" /> {emptyActionText}
           </Link>
@@ -148,14 +148,14 @@ export default function NotesCarousel({
                               />
                             </div>
                           )}
-                          <h2 className="line-clamp-2 text-xs leading-tight font-semibold text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-100 dark:group-hover:text-brand-primary-500">
+                          <h2 className="dark:group-hover:text-brand-primary-500 line-clamp-2 text-xs leading-tight font-semibold text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-100">
                             {note.title || "Nota sem título"}
                           </h2>
                         </div>
 
                         {isNew && (
                           <span
-                            className="flex h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand-primary-500 shadow-sm"
+                            className="bg-brand-primary-500 flex h-1.5 w-1.5 flex-shrink-0 rounded-full shadow-sm"
                             title="Nova"
                           />
                         )}
@@ -285,7 +285,7 @@ export default function NotesCarousel({
                   onClick={() => scrollToSlide(index)}
                   className={`h-1 rounded-full transition-all ${
                     currentSlide === index
-                      ? "w-4 bg-brand-primary-500"
+                      ? "bg-brand-primary-500 w-4"
                       : "w-1 bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-700 dark:hover:bg-neutral-600"
                   }`}
                   aria-label={`Ir para nota ${index + 1}`}

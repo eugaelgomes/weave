@@ -10,13 +10,7 @@ import { consumeInvitePostLoginPath } from "@/app/_utils/post-login-redirect";
 
 interface Props {
   onNavigate: (
-    view:
-      | "signin"
-      | "signup"
-      | "forgot"
-      | "confirm"
-      | "profile-settings"
-      | "accept-invite",
+    view: "signin" | "signup" | "forgot" | "confirm" | "profile-settings" | "accept-invite",
     payload?: { email?: string; password?: string }
   ) => void;
   locale?: LocaleKey;
@@ -117,7 +111,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder={t.signIn.usernamePlaceholder}
-              className="bg-white border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
           </div>
@@ -131,7 +125,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t.signIn.passwordPlaceholder}
-              className="bg-white border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
             <button
@@ -204,7 +198,10 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
       </div>
       <div className="text-brand-secondary-400 mt-8 flex flex-col items-center gap-2 text-xs">
         <div className="flex items-center gap-2">
-          <a href="/terms" className="hover:text-brand-secondary-600 transition-colors hover:underline">
+          <a
+            href="/terms"
+            className="hover:text-brand-secondary-600 transition-colors hover:underline"
+          >
             {t.signIn.terms}
           </a>
           <span className="text-brand-secondary-300">|</span>

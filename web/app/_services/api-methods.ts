@@ -120,7 +120,8 @@ export const API_ENDPOINTS = {
   CALENDAR_EVENTS: "/calendar-events",
   CALENDAR_EVENT_BY_ID: (id: string) => `/calendar-events/${id}`,
   CALENDAR_EVENT_INVITES: (eventId: string) => `/calendar-events/${eventId}/invites`,
-  CALENDAR_EVENT_INVITE_BY_ID: (eventId: string, inviteId: string) => `/calendar-events/${eventId}/invites/${inviteId}`,
+  CALENDAR_EVENT_INVITE_BY_ID: (eventId: string, inviteId: string) =>
+    `/calendar-events/${eventId}/invites/${inviteId}`,
   GOOGLE_CALENDAR_SETTINGS: "/calendar-events/google/settings",
   GOOGLE_CALENDAR_LIST: "/calendar-events/google/calendars",
   GOOGLE_CALENDAR_FREEBUSY: "/calendar-events/google/freebusy",

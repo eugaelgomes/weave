@@ -8,7 +8,10 @@ import {
   type User as SearchUser,
 } from "@/app/_services/notes-service/notes-service";
 import { useCalendar, type UnifiedCalendarEvent } from "@/app/_contexts/calendar-context";
-import { type InternalCalendarEvent, type InternalCalendarEventInvite } from "@/app/_services/calendar-service/calendar-service";
+import {
+  type InternalCalendarEvent,
+  type InternalCalendarEventInvite,
+} from "@/app/_services/calendar-service/calendar-service";
 
 /**
  * Propriedades do Modal de Criação de Eventos
@@ -188,13 +191,25 @@ export default function CreateEventModal({
   googleConnected = false,
   eventToEdit = null,
 }: CreateEventModalProps) {
-  const { createEvent, updateEvent, createEventInvite, updateEventInvite, deleteEventInvite, fetchEventInvites, connectGoogleCalendar, getGoogleCalendarsList, checkGoogleFreeBusy } = useCalendar();
+  const {
+    createEvent,
+    updateEvent,
+    createEventInvite,
+    updateEventInvite,
+    deleteEventInvite,
+    fetchEventInvites,
+    connectGoogleCalendar,
+    getGoogleCalendarsList,
+    checkGoogleFreeBusy,
+  } = useCalendar();
   const [form, setForm] = useState<FormState>(() => initialState(defaultDate));
   const [isSaving, setIsSaving] = useState(false);
   const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
   const [attendeeResults, setAttendeeResults] = useState<SearchUser[]>([]);
   const [isSearchingAttendees, setIsSearchingAttendees] = useState(false);
-  const [availableCalendars, setAvailableCalendars] = useState<{id: string, summary: string}[]>([]);
+  const [availableCalendars, setAvailableCalendars] = useState<{ id: string; summary: string }[]>(
+    []
+  );
   const [freebusyStatus, setFreebusyStatus] = useState<"free" | "busy" | null>(null);
   const [checkingFreebusy, setCheckingFreebusy] = useState(false);
   const [localInvites, setLocalInvites] = useState<InternalCalendarEventInvite[]>([]);
@@ -205,14 +220,21 @@ export default function CreateEventModal({
 
     if (eventToEdit) {
       if (eventToEdit.source === "internal" && eventToEdit.internalId) {
-        fetchEventInvites(eventToEdit.internalId).then((invites) => {
-          setLocalInvites(invites);
-          setSelectedAttendees(mergeUniqueEmails([], invites.map(i => i.email)));
-        }).catch(() => {
-           setLocalInvites([]);
-        });
+        fetchEventInvites(eventToEdit.internalId)
+          .then((invites) => {
+            setLocalInvites(invites);
+            setSelectedAttendees(
+              mergeUniqueEmails(
+                [],
+                invites.map((i) => i.email)
+              )
+            );
+          })
+          .catch(() => {
+            setLocalInvites([]);
+          });
       }
-      
+
       const hasGoogleSync = !!eventToEdit.googleEventId || eventToEdit.source === "google";
       const startDate = new Date(eventToEdit.start!);
       const endDate = eventToEdit.end ? new Date(eventToEdit.end) : startDate;
@@ -240,7 +262,7 @@ export default function CreateEventModal({
       setSelectedAttendees([]);
       setLocalInvites([]);
     }
-    
+
     setAttendeeResults([]);
     setFreebusyStatus(null);
   }, [isOpen, defaultDate, eventToEdit, fetchEventInvites]);
@@ -249,9 +271,11 @@ export default function CreateEventModal({
   useEffect(() => {
     if (googleConnected) {
       if (isOpen) {
-        getGoogleCalendarsList().then(cals => {
-          setAvailableCalendars(cals);
-        }).catch(() => {});
+        getGoogleCalendarsList()
+          .then((cals) => {
+            setAvailableCalendars(cals);
+          })
+          .catch(() => {});
       }
       return;
     }
@@ -406,10 +430,9 @@ export default function CreateEventModal({
     });
   };
 
-
   const handleCheckFreebusy = async () => {
     if (!form.syncWithGoogle || !googleConnected) return;
-    
+
     const start = form.isAllDay
       ? combineDateTime(form.startDate, "00:00")
       : combineDateTime(form.startDate, form.startTime);
@@ -427,17 +450,17 @@ export default function CreateEventModal({
       setCheckingFreebusy(true);
       setFreebusyStatus(null);
       const items = [{ id: form.googleCalendarId }];
-      selectedAttendees.forEach(email => items.push({ id: email }));
-      
+      selectedAttendees.forEach((email) => items.push({ id: email }));
+
       const freebusy = await checkGoogleFreeBusy(start.toISOString(), end.toISOString(), items);
-      
+
       let isBusy = false;
-      Object.keys(freebusy).forEach(id => {
+      Object.keys(freebusy).forEach((id) => {
         if (freebusy[id].busy && freebusy[id].busy.length > 0) {
           isBusy = true;
         }
       });
-      
+
       setFreebusyStatus(isBusy ? "busy" : "free");
       if (isBusy) {
         toast.warning("Atenção: Existem conflitos de horário neste período.");
@@ -488,7 +511,7 @@ export default function CreateEventModal({
 
     try {
       setIsSaving(true);
-      
+
       const payload = {
         title,
         description: form.description.trim() || undefined,
@@ -506,43 +529,43 @@ export default function CreateEventModal({
       if (eventToEdit?.id && eventToEdit.source === "internal") {
         result = await updateEvent(eventToEdit.id, payload);
         toast.success("Evento atualizado com sucesso");
-        
+
         // Handling Event Invites (Creation / Update sync for existing internal)
         if (!form.syncWithGoogle || googleConnected) {
-           for (const email of attendees) {
-              const alreadyExists = localInvites.find(i => i.email === email);
-              if (!alreadyExists) {
-                  await createEventInvite(eventToEdit.id, { email });
-              }
-           }
-           for (const inv of localInvites) {
-              if (!attendees.includes(inv.email)) {
-                  await deleteEventInvite(eventToEdit.id, inv.id);
-              }
-           }
+          for (const email of attendees) {
+            const alreadyExists = localInvites.find((i) => i.email === email);
+            if (!alreadyExists) {
+              await createEventInvite(eventToEdit.id, { email });
+            }
+          }
+          for (const inv of localInvites) {
+            if (!attendees.includes(inv.email)) {
+              await deleteEventInvite(eventToEdit.id, inv.id);
+            }
+          }
         }
       } else {
         result = await createEvent(payload);
         toast.success("Evento criado com sucesso");
 
         if (!form.syncWithGoogle || googleConnected) {
-           for (const email of attendees) {
-              await createEventInvite(result.id, { email });
-           }
+          for (const email of attendees) {
+            await createEventInvite(result.id, { email });
+          }
         }
       }
-      
+
       onCreated?.(result);
       onClose();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro interno no servidor.";
-      toast.error(message || `Não foi possível ${eventToEdit ? 'atualizar' : 'criar'} o evento`);
+      toast.error(message || `Não foi possível ${eventToEdit ? "atualizar" : "criar"} o evento`);
     } finally {
       setIsSaving(false);
     }
   };
 
-return (
+  return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
@@ -651,21 +674,20 @@ return (
 
             {/* Integração Google */}
             <div className="flex flex-col gap-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-800/30">
-              
               <div className="flex flex-col gap-2">
-                 <div className="flex items-center gap-2">
-                    <Users size={14} className="text-neutral-500" />
-                    <span className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
-                      Adicionar convidados
-                    </span>
-                 </div>
-                 {/* Input de Convidados */}
-                 <div className="relative">
+                <div className="flex items-center gap-2">
+                  <Users size={14} className="text-neutral-500" />
+                  <span className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
+                    Adicionar convidados
+                  </span>
+                </div>
+                {/* Input de Convidados */}
+                <div className="relative">
                   <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-neutral-300 bg-neutral-50 p-1 focus-within:border-blue-500 focus-within:bg-white focus-within:ring-1 focus-within:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-within:bg-neutral-900">
                     {selectedAttendees.map((email) => (
                       <span
                         key={email}
-                        className="flex max-w-full items-center gap-1 overflow-hidden rounded bg-blue-100 px-1.5 pt-[1px] pb-[1.5px] text-[10px] sm:text-xs font-medium tracking-tight text-blue-800/90 [word-break:keep-all] dark:bg-blue-900/30 dark:text-blue-300"
+                        className="flex max-w-full items-center gap-1 overflow-hidden rounded bg-blue-100 px-1.5 pt-[1px] pb-[1.5px] text-[10px] font-medium tracking-tight [word-break:keep-all] text-blue-800/90 sm:text-xs dark:bg-blue-900/30 dark:text-blue-300"
                       >
                         <span className="truncate" title={email}>
                           {email}
@@ -705,35 +727,41 @@ return (
                           }}
                         >
                           {user.avatar_url ? (
-                            <img src={user.avatar_url} alt={user.name} className="h-6 w-6 rounded-full object-cover" />
+                            <img
+                              src={user.avatar_url}
+                              alt={user.name}
+                              className="h-6 w-6 rounded-full object-cover"
+                            />
                           ) : (
                             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-medium text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                              {user.name ? user.name.charAt(0).toUpperCase() : '?'}
+                              {user.name ? user.name.charAt(0).toUpperCase() : "?"}
                             </div>
                           )}
                           <div className="flex flex-col overflow-hidden">
                             <span className="truncate font-medium text-neutral-800 dark:text-neutral-200">
                               {user.name}
                             </span>
-                            <span className="truncate text-[10px] text-neutral-500">{user.email}</span>
+                            <span className="truncate text-[10px] text-neutral-500">
+                              {user.email}
+                            </span>
                           </div>
                         </li>
                       ))}
                     </ul>
                   )}
                 </div>
-                 
               </div>
 
               {/* Header de Integração */}
-              <div className="flex items-center justify-between p-1 mt-2 border-t border-neutral-200 pt-2 dark:border-neutral-800">
+              <div className="mt-2 flex items-center justify-between border-t border-neutral-200 p-1 pt-2 dark:border-neutral-800">
                 <div className="flex items-center gap-2">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
                     <GoogleLogoIcon />
                   </div>
                   <div>
                     <h3 className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
-                      Conectar evento com <span className="text-brand-primary-500">Google Calendar</span> |{" "}
+                      Conectar evento com{" "}
+                      <span className="text-brand-primary-500">Google Calendar</span> |{" "}
                       <span className="text-brand-primary-500">Meet</span>
                     </h3>
                     {!googleConnected && (
@@ -762,14 +790,25 @@ return (
                     : "grid-rows-[0fr] opacity-0"
                 }`}
               >
-                <div
-                  className="overflow-hidden"
-                >
+                <div className="overflow-hidden">
                   <div className="flex flex-col gap-2 rounded-md border border-neutral-200 bg-white p-2.5 shadow-sm dark:border-neutral-700/60 dark:bg-neutral-900">
-                    <div className={(form.syncWithGoogle && googleConnected) ? "flex flex-col gap-1.5" : "hidden"}>
+                    <div
+                      className={
+                        form.syncWithGoogle && googleConnected ? "flex flex-col gap-1.5" : "hidden"
+                      }
+                    >
                       <div className="flex items-center gap-2">
-                        <svg viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg" className="text-neutral-500">
-                          <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z" fill="currentColor"/>
+                        <svg
+                          viewBox="0 0 24 24"
+                          width="14"
+                          height="14"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="text-neutral-500"
+                        >
+                          <path
+                            d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"
+                            fill="currentColor"
+                          />
                         </svg>
                         <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
                           Calendário Base
@@ -779,14 +818,16 @@ return (
                         value={form.googleCalendarId}
                         onChange={(e) => handleChange("googleCalendarId", e.target.value)}
                         disabled={isSaving || !googleConnected || availableCalendars.length === 0}
-                        className="w-full rounded-md border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-xs text-neutral-800 transition-colors focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200 dark:focus:bg-neutral-900"
+                        className="w-full rounded-md border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-xs text-neutral-800 transition-colors focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200 dark:focus:bg-neutral-900"
                       >
                         {availableCalendars.length === 0 ? (
                           <option value="primary">Carregando calendários...</option>
                         ) : (
                           availableCalendars.map((cal) => (
                             <option key={cal.id} value={cal.id} title={cal.summary}>
-                              {cal.summary.length > 30 ? cal.summary.substring(0, 30) + '...' : cal.summary}
+                              {cal.summary.length > 30
+                                ? cal.summary.substring(0, 30) + "..."
+                                : cal.summary}
                             </option>
                           ))
                         )}
@@ -794,51 +835,71 @@ return (
                     </div>
 
                     <div className="my-0.5 h-px bg-neutral-100 dark:bg-neutral-800" />
-                    
-                    <div className={(form.syncWithGoogle && googleConnected) ? "flex items-center justify-between mb-2" : "hidden"}>
-                        <div className="flex items-center gap-2">
-                          <Video size={14} className="text-neutral-500" />
-                          <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                            Adicionar link do Google Meet
-                          </span>
-                        </div>
-                        <Toggle
-                          checked={form.createMeetLink}
-                          onChange={(v) => handleChange("createMeetLink", v)}
-                          disabled={isSaving || !googleConnected}
-                        />
-                      </div>
 
-                      <div className={(form.syncWithGoogle && googleConnected) ? "flex items-center justify-between" : "hidden"}>
-                        <div className="flex items-center gap-2">
-                          <Users size={14} className="text-emerald-600 dark:text-emerald-500" />
-                          <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                            Checar disponbilidade (Google)
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleCheckFreebusy}
-                          disabled={isSaving || checkingFreebusy || selectedAttendees.length === 0}
-                          className="flex items-center justify-center rounded-md bg-blue-100 px-2 py-1 text-[10px] font-medium tracking-tight text-blue-800 transition-colors hover:bg-blue-200 disabled:opacity-50 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
-                        >
-                          {checkingFreebusy ? <Loader2 size={12} className="animate-spin" /> : "Verificar"}
-                        </button>
+                    <div
+                      className={
+                        form.syncWithGoogle && googleConnected
+                          ? "mb-2 flex items-center justify-between"
+                          : "hidden"
+                      }
+                    >
+                      <div className="flex items-center gap-2">
+                        <Video size={14} className="text-neutral-500" />
+                        <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                          Adicionar link do Google Meet
+                        </span>
                       </div>
-                      
-                      {freebusyStatus && (
-                        <div className={`mt-1 rounded border px-2 py-1.5 text-[11px] ${
-                          freebusyStatus === "busy" 
-                            ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400" 
-                            : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400"
-                        }`}>
-                          {freebusyStatus === "busy" ? "Existem conflitos na agenda de pelo menos um participante." : "Horário livre para todos os participantes."}
-                        </div>
-                      )}
+                      <Toggle
+                        checked={form.createMeetLink}
+                        onChange={(v) => handleChange("createMeetLink", v)}
+                        disabled={isSaving || !googleConnected}
+                      />
                     </div>
+
+                    <div
+                      className={
+                        form.syncWithGoogle && googleConnected
+                          ? "flex items-center justify-between"
+                          : "hidden"
+                      }
+                    >
+                      <div className="flex items-center gap-2">
+                        <Users size={14} className="text-emerald-600 dark:text-emerald-500" />
+                        <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                          Checar disponbilidade (Google)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCheckFreebusy}
+                        disabled={isSaving || checkingFreebusy || selectedAttendees.length === 0}
+                        className="flex items-center justify-center rounded-md bg-blue-100 px-2 py-1 text-[10px] font-medium tracking-tight text-blue-800 transition-colors hover:bg-blue-200 disabled:opacity-50 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
+                      >
+                        {checkingFreebusy ? (
+                          <Loader2 size={12} className="animate-spin" />
+                        ) : (
+                          "Verificar"
+                        )}
+                      </button>
+                    </div>
+
+                    {freebusyStatus && (
+                      <div
+                        className={`mt-1 rounded border px-2 py-1.5 text-[11px] ${
+                          freebusyStatus === "busy"
+                            ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400"
+                            : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400"
+                        }`}
+                      >
+                        {freebusyStatus === "busy"
+                          ? "Existem conflitos na agenda de pelo menos um participante."
+                          : "Horário livre para todos os participantes."}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
+            </div>
 
             {/* Localização e Descrição (Ghost Inputs com Ícones) */}
             <div className="space-y-3 px-1 pt-1">

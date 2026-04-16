@@ -65,7 +65,7 @@ export default function ProjectEditor({ project, onClose, onSave }: any) {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-1.5 rounded-md bg-brand-primary-500 px-4 py-1.5 text-xs font-bold text-neutral-950 transition-colors hover:bg-yellow-600 disabled:opacity-50"
+          className="bg-brand-primary-500 flex items-center gap-1.5 rounded-md px-4 py-1.5 text-xs font-bold text-neutral-950 transition-colors hover:bg-yellow-600 disabled:opacity-50"
         >
           {saving ? <FaSpinner className="animate-spin" /> : <FaSave />}
           Guardar Alterações

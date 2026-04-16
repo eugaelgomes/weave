@@ -23,6 +23,7 @@ import { useAuth } from "@/app/_contexts/auth-context";
 import { useCalendar, type UnifiedCalendarEvent } from "@/app/_contexts/calendar-context";
 import type { UserPreferences } from "@/types/user-preferences";
 import CreateEventModal from "./create-event";
+import { useOptionalCalendarPageView } from "../_contexts/calendar-page-view-context";
 
 import { calendarUtils } from "@/app/_utils/calendar";
 
@@ -196,9 +197,15 @@ export function CalendarPreview({
     fetchEventInvites,
   } = useCalendar();
 
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const pageView = useOptionalCalendarPageView();
+  const [fallbackCurrentDate, setFallbackCurrentDate] = useState(() => new Date());
+  const [fallbackSelectedDate, setFallbackSelectedDate] = useState<Date | null>(null);
+  const currentDate = pageView?.currentDate ?? fallbackCurrentDate;
+  const setCurrentDate = pageView?.setCurrentDate ?? setFallbackCurrentDate;
+  const selectedDate = pageView?.selectedDate ?? fallbackSelectedDate;
+  const setSelectedDate = pageView?.setSelectedDate ?? setFallbackSelectedDate;
+
   const [view, setView] = useState<ViewType>("week");
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [viewEventModal, setViewEventModal] = useState<UnifiedCalendarEvent | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<UnifiedCalendarEvent | null>(null);
@@ -211,16 +218,23 @@ export function CalendarPreview({
       setViewEventInvites([]);
       return;
     }
-    
+
     if (viewEventModal.source === "internal" && viewEventModal.internalId) {
-      fetchEventInvites(viewEventModal.internalId).then(setContentViewEventInvites).catch(() => setViewEventInvites([]));
+      fetchEventInvites(viewEventModal.internalId)
+        .then(setContentViewEventInvites)
+        .catch(() => setViewEventInvites([]));
     } else if (viewEventModal.source === "google") {
-      setViewEventInvites((viewEventModal as any).attendees?.map((email: string) => ({ email, status: "TENTATIVE" })) || []);
+      setViewEventInvites(
+        (viewEventModal as any).attendees?.map((email: string) => ({
+          email,
+          status: "TENTATIVE",
+        })) || []
+      );
     }
   }, [viewEventModal, fetchEventInvites]);
-  
+
   const setContentViewEventInvites = (data: any[]) => {
-      setViewEventInvites(data);
+    setViewEventInvites(data);
   };
 
   const userPreferences = useMemo(() => {
@@ -957,7 +971,7 @@ export function CalendarPreview({
                     <span className="text-sm font-bold text-neutral-800 sm:text-base dark:text-neutral-200">
                       {monthEventsCount}
                     </span>
-                    <span className="text-[8px] text-neutral-500  sm:text-[9px]">
+                    <span className="text-[8px] text-neutral-500 sm:text-[9px]">
                       {texts.records}
                     </span>
                   </div>
@@ -1096,7 +1110,7 @@ export function CalendarPreview({
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <span className="text-xs font-medium ">
+                    <span className="text-xs font-medium">
                       {user?.user_name?.charAt(0) || user?.username?.charAt(0) || "V"}
                     </span>
                   )}
@@ -1175,7 +1189,7 @@ export function CalendarPreview({
                     key={v}
                     onClick={() => setView(v)}
                     type="button"
-                    className={`rounded px-2 py-0.5 text-[9px] font-bold tracking-wider whitespace-nowrap  transition-all ${
+                    className={`rounded px-2 py-0.5 text-[9px] font-bold tracking-wider whitespace-nowrap transition-all ${
                       view === v
                         ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-800 dark:text-white"
                         : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-300"
@@ -1191,7 +1205,7 @@ export function CalendarPreview({
             <div className="ml-auto flex shrink-0 items-center gap-1.5">
               <button
                 onClick={goToToday}
-                className="rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-neutral-500  transition-colors hover:bg-neutral-50 hover:text-neutral-700 dark:border-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                className="rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700 dark:border-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
                 type="button"
               >
                 {texts.today}

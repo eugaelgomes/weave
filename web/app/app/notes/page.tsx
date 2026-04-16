@@ -101,7 +101,10 @@ function getDueDatePresetRange(preset: DueDatePreset): { start: Date; end: Date 
   }
 }
 
-function dueDateInRange(due: string | null | undefined, range: { start: Date; end: Date }): boolean {
+function dueDateInRange(
+  due: string | null | undefined,
+  range: { start: Date; end: Date }
+): boolean {
   if (!due) return false;
   const t = new Date(due).getTime();
   if (Number.isNaN(t)) return false;
@@ -243,7 +246,9 @@ const NotesWithPagination = () => {
           setStageOptions(stages);
           setPriorityOptions(priorities);
           setSelectedStageIds((prev) => prev.filter((id) => stages.some((s) => s.id === id)));
-          setSelectedPriorityIds((prev) => prev.filter((id) => priorities.some((p) => p.id === id)));
+          setSelectedPriorityIds((prev) =>
+            prev.filter((id) => priorities.some((p) => p.id === id))
+          );
         }
       } finally {
         if (!cancelled) {
@@ -575,97 +580,99 @@ const NotesWithPagination = () => {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col space-y-2">
-      {/* =================== HEADER / TOOLBAR =================== */}
-      <div className="flex flex-col border-b border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-950">
-        {/* Linha Única: Título, Busca e Ações */}
-        <div className="flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
-          {/* Lado Esquerdo: Registros & Check */}
-          <div className="order-1 flex shrink-0 items-center gap-2">
-            <div className="flex items-center gap-1 text-[11px] text-neutral-500">
-              <span className="font-semibold text-neutral-900 dark:text-neutral-200">
-                {pagination.total}
-              </span>
-              <span className="hidden sm:inline">registros</span>
-            </div>
-            <button
-              onClick={toggleSelectionMode}
-              className={`flex h-7 items-center justify-center rounded px-1.5 transition-colors ${
-                selectionMode
-                  ? "bg-yellow-50 text-yellow-600 dark:bg-brand-primary-500/10 dark:text-brand-primary-500"
-                  : "text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              }`}
-              title="Modo de seleção"
-            >
-              <FiCheckSquare size={14} />
-            </button>
-          </div>
-
-          {/* Centro: Busca */}
-          <div className="relative order-3 w-full min-w-[200px] flex-1 sm:order-2 sm:w-auto sm:max-w-md">
-            <Search
-              className="absolute top-1/2 left-2.5 -translate-y-1/2 text-neutral-400"
-              size={13}
-            />
-            <input
-              type="text"
-              placeholder="Buscar notas..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="h-7 w-full rounded-md border border-neutral-200 bg-white pr-7 pl-8 text-xs text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:bg-white focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
-            />
-            {(searchTerm !== debouncedSearch || isLoading) && (
-              <div className="absolute top-1/2 right-2.5 -translate-y-1/2">
-                <Loader2 size={12} className="animate-spin text-neutral-400" />
-              </div>
-            )}
-          </div>
-
-          {/* Lado Direito: Ações */}
-          <div className="order-2 flex shrink-0 items-center gap-1.5 sm:order-3">
-            <button
-              onClick={handleRefresh}
-              disabled={isLoading}
-              className="flex h-7 w-7 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-900 disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200"
-              title="Atualizar"
-            >
-              <RefreshCw size={13} className={isLoading ? "animate-spin" : ""} />
-            </button>
-
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex h-7 shrink-0 items-center gap-1.5 rounded-md border px-2 text-[11px] font-medium transition-colors ${
-                showFilters || activeFilterCount > 0
-                  ? "border-yellow-500 bg-yellow-50 text-yellow-700 dark:border-yellow-500/30 dark:bg-brand-primary-500/10 dark:text-brand-primary-500"
-                  : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200"
-              }`}
-            >
-              <Filter size={13} />
-              <span className="hidden sm:inline">Filtrar</span>
-              {activeFilterCount > 0 && (
-                <span className="flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-brand-primary-500 px-1 text-[8px] font-bold text-white">
-                  {activeFilterCount}
+    <div className="flex min-h-0 flex-1 flex-col gap-2">
+      {/* =================== FILTROS + TOOLBAR + CABEÇALHO COLUNAS =================== */}
+      <div className=" bg-white border-b border-neutral-200 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="flex flex-col border-b border-neutral-100 px-2 py-2 dark:border-neutral-800">
+          {/* Linha Única: Título, Busca e Ações */}
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
+            {/* Lado Esquerdo: Registros & Check */}
+            <div className="order-1 flex shrink-0 items-center gap-2">
+              <div className="flex items-center gap-1 text-[11px] text-neutral-500">
+                <span className="font-semibold text-neutral-900 dark:text-neutral-200">
+                  {pagination.total}
                 </span>
-              )}
-            </button>
+                <span className="hidden sm:inline">registros</span>
+              </div>
+              <button
+                onClick={toggleSelectionMode}
+                className={`flex h-7 items-center justify-center rounded px-1.5 transition-colors ${
+                  selectionMode
+                    ? "dark:bg-brand-primary-500/10 dark:text-brand-primary-500 bg-yellow-50 text-yellow-600"
+                    : "text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                }`}
+                title="Modo de seleção"
+              >
+                <FiCheckSquare size={14} />
+              </button>
+            </div>
 
-            <button
-              onClick={handleCreateNote}
-              className="flex h-7 shrink-0 items-center gap-1 rounded-md bg-brand-primary-500 px-2.5 text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-neutral-800 active:scale-95 dark:bg-brand-primary-500 dark:text-neutral-950 dark:hover:bg-neutral-200"
-            >
-              <Plus size={13} />
-              <span className="hidden sm:inline">Criar</span>
-            </button>
+            {/* Centro: Busca */}
+            <div className="relative order-3 w-full min-w-[200px] flex-1 sm:order-2 sm:w-auto sm:max-w-md">
+              <Search
+                className="absolute top-1/2 left-2.5 -translate-y-1/2 text-neutral-400"
+                size={13}
+              />
+              <input
+                type="text"
+                placeholder="Buscar notas..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="h-7 w-full rounded-md border border-neutral-200 bg-white pr-7 pl-8 text-xs text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:bg-white focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+              />
+              {(searchTerm !== debouncedSearch || isLoading) && (
+                <div className="absolute top-1/2 right-2.5 -translate-y-1/2">
+                  <Loader2 size={12} className="animate-spin text-neutral-400" />
+                </div>
+              )}
+            </div>
+
+            {/* Lado Direito: Ações */}
+            <div className="order-2 flex shrink-0 items-center gap-1.5 sm:order-3">
+              <button
+                onClick={handleRefresh}
+                disabled={isLoading}
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-900 disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200"
+                title="Atualizar"
+              >
+                <RefreshCw size={13} className={isLoading ? "animate-spin" : ""} />
+              </button>
+
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex h-7 shrink-0 items-center gap-1.5 rounded-md border px-2 text-[11px] font-medium transition-colors ${
+                  showFilters || activeFilterCount > 0
+                    ? "dark:bg-brand-primary-500/10 dark:text-brand-primary-500 border-yellow-500 bg-yellow-50 text-yellow-700 dark:border-yellow-500/30"
+                    : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200"
+                }`}
+              >
+                <Filter size={13} />
+                <span className="hidden sm:inline">Filtrar</span>
+                {activeFilterCount > 0 && (
+                  <span className="bg-brand-primary-500 flex h-3.5 min-w-[14px] items-center justify-center rounded-full px-1 text-[8px] font-bold text-white">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={handleCreateNote}
+                className="bg-brand-primary-500 dark:bg-brand-primary-500 flex h-7 shrink-0 items-center gap-1 rounded-md px-2.5 text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-neutral-800 active:scale-95 dark:text-neutral-950 dark:hover:bg-neutral-200"
+              >
+                <Plus size={13} />
+                <span className="hidden sm:inline">Criar</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Linha 2: Painel de Filtros */}
+        {/* Painel de Filtros */}
         {showFilters && (
-          <div className="animate-in slide-in-from-top-1 mt-2 max-h-[60vh] overflow-y-auto border-t border-neutral-100 pt-3 dark:border-neutral-800">
-            <div className="flex flex-col gap-4 sm:gap-6">
+          <div className="animate-in slide-in-from-top-1 mx-3 mb-3 max-h-[60vh] overflow-y-auto rounded-md border border-neutral-200 bg-white p-3 dark:border-neutral-700 dark:bg-neutral-950">
+            <div className="flex flex-col gap-3 sm:gap-4">
               {/* Projetos */}
               {projectsForFilter.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/80">
                   <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
                     Projetos ({projectsForFilter.length})
                   </span>
@@ -689,13 +696,15 @@ const NotesWithPagination = () => {
 
               {/* Estágios (após escolher projeto) */}
               {selectedProjects.length > 0 && (
-                <div className="space-y-3 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/80">
                   <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
                     Estágios
                     {taxonomyLoading ? (
                       <span className="ml-1 font-normal text-neutral-400">(carregando…)</span>
                     ) : (
-                      <span className="ml-1 font-normal text-neutral-400">({stageOptions.length})</span>
+                      <span className="ml-1 font-normal text-neutral-400">
+                        ({stageOptions.length})
+                      </span>
                     )}
                   </span>
                   {!taxonomyLoading && stageOptions.length === 0 && (
@@ -737,7 +746,7 @@ const NotesWithPagination = () => {
 
               {/* Prioridades (após escolher projeto) */}
               {selectedProjects.length > 0 && (
-                <div className="space-y-3 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/80">
                   <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
                     Prioridades
                     {taxonomyLoading ? (
@@ -749,7 +758,9 @@ const NotesWithPagination = () => {
                     )}
                   </span>
                   {!taxonomyLoading && priorityOptions.length === 0 && (
-                    <p className="text-xs text-neutral-400">Nenhuma prioridade neste(s) projeto(s).</p>
+                    <p className="text-xs text-neutral-400">
+                      Nenhuma prioridade neste(s) projeto(s).
+                    </p>
                   )}
                   <div className="flex flex-wrap gap-2">
                     {priorityOptions.map((pr) => {
@@ -789,13 +800,13 @@ const NotesWithPagination = () => {
               )}
 
               {/* Vencimento */}
-              <div className="space-y-3 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+              <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/80">
                 <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
                   Vencimento
                 </span>
                 <p className="text-[11px] text-neutral-400">
-                  Filtra por data de vencimento da nota (notas sem vencimento ficam de fora quando um
-                  período está ativo).
+                  Filtra por data de vencimento da nota (notas sem vencimento ficam de fora quando
+                  um período está ativo).
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {DUE_DATE_PRESETS.map((preset) => (
@@ -819,8 +830,8 @@ const NotesWithPagination = () => {
               </div>
 
               {/* Tags */}
-              <div className="space-y-3 border-t border-neutral-100 pt-4 dark:border-neutral-800">
-                <span className="text-[10px] font-semibold tracking-wider text-neutral-500 ">
+              <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/80">
+                <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
                   Tags ({availableTags.length})
                 </span>
                 <div className="flex flex-wrap gap-2">
@@ -848,8 +859,8 @@ const NotesWithPagination = () => {
               </div>
 
               {/* Colaboradores */}
-              <div className="space-y-3">
-                <span className="text-[10px] font-semibold tracking-wider text-neutral-500 ">
+              <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/80">
+                <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
                   Colaboradores ({availableCollaborators.length})
                 </span>
                 <div className="flex flex-wrap gap-2">
@@ -876,10 +887,10 @@ const NotesWithPagination = () => {
               </div>
 
               {/* Ordenação */}
-              <div className="space-y-3 border-t border-neutral-100 pt-4 sm:pt-6 dark:border-neutral-800">
+              <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 sm:pt-3 dark:border-neutral-800 dark:bg-neutral-900/80">
                 <div className="flex items-center justify-between">
                   <div className="w-full space-y-3 sm:w-auto sm:min-w-[240px]">
-                    <span className="text-[10px] font-semibold tracking-wider text-neutral-500 ">
+                    <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
                       Ordenação
                     </span>
                     <div className="flex gap-2">
@@ -911,7 +922,7 @@ const NotesWithPagination = () => {
             </div>
 
             {(searchTerm || activeFilterCount > 0) && (
-              <div className="mt-4 flex justify-end border-t border-neutral-100 pt-3 dark:border-neutral-800">
+              <div className="mt-3 flex justify-end border-t border-neutral-100 pt-3 dark:border-neutral-800">
                 <button
                   onClick={clearFilters}
                   className="flex items-center gap-1.5 text-xs font-medium text-red-500 transition-colors hover:text-red-600"
@@ -922,25 +933,44 @@ const NotesWithPagination = () => {
             )}
           </div>
         )}
+
+        {/* Cabeçalho da lista (desktop) — mesmo card de filtros */}
+        {notes.length > 0 && !showFullSkeleton && !showListSkeleton && (
+          <div className="hidden bg-white px-3 py-2 sm:block dark:bg-neutral-950 ">
+            <div className="grid grid-cols-12 gap-2 text-[9px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
+              <div className="col-span-3 flex min-w-0 items-center">Título</div>
+              <div className="col-span-2 flex min-w-0 items-center">Projeto</div>
+              <div className="col-span-2 flex min-w-0 items-center">Tags</div>
+              <div className="col-span-1 flex min-w-0 items-center">Estágio</div>
+              <div className="col-span-1 flex min-w-0 items-center">Prioridade</div>
+              <div className="col-span-1 flex min-w-0 items-center">Vencimento</div>
+              <div className="col-span-1 flex items-center justify-center">Equipe</div>
+              <div className="col-span-1 flex items-center justify-end">Atualização</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* =================== BARRA DE AÇÕES EM LOTE =================== */}
       {selectionMode && selectedNotes.size > 0 && (
-        <div className="animate-in slide-in-from-top-2 mt-2 flex flex-col gap-2 rounded-md border border-yellow-500/30 bg-yellow-50 p-2 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-yellow-500/20 dark:bg-brand-primary-500/10">
+        <div className="animate-in slide-in-from-top-2 dark:bg-brand-primary-500/10 flex flex-col gap-2 rounded-md border border-yellow-500/30 bg-yellow-50 p-2 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-yellow-500/20">
           <div className="flex items-center gap-2">
-            <FiCheckSquare size={14} className="shrink-0 text-yellow-600 dark:text-brand-primary-500" />
-            <span className="text-xs font-medium text-yellow-900 dark:text-brand-primary-500">
+            <FiCheckSquare
+              size={14}
+              className="dark:text-brand-primary-500 shrink-0 text-yellow-600"
+            />
+            <span className="dark:text-brand-primary-500 text-xs font-medium text-yellow-900">
               {selectedNotes.size} nota(s) selecionada(s)
             </span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={selectAllNotes}
-              className="text-[11px] font-medium text-yellow-700 underline hover:text-yellow-800 dark:text-brand-primary-500 dark:hover:text-yellow-400"
+              className="dark:text-brand-primary-500 text-[11px] font-medium text-yellow-700 underline hover:text-yellow-800 dark:hover:text-yellow-400"
             >
               {selectedNotes.size === notes.length ? "Desmarcar" : "Selecionar todas"}
             </button>
-            <div className="h-3 w-px bg-yellow-300 dark:bg-brand-primary-500/30"></div>
+            <div className="dark:bg-brand-primary-500/30 h-3 w-px bg-yellow-300"></div>
             <button
               onClick={handleBulkDelete}
               className="flex items-center gap-1 rounded bg-red-500 px-2 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-red-600"
@@ -962,36 +992,25 @@ const NotesWithPagination = () => {
       {/* =================== CONTEÚDO (LISTA) =================== */}
       <div
         id="notes-container"
-        className="flex-1 overflow-y-auto rounded-md  bg-white shadow-sm dark:bg-neutral-950"
+        className="flex-1 overflow-y-auto rounded-md  p-1"
       >
-        <div className="flex w-full flex-col">
-          {/* Headers da Lista - Visível apenas em desktop */}
-          {notes.length > 0 && !showFullSkeleton && (
-            <div className="sticky top-0 z-20 hidden grid-cols-12 gap-2 border-b border-neutral-100 bg-neutral-50/95 px-3 py-1.5 text-[9px] font-bold tracking-wider text-neutral-400 backdrop-blur-sm sm:grid dark:border-neutral-800 dark:bg-neutral-900/95">
-              <div className="col-span-3 flex min-w-0 items-center">Nota</div>
-              <div className="col-span-2 flex min-w-0 items-center">Projeto</div>
-              <div className="col-span-2 flex min-w-0 items-center">Tags</div>
-              <div className="col-span-1 flex min-w-0 items-center">Estágio</div>
-              <div className="col-span-1 flex min-w-0 items-center">Prioridade</div>
-              <div className="col-span-1 flex min-w-0 items-center">Vencimento</div>
-              <div className="col-span-1 flex items-center justify-center">Equipe</div>
-              <div className="col-span-1 flex items-center justify-end">Atualização</div>
-            </div>
-          )}
-
+        <div className="flex w-full flex-col gap-1">
           {showFullSkeleton || showListSkeleton ? (
-            <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+            <>
               {Array.from({ length: itemsPerPage }).map((_, i) => (
-                <div key={i} className="flex h-12 animate-pulse items-center gap-2 px-3 sm:h-10">
+                <div
+                  key={i}
+                  className="flex h-12 animate-pulse items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 sm:h-11 dark:border-neutral-800 dark:bg-neutral-950"
+                >
                   <div className="flex-1 space-y-2">
                     <div className="h-3.5 w-2/3 rounded bg-neutral-100 sm:w-1/3 dark:bg-neutral-800"></div>
                     <div className="h-2.5 w-1/2 rounded bg-neutral-50 dark:bg-neutral-900"></div>
                   </div>
                 </div>
               ))}
-            </div>
+            </>
           ) : notes.length > 0 ? (
-            <div className="relative flex flex-col divide-y divide-neutral-100 dark:divide-neutral-800/60">
+            <div className="relative flex flex-col gap-1">
               {/* Overlay Loading */}
               {showOverlayLoading && (
                 <div className="absolute inset-0 z-30 flex items-start justify-center bg-white/60 pt-10 backdrop-blur-[1px] dark:bg-neutral-950/60">
@@ -1004,10 +1023,10 @@ const NotesWithPagination = () => {
                 return (
                   <div
                     key={note.id}
-                    className={`group relative transition-all ${
+                    className={`group relative overflow-hidden rounded-md border transition-colors ${
                       isSelected
-                        ? "bg-yellow-50/80 dark:bg-brand-primary-500/10"
-                        : "hover:bg-neutral-50/50 dark:hover:bg-neutral-900/40"
+                        ? "dark:bg-brand-primary-500/10 border-yellow-400/70 bg-yellow-50/95 dark:border-yellow-500/35"
+                        : "border-neutral-200 bg-white hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-600"
                     }`}
                   >
                     {selectionMode && (
@@ -1016,7 +1035,7 @@ const NotesWithPagination = () => {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleNoteSelection(note.id)}
-                          className="h-4 w-4 cursor-pointer rounded border-neutral-300 text-brand-primary-500 transition-colors focus:ring-2 focus:ring-yellow-500 focus:ring-offset-0 dark:border-neutral-600 dark:bg-neutral-800 dark:checked:bg-brand-primary-500"
+                          className="text-brand-primary-500 dark:checked:bg-brand-primary-500 h-4 w-4 cursor-pointer rounded border-neutral-300 transition-colors focus:ring-2 focus:ring-yellow-500 focus:ring-offset-0 dark:border-neutral-600 dark:bg-neutral-800"
                         />
                       </div>
                     )}
@@ -1042,7 +1061,7 @@ const NotesWithPagination = () => {
                               {note.title || "Sem título"}
                             </h3>
                             {new Date(note.created_at).getTime() > Date.now() - 86400000 && (
-                              <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-primary-500"></span>
+                              <span className="bg-brand-primary-500 inline-block h-1.5 w-1.5 shrink-0 rounded-full"></span>
                             )}
                           </div>
                           <span className="shrink-0 text-[9px] font-medium text-neutral-400 dark:text-neutral-500">
@@ -1050,12 +1069,18 @@ const NotesWithPagination = () => {
                           </span>
                         </div>
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] text-neutral-500 dark:text-neutral-400">
-                          <span className="max-w-[42%] truncate" title={note.associated_project?.stage_name || undefined}>
+                          <span
+                            className="max-w-[42%] truncate"
+                            title={note.associated_project?.stage_name || undefined}
+                          >
                             <span className="text-neutral-400 dark:text-neutral-500">Est. </span>
                             {note.associated_project?.stage_name || "—"}
                           </span>
                           <span className="text-neutral-300 dark:text-neutral-600">·</span>
-                          <span className="max-w-[36%] truncate" title={note.priority_name || undefined}>
+                          <span
+                            className="max-w-[36%] truncate"
+                            title={note.priority_name || undefined}
+                          >
                             {note.priority_name || "—"}
                           </span>
                           <span className="text-neutral-300 dark:text-neutral-600">·</span>
@@ -1129,16 +1154,16 @@ const NotesWithPagination = () => {
 
                       {/* === Layout Desktop (grid row) === */}
                       <article
-                        className={`hidden h-9 items-center gap-2 px-3 sm:grid sm:grid-cols-12 ${
+                        className={`hidden min-h-[2.25rem] items-center gap-2 px-3 py-1 sm:grid sm:grid-cols-12 ${
                           selectionMode ? "pl-10" : ""
                         }`}
                       >
                         <div className="col-span-3 flex min-w-0 items-center gap-1.5 pr-1">
-                          <h3 className="truncate text-[10px]  text-neutral-800 transition-colors group-hover:text-yellow-600 dark:text-neutral-200 dark:group-hover:text-yellow-400">
+                          <h3 className="truncate text-[10px] text-neutral-800 transition-colors group-hover:text-yellow-600 dark:text-neutral-200 dark:group-hover:text-yellow-400">
                             {note.title || "Sem título"}
                           </h3>
                           {new Date(note.created_at).getTime() > Date.now() - 86400000 && (
-                            <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-primary-500"></span>
+                            <span className="bg-brand-primary-500 inline-block h-1.5 w-1.5 shrink-0 rounded-full"></span>
                           )}
                         </div>
 
@@ -1146,12 +1171,14 @@ const NotesWithPagination = () => {
                           {note.project_name ? (
                             <div className="flex min-w-0 items-center gap-1 truncate rounded bg-neutral-50 px-1.5 py-0.5 dark:bg-neutral-900">
                               <div className="h-1 w-1 shrink-0 rounded-full bg-blue-500"></div>
-                              <span className="truncate text-[9px]  text-neutral-600 dark:text-neutral-300">
+                              <span className="truncate text-[9px] text-neutral-600 dark:text-neutral-300">
                                 {note.project_name}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-[9px] text-neutral-300 dark:text-neutral-700">—</span>
+                            <span className="text-[9px] text-neutral-300 dark:text-neutral-700">
+                              —
+                            </span>
                           )}
                         </div>
 
@@ -1162,7 +1189,7 @@ const NotesWithPagination = () => {
                               return (
                                 <span
                                   key={i}
-                                  className={`inline-flex max-w-[64px] items-center truncate rounded px-1 py-0.5 text-[8px]  ${colors.bg} ${colors.text}`}
+                                  className={`inline-flex max-w-[64px] items-center truncate rounded px-1 py-0.5 text-[8px] ${colors.bg} ${colors.text}`}
                                   title={tag}
                                 >
                                   {tag}
@@ -1208,7 +1235,9 @@ const NotesWithPagination = () => {
                               <span className="truncate">{note.priority_name}</span>
                             </span>
                           ) : (
-                            <span className="text-[9px] text-neutral-300 dark:text-neutral-700">—</span>
+                            <span className="text-[9px] text-neutral-300 dark:text-neutral-700">
+                              —
+                            </span>
                           )}
                         </div>
 
@@ -1251,7 +1280,9 @@ const NotesWithPagination = () => {
                               })}
                             </div>
                           ) : (
-                            <span className="text-[9px] text-neutral-300 dark:text-neutral-700">—</span>
+                            <span className="text-[9px] text-neutral-300 dark:text-neutral-700">
+                              —
+                            </span>
                           )}
                         </div>
 
@@ -1271,7 +1302,7 @@ const NotesWithPagination = () => {
             </div>
           ) : (
             // Empty State
-            <div className="flex h-48 flex-col items-center justify-center text-center sm:h-64">
+            <div className="flex h-48 flex-col items-center justify-center rounded-md border border-neutral-200 bg-white text-center sm:h-64 dark:border-neutral-800 dark:bg-neutral-950">
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-neutral-100 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/50">
                 <Search size={16} className="text-neutral-400" />
               </div>
@@ -1284,7 +1315,7 @@ const NotesWithPagination = () => {
               {(searchTerm || activeFilterCount > 0) && (
                 <button
                   onClick={clearFilters}
-                  className="rounded-md bg-yellow-50 px-3 py-1.5 text-[11px] font-bold text-yellow-700 transition-colors hover:bg-yellow-100 dark:bg-brand-primary-500/10 dark:text-brand-primary-500 dark:hover:bg-brand-primary-500/20"
+                  className="dark:bg-brand-primary-500/10 dark:text-brand-primary-500 dark:hover:bg-brand-primary-500/20 rounded-md bg-yellow-50 px-3 py-1.5 text-[11px] font-bold text-yellow-700 transition-colors hover:bg-yellow-100"
                 >
                   Limpar filtros ativos
                 </button>
@@ -1295,7 +1326,7 @@ const NotesWithPagination = () => {
       </div>
       {/* =================== FOOTER =================== */}
       {totalPages > 1 && (
-        <div className="shrink-0 rounded-md border border-neutral-200 bg-neutral-50 py-1 dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="shrink-0 rounded-md border border-neutral-200 bg-white py-1 dark:border-neutral-800 dark:bg-neutral-950">
           <div className="origin-center scale-[0.85] sm:scale-90">
             <Pagination
               currentPage={pagination.currentPage}

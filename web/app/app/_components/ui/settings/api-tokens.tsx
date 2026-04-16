@@ -136,7 +136,7 @@ const PasswordConfirmModal = ({ isOpen, onClose, onConfirm }: any) => {
             <button
               type="submit"
               disabled={loading || !password}
-              className="flex items-center gap-2 rounded-md bg-brand-primary-500 px-4 py-1.5 text-[11px] font-bold text-white transition-all hover:bg-yellow-600 disabled:opacity-50"
+              className="bg-brand-primary-500 flex items-center gap-2 rounded-md px-4 py-1.5 text-[11px] font-bold text-white transition-all hover:bg-yellow-600 disabled:opacity-50"
             >
               {loading && <Loader2 size={12} className="animate-spin" />}
               Confirmar
@@ -231,7 +231,7 @@ export const SettingsApiTokens: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-neutral-100/60 px-4 py-2 dark:border-neutral-800/60">
         <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] text-neutral-500 dark:text-neutral-400">
-          <KeyRound className="h-3.5 w-3.5 text-brand-primary-500" />
+          <KeyRound className="text-brand-primary-500 h-3.5 w-3.5" />
           API Tokens
         </h3>
       </div>
@@ -241,7 +241,7 @@ export const SettingsApiTokens: React.FC = () => {
           <div className="max-w-xl">
             <p className="text-[11px] leading-relaxed text-neutral-500 dark:text-neutral-400">
               Gere chaves de acesso para integrar o Weave com scripts externos.
-              <span className="ml-1 font-medium text-yellow-600 dark:text-brand-primary-500">
+              <span className="dark:text-brand-primary-500 ml-1 font-medium text-yellow-600">
                 Nunca compartilhe seus tokens.
               </span>
             </p>
@@ -252,7 +252,7 @@ export const SettingsApiTokens: React.FC = () => {
             {!isCreating && !generatedToken && (
               <button
                 onClick={() => setIsCreating(true)}
-                className="flex items-center gap-1.5 rounded-md bg-brand-primary-500 px-2 py-1 text-[11px] font-bold text-white shadow-sm transition-all hover:bg-yellow-600 active:scale-95"
+                className="bg-brand-primary-500 flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-bold text-white shadow-sm transition-all hover:bg-yellow-600 active:scale-95"
               >
                 <Plus size={14} />
                 Novo Token
@@ -273,7 +273,7 @@ export const SettingsApiTokens: React.FC = () => {
                       <h4 className="text-[12px] font-bold text-yellow-900 dark:text-yellow-400">
                         Token Gerado!
                       </h4>
-                      <p className="text-[11px] text-yellow-700/80 dark:text-brand-primary-500/80">
+                      <p className="dark:text-brand-primary-500/80 text-[11px] text-yellow-700/80">
                         Copie agora. Por segurança, ele não será exibido novamente.
                       </p>
                     </div>
@@ -283,7 +283,7 @@ export const SettingsApiTokens: React.FC = () => {
                       </code>
                       <button
                         onClick={handleCopyToken}
-                        className="flex h-8 items-center gap-2 rounded-md bg-brand-primary-500 px-3 text-[11px] font-bold text-white transition-colors hover:bg-yellow-600"
+                        className="bg-brand-primary-500 flex h-8 items-center gap-2 rounded-md px-3 text-[11px] font-bold text-white transition-colors hover:bg-yellow-600"
                       >
                         {copied ? <Check className="text-white" size={14} /> : <Copy size={14} />}
                         {copied ? "Copiado" : "Copiar"}
@@ -358,7 +358,7 @@ export const SettingsApiTokens: React.FC = () => {
                               key={scope.value}
                               className={`group relative flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-all duration-200 ${
                                 isSelected
-                                  ? "border-yellow-500/50 bg-yellow-50/30 ring-1 ring-yellow-500/10 dark:border-yellow-500/40 dark:bg-brand-primary-500/5"
+                                  ? "dark:bg-brand-primary-500/5 border-yellow-500/50 bg-yellow-50/30 ring-1 ring-yellow-500/10 dark:border-yellow-500/40"
                                   : "border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:bg-neutral-900"
                               }`}
                             >
@@ -377,7 +377,7 @@ export const SettingsApiTokens: React.FC = () => {
                                     }
                                   }}
                                 />
-                                <div className="h-4 w-7 rounded-full bg-neutral-300 transition-colors peer-checked:bg-brand-primary-500 peer-focus-visible:ring-2 peer-focus-visible:ring-yellow-500 peer-focus-visible:ring-offset-1 dark:bg-neutral-700 dark:peer-focus-visible:ring-offset-neutral-950"></div>
+                                <div className="peer-checked:bg-brand-primary-500 h-4 w-7 rounded-full bg-neutral-300 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-yellow-500 peer-focus-visible:ring-offset-1 dark:bg-neutral-700 dark:peer-focus-visible:ring-offset-neutral-950"></div>
                                 <div className="absolute top-0.5 left-0.5 h-3 w-3 transform rounded-full bg-white transition-transform peer-checked:translate-x-3"></div>
                               </div>
                               <div className="flex flex-col gap-0.5 pt-0.5">
@@ -422,7 +422,7 @@ export const SettingsApiTokens: React.FC = () => {
                     <button
                       type="submit"
                       disabled={loading || selectedScopes.length === 0}
-                      className="rounded-md bg-brand-primary-500 px-4 py-1.5 text-[11px] font-bold text-white transition-all hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="bg-brand-primary-500 rounded-md px-4 py-1.5 text-[11px] font-bold text-white transition-all hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {loading ? "Gerando..." : "Gerar Token"}
                     </button>
@@ -448,7 +448,7 @@ export const SettingsApiTokens: React.FC = () => {
               <div className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900/30">
                 <div className="flex items-center gap-4 text-[11px] font-bold">
                   <span className="flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
-                    <span className="h-2 w-2 rounded-full bg-brand-primary-500"></span>
+                    <span className="bg-brand-primary-500 h-2 w-2 rounded-full"></span>
                     {activeTokensCount} Ativo{activeTokensCount !== 1 && "s"}
                   </span>
                   <span className="flex items-center gap-1.5 text-neutral-500 dark:text-neutral-500">
@@ -474,7 +474,7 @@ export const SettingsApiTokens: React.FC = () => {
                       className={`group flex items-center justify-between rounded-md border p-3 transition-all ${
                         token.revoked_at
                           ? "border-neutral-100 bg-neutral-50/40 opacity-70 dark:border-neutral-900/50 dark:bg-neutral-900/10"
-                          : "border-yellow-500/10 bg-yellow-50/5 hover:border-yellow-500/30 dark:border-yellow-500/5 dark:bg-brand-primary-500/5 dark:hover:border-yellow-500/20"
+                          : "dark:bg-brand-primary-500/5 border-yellow-500/10 bg-yellow-50/5 hover:border-yellow-500/30 dark:border-yellow-500/5 dark:hover:border-yellow-500/20"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -482,7 +482,7 @@ export const SettingsApiTokens: React.FC = () => {
                           className={`rounded-md p-2 ${
                             token.revoked_at
                               ? "bg-neutral-100 dark:bg-neutral-800"
-                              : "bg-yellow-100/50 dark:bg-brand-primary-500/20"
+                              : "dark:bg-brand-primary-500/20 bg-yellow-100/50"
                           }`}
                         >
                           <KeyRound

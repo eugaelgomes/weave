@@ -206,7 +206,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
       <div className="relative z-10 w-full max-w-2xl transform overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 transition-all dark:bg-neutral-900 dark:ring-white/10">
         {/* Search Input Header */}
         <div className="flex items-center border-b border-neutral-200 px-4 dark:border-neutral-800">
-          <Search className="h-5 w-5 text-brand-primary-500" />
+          <Search className="text-brand-primary-500 h-5 w-5" />
           <input
             ref={inputRef}
             type="text"

@@ -79,8 +79,8 @@ const ProjectsManagementPage = () => {
       <div className="border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <div className="rounded bg-brand-primary-500/10 p-1.5">
-              <BarChart3 className="h-4 w-4 text-brand-primary-500" />
+            <div className="bg-brand-primary-500/10 rounded p-1.5">
+              <BarChart3 className="text-brand-primary-500 h-4 w-4" />
             </div>
             <div>
               <h1 className="text-sm leading-tight font-semibold text-neutral-900 dark:text-neutral-100">
@@ -97,7 +97,7 @@ const ProjectsManagementPage = () => {
               <Download className="h-3 w-3" />
               <span>Exportar</span>
             </button>
-            <button className="flex h-7 items-center justify-center gap-1.5 rounded bg-brand-primary-500 px-2.5 text-[11px] font-medium text-white transition-colors hover:bg-yellow-600">
+            <button className="bg-brand-primary-500 flex h-7 items-center justify-center gap-1.5 rounded px-2.5 text-[11px] font-medium text-white transition-colors hover:bg-yellow-600">
               <Plus className="h-3 w-3" />
               <span>Novo Projeto</span>
             </button>
@@ -140,7 +140,7 @@ const ProjectsManagementPage = () => {
                   {metrics.pausedOrBlocked}
                 </p>
               </div>
-              <AlertCircle className="h-4 w-4 text-brand-primary-500/70" />
+              <AlertCircle className="text-brand-primary-500/70 h-4 w-4" />
             </div>
 
             <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-neutral-800">

@@ -96,7 +96,6 @@ export default function NotificationsLayout({ children }: { children: React.Reac
       <NotificationHeader className="border-b border-neutral-200/90 pb-2 dark:border-neutral-800" />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        
         {/* Cabeçalho mobile padronizado */}
         <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-neutral-800 dark:bg-neutral-950">
           <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
@@ -124,7 +123,6 @@ export default function NotificationsLayout({ children }: { children: React.Reac
 
         {/* Layout Flexbox com Gap (Desktop) */}
         <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
-          
           {/* SIDEBAR LATERAL — Painel flutuante gerido puramente por Flexbox */}
           <NotificationSidebar className="hidden w-64 shrink-0 md:flex md:flex-col md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:md:border-neutral-800 dark:md:bg-neutral-900/50" />
 

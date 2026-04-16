@@ -14,10 +14,7 @@ const NoteCommentsPanelContext = createContext<NoteCommentsPanelContextValue | u
 
 export function NoteCommentsPanelProvider({ children }: { children: React.ReactNode }) {
   const [commentsPanelOpen, setCommentsPanelOpen] = useState(false);
-  const value = useMemo(
-    () => ({ commentsPanelOpen, setCommentsPanelOpen }),
-    [commentsPanelOpen]
-  );
+  const value = useMemo(() => ({ commentsPanelOpen, setCommentsPanelOpen }), [commentsPanelOpen]);
   return (
     <NoteCommentsPanelContext.Provider value={value}>{children}</NoteCommentsPanelContext.Provider>
   );

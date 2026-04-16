@@ -12,7 +12,7 @@ const PagesFooter = () => {
   const linkClass = "hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors";
 
   return (
-    <div className="flex flex-col items-center justify-between gap-4 rounded-md border border-neutral-200/50 bg-white/50 px-4 py-2 shadow-sm backdrop-blur-sm sm:flex-row dark:border-neutral-800/50 dark:bg-brand-secondary-950/50">
+    <div className="dark:bg-brand-secondary-950/50 flex flex-col items-center justify-between gap-4 rounded-md border border-neutral-200/50 bg-white/50 px-4 py-2 shadow-sm backdrop-blur-sm sm:flex-row dark:border-neutral-800/50">
       {/* Copyright & Brand */}
       <div className="text-[11px] font-medium text-neutral-400 dark:text-neutral-500">
         &copy; {currentYear}{" "}
@@ -20,7 +20,7 @@ const PagesFooter = () => {
           href={blogUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-bold text-brand-primary-500 transition-colors hover:text-brand-primary-500 dark:text-brand-primary-500/40 dark:hover:text-brand-primary-500"
+          className="text-brand-primary-500 hover:text-brand-primary-500 dark:text-brand-primary-500/40 dark:hover:text-brand-primary-500 font-bold transition-colors"
         >
           Weave Notes
         </a>

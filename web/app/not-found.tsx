@@ -11,12 +11,12 @@ export default function NotFound() {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white">
       {/* Decorative background glows */}
-      <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-brand-primary-500/5 blur-3xl" />
-      <div className="pointer-events-none absolute -right-32 -bottom-32 h-96 w-96 rounded-full bg-brand-primary-500/5 blur-3xl" />
+      <div className="bg-brand-primary-500/5 pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full blur-3xl" />
+      <div className="bg-brand-primary-500/5 pointer-events-none absolute -right-32 -bottom-32 h-96 w-96 rounded-full blur-3xl" />
 
       <div className="w-full max-w-md text-center">
         <div className="mb-8">
-          <div className="mb-2 text-[8rem] leading-none font-black tracking-tighter text-brand-primary-500/20">
+          <div className="text-brand-primary-500/20 mb-2 text-[8rem] leading-none font-black tracking-tighter">
             404
           </div>
           <h1 className="mb-3 text-3xl font-bold text-neutral-950">Página não encontrada</h1>
@@ -28,7 +28,7 @@ export default function NotFound() {
         <div className="space-y-3">
           <button
             onClick={() => router.back()}
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-brand-primary-500/90 px-6 py-3 font-semibold text-neutral-950 transition-all hover:bg-brand-primary-500"
+            className="bg-brand-primary-500/90 hover:bg-brand-primary-500 flex w-full items-center justify-center gap-2 rounded-md px-6 py-3 font-semibold text-neutral-950 transition-all"
           >
             <FaArrowLeft className="h-4 w-4" />
             Voltar
@@ -47,7 +47,7 @@ export default function NotFound() {
           <div className="">
             <p className="text-sm text-neutral-500">
               Precisa de ajuda?{" "}
-              <Link href="/support/" className="tex-underline font-semibold text-brand-primary-500">
+              <Link href="/support/" className="tex-underline text-brand-primary-500 font-semibold">
                 Clique aqui
               </Link>{" "}
               e veja nosso repositório de ajuda ou entre em contato com o suporte.
@@ -56,19 +56,19 @@ export default function NotFound() {
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <Link
               href="/app/notes"
-              className="text-neutral-400 transition-colors hover:text-brand-primary-500"
+              className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
             >
               Notas
             </Link>
             <Link
               href="/app/projects"
-              className="text-neutral-400 transition-colors hover:text-brand-primary-500"
+              className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
             >
               Projetos
             </Link>
             <Link
               href="/app/settings"
-              className="text-neutral-400 transition-colors hover:text-brand-primary-500"
+              className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
             >
               Configurações
             </Link>

@@ -162,7 +162,8 @@ const esES: TranslationKeys = {
     saveChanges: "Guardar Cambios",
     saving: "Guardando...",
     removeMemberTitle: "Eliminar Miembro",
-    removeConfirmation: "¿Estás seguro de que deseas eliminar a {name} de la organización? Perderán el acceso a todos los proyectos y notas internas.",
+    removeConfirmation:
+      "¿Estás seguro de que deseas eliminar a {name} de la organización? Perderán el acceso a todos los proyectos y notas internas.",
     yesRemove: "Sí, eliminar miembro",
     removing: "Eliminando...",
     emptyState: "Crea una organización para gestionar miembros.",
@@ -171,7 +172,7 @@ const esES: TranslationKeys = {
     roleUpdateSuccess: "Rol actualizado con éxito.",
     roleUpdateError: "Error al actualizar permiso.",
     removeSuccess: "Miembro eliminado de la organización.",
-    removeError: "Error al eliminar miembro."
+    removeError: "Error al eliminar miembro.",
   },
 };
 export default esES;

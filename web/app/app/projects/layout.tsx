@@ -5,7 +5,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../../_contexts/auth-context";
 import { useProjects } from "../../_contexts/projects-context";
-import { Folder, ChevronRight, FolderOpen, LayoutDashboard, ChevronDown, Menu, X } from "lucide-react";
+import {
+  Folder,
+  ChevronRight,
+  FolderOpen,
+  LayoutDashboard,
+  ChevronDown,
+  Menu,
+  X,
+} from "lucide-react";
 import { ProjectsHeader } from "../_components/ui/headers/projects-header";
 
 export default function ProjectsLayout({ children }: { children: React.ReactNode }) {
@@ -166,7 +174,9 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
         })}
 
         {recentProjects.length === 0 && (
-          <li className="list-none px-2 text-xs text-neutral-400 italic">Nenhum projeto encontrado.</li>
+          <li className="list-none px-2 text-xs text-neutral-400 italic">
+            Nenhum projeto encontrado.
+          </li>
         )}
       </ul>
     </div>
@@ -177,7 +187,6 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
       <ProjectsHeader />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        
         {/* Cabeçalho mobile */}
         <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-neutral-800 dark:bg-neutral-950">
           <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
@@ -205,7 +214,6 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
 
         {/* Layout Flexbox com Gap (Desktop) */}
         <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
-          
           {/* SIDEBAR LATERAL — Altura dinâmica da Viewport + Sticky + Overflow interno */}
           <div className="hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-sm md:sticky md:block md:h-[calc(100vh-auto)] md:w-[180px] dark:border-neutral-800 dark:bg-neutral-900/50">
             {sidebarContent}

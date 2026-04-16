@@ -42,6 +42,12 @@ interface NavigationItem {
   badge?: number;
 }
 
+/** Primeiro destino real ao clicar num item com filhos (ex.: /members → /members/list). */
+function getFirstNavigableChildPath(item: NavigationItem): string {
+  if (!item.subItems?.length) return item.path;
+  return getFirstNavigableChildPath(item.subItems[0]);
+}
+
 const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarProps) => {
   const { authenticated } = useAuth();
   const { t } = useLanguage();
@@ -82,11 +88,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
 
   const handleLinkClick = () => {
     onLinkClick?.();
-  };
-
-  const toggleExpand = (path: string) => {
-    if (isCollapsed) return;
-    setExpandedItems((prev) => ({ ...prev, [path]: !prev[path] }));
   };
 
   if (!authenticated || !authData) return null;
@@ -140,14 +141,18 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
             label: t.nav.organization,
             subItems: [
               { path: "/app/organization/settings", icon: Settings, label: t.nav.settings },
-              { 
-                path: "/app/organization/members", 
-                icon: UsersRound, 
+              {
+                path: "/app/organization/members",
+                icon: UsersRound,
                 label: t.nav.members,
                 subItems: [
                   { path: "/app/organization/members/list", icon: Users, label: t.nav.list },
-                  { path: "/app/organization/members/invites", icon: MessageSquare, label: t.nav.invites },
-                ]
+                  {
+                    path: "/app/organization/members/invites",
+                    icon: MessageSquare,
+                    label: t.nav.invites,
+                  },
+                ],
               },
               { path: "/app/organization/areas", icon: Workflow, label: t.nav.areas },
               { path: "/app/organization/projects", icon: Network, label: t.nav.projects },
@@ -159,12 +164,12 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   ];
 
   return (
-    <div className="flex h-full flex-col bg-white text-neutral-600 dark:bg-brand-secondary-950 dark:text-neutral-400">
+    <div className="dark:bg-brand-secondary-950 flex h-full flex-col bg-white text-neutral-600 dark:text-neutral-400">
       {/* Header mobile */}
       <div className="flex items-center justify-between border-b border-neutral-200 p-3 lg:hidden dark:border-neutral-800">
         <div className="flex items-center gap-2">
-          <Book className="h-3.5 w-3.5 text-brand-primary-500" />
-          <h2 className="text-xs font-bold tracking-wider text-neutral-700 dark:text-neutral-200">
+          <Book className="text-brand-primary-500 h-3.5 w-3.5" />
+          <h2 className="text-[11px]  font-bold tracking-wider text-neutral-700 dark:text-neutral-200">
             Menu
           </h2>
         </div>
@@ -181,12 +186,12 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
         {/* Toggle collapse desktop only */}
         <div className={`flex items-center py-1.5 ${isCollapsed ? "justify-center" : "px-2"}`}>
           {!isCollapsed && (
-            <h2 className="text-[10px] font-bold tracking-wider text-brand-primary-500 ">Menu</h2>
+            <h2 className="text-brand-primary-500 text-[10px]  font-bold tracking-wider">Menu</h2>
           )}
           {toggleCollapse && (
             <button
               onClick={toggleCollapse}
-              className={`hidden rounded-md p-1 text-brand-primary-500 hover:bg-neutral-100 lg:block dark:hover:bg-neutral-800 ${
+              className={`text-brand-primary-500 hidden rounded-md p-1 hover:bg-neutral-100 lg:block dark:hover:bg-neutral-800 ${
                 isCollapsed ? "" : "ml-auto"
               }`}
               title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
@@ -203,41 +208,38 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
               const active = isItemActive(item);
               const hasSubItems = item.subItems && item.subItems.length > 0;
               const isExpanded = !isCollapsed && expandedItems[item.path];
-              const linkHref = isCollapsed && hasSubItems ? item.subItems![0].path : item.path;
+              const linkHref = hasSubItems ? getFirstNavigableChildPath(item) : item.path;
 
               return (
                 <li key={item.path}>
                   <Link
                     href={linkHref}
-                    onClick={(e) => {
-                      if (hasSubItems && !isCollapsed) {
-                        e.preventDefault();
-                        toggleExpand(item.path);
-                      } else {
-                        handleLinkClick();
-                      }
+                    onClick={() => {
+                      handleLinkClick();
                     }}
                     title={isCollapsed ? item.label : undefined}
-                    className={`flex items-center rounded-md py-2 text-sm font-medium transition duration-200 ${
+                    className={`flex items-center rounded-md py-1.5 text-xs font-medium transition duration-200 ${
                       active
-                        ? "bg-brand-primary-500/10 text-yellow-600 dark:text-brand-primary-500"
+                        ? "bg-brand-primary-500/10 dark:text-brand-primary-500 text-yellow-600"
                         : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-white"
                     } ${isCollapsed ? "justify-center px-0" : "px-2"}`}
                   >
                     <div className="flex items-center gap-2">
                       <Icon
                         className={`h-4 w-4 ${
-                          active ? "text-brand-primary-500" : "text-neutral-500 dark:text-neutral-500"
+                          active
+                            ? "text-brand-primary-500"
+                            : "text-neutral-500 dark:text-neutral-500"
                         }`}
                       />
                       {!isCollapsed && <span className="truncate">{item.label}</span>}
                       {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
-                        <span className="ml-auto flex h-4 min-w-[18px] items-center justify-center rounded-full bg-brand-primary-500 px-1 text-[9px] font-bold text-white">
+                        <span className="bg-brand-primary-500 ml-auto flex h-3.5 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-white">
                           {item.badge > 99 ? "99+" : item.badge}
                         </span>
                       )}
                       {isCollapsed && item.badge !== undefined && item.badge > 0 && (
-                        <span className="ml-1 flex h-1.5 w-1.5 rounded-full bg-brand-primary-500" />
+                        <span className="bg-brand-primary-500 ml-1 flex h-1.5 w-1.5 rounded-full" />
                       )}
                     </div>
 
@@ -258,23 +260,20 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
                           pathname === subItem.path || pathname.startsWith(`${subItem.path}/`);
                         const hasSubSubItems = subItem.subItems && subItem.subItems.length > 0;
                         const isSubExpanded = !isCollapsed && expandedItems[subItem.path];
-                        const linkHref = isCollapsed && hasSubSubItems ? subItem.subItems![0].path : subItem.path;
+                        const linkHref = hasSubSubItems
+                          ? getFirstNavigableChildPath(subItem)
+                          : subItem.path;
 
                         return (
                           <li key={subItem.path}>
                             <Link
                               href={linkHref}
-                              onClick={(e) => {
-                                if (hasSubSubItems && !isCollapsed) {
-                                  e.preventDefault();
-                                  toggleExpand(subItem.path);
-                                } else {
-                                  handleLinkClick();
-                                }
+                              onClick={() => {
+                                handleLinkClick();
                               }}
-                              className={`flex items-center rounded-md px-2 py-1 text-sm font-medium transition duration-200 ${
+                              className={`flex items-center rounded-md px-2 py-1 text-xs font-medium transition duration-200 ${
                                 isSubActive && !hasSubSubItems
-                                  ? "bg-brand-primary-500/10 text-yellow-600 dark:text-brand-primary-500"
+                                  ? "bg-brand-primary-500/10 dark:text-brand-primary-500 text-yellow-600"
                                   : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900"
                               }`}
                             >
@@ -286,7 +285,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
                                       : "text-neutral-500 opacity-70 dark:text-neutral-500"
                                   }`}
                                 />
-                                <span className="truncate text-sm">{subItem.label}</span>
+                                <span className="truncate text-xs">{subItem.label}</span>
                               </div>
 
                               {!isCollapsed && hasSubSubItems && (
@@ -303,16 +302,17 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
                                 {subItem.subItems!.map((subSubItem) => {
                                   const SubSubIcon = subSubItem.icon;
                                   const isSubSubActive =
-                                    pathname === subSubItem.path || pathname.startsWith(`${subSubItem.path}/`);
+                                    pathname === subSubItem.path ||
+                                    pathname.startsWith(`${subSubItem.path}/`);
 
                                   return (
                                     <li key={subSubItem.path}>
                                       <Link
                                         href={subSubItem.path}
                                         onClick={handleLinkClick}
-                                        className={`flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium transition duration-200 ${
+                                        className={`flex items-center gap-2 rounded-md px-2 py-1 text-[11px] font-medium transition duration-200 ${
                                           isSubSubActive
-                                            ? "bg-brand-primary-500/10 text-yellow-600 dark:text-brand-primary-500"
+                                            ? "bg-brand-primary-500/10 dark:text-brand-primary-500 text-yellow-600"
                                             : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900"
                                         }`}
                                       >
@@ -323,7 +323,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
                                               : "text-neutral-500 opacity-70 dark:text-neutral-500"
                                           }`}
                                         />
-                                        <span className="truncate text-xs">{subSubItem.label}</span>
+                                        <span className="truncate">{subSubItem.label}</span>
                                       </Link>
                                     </li>
                                   );
@@ -345,15 +345,15 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
               <div className="my-2 h-px w-full bg-neutral-200 dark:bg-neutral-800" />
 
               <div>
-                <h2 className="mb-1.5 px-2 text-[10px] font-bold tracking-wider text-brand-primary-500 ">
+                <h2 className="text-brand-primary-500 mb-1.5 px-2 text-[10px]  font-bold tracking-wider">
                   {t.nav.recentAccess}
                 </h2>
 
                 <ul className="space-y-1 px-1">
                   {recentItems.length === 0 ? (
-                    <li className="flex flex-col items-center justify-center gap-2 py-6 text-center text-sm text-neutral-500">
+                    <li className="flex flex-col items-center justify-center gap-2 py-6 text-center text-xs text-neutral-500">
                       <Frown className="size-6 opacity-60" />
-                      <span className="text-sm">{t.common.empty}</span>
+                      <span className="text-xs">{t.common.empty}</span>
                     </li>
                   ) : (
                     recentItems.map((item) => {
@@ -374,13 +374,13 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
                             }`}
                           >
                             <ItemIcon
-                              className={`shrink-0 h-3.5 w-3.5 ${
+                              className={`h-3 w-3 shrink-0 ${
                                 isItemActive
                                   ? "text-brand-primary-500"
                                   : "text-neutral-400 dark:text-neutral-500"
                               }`}
                             />
-                            <span className="truncate text-xs">{item.title}</span>
+                            <span className="truncate text-[11px]">{item.title}</span>
                           </Link>
                         </li>
                       );

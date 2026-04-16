@@ -9,13 +9,7 @@ import { useRouter } from "next/navigation";
 
 interface Props {
   onNavigate: (
-    view:
-      | "signin"
-      | "signup"
-      | "forgot"
-      | "confirm"
-      | "profile-settings"
-      | "accept-invite",
+    view: "signin" | "signup" | "forgot" | "confirm" | "profile-settings" | "accept-invite",
     payload?: { email?: string; password?: string }
   ) => void;
   locale?: LocaleKey;
@@ -37,7 +31,9 @@ function TermsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        <h2 className="text-brand-secondary-900 mb-4 text-xl font-bold">{t.signUp.termsModalTitle}</h2>
+        <h2 className="text-brand-secondary-900 mb-4 text-xl font-bold">
+          {t.signUp.termsModalTitle}
+        </h2>
         <div className="bg-brand-secondary-100 text-brand-secondary-700 mb-6 max-h-60 overflow-y-auto rounded p-4 text-sm">
           <p className="mb-2">
             <strong>1. Aceitação</strong>
@@ -200,7 +196,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               onChange={(e) => setName(e.target.value)}
               placeholder={t.signUp.namePlaceholder || "Nome completo"}
               autoComplete="off"
-              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className="border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
           </div>
@@ -215,7 +211,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               onChange={(e) => setUsername(e.target.value)}
               placeholder={t.signUp.usernamePlaceholder}
               autoComplete="off"
-              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className="border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
           </div>
@@ -230,7 +226,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t.forgotPassword?.emailPlaceholder || "Email"}
               autoComplete="off"
-              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className="border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
           </div>
@@ -245,7 +241,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t.signUp.passwordPlaceholder}
               autoComplete="new-password"
-              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className="border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
             <button
@@ -269,7 +265,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder={t.signUp.confirmPasswordPlaceholder}
               autoComplete="new-password"
-              className="bg-white border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className="border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
             <button
@@ -328,9 +324,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <div className="border-brand-secondary-200 w-full border-t"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-white text-brand-gray-500 px-2">
-              {t.signUp.orRegisterWith}
-            </span>
+            <span className="text-brand-gray-500 bg-white px-2">{t.signUp.orRegisterWith}</span>
           </div>
         </div>
 

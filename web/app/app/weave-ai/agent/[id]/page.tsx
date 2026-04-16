@@ -38,7 +38,12 @@ const getProviderDetails = (provider: string) => {
 };
 
 const CAPABILITIES = [
-  { id: "web_search", label: "Busca na web", icon: Globe, hint: "Acesso à internet para informações atuais" },
+  {
+    id: "web_search",
+    label: "Busca na web",
+    icon: Globe,
+    hint: "Acesso à internet para informações atuais",
+  },
   {
     id: "code_interpreter",
     label: "Interpretador de código",
@@ -60,7 +65,13 @@ const inputClass =
 
 const labelClass = "text-[11px] font-medium text-neutral-600 dark:text-neutral-300";
 
-export function AgentForm({ initialData, isEditing = false }: { initialData?: Agent; isEditing?: boolean }) {
+export function AgentForm({
+  initialData,
+  isEditing = false,
+}: {
+  initialData?: Agent;
+  isEditing?: boolean;
+}) {
   const router = useRouter();
   const { createAgent, updateAgent, agentProviders } = useAgent();
   const [loading, setLoading] = useState(false);
@@ -104,7 +115,11 @@ export function AgentForm({ initialData, isEditing = false }: { initialData?: Ag
   };
 
   useEffect(() => {
-    if (!initialData?.model_name && availableModels.length > 0 && !availableModels.find((m) => m.id === modelId)) {
+    if (
+      !initialData?.model_name &&
+      availableModels.length > 0 &&
+      !availableModels.find((m) => m.id === modelId)
+    ) {
       setModelId(availableModels[0].id);
     }
   }, [availableModels, initialData, modelId]);
@@ -165,7 +180,7 @@ export function AgentForm({ initialData, isEditing = false }: { initialData?: Ag
     <div className="flex min-h-full flex-col rounded-md border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-3 py-2">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold  tracking-wider text-brand-primary-600 dark:text-brand-primary-400">
+          <p className="text-brand-primary-600 dark:text-brand-primary-400 text-[10px] font-bold tracking-wider">
             {isEditing ? "Editar agente" : "Novo agente"}
           </p>
           <p className="truncate text-xs font-medium text-neutral-900 dark:text-neutral-100">
@@ -185,7 +200,7 @@ export function AgentForm({ initialData, isEditing = false }: { initialData?: Ag
             type="button"
             onClick={handleSave}
             disabled={loading}
-            className="flex h-7 items-center gap-1.5 rounded-md bg-brand-primary-500 px-3 text-[11px] font-semibold text-neutral-900 shadow-sm transition hover:bg-brand-primary-400 disabled:opacity-50"
+            className="bg-brand-primary-500 hover:bg-brand-primary-400 flex h-7 items-center gap-1.5 rounded-md px-3 text-[11px] font-semibold text-neutral-900 shadow-sm transition disabled:opacity-50"
           >
             {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
             {isEditing ? "Salvar" : "Criar"}
@@ -252,7 +267,9 @@ export function AgentForm({ initialData, isEditing = false }: { initialData?: Ag
             </select>
           </div>
 
-          <p className="mb-1.5 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400 uppercase">Capacidades</p>
+          <p className="mb-1.5 text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+            Capacidades
+          </p>
           <div className="grid gap-2 sm:grid-cols-2">
             {CAPABILITIES.map((cap) => {
               const active = selectedTools.includes(cap.id);
@@ -264,7 +281,7 @@ export function AgentForm({ initialData, isEditing = false }: { initialData?: Ag
                   className={cn(
                     "flex w-full items-center justify-between gap-2.5 rounded-md px-2 py-1.5 text-left transition-all",
                     active
-                      ? "bg-brand-primary-500/5 ring-1 ring-inset ring-brand-primary-500/20"
+                      ? "bg-brand-primary-500/5 ring-brand-primary-500/20 ring-1 ring-inset"
                       : "hover:bg-neutral-50 dark:hover:bg-neutral-900/60"
                   )}
                 >
@@ -273,7 +290,9 @@ export function AgentForm({ initialData, isEditing = false }: { initialData?: Ag
                       <cap.icon
                         className={cn(
                           "h-3.5 w-3.5",
-                          active ? "text-brand-primary-600 dark:text-brand-primary-400" : "text-neutral-500 dark:text-neutral-400"
+                          active
+                            ? "text-brand-primary-600 dark:text-brand-primary-400"
+                            : "text-neutral-500 dark:text-neutral-400"
                         )}
                       />
                     </div>
@@ -288,19 +307,25 @@ export function AgentForm({ initialData, isEditing = false }: { initialData?: Ag
                       >
                         {cap.label}
                       </span>
-                      <p className="truncate text-[10px] text-neutral-400 dark:text-neutral-500">{cap.hint}</p>
+                      <p className="truncate text-[10px] text-neutral-400 dark:text-neutral-500">
+                        {cap.hint}
+                      </p>
                     </div>
                   </div>
-                  
+
                   {/* Toggle Switch Componente */}
-                  <div className={cn(
-                    "flex h-4 w-7 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out",
-                    active ? "bg-brand-primary-500" : "bg-neutral-300 dark:bg-neutral-600"
-                  )}>
-                    <div className={cn(
-                      "h-3 w-3 inline-block transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
-                      active ? "translate-x-3" : "translate-x-0"
-                    )} />
+                  <div
+                    className={cn(
+                      "flex h-4 w-7 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out",
+                      active ? "bg-brand-primary-500" : "bg-neutral-300 dark:bg-neutral-600"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "inline-block h-3 w-3 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+                        active ? "translate-x-3" : "translate-x-0"
+                      )}
+                    />
                   </div>
                 </button>
               );
@@ -317,8 +342,11 @@ export function AgentForm({ initialData, isEditing = false }: { initialData?: Ag
               Regras, limites e estilo de resposta. Quanto mais específico, melhor. Use Markdown.
             </p>
           </div>
-          
-          <div data-color-mode="auto" className="rounded-md border border-neutral-200 overflow-hidden dark:border-neutral-800">
+
+          <div
+            data-color-mode="auto"
+            className="overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800"
+          >
             <MDEditor
               value={instructions}
               onChange={(val) => setInstructions(val || "")}
@@ -330,12 +358,13 @@ export function AgentForm({ initialData, isEditing = false }: { initialData?: Ag
               }}
             />
           </div>
-          
+
           <div className="mt-1.5 flex items-center justify-end text-[11px] text-neutral-400">
             <span
               className={cn(
                 "tabular-nums",
-                instructions.length > INSTRUCTIONS_MAX && "font-semibold text-red-600 dark:text-red-400"
+                instructions.length > INSTRUCTIONS_MAX &&
+                  "font-semibold text-red-600 dark:text-red-400"
               )}
             >
               {instructions.length}/{INSTRUCTIONS_MAX}
@@ -360,12 +389,14 @@ export function AgentForm({ initialData, isEditing = false }: { initialData?: Ag
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-300 bg-neutral-50/50 px-2.5 py-4 text-center text-xs transition hover:border-brand-primary-500/50 hover:bg-brand-primary-500/5 dark:border-neutral-700 dark:bg-neutral-900/40 dark:hover:border-brand-primary-500/40 lg:py-6"
+            className="hover:border-brand-primary-500/50 hover:bg-brand-primary-500/5 dark:hover:border-brand-primary-500/40 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-300 bg-neutral-50/50 px-2.5 py-4 text-center text-xs transition lg:py-6 dark:border-neutral-700 dark:bg-neutral-900/40"
           >
-            <Upload className="h-4 w-4 shrink-0 text-brand-primary-500" />
-            <div className="flex flex-col items-start min-w-0">
-              <span className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-200">Adicionar arquivos...</span>
-              <p className="text-[10px] text-neutral-500 truncate">PDFs e documentos (até 5MB)</p>
+            <Upload className="text-brand-primary-500 h-4 w-4 shrink-0" />
+            <div className="flex min-w-0 flex-col items-start">
+              <span className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-200">
+                Adicionar arquivos...
+              </span>
+              <p className="truncate text-[10px] text-neutral-500">PDFs e documentos (até 5MB)</p>
             </div>
           </button>
 
@@ -380,7 +411,7 @@ export function AgentForm({ initialData, isEditing = false }: { initialData?: Ag
                     key={`existing-${i}`}
                     className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs dark:border-neutral-800 dark:bg-neutral-950"
                   >
-                    <FileText className="h-3.5 w-3.5 shrink-0 text-brand-primary-500" />
+                    <FileText className="text-brand-primary-500 h-3.5 w-3.5 shrink-0" />
                     <a
                       href={file.url}
                       target="_blank"
@@ -407,7 +438,7 @@ export function AgentForm({ initialData, isEditing = false }: { initialData?: Ag
                     className="group flex items-center justify-between gap-2 rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs dark:border-neutral-800 dark:bg-neutral-950"
                   >
                     <div className="flex min-w-0 items-center gap-2">
-                      <FileText className="h-3.5 w-3.5 shrink-0 text-brand-primary-500" />
+                      <FileText className="text-brand-primary-500 h-3.5 w-3.5 shrink-0" />
                       <span className="truncate font-medium text-neutral-700 dark:text-neutral-200">
                         {file.name}
                       </span>
@@ -415,7 +446,7 @@ export function AgentForm({ initialData, isEditing = false }: { initialData?: Ag
                     <button
                       type="button"
                       onClick={() => setFiles((prev) => prev.filter((_, index) => index !== i))}
-                      className="rounded p-1 text-neutral-400 opacity-0 transition hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                      className="rounded p-1 text-neutral-400 opacity-0 transition group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400"
                       aria-label="Remover arquivo"
                     >
                       <Trash2 className="h-3 w-3" />

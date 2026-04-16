@@ -649,7 +649,9 @@ export interface OrganizationMembersData {
   list_org_members: OrganizationMember[];
 }
 
-export const fetchOrganizationMembers = async (userId?: string): Promise<OrganizationMembersData | null> => {
+export const fetchOrganizationMembers = async (
+  userId?: string
+): Promise<OrganizationMembersData | null> => {
   try {
     const url = userId
       ? `${API_ENDPOINTS.ORGANIZATIONS_MEMBERS}?userId=${userId}`

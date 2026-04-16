@@ -1756,9 +1756,7 @@ const NoteDetail = () => {
               <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
 
               {/*Botão de paleta de cores*/}
-              <div className="flex relative">
-
-
+              <div className="relative flex">
                 <button
                   onClick={() => setShowColorPicker(!showColorPicker)}
                   className="dark:hover:text-brand-primary-500 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800"
@@ -1845,7 +1843,7 @@ const NoteDetail = () => {
                     </button>
                   </div>
                 )}
-                                <button
+                <button
                   onClick={handleExportNote}
                   disabled={isExporting}
                   className="dark:hover:text-brand-primary-500 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 disabled:cursor-not-allowed disabled:opacity-60 dark:text-neutral-400 dark:hover:bg-neutral-800"
@@ -2038,352 +2036,353 @@ const NoteDetail = () => {
                   <div className="mb-6 flex w-full flex-col gap-4 pb-4">
                     <div className="w-full max-w-[66.666667%]">
                       <div className="grid grid-cols-1 gap-x-6 gap-y-4 lg:grid-cols-2 lg:items-center">
-                      {(note.access?.canEdit || note.associated_project) && (
-                        <>
-                          <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
-                            <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-                              <FolderKanban
-                                className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
-                                size={13}
-                              />
-                              <span className="font-medium">Projeto</span>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              {note.access?.canEdit ? (
-                                <select
-                                  aria-label="Projeto da nota"
-                                  className="w-full max-w-full cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
-                                  value={note.associated_project?.id ?? ""}
-                                  onChange={(e) => void handleProjectAssignment(e.target.value)}
-                                >
-                                  <option value="">Sem projeto</option>
-                                  {projects.map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                      {p.title}
-                                    </option>
-                                  ))}
-                                </select>
-                              ) : note.associated_project ? (
-                                <span className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
-                                  {note.associated_project.name}
-                                </span>
-                              ) : null}
-                            </div>
-                          </div>
-                          <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
-                            <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-                              <Kanban
-                                className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
-                                size={13}
-                              />
-                              <span className="font-medium">Estágio</span>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              {note.associated_project ? (
-                                <>
-                                  {note.access?.canEdit && projectStages.length > 0 ? (
-                                    <div className="flex items-center gap-2">
-                                      <span
-                                        className="h-3 w-3 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
-                                        style={{
-                                          backgroundColor: (() => {
-                                            const sid = note.associated_project?.stage_id;
-                                            if (!sid) return "#a3a3a3";
-                                            const st = projectStages.find((s) => s.id === sid);
-                                            return st?.color || "#a3a3a3";
-                                          })(),
-                                        }}
-                                        title="Cor do estágio"
-                                        aria-hidden
-                                      />
-                                      <select
-                                        aria-label="Estágio da nota no projeto"
-                                        className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
-                                        value={note.associated_project.stage_id ?? ""}
-                                        onChange={(e) => void handleStageChange(e.target.value)}
-                                      >
-                                        <option value="">Escolha o estágio</option>
-                                        {note.associated_project.stage_id &&
-                                          !projectStages.some(
-                                            (s) => s.id === note.associated_project?.stage_id
-                                          ) && (
-                                            <option value={note.associated_project.stage_id}>
-                                              {note.associated_project.stage_name || "Estágio"}
-                                            </option>
-                                          )}
-                                        {projectStages.map((s) => (
-                                          <option key={s.id} value={s.id}>
-                                            {s.name}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                  ) : (
-                                    <span
-                                      className="inline-flex max-w-full items-center gap-2 rounded-lg bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-700 dark:bg-neutral-800/55 dark:text-neutral-300"
-                                      style={(() => {
-                                        const sid = note.associated_project?.stage_id;
-                                        const st = sid
-                                          ? projectStages.find((s) => s.id === sid)
-                                          : undefined;
-                                        const c = st?.color || "#a3a3a3";
-                                        return {
-                                          borderLeftWidth: 3,
-                                          borderLeftStyle: "solid" as const,
-                                          borderLeftColor: c,
-                                          backgroundColor: st?.color ? `${st.color}26` : undefined,
-                                        };
-                                      })()}
-                                    >
-                                      <span
-                                        className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
-                                        style={{
-                                          backgroundColor: (() => {
-                                            const sid = note.associated_project?.stage_id;
-                                            if (!sid) return "#a3a3a3";
-                                            return (
-                                              projectStages.find((s) => s.id === sid)?.color ||
-                                              "#a3a3a3"
-                                            );
-                                          })(),
-                                        }}
-                                        aria-hidden
-                                      />
-                                      {note.associated_project.stage_name ||
-                                        (projectStages.length === 0
-                                          ? "Nenhuma coluna neste projeto"
-                                          : "—")}
-                                    </span>
-                                  )}
-                                </>
-                              ) : note.access?.canEdit ? (
-                                <p className="text-[10px] leading-snug text-neutral-400 dark:text-neutral-500">
-                                  O estágio só pode ser definido quando a nota está num projeto.
-                                </p>
-                              ) : (
-                                <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                                  —
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                      {(note.access?.canEdit ||
-                        note.due_date ||
-                        note.priority_id ||
-                        note.priority_name) && (
-                        <>
-                          <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
-                            <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-                              <Calendar
-                                className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
-                                size={13}
-                              />
-                              <span className="font-medium">Prazo</span>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              {note.access?.canEdit ? (
-                                <input
-                                  type="datetime-local"
-                                  aria-label="Data e hora de prazo"
-                                  className="w-full max-w-full rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
-                                  value={
-                                    note.due_date
-                                      ? (() => {
-                                          const d = new Date(note.due_date);
-                                          const pad = (n: number) => String(n).padStart(2, "0");
-                                          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-                                        })()
-                                      : ""
-                                  }
-                                  onChange={async (e) => {
-                                    const v = e.target.value;
-                                    if (!v) {
-                                      await saveAndApply({ due_date: null });
-                                      return;
-                                    }
-                                    await saveAndApply({ due_date: new Date(v).toISOString() });
-                                  }}
+                        {(note.access?.canEdit || note.associated_project) && (
+                          <>
+                            <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                              <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                                <FolderKanban
+                                  className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
+                                  size={13}
                                 />
-                              ) : (
-                                <span className="text-xs text-neutral-600 dark:text-neutral-300">
-                                  {note.due_date
-                                    ? new Date(note.due_date).toLocaleString("pt-BR")
-                                    : "Sem prazo definido"}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
-                            <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-                              <Flag
-                                className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
-                                size={13}
-                              />
-                              <span className="font-medium">Prioridade</span>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              {note.access?.canEdit && taskPriorities.length > 0 ? (
-                                <div className="flex items-center gap-2">
-                                  <span
-                                    className="h-3 w-3 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
-                                    style={{
-                                      backgroundColor:
-                                        (note.priority_id &&
-                                          taskPriorities.find((p) => p.id === note.priority_id)
-                                            ?.color_hex) ||
-                                        note.priority_color ||
-                                        "#a3a3a3",
-                                    }}
-                                    title="Cor da prioridade"
-                                    aria-hidden
-                                  />
+                                <span className="font-medium">Projeto</span>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                {note.access?.canEdit ? (
                                   <select
-                                    aria-label="Prioridade da nota"
-                                    className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
-                                    value={note.priority_id ?? ""}
-                                    onChange={async (e) => {
-                                      const v = e.target.value;
-                                      await saveAndApply({
-                                        priority_id: v === "" ? null : v,
-                                      });
-                                    }}
+                                    aria-label="Projeto da nota"
+                                    className="w-full max-w-full cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
+                                    value={note.associated_project?.id ?? ""}
+                                    onChange={(e) => void handleProjectAssignment(e.target.value)}
                                   >
-                                    <option value="">Sem prioridade</option>
-                                    {taskPriorities.map((p) => (
+                                    <option value="">Sem projeto</option>
+                                    {projects.map((p) => (
                                       <option key={p.id} value={p.id}>
-                                        {p.name}
+                                        {p.title}
                                       </option>
                                     ))}
                                   </select>
-                                </div>
-                              ) : note.priority_name ? (
-                                <span
-                                  className="inline-flex w-fit max-w-full items-center gap-2 rounded-lg px-2 py-1 text-xs font-medium text-neutral-900 dark:text-neutral-100"
-                                  style={{
-                                    borderLeftWidth: 3,
-                                    borderLeftStyle: "solid",
-                                    borderLeftColor: note.priority_color || "#ca8a04",
-                                    backgroundColor: note.priority_color
-                                      ? `${note.priority_color}33`
-                                      : "rgba(234, 179, 8, 0.2)",
-                                  }}
-                                >
-                                  <span
-                                    className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
-                                    style={{
-                                      backgroundColor: note.priority_color || "#ca8a04",
-                                    }}
-                                    aria-hidden
-                                  />
-                                  {note.priority_name}
-                                </span>
-                              ) : note.access?.canEdit ? (
-                                <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                                  Nenhuma prioridade disponível neste âmbito
-                                </span>
-                              ) : (
-                                <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                                  Sem prioridade
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                      <div className="flex items-center min-w-0 flex-row gap-2 sm:gap-3">
-                        <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-                          <Users
-                            className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
-                            size={13}
-                          />
-                          <span className="font-medium">Collabs</span>
-                        </div>
-                        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-                          {note.collaborators && note.collaborators.length > 0 && (
-                            <>
-                              <div className="flex -space-x-1.5">
-                                {(showAllCollabs
-                                  ? note.collaborators
-                                  : note.collaborators.slice(0, META_LIST_PREVIEW_LIMIT)
-                                ).map((collab, index) => {
-                                  const displayName = getCollaboratorDisplayName(collab);
-                                  const avatarUrl = getCollaboratorAvatarUrl(collab);
-
-                                  return (
-                                    <div
-                                      key={index}
-                                      className="group relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-200 ring-0 transition-all hover:z-10 hover:ring-2 hover:ring-yellow-500/30 dark:border-neutral-900 dark:bg-neutral-700"
-                                      title={displayName}
-                                    >
-                                      {avatarUrl ? (
-                                        <Image
-                                          width={28}
-                                          height={28}
-                                          src={avatarUrl}
-                                          alt={displayName}
-                                          className="h-full w-full object-cover"
-                                        />
-                                      ) : (
-                                        <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-300">
-                                          {displayName.charAt(0).toUpperCase()}
-                                        </span>
-                                      )}
-
-                                      {note.access?.canShare && (
-                                        <button
-                                          onClick={() => handleRemoveCollaborator(collab)}
-                                          className="absolute inset-0 flex items-center justify-center rounded-full bg-red-500/80 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                                          title="Remover colaborador"
-                                        >
-                                          <X size={10} />
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                })}
+                                ) : note.associated_project ? (
+                                  <span className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
+                                    {note.associated_project.name}
+                                  </span>
+                                ) : null}
                               </div>
-                              {note.collaborators.length > META_LIST_PREVIEW_LIMIT && (
-                                <button
-                                  type="button"
-                                  onClick={() => setShowAllCollabs(!showAllCollabs)}
-                                  className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
-                                >
-                                  {showAllCollabs ? "Ver menos" : "Ver mais"}
-                                </button>
-                              )}
-                            </>
-                          )}
-                          {note.access?.canShare && (
-                            <button
-                              onClick={() => setShowShareModal(true)}
-                              className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                              title="Adicionar colaborador"
-                            >
-                              <Plus size={10} />
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                            </div>
+                            <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                              <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                                <Kanban
+                                  className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
+                                  size={13}
+                                />
+                                <span className="font-medium">Estágio</span>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                {note.associated_project ? (
+                                  <>
+                                    {note.access?.canEdit && projectStages.length > 0 ? (
+                                      <div className="flex items-center gap-2">
+                                        <span
+                                          className="h-3 w-3 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
+                                          style={{
+                                            backgroundColor: (() => {
+                                              const sid = note.associated_project?.stage_id;
+                                              if (!sid) return "#a3a3a3";
+                                              const st = projectStages.find((s) => s.id === sid);
+                                              return st?.color || "#a3a3a3";
+                                            })(),
+                                          }}
+                                          title="Cor do estágio"
+                                          aria-hidden
+                                        />
+                                        <select
+                                          aria-label="Estágio da nota no projeto"
+                                          className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
+                                          value={note.associated_project.stage_id ?? ""}
+                                          onChange={(e) => void handleStageChange(e.target.value)}
+                                        >
+                                          <option value="">Escolha o estágio</option>
+                                          {note.associated_project.stage_id &&
+                                            !projectStages.some(
+                                              (s) => s.id === note.associated_project?.stage_id
+                                            ) && (
+                                              <option value={note.associated_project.stage_id}>
+                                                {note.associated_project.stage_name || "Estágio"}
+                                              </option>
+                                            )}
+                                          {projectStages.map((s) => (
+                                            <option key={s.id} value={s.id}>
+                                              {s.name}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                    ) : (
+                                      <span
+                                        className="inline-flex max-w-full items-center gap-2 rounded-lg bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-700 dark:bg-neutral-800/55 dark:text-neutral-300"
+                                        style={(() => {
+                                          const sid = note.associated_project?.stage_id;
+                                          const st = sid
+                                            ? projectStages.find((s) => s.id === sid)
+                                            : undefined;
+                                          const c = st?.color || "#a3a3a3";
+                                          return {
+                                            borderLeftWidth: 3,
+                                            borderLeftStyle: "solid" as const,
+                                            borderLeftColor: c,
+                                            backgroundColor: st?.color
+                                              ? `${st.color}26`
+                                              : undefined,
+                                          };
+                                        })()}
+                                      >
+                                        <span
+                                          className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
+                                          style={{
+                                            backgroundColor: (() => {
+                                              const sid = note.associated_project?.stage_id;
+                                              if (!sid) return "#a3a3a3";
+                                              return (
+                                                projectStages.find((s) => s.id === sid)?.color ||
+                                                "#a3a3a3"
+                                              );
+                                            })(),
+                                          }}
+                                          aria-hidden
+                                        />
+                                        {note.associated_project.stage_name ||
+                                          (projectStages.length === 0
+                                            ? "Nenhuma coluna neste projeto"
+                                            : "—")}
+                                      </span>
+                                    )}
+                                  </>
+                                ) : note.access?.canEdit ? (
+                                  <p className="text-[10px] leading-snug text-neutral-400 dark:text-neutral-500">
+                                    O estágio só pode ser definido quando a nota está num projeto.
+                                  </p>
+                                ) : (
+                                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                                    —
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
 
-                      {/* Relações */}
-                      <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
-                        <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-                          <Link
-                            className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
-                            size={13}
-                          />
-                          <span className="font-medium">Relações</span>
+                        {(note.access?.canEdit ||
+                          note.due_date ||
+                          note.priority_id ||
+                          note.priority_name) && (
+                          <>
+                            <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                              <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                                <Calendar
+                                  className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
+                                  size={13}
+                                />
+                                <span className="font-medium">Prazo</span>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                {note.access?.canEdit ? (
+                                  <input
+                                    type="datetime-local"
+                                    aria-label="Data e hora de prazo"
+                                    className="w-full max-w-full rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
+                                    value={
+                                      note.due_date
+                                        ? (() => {
+                                            const d = new Date(note.due_date);
+                                            const pad = (n: number) => String(n).padStart(2, "0");
+                                            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                                          })()
+                                        : ""
+                                    }
+                                    onChange={async (e) => {
+                                      const v = e.target.value;
+                                      if (!v) {
+                                        await saveAndApply({ due_date: null });
+                                        return;
+                                      }
+                                      await saveAndApply({ due_date: new Date(v).toISOString() });
+                                    }}
+                                  />
+                                ) : (
+                                  <span className="text-xs text-neutral-600 dark:text-neutral-300">
+                                    {note.due_date
+                                      ? new Date(note.due_date).toLocaleString("pt-BR")
+                                      : "Sem prazo definido"}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                              <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                                <Flag
+                                  className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
+                                  size={13}
+                                />
+                                <span className="font-medium">Prioridade</span>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                {note.access?.canEdit && taskPriorities.length > 0 ? (
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className="h-3 w-3 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
+                                      style={{
+                                        backgroundColor:
+                                          (note.priority_id &&
+                                            taskPriorities.find((p) => p.id === note.priority_id)
+                                              ?.color_hex) ||
+                                          note.priority_color ||
+                                          "#a3a3a3",
+                                      }}
+                                      title="Cor da prioridade"
+                                      aria-hidden
+                                    />
+                                    <select
+                                      aria-label="Prioridade da nota"
+                                      className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
+                                      value={note.priority_id ?? ""}
+                                      onChange={async (e) => {
+                                        const v = e.target.value;
+                                        await saveAndApply({
+                                          priority_id: v === "" ? null : v,
+                                        });
+                                      }}
+                                    >
+                                      <option value="">Sem prioridade</option>
+                                      {taskPriorities.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                          {p.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                ) : note.priority_name ? (
+                                  <span
+                                    className="inline-flex w-fit max-w-full items-center gap-2 rounded-lg px-2 py-1 text-xs font-medium text-neutral-900 dark:text-neutral-100"
+                                    style={{
+                                      borderLeftWidth: 3,
+                                      borderLeftStyle: "solid",
+                                      borderLeftColor: note.priority_color || "#ca8a04",
+                                      backgroundColor: note.priority_color
+                                        ? `${note.priority_color}33`
+                                        : "rgba(234, 179, 8, 0.2)",
+                                    }}
+                                  >
+                                    <span
+                                      className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
+                                      style={{
+                                        backgroundColor: note.priority_color || "#ca8a04",
+                                      }}
+                                      aria-hidden
+                                    />
+                                    {note.priority_name}
+                                  </span>
+                                ) : note.access?.canEdit ? (
+                                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                                    Nenhuma prioridade disponível neste âmbito
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                                    Sem prioridade
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                          <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                            <Users
+                              className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
+                              size={13}
+                            />
+                            <span className="font-medium">Collabs</span>
+                          </div>
+                          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+                            {note.collaborators && note.collaborators.length > 0 && (
+                              <>
+                                <div className="flex -space-x-1.5">
+                                  {(showAllCollabs
+                                    ? note.collaborators
+                                    : note.collaborators.slice(0, META_LIST_PREVIEW_LIMIT)
+                                  ).map((collab, index) => {
+                                    const displayName = getCollaboratorDisplayName(collab);
+                                    const avatarUrl = getCollaboratorAvatarUrl(collab);
+
+                                    return (
+                                      <div
+                                        key={index}
+                                        className="group relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-200 ring-0 transition-all hover:z-10 hover:ring-2 hover:ring-yellow-500/30 dark:border-neutral-900 dark:bg-neutral-700"
+                                        title={displayName}
+                                      >
+                                        {avatarUrl ? (
+                                          <Image
+                                            width={28}
+                                            height={28}
+                                            src={avatarUrl}
+                                            alt={displayName}
+                                            className="h-full w-full object-cover"
+                                          />
+                                        ) : (
+                                          <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-300">
+                                            {displayName.charAt(0).toUpperCase()}
+                                          </span>
+                                        )}
+
+                                        {note.access?.canShare && (
+                                          <button
+                                            onClick={() => handleRemoveCollaborator(collab)}
+                                            className="absolute inset-0 flex items-center justify-center rounded-full bg-red-500/80 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                            title="Remover colaborador"
+                                          >
+                                            <X size={10} />
+                                          </button>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                {note.collaborators.length > META_LIST_PREVIEW_LIMIT && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowAllCollabs(!showAllCollabs)}
+                                    className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                  >
+                                    {showAllCollabs ? "Ver menos" : "Ver mais"}
+                                  </button>
+                                )}
+                              </>
+                            )}
+                            {note.access?.canShare && (
+                              <button
+                                onClick={() => setShowShareModal(true)}
+                                className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                                title="Adicionar colaborador"
+                              >
+                                <Plus size={10} />
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
-                          {(showAllRelations
-                            ? relatedNotesData
-                            : relatedNotesData.slice(0, META_LIST_PREVIEW_LIMIT)
-                          ).map(
-                            (relNote) => (
+
+                        {/* Relações */}
+                        <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                          <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                            <Link
+                              className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
+                              size={13}
+                            />
+                            <span className="font-medium">Relações</span>
+                          </div>
+                          <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                            {(showAllRelations
+                              ? relatedNotesData
+                              : relatedNotesData.slice(0, META_LIST_PREVIEW_LIMIT)
+                            ).map((relNote) => (
                               <span
                                 key={relNote!.id}
                                 className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
@@ -2415,46 +2414,44 @@ const NoteDetail = () => {
                                   </button>
                                 )}
                               </span>
-                            )
-                          )}
-                          {relatedNotesData.length > META_LIST_PREVIEW_LIMIT && (
-                            <button
-                              type="button"
-                              onClick={() => setShowAllRelations(!showAllRelations)}
-                              className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
-                            >
-                              {showAllRelations ? "Ver menos" : "Ver mais"}
-                            </button>
-                          )}
-                          {note.access?.canEdit && (
-                            <button
-                              onClick={() => setShowRelationModal(true)}
-                              className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                              title="Adicionar relação"
-                            >
-                              <Plus size={10} />
-                            </button>
-                          )}
+                            ))}
+                            {relatedNotesData.length > META_LIST_PREVIEW_LIMIT && (
+                              <button
+                                type="button"
+                                onClick={() => setShowAllRelations(!showAllRelations)}
+                                className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                              >
+                                {showAllRelations ? "Ver menos" : "Ver mais"}
+                              </button>
+                            )}
+                            {note.access?.canEdit && (
+                              <button
+                                onClick={() => setShowRelationModal(true)}
+                                className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                                title="Adicionar relação"
+                              >
+                                <Plus size={10} />
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Tags */}
-                      <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
-                        <div className="flex  shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-                          <Tag
-                            className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
-                            size={13}
-                          />
-                          <span className="font-medium">Tags</span>
-                        </div>
-                        <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
-                          {note.tags && note.tags.length > 0 && (
-                            <>
-                              {(showAllTags
-                                ? note.tags
-                                : note.tags.slice(0, META_LIST_PREVIEW_LIMIT)
-                              ).map(
-                                (tag, index) => {
+                        {/* Tags */}
+                        <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                          <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                            <Tag
+                              className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
+                              size={13}
+                            />
+                            <span className="font-medium">Tags</span>
+                          </div>
+                          <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                            {note.tags && note.tags.length > 0 && (
+                              <>
+                                {(showAllTags
+                                  ? note.tags
+                                  : note.tags.slice(0, META_LIST_PREVIEW_LIMIT)
+                                ).map((tag, index) => {
                                   const colors = getTagColor(tag);
                                   return (
                                     <span
@@ -2473,215 +2470,216 @@ const NoteDetail = () => {
                                       )}
                                     </span>
                                   );
-                                }
-                              )}
-                              {note.tags.length > META_LIST_PREVIEW_LIMIT && (
-                                <button
-                                  type="button"
-                                  onClick={() => setShowAllTags(!showAllTags)}
-                                  className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
-                                >
-                                  {showAllTags ? "Ver menos" : "Ver mais"}
-                                </button>
-                              )}
-                            </>
-                          )}
-                          {note.access?.canEdit && (
-                            <button
-                              onClick={() => setShowTagModal(true)}
-                              className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                              title="Adicionar tag"
-                            >
-                              <Plus size={10} />
-                            </button>
-                          )}
+                                })}
+                                {note.tags.length > META_LIST_PREVIEW_LIMIT && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowAllTags(!showAllTags)}
+                                    className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                  >
+                                    {showAllTags ? "Ver menos" : "Ver mais"}
+                                  </button>
+                                )}
+                              </>
+                            )}
+                            {note.access?.canEdit && (
+                              <button
+                                onClick={() => setShowTagModal(true)}
+                                className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                                title="Adicionar tag"
+                              >
+                                <Plus size={10} />
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* URLs */}
-                      <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
-                        <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-                          <Link2
-                            className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
-                            size={13}
-                          />
-                          <span className="font-medium">URLs</span>
-                        </div>
-                        <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
-                          {note.properties?.urls &&
-                            (() => {
-                              const filteredUrls = note.properties.urls.filter(Boolean);
-                              const visibleUrls = showAllUrls
-                                ? filteredUrls
-                                : filteredUrls.slice(0, META_LIST_PREVIEW_LIMIT);
-                              return (
-                                <>
-                                  {visibleUrls.map((url, index) => (
-                                    <span
-                                      key={index}
-                                      className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
-                                    >
-                                      <a
-                                        href={url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex max-w-[150px] items-center gap-1.5 truncate text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                        {/* URLs */}
+                        <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                          <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                            <Link2
+                              className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
+                              size={13}
+                            />
+                            <span className="font-medium">URLs</span>
+                          </div>
+                          <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                            {note.properties?.urls &&
+                              (() => {
+                                const filteredUrls = note.properties.urls.filter(Boolean);
+                                const visibleUrls = showAllUrls
+                                  ? filteredUrls
+                                  : filteredUrls.slice(0, META_LIST_PREVIEW_LIMIT);
+                                return (
+                                  <>
+                                    {visibleUrls.map((url, index) => (
+                                      <span
+                                        key={index}
+                                        className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
                                       >
-                                        <span className="truncate">
-                                          {url.replace(/^https?:\/\//, "")}
-                                        </span>
-                                      </a>
-                                      {note.access?.canEdit && (
-                                        <button
-                                          onClick={() => handleRemoveUrl(url)}
-                                          className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
-                                          title="Remover URL"
+                                        <a
+                                          href={url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex max-w-[150px] items-center gap-1.5 truncate text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
                                         >
-                                          <X size={10} />
-                                        </button>
-                                      )}
-                                    </span>
-                                  ))}
-                                  {filteredUrls.length > META_LIST_PREVIEW_LIMIT && (
+                                          <span className="truncate">
+                                            {url.replace(/^https?:\/\//, "")}
+                                          </span>
+                                        </a>
+                                        {note.access?.canEdit && (
+                                          <button
+                                            onClick={() => handleRemoveUrl(url)}
+                                            className="ml-0.5 text-neutral-400 opacity-100 transition-all hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 dark:text-neutral-500 dark:hover:text-red-400"
+                                            title="Remover URL"
+                                          >
+                                            <X size={10} />
+                                          </button>
+                                        )}
+                                      </span>
+                                    ))}
+                                    {filteredUrls.length > META_LIST_PREVIEW_LIMIT && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setShowAllUrls(!showAllUrls)}
+                                        className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                      >
+                                        {showAllUrls ? "Ver menos" : "Ver mais"}
+                                      </button>
+                                    )}
+                                  </>
+                                );
+                              })()}
+                            {note.access?.canEdit && (
+                              <>
+                                {showUrlInput ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <input
+                                      type="url"
+                                      value={newUrl}
+                                      onChange={(e) => setNewUrl(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          e.preventDefault();
+                                          handleAddUrl();
+                                        }
+                                        if (e.key === "Escape") {
+                                          setShowUrlInput(false);
+                                          setNewUrl("");
+                                        }
+                                      }}
+                                      placeholder="https://..."
+                                      className="w-40 rounded-md border border-neutral-200 bg-transparent px-2 py-0.5 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                                      autoFocus
+                                    />
                                     <button
-                                      type="button"
-                                      onClick={() => setShowAllUrls(!showAllUrls)}
-                                      className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                      onClick={handleAddUrl}
+                                      disabled={!newUrl.trim()}
+                                      className="bg-brand-primary-500 rounded-md px-2 py-0.5 text-xs font-medium text-white transition-colors hover:bg-yellow-600 disabled:opacity-50 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
                                     >
-                                      {showAllUrls ? "Ver menos" : "Ver mais"}
+                                      OK
                                     </button>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          {note.access?.canEdit && (
-                            <>
-                              {showUrlInput ? (
-                                <div className="flex items-center gap-1.5">
-                                  <input
-                                    type="url"
-                                    value={newUrl}
-                                    onChange={(e) => setNewUrl(e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        handleAddUrl();
-                                      }
-                                      if (e.key === "Escape") {
+                                    <button
+                                      onClick={() => {
                                         setShowUrlInput(false);
                                         setNewUrl("");
-                                      }
-                                    }}
-                                    placeholder="https://..."
-                                    className="w-40 rounded-md border border-neutral-200 bg-transparent px-2 py-0.5 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
-                                    autoFocus
-                                  />
-                                  <button
-                                    onClick={handleAddUrl}
-                                    disabled={!newUrl.trim()}
-                                    className="bg-brand-primary-500 rounded-md px-2 py-0.5 text-xs font-medium text-white transition-colors hover:bg-yellow-600 disabled:opacity-50 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
-                                  >
-                                    OK
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setShowUrlInput(false);
-                                      setNewUrl("");
-                                    }}
-                                    className="text-neutral-400 transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"
-                                    title="Cancelar"
-                                  >
-                                    <X size={10} />
-                                  </button>
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={() => setShowUrlInput(true)}
-                                  className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                                  title="Adicionar URL"
-                                >
-                                  <Plus size={10} />
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Arquivos */}
-                      <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3 lg:col-span-2">
-                        <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-                          <FileText
-                            className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
-                            size={13}
-                          />
-                          <span className="font-medium">Arquivos</span>
-                        </div>
-                        <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
-                          {note.properties?.files &&
-                            (() => {
-                              const filteredFiles = note.properties.files.filter((f) => f.path);
-                              const visibleFiles = showAllFiles
-                                ? filteredFiles
-                                : filteredFiles.slice(0, 2);
-                              return (
-                                <>
-                                  {visibleFiles.map((file, index) => (
-                                    <span
-                                      key={file.id || index}
-                                      className="group flex items-center gap-1 rounded-md bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors  dark:bg-neutral-800 dark:text-neutral-300"
+                                      }}
+                                      className="text-neutral-400 transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"
+                                      title="Cancelar"
                                     >
-                                      <a
-                                        href={getStorageUrl(file.path)}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex max-w-[120px] items-center gap-1.5 truncate hover:text-neutral-900 dark:hover:text-neutral-100"
-                                      >
-                                        <span className="truncate">{file.name || "Arquivo"}</span>
-                                      </a>
-                                      <a
-                                        href={getStorageUrl(file.path)}
-                                        download={file.name || "arquivo"}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="text-neutral-400 opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
-                                        title="Baixar arquivo"
-                                      >
-                                        <Download size={10} />
-                                      </a>
-                                      {note.access?.canEdit && (
-                                        <button
-                                          onClick={() => handleRemoveFile(file.id)}
-                                          className="ml-0.5 text-neutral-400 dark:text-neutral-500 dark:hover:text-red-400"
-                                          title="Remover arquivo"
-                                        >
-                                          <X size={10} />
-                                        </button>
-                                      )}
-                                    </span>
-                                  ))}
-                                  {filteredFiles.length > 3 && (
-                                    <button
-                                      onClick={() => setShowAllFiles(!showAllFiles)}
-                                      className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
-                                    >
-                                      {showAllFiles ? "Ver menos" : `+${filteredFiles.length - 3}`}
+                                      <X size={10} />
                                     </button>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          {note.access?.canEdit && (
-                            <button
-                              onClick={() => filesInputRef.current?.click()}
-                              className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                              title="Adicionar arquivo"
-                            >
-                              <Plus size={10} />
-                            </button>
-                          )}
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => setShowUrlInput(true)}
+                                    className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                                    title="Adicionar URL"
+                                  >
+                                    <Plus size={10} />
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Arquivos */}
+                        <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3 lg:col-span-2">
+                          <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                            <FileText
+                              className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
+                              size={13}
+                            />
+                            <span className="font-medium">Arquivos</span>
+                          </div>
+                          <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                            {note.properties?.files &&
+                              (() => {
+                                const filteredFiles = note.properties.files.filter((f) => f.path);
+                                const visibleFiles = showAllFiles
+                                  ? filteredFiles
+                                  : filteredFiles.slice(0, 2);
+                                return (
+                                  <>
+                                    {visibleFiles.map((file, index) => (
+                                      <span
+                                        key={file.id || index}
+                                        className="group flex items-center gap-1 rounded-md bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors dark:bg-neutral-800 dark:text-neutral-300"
+                                      >
+                                        <a
+                                          href={getStorageUrl(file.path)}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex max-w-[120px] items-center gap-1.5 truncate hover:text-neutral-900 dark:hover:text-neutral-100"
+                                        >
+                                          <span className="truncate">{file.name || "Arquivo"}</span>
+                                        </a>
+                                        <a
+                                          href={getStorageUrl(file.path)}
+                                          download={file.name || "arquivo"}
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="text-neutral-400 opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
+                                          title="Baixar arquivo"
+                                        >
+                                          <Download size={10} />
+                                        </a>
+                                        {note.access?.canEdit && (
+                                          <button
+                                            onClick={() => handleRemoveFile(file.id)}
+                                            className="ml-0.5 text-neutral-400 dark:text-neutral-500 dark:hover:text-red-400"
+                                            title="Remover arquivo"
+                                          >
+                                            <X size={10} />
+                                          </button>
+                                        )}
+                                      </span>
+                                    ))}
+                                    {filteredFiles.length > 3 && (
+                                      <button
+                                        onClick={() => setShowAllFiles(!showAllFiles)}
+                                        className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                      >
+                                        {showAllFiles
+                                          ? "Ver menos"
+                                          : `+${filteredFiles.length - 3}`}
+                                      </button>
+                                    )}
+                                  </>
+                                );
+                              })()}
+                            {note.access?.canEdit && (
+                              <button
+                                onClick={() => filesInputRef.current?.click()}
+                                className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                                title="Adicionar arquivo"
+                              >
+                                <Plus size={10} />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
                     </div>
 
                     {/* Criado / editado — linha superior em largura total; texto limitado a 2/3 */}

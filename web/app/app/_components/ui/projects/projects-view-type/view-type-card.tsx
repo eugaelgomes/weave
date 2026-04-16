@@ -28,7 +28,7 @@ export default function ViewTypeCard({
       disabled={disabled}
       className={`flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
         selected
-          ? "border-yellow-500 bg-brand-primary-500/10 ring-2 ring-yellow-500/20 dark:border-yellow-500 dark:bg-brand-primary-500/20"
+          ? "bg-brand-primary-500/10 dark:bg-brand-primary-500/20 border-yellow-500 ring-2 ring-yellow-500/20 dark:border-yellow-500"
           : "border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:border-neutral-600 dark:hover:bg-neutral-700"
       } ${className}`}
     >

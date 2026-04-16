@@ -196,7 +196,7 @@ export const ImageEditModal = ({
               <span className="text-xs">Faça upload de uma imagem</span>
             </div>
           )}
-          
+
           <input
             type="file"
             accept="image/*"

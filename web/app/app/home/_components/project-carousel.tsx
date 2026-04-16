@@ -129,7 +129,7 @@ export default function ProjectsCarousel({
           </p>
           <Link
             href={emptyActionHref}
-            className="inline-flex items-center gap-1.5 rounded bg-brand-primary-500 px-3 py-1.5 text-[10px] font-medium text-neutral-950 transition-colors hover:bg-yellow-600"
+            className="bg-brand-primary-500 inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-[10px] font-medium text-neutral-950 transition-colors hover:bg-yellow-600"
           >
             <Folder className="h-3 w-3" /> {emptyActionText}
           </Link>
@@ -321,7 +321,7 @@ export default function ProjectsCarousel({
                   onClick={() => scrollToSlide(index)}
                   className={`h-1 rounded-full transition-all ${
                     currentSlide === index
-                      ? "w-4 bg-brand-primary-500"
+                      ? "bg-brand-primary-500 w-4"
                       : "w-1 bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-700 dark:hover:bg-neutral-600"
                   }`}
                   aria-label={`Ir para projeto ${index + 1}`}

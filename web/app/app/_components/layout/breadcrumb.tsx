@@ -61,7 +61,7 @@ const Breadcrumb = () => {
       {/* Home Link */}
       <Link
         href="/app/home"
-        className="group flex items-center gap-1.5 rounded-md px-2 py-1 text-neutral-400 transition-all hover:bg-neutral-800/50 hover:text-brand-primary-500"
+        className="group hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md px-2 py-1 text-neutral-400 transition-all hover:bg-neutral-800/50"
         aria-label="Início"
       >
         <Home className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
@@ -76,7 +76,7 @@ const Breadcrumb = () => {
 
           {/* Item */}
           {crumb.isLast ? (
-            <span className="truncate rounded-md bg-brand-primary-500/10 px-2.5 py-1 text-xs font-semibold text-brand-primary-500">
+            <span className="bg-brand-primary-500/10 text-brand-primary-500 truncate rounded-md px-2.5 py-1 text-xs font-semibold">
               {crumb.label}
             </span>
           ) : (

@@ -447,7 +447,9 @@ export async function exportNoteAsPDF(noteId: string): Promise<{ blob: Blob; fil
   const blob = await response.blob();
   const contentDisposition = response.headers.get("content-disposition") || "";
   const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|")?([^\";]+)/i);
-  const parsedName = fileNameMatch?.[1] ? decodeURIComponent(fileNameMatch[1].replace(/"/g, "")) : "";
+  const parsedName = fileNameMatch?.[1]
+    ? decodeURIComponent(fileNameMatch[1].replace(/"/g, ""))
+    : "";
 
   return {
     blob,
