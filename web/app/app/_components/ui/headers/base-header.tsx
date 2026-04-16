@@ -17,20 +17,29 @@ export function BaseHeader({ className, leftContent, rightContent }: BaseHeaderP
   return (
     <div
       className={cn(
-        "flex flex-row items-center justify-between gap-3 rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:gap-4 sm:px-4 sm:py-1 dark:border-neutral-800 dark:bg-neutral-800",
+        // items-center garante o alinhamento vertical do container principal
+        "flex flex-row items-center justify-between gap-3 rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:gap-4 sm:px-2 sm:py-1 dark:border-neutral-800 dark:bg-neutral-800",
         className
       )}
     >
+      {/* Lado Esquerdo */}
       <div className="flex items-center gap-2">
-        <span className="text-xs font-medium tracking-tight text-neutral-900 sm:text-sm dark:text-neutral-100">
+        <div className="flex items-center text-xs font-medium tracking-tight text-neutral-900 sm:text-sm dark:text-neutral-100">
           {leftContent}
-        </span>
+        </div>
       </div>
-      <div className="flex items-center gap-3 text-xs text-neutral-600 sm:gap-4 sm:text-sm dark:text-neutral-400">
-        <span className="truncate text-xs">
+
+      {/* Lado Direito (Data e Content) */}
+      <div className="flex items-center gap-3 text-xs text-neutral-600 sm:gap-4 dark:text-neutral-400">
+        <span className="flex items-center truncate text-[10px] leading-none">
           {`${dateFormat(userCurrentDateTime)} ${timeFormat(userCurrentDateTime)}`}
         </span>
-        {rightContent}
+        
+        {rightContent && (
+          <div className="flex items-center">
+            {rightContent}
+          </div>
+        )}
       </div>
     </div>
   );

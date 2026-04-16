@@ -1,18 +1,13 @@
 import React from "react";
-import { FaArrowLeft, FaTrash } from "react-icons/fa";
-import { Sparkles, Activity, Columns3, List, Timer, ChevronRight } from "lucide-react";
+import { FaArrowLeft } from "react-icons/fa";
+import { Activity, Columns3, List, Timer, ChevronRight } from "lucide-react";
 
 interface ProjectHeaderProps {
   project: any;
   stagesCount: number;
   activeView: string;
   setActiveView: (view: any) => void;
-  isEditing: boolean;
-  setIsEditing: (val: boolean) => void;
-  canEdit: boolean;
-  isOwner: boolean;
-  onDelete: () => void;
-  onToggleSidebar: () => void;
+  onViewDetails: () => void;
   onBack: () => void;
 }
 
@@ -20,19 +15,17 @@ export default function ProjectHeader({
   project,
   activeView,
   setActiveView,
-  isEditing,
-  setIsEditing,
-  canEdit,
-  isOwner,
-  onDelete,
-  onToggleSidebar,
+  onViewDetails,
   onBack,
 }: ProjectHeaderProps) {
   return (
-    <header className="flex h-11 flex-none items-center justify-between border-b border-neutral-200 bg-white/80 px-3 backdrop-blur-md dark:border-neutral-800/50 dark:bg-[#0E0E11]/80">
+    <div className="flex h-11 flex-none items-center justify-between bg-white px-3 backdrop-blur-md dark:bg-neutral-800">
       <div className="flex items-center gap-2">
         <button
+          type="button"
           onClick={onBack}
+          aria-label="Voltar"
+          title="Voltar"
           className="flex size-6 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
         >
           <FaArrowLeft className="size-2.5" />
@@ -84,35 +77,16 @@ export default function ProjectHeader({
         </div>
 
         <div className="flex items-center gap-1 border-l border-neutral-200 pl-3 dark:border-neutral-800">
-          {canEdit && !isEditing && (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-1 rounded px-2 py-1 text-[10px] font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-            >
-              <Sparkles className="size-3" />
-              Editar
-            </button>
-          )}
-
-          {isOwner && (
-            <button
-              onClick={() => {
-                if (window.confirm("Eliminar projeto?")) onDelete();
-              }}
-              className="flex size-6 items-center justify-center rounded text-neutral-400 transition-colors hover:text-red-500 dark:hover:text-red-400"
-            >
-              <FaTrash className="size-2.5" />
-            </button>
-          )}
-
           <button
-            onClick={onToggleSidebar}
-            className="ml-1 flex size-6 items-center justify-center rounded border border-transparent text-neutral-400 transition-all hover:border-neutral-200 hover:bg-white hover:text-neutral-900 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+            type="button"
+            onClick={onViewDetails}
+            className="ml-1 flex items-center gap-1 rounded border border-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
           >
-            <Activity className="size-3" />
+            Ver detalhes
+            <ChevronRight className="size-3" />
           </button>
         </div>
       </div>
-    </header>
+    </div>
   );
 }

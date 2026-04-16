@@ -9,8 +9,6 @@ import { useAuth } from "@/app/_contexts/auth-context";
 // Componentes importados (idealmente separados em seus próprios arquivos)
 import ProjectHeader from "@/app/app/projects/_components/project-header";
 import ProjectBoard from "@/app/app/projects/_components/project-board";
-import ProjectSidebar from "@/app/app/projects/_components/project-sidebar";
-import ProjectEditor from "@/app/app/projects/_components/project-editor";
 import AddCollaboratorModal from "@/app/app/projects/_components/modals/add-collaborator-modal";
 import AddNoteModal from "@/app/app/projects/_components/modals/add-note-modal";
 import { ProjectFilters } from "@/app/app/projects/_components/project-filters";
@@ -28,7 +26,6 @@ export default function ProjectViewPage() {
     getProjectStages,
     getProjectTags,
     getTaskPriorities,
-    deleteProject,
   } = useProjects();
 
   const { notes } = useNotes();
@@ -43,11 +40,9 @@ export default function ProjectViewPage() {
 
   // Estados de UI
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
   const [activeView, setActiveView] = useState<
     "board" | "list" | "calendar" | "timeline" | "gantt"
   >("board");
-  const [showSidebar, setShowSidebar] = useState(false);
   const [showAddCollaborator, setShowAddCollaborator] = useState(false);
   const [showAddNote, setShowAddNote] = useState(false);
 
@@ -59,13 +54,13 @@ export default function ProjectViewPage() {
       try {
         const [projectData, collabData, notesData, stagesData, tagsData, prioritiesData] =
           await Promise.all([
-            getProjectById(projectId),
-            getCollaborators(projectId),
-            getProjectNotes(projectId),
-            getProjectStages(projectId).catch(() => []),
-            getProjectTags(projectId).catch(() => []),
-            getTaskPriorities(projectId).catch(() => []),
-          ]);
+          getProjectById(projectId),
+          getCollaborators(projectId),
+          getProjectNotes(projectId),
+          getProjectStages(projectId).catch(() => []),
+          getProjectTags(projectId).catch(() => []),
+          getTaskPriorities(projectId).catch(() => []),
+        ]);
 
         if (projectData) {
           setProject(projectData);
@@ -107,12 +102,7 @@ export default function ProjectViewPage() {
         stagesCount={stages.length}
         activeView={activeView}
         setActiveView={setActiveView}
-        isEditing={isEditing}
-        setIsEditing={setIsEditing}
-        canEdit={canEdit}
-        isOwner={isOwner}
-        onDelete={() => deleteProject(projectId).then(() => router.push("/app/projects"))}
-        onToggleSidebar={() => setShowSidebar(!showSidebar)}
+        onViewDetails={() => router.push(`/app/projects/${projectId}/details`)}
         onBack={() => router.push("/app/projects")}
       />
 
@@ -120,38 +110,24 @@ export default function ProjectViewPage() {
 
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {isEditing && (
-            <ProjectEditor
-              project={project}
-              onClose={() => setIsEditing(false)}
-              onSave={(updatedProject: any) => {
-                setProject(updatedProject);
-                setIsEditing(false);
-              }}
-            />
-          )}
-
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white shadow-sm dark:bg-neutral-900/50">
             {activeView === "board" && (
-              <ProjectBoard stages={stages} projectNotes={projectNotes} projectTags={projectTags} />
+              <ProjectBoard
+                stages={stages}
+                projectNotes={projectNotes}
+                projectTags={projectTags}
+                onNoteStageChange={(noteId, newStageId) => {
+                  setProjectNotes((prev) =>
+                    prev.map((n) =>
+                      n.id === noteId ? { ...n, project_stage_id: newStageId } : n
+                    )
+                  );
+                }}
+              />
             )}
             {/* Outras visualizações (List, Timeline) entrariam aqui */}
           </div>
         </main>
-
-        <ProjectSidebar
-          isOpen={showSidebar}
-          project={project}
-          tags={projectTags}
-          priorities={taskPriorities}
-          collaborators={collaborators}
-          notes={projectNotes}
-          isOwner={isOwner}
-          canEdit={canEdit}
-          onClose={() => setShowSidebar(false)}
-          onAddCollaborator={() => setShowAddCollaborator(true)}
-          onAddNote={() => setShowAddNote(true)}
-        />
       </div>
 
       {showAddCollaborator && (
