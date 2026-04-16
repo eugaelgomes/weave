@@ -12,9 +12,12 @@ const SCOPES = [
   "https://www.googleapis.com/auth/userinfo.profile",
 ];
 
-const CALENDAR_REDIRECT_URI =
-  process.env.GOOGLE_CALENDAR_REDIRECT_URI ||
-  "http://localhost:8080/api/v1/webhooks/google/callback";
+/** Mesma URI no Google Cloud Console (OAuth Web client) e na troca do `code`. */
+const GOOGLE_CALENDAR_OAUTH_REDIRECT_URI =
+  process.env.NODE_ENV === "production"
+    ? "https://apis.weavenotes.app/api/v1/webhooks/google/callback"
+    : "http://localhost:8080/api/v1/webhooks/google/callback";
+
 /**
  * Setup Envs of Google OAuth2 Client and Calendar API
  * @see https://developers.google.com/calendar/api/quickstart/nodejs
@@ -24,7 +27,7 @@ const CALENDAR_REDIRECT_URI =
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  CALENDAR_REDIRECT_URI
+  GOOGLE_CALENDAR_OAUTH_REDIRECT_URI
 );
 
 /**
@@ -62,7 +65,7 @@ const createUserOAuth2Client = (tokens) => {
   const client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    CALENDAR_REDIRECT_URI
+    GOOGLE_CALENDAR_OAUTH_REDIRECT_URI
   );
   client.setCredentials(tokens);
   return client;
@@ -90,9 +93,10 @@ const getCalendarClientWithAuth = (tokens) => {
 };
 
 module.exports = {
-  oauth2Client,
   getAuthUrl,
-  getTokens,
   getCalendarClient,
   getCalendarClientWithAuth,
+  getTokens,
+  GOOGLE_CALENDAR_OAUTH_REDIRECT_URI,
+  oauth2Client,
 };

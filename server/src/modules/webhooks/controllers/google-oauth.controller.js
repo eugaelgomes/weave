@@ -6,7 +6,12 @@ const WebhooksBaseController = require("@/modules/webhooks/controllers/base.cont
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 /**
- * OAuth2 do Google (redirect e callback).
+ * OAuth2 do Google Calendar: `GET /api/v1/webhooks/google/auth` e callback
+ * `GET /api/v1/webhooks/google/callback`.
+ *
+ * O `redirect_uri` está fixo em `@/hooks/google/google-calendar.js`:
+ * produção `https://apis.weavenotes.app/api/v1/webhooks/google/callback`,
+ * dev `http://localhost:8080/api/v1/webhooks/google/callback`.
  */
 class GoogleOauthController extends WebhooksBaseController {
   /**
@@ -17,7 +22,7 @@ class GoogleOauthController extends WebhooksBaseController {
   async googleAuth(req, res) {
     try {
       const userId = this._requireAuthenticatedUser(req, res);
-      if (userId == null) return;
+      if (userId === null || userId === undefined) return;
 
       const url = googleService.getAuthUrl(userId);
       res.redirect(url);
