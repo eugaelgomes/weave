@@ -12,22 +12,11 @@ const secretsService = require("@/services/secrets");
 const setAuthCookie = cookieHelper.setAuthCookie;
 const secretsManager = secretsService.secretsManager;
 
-const GITHUB_SSO_CALLBACK_PATH = "/api/v1/auth/signin/sso/github/callback";
-
-/**
- * @returns {string}
- */
-function resolveGithubRedirectUri() {
-  const fromEnv = process.env.GITHUB_REDIRECT_URI?.trim();
-  if (fromEnv) {
-    return fromEnv;
-  }
-  const origin =
-    process.env.NODE_ENV === "production"
-      ? "https://apis.weavenotes.app"
-      : "http://localhost:8080";
-  return `${origin.replace(/\/+$/, "")}${GITHUB_SSO_CALLBACK_PATH}`;
-}
+/** Callback fixo; cadastrar a mesma URL na OAuth App do GitHub. */
+const GITHUB_OAUTH_REDIRECT_URI =
+  process.env.NODE_ENV === "production"
+    ? "https://apis.weavenotes.app/api/v1/auth/signin/sso/github/callback"
+    : "http://localhost:8080/api/v1/auth/signin/sso/github/callback";
 
 /**
  * Fluxo OAuth2 GitHub (redirect e callback).
@@ -38,8 +27,7 @@ class GithubOauthController extends AuthBaseController {
    * @param {import('express').Response} res
    */
   async githubAuth(req, res) {
-    const redirectUri = resolveGithubRedirectUri();
-    const githubOAuthURL = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`;
+    const githubOAuthURL = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(GITHUB_OAUTH_REDIRECT_URI)}&scope=user:email`;
 
     res.redirect(githubOAuthURL);
   }
@@ -65,15 +53,13 @@ class GithubOauthController extends AuthBaseController {
         return res.redirect(`${frontendURL}/?error=missing_auth_code`);
       }
 
-      const redirectURI = resolveGithubRedirectUri();
-
       const tokenResponse = await axios.post(
         "https://github.com/login/oauth/access_token",
         {
           client_id: process.env.GITHUB_CLIENT_ID,
           client_secret: process.env.GITHUB_CLIENT_SECRET,
           code: code,
-          redirect_uri: redirectURI,
+          redirect_uri: GITHUB_OAUTH_REDIRECT_URI,
         },
         {
           headers: {
