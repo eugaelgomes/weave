@@ -49,8 +49,8 @@ class GithubOauthController extends AuthBaseController {
 
       const redirectURI =
         process.env.NODE_ENV === "production"
-          ? "https://api.weavenotes.app/api/auth/sso/github/callback"
-          : "http://localhost:8080/api/auth/sso/github/callback";
+          ? "https://apis.weavenotes.app/api/v1/auth/signin/sso/github/callback"
+          : "http://localhost:8080/api/v1/auth/signin/sso/github/callback";
 
       const tokenResponse = await axios.post(
         "https://github.com/login/oauth/access_token",

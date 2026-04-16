@@ -47,8 +47,8 @@ class GoogleOauthController extends AuthBaseController {
 
       const redirectURI =
         process.env.NODE_ENV === "production"
-          ? "https://api.weavenotes.app/api/auth/sso/google/callback"
-          : "http://localhost:8080/api/auth/sso/google/callback";
+          ? "https://apis.weavenotes.app/api/v1/auth/signin/sso/google/callback"
+          : "http://localhost:8080/api/v1/auth/signin/sso/google/callback";
 
       const params = new URLSearchParams();
       params.append("client_id", process.env.GOOGLE_CLIENT_ID);
