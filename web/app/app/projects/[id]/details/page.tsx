@@ -63,8 +63,6 @@ const btnSecondaryCls =
   "inline-flex items-center gap-1.5 rounded-md border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800";
 const btnDangerCls =
   "inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10";
-const cardCls =
-  "rounded-md border border-neutral-200 bg-white p-2 shadow-sm dark:border-neutral-800 dark:bg-neutral-900";
 
 export default function ProjectDetailsPage() {
   const router = useRouter();
@@ -103,6 +101,11 @@ export default function ProjectDetailsPage() {
   const [projectTags, setProjectTags] = useState<any[]>([]);
   const [taskPriorities, setTaskPriorities] = useState<any[]>([]);
   const [formData, setFormData] = useState<any>(null);
+  const [iconFile, setIconFile] = useState<File | null>(null);
+  const [iconPreview, setIconPreview] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const lastSavedData = React.useRef<string | null>(null);
+  const initialized = React.useRef(false);
 
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#6366f1");
@@ -162,7 +165,9 @@ export default function ProjectDetailsPage() {
 
   useEffect(() => {
     if (!project) return;
-    setFormData({
+    if (initialized.current && isDirty) return; // Não sobrescreve durante edições não salvas
+
+    const freshFormData = {
       title: project.title || "",
       description: project.description || "",
       status: project.status || "open",
@@ -173,8 +178,19 @@ export default function ProjectDetailsPage() {
       priority: project.properties?.priority || "media",
       complexity: project.properties?.complexity || "media",
       estimated_time: project.properties?.estimated_time || "",
-    });
-  }, [project]);
+    };
+
+    setFormData(freshFormData);
+    lastSavedData.current = JSON.stringify(freshFormData);
+
+    if (project.properties?.icon?.path) {
+      setIconPreview(project.properties.icon.path);
+    } else {
+      setIconPreview(null);
+    }
+    initialized.current = true;
+    setIsDirty(false);
+  }, [project, isDirty]);
 
   useEffect(() => {
     if (collabSearch.length < 2) {
@@ -197,6 +213,77 @@ export default function ProjectDetailsPage() {
     return () => clearTimeout(timeout);
   }, [collabSearch, searchUsers, collaborators]);
 
+  const isOwner = project?.user_id === user?.id;
+  const canEdit =
+    isOwner || collaborators.some((c) => c.user_id === user?.id && c.permission === "admin");
+
+  const handleSaveGeneral = useCallback(async () => {
+    if (!canEdit || !isDirty || !project || !formData) return;
+    setSaving(true);
+    try {
+      const currentDataSnapshot = JSON.stringify(formData);
+      
+      const properties: any = {
+        ...project.properties,
+        color: formData.color,
+        priority: formData.priority as (typeof LEVEL_OPTIONS)[number],
+        complexity: formData.complexity as (typeof LEVEL_OPTIONS)[number],
+        estimated_time: formData.estimated_time || null,
+      };
+
+      if (!iconPreview && !iconFile) {
+        properties.icon = { path: "" }; // Sinaliza remoção
+      }
+
+      let payload: any = {
+        title: formData.title,
+        description: formData.description || undefined,
+        status: formData.status as (typeof STATUS_OPTIONS)[number],
+        methodology: formData.methodology as (typeof METHODOLOGY_OPTIONS)[number],
+        default_view: formData.default_view as (typeof VIEW_OPTIONS)[number],
+        active: formData.active,
+        properties: properties,
+      };
+
+      if (iconFile) {
+        const fd = new FormData();
+        Object.entries(payload).forEach(([key, value]) => {
+          if (value !== undefined) {
+            fd.append(key, typeof value === "object" ? JSON.stringify(value) : String(value));
+          }
+        });
+        fd.append("icon", iconFile);
+        payload = fd;
+      }
+
+      const updated = await updateProject(project.id, payload);
+      if (updated) {
+        setProject(updated);
+        setIconFile(null);
+        lastSavedData.current = currentDataSnapshot;
+        setFormData((prev: any) => {
+          const stillDirty = JSON.stringify(prev) !== currentDataSnapshot;
+          setIsDirty(stillDirty);
+          return prev;
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao salvar projeto:", error);
+    } finally {
+      setSaving(false);
+    }
+  }, [project, formData, iconFile, iconPreview, canEdit, isDirty, updateProject]);
+
+  useEffect(() => {
+    if (!isDirty || !canEdit || !formData?.title?.trim()) return;
+
+    const timeoutId = setTimeout(() => {
+      handleSaveGeneral();
+    }, 1500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData, iconFile, iconPreview, isDirty, canEdit, handleSaveGeneral]);
+
   if (loading || !formData) {
     return (
       <div className="flex min-h-[50vh] flex-1 items-center justify-center">
@@ -207,40 +294,27 @@ export default function ProjectDetailsPage() {
 
   if (!project) return null;
 
-  const isOwner = project.user_id === user?.id;
-  const canEdit =
-    isOwner || collaborators.some((c) => c.user_id === user?.id && c.permission === "admin");
-
   const handleChange = (key: string, value: string | boolean) => {
-    setFormData((prev: any) => ({ ...prev, [key]: value }));
+    setFormData((prev: any) => {
+      const next = { ...prev, [key]: value };
+      setIsDirty(JSON.stringify(next) !== lastSavedData.current);
+      return next;
+    });
   };
 
-  const handleSaveGeneral = async () => {
-    if (!canEdit) return;
-    setSaving(true);
-    try {
-      const payload = {
-        title: formData.title,
-        description: formData.description || undefined,
-        status: formData.status as (typeof STATUS_OPTIONS)[number],
-        methodology: formData.methodology as (typeof METHODOLOGY_OPTIONS)[number],
-        default_view: formData.default_view as (typeof VIEW_OPTIONS)[number],
-        active: formData.active,
-        properties: {
-          ...project.properties,
-          color: formData.color,
-          priority: formData.priority as (typeof LEVEL_OPTIONS)[number],
-          complexity: formData.complexity as (typeof LEVEL_OPTIONS)[number],
-          estimated_time: formData.estimated_time || null,
-        },
-      };
-      const updated = await updateProject(project.id, payload);
-      if (updated) setProject(updated);
-    } catch (error) {
-      console.error("Erro ao salvar projeto:", error);
-    } finally {
-      setSaving(false);
+  const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setIconFile(file);
+      setIconPreview(URL.createObjectURL(file));
+      setIsDirty(true);
     }
+  };
+
+  const handleRemoveIcon = () => {
+    setIconFile(null);
+    setIconPreview(null);
+    setIsDirty(true);
   };
 
   const handleDeleteProject = async () => {
@@ -392,9 +466,9 @@ export default function ProjectDetailsPage() {
         </span>
       </div>
 
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-2 p-2">
+      <div className="mx-auto flex w-full flex-col gap-2">
         {/* Seção: Geral */}
-        <div className={cardCls}>
+        <div className="bg-white p-3 dark:bg-neutral-900">
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
             Geral
           </h2>
@@ -520,13 +594,62 @@ export default function ProjectDetailsPage() {
               />
             </label>
 
-            <label className="flex items-center gap-1.5 self-end pb-1">
-              <input
-                type="checkbox"
-                checked={formData.active}
-                onChange={(e) => handleChange("active", e.target.checked)}
-                disabled={!canEdit}
-              />
+            <div className="sm:col-span-2">
+              <span className="mb-1 block text-[10px] text-neutral-500">Ícone do Projeto</span>
+              <div className="flex items-center gap-3">
+                {iconPreview ? (
+                  <div className="relative h-12 w-12 overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-700">
+                    <img
+                      src={iconPreview.startsWith("http") || iconPreview.startsWith("blob") ? iconPreview : `https://spaces.weavenotes.com/${iconPreview}`}
+                      alt="Ícone do Projeto"
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/default-project-icon.png';
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 text-neutral-400 dark:border-neutral-700 dark:bg-neutral-900">
+                    <FaArrowLeft className="size-4 opacity-0" />
+                  </div>
+                )}
+                {canEdit && (
+                  <div className="flex gap-2">
+                    <label className="cursor-pointer rounded-md bg-neutral-100 px-3 py-1.5 text-[11px] font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
+                      Mudar Ícone
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleIconChange}
+                      />
+                    </label>
+                    {iconPreview && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveIcon}
+                        className="rounded-md border border-red-200 bg-red-50 text-red-600 px-3 py-1.5 text-[11px] font-medium hover:bg-red-100 dark:border-red-900/50 dark:bg-red-900/10 dark:hover:bg-red-900/20"
+                      >
+                        Remover
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <label className="flex cursor-pointer items-center gap-2 self-end pb-1">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={formData.active}
+                  onChange={(e) => handleChange("active", e.target.checked)}
+                  disabled={!canEdit}
+                  className="peer sr-only"
+                />
+                <div className="h-5 w-9 rounded-full bg-neutral-200 transition-colors peer-checked:bg-brand-primary-500 peer-disabled:opacity-50 dark:bg-neutral-700"></div>
+                <div className="absolute left-[2px] top-[2px] h-4 w-4 rounded-full bg-white transition-all peer-checked:translate-x-full"></div>
+              </div>
               <span className="text-xs text-neutral-600 dark:text-neutral-300">Projeto ativo</span>
             </label>
           </div>
@@ -542,21 +665,27 @@ export default function ProjectDetailsPage() {
               </button>
             )}
             {canEdit && (
-              <button
-                type="button"
-                onClick={handleSaveGeneral}
-                disabled={saving || !formData.title.trim()}
-                className={`${btnPrimaryCls} ml-auto`}
-              >
-                {saving && <FaSpinner className="size-2.5 animate-spin" />}
-                Salvar alterações
-              </button>
+              <div className="ml-auto flex items-center gap-2 text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
+                {saving ? (
+                  <>
+                    <FaSpinner className="size-3 animate-spin text-brand-primary-500" />
+                    <span>Salvando...</span>
+                  </>
+                ) : isDirty ? (
+                  <span>Edições pendentes...</span>
+                ) : (
+                  <>
+                    <FaCheck className="size-3 text-green-500" />
+                    <span>Salvo automaticamente</span>
+                  </>
+                )}
+              </div>
             )}
           </div>
         </div>
 
         {/* Seção: Tags */}
-        <div className={cardCls}>
+        <div className="bg-white p-3 dark:bg-neutral-900">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
               Tags ({projectTags.length})
@@ -648,7 +777,7 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Seção: Prioridades */}
-        <div className={cardCls}>
+        <div className="bg-white p-3 dark:bg-neutral-900">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
               Prioridades ({taskPriorities.length})
@@ -754,7 +883,7 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Seção: Etapas */}
-        <div className={cardCls}>
+        <div className="bg-white p-3 dark:bg-neutral-900">
           <div className="mb-2">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
               Etapas do Board ({stages.length})
@@ -785,7 +914,7 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Seção: Colaboradores */}
-        <div className={cardCls}>
+        <div className="bg-white p-3 dark:bg-neutral-900">
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
             Colaboradores ({collaborators.length})
           </h2>

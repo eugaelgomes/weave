@@ -47,13 +47,18 @@ class GithubOauthController extends AuthBaseController {
         return res.redirect(`${frontendURL}/?error=missing_auth_code`);
       }
 
+      const redirectURI =
+        process.env.NODE_ENV === "production"
+          ? "https://api.weavenotes.app/api/auth/sso/github/callback"
+          : "http://localhost:8080/api/auth/sso/github/callback";
+
       const tokenResponse = await axios.post(
         "https://github.com/login/oauth/access_token",
         {
           client_id: process.env.GITHUB_CLIENT_ID,
           client_secret: process.env.GITHUB_CLIENT_SECRET,
           code: code,
-          redirect_uri: process.env.GITHUB_REDIRECT_URI,
+          redirect_uri: redirectURI,
         },
         {
           headers: {

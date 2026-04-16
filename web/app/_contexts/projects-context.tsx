@@ -108,7 +108,10 @@ export interface ProjectsContextType {
   refreshProjects: () => Promise<void>;
   getProjectById: (projectId: string) => Promise<Project | null>;
   createProject: (projectData: CreateProjectData) => Promise<Project | null>;
-  updateProject: (projectId: string, projectData: UpdateProjectData) => Promise<Project | null>;
+  updateProject: (
+    projectId: string,
+    projectData: UpdateProjectData | FormData
+  ) => Promise<Project | null>;
   deleteProject: (projectId: string) => Promise<boolean>;
 
   // Funções de dados derivados
@@ -274,7 +277,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
 
   // 3. ATUALIZAR PROJETO (UPDATE)
   const updateProject = useCallback(
-    async (projectId: string, projectData: UpdateProjectData): Promise<Project | null> => {
+    async (projectId: string, projectData: UpdateProjectData | FormData): Promise<Project | null> => {
       if (!user?.id) return null;
 
       setLoading(true);

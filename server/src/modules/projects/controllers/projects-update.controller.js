@@ -49,7 +49,15 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       // Se properties foi enviado, validar e preparar para merge
       if (properties !== undefined) {
-        propertiesUpdate = this._validateProperties(properties);
+        let parsedProperties = properties;
+        if (typeof properties === "string") {
+          try {
+            parsedProperties = JSON.parse(properties);
+          } catch (e) {
+            // Ignorar erro de parse e usar o original (que vai falhar no typeof object)
+          }
+        }
+        propertiesUpdate = this._validateProperties(parsedProperties);
       }
 
       // Processar upload de ícone

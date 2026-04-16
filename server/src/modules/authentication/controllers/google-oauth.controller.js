@@ -45,12 +45,17 @@ class GoogleOauthController extends AuthBaseController {
         return res.redirect(`${frontendURL}/?error=missing_auth_code`);
       }
 
+      const redirectURI =
+        process.env.NODE_ENV === "production"
+          ? "https://api.weavenotes.app/api/auth/sso/google/callback"
+          : "http://localhost:8080/api/auth/sso/google/callback";
+
       const params = new URLSearchParams();
       params.append("client_id", process.env.GOOGLE_CLIENT_ID);
       params.append("client_secret", process.env.GOOGLE_CLIENT_SECRET);
       params.append("code", code);
       params.append("grant_type", "authorization_code");
-      params.append("redirect_uri", process.env.GOOGLE_REDIRECT_URI);
+      params.append("redirect_uri", redirectURI);
 
       const tokenResponse = await axios.post(
         "https://oauth2.googleapis.com/token",

@@ -200,7 +200,7 @@ export const createProject = async (projectData: CreateProjectData): Promise<Pro
 
 export const updateProject = async (
   projectId: string,
-  projectData: UpdateProjectData
+  projectData: UpdateProjectData | FormData
 ): Promise<Project> => {
   const response = await apiClient.put(API_ENDPOINTS.PROJECTS_BY_ID(projectId), projectData);
   const data = await handleResponse<{ message: string; project: Project }>(response);
