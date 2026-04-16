@@ -12,6 +12,23 @@ const secretsService = require("@/services/secrets");
 const setAuthCookie = cookieHelper.setAuthCookie;
 const secretsManager = secretsService.secretsManager;
 
+const GOOGLE_SSO_CALLBACK_PATH = "/api/v1/auth/signin/sso/google/callback";
+
+/**
+ * @returns {string}
+ */
+function resolveGoogleRedirectUri() {
+  const fromEnv = process.env.GOOGLE_REDIRECT_URI?.trim();
+  if (fromEnv) {
+    return fromEnv;
+  }
+  const origin =
+    process.env.NODE_ENV === "production"
+      ? "https://apis.weavenotes.app"
+      : "http://localhost:8080";
+  return `${origin.replace(/\/+$/, "")}${GOOGLE_SSO_CALLBACK_PATH}`;
+}
+
 /**
  * Fluxo OAuth2 Google (redirect e callback).
  */
@@ -21,7 +38,8 @@ class GoogleOauthController extends AuthBaseController {
    * @param {import('express').Response} res
    */
   async googleAuth(req, res) {
-    const googleOAuthURL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.GOOGLE_REDIRECT_URI)}&response_type=code&scope=openid%20email%20profile&prompt=select_account`;
+    const redirectUri = resolveGoogleRedirectUri();
+    const googleOAuthURL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid%20email%20profile&prompt=select_account`;
     res.redirect(googleOAuthURL);
   }
 
@@ -45,10 +63,7 @@ class GoogleOauthController extends AuthBaseController {
         return res.redirect(`${frontendURL}/?error=missing_auth_code`);
       }
 
-      const redirectURI =
-        process.env.NODE_ENV === "production"
-          ? "https://apis.weavenotes.app/api/v1/auth/signin/sso/google/callback"
-          : "http://localhost:8080/api/v1/auth/signin/sso/google/callback";
+      const redirectURI = resolveGoogleRedirectUri();
 
       const params = new URLSearchParams();
       params.append("client_id", process.env.GOOGLE_CLIENT_ID);
