@@ -10,7 +10,7 @@
 
 ## Visão Geral
 
-Frontend do **Weave Notes** — um web app full-stack para gerenciamento de notas estruturadas com sistema de blocos, drag-and-drop, compartilhamento colaborativo e chat com IA.
+Frontend do **Weave Notes** — um web app full-stack para gerenciamento de tarefas estruturadas com sistema de blocos, drag-and-drop, compartilhamento colaborativo e chat com IA.
 
 ## Tecnologias
 
@@ -41,8 +41,8 @@ web/
 │   │   └── modals/              # Modais de autenticação
 │   ├── app/                      # Páginas protegidas (autenticado)
 │   │   ├── home/                # Dashboard
-│   │   ├── notes/               # Gerenciamento de notas
-│   │   │   └── view/           # Visualização de nota
+│   │   ├── notes/               # Gerenciamento de tarefas
+│   │   │   └── view/           # Visualização de tarefa
 │   │   ├── projects/            # Projetos
 │   │   │   └── view/           # Visualização de projeto
 │   │   ├── organization/        # Organizações
@@ -61,7 +61,7 @@ web/
 │   │       └── ui/             # Componentes de UI
 │   ├── contexts/                 # Context API (providers)
 │   │   ├── AuthContext          # Estado de autenticação
-│   │   ├── NotesContext         # Estado de notas
+│   │   ├── NotesContext         # Estado de tarefas
 │   │   ├── ProjectsContext      # Estado de projetos
 │   │   ├── OrganizationContext  # Estado de organizações
 │   │   ├── ChatContext          # Estado do chat IA
@@ -71,7 +71,7 @@ web/
 │   │   ├── authentication/      # Serviço de autenticação
 │   │   ├── backup-service/      # Serviço de backup
 │   │   ├── health-service/      # Health check
-│   │   ├── notes-service/       # Serviço de notas
+│   │   ├── notes-service/       # Serviço de tarefas
 │   │   ├── organization/        # Serviço de organizações
 │   │   └── projects-service/    # Serviço de projetos
 │   └── utils/                    # Utilitários
@@ -118,7 +118,7 @@ Cliente centralizado em `services/api-methods.ts`:
 | `/about`             | Pública   | Página institucional      |
 | `/auth/*`            | Pública   | Login, cadastro, ativação |
 | `/app`               | Protegida | Dashboard                 |
-| `/app/notes`         | Protegida | Gerenciamento de notas    |
+| `/app/notes`         | Protegida | Gerenciamento de tarefas    |
 | `/app/projects`      | Protegida | Projetos                  |
 | `/app/organization`  | Protegida | Organizações              |
 | `/app/settings`      | Protegida | Configurações             |

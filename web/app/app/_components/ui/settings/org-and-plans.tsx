@@ -277,7 +277,7 @@ export const SettingsOrgAndPlan: React.FC<SettingsOrgAndPlanProps> = ({ user }) 
               {/* Barras de Progresso Principais */}
               <div className="grid gap-6 sm:grid-cols-3">
                 {[
-                  { label: "Notas Criadas", usage: notesUsage, max: maxNotes },
+                  { label: "Tarefas Criadas", usage: notesUsage, max: maxNotes },
                   { label: "Projetos Ativos", usage: projectsUsage, max: maxProjects },
                   { label: "Membros na Equipe", usage: teamUsage, max: maxTeam },
                 ].map((item, i) => (
@@ -340,7 +340,7 @@ export const SettingsOrgAndPlan: React.FC<SettingsOrgAndPlanProps> = ({ user }) 
                   </div>
                   <div className="mt-1 space-y-2 text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
                     <div className="flex justify-between">
-                      <span>Notas</span>
+                      <span>Tarefas</span>
                       <span className="font-bold text-neutral-900 dark:text-neutral-200">
                         {exportsNotesUsage}{" "}
                         <span className="font-normal text-neutral-400">

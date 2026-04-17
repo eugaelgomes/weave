@@ -81,7 +81,7 @@ export const ptBR = {
         desc: "Suporte nativo a Scrum e Kanban, com visões em lista, calendário e timeline.",
       },
       notes: {
-        title: "Notas em Blocos",
+        title: "Tarefas em Blocos",
         desc: "Editor modular com drag-and-drop. Organize ideias e vincule pendências aos projetos.",
       },
       collaboration: {

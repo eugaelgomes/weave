@@ -80,7 +80,7 @@ export const enUS = {
         desc: "Native support for Scrum and Kanban, with list, calendar, and timeline views.",
       },
       notes: {
-        title: "Block Notes",
+        title: "Block Tasks",
         desc: "Modular editor with drag-and-drop. Organize ideas and link tasks to projects.",
       },
       collaboration: {

@@ -58,7 +58,7 @@ export default function NotFound() {
               href="/app/notes"
               className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
             >
-              Notas
+              Tarefas
             </Link>
             <Link
               href="/app/projects"

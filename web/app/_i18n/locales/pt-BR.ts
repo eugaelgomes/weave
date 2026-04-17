@@ -15,7 +15,7 @@ const ptBR = {
     back: "Voltar",
     next: "Próximo",
     search: "Buscar",
-    notes: "notas",
+    notes: "tarefas",
     projects: "projetos",
   },
 
@@ -25,7 +25,7 @@ const ptBR = {
 
   nav: {
     home: "Início",
-    notes: "Notas",
+    notes: "Tarefas",
     projects: "Projetos",
     weaveAi: "Weave AI",
     chat: "Chat",
@@ -48,7 +48,7 @@ const ptBR = {
 
   home: {
     metrics: "Métricas",
-    totalNotes: "Total de Notas",
+    totalNotes: "Total de Tarefas",
     uniqueTags: "Tags únicas",
     totalProjects: "Total de Projetos",
     activeProjects: "Projetos Ativos",
@@ -59,7 +59,7 @@ const ptBR = {
 
   navbar: {
     accountSettings: "Configurações da Conta",
-    searchPlaceholder: "Buscar notas, projetos...",
+    searchPlaceholder: "Buscar tarefas, projetos...",
     theme: "Tema",
     light: "Claro",
     dark: "Escuro",
@@ -72,18 +72,18 @@ const ptBR = {
       placePreferences: "Preferências",
       places: "Lugares",
       recentProjects: "Projetos Recentes",
-      recentNotes: "Notas Recentes",
+      recentNotes: "Tarefas Recentes",
       allProjects: "Ver todos os projetos",
-      allNotes: "Ver todas as notas",
+      allNotes: "Ver todas as tarefas",
       projectsEmpty: "Projetos que você visita aparecerão aqui.",
-      notesEmpty: "Suas notas recentes aparecerão aqui.",
+      notesEmpty: "Suas tarefas recentes aparecerão aqui.",
       noItemsFound: "Nenhum item encontrado.",
-      noteFallback: "Anotação",
+      noteFallback: "Tarefa",
       projectFallback: "Projeto",
       inputPlaceholder: "O que você está procurando?",
       filterButtonLabel: "Filtrar resultados",
       projects: "Projetos",
-      notes: "Notas",
+      notes: "Tarefas",
       noResultTitle: 'Nenhum resultado encontrado para "{term}"',
       noResultDescription: "Tente buscar por outro termo ou tag.",
       escToClose: "para fechar",
@@ -160,7 +160,7 @@ const ptBR = {
     saving: "Salvando...",
     removeMemberTitle: "Remover Membro",
     removeConfirmation:
-      "Tem certeza que deseja remover {name} da organização? Eles perderão acesso a todos os projetos e notas internas.",
+      "Tem certeza que deseja remover {name} da organização? Eles perderão acesso a todos os projetos e tarefas internas.",
     yesRemove: "Sim, remover membro",
     removing: "Removendo...",
     emptyState: "Crie uma organização para gerenciar membros.",

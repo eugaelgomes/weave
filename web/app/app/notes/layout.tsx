@@ -50,7 +50,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
                   isDashboard ? "text-brand-primary-500" : "text-neutral-400"
                 }`}
               />
-              <span className="truncate">Painel de Notas</span>
+              <span className="truncate">Painel de Tarefas</span>
             </div>
             {isDashboard && <ChevronRight className="h-3 w-3 text-neutral-400" />}
           </Link>
@@ -58,7 +58,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
       </ul>
 
       <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-        Notas Recentes
+        Tarefas Recentes
       </h2>
 
       <ul className="space-y-0.5">
@@ -91,7 +91,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
         })}
 
         {!notesLoading && recentNotes.length === 0 && (
-          <li className="px-2 text-xs text-neutral-400 italic">Nenhuma nota recente.</li>
+          <li className="px-2 text-xs text-neutral-400 italic">Nenhuma tarefa recente.</li>
         )}
       </ul>
     </div>
@@ -129,7 +129,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
         <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
           {/* SIDEBAR LATERAL — Altura dinâmica da Viewport + Sticky + Overflow */}
           <div
-            className={`hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-sm md:sticky md:h-[calc(100vh-auto)] dark:border-neutral-800 dark:bg-neutral-900/50 ${
+            className={`hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-md md:sticky md:h-[calc(100vh-auto)] dark:border-neutral-800 dark:bg-neutral-900/50 ${
               commentsPanelOpen ? "md:hidden" : "md:block md:w-[180px]"
             }`}
           >
@@ -155,7 +155,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="ml-auto flex h-full w-[80%] max-w-xs flex-col border-l border-neutral-200 bg-white shadow-xl dark:border-neutral-800 dark:bg-neutral-950">
             <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 dark:border-neutral-800">
               <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
-                Menu de Notas
+                Menu de Tarefas
               </span>
               <button
                 type="button"

@@ -33,7 +33,7 @@ export function Stats({ stats, projectsStats, tagCloudData }: StatsProps) {
 
         <div className={`${showMetrics ? "block" : "hidden"} sm:block`}>
           <div className="flex flex-col">
-            {/* Total Notas */}
+            {/* Total Tarefas */}
             <div className="group flex items-center justify-between gap-2 px-3 py-2.5 transition-colors hover:bg-neutral-100 sm:gap-3 sm:py-3 dark:hover:bg-neutral-800">
               <div className="flex items-center gap-2">
                 <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-yellow-400/20 bg-yellow-400/10 text-yellow-400">

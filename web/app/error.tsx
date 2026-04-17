@@ -64,7 +64,7 @@ export default function Error({ error, reset }: ErrorProps) {
               href="/app/notes"
               className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
             >
-              Notas
+              Tarefas
             </Link>
             <Link
               href="/app/settings"

@@ -453,7 +453,7 @@ export async function exportNoteAsPDF(noteId: string): Promise<{ blob: Blob; fil
 
   return {
     blob,
-    fileName: parsedName || `nota-${noteId}.pdf`,
+    fileName: parsedName || `tarefa-${noteId}.pdf`,
   };
 }
 

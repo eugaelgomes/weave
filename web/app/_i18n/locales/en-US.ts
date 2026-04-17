@@ -17,7 +17,7 @@ const enUS: TranslationKeys = {
     back: "Back",
     next: "Next",
     search: "Search",
-    notes: "notes",
+    notes: "tasks",
     projects: "projects",
   },
 
@@ -27,7 +27,7 @@ const enUS: TranslationKeys = {
 
   nav: {
     home: "Home",
-    notes: "Notes",
+    notes: "Tasks",
     projects: "Projects",
     weaveAi: "Weave AI",
     chat: "Chat",
@@ -50,7 +50,7 @@ const enUS: TranslationKeys = {
 
   home: {
     metrics: "Metrics",
-    totalNotes: "Total Notes",
+    totalNotes: "Total Tasks",
     uniqueTags: "Unique Tags",
     totalProjects: "Total Projects",
     activeProjects: "Active Projects",
@@ -61,7 +61,7 @@ const enUS: TranslationKeys = {
 
   navbar: {
     accountSettings: "Account Settings",
-    searchPlaceholder: "Search notes, projects...",
+    searchPlaceholder: "Search tasks, projects...",
     theme: "Theme",
     light: "Light",
     dark: "Dark",
@@ -74,18 +74,18 @@ const enUS: TranslationKeys = {
       placePreferences: "Preferences",
       places: "Places",
       recentProjects: "Recent Projects",
-      recentNotes: "Recent Notes",
+      recentNotes: "Recent Tasks",
       allProjects: "View all projects",
-      allNotes: "View all notes",
+      allNotes: "View all tasks",
       projectsEmpty: "Projects you visit will appear here.",
-      notesEmpty: "Your recent notes will appear here.",
+      notesEmpty: "Your recent tasks will appear here.",
       noItemsFound: "No items found.",
-      noteFallback: "Note",
+      noteFallback: "Task",
       projectFallback: "Project",
       inputPlaceholder: "What are you looking for?",
       filterButtonLabel: "Filter results",
       projects: "Projects",
-      notes: "Notes",
+      notes: "Tasks",
       noResultTitle: 'No results found for "{term}"',
       noResultDescription: "Try searching for another term or tag.",
       escToClose: "to close",
@@ -163,7 +163,7 @@ const enUS: TranslationKeys = {
     saving: "Saving...",
     removeMemberTitle: "Remove Member",
     removeConfirmation:
-      "Are you sure you want to remove {name} from the organization? They will lose access to all internal projects and notes.",
+      "Are you sure you want to remove {name} from the organization? They will lose access to all internal projects and tasks.",
     yesRemove: "Yes, remove member",
     removing: "Removing...",
     emptyState: "Create an organization to manage members.",

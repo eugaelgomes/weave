@@ -44,7 +44,7 @@ export const IntegrationsSettings: React.FC<any> = () => {
         {/* --- Top Section --- */}
         <div className="mb-4">
           <p className="max-w-2xl text-[11px] leading-relaxed text-neutral-500 dark:text-neutral-400">
-            Conecte o Weave às suas ferramentas favoritas para sincronizar eventos, criar notas
+            Conecte o Weave às suas ferramentas favoritas para sincronizar eventos, criar tarefas
             automaticamente e otimizar o seu fluxo de trabalho.
           </p>
         </div>
@@ -156,7 +156,7 @@ export const IntegrationsSettings: React.FC<any> = () => {
                   </span>
                 </div>
                 <p className="text-[10px] leading-snug text-neutral-500 dark:text-neutral-400">
-                  Receba notificações e crie notas via comandos no Slack.
+                  Receba notificações e crie tarefas via comandos no Slack.
                 </p>
               </div>
             </div>

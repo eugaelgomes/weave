@@ -77,7 +77,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                   isDashboard ? "text-brand-primary-500" : "text-neutral-400"
                 }`}
               />
-              <span className="truncate">Dashboard</span>
+              <span className="truncate">Overview</span>
             </div>
             {isDashboard && <ChevronRight className="h-3 w-3 text-neutral-400" />}
           </Link>

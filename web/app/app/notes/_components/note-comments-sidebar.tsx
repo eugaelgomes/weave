@@ -330,7 +330,7 @@ function CommentComposerTextarea({
                     <FileText size={14} className="flex-shrink-0 text-sky-600 dark:text-sky-400" />
                     <span className="min-w-0 truncate">{item.file.name}</span>
                     <span className="flex-shrink-0 text-[10px] text-neutral-400">
-                      Arquivo da nota
+                      Arquivo da tarefa
                     </span>
                   </>
                 ) : (
@@ -403,9 +403,9 @@ export function NoteCommentsSidebarTrigger({
 export interface NoteCommentsSidebarProps {
   canComment: boolean;
   onClose: () => void;
-  /** Busca pessoas na organização ao digitar @ (não fica limitado a colaboradores da nota). */
+  /** Busca pessoas na organização ao digitar @ (não fica limitado a colaboradores da tarefa). */
   searchMentionUsers?: (query: string) => Promise<MentionUser[]>;
-  /** Arquivos anexados à nota para embutir no texto com @. */
+  /** Arquivos anexados à tarefa para embutir no texto com @. */
   embeddableNoteFiles?: NoteCommentsEmbeddableFile[];
 }
 
@@ -921,8 +921,8 @@ export function NoteCommentsSidebar({
               aria-label="Novo comentário"
               placeholder={
                 replyingTo
-                  ? "Sua resposta… (@ para mencionar ou anexar arquivo da nota)"
-                  : "Escreva um comentário… (@ para mencionar ou anexar arquivo da nota)"
+                  ? "Sua resposta… (@ para mencionar ou anexar arquivo da tarefa)"
+                  : "Escreva um comentário… (@ para mencionar ou anexar arquivo da tarefa)"
               }
               rows={3}
               className="w-full resize-y rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"

@@ -278,7 +278,7 @@ export default function ProjectBoard({
 
   const handleRemoveNote = useCallback(
     async (projectId: string, noteId: string) => {
-      if (confirm("Remover esta nota do projeto?")) {
+      if (confirm("Remover esta tarefa do projeto?")) {
         await removeNoteFromProject(projectId, noteId);
       }
     },

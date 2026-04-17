@@ -81,7 +81,7 @@ export const esES = {
         desc: "Soporte nativo para Scrum y Kanban, con vistas de lista, calendario y línea de tiempo.",
       },
       notes: {
-        title: "Notas en Bloques",
+        title: "Tareas en Bloques",
         desc: "Editor modular con drag-and-drop. Organiza ideas y enlaza tareas a proyectos.",
       },
       collaboration: {

@@ -45,6 +45,7 @@ function NotificationSidebar({ className, onLinkClick }: SidebarProps) {
         {onLinkClick && (
           <button
             onClick={onLinkClick}
+            aria-label="Fechar menu"
             className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900 lg:hidden dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
           >
             <X className="h-4 w-4" />
@@ -103,7 +104,6 @@ export default function NotificationsLayout({ children }: { children: React.Reac
           </span>
           <button
             type="button"
-            aria-expanded={isSidebarOpen}
             onClick={() => setIsSidebarOpen((prev) => !prev)}
             className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
           >
@@ -124,7 +124,7 @@ export default function NotificationsLayout({ children }: { children: React.Reac
         {/* Layout Flexbox com Gap (Desktop) */}
         <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
           {/* SIDEBAR LATERAL — Painel flutuante gerido puramente por Flexbox */}
-          <NotificationSidebar className="hidden w-64 shrink-0 md:flex md:flex-col md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:md:border-neutral-800 dark:md:bg-neutral-900/50" />
+          <NotificationSidebar className="hidden w-full shrink-0 md:flex md:w-[180px] md:flex-col md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:md:border-neutral-800 dark:md:bg-neutral-900/50" />
 
           {/* Modal Mobile Overlay */}
           {isSidebarOpen && (
@@ -136,7 +136,7 @@ export default function NotificationsLayout({ children }: { children: React.Reac
                 onClick={() => setIsSidebarOpen(false)}
               />
               <NotificationSidebar
-                className="relative z-10 h-full w-[min(20rem,100%)] bg-white shadow-xl dark:bg-neutral-950"
+                className="relative z-10 ml-auto flex h-full w-[80%] max-w-xs flex-col bg-white shadow-xl dark:bg-neutral-950"
                 onLinkClick={() => setIsSidebarOpen(false)}
               />
             </div>

@@ -44,8 +44,8 @@ const featuresTree = [
             icon: FolderKanban,
             children: [
               {
-                title: "Task/Notas e Blocos",
-                desc: "Notas modulares para rastrear tarefas",
+                title: "Task/Tarefas e Blocos",
+                desc: "Tarefas modulares para rastrear tarefas",
                 icon: FileEdit,
               },
             ],

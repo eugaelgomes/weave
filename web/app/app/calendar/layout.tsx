@@ -65,7 +65,7 @@ export default function CalendarLayout({ children }: { children: React.ReactNode
                   </div>
                   <div className="flex items-center gap-2 text-[11px] text-neutral-600 dark:text-neutral-300">
                     <span className="h-2 w-2 rounded-full bg-yellow-400" />
-                    <span>Notas</span>
+                    <span>Tarefas</span>
                   </div>
                   <div className="flex items-center gap-2 text-[11px] text-neutral-600 dark:text-neutral-300">
                     <span className="h-2 w-2 rounded-full bg-purple-400" />

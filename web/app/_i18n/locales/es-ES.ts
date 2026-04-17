@@ -17,7 +17,7 @@ const esES: TranslationKeys = {
     back: "Volver",
     next: "Siguiente",
     search: "Buscar",
-    notes: "notas",
+    notes: "tareas",
     projects: "proyectos",
   },
 
@@ -27,7 +27,7 @@ const esES: TranslationKeys = {
 
   nav: {
     home: "Inicio",
-    notes: "Notas",
+    notes: "Tareas",
     projects: "Proyectos",
     weaveAi: "Weave AI",
     chat: "Chat",
@@ -50,7 +50,7 @@ const esES: TranslationKeys = {
 
   home: {
     metrics: "Métricas",
-    totalNotes: "Total de Notas",
+    totalNotes: "Total de Tareas",
     uniqueTags: "Tags únicas",
     totalProjects: "Total de Proyectos",
     activeProjects: "Proyectos Activos",
@@ -61,7 +61,7 @@ const esES: TranslationKeys = {
 
   navbar: {
     accountSettings: "Configuración de la Cuenta",
-    searchPlaceholder: "Buscar notas, proyectos...",
+    searchPlaceholder: "Buscar tareas, proyectos...",
     theme: "Tema",
     light: "Claro",
     dark: "Oscuro",
@@ -74,18 +74,18 @@ const esES: TranslationKeys = {
       placePreferences: "Preferencias",
       places: "Lugares",
       recentProjects: "Proyectos Recientes",
-      recentNotes: "Notas Recientes",
+      recentNotes: "Tareas Recientes",
       allProjects: "Ver todos los proyectos",
-      allNotes: "Ver todas las notas",
+      allNotes: "Ver todas las tareas",
       projectsEmpty: "Los proyectos que visites aparecerán aquí.",
-      notesEmpty: "Tus notas recientes aparecerán aquí.",
+      notesEmpty: "Tus tareas recientes aparecerán aquí.",
       noItemsFound: "No se encontraron elementos.",
-      noteFallback: "Nota",
+      noteFallback: "Tarea",
       projectFallback: "Proyecto",
       inputPlaceholder: "¿Qué estás buscando?",
       filterButtonLabel: "Filtrar resultados",
       projects: "Proyectos",
-      notes: "Notas",
+      notes: "Tareas",
       noResultTitle: 'No se encontraron resultados para "{term}"',
       noResultDescription: "Intenta buscar otro término o etiqueta.",
       escToClose: "para cerrar",
@@ -163,7 +163,7 @@ const esES: TranslationKeys = {
     saving: "Guardando...",
     removeMemberTitle: "Eliminar Miembro",
     removeConfirmation:
-      "¿Estás seguro de que deseas eliminar a {name} de la organización? Perderán el acceso a todos los proyectos y notas internas.",
+      "¿Estás seguro de que deseas eliminar a {name} de la organización? Perderán el acceso a todos los proyectos y tareas internas.",
     yesRemove: "Sí, eliminar miembro",
     removing: "Eliminando...",
     emptyState: "Crea una organización para gestionar miembros.",

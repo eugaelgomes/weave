@@ -689,7 +689,7 @@ const NoteDetail = () => {
   const router = useRouter();
   const id = params?.id as string;
 
-  // Hook para gerenciar notas
+  // Hook para gerenciar tarefas
   const {
     error,
     getNoteById,
@@ -759,7 +759,7 @@ const NoteDetail = () => {
   const bannerInputRef = React.useRef<HTMLInputElement>(null);
   const filesInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Helper: salva no backend e retorna a nota atualizada (usado para uploads de arquivo)
+  // Helper: salva no backend e retorna a tarefa atualizada (usado para uploads de arquivo)
   const saveAndApply = async (data: UpdateNoteData): Promise<Note | null> => {
     if (!note) return null;
     setIsSaving(true);
@@ -770,7 +770,7 @@ const NoteDetail = () => {
       }
       return updated;
     } catch (err) {
-      console.error("Erro ao atualizar nota:", err);
+      console.error("Erro ao atualizar tarefa:", err);
       return null;
     } finally {
       setIsSaving(false);
@@ -794,11 +794,11 @@ const NoteDetail = () => {
       document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
     } catch (err: unknown) {
-      console.error("Erro ao exportar nota:", err);
+      console.error("Erro ao exportar tarefa:", err);
       const message =
         err instanceof Error && err.message
           ? err.message
-          : "Não foi possível exportar a nota agora. Tente novamente.";
+          : "Não foi possível exportar a tarefa agora. Tente novamente.";
       window.alert(message);
     } finally {
       setIsExporting(false);
@@ -816,7 +816,7 @@ const NoteDetail = () => {
         }
       }
     } catch (e) {
-      console.error("Erro ao recarregar a nota:", e);
+      console.error("Erro ao recarregar a tarefa:", e);
     }
   };
 
@@ -835,7 +835,7 @@ const NoteDetail = () => {
     } catch (e) {
       console.error(e);
       window.alert(
-        "Não foi possível associar a nota ao projeto. Verifique se você participa do projeto e se pode editar esta nota."
+        "Não foi possível associar a tarefa ao projeto. Verifique se você participa do projeto e se pode editar esta tarefa."
       );
     } finally {
       setIsSaving(false);
@@ -866,7 +866,7 @@ const NoteDetail = () => {
       );
     } catch (e) {
       console.error(e);
-      window.alert("Não foi possível atualizar o estágio da nota.");
+      window.alert("Não foi possível atualizar o estágio da tarefa.");
     } finally {
       setIsSaving(false);
     }
@@ -1013,14 +1013,14 @@ const NoteDetail = () => {
     }
   };
 
-  // Notas filtradas para o modal de relações (exclui a nota atual)
+  // Tarefas filtradas para o modal de relações (exclui a tarefa atual)
   const filteredRelationNotes = notesOverview
     .filter((n) => n.id !== id)
     .filter((n) =>
       relationSearchTerm ? n.title.toLowerCase().includes(relationSearchTerm.toLowerCase()) : true
     );
 
-  // Buscar dados das notas relacionadas pelo ID
+  // Buscar dados das tarefas relacionadas pelo ID
   const relatedNotesData = (note?.properties?.relations || [])
     .map((relId) => notesOverview.find((n) => n.id === relId))
     .filter(Boolean);
@@ -1070,7 +1070,7 @@ const NoteDetail = () => {
     })
   );
 
-  // Carregar nota específica
+  // Carregar tarefa específica
   useEffect(() => {
     if (id) {
       const loadNote = async () => {
@@ -1081,7 +1081,7 @@ const NoteDetail = () => {
             setNote(loadedNote);
             setEditingTitle(loadedNote.title);
             setEditingDescription(loadedNote.description || "");
-            // Carregar blocos da nota
+            // Carregar blocos da tarefa
             if (loadedNote.blocks) {
               setBlocks(loadedNote.blocks as (Block & { children?: Block[] })[]);
             }
@@ -1149,7 +1149,7 @@ const NoteDetail = () => {
     };
   }, [note?.associated_project?.id, getProjectStages]);
 
-  // Auto-criar bloco parágrafo quando a nota não tem blocos
+  // Auto-criar bloco parágrafo quando a tarefa não tem blocos
   useEffect(() => {
     if (
       !initialLoading &&
@@ -1398,15 +1398,15 @@ const NoteDetail = () => {
   const handleDelete = async () => {
     if (!note) return;
 
-    if (window.confirm("Tem certeza que deseja deletar esta nota?")) {
+    if (window.confirm("Tem certeza que deseja deletar esta tarefa?")) {
       try {
         const success = await deleteNote(note.id);
         if (success) {
           router.push("/app/notes");
         }
       } catch (error) {
-        console.error("Erro ao deletar nota:", error);
-        alert("Erro ao deletar a nota. Tente novamente.");
+        console.error("Erro ao deletar tarefa:", error);
+        alert("Erro ao deletar a tarefa. Tente novamente.");
       }
     }
   };
@@ -1466,8 +1466,8 @@ const NoteDetail = () => {
       setSearchTerm("");
       setSearchResults([]);
     } catch (error) {
-      console.error("Erro ao compartilhar nota:", error);
-      alert("Erro ao compartilhar nota. Tente novamente.");
+      console.error("Erro ao compartilhar tarefa:", error);
+      alert("Erro ao compartilhar tarefa. Tente novamente.");
     }
   };
 
@@ -1482,7 +1482,7 @@ const NoteDetail = () => {
       return;
     }
 
-    if (window.confirm(`Tem certeza que deseja remover ${collaboratorName} desta nota?`)) {
+    if (window.confirm(`Tem certeza que deseja remover ${collaboratorName} desta tarefa?`)) {
       const previousCollaborators = note.collaborators || [];
       setNote((prev) =>
         prev
@@ -1512,7 +1512,7 @@ const NoteDetail = () => {
 
     const currentTags = note.tags || [];
     if (currentTags.includes(newTag.trim())) {
-      alert("Esta tag já existe nesta nota.");
+      alert("Esta tag já existe nesta tarefa.");
       return;
     }
 
@@ -1588,7 +1588,7 @@ const NoteDetail = () => {
             <span className="text-xl">⚠️</span>
           </div>
           <p className="mb-1 font-semibold text-neutral-900 dark:text-neutral-100">
-            Erro ao carregar nota
+            Erro ao carregar tarefa
           </p>
           <p className="mb-5 text-sm text-neutral-500 dark:text-neutral-400">{error}</p>
           <button
@@ -1596,7 +1596,7 @@ const NoteDetail = () => {
             className="inline-flex items-center gap-2 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
           >
             <ArrowLeft size={14} />
-            Voltar para Notas
+            Voltar para Tarefas
           </button>
         </div>
       </div>
@@ -1736,7 +1736,7 @@ const NoteDetail = () => {
                   <button
                     onClick={() => setShowShareModal(true)}
                     className="dark:hover:text-brand-primary-500 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800"
-                    title="Compartilhar nota"
+                    title="Compartilhar tarefa"
                   >
                     <Share2 size={15} />
                   </button>
@@ -1746,7 +1746,7 @@ const NoteDetail = () => {
                   <button
                     onClick={handleDelete}
                     className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-all hover:bg-red-50 hover:text-red-500 dark:text-neutral-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                    title="Deletar nota"
+                    title="Deletar tarefa"
                   >
                     <Trash2 size={15} />
                   </button>
@@ -1847,7 +1847,7 @@ const NoteDetail = () => {
                   onClick={handleExportNote}
                   disabled={isExporting}
                   className="dark:hover:text-brand-primary-500 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 disabled:cursor-not-allowed disabled:opacity-60 dark:text-neutral-400 dark:hover:bg-neutral-800"
-                  title="Exportar nota"
+                  title="Exportar tarefa"
                 >
                   {isExporting ? (
                     <Loader2 size={15} className="animate-spin" />
@@ -1983,7 +1983,7 @@ const NoteDetail = () => {
                               }
                             }
                           }}
-                          placeholder="Título da nota..."
+                          placeholder="Título da tarefa..."
                           rows={1}
                           className="w-full resize-none overflow-hidden bg-transparent text-xl font-bold text-neutral-900 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-100 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
                         />
@@ -2049,7 +2049,7 @@ const NoteDetail = () => {
                               <div className="min-w-0 flex-1">
                                 {note.access?.canEdit ? (
                                   <select
-                                    aria-label="Projeto da nota"
+                                    aria-label="Projeto da tarefa"
                                     className="w-full max-w-full cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
                                     value={note.associated_project?.id ?? ""}
                                     onChange={(e) => void handleProjectAssignment(e.target.value)}
@@ -2095,7 +2095,7 @@ const NoteDetail = () => {
                                           aria-hidden
                                         />
                                         <select
-                                          aria-label="Estágio da nota no projeto"
+                                          aria-label="Estágio da tarefa no projeto"
                                           className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
                                           value={note.associated_project.stage_id ?? ""}
                                           onChange={(e) => void handleStageChange(e.target.value)}
@@ -2158,7 +2158,7 @@ const NoteDetail = () => {
                                   </>
                                 ) : note.access?.canEdit ? (
                                   <p className="text-[10px] leading-snug text-neutral-400 dark:text-neutral-500">
-                                    O estágio só pode ser definido quando a nota está num projeto.
+                                    O estágio só pode ser definido quando a tarefa está num projeto.
                                   </p>
                                 ) : (
                                   <span className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -2241,7 +2241,7 @@ const NoteDetail = () => {
                                       aria-hidden
                                     />
                                     <select
-                                      aria-label="Prioridade da nota"
+                                      aria-label="Prioridade da tarefa"
                                       className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
                                       value={note.priority_id ?? ""}
                                       onChange={async (e) => {
@@ -2401,7 +2401,7 @@ const NoteDetail = () => {
                                     />
                                   ) : null}
                                   <span className="max-w-[120px] truncate">
-                                    {relNote!.title || "Nota sem título"}
+                                    {relNote!.title || "Tarefa sem título"}
                                   </span>
                                 </button>
                                 {note.access?.canEdit && (
@@ -2848,7 +2848,7 @@ const NoteDetail = () => {
                   <div className="dark:bg-brand-primary-500/10 flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50">
                     <UserPlus size={16} className="dark:text-brand-primary-500 text-yellow-600" />
                   </div>
-                  Compartilhar Nota
+                  Compartilhar Tarefa
                 </h3>
                 <button
                   onClick={() => setShowShareModal(false)}
@@ -2965,7 +2965,7 @@ const NoteDetail = () => {
               <div className="space-y-4">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    Buscar notas
+                    Buscar tarefas
                   </label>
                   <div className="relative">
                     <Search
@@ -3022,7 +3022,7 @@ const NoteDetail = () => {
                             )}
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                                {relNote.title || "Nota sem título"}
+                                {relNote.title || "Tarefa sem título"}
                               </div>
                               {relNote.tags && relNote.tags.length > 0 && (
                                 <div className="mt-0.5 flex gap-1 overflow-hidden">
@@ -3046,16 +3046,16 @@ const NoteDetail = () => {
                     })
                   ) : (
                     <div className="py-6 text-center text-sm text-neutral-400 dark:text-neutral-500">
-                      {relationSearchTerm ? "Nenhuma nota encontrada" : "Nenhuma nota disponível"}
+                      {relationSearchTerm ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa disponível"}
                     </div>
                   )}
                 </div>
 
-                {/* Notas selecionadas */}
+                {/* Tarefas selecionadas */}
                 {(note?.properties?.relations || []).length > 0 && (
                   <div className="border-t border-neutral-100 pt-3 dark:border-neutral-800">
                     <div className="mb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                      {(note?.properties?.relations || []).length} nota
+                      {(note?.properties?.relations || []).length} tarefa
                       {(note?.properties?.relations || []).length !== 1 ? "s" : ""} relacionada
                       {(note?.properties?.relations || []).length !== 1 ? "s" : ""}
                     </div>

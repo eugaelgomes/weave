@@ -159,7 +159,7 @@ export interface ProjectsContextType {
   ) => Promise<boolean>;
   removeCollaborator: (projectId: string, userId: string) => Promise<boolean>;
 
-  // Funções de notas
+  // Funções de tarefas
   getProjectNotes: (projectId: string) => Promise<ProjectNote[]>;
   addNoteToProject: (projectId: string, noteId: string) => Promise<boolean>;
   syncProjectNote: (projectId: string, noteId: string) => Promise<boolean>;
@@ -665,7 +665,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         const notes = await fetchProjectNotesService(projectId);
         return notes;
       } catch (err: unknown) {
-        console.error("Erro ao buscar notas do projeto:", err);
+        console.error("Erro ao buscar tarefas do projeto:", err);
         throw err;
       }
     },
@@ -685,7 +685,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         await fetchProjects(); // Atualiza a lista
         return true;
       } catch (err: unknown) {
-        console.error("Erro ao adicionar nota ao projeto:", err);
+        console.error("Erro ao adicionar tarefa ao projeto:", err);
         throw err;
       }
     },
@@ -705,7 +705,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         await fetchProjects(); // Atualiza a lista
         return true;
       } catch (err: unknown) {
-        console.error("Erro ao sincronizar nota:", err);
+        console.error("Erro ao sincronizar tarefa:", err);
         throw err;
       }
     },
@@ -725,7 +725,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         await fetchProjects(); // Atualiza a lista
         return true;
       } catch (err: unknown) {
-        console.error("Erro ao remover nota do projeto:", err);
+        console.error("Erro ao remover tarefa do projeto:", err);
         throw err;
       }
     },
@@ -739,7 +739,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
       try {
         await updateProjectNoteStageService(projectId, noteId, stageId);
       } catch (err: unknown) {
-        console.error("Erro ao atualizar estágio da nota no projeto:", err);
+        console.error("Erro ao atualizar estágio da tarefa no projeto:", err);
         throw err;
       }
     },

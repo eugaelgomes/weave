@@ -73,7 +73,7 @@ export interface NotesContextType {
   lastFetch: Date | null;
   refreshInterval: number;
 
-  // Funções de notas
+  // Funções de tarefas
   fetchNotes: () => Promise<void>;
   refreshNotes: () => Promise<void>;
   getNoteById: (noteId: string) => Promise<Note | null>;
@@ -149,7 +149,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
   const toOverview = useCallback(
     (note: Note): NoteOverview => ({
       id: note.id,
-      title: note.title || "Nota sem título",
+      title: note.title || "Tarefa sem título",
       properties: note.properties || {},
       tags: note.tags || [],
       lastModified: note.updated_at || note.created_at,
@@ -229,8 +229,8 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
         });
       }
     } catch (err: unknown) {
-      console.error("Erro ao buscar notas:", err);
-      setError(err instanceof Error ? err.message : "Erro ao buscar notas");
+      console.error("Erro ao buscar tarefas:", err);
+      setError(err instanceof Error ? err.message : "Erro ao buscar tarefas");
     } finally {
       setLoading(false);
     }
@@ -250,7 +250,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
         const noteData = await fetchNoteByIdService(noteId);
         return noteData;
       } catch (err: unknown) {
-        console.error("Erro ao buscar nota:", err);
+        console.error("Erro ao buscar tarefa:", err);
         throw err;
       }
     },
@@ -269,8 +269,8 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
         insertOrUpdateNoteLocally(newNote);
         return newNote;
       } catch (err: unknown) {
-        console.error("Erro ao criar nota:", err);
-        setError(err instanceof Error ? err.message : "Erro ao criar nota");
+        console.error("Erro ao criar tarefa:", err);
+        setError(err instanceof Error ? err.message : "Erro ao criar tarefa");
         throw err; // Propaga o erro para ser tratado na UI
       }
     },
@@ -289,8 +289,8 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
         insertOrUpdateNoteLocally(newNote);
         return newNote;
       } catch (err: unknown) {
-        console.error("Erro ao criar nota completa:", err);
-        setError(err instanceof Error ? err.message : "Erro ao criar nota completa");
+        console.error("Erro ao criar tarefa completa:", err);
+        setError(err instanceof Error ? err.message : "Erro ao criar tarefa completa");
         return null;
       }
     },
@@ -334,8 +334,8 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
 
         return updatedNote;
       } catch (err: unknown) {
-        console.error("Erro ao atualizar nota:", err);
-        setError(err instanceof Error ? err.message : "Erro ao atualizar nota");
+        console.error("Erro ao atualizar tarefa:", err);
+        setError(err instanceof Error ? err.message : "Erro ao atualizar tarefa");
         return null;
       }
     },
@@ -355,8 +355,8 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
         await fetchNotes(); // Atualiza a lista após a exclusão
         return true;
       } catch (err: unknown) {
-        console.error("Erro ao deletar nota:", err);
-        setError(err instanceof Error ? err.message : "Erro ao deletar nota");
+        console.error("Erro ao deletar tarefa:", err);
+        setError(err instanceof Error ? err.message : "Erro ao deletar tarefa");
         return false;
       } finally {
         setLoading(false);
@@ -377,8 +377,8 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
         await fetchNotes();
         return true;
       } catch (err: unknown) {
-        console.error("Erro ao deletar notas:", err);
-        setError(err instanceof Error ? err.message : "Erro ao deletar notas");
+        console.error("Erro ao deletar tarefas:", err);
+        setError(err instanceof Error ? err.message : "Erro ao deletar tarefas");
         return false;
       } finally {
         setLoading(false);
@@ -395,8 +395,8 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       try {
         return await exportNoteAsPDFService(noteId);
       } catch (err: unknown) {
-        console.error("Erro ao exportar nota:", err);
-        setError(err instanceof Error ? err.message : "Erro ao exportar nota");
+        console.error("Erro ao exportar tarefa:", err);
+        setError(err instanceof Error ? err.message : "Erro ao exportar tarefa");
         throw err;
       }
     },
@@ -513,11 +513,11 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const sharedNote = await shareNoteService(noteId, collaboratorData);
-        // Atualizar a lista de notas para refletir a mudança
+        // Atualizar a lista de tarefas para refletir a mudança
         await fetchNotes();
         return sharedNote;
       } catch (err: unknown) {
-        console.error("Erro ao compartilhar nota:", err);
+        console.error("Erro ao compartilhar tarefa:", err);
         throw err;
       }
     },
@@ -560,7 +560,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
 
       try {
         await removeCollaboratorService(noteId, collaboratorId);
-        // Atualizar a lista de notas para refletir a mudança
+        // Atualizar a lista de tarefas para refletir a mudança
         await fetchNotes();
         return true;
       } catch (err: unknown) {
@@ -577,7 +577,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
 
       try {
         await recuseCollaborationService(noteId);
-        // Atualizar a lista de notas para refletir a mudança
+        // Atualizar a lista de tarefas para refletir a mudança
         await fetchNotes();
         return true;
       } catch (err: unknown) {

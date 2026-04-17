@@ -282,11 +282,11 @@ export default function ProjectsCarousel({
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {/* Contador de Notas */}
+                        {/* Contador de Tarefas */}
                         {project.notesCount > 0 && (
                           <div
                             className="flex items-center gap-0.5 text-neutral-400 dark:text-neutral-500"
-                            title={`${project.notesCount} nota(s)`}
+                            title={`${project.notesCount} tarefa(s)`}
                           >
                             <FileText className="h-2.5 w-2.5" />
                             <span className="text-[8px] font-medium">{project.notesCount}</span>

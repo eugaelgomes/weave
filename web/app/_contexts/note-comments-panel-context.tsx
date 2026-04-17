@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useMemo, useState } from "react";
 
-/** Só para o layout das notas: esconder a nav esquerda no desktop quando o painel de comentários está aberto. */
+/** Só para o layout das tarefas: esconder a nav esquerda no desktop quando o painel de comentários está aberto. */
 export type NoteCommentsPanelContextValue = {
   commentsPanelOpen: boolean;
   setCommentsPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;

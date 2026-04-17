@@ -2,17 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   Loader2,
   Bell,
   CheckCheck,
   RefreshCw,
   AlertCircle,
-  Inbox,
-  Archive,
-  Trash2,
-  MailWarning,
 } from "lucide-react";
 import { NotificationList } from "./_components/notification-list";
 import { useNotification } from "@/app/_contexts/notification-context";
@@ -40,17 +35,14 @@ export default function NotificationsPage() {
     await markAllAsRead();
   };
 
-  // Configuração das Abas (Tabs) de navegação
-  const tabs = [
-    { id: "all", label: "Caixa de Entrada", icon: Inbox },
-    { id: "unread", label: "Não Lidas", icon: MailWarning },
-    { id: "archived", label: "Arquivadas", icon: Archive },
-    { id: "trash", label: "Lixeira", icon: Trash2 },
-  ];
-
   const getTitle = () => {
-    const activeTab = tabs.find((t) => t.id === filterParam);
-    return activeTab?.label || "Caixa de Entrada";
+    const labels: Record<string, string> = {
+      all: "Caixa de Entrada",
+      unread: "Não Lidas",
+      archived: "Arquivadas",
+      trash: "Lixeira",
+    };
+    return labels[filterParam] || "Caixa de Entrada";
   };
 
   // --- SKELETON LOADING ---
@@ -127,32 +119,6 @@ export default function NotificationsPage() {
                   Marcar todas como lidas
                 </button>
               )}
-          </div>
-        </div>
-
-        {/* Abas de Navegação (Tabs) */}
-        <div className="border-b border-neutral-100 bg-neutral-50/50 dark:border-neutral-800/60 dark:bg-neutral-900/20">
-          <div className="flex overflow-x-auto px-2 py-1.5 [&::-webkit-scrollbar]:hidden">
-            <div className="flex w-max gap-1">
-              {tabs.map((tab) => {
-                const isActive = filterParam === tab.id;
-                const Icon = tab.icon;
-                return (
-                  <Link
-                    key={tab.id}
-                    href={`/app/notifications?filter=${tab.id}`}
-                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-bold transition-all ${
-                      isActive
-                        ? "border border-neutral-200/60 bg-white text-amber-600 shadow-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-amber-500"
-                        : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-300"
-                    }`}
-                  >
-                    <Icon size={12} className={isActive ? "text-amber-500" : "opacity-70"} />
-                    {tab.label}
-                  </Link>
-                );
-              })}
-            </div>
           </div>
         </div>
 

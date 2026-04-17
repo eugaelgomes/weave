@@ -469,7 +469,7 @@ const NotesWithPagination = () => {
   const handleCreateNote = async () => {
     try {
       const newNote = await createNote({
-        title: "Nova Nota",
+        title: "Nova Tarefa",
         description: "",
         tags: [],
       });
@@ -488,8 +488,8 @@ const NotesWithPagination = () => {
           },
         });
       } else {
-        toast.error("Erro ao criar nota", {
-          description: error?.message || "Ocorreu um erro ao criar a nota. Tente novamente.",
+        toast.error("Erro ao criar tarefa", {
+          description: error?.message || "Ocorreu um erro ao criar a tarefa. Tente novamente.",
         });
       }
     }
@@ -526,14 +526,14 @@ const NotesWithPagination = () => {
     if (selectedNotes.size === 0) return;
 
     const confirmed = window.confirm(
-      `Tem certeza que deseja excluir ${selectedNotes.size} nota(s)?`
+      `Tem certeza que deseja excluir ${selectedNotes.size} tarefa(s)?`
     );
 
     if (confirmed) {
       const noteIds = Array.from(selectedNotes);
       const ok = await deleteNotes(noteIds);
       if (!ok) {
-        alert("Erro ao excluir notas selecionadas.");
+        alert("Erro ao excluir tarefas selecionadas.");
         return;
       }
       setSelectedNotes(new Set());
@@ -567,7 +567,7 @@ const NotesWithPagination = () => {
     return (
       <div className="flex h-full items-center justify-center bg-neutral-50 p-6 dark:bg-neutral-950">
         <div className="text-center">
-          <p className="font-medium text-red-500 dark:text-red-400">Erro ao carregar notas</p>
+          <p className="font-medium text-red-500 dark:text-red-400">Erro ao carregar tarefas</p>
           <button
             onClick={handleRefresh}
             className="mt-2 text-sm text-neutral-400 underline hover:text-neutral-900 dark:hover:text-white"
@@ -580,7 +580,7 @@ const NotesWithPagination = () => {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2">
+    <div className="flex min-h-0 flex-1 flex-col gap-1">
       {/* =================== FILTROS + TOOLBAR + CABEÇALHO COLUNAS =================== */}
       <div className=" bg-white border-b border-neutral-200 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
         <div className="flex flex-col border-b border-neutral-100 px-2 py-2 dark:border-neutral-800">
@@ -615,7 +615,7 @@ const NotesWithPagination = () => {
               />
               <input
                 type="text"
-                placeholder="Buscar notas..."
+                placeholder="Buscar tarefas..."
                 value={searchTerm}
                 onChange={handleSearchChange}
                 className="h-7 w-full rounded-md border border-neutral-200 bg-white pr-7 pl-8 text-xs text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:bg-white focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
@@ -805,7 +805,7 @@ const NotesWithPagination = () => {
                   Vencimento
                 </span>
                 <p className="text-[11px] text-neutral-400">
-                  Filtra por data de vencimento da nota (notas sem vencimento ficam de fora quando
+                  Filtra por data de vencimento da tarefa (tarefas sem vencimento ficam de fora quando
                   um período está ativo).
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -960,7 +960,7 @@ const NotesWithPagination = () => {
               className="dark:text-brand-primary-500 shrink-0 text-yellow-600"
             />
             <span className="dark:text-brand-primary-500 text-xs font-medium text-yellow-900">
-              {selectedNotes.size} nota(s) selecionada(s)
+              {selectedNotes.size} tarefa(s) selecionada(s)
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -1307,7 +1307,7 @@ const NotesWithPagination = () => {
                 <Search size={16} className="text-neutral-400" />
               </div>
               <h3 className="text-[13px] font-bold text-neutral-900 dark:text-neutral-100">
-                Nenhuma nota encontrada
+                Nenhuma tarefa encontrada
               </h3>
               <p className="mt-1 mb-4 max-w-[250px] text-[11px] leading-relaxed text-neutral-500">
                 Ajuste os termos de busca ou remova os filtros atuais para ver mais resultados.
@@ -1326,7 +1326,7 @@ const NotesWithPagination = () => {
       </div>
       {/* =================== FOOTER =================== */}
       {totalPages > 1 && (
-        <div className="shrink-0 rounded-md border border-neutral-200 bg-white py-1 dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="shrink-0 bg-white dark:bg-neutral-950">
           <div className="origin-center scale-[0.85] sm:scale-90">
             <Pagination
               currentPage={pagination.currentPage}

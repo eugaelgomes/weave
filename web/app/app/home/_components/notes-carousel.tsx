@@ -35,9 +35,9 @@ const formatDate = (dateString?: string) => {
 
 export default function NotesCarousel({
   notes,
-  title = "Notas Recentes",
-  emptyMessage = "Você ainda não tem notas",
-  emptyActionText = "Criar Primeira Nota",
+  title = "Tarefas Recentes",
+  emptyMessage = "Você ainda não tem tarefas",
+  emptyActionText = "Criar Primeira Tarefa",
   emptyActionHref = "/app/notes",
 }: NotesCarouselProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -149,7 +149,7 @@ export default function NotesCarousel({
                             </div>
                           )}
                           <h2 className="dark:group-hover:text-brand-primary-500 line-clamp-2 text-xs leading-tight font-semibold text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-100">
-                            {note.title || "Nota sem título"}
+                            {note.title || "Tarefa sem título"}
                           </h2>
                         </div>
 
@@ -197,7 +197,7 @@ export default function NotesCarousel({
                       <div className="flex items-center justify-between border-t border-neutral-100 pt-2 dark:border-neutral-900">
                         {/* Colaboradores */}
                         <div className="flex -space-x-1.5">
-                          {/* Avatar do dono da nota */}
+                          {/* Avatar do dono da tarefa */}
                           <div
                             className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full border border-neutral-900 bg-neutral-100 dark:border-neutral-200 dark:bg-neutral-800"
                             title={note.owner_name || "Dono"}
@@ -288,7 +288,7 @@ export default function NotesCarousel({
                       ? "bg-brand-primary-500 w-4"
                       : "w-1 bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-700 dark:hover:bg-neutral-600"
                   }`}
-                  aria-label={`Ir para nota ${index + 1}`}
+                  aria-label={`Ir para tarefa ${index + 1}`}
                 />
               ))}
             </div>

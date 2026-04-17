@@ -324,7 +324,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                   <div className="absolute bottom-full left-0 z-20 mb-2 w-56 overflow-hidden rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
                     <div className="max-h-48 overflow-y-auto p-1">
                       <div className="px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase">
-                        Notas
+                        Tarefas
                       </div>
                       {notesOverview?.slice(0, 5).map((note: any) => (
                         <button

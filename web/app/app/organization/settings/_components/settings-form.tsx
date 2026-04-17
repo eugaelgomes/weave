@@ -145,7 +145,7 @@ export function SettingsForm({
             />
             <div className="pt-2">
               <Toggle
-                label="Permitir Notas Públicas"
+                label="Permitir Tarefas Públicas"
                 description="Habilitar compartilhamento público"
                 checked={localProps?.allowPublicNotes || false}
                 onChange={(v) => handlePropertyChange("allowPublicNotes", null, v)}
@@ -213,7 +213,7 @@ export function SettingsForm({
             />
             <Toggle
               label="Backup Automático"
-              description="Backup diário de notas"
+              description="Backup diário de tarefas"
               checked={localProps?.features?.backup || false}
               onChange={(v) => handlePropertyChange("features", "backup", v)}
               disabled={!userIsOwner}
