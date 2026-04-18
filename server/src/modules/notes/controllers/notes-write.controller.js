@@ -4,14 +4,89 @@ const PlansRepository = require("@/modules/plans/plans.repository");
 const taskPrioritiesRepository = require("@/modules/task_priorities/repositories/task-priorities.repository");
 const { ALLOWED_NOTE_STATUSES } = require("@/utils/patterns/product-patterns");
 const spacesService = require("@/services/storage");
+const {
+  cloneDefaultNoteDocumentState,
+  normalizeNoteDocumentPayload,
+} = require("../document-normalizer");
+const { documentToBlocks } = require("../document-blocks-adapter");
 
 /**
  * Criação, atualização e exclusão de notas.
  */
 class NotesWriteController extends NotesBaseController {
+  _injectUploadedDocumentImages(documentState, uploadedImages = []) {
+    if (!documentState?.document || uploadedImages.length === 0) {
+      return documentState;
+    }
+
+    const nextDocument = structuredClone(documentState);
+    const byOriginalName = new Map(
+      uploadedImages.map((item) => [item.originalName, item])
+    );
+    const byIndex = new Map(uploadedImages.map((item, index) => [String(index), item]));
+    let cursor = 0;
+
+    const resolveUpload = (token) => {
+      if (!token) {
+        const next = uploadedImages[cursor];
+        cursor += 1;
+        return next || null;
+      }
+
+      if (byIndex.has(token)) {
+        return byIndex.get(token);
+      }
+
+      if (byOriginalName.has(token)) {
+        return byOriginalName.get(token);
+      }
+
+      return null;
+    };
+
+    const walk = (node, path = "document.document") => {
+      if (!node || typeof node !== "object") return;
+
+      if (node.type === "image" && node.attrs?.src?.startsWith?.("upload://")) {
+        const token = String(node.attrs.src).replace("upload://", "").trim();
+        const upload = resolveUpload(token);
+        if (!upload) {
+          throw new Error(
+            `${path}: placeholder '${node.attrs.src}' sem arquivo correspondente em documentImages`
+          );
+        }
+        node.attrs.src = upload.path;
+      }
+
+      if (Array.isArray(node.content)) {
+        node.content.forEach((child, index) => walk(child, `${path}.content[${index}]`));
+      }
+    };
+
+    walk(nextDocument.document);
+    return nextDocument;
+  }
+
+  _assertNoDocumentUploadPlaceholders(documentState) {
+    const walk = (node, path = "document.document") => {
+      if (!node || typeof node !== "object") return;
+
+      if (node.type === "image" && node.attrs?.src?.startsWith?.("upload://")) {
+        throw new Error(`${path}: placeholder de upload pendente em image.attrs.src`);
+      }
+
+      if (Array.isArray(node.content)) {
+        node.content.forEach((child, index) => walk(child, `${path}.content[${index}]`));
+      }
+    };
+
+    walk(documentState?.document);
+  }
+
   async createNote(req, res, next) {
     try {
-      const { title, description, tags = [], status, project_id } = req.body;
+      const { title, description, tags = [], status, project_id, document } =
+        req.body;
 
       // 1. Validação de autenticação
       const userId = this._validateAuthentication(req, res);
@@ -63,6 +138,17 @@ class NotesWriteController extends NotesBaseController {
         });
       }
 
+      let normalizedDocument;
+      try {
+        normalizedDocument =
+          document === undefined
+            ? cloneDefaultNoteDocumentState()
+            : normalizeNoteDocumentPayload(document);
+        this._assertNoDocumentUploadPlaceholders(normalizedDocument);
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
+      }
+
       // 6. Criação da nota no banco
       const newNote = await this.notesRepository.createNotesQuery(
         userId,
@@ -70,7 +156,10 @@ class NotesWriteController extends NotesBaseController {
         description,
         tags,
         noteStatus,
-        project_id
+        project_id,
+        null,
+        null,
+        normalizedDocument
       );
 
       // 7. INCREMENTAR O USO
@@ -93,6 +182,7 @@ class NotesWriteController extends NotesBaseController {
         initialBlockContent = "",
         status,
         project_id,
+        document,
       } = req.body;
 
       // Validação de autenticação
@@ -145,6 +235,17 @@ class NotesWriteController extends NotesBaseController {
         });
       }
 
+      let normalizedDocument;
+      try {
+        normalizedDocument =
+          document === undefined
+            ? cloneDefaultNoteDocumentState()
+            : normalizeNoteDocumentPayload(document);
+        this._assertNoDocumentUploadPlaceholders(normalizedDocument);
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
+      }
+
       // Criação da nota completa (nota + bloco inicial) em uma única transação
       const result = await this.notesRepository.createCompleteNote(
         userId,
@@ -153,7 +254,8 @@ class NotesWriteController extends NotesBaseController {
         tags,
         initialBlockContent,
         noteStatus,
-        project_id
+        project_id,
+        normalizedDocument
       );
 
       // Incrementar o uso de notas
@@ -167,6 +269,7 @@ class NotesWriteController extends NotesBaseController {
         title: result.title,
         description: result.description,
         properties: result.properties || {},
+        document: result.document || cloneDefaultNoteDocumentState(),
         tags: result.tags || [],
         status: result.status,
         created_at: result.note_created_at,
@@ -178,23 +281,10 @@ class NotesWriteController extends NotesBaseController {
           email: result.user_email,
           avatar_url: result.user_avatar_url,
         },
-        blocks: [
-          {
-            id: result.block_id,
-            note_id: result.note_id,
-            user_id: result.user_id,
-            parent_id: null,
-            type: result.block_type,
-            text: result.block_text,
-            properties: result.block_properties,
-            done: result.block_done,
-            position: result.block_position,
-            level: 0,
-            created_at: result.block_created_at,
-            updated_at: result.block_updated_at,
-            children: [],
-          },
-        ],
+        blocks: documentToBlocks(
+          result.document || cloneDefaultNoteDocumentState(),
+          result.note_id
+        ),
       };
 
       // Retorna a nota completíssima criada
@@ -218,6 +308,7 @@ class NotesWriteController extends NotesBaseController {
         deleted,
         project_id,
         properties,
+        document,
         priority_id,
         due_date,
       } = req.body;
@@ -333,15 +424,16 @@ class NotesWriteController extends NotesBaseController {
             ? null
             : new Date(due_date).toISOString();
       }
-
       // Processar properties (campos JSON) e arquivos enviados
       const propertiesUpdate = properties || {};
+      const uploadedDocumentImages = [];
 
       // Coletar todos os arquivos que serão enviados para validação de plano
       const allUploadedFiles = [
         ...(req.files?.icon || []),
         ...(req.files?.banner || []),
         ...(req.files?.files || []),
+        ...(req.files?.documentImages || []),
       ];
 
       // Validar limites do plano antes de fazer qualquer upload
@@ -470,6 +562,27 @@ class NotesWriteController extends NotesBaseController {
         propertiesUpdate.files = [...currentFiles, ...newFiles];
       }
 
+      if (req.files?.documentImages?.length > 0) {
+        const uploaded = await Promise.all(
+          req.files.documentImages.map(async (file) => {
+            const result = await spacesService.uploadNoteDocumentImage(
+              file.buffer,
+              file.mimetype,
+              id,
+              userId,
+              file.originalname
+            );
+            return {
+              id: result.fileName,
+              originalName: file.originalname,
+              path: result.key || result.path || "",
+              type: file.mimetype,
+            };
+          })
+        );
+        uploadedDocumentImages.push(...uploaded);
+      }
+
       // Remover arquivos do storage ao remover icon, banner ou files
       // Remover ícone
       if (propertiesUpdate.icon && propertiesUpdate.icon.path === "") {
@@ -508,6 +621,28 @@ class NotesWriteController extends NotesBaseController {
         );
       }
 
+      if (document !== undefined) {
+        let normalizedDocument;
+        try {
+          normalizedDocument = normalizeNoteDocumentPayload(document);
+          if (uploadedDocumentImages.length > 0) {
+            normalizedDocument = this._injectUploadedDocumentImages(
+              normalizedDocument,
+              uploadedDocumentImages
+            );
+          }
+          this._assertNoDocumentUploadPlaceholders(normalizedDocument);
+        } catch (error) {
+          return res.status(400).json({ error: error.message });
+        }
+        updateData.document = normalizedDocument;
+      } else if (uploadedDocumentImages.length > 0) {
+        return res.status(400).json({
+          error:
+            "documentImages exige envio do campo document com placeholders 'upload://<nome-do-arquivo>'",
+        });
+      }
+
       // Se há properties para atualizar
       if (Object.keys(propertiesUpdate).length > 0) {
         updateData.properties = propertiesUpdate;
@@ -519,6 +654,10 @@ class NotesWriteController extends NotesBaseController {
           error: "Nenhum campo fornecido para atualização",
         });
       }
+
+      const updatedFields = Object.keys(updateData);
+      const isDocumentOnlyUpdate =
+        updatedFields.length === 1 && updatedFields[0] === "document";
 
       // Atualização da nota
       const updatedNote = await this.notesRepository.updateNoteById(
@@ -532,8 +671,16 @@ class NotesWriteController extends NotesBaseController {
         });
       }
 
-      const refreshed = await this.notesRepository.getNoteById(id);
-      const formattedNote = this._formatNoteResponse(refreshed || updatedNote);
+      let formattedNote;
+      if (isDocumentOnlyUpdate) {
+        formattedNote = this._formatNoteResponse(updatedNote, [], {
+          includeBlocks: false,
+        });
+      } else {
+        const refreshed = await this.notesRepository.getNoteById(id);
+        formattedNote = this._formatNoteResponse(refreshed || updatedNote);
+      }
+
       formattedNote.access = {
         isOwner,
         isCollaborator,
@@ -543,6 +690,94 @@ class NotesWriteController extends NotesBaseController {
         canShare: isOwner || hasOrgProjectAccess,
       };
       res.status(200).json(formattedNote);
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  async uploadDocumentImages(req, res, next) {
+    try {
+      const { id } = req.params;
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      await this._validateNoteAccess(id, userId);
+
+      const uploads = req.files || [];
+      if (!uploads.length) {
+        return res.status(400).json({ error: "Nenhum arquivo enviado" });
+      }
+
+      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const getUserPlan = await PlansRepository.getUserAndPlan(userId);
+      const planDetails = await PlansRepository.getPlanById(getUserPlan.plan_id);
+
+      if (!usageRecord || !planDetails) {
+        return res.status(404).json({
+          error: "Configuração de plano não encontrada para este usuário.",
+        });
+      }
+
+      const maxFileSizeMb = planDetails.details?.limits?.storage?.max_file_size_mb;
+      const totalMonthlyUploadMb =
+        planDetails.details?.limits?.storage?.total_monthly_upload_mb;
+
+      if (maxFileSizeMb) {
+        for (const file of uploads) {
+          const fileSizeMb = file.size / (1024 * 1024);
+          if (fileSizeMb > maxFileSizeMb) {
+            return res.status(413).json({
+              error: "Arquivo excede o tamanho máximo permitido",
+              message: `O arquivo "${file.originalname}" tem ${fileSizeMb.toFixed(2)} MB. Seu plano (${planDetails.name}) permite arquivos de até ${maxFileSizeMb} MB.`,
+            });
+          }
+        }
+      }
+
+      const totalUploadSizeMb = uploads.reduce(
+        (sum, file) => sum + file.size / (1024 * 1024),
+        0
+      );
+
+      if (totalMonthlyUploadMb) {
+        const currentUsageMb =
+          PlanUsageManager.getNestedValue(
+            usageRecord.usage_details,
+            "monthly_cycle.storage.total_uploaded_mb"
+          ) || 0;
+
+        if (currentUsageMb + totalUploadSizeMb > totalMonthlyUploadMb) {
+          return res.status(403).json({
+            error: "Limite de armazenamento mensal atingido",
+            message: `Seu plano (${planDetails.name}) permite ${totalMonthlyUploadMb} MB de upload por mês. Uso atual: ${currentUsageMb.toFixed(2)} MB.`,
+          });
+        }
+      }
+
+      const files = await Promise.all(
+        uploads.map(async (file) => {
+          const result = await spacesService.uploadNoteDocumentImage(
+            file.buffer,
+            file.mimetype,
+            id,
+            userId,
+            file.originalname
+          );
+          return {
+            id: result.fileName,
+            name: file.originalname,
+            path: result.key || result.path || "",
+            size: file.size,
+            type: file.mimetype,
+          };
+        })
+      );
+
+      if (totalUploadSizeMb > 0) {
+        await PlanUsageManager.consumeStorage(usageRecord.id, totalUploadSizeMb);
+      }
+
+      return res.status(201).json({ files });
     } catch (error) {
       this._handleError(error, res, next);
     }

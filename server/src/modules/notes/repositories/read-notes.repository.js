@@ -17,6 +17,7 @@ class ReadNotesRepository extends BaseRepository {
       n.created_at,
       n.updated_at,
       n.properties,
+      n.document,
       n.due_date,
 
       -- criador da nota
@@ -98,6 +99,7 @@ class ReadNotesRepository extends BaseRepository {
         n.updated_at,
         n.deleted,
         n.properties,
+        n.document,
         n.due_date,
 
         -- criador da nota
@@ -228,6 +230,7 @@ class ReadNotesRepository extends BaseRepository {
         n.description,
         n.status,
         n.properties,
+        n.document,
         n.tags,
         n.created_at,
         n.updated_at,
@@ -324,6 +327,7 @@ class ReadNotesRepository extends BaseRepository {
         n.description,
         n.status,
         n.properties,
+        n.document,
         n.tags,
         n.created_at,
         n.updated_at,
@@ -501,6 +505,7 @@ class ReadNotesRepository extends BaseRepository {
         n.title,
         n.due_date,
         n.properties,
+        n.document,
         n.user_id::text,
         u.email AS owner_email,
         u.name AS owner_name

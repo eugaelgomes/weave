@@ -1,78 +1,75 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
-import { FaHome, FaArrowLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import { ArrowLeft, FileQuestionMark, Home } from "lucide-react";
 
 export default function NotFound() {
   const router = useRouter();
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white">
-      {/* Decorative background glows */}
-      <div className="bg-brand-primary-500/5 pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full blur-3xl" />
-      <div className="bg-brand-primary-500/5 pointer-events-none absolute -right-32 -bottom-32 h-96 w-96 rounded-full blur-3xl" />
-
-      <div className="w-full max-w-md text-center">
-        <div className="mb-8">
-          <div className="text-brand-primary-500/20 mb-2 text-[8rem] leading-none font-black tracking-tighter">
-            404
+    <div className="flex min-h-[100dvh] flex-col bg-neutral-50 dark:bg-neutral-950">
+      <div className="flex flex-1 items-center justify-center px-4 py-12">
+        <div className="w-full max-w-[420px] rounded-lg border border-neutral-200 bg-white p-8 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+          <div className="mb-6 flex justify-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900/80">
+              <FileQuestionMark
+                className="h-7 w-7 text-neutral-600 dark:text-neutral-300"
+                aria-hidden
+              />
+            </div>
           </div>
-          <h1 className="mb-3 text-3xl font-bold text-neutral-950">Página não encontrada</h1>
-          <p className="text-neutral-400">
-            A página que você está procurando não existe ou foi movida.
-          </p>
-        </div>
 
-        <div className="space-y-3">
-          <button
-            onClick={() => router.back()}
-            className="bg-brand-primary-500/90 hover:bg-brand-primary-500 flex w-full items-center justify-center gap-2 rounded-md px-6 py-3 font-semibold text-neutral-950 transition-all"
-          >
-            <FaArrowLeft className="h-4 w-4" />
-            Voltar
-          </button>
-
-          <Link
-            href="/home"
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-neutral-700 px-6 py-3 text-neutral-300 transition-all hover:border-neutral-600 hover:bg-neutral-900/50"
-          >
-            <FaHome className="h-4 w-4" />
-            Ir para o Início
-          </Link>
-        </div>
-
-        <div className="mt-8 space-y-2 border-t border-neutral-800/50 pt-6">
-          <div className="">
-            <p className="text-sm text-neutral-500">
-              Precisa de ajuda?{" "}
-              <Link href="/support/" className="tex-underline text-brand-primary-500 font-semibold">
-                Clique aqui
-              </Link>{" "}
-              e veja nosso repositório de ajuda ou entre em contato com o suporte.
+          <div className="text-center">
+            <p className="mb-3 inline-flex rounded-full border border-neutral-200 bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400">
+              404
+            </p>
+            <h1 className="text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
+              Página não encontrada
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+              O endereço não existe ou foi movido.
             </p>
           </div>
-          <div className="flex flex-wrap justify-center gap-4 text-sm">
+
+          <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:gap-3">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="bg-brand-primary-500 hover:bg-brand-primary-800 inline-flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-white transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+              Voltar
+            </button>
+            <Link
+              href="/home"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200 dark:hover:bg-neutral-900"
+            >
+              <Home className="h-4 w-4 shrink-0" aria-hidden />
+              Início
+            </Link>
+          </div>
+
+          <nav className="mt-8 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-neutral-200 pt-6 text-sm dark:border-neutral-800">
             <Link
               href="/notes"
-              className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
+              className="hover:text-brand-primary-600 dark:hover:text-brand-primary-400 text-neutral-500 transition-colors dark:text-neutral-400"
             >
               Tarefas
             </Link>
             <Link
               href="/projects"
-              className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
+              className="hover:text-brand-primary-600 dark:hover:text-brand-primary-400 text-neutral-500 transition-colors dark:text-neutral-400"
             >
               Projetos
             </Link>
             <Link
               href="/settings"
-              className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
+              className="hover:text-brand-primary-600 dark:hover:text-brand-primary-400 text-neutral-500 transition-colors dark:text-neutral-400"
             >
               Configurações
             </Link>
-          </div>
+          </nav>
         </div>
       </div>
     </div>

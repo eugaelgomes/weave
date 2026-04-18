@@ -1,11 +1,14 @@
 const notesRepository = require("@/modules/notes/notes.repository");
-const blocksRepository = require("@/modules/notes/repositories/blocks.repository");
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 const {
   orgRoleHasPermission,
   ORG_PERMISSIONS,
 } = require("@/modules/organizations/organization-role-policy");
+const {
+  cloneDefaultNoteDocumentState,
+} = require("../document-normalizer");
+const { documentToBlocks } = require("../document-blocks-adapter");
 
 /**
  * Base dos controllers de notas: autenticação, acesso e formatação.
@@ -13,7 +16,6 @@ const {
 class NotesBaseController {
   constructor() {
     this.notesRepository = notesRepository;
-    this.blocksRepository = blocksRepository;
   }
 
   _validateAuthentication(req, res) {
@@ -153,13 +155,16 @@ class NotesBaseController {
    * @param {Array} blocks
    * @returns {Object}
    */
-  _formatNoteResponse(note, blocks = []) {
+  _formatNoteResponse(note, blocks = [], options = {}) {
+    const { includeBlocks = true } = options;
     const projectId = note.project_id ? String(note.project_id) : null;
+    const normalizedDocument = note.document || cloneDefaultNoteDocumentState();
     return {
       id: note.id.toString(),
       title: note.title,
       description: note.description,
       properties: note.properties || {},
+      document: normalizedDocument,
       tags: note.tags || [],
       status: note.status,
       due_date: note.due_date ?? null,
@@ -178,7 +183,11 @@ class NotesBaseController {
             stage_name: note.project_stage_name || null,
           }
         : null,
-      blocks: blocks,
+      blocks: includeBlocks
+        ? Array.isArray(blocks) && blocks.length > 0
+          ? blocks
+          : documentToBlocks(normalizedDocument, note.id.toString())
+        : [],
     };
   }
 

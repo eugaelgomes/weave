@@ -114,6 +114,7 @@ export interface Note {
   // Propriedades unificadas do componente de UI
   owner_name?: string;
   owner_avatar_url?: string;
+  document?: NoteDocumentState | null;
 }
 
 export interface Block {
@@ -130,6 +131,22 @@ export interface Block {
   created_at?: string;
   updated_at?: string;
   children?: Block[];
+}
+
+export interface NoteDocumentNode {
+  type: string;
+  attrs?: Record<string, unknown>;
+  content?: NoteDocumentNode[];
+  text?: string;
+  marks?: Array<{ type: string; attrs?: Record<string, unknown> }>;
+}
+
+export interface NoteDocumentState {
+  version: number;
+  document: {
+    type: "doc";
+    content: NoteDocumentNode[];
+  };
 }
 
 export interface FetchNotesParams {
@@ -167,6 +184,7 @@ export interface UpdateNoteData {
   priority_id?: string | null;
   due_date?: string | null;
   properties?: Partial<NoteProperties>;
+  document?: NoteDocumentState;
   icon?: File;
   banner?: File;
   files?: File[];
@@ -271,6 +289,8 @@ export async function updateNote(noteId: string, noteData: UpdateNoteData): Prom
     if (noteData.due_date !== undefined) formData.append("due_date", noteData.due_date ?? "");
     if (noteData.properties !== undefined)
       formData.append("properties", JSON.stringify(noteData.properties));
+    if (noteData.document !== undefined)
+      formData.append("document", JSON.stringify(noteData.document));
 
     if (noteData.icon) formData.append("icon", noteData.icon);
     if (noteData.banner) formData.append("banner", noteData.banner);
@@ -292,6 +312,7 @@ export async function updateNote(noteId: string, noteData: UpdateNoteData): Prom
     priority_id: noteData.priority_id,
     due_date: noteData.due_date,
     properties: noteData.properties,
+    document: noteData.document,
   });
 
   return await handleResponse<Note>(response);
@@ -307,60 +328,6 @@ export async function deleteNotes(noteIds: string[]): Promise<boolean> {
   const response = await apiClient.delete(API_ENDPOINTS.NOTES, {
     body: JSON.stringify({ ids: noteIds }),
   });
-  await handleResponse<void>(response);
-  return true;
-}
-
-//
-// --- Blocks API ---
-//
-
-export async function fetchBlocks(noteId: string): Promise<Block[]> {
-  const response = await apiClient.get(`${API_ENDPOINTS.NOTES_BY_ID(noteId)}/blocks`);
-  const data = await handleResponse<{ blocks?: Block[] } | Block[]>(response);
-
-  return Array.isArray(data) ? data : data.blocks || [];
-}
-
-export async function createBlock(noteId: string, blockData: CreateBlockData): Promise<Block> {
-  const response = await apiClient.post(`${API_ENDPOINTS.NOTES_BY_ID(noteId)}/blocks`, {
-    type: blockData.type,
-    text: blockData.text || "",
-    properties: blockData.properties || {},
-    done: blockData.done,
-    parentId: blockData.parentId,
-    position: blockData.position,
-  });
-
-  return await handleResponse<Block>(response);
-}
-
-export async function updateBlock(
-  noteId: string,
-  blockId: string,
-  blockData: Partial<Block>
-): Promise<Block> {
-  const response = await apiClient.put(
-    `${API_ENDPOINTS.NOTES_BY_ID(noteId)}/blocks/${blockId}`,
-    blockData
-  );
-  return await handleResponse<Block>(response);
-}
-
-export async function deleteBlock(noteId: string, blockId: string): Promise<boolean> {
-  const response = await apiClient.delete(`${API_ENDPOINTS.NOTES_BY_ID(noteId)}/blocks/${blockId}`);
-  await handleResponse<void>(response);
-  return true;
-}
-
-export async function reorderBlocks(
-  noteId: string,
-  blockPositions: Array<{ id: string; position: number }>
-): Promise<boolean> {
-  const response = await apiClient.put(`${API_ENDPOINTS.NOTES_BY_ID(noteId)}/blocks/reorder`, {
-    blocks: blockPositions,
-  });
-
   await handleResponse<void>(response);
   return true;
 }

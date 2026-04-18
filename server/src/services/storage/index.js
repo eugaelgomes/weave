@@ -15,6 +15,7 @@ class SpacesService {
       ICONS: "icons",
       BANNERS: "banners",
       FILES: "files",
+      DOCUMENT_IMAGES: "document-images",
     },
     NOTES_COMMENTS_FILES: {
       ROOT: "notes-comments-files",
@@ -324,6 +325,31 @@ class SpacesService {
       userFolder,
       noteFolder,
       NOTES.FILES
+    );
+    return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
+  }
+
+  async uploadNoteDocumentImage(
+    fileBuffer,
+    mimeType,
+    noteId,
+    userId,
+    originalName = null
+  ) {
+    const { NOTES } = SpacesService.FOLDER_PATHS;
+    const ext = this.getFileExtensionFromMimeType(mimeType);
+    const safeOriginalName = originalName
+      ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_")
+      : `image${ext}`;
+
+    const fileName = `${uuidv4()}_${safeOriginalName}`;
+    const userFolder = `userId_${userId}`;
+    const noteFolder = `noteId_${noteId}`;
+    const folderPath = this.buildKey(
+      NOTES.ROOT,
+      userFolder,
+      noteFolder,
+      NOTES.DOCUMENT_IMAGES
     );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }

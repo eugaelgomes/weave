@@ -27,11 +27,28 @@ const {
   formatContextForPrompt,
 } = require("@/services/weave-ai/context-reasoning/context-provider");
 const notesRepository = require("@/modules/notes/notes.repository");
+const {
+  blocksToDocument,
+  documentToBlocks,
+} = require("@/modules/notes/document-blocks-adapter");
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const { callAIProvider } = require("@/services/weave-ai/ai-service");
 const reasoningEngine = require("@/services/weave-ai/context-reasoning/reasoning-engine");
 
 const responseCache = new Map();
+
+const toDocumentFromAiBlocks = (blocks) => {
+  if (!Array.isArray(blocks) || blocks.length === 0) return null;
+  const normalizedBlocks = blocks.map((block, index) => ({
+    id: `ai-${Date.now()}-${index}`,
+    note_id: "",
+    position: index,
+    properties: block?.properties || {},
+    text: block?.text || "",
+    type: block?.type || "paragraph",
+  }));
+  return blocksToDocument(normalizedBlocks);
+};
 
 // Cache
 function cleanCache() {
@@ -377,8 +394,6 @@ Inclua apenas os campos que devem ser atualizados.`,
    * @private
    */
   async _executeAction(userId, action, aiResponse, context) {
-    const blocksRepository = require("@/modules/notes/blocks.repository");
-
     try {
       // Parse da resposta se for string
       let parsedResponse = aiResponse;
@@ -419,38 +434,30 @@ Inclua apenas os campos que devem ser atualizados.`,
           ];
           const uniqueTags = [...new Set(tags)];
 
+          const generatedDocument =
+            context.includeBlocks !== false
+              ? toDocumentFromAiBlocks(parsedResponse.blocks)
+              : null;
+
           const note = await notesRepository.createNotesQuery(
             userId,
             parsedResponse.title,
             parsedResponse.description,
-            uniqueTags
+            uniqueTags,
+            "visible",
+            null,
+            null,
+            null,
+            generatedDocument
           );
-
-          // Cria blocos se fornecidos
-          const blocks = [];
-          if (
-            context.includeBlocks !== false &&
-            parsedResponse.blocks &&
-            parsedResponse.blocks.length > 0
-          ) {
-            for (let i = 0; i < parsedResponse.blocks.length; i++) {
-              const blockData = parsedResponse.blocks[i];
-              const block = await blocksRepository.createBlock({
-                noteId: note.id,
-                userId: userId,
-                type: blockData.type || "paragraph",
-                text: blockData.text || "",
-                position: i,
-                properties: blockData.properties || {},
-              });
-              blocks.push(block);
-            }
-          }
 
           return {
             type: "note",
+            blocks:
+              generatedDocument && note?.id
+                ? documentToBlocks(generatedDocument, String(note.id))
+                : null,
             note,
-            blocks: blocks.length > 0 ? blocks : null,
           };
         }
 
@@ -498,44 +505,41 @@ Inclua apenas os campos que devem ser atualizados.`,
         }
 
         case "create_blocks": {
-          // Cria blocos em uma nota existente
+          // Adiciona conteúdo no documento de uma nota existente
           if (!context.noteId) {
-            throw new Error("noteId é obrigatório para criar blocos");
+            throw new Error("noteId é obrigatório para atualizar conteúdo");
           }
 
-          const {
-            ALLOWED_BLOCK_TYPES,
-          } = require("@/utils/patterns/product-patterns");
-          const blocks = [];
-          if (parsedResponse.blocks && parsedResponse.blocks.length > 0) {
-            for (let i = 0; i < parsedResponse.blocks.length; i++) {
-              const blockData = parsedResponse.blocks[i];
-              const blockType = blockData.type || "paragraph";
-
-              // Validar tipo de bloco
-              if (!ALLOWED_BLOCK_TYPES.includes(blockType)) {
-                console.warn(
-                  `Tipo de bloco inválido: ${blockType}. Usando 'paragraph'.`
-                );
-                blockType = "paragraph";
-              }
-
-              const block = await blocksRepository.createBlock({
-                noteId: context.noteId,
-                userId: userId,
-                type: blockType,
-                text: blockData.text || "",
-                position: blockData.position || i,
-                properties: blockData.properties || {},
-              });
-              blocks.push(block);
-            }
+          const existingNote = await notesRepository.getNoteById(context.noteId);
+          if (!existingNote) {
+            throw new Error("Nota não encontrada");
           }
+
+          const currentBlocks = documentToBlocks(
+            existingNote.document,
+            String(context.noteId)
+          );
+          const newBlocks = Array.isArray(parsedResponse.blocks)
+            ? parsedResponse.blocks.map((block, index) => ({
+                id: `ai-${Date.now()}-${index}`,
+                note_id: String(context.noteId),
+                position: currentBlocks.length + index,
+                properties: block?.properties || {},
+                text: block?.text || "",
+                type: block?.type || "paragraph",
+              }))
+            : [];
+          const mergedBlocks = [...currentBlocks, ...newBlocks];
+          const nextDocument = blocksToDocument(mergedBlocks);
+
+          await notesRepository.updateNoteById(context.noteId, {
+            document: nextDocument,
+          });
 
           return {
             type: "blocks",
+            blocks: newBlocks,
             noteId: context.noteId,
-            blocks,
           };
         }
 
@@ -551,6 +555,18 @@ Inclua apenas os campos que devem ser atualizados.`,
             updateData.description = parsedResponse.description;
           if (parsedResponse.tags) updateData.tags = parsedResponse.tags;
           if (parsedResponse.status) updateData.status = parsedResponse.status;
+          if (Array.isArray(parsedResponse.blocks)) {
+            updateData.document = blocksToDocument(
+              parsedResponse.blocks.map((block, index) => ({
+                id: `ai-${Date.now()}-${index}`,
+                note_id: String(context.noteId),
+                position: index,
+                properties: block?.properties || {},
+                text: block?.text || "",
+                type: block?.type || "paragraph",
+              }))
+            );
+          }
 
           const updatedNote = await notesRepository.updateNoteById(
             context.noteId,
@@ -679,7 +695,6 @@ Inclua apenas os campos que devem ser atualizados.`,
    */
   async _executeFunctionCall(userId, functionCall, context) {
     const { name, arguments: args } = functionCall;
-    const blocksRepository = require("@/modules/notes/blocks.repository");
 
     // Valida se a função não é proibida
     if (isFunctionForbidden(name)) {
@@ -698,58 +713,43 @@ Inclua apenas os campos que devem ser atualizados.`,
     switch (name) {
       // ========== NOTAS ==========
       case "create_note":
+        const createdDocument = toDocumentFromAiBlocks(args.blocks);
         const newNote = await notesRepository.createNotesQuery(
           userId,
           args.title,
           args.description || "",
-          args.tags || []
+          args.tags || [],
+          "visible",
+          null,
+          null,
+          null,
+          createdDocument
         );
-
-        if (args.blocks && args.blocks.length > 0) {
-          for (let i = 0; i < args.blocks.length; i++) {
-            const blockData = args.blocks[i];
-            await blocksRepository.createBlock({
-              noteId: newNote.id,
-              userId: userId,
-              type: blockData.type || "paragraph",
-              text: blockData.text || "",
-              position: i,
-              properties: blockData.properties || {},
-            });
-          }
-        }
         return newNote;
 
       case "update_note":
-        const updatedNote = await notesRepository.updateNoteById(args.noteId, {
+        const noteUpdateData = {
           title: args.title,
           description: args.description,
           tags: args.tags,
           status: args.status,
-        });
-
-        if (args.blocks && args.blocks.length > 0) {
-          // Remove blocos antigos para substituir pelo novo conteúdo estruturado
-          const oldBlocks = await blocksRepository.getBlocksByNoteId(
-            args.noteId
+        };
+        if (Array.isArray(args.blocks)) {
+          noteUpdateData.document = blocksToDocument(
+            args.blocks.map((block, index) => ({
+              id: `fn-${Date.now()}-${index}`,
+              note_id: String(args.noteId),
+              position: index,
+              properties: block?.properties || {},
+              text: block?.text || "",
+              type: block?.type || "paragraph",
+            }))
           );
-          for (const block of oldBlocks) {
-            await blocksRepository.deleteBlock(block.id);
-          }
-
-          // Cria novos blocos
-          for (let i = 0; i < args.blocks.length; i++) {
-            const blockData = args.blocks[i];
-            await blocksRepository.createBlock({
-              noteId: args.noteId,
-              userId: userId,
-              type: blockData.type || "paragraph",
-              text: blockData.text || "",
-              position: i,
-              properties: blockData.properties || {},
-            });
-          }
         }
+        const updatedNote = await notesRepository.updateNoteById(
+          args.noteId,
+          noteUpdateData
+        );
         return updatedNote;
 
       case "delete_note":
@@ -758,17 +758,7 @@ Inclua apenas os campos que devem ser atualizados.`,
       case "get_note":
         const note = await notesRepository.getNoteById(args.noteId);
         if (note) {
-          try {
-            const blocks = await blocksRepository.getBlocksByNoteId(
-              args.noteId
-            );
-            note.blocks = blocks;
-          } catch (err) {
-            console.warn(
-              `Erro ao buscar blocos para nota ${args.noteId}:`,
-              err
-            );
-          }
+          note.blocks = documentToBlocks(note.document, String(args.noteId));
         }
         return note;
 
@@ -834,31 +824,6 @@ Inclua apenas os campos que devem ser atualizados.`,
           args.noteId,
           userId
         );
-
-      // ========== BLOCOS ==========
-      case "create_block":
-        return await blocksRepository.createBlock({
-          noteId: args.noteId,
-          userId: userId,
-          type: args.blockType,
-          text: args.text,
-          position: args.position || 0,
-          properties: args.properties || {},
-        });
-
-      case "update_block":
-        return await blocksRepository.updateBlock(args.blockId, {
-          type: args.blockType,
-          text: args.text,
-          position: args.position,
-          properties: args.properties,
-        });
-
-      case "delete_block":
-        return await blocksRepository.deleteBlock(args.blockId);
-
-      case "get_blocks":
-        return await blocksRepository.getBlocksByNoteId(args.noteId);
 
       default:
         throw new Error(`Função ${name} não implementada`);
@@ -1008,7 +973,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         );
 
         systemMessage +=
-          '\n\n## ⚡ MODO DE EXECUÇÃO ATIVADO\n\n**IMPORTANTE: Você TEM funções disponíveis e DEVE usá-las.**\n\nQuando o usuário pedir:\n- "Crie..." → use create_note ou create_project\n- "Edite..." → use update_note ou update_project\n- "Delete..." → use delete_note ou delete_project\n- "Adicione bloco..." → use create_block\n\n**NUNCA retorne JSON no texto. SEMPRE use as funções.**';
+          '\n\n## ⚡ MODO DE EXECUÇÃO ATIVADO\n\n**IMPORTANTE: Você TEM funções disponíveis e DEVE usá-las.**\n\nQuando o usuário pedir:\n- "Crie..." → use create_note ou create_project\n- "Edite..." → use update_note ou update_project\n- "Delete..." → use delete_note ou delete_project\n- "Adicione conteúdo..." → use update_note com document/blocos\n\n**NUNCA retorne JSON no texto. SEMPRE use as funções.**';
 
         // Reforço de contexto específico para evitar buscas desnecessárias
         if (context.noteId) {

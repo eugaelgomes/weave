@@ -5,6 +5,7 @@
  */
 
 const notesRepository = require("@/modules/notes/notes.repository");
+const { documentToBlocks } = require("@/modules/notes/document-blocks-adapter");
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const CreateUsersRepository = require("@/modules/users/repositories/create-users.repository");
 const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
@@ -246,9 +247,7 @@ async function getNoteContext(userId, noteId) {
       return null;
     }
 
-    // Busca blocos da nota
-    const blocksRepository = require("@/repositories/blocks-manager");
-    const blocks = await blocksRepository.getBlocksByNoteId(noteId);
+    const blocks = documentToBlocks(note.document, noteId);
 
     // Busca projeto associado se houver
     let project = null;

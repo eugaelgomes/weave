@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthProviderClient from "./_contexts/auth-provider-client";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/app/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "./_contexts/theme-context";
 import { LanguageProvider } from "./_contexts/language-context";
+import { InternetConnectionMonitor } from "./_components/internet-connection-monitor";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -71,6 +72,7 @@ export default function RootLayout({
           <AuthProviderClient>
             <LanguageProvider>{children}</LanguageProvider>
           </AuthProviderClient>
+          <InternetConnectionMonitor />
           <Toaster position="top-right" expand={true} richColors closeButton />
         </ThemeProvider>
       </body>

@@ -7,14 +7,10 @@ import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft,
-  Trash2,
   Tag,
   Loader2,
-  Share2,
   Plus,
   X,
-  UserPlus,
-  Search,
   Code,
   Quote,
   List,
@@ -29,12 +25,15 @@ import {
   FileText,
   ImagePlus,
   Download,
-  Palette,
   Link,
   Users,
   Kanban,
   FolderKanban,
   Flag,
+  Image as ImageIcon,
+  ListOrdered,
+  Minus,
+  Table,
 } from "lucide-react";
 import {
   DndContext,
@@ -73,6 +72,11 @@ import {
   NoteCommentsSidebar,
   NoteCommentsSidebarTrigger,
 } from "@/app/(protected)/notes/_components/note-comments-sidebar";
+import { NoteDetailBody } from "@/app/(protected)/notes/[id]/_components/note-body";
+import { NoteDetailHeader } from "@/app/(protected)/notes/[id]/_components/note-header";
+import { NoteRelationsModal } from "@/app/(protected)/notes/[id]/_components/note-relations-modal";
+import { NoteShareModal } from "@/app/(protected)/notes/[id]/_components/note-share-modal";
+import { NoteTagsModal } from "@/app/(protected)/notes/[id]/_components/note-tags-modal";
 import {
   getCollaboratorDisplayName,
   getCollaboratorAvatarUrl,
@@ -281,8 +285,17 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
     { type: "heading", label: "Título", icon: Heading, description: "Título de seção" },
     { type: "todo", label: "Tarefa", icon: CheckSquare, description: "Item de checklist" },
     { type: "list", label: "Lista", icon: List, description: "Item de lista" },
+    {
+      type: "orderedList",
+      label: "Lista numerada",
+      icon: ListOrdered,
+      description: "Lista ordenada",
+    },
     { type: "quote", label: "Citação", icon: Quote, description: "Bloco de citação" },
     { type: "code", label: "Código", icon: Code, description: "Bloco de código" },
+    { type: "divider", label: "Divisor", icon: Minus, description: "Separador visual" },
+    { type: "image", label: "Imagem", icon: ImageIcon, description: "URL da imagem" },
+    { type: "table", label: "Tabela", icon: Table, description: "Tabela simples" },
   ];
 
   // Sincroniza apenas quando block.text muda externamente (ex: do servidor)
@@ -337,7 +350,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
           return (
             <div
               onClick={() => setIsEditing(true)}
-              className="cursor-text text-xl font-bold break-words whitespace-pre-wrap text-neutral-900 dark:text-neutral-100"
+              className="cursor-text text-3xl leading-tight font-semibold tracking-tight break-words whitespace-pre-wrap text-neutral-900 dark:text-neutral-100"
             >
               <LinkifiedText text={localText} />
             </div>
@@ -351,7 +364,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
             onBlur={handleBlur}
             onFocus={handleFocus}
             onKeyDown={handleKeyDown}
-            className="w-full resize-none overflow-hidden bg-transparent text-xl font-bold text-neutral-900 placeholder-neutral-400 outline-none dark:text-neutral-100 dark:placeholder-neutral-500"
+            className="w-full resize-none overflow-hidden bg-transparent text-3xl leading-tight font-semibold tracking-tight text-neutral-900 placeholder-neutral-400 outline-none dark:text-neutral-100 dark:placeholder-neutral-500"
             placeholder="Título..."
             rows={1}
           />
@@ -387,7 +400,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
                 onBlur={handleBlur}
                 onFocus={handleFocus}
                 onKeyDown={handleKeyDown}
-                className={`w-full resize-none overflow-hidden bg-transparent text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500 ${
+                className={`w-full resize-none overflow-hidden bg-transparent text-[15px] leading-7 text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500 ${
                   block.done ? "text-neutral-400 line-through dark:text-neutral-500" : ""
                 }`}
                 placeholder="Tarefa..."
@@ -398,9 +411,16 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
         );
 
       case "list":
+      case "orderedList":
         return (
           <div className="flex items-start gap-3">
-            <span className="bg-brand-primary-500 mt-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full" />
+            {block.type === "orderedList" ? (
+              <span className="mt-0.5 min-w-6 text-right text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+                {(block.position || 0) + 1}.
+              </span>
+            ) : (
+              <span className="bg-brand-primary-500 mt-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full" />
+            )}
             {!isEditing && localText && hasLinks(localText) ? (
               <div
                 onClick={() => setIsEditing(true)}
@@ -416,7 +436,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
                 onBlur={handleBlur}
                 onFocus={handleFocus}
                 onKeyDown={handleKeyDown}
-                className="w-full resize-none overflow-hidden bg-transparent text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500"
+                className="w-full resize-none overflow-hidden bg-transparent text-[15px] leading-7 text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500"
                 placeholder="Item da lista..."
                 rows={1}
               />
@@ -424,9 +444,60 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
           </div>
         );
 
+      case "divider":
+        return <div className="my-2 border-t border-neutral-200 dark:border-neutral-700" />;
+
+      case "image":
+        return (
+          <div className="space-y-2">
+            <textarea
+              ref={textareaRef}
+              value={localText}
+              onChange={(e) => setLocalText(e.target.value)}
+              onBlur={handleBlur}
+              onFocus={handleFocus}
+              onKeyDown={handleKeyDown}
+              className="w-full resize-none overflow-hidden rounded-md border border-neutral-200 bg-transparent px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500"
+              placeholder="Cole a URL da imagem..."
+              rows={1}
+            />
+            {localText ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={localText}
+                alt="Imagem do bloco"
+                className="max-h-72 w-auto rounded-md border border-neutral-200 object-contain dark:border-neutral-700"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+            ) : null}
+          </div>
+        );
+
+      case "table":
+        return (
+          <div className="space-y-2">
+            <textarea
+              ref={textareaRef}
+              value={localText}
+              onChange={(e) => setLocalText(e.target.value)}
+              onBlur={handleBlur}
+              onFocus={handleFocus}
+              onKeyDown={handleKeyDown}
+              className="w-full resize-none overflow-hidden rounded-md border border-neutral-200 bg-transparent px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500"
+              placeholder="Ex.: Coluna A | Coluna B"
+              rows={2}
+            />
+            <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+              Use `|` para separar colunas e quebra de linha para novas linhas.
+            </p>
+          </div>
+        );
+
       case "quote":
         return (
-          <div className="border-l-3 border-yellow-500 pl-4">
+            <div className="border-l-2 border-neutral-300 pl-4 dark:border-neutral-700">
             {!isEditing && localText && hasLinks(localText) ? (
               <div
                 onClick={() => setIsEditing(true)}
@@ -442,7 +513,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
                 onBlur={handleBlur}
                 onFocus={handleFocus}
                 onKeyDown={handleKeyDown}
-                className="w-full resize-none overflow-hidden bg-transparent text-neutral-600 italic placeholder-neutral-400 outline-none dark:text-neutral-300 dark:placeholder-neutral-500"
+                className="w-full resize-none overflow-hidden bg-transparent text-[15px] leading-7 text-neutral-600 italic placeholder-neutral-400 outline-none dark:text-neutral-300 dark:placeholder-neutral-500"
                 placeholder="Citação..."
                 rows={1}
               />
@@ -452,9 +523,9 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
 
       case "code":
         return (
-          <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900">
-            <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 dark:border-neutral-700 dark:bg-neutral-800">
-              <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+          <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-50/70 dark:border-neutral-700 dark:bg-neutral-900/60">
+            <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-100/70 px-3 py-1.5 dark:border-neutral-700 dark:bg-neutral-800/80">
+              <span className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                 {(block.properties as { language?: string })?.language || "código"}
               </span>
               <Code size={12} className="text-neutral-400 dark:text-neutral-500" />
@@ -464,7 +535,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
               value={localText}
               onChange={(e) => setLocalText(e.target.value)}
               onBlur={handleBlur}
-              className="w-full resize-none overflow-hidden bg-neutral-100 p-3 font-mono text-sm text-emerald-700 placeholder-neutral-400 outline-none dark:bg-neutral-900 dark:text-green-400 dark:placeholder-neutral-600"
+              className="w-full resize-none overflow-hidden bg-neutral-50/60 p-3 font-mono text-[13px] leading-6 text-neutral-700 placeholder-neutral-400 outline-none dark:bg-neutral-900/70 dark:text-neutral-200 dark:placeholder-neutral-600"
               placeholder="// Seu código aqui..."
               rows={3}
             />
@@ -478,7 +549,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
           return (
             <div
               onClick={() => setIsEditing(true)}
-              className="w-full cursor-text leading-relaxed break-words whitespace-pre-wrap text-neutral-800 dark:text-neutral-200"
+              className="w-full cursor-text text-[16px] leading-7 break-words whitespace-pre-wrap text-neutral-800 dark:text-neutral-200"
             >
               <LinkifiedText text={localText} />
             </div>
@@ -492,7 +563,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
             onBlur={handleBlur}
             onFocus={handleFocus}
             onKeyDown={handleKeyDown}
-            className="w-full resize-none overflow-hidden bg-transparent leading-relaxed text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500"
+            className="w-full resize-none overflow-hidden bg-transparent text-[16px] leading-7 text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500"
             placeholder="Digite seu texto..."
             rows={1}
           />
@@ -514,7 +585,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
       >
         <button
           {...dragHandleProps}
-          className="hover:text-brand-primary-500 dark:hover:text-brand-primary-500 cursor-grab rounded p-0.5 text-neutral-300 hover:bg-neutral-100 active:cursor-grabbing dark:text-neutral-600 dark:hover:bg-neutral-800"
+          className="hover:text-brand-primary-500 dark:hover:text-brand-primary-500 cursor-grab rounded p-0.5 text-neutral-300 hover:bg-neutral-100/80 active:cursor-grabbing dark:text-neutral-600 dark:hover:bg-neutral-800/70"
           title="Arrastar para reordenar"
         >
           <GripVertical size={14} />
@@ -523,9 +594,9 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
 
       {/* Conteúdo do bloco */}
       <div
-        className={`rounded-md px-3 py-2 transition-colors hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40 ${
+        className={`rounded-md px-2 py-1 transition-colors hover:bg-neutral-100/70 dark:hover:bg-neutral-800/45 ${
           isDragging
-            ? "bg-neutral-100 shadow-lg ring-2 ring-yellow-500/30 dark:bg-neutral-800 dark:ring-yellow-500/50"
+            ? "bg-neutral-100 shadow-lg ring-2 ring-yellow-500/20 dark:bg-neutral-800 dark:ring-yellow-500/40"
             : ""
         }`}
       >
@@ -649,8 +720,17 @@ const BlockTypeSelector: React.FC<BlockTypeSelectorProps> = ({ onSelect, onClose
     { type: "heading", label: "Título", icon: Heading, description: "Título de seção" },
     { type: "todo", label: "Tarefa", icon: CheckSquare, description: "Item de checklist" },
     { type: "list", label: "Lista", icon: List, description: "Item de lista" },
+    {
+      type: "orderedList",
+      label: "Lista numerada",
+      icon: ListOrdered,
+      description: "Lista ordenada",
+    },
     { type: "quote", label: "Citação", icon: Quote, description: "Bloco de citação" },
     { type: "code", label: "Código", icon: Code, description: "Bloco de código" },
+    { type: "divider", label: "Divisor", icon: Minus, description: "Separador visual" },
+    { type: "image", label: "Imagem", icon: ImageIcon, description: "URL da imagem" },
+    { type: "table", label: "Tabela", icon: Table, description: "Tabela simples" },
   ];
 
   return (
@@ -725,6 +805,14 @@ const NoteDetail = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [focusBlockId, setFocusBlockId] = useState<string | null>(null);
   const initialBlockCreated = React.useRef(false);
+  const metadataDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const metadataSaveInFlightRef = React.useRef(false);
+  const pendingMetadataRef = React.useRef<{
+    description: string;
+    title: string;
+  } | null>(null);
 
   // Estados para modais e funcionalidades
   const [showShareModal, setShowShareModal] = useState(false);
@@ -1178,7 +1266,54 @@ const NoteDetail = () => {
     }
   }, [initialLoading, note, blocks.length, createBlock]);
 
-  // Auto-salvar título quando houver mudanças
+  const flushMetadataSave = React.useCallback(
+    async (payload: { description: string; title: string }) => {
+      if (!note) return;
+      if (
+        payload.title === note.title &&
+        payload.description === (note.description || "")
+      ) {
+        return;
+      }
+
+      if (metadataSaveInFlightRef.current) {
+        pendingMetadataRef.current = payload;
+        return;
+      }
+
+      metadataSaveInFlightRef.current = true;
+      setIsSaving(true);
+      try {
+        const updatedNote = await updateNote(note.id, payload);
+        if (updatedNote) {
+          setNote((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  ...updatedNote,
+                  description: payload.description,
+                  title: payload.title,
+                }
+              : updatedNote
+          );
+        }
+      } catch (error) {
+        console.error("Erro ao salvar:", error);
+      } finally {
+        metadataSaveInFlightRef.current = false;
+        const pendingPayload = pendingMetadataRef.current;
+        pendingMetadataRef.current = null;
+        if (pendingPayload) {
+          await flushMetadataSave(pendingPayload);
+          return;
+        }
+        setIsSaving(false);
+      }
+    },
+    [note, updateNote]
+  );
+
+  // Auto-salvar título/descrição com debounce e fila para evitar travamentos
   useEffect(() => {
     if (!note) return;
 
@@ -1186,28 +1321,23 @@ const NoteDetail = () => {
       editingTitle !== note.title || editingDescription !== (note.description || "");
     if (!hasChanges) return;
 
-    const timeoutId = setTimeout(async () => {
-      setIsSaving(true);
-      try {
-        const updatedNote = await updateNote(note.id, {
-          title: editingTitle,
-          description: editingDescription,
-        });
+    if (metadataDebounceRef.current) {
+      clearTimeout(metadataDebounceRef.current);
+    }
 
-        if (updatedNote) {
-          setNote((prev) =>
-            prev ? { ...prev, title: editingTitle, description: editingDescription } : null
-          );
-        }
-      } catch (error) {
-        console.error("Erro ao salvar:", error);
-      } finally {
-        setIsSaving(false);
+    metadataDebounceRef.current = setTimeout(() => {
+      void flushMetadataSave({
+        description: editingDescription,
+        title: editingTitle,
+      });
+    }, 750);
+
+    return () => {
+      if (metadataDebounceRef.current) {
+        clearTimeout(metadataDebounceRef.current);
       }
-    }, 1000);
-
-    return () => clearTimeout(timeoutId);
-  }, [editingTitle, editingDescription, note, updateNote]);
+    };
+  }, [editingDescription, editingTitle, flushMetadataSave, note]);
 
   // =================== FUNÇÕES PARA DRAG AND DROP ===================
   const handleDragStart = (event: DragStartEvent) => {
@@ -1556,25 +1686,21 @@ const NoteDetail = () => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         if (note) {
-          setIsSaving(true);
-          try {
-            await updateNote(note.id, {
-              title: editingTitle,
-              description: editingDescription,
-            });
-          } catch (error) {
-            console.error("Erro ao salvar:", error);
-          } finally {
-            setIsSaving(false);
+          if (metadataDebounceRef.current) {
+            clearTimeout(metadataDebounceRef.current);
+            metadataDebounceRef.current = null;
           }
+          await flushMetadataSave({
+            description: editingDescription,
+            title: editingTitle,
+          });
         }
       }
     };
 
     document.addEventListener("keydown", handleDocumentKeyDown);
     return () => document.removeEventListener("keydown", handleDocumentKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [note, editingTitle, editingDescription]);
+  }, [editingDescription, editingTitle, flushMetadataSave, note]);
 
   if (initialLoading || !note) {
     return <NoteDetailSkeleton />;
@@ -1701,168 +1827,22 @@ const NoteDetail = () => {
   return (
     <NoteCommentsProvider noteId={note.id}>
       <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-neutral-50 shadow-sm dark:bg-neutral-950">
-        {/* =================== HEADER =================== */}
-        <div className="flex-shrink-0 border-b border-neutral-200 bg-neutral-50 px-2 dark:border-neutral-800 dark:bg-neutral-950">
-          <div className="mx-auto flex w-full items-center justify-between">
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-neutral-600 transition-all hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-              title="Go back to notes list"
-            >
-              <ArrowLeft size={16} />
-            </button>
-
-            <div className="flex items-center gap-2">
-              {isSaving && (
-                <>
-                  <div className="flex items-center gap-3">
-                    <div className="bg-brand-primary-500/10 flex animate-pulse items-center gap-1.5 rounded-full border border-yellow-500/20 px-3 py-1">
-                      <Loader2
-                        size={13}
-                        className="dark:text-brand-primary-500 animate-spin text-yellow-600"
-                      />
-                      <span className="dark:text-brand-primary-500 text-[11px] font-semibold tracking-wider text-yellow-700 uppercase">
-                        Sincronizando
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
-                </>
-              )}
-
-              {/* Ações */}
-              <div className="flex items-center gap-0.5">
-                {note.access?.canShare && (
-                  <button
-                    onClick={() => setShowShareModal(true)}
-                    className="dark:hover:text-brand-primary-500 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800"
-                    title="Compartilhar tarefa"
-                  >
-                    <Share2 size={15} />
-                  </button>
-                )}
-
-                {note.access?.canDelete && (
-                  <button
-                    onClick={handleDelete}
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-all hover:bg-red-50 hover:text-red-500 dark:text-neutral-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                    title="Deletar tarefa"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                )}
-              </div>
-
-              <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
-
-              {/*Botão de paleta de cores*/}
-              <div className="relative flex">
-                <button
-                  onClick={() => setShowColorPicker(!showColorPicker)}
-                  className="dark:hover:text-brand-primary-500 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800"
-                  title="Adicionar cor"
-                >
-                  <Palette size={15} />
-                </button>
-                {showColorPicker && (
-                  <div className="absolute top-full right-0 z-20 mt-1 w-56 rounded-md border border-neutral-200 bg-white p-3 shadow-xl dark:border-neutral-700 dark:bg-neutral-900">
-                    <div className="mb-2 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                      Escolha uma cor
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {[
-                        "#F6821F",
-                        "#EF4444",
-                        "#F59E0B",
-                        "#10B981",
-                        "#3B82F6",
-                        "#8B5CF6",
-                        "#EC4899",
-                        "#06B6D4",
-                        "#84CC16",
-                        "#F97316",
-                      ].map((c) => (
-                        <button
-                          key={c}
-                          onClick={() => handleChangeColor(c)}
-                          className={`h-6 w-6 rounded-full border-2 transition-all hover:scale-110 ${
-                            note.properties?.color === c
-                              ? "border-neutral-900 dark:border-white"
-                              : "border-transparent hover:border-neutral-400 dark:hover:border-neutral-500"
-                          }`}
-                          style={{ backgroundColor: c }}
-                          title={c}
-                        />
-                      ))}
-                    </div>
-                    <div className="mt-2.5 border-t border-neutral-100 pt-2.5 dark:border-neutral-800">
-                      <div className="mb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                        Cor personalizada
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={note.properties?.color || "#F6821F"}
-                          onChange={(e) => handleChangeColor(e.target.value)}
-                          className="h-8 w-8 cursor-pointer rounded border border-neutral-200 bg-transparent p-0.5 dark:border-neutral-700"
-                          title="Escolher cor"
-                        />
-                        <div className="relative flex-1">
-                          <span className="absolute top-1/2 left-2 -translate-y-1/2 text-xs font-medium text-neutral-400 dark:text-neutral-500">
-                            #
-                          </span>
-                          <input
-                            type="text"
-                            maxLength={6}
-                            placeholder="HEX"
-                            defaultValue={(note.properties?.color || "").replace("#", "")}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                const val = (e.target as HTMLInputElement).value.trim();
-                                if (/^[0-9A-Fa-f]{3,6}$/.test(val)) {
-                                  handleChangeColor(`#${val}`);
-                                }
-                              }
-                            }}
-                            onBlur={(e) => {
-                              const val = e.target.value.trim();
-                              if (/^[0-9A-Fa-f]{3,6}$/.test(val)) {
-                                handleChangeColor(`#${val}`);
-                              }
-                            }}
-                            className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-1.5 pr-2 pl-5 font-mono text-xs text-neutral-700 uppercase placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setShowColorPicker(false)}
-                      className="mt-2 w-full rounded-md px-2 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
-                    >
-                      Fechar
-                    </button>
-                  </div>
-                )}
-                <button
-                  onClick={handleExportNote}
-                  disabled={isExporting}
-                  className="dark:hover:text-brand-primary-500 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 disabled:cursor-not-allowed disabled:opacity-60 dark:text-neutral-400 dark:hover:bg-neutral-800"
-                  title="Exportar tarefa"
-                >
-                  {isExporting ? (
-                    <Loader2 size={15} className="animate-spin" />
-                  ) : (
-                    <Download size={15} />
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <NoteDetailHeader
+          isExporting={isExporting}
+          isSaving={isSaving}
+          note={note}
+          onBack={handleBack}
+          onChangeColor={handleChangeColor}
+          onDelete={handleDelete}
+          onExport={handleExportNote}
+          onShare={() => setShowShareModal(true)}
+          onToggleColorPicker={() => setShowColorPicker(!showColorPicker)}
+          setShowColorPicker={setShowColorPicker}
+          showColorPicker={showColorPicker}
+        />
 
         {/* =================== CONTEÚDO: banner cheio; abaixo = corpo | comentários =================== */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden">
-          <div className="no-scrollbar flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-visible">
+        <NoteDetailBody>
             {/* Hidden file inputs */}
             <input
               ref={iconInputRef}
@@ -1952,6 +1932,7 @@ const NoteDetail = () => {
                     hasNoteHero ? "pt-2 sm:pt-4" : ""
                   }`}
                 >
+                  <div className="mx-auto w-full max-w-4xl">
                   {/* Título + comentários */}
                   <div className="mb-4">
                     <div className="flex items-start gap-2">
@@ -1969,19 +1950,6 @@ const NoteDetail = () => {
                             const el = e.target;
                             el.style.height = "auto";
                             el.style.height = `${el.scrollHeight}px`;
-                          }}
-                          onBlur={async () => {
-                            if (note && editingTitle !== note.title) {
-                              setIsSaving(true);
-                              try {
-                                const updated = await updateNote(note.id, { title: editingTitle });
-                                if (updated) setNote(updated);
-                              } catch (error) {
-                                console.error("Erro ao salvar título:", error);
-                              } finally {
-                                setIsSaving(false);
-                              }
-                            }
                           }}
                           placeholder="Título da tarefa..."
                           rows={1}
@@ -2001,21 +1969,6 @@ const NoteDetail = () => {
                             el.style.height = "auto";
                             el.style.height = `${el.scrollHeight}px`;
                           }}
-                          onBlur={async () => {
-                            if (note && editingDescription !== (note.description || "")) {
-                              setIsSaving(true);
-                              try {
-                                const updated = await updateNote(note.id, {
-                                  description: editingDescription,
-                                });
-                                if (updated) setNote(updated);
-                              } catch (error) {
-                                console.error("Erro ao salvar descrição:", error);
-                              } finally {
-                                setIsSaving(false);
-                              }
-                            }
-                          }}
                           placeholder="Adicionar descrição..."
                           rows={1}
                           className="w-full resize-none overflow-hidden bg-transparent text-sm text-neutral-600 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-400 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
@@ -2033,7 +1986,7 @@ const NoteDetail = () => {
                   </div>
 
                   {/* Meta informações — conteúdo até 2/3; linhas divisórias em largura total */}
-                  <div className="mb-6 flex w-full flex-col gap-4 pb-4">
+                  <div className="mb-3 flex w-full flex-col gap-4 pb-1">
                     <div className="w-full max-w-[66.666667%]">
                       <div className="grid grid-cols-1 gap-x-6 gap-y-4 lg:grid-cols-2 lg:items-center">
                         {(note.access?.canEdit || note.associated_project) && (
@@ -2713,7 +2666,7 @@ const NoteDetail = () => {
                     />
                   </div>
 
-                  {/* =================== BLOCOS =================== */}
+                  {/* =================== EDITOR =================== */}
                   <div className="w-full space-y-1">
                     {blocks.length > 0 ? (
                       <DndContext
@@ -2817,11 +2770,12 @@ const NoteDetail = () => {
                       </div>
                     </div>
                   )}
+                  </div>
                 </div>
               </div>
 
               {commentsSidebarOpen && canUseNoteComments ? (
-                <div className="flex w-full shrink-0 flex-col border-t border-neutral-200 bg-white md:h-full md:w-[380px] md:max-w-[42%] md:flex-shrink-0 md:border-t-0  dark:border-neutral-800 dark:bg-neutral-950">
+                <div className="flex w-full shrink-0 flex-col border-t border-neutral-200 bg-white md:h-full md:w-[380px] md:max-w-[42%] md:flex-shrink-0 md:border-t-0 dark:border-neutral-800 dark:bg-neutral-950">
                   <div className="flex h-[min(22rem,52dvh)] max-h-[480px] min-h-[260px] w-full flex-col overflow-hidden md:h-full md:max-h-none md:min-h-0 md:flex-1">
                     <NoteCommentsSidebar
                       canComment={canUseNoteComments}
@@ -2833,344 +2787,43 @@ const NoteDetail = () => {
                 </div>
               ) : null}
             </div>
-          </div>
-        </div>
+        </NoteDetailBody>
 
-        {/* =================== MODAL DE COMPARTILHAMENTO =================== */}
-        {showShareModal && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-            <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
-              {/* Handle para mobile */}
-              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
+        <NoteShareModal
+          isOpen={showShareModal}
+          isSearching={isSearching}
+          onClose={() => setShowShareModal(false)}
+          onSearchUsers={(value) => {
+            setSearchTerm(value);
+            handleSearchUsers(value);
+          }}
+          onShareNote={handleShareNote}
+          searchResults={searchResults}
+          searchTerm={searchTerm}
+        />
 
-              <div className="mb-5 flex items-center justify-between">
-                <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
-                  <div className="dark:bg-brand-primary-500/10 flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50">
-                    <UserPlus size={16} className="dark:text-brand-primary-500 text-yellow-600" />
-                  </div>
-                  Compartilhar Tarefa
-                </h3>
-                <button
-                  onClick={() => setShowShareModal(false)}
-                  className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                  title="Fechar modal"
-                >
-                  <X size={18} />
-                </button>
-              </div>
+        <NoteRelationsModal
+          filteredRelationNotes={filteredRelationNotes}
+          isOpen={showRelationModal}
+          note={note}
+          onClose={() => {
+            setShowRelationModal(false);
+            setRelationSearchTerm("");
+          }}
+          onRelationSearchTermChange={setRelationSearchTerm}
+          onToggleRelation={handleToggleRelation}
+          relationSearchTerm={relationSearchTerm}
+        />
 
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    Buscar usuário por email
-                  </label>
-                  <div className="relative">
-                    <Search
-                      className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-400"
-                      size={15}
-                    />
-                    <input
-                      type="email"
-                      value={searchTerm}
-                      onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        handleSearchUsers(e.target.value);
-                      }}
-                      placeholder="Digite o email do usuário..."
-                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-3 pr-4 pl-10 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
-                    />
-                    {isSearching && (
-                      <div className="absolute top-1/2 right-3 -translate-y-1/2">
-                        <Loader2
-                          size={15}
-                          className="dark:text-brand-primary-500 animate-spin text-yellow-600"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {searchResults.length > 0 && (
-                  <div className="max-h-48 space-y-1.5 overflow-y-auto sm:max-h-36">
-                    {searchResults.map((user) => (
-                      <div
-                        key={user.id}
-                        className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 p-2.5 transition-colors hover:bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700"
-                      >
-                        <div className="flex min-w-0 items-center gap-2.5">
-                          <div className="dark:bg-brand-primary-500/20 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100">
-                            <span className="dark:text-brand-primary-500 text-xs font-bold text-yellow-700">
-                              {(user.name || user.username).charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                              {user.name || user.username}
-                            </div>
-                            <div className="truncate text-xs text-neutral-500 dark:text-neutral-400">
-                              {user.email}
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleShareNote(user.id)}
-                          className="bg-brand-primary-500 ml-2 flex-shrink-0 rounded-md px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
-                        >
-                          Adicionar
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-neutral-800">
-                  <button
-                    onClick={() => setShowShareModal(false)}
-                    className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* =================== MODAL DE RELAÇÕES =================== */}
-        {showRelationModal && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-            <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
-              {/* Handle para mobile */}
-              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
-
-              <div className="mb-5 flex items-center justify-between">
-                <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
-                  <div className="dark:bg-brand-primary-500/10 flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50">
-                    <Link size={16} className="dark:text-brand-primary-500 text-yellow-600" />
-                  </div>
-                  Relações
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowRelationModal(false);
-                    setRelationSearchTerm("");
-                  }}
-                  className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                  title="Fechar modal"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    Buscar tarefas
-                  </label>
-                  <div className="relative">
-                    <Search
-                      className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-400"
-                      size={15}
-                    />
-                    <input
-                      type="text"
-                      value={relationSearchTerm}
-                      onChange={(e) => setRelationSearchTerm(e.target.value)}
-                      placeholder="Pesquisar por título..."
-                      className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-3 pr-4 pl-10 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
-                      autoFocus
-                    />
-                  </div>
-                </div>
-
-                <div className="max-h-64 space-y-1 overflow-y-auto sm:max-h-52">
-                  {filteredRelationNotes.length > 0 ? (
-                    filteredRelationNotes.map((relNote) => {
-                      const isSelected = (note?.properties?.relations || []).includes(relNote.id);
-                      return (
-                        <button
-                          key={relNote.id}
-                          onClick={() => handleToggleRelation(relNote.id)}
-                          className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors sm:py-2 ${
-                            isSelected
-                              ? "dark:bg-brand-primary-500/10 bg-yellow-50 ring-1 ring-yellow-200 dark:ring-yellow-500/30"
-                              : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                          }`}
-                        >
-                          <div
-                            className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-all ${
-                              isSelected
-                                ? "bg-brand-primary-500 border-yellow-500 text-white"
-                                : "border-neutral-300 dark:border-neutral-600"
-                            }`}
-                          >
-                            {isSelected && <CheckSquare size={10} />}
-                          </div>
-                          <div className="flex min-w-0 flex-1 items-center gap-2">
-                            {relNote.properties?.icon?.path ? (
-                              <Image
-                                src={getStorageUrl(relNote.properties.icon.path)}
-                                alt=""
-                                width={20}
-                                height={20}
-                                className="flex-shrink-0 rounded"
-                              />
-                            ) : (
-                              <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded bg-neutral-100 dark:bg-neutral-800">
-                                <Type size={10} className="text-neutral-400" />
-                              </div>
-                            )}
-                            <div className="min-w-0 flex-1">
-                              <div className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                                {relNote.title || "Tarefa sem título"}
-                              </div>
-                              {relNote.tags && relNote.tags.length > 0 && (
-                                <div className="mt-0.5 flex gap-1 overflow-hidden">
-                                  {relNote.tags.slice(0, 2).map((tag) => {
-                                    const colors = getTagColor(tag);
-                                    return (
-                                      <span
-                                        key={tag}
-                                        className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
-                                      >
-                                        {tag}
-                                      </span>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <div className="py-6 text-center text-sm text-neutral-400 dark:text-neutral-500">
-                      {relationSearchTerm ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa disponível"}
-                    </div>
-                  )}
-                </div>
-
-                {/* Tarefas selecionadas */}
-                {(note?.properties?.relations || []).length > 0 && (
-                  <div className="border-t border-neutral-100 pt-3 dark:border-neutral-800">
-                    <div className="mb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                      {(note?.properties?.relations || []).length} tarefa
-                      {(note?.properties?.relations || []).length !== 1 ? "s" : ""} relacionada
-                      {(note?.properties?.relations || []).length !== 1 ? "s" : ""}
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-neutral-800">
-                  <button
-                    onClick={() => {
-                      setShowRelationModal(false);
-                      setRelationSearchTerm("");
-                    }}
-                    className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                  >
-                    Fechar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* =================== MODAL DE TAGS =================== */}
-        {showTagModal && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-            <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
-              {/* Handle para mobile */}
-              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
-
-              <div className="mb-5 flex items-center justify-between">
-                <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
-                  <div className="dark:bg-brand-primary-500/10 flex h-8 w-8 items-center justify-center rounded-md bg-yellow-50">
-                    <Tag size={16} className="dark:text-brand-primary-500 text-yellow-600" />
-                  </div>
-                  Gerenciar Tags
-                </h3>
-                <button
-                  onClick={() => setShowTagModal(false)}
-                  className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                  title="Fechar modal"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    Nova tag
-                  </label>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <input
-                      type="text"
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      placeholder="Digite o nome da tag..."
-                      className="flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-3 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleAddTag();
-                        }
-                      }}
-                    />
-                    <button
-                      onClick={handleAddTag}
-                      disabled={!newTag.trim()}
-                      className="bg-brand-primary-500 flex items-center justify-center gap-1.5 rounded-md px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-50 sm:py-2.5 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
-                    >
-                      <Plus size={14} />
-                      Adicionar
-                    </button>
-                  </div>
-                </div>
-
-                {note && note.tags && note.tags.length > 0 && (
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                      Tags existentes
-                    </label>
-                    <div className="flex max-h-32 flex-wrap gap-2 overflow-y-auto">
-                      {note.tags.map((tag, index) => {
-                        const colors = getTagColor(tag);
-                        return (
-                          <span
-                            key={index}
-                            className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${colors.bg} ${colors.text} ${colors.border}`}
-                          >
-                            {tag}
-                            <button
-                              onClick={() => handleRemoveTag(tag)}
-                              className="text-neutral-400 transition-colors hover:text-red-500 dark:text-neutral-500 dark:hover:text-red-400"
-                              title="Remover tag"
-                            >
-                              <X size={12} />
-                            </button>
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-neutral-800">
-                  <button
-                    onClick={() => setShowTagModal(false)}
-                    className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                  >
-                    Fechar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <NoteTagsModal
+          isOpen={showTagModal}
+          newTag={newTag}
+          note={note}
+          onAddTag={handleAddTag}
+          onClose={() => setShowTagModal(false)}
+          onNewTagChange={setNewTag}
+          onRemoveTag={handleRemoveTag}
+        />
       </div>
     </NoteCommentsProvider>
   );

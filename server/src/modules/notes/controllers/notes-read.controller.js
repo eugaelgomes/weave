@@ -1,4 +1,8 @@
 const NotesBaseController = require("./base.controller");
+const { documentToBlocks } = require("../document-blocks-adapter");
+const {
+  cloneDefaultNoteDocumentState,
+} = require("../document-normalizer");
 
 /**
  * Leitura: lista, detalhe e estatísticas.
@@ -57,53 +61,52 @@ class NotesReadController extends NotesBaseController {
         result = { notes, pagination: null };
       }
 
-      const notesWithBlocks = await Promise.all(
-        result.notes.map(async (note) => {
-          const blocks = await this.blocksRepository.getBlocksByNoteId(note.id);
-          const blockTree = this.blocksRepository.buildBlockTree(blocks);
-
+      const notesWithBlocks = result.notes.map((note) => ({
+        ...(function () {
+          const noteDocument = note.document || cloneDefaultNoteDocumentState();
           return {
-            id: note.id,
-            title: note.title,
-            description: note.description || null,
-            properties: note.properties || {},
-            tags: note.tags || [] || null,
-            status: note.status || null,
-            due_date: note.due_date ?? null,
-            priority_id: note.priority_id ?? null,
-            priority_name: note.priority_name ?? null,
-            priority_color: note.priority_color ?? null,
-            created_at: note.created_at,
-            updated_at: note.updated_at,
-            deleted: note.deleted,
-            associated_project: note.project_id
-              ? {
-                  id: note.project_id,
-                  name: note.project_name,
-                  stage_id: note.project_stage_id || null,
-                  stage_name: note.project_stage_name || null,
-                }
-              : null,
-            associated_organization: note.org_id
-              ? {
-                  id: note.org_id,
-                  name: note.org_name,
-                  unique_name: note.org_unique_name,
-                  logo_url: note.org_logo_url,
-                }
-              : null,
-            author: {
-              id: note.user_id,
-              name: note.user_name,
-              username: note.user_username,
-              email: note.user_email,
-              avatar_url: note.user_avatar_url,
-            },
-            collaborators: note.collaborators || [],
-            blocks: blockTree,
+            blocks: documentToBlocks(noteDocument, String(note.id)),
+            document: noteDocument,
           };
-        })
-      );
+        })(),
+        id: note.id,
+        title: note.title,
+        description: note.description || null,
+        properties: note.properties || {},
+        tags: note.tags || [] || null,
+        status: note.status || null,
+        due_date: note.due_date ?? null,
+        priority_id: note.priority_id ?? null,
+        priority_name: note.priority_name ?? null,
+        priority_color: note.priority_color ?? null,
+        created_at: note.created_at,
+        updated_at: note.updated_at,
+        deleted: note.deleted,
+        associated_project: note.project_id
+          ? {
+              id: note.project_id,
+              name: note.project_name,
+              stage_id: note.project_stage_id || null,
+              stage_name: note.project_stage_name || null,
+            }
+          : null,
+        associated_organization: note.org_id
+          ? {
+              id: note.org_id,
+              name: note.org_name,
+              unique_name: note.org_unique_name,
+              logo_url: note.org_logo_url,
+            }
+          : null,
+        author: {
+          id: note.user_id,
+          name: note.user_name,
+          username: note.user_username,
+          email: note.user_email,
+          avatar_url: note.user_avatar_url,
+        },
+        collaborators: note.collaborators || [],
+      }));
 
       if (result.pagination) {
         res.status(200).json({
@@ -134,9 +137,7 @@ class NotesReadController extends NotesBaseController {
         hasOrgProjectAccess,
       } = await this._validateNoteAccess(id, userId);
 
-      // Buscar blocos da nota
-      const blocks = await this.blocksRepository.getBlocksByNoteId(id);
-      const blockTree = this.blocksRepository.buildBlockTree(blocks);
+      const noteDocument = note.document || cloneDefaultNoteDocumentState();
 
       // Montar estrutura completa da nota
       const completeNote = {
@@ -144,6 +145,7 @@ class NotesReadController extends NotesBaseController {
         title: note.title,
         description: note.description || null,
         properties: note.properties || {},
+        document: noteDocument,
         tags: note.tags || [] || null,
         status: note.status || null,
         due_date: note.due_date ?? null,
@@ -177,7 +179,7 @@ class NotesReadController extends NotesBaseController {
           avatar_url: note.user_avatar_url,
         },
         collaborators: note.collaborators || [],
-        blocks: blockTree,
+        blocks: documentToBlocks(noteDocument, String(note.id)),
         access: {
           isOwner,
           isCollaborator,

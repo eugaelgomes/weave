@@ -38,7 +38,7 @@ const ALLOWED_FILE_TYPES = [
 
 /**
  * Upload combinado para update de nota
- * Aceita: icon (1), banner (1) e files (múltiplos)
+ * Aceita: icon (1), banner (1), files (múltiplos) e documentImages (múltiplos)
  */
 /**
  * Upload de anexos para comentários em notas (mesmos MIMEs que `files` na atualização de nota).
@@ -70,6 +70,15 @@ const noteUpdateUpload = multer({
     } else if (file.fieldname === "files") {
       if (!ALLOWED_FILE_TYPES.includes(file.mimetype)) {
         return cb(new Error("Formato de arquivo não permitido."), false);
+      }
+    } else if (file.fieldname === "documentImages") {
+      if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+        return cb(
+          new Error(
+            "Formato de imagem do documento não permitido. Use: PNG, JPEG, WEBP, GIF ou SVG."
+          ),
+          false
+        );
       }
     } else {
       return cb(new Error(`Campo '${file.fieldname}' não permitido.`), false);

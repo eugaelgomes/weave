@@ -11,11 +11,6 @@ import {
   updateNote as updateNoteService,
   deleteNote as deleteNoteService,
   deleteNotes as deleteNotesService,
-  fetchBlocks as fetchBlocksService,
-  createBlock as createBlockService,
-  updateBlock as updateBlockService,
-  deleteBlock as deleteBlockService,
-  reorderBlocks as reorderBlocksService,
   shareNote as shareNoteService,
   searchUsers as searchUsersService,
   getCollaborators as getCollaboratorsService,
@@ -28,6 +23,8 @@ import {
   type UpdateNoteData,
   type Block,
   type CreateBlockData,
+  type NoteDocumentNode,
+  type NoteDocumentState,
   type ShareNoteData,
   type User as SearchUser,
 } from "../_services/notes-service/notes-service";
@@ -121,6 +118,247 @@ export function useNotes(): NotesContextType {
   return context;
 }
 
+const createLocalBlockId = () => `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+const emptyDocument = (): NoteDocumentState => ({
+  version: 1,
+  document: {
+    type: "doc",
+    content: [{ type: "paragraph", content: [] }],
+  },
+});
+
+const extractText = (content?: NoteDocumentNode[]): string => {
+  if (!Array.isArray(content)) return "";
+  return content
+    .map((node) => {
+      if (node.type === "text") return node.text || "";
+      if (node.type === "hardBreak") return "\n";
+      return extractText(node.content);
+    })
+    .join("")
+    .trim();
+};
+
+const paragraphFromText = (text: string): NoteDocumentNode => ({
+  type: "paragraph",
+  content: text ? [{ type: "text", text }] : [],
+});
+
+const mapNodeToBlock = (
+  node: NoteDocumentNode,
+  noteId: string,
+  position: number,
+  level = 0,
+  parentId: string | null = null
+): (Block & { children?: Block[] }) | null => {
+  const base: Block & { children?: Block[] } = {
+    id: createLocalBlockId(),
+    note_id: noteId,
+    parent_id: parentId || undefined,
+    position,
+    properties: {},
+    text: "",
+    type: "paragraph",
+    level,
+    children: [],
+  };
+
+  switch (node.type) {
+    case "heading":
+      return {
+        ...base,
+        type: "heading",
+        text: extractText(node.content),
+        properties: { level: Number(node.attrs?.level) || 1 },
+      };
+    case "paragraph":
+      return { ...base, type: "paragraph", text: extractText(node.content) };
+    case "blockquote":
+      return { ...base, type: "quote", text: extractText(node.content) };
+    case "codeBlock":
+      return { ...base, type: "code", text: extractText(node.content) };
+    case "horizontalRule":
+      return { ...base, type: "divider" };
+    case "image":
+      return {
+        ...base,
+        type: "image",
+        text: typeof node.attrs?.src === "string" ? node.attrs.src : "",
+        properties: {
+          alt: typeof node.attrs?.alt === "string" ? node.attrs.alt : "",
+          title: typeof node.attrs?.title === "string" ? node.attrs.title : "",
+        },
+      };
+    case "table": {
+      const lines = (node.content || []).map((row) => extractText(row.content));
+      return { ...base, type: "table", text: lines.join("\n") };
+    }
+    case "taskList": {
+      const listId = base.id;
+      const children = (node.content || []).map((item, idx) => ({
+        ...base,
+        id: createLocalBlockId(),
+        type: "todo",
+        text: extractText(item.content),
+        done: item.attrs?.checked === true,
+        level: level + 1,
+        parent_id: listId,
+        position: idx,
+        children: [],
+      }));
+      return { ...base, type: "list", children };
+    }
+    case "bulletList":
+    case "orderedList": {
+      const listId = base.id;
+      const children = (node.content || []).map((item, idx) => ({
+        ...base,
+        id: createLocalBlockId(),
+        type: "list",
+        text: extractText(item.content),
+        level: level + 1,
+        parent_id: listId,
+        position: idx,
+        children: [],
+      }));
+      return {
+        ...base,
+        type: "list",
+        properties: node.type === "orderedList" ? { ordered: true } : {},
+        children,
+      };
+    }
+    default:
+      return { ...base, type: "paragraph", text: extractText(node.content) };
+  }
+};
+
+const documentToBlocks = (
+  noteDocument: NoteDocumentState | null | undefined,
+  noteId: string
+): (Block & { children?: Block[] })[] => {
+  const content = noteDocument?.document?.content || emptyDocument().document.content;
+  return content
+    .map((node, index) => mapNodeToBlock(node, noteId, index, 0, null))
+    .filter((block): block is Block & { children?: Block[] } => Boolean(block));
+};
+
+const mapBlockToNode = (block: Block & { children?: Block[] }): NoteDocumentNode => {
+  if (block.type === "heading") {
+    return {
+      type: "heading",
+      attrs: { level: Number(block.properties?.level) || 1 },
+      content: block.text ? [{ type: "text", text: block.text }] : [],
+    };
+  }
+
+  if (block.type === "code") {
+    return {
+      type: "codeBlock",
+      content: block.text ? [{ type: "text", text: block.text }] : [],
+    };
+  }
+
+  if (block.type === "quote") {
+    return { type: "blockquote", content: [paragraphFromText(block.text)] };
+  }
+
+  if (block.type === "divider") {
+    return { type: "horizontalRule" };
+  }
+
+  if (block.type === "image") {
+    return {
+      type: "image",
+      attrs: {
+        src: block.text || "",
+        alt: typeof block.properties?.alt === "string" ? block.properties.alt : "",
+        title: typeof block.properties?.title === "string" ? block.properties.title : "",
+      },
+    };
+  }
+
+  if (block.type === "table") {
+    const rows = (block.text || "")
+      .split("\n")
+      .map((line) =>
+        line
+          .split("|")
+          .map((cell) => cell.trim())
+          .filter(Boolean)
+      )
+      .filter((cells) => cells.length > 0);
+
+    return {
+      type: "table",
+      content: rows.map((cells) => ({
+        type: "tableRow",
+        content: cells.map((cell) => ({
+          type: "tableCell",
+          content: [paragraphFromText(cell)],
+        })),
+      })),
+    };
+  }
+
+  if (block.type === "orderedList") {
+    const lines = (block.text || "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    return {
+      type: "orderedList",
+      content: (lines.length > 0 ? lines : [""]).map((line) => ({
+        type: "listItem",
+        content: [paragraphFromText(line)],
+      })),
+    };
+  }
+
+  if (block.type === "todo") {
+    return {
+      type: "taskItem",
+      attrs: { checked: block.done === true },
+      content: [paragraphFromText(block.text)],
+    };
+  }
+
+  if (block.type === "list") {
+    const children = Array.isArray(block.children) ? block.children : [];
+    if (children.some((child) => child.type === "todo")) {
+      return {
+        type: "taskList",
+        content: children.map((child) => mapBlockToNode({ ...child, type: "todo" })),
+      };
+    }
+
+    if (children.length > 0) {
+      return {
+        type: block.properties?.ordered ? "orderedList" : "bulletList",
+        content: children.map((child) => ({
+          type: "listItem",
+          content: [paragraphFromText(child.text || "")],
+        })),
+      };
+    }
+  }
+
+  return paragraphFromText(block.text || "");
+};
+
+const blocksToDocument = (blocks: (Block & { children?: Block[] })[]): NoteDocumentState => ({
+  version: 1,
+  document: {
+    type: "doc",
+    content:
+      blocks.length > 0
+        ? blocks.map((block) => mapBlockToNode(block))
+        : emptyDocument().document.content,
+  },
+});
+
 export function NotesProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
@@ -198,7 +436,14 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       const notesData = await fetchNotesService();
 
       // Se retornar NotesResponse (com paginação), usar notes; senão usar direct array
-      const notes = Array.isArray(notesData) ? notesData : notesData.notes;
+      const notesRaw = Array.isArray(notesData) ? notesData : notesData.notes;
+      const notes = notesRaw.map((note) => ({
+        ...note,
+        blocks:
+          Array.isArray(note.blocks) && note.blocks.length > 0
+            ? note.blocks
+            : documentToBlocks(note.document || null, note.id),
+      }));
 
       setNotes(notes);
 
@@ -248,7 +493,13 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const noteData = await fetchNoteByIdService(noteId);
-        return noteData;
+        return {
+          ...noteData,
+          blocks:
+            Array.isArray(noteData.blocks) && noteData.blocks.length > 0
+              ? noteData.blocks
+              : documentToBlocks(noteData.document || null, noteId),
+        };
       } catch (err: unknown) {
         console.error("Erro ao buscar tarefa:", err);
         throw err;
@@ -425,6 +676,46 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     return notesStats;
   }, [notesStats]);
 
+  const resolveNoteDocument = useCallback(
+    async (noteId: string): Promise<NoteDocumentState | null> => {
+      const localNote = notes.find((n) => n.id === noteId);
+      if (localNote?.document) return localNote.document;
+      const fetched = await fetchNoteByIdService(noteId);
+      return fetched.document || null;
+    },
+    [notes]
+  );
+
+  const applyLocalDocumentUpdate = useCallback(
+    (noteId: string, document: NoteDocumentState, updatedAt?: string) => {
+      const nextUpdatedAt = updatedAt || new Date().toISOString();
+      setNotes((prev) =>
+        prev.map((note) =>
+          note.id === noteId
+            ? {
+                ...note,
+                document,
+                updated_at: nextUpdatedAt,
+                lastModified: nextUpdatedAt,
+              }
+            : note
+        )
+      );
+      setNotesOverview((prev) =>
+        prev.map((note) =>
+          note.id === noteId
+            ? {
+                ...note,
+                updated_at: nextUpdatedAt,
+                lastModified: nextUpdatedAt,
+              }
+            : note
+        )
+      );
+    },
+    []
+  );
+
   // --- FUNÇÕES DE BLOCOS ---
 
   const fetchBlocks = useCallback(
@@ -432,14 +723,14 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       if (!user?.id) return [];
 
       try {
-        const blocks = await fetchBlocksService(noteId);
-        return blocks;
+        const document = await resolveNoteDocument(noteId);
+        return documentToBlocks(document, noteId);
       } catch (err: unknown) {
         console.error("Erro ao buscar blocos:", err);
         throw err;
       }
     },
-    [user?.id]
+    [resolveNoteDocument, user?.id]
   );
 
   const createBlock = useCallback(
@@ -447,14 +738,63 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       if (!user?.id) return null;
 
       try {
-        const newBlock = await createBlockService(noteId, blockData);
+        const document = await resolveNoteDocument(noteId);
+        const blocks = documentToBlocks(document, noteId);
+        const newBlock: Block & { children?: Block[] } = {
+          id: createLocalBlockId(),
+          type: blockData.type || "paragraph",
+          text: blockData.text || "",
+          properties: blockData.properties || {},
+          done: blockData.done,
+          parent_id: blockData.parentId,
+          position: blockData.position ?? blocks.length,
+          note_id: noteId,
+          children: [],
+        };
+
+        if (blockData.parentId) {
+          const addChild = (
+            items: (Block & { children?: Block[] })[]
+          ): (Block & { children?: Block[] })[] =>
+            items.map((item) => {
+              if (item.id === blockData.parentId) {
+                const children = Array.isArray(item.children) ? item.children : [];
+                return { ...item, children: [...children, newBlock] };
+              }
+              return {
+                ...item,
+                children: Array.isArray(item.children) ? addChild(item.children) : [],
+              };
+            });
+          const nextBlocks = addChild(blocks);
+          const nextDocument = blocksToDocument(nextBlocks);
+          const updatedNote = await updateNoteService(noteId, { document: nextDocument });
+          applyLocalDocumentUpdate(
+            noteId,
+            updatedNote?.document || nextDocument,
+            updatedNote?.updated_at
+          );
+        } else {
+          const nextBlocks = [...blocks, newBlock].map((block, index) => ({
+            ...block,
+            position: index,
+          }));
+          const nextDocument = blocksToDocument(nextBlocks);
+          const updatedNote = await updateNoteService(noteId, { document: nextDocument });
+          applyLocalDocumentUpdate(
+            noteId,
+            updatedNote?.document || nextDocument,
+            updatedNote?.updated_at
+          );
+        }
+
         return newBlock;
       } catch (err: unknown) {
         console.error("Erro ao criar bloco:", err);
         throw err;
       }
     },
-    [user?.id]
+    [applyLocalDocumentUpdate, resolveNoteDocument, user?.id]
   );
 
   const updateBlock = useCallback(
@@ -462,14 +802,39 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       if (!user?.id) return null;
 
       try {
-        const updatedBlock = await updateBlockService(noteId, blockId, blockData);
-        return updatedBlock;
+        const document = await resolveNoteDocument(noteId);
+        const blocks = documentToBlocks(document, noteId);
+        let updated: Block | null = null;
+
+        const patchBlock = (
+          items: (Block & { children?: Block[] })[]
+        ): (Block & { children?: Block[] })[] =>
+          items.map((item) => {
+            if (item.id === blockId) {
+              updated = { ...item, ...blockData };
+              return { ...item, ...blockData };
+            }
+            return {
+              ...item,
+              children: Array.isArray(item.children) ? patchBlock(item.children) : [],
+            };
+          });
+
+        const nextBlocks = patchBlock(blocks);
+        const nextDocument = blocksToDocument(nextBlocks);
+        const updatedNote = await updateNoteService(noteId, { document: nextDocument });
+        applyLocalDocumentUpdate(
+          noteId,
+          updatedNote?.document || nextDocument,
+          updatedNote?.updated_at
+        );
+        return updated;
       } catch (err: unknown) {
         console.error("Erro ao atualizar bloco:", err);
         throw err;
       }
     },
-    [user?.id]
+    [applyLocalDocumentUpdate, resolveNoteDocument, user?.id]
   );
 
   const deleteBlock = useCallback(
@@ -477,14 +842,37 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       if (!user?.id) return false;
 
       try {
-        await deleteBlockService(noteId, blockId);
+        const document = await resolveNoteDocument(noteId);
+        const blocks = documentToBlocks(document, noteId);
+
+        const removeBlock = (
+          items: (Block & { children?: Block[] })[]
+        ): (Block & { children?: Block[] })[] =>
+          items
+            .filter((item) => item.id !== blockId)
+            .map((item) => ({
+              ...item,
+              children: Array.isArray(item.children) ? removeBlock(item.children) : [],
+            }));
+
+        const nextBlocks = removeBlock(blocks).map((block: Block, index: number) => ({
+          ...block,
+          position: index,
+        }));
+        const nextDocument = blocksToDocument(nextBlocks);
+        const updatedNote = await updateNoteService(noteId, { document: nextDocument });
+        applyLocalDocumentUpdate(
+          noteId,
+          updatedNote?.document || nextDocument,
+          updatedNote?.updated_at
+        );
         return true;
       } catch (err: unknown) {
         console.error("Erro ao deletar bloco:", err);
         throw err;
       }
     },
-    [user?.id]
+    [applyLocalDocumentUpdate, resolveNoteDocument, user?.id]
   );
 
   const reorderBlocks = useCallback(
@@ -495,14 +883,32 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       if (!user?.id) return false;
 
       try {
-        await reorderBlocksService(noteId, blockPositions);
+        const document = await resolveNoteDocument(noteId);
+        const blocks = documentToBlocks(document, noteId);
+        const blockMap = new Map(blocks.map((block) => [block.id, block]));
+        const reordered = blockPositions
+          .map(({ id }, index) => {
+            const block = blockMap.get(id);
+            if (!block) return null;
+            return { ...block, position: index };
+          })
+          .filter((block): block is Block & { children?: Block[] } => Boolean(block));
+        if (reordered.length > 0) {
+          const nextDocument = blocksToDocument(reordered);
+          const updatedNote = await updateNoteService(noteId, { document: nextDocument });
+          applyLocalDocumentUpdate(
+            noteId,
+            updatedNote?.document || nextDocument,
+            updatedNote?.updated_at
+          );
+        }
         return true;
       } catch (err: unknown) {
         console.error("Erro ao reordenar blocos:", err);
         throw err;
       }
     },
-    [user?.id]
+    [applyLocalDocumentUpdate, resolveNoteDocument, user?.id]
   );
 
   // --- FUNÇÕES DE COLABORAÇÃO ---

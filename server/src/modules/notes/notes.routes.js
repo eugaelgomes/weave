@@ -8,7 +8,6 @@ const {
 
 const NotesReadController = require("@/modules/notes/controllers/notes-read.controller");
 const NotesWriteController = require("@/modules/notes/controllers/notes-write.controller");
-const NotesBlocksController = require("@/modules/notes/controllers/notes-blocks.controller");
 const NotesCollaboratorsController = require("@/modules/notes/controllers/notes-collaborators.controller");
 const NotesExportController = require("@/modules/notes/controllers/notes-export.controller");
 const NotesCommentsController = require("@/modules/notes/controllers/notes-comments.controllers");
@@ -37,6 +36,15 @@ router.get("/:noteId/export/pdf", (req, res, next) => {
   NotesExportController.exportNoteAsPDF(req, res, next);
 });
 
+router.post(
+  "/:id/document-images",
+  standardTrafficLimiter,
+  noteUpdateUpload.array("documentImages", 20),
+  (req, res, next) => {
+    NotesWriteController.uploadDocumentImages(req, res, next);
+  }
+);
+
 router.post("/", (req, res, next) => {
   NotesWriteController.createNote(req, res, next);
 });
@@ -47,6 +55,7 @@ router.put(
     { name: "icon", maxCount: 1 },
     { name: "banner", maxCount: 1 },
     { name: "files", maxCount: 10 },
+    { name: "documentImages", maxCount: 20 },
   ]),
   (req, res, next) => {
     NotesWriteController.updateNote(req, res, next);
@@ -84,26 +93,6 @@ router.put("/:noteId/comments/:commentId", (req, res, next) => {
 
 router.delete("/:noteId/comments/:commentId", (req, res, next) => {
   NotesCommentsController.deleteComment(req, res, next);
-});
-
-router.get("/:noteId/blocks", (req, res, next) => {
-  NotesBlocksController.getBlocksByNote(req, res, next);
-});
-
-router.post("/:id/blocks", (req, res, next) => {
-  NotesBlocksController.createBlock(req, res, next);
-});
-
-router.put("/:noteId/blocks/reorder", (req, res, next) => {
-  NotesBlocksController.reorderBlocks(req, res, next);
-});
-
-router.put("/:noteId/blocks/:blockId", (req, res, next) => {
-  NotesBlocksController.updateBlock(req, res, next);
-});
-
-router.delete("/:noteId/blocks/:blockId", (req, res, next) => {
-  NotesBlocksController.deleteBlock(req, res, next);
 });
 
 router.get("/:noteId/collaborators", (req, res, next) => {
