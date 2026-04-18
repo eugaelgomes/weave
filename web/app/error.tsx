@@ -55,19 +55,19 @@ export default function Error({ error, reset }: ErrorProps) {
           <p className="mb-3 text-sm text-neutral-500">Precisa de ajuda?</p>
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <Link
-              href="/app/home"
+              href="/home"
               className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
             >
               Início
             </Link>
             <Link
-              href="/app/notes"
+              href="/notes"
               className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
             >
               Tarefas
             </Link>
             <Link
-              href="/app/settings"
+              href="/settings"
               className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
             >
               Configurações

@@ -2,20 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import Layout from "@/app/app/app_layout";
-import AuthProviderClient from "@/app/_contexts/auth-provider-client";
+import ProtectedLayout from "@/app/_components/layout/protected-layout";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { AuthenticatedProviders } from "@/app/_contexts/authenticated-providers";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  return (
-    <AuthProviderClient>
-      <AppShellContent>{children}</AppShellContent>
-    </AuthProviderClient>
-  );
-}
-
-function AppShellContent({ children }: { children: React.ReactNode }) {
   const { authenticated, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -25,7 +16,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
     if (!loading && !authenticated && !hasRedirected.current) {
       hasRedirected.current = true;
       // Normalize the pathname before storing it in redirect query param.
-      const normalizedPath = pathname.replace(/\/+$/, "") || "/app";
+      const normalizedPath = pathname.replace(/\/+$/, "") || "/home";
       router.push(`/auth/?redirect=${encodeURIComponent(normalizedPath)}`);
     }
   }, [authenticated, loading, pathname, router]);
@@ -42,7 +33,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthenticatedProviders>
-      <Layout>{children}</Layout>
+      <ProtectedLayout>{children}</ProtectedLayout>
     </AuthenticatedProviders>
   );
 }

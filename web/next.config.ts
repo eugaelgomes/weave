@@ -82,7 +82,8 @@ const nextConfig: NextConfig = {
   // Redirects de rotas públicas removidas (agora no blog subdomain)
   async redirects() {
     return [
-      { source: "/home", destination: "/app/home", permanent: true },
+      { source: "/app", destination: "/home", permanent: true },
+      { source: "/app/:path*", destination: "/:path*", permanent: true },
       {
         source: "/about",
         destination: process.env.NEXT_PUBLIC_BLOG_URL

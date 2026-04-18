@@ -35,7 +35,7 @@ export default function NotFound() {
           </button>
 
           <Link
-            href="/app/home"
+            href="/home"
             className="flex w-full items-center justify-center gap-2 rounded-md border border-neutral-700 px-6 py-3 text-neutral-300 transition-all hover:border-neutral-600 hover:bg-neutral-900/50"
           >
             <FaHome className="h-4 w-4" />
@@ -55,19 +55,19 @@ export default function NotFound() {
           </div>
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <Link
-              href="/app/notes"
+              href="/notes"
               className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
             >
               Tarefas
             </Link>
             <Link
-              href="/app/projects"
+              href="/projects"
               className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
             >
               Projetos
             </Link>
             <Link
-              href="/app/settings"
+              href="/settings"
               className="hover:text-brand-primary-500 text-neutral-400 transition-colors"
             >
               Configurações
