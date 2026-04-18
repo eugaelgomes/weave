@@ -52,4 +52,6 @@ docker-sync.yml
 ehthumbs.db
 Thumbs.db
 
-/node_modules
+# Node.js
+node_modules/
+dist/

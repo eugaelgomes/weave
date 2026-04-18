@@ -386,14 +386,14 @@ class ProjectsReadRepository {
         id::text,
         project_id::text,
         name,
-        position,
+        "position",
         color,
         properties,
         created_at,
         updated_at
       FROM project_stages
       WHERE project_id = $1::uuid
-      ORDER BY position ASC;
+      ORDER BY "position" ASC;
     `;
 
     return executeQuery(query, [projectId]);

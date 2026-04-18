@@ -510,6 +510,192 @@ class ProjectsUpdateRepository {
     `;
     return executeQuery(query, [projectId, noteId, stageId]);
   }
+
+  _projectProgressJsonFragment() {
+    return `
+      COALESCE(
+        (SELECT ROUND(
+          (
+            COUNT(*) FILTER (WHERE EXISTS (
+              SELECT 1 FROM project_stages ps
+              WHERE ps.id = n.project_stage_id
+                AND ps.project_id = n.project_id
+                AND COALESCE((ps.properties->>'is_done')::boolean, false) = true
+            ))::numeric
+            / NULLIF(COUNT(*), 0)
+          ) * 100
+        )::integer
+        FROM notes n
+        WHERE n.project_id = $1::uuid AND n.deleted = false),
+        0
+      )
+    `;
+  }
+
+  async updateProjectStage(projectId, userId, stageId, updates) {
+    const allowedFields = ["name", "position", "color", "properties"];
+    const keys = Object.keys(updates).filter((k) => allowedFields.includes(k));
+
+    if (keys.length === 0) {
+      throw new Error("Nenhum campo válido para atualizar.");
+    }
+
+    const setParts = keys.map((key, index) => {
+      const paramIndex = index + 4;
+      if (key === "properties") {
+        return `properties = jsonb_strip_nulls(COALESCE(ps.properties, '{}'::jsonb) || $${paramIndex}::jsonb)`;
+      }
+      if (key === "position") {
+        return `"position" = $${paramIndex}::int`;
+      }
+      return `${key} = $${paramIndex}`;
+    });
+
+    const progressFrag = this._projectProgressJsonFragment();
+    const values = [
+      projectId,
+      userId,
+      stageId,
+      ...keys.map((k) =>
+        k === "properties" ? JSON.stringify(updates[k] ?? {}) : updates[k]
+      ),
+    ];
+
+    const query = `
+      WITH stage_upd AS (
+        UPDATE project_stages ps
+        SET ${setParts.join(", ")}, updated_at = NOW()
+        FROM projects p
+        WHERE ps.id = $3::uuid
+          AND ps.project_id = $1::uuid
+          AND p.id = ps.project_id
+          AND p.user_id = $2::uuid
+          AND p.deleted = false
+        RETURNING
+          ps.id::text,
+          ps.project_id::text,
+          ps.name,
+          ps."position",
+          ps.color,
+          ps.properties,
+          ps.created_at,
+          ps.updated_at
+      )
+      UPDATE projects p
+      SET
+        properties = COALESCE(p.properties, '{}'::jsonb)
+          || jsonb_build_object('progress', (${progressFrag})),
+        updated_at = NOW()
+      WHERE p.id = $1::uuid
+        AND p.user_id = $2::uuid
+        AND p.deleted = false
+        AND EXISTS (SELECT 1 FROM stage_upd)
+      RETURNING (SELECT row_to_json(su.*) FROM stage_upd su LIMIT 1) AS stage;
+    `;
+
+    const rows = await executeQuery(query, values);
+    if (!rows?.length || !rows[0].stage) {
+      return [];
+    }
+    const s = rows[0].stage;
+    return [
+      {
+        color: s.color,
+        created_at: s.created_at,
+        id: s.id,
+        name: s.name,
+        position: s.position,
+        project_id: s.project_id,
+        properties: s.properties,
+        updated_at: s.updated_at,
+      },
+    ];
+  }
+
+  async updateProjectStageInOrganization(
+    projectId,
+    organizationId,
+    stageId,
+    updates
+  ) {
+    const allowedFields = ["name", "position", "color", "properties"];
+    const keys = Object.keys(updates).filter((k) => allowedFields.includes(k));
+
+    if (keys.length === 0) {
+      throw new Error("Nenhum campo válido para atualizar.");
+    }
+
+    const setParts = keys.map((key, index) => {
+      const paramIndex = index + 4;
+      if (key === "properties") {
+        return `properties = jsonb_strip_nulls(COALESCE(ps.properties, '{}'::jsonb) || $${paramIndex}::jsonb)`;
+      }
+      if (key === "position") {
+        return `"position" = $${paramIndex}::int`;
+      }
+      return `${key} = $${paramIndex}`;
+    });
+
+    const progressFrag = this._projectProgressJsonFragment();
+    const values = [
+      projectId,
+      organizationId,
+      stageId,
+      ...keys.map((k) =>
+        k === "properties" ? JSON.stringify(updates[k] ?? {}) : updates[k]
+      ),
+    ];
+
+    const query = `
+      WITH stage_upd AS (
+        UPDATE project_stages ps
+        SET ${setParts.join(", ")}, updated_at = NOW()
+        FROM projects p
+        WHERE ps.id = $3::uuid
+          AND ps.project_id = $1::uuid
+          AND p.id = ps.project_id
+          AND p.org_id = $2::uuid
+          AND p.deleted = false
+        RETURNING
+          ps.id::text,
+          ps.project_id::text,
+          ps.name,
+          ps."position",
+          ps.color,
+          ps.properties,
+          ps.created_at,
+          ps.updated_at
+      )
+      UPDATE projects p
+      SET
+        properties = COALESCE(p.properties, '{}'::jsonb)
+          || jsonb_build_object('progress', (${progressFrag})),
+        updated_at = NOW()
+      WHERE p.id = $1::uuid
+        AND p.org_id = $2::uuid
+        AND p.deleted = false
+        AND EXISTS (SELECT 1 FROM stage_upd)
+      RETURNING (SELECT row_to_json(su.*) FROM stage_upd su LIMIT 1) AS stage;
+    `;
+
+    const rows = await executeQuery(query, values);
+    if (!rows?.length || !rows[0].stage) {
+      return [];
+    }
+    const s = rows[0].stage;
+    return [
+      {
+        color: s.color,
+        created_at: s.created_at,
+        id: s.id,
+        name: s.name,
+        position: s.position,
+        project_id: s.project_id,
+        properties: s.properties,
+        updated_at: s.updated_at,
+      },
+    ];
+  }
 }
 
 module.exports = new ProjectsUpdateRepository();

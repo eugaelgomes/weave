@@ -79,6 +79,19 @@ router.get(
   ProjectsReadController.getProjectStages.bind(ProjectsReadController)
 );
 
+router.patch(
+  "/:id/stages/:stageId",
+  standardTrafficLimiter,
+  requireManageProjects,
+  ProjectsUpdateController.updateProjectStage.bind(ProjectsUpdateController)
+);
+router.delete(
+  "/:id/stages/:stageId",
+  standardTrafficLimiter,
+  requireManageProjects,
+  ProjectsDeleteController.deleteProjectStage.bind(ProjectsDeleteController)
+);
+
 router
   .route("/:projectId/collaborators")
   .get(ProjectsReadController.getCollaborators.bind(ProjectsReadController))

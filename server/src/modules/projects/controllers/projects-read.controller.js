@@ -168,10 +168,10 @@ class ProjectsReadController extends ProjectsCoreController {
 
       // Busca as etapas na base de dados
       const stages = await this.projectsRepository.getProjectStages(id);
+      const formatted = (stages || []).map((s) => this._formatProjectStage(s));
 
-      // Retorna a resposta limpa
       res.status(200).json({
-        stages: stages || [],
+        stages: formatted,
       });
     } catch (error) {
       this._handleError(error, res, next);

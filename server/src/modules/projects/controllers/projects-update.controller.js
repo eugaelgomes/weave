@@ -778,6 +778,97 @@ class ProjectsUpdateController extends ProjectsCoreController {
       this._handleError(error, res, next);
     }
   }
+
+  /**
+   * PATCH /api/projects/:id/stages/:stageId
+   * Atualiza nome, posição, cor ou properties (merge em jsonb) do estágio.
+   */
+  async updateProjectStage(req, res, next) {
+    try {
+      const { id, stageId } = req.params;
+      const { name, position, color, properties } = req.body;
+
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      const ctx = await this._getProjectOwnershipContext(id, userId);
+
+      const updates = {};
+      if (name !== undefined) updates.name = name;
+      if (position !== undefined) {
+        const pos = Number(position);
+        if (!Number.isInteger(pos)) {
+          return res.status(400).json({
+            error: "O campo 'position' deve ser um número inteiro",
+          });
+        }
+        updates.position = pos;
+      }
+      if (color !== undefined) {
+        if (color !== null && typeof color === "string") {
+          const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+          if (!hexRegex.test(color)) {
+            return res.status(400).json({
+              error:
+                "Color deve ser uma cor hexadecimal válida (ex: #E2E8F0)",
+            });
+          }
+        }
+        updates.color = color;
+      }
+      if (properties !== undefined) {
+        let parsed = properties;
+        if (typeof properties === "string") {
+          try {
+            parsed = JSON.parse(properties);
+          } catch {
+            return res.status(400).json({
+              error: "O campo 'properties' deve ser um objeto JSON válido",
+            });
+          }
+        }
+        if (parsed !== null && typeof parsed !== "object") {
+          return res.status(400).json({
+            error: "O campo 'properties' deve ser um objeto",
+          });
+        }
+        updates.properties = parsed ?? {};
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({
+          error: "Nenhum campo válido fornecido para atualização",
+        });
+      }
+
+      const result = ctx.orgWide
+        ? await this.projectsRepository.updateProjectStageInOrganization(
+            id,
+            ctx.membership.id,
+            stageId,
+            updates
+          )
+        : await this.projectsRepository.updateProjectStage(
+            id,
+            userId,
+            stageId,
+            updates
+          );
+
+      if (!result || result.length === 0) {
+        return res.status(404).json({
+          error: "Estágio não encontrado ou você não tem permissão",
+        });
+      }
+
+      res.status(200).json({
+        message: "Estágio atualizado com sucesso",
+        stage: this._formatProjectStage(result[0]),
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
 }
 
 module.exports = new ProjectsUpdateController();

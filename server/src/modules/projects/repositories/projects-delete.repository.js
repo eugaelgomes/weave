@@ -214,6 +214,175 @@ class ProjectsDeleteRepository {
 
     return executeQuery(query, [projectId, noteId, userId, organizationId]);
   }
+
+  _projectProgressExpr() {
+    return `
+      COALESCE(
+        (SELECT ROUND(
+          (
+            COUNT(*) FILTER (WHERE EXISTS (
+              SELECT 1 FROM project_stages ps
+              WHERE ps.id = n.project_stage_id
+                AND ps.project_id = n.project_id
+                AND COALESCE((ps.properties->>'is_done')::boolean, false) = true
+            ))::numeric
+            / NULLIF(COUNT(*), 0)
+          ) * 100
+        )::integer
+        FROM notes n
+        WHERE n.project_id = $1::uuid AND n.deleted = false),
+        0
+      )
+    `;
+  }
+
+  async deleteProjectStage(projectId, userId, stageId) {
+    const progressExpr = this._projectProgressExpr();
+    const query = `
+      WITH auth AS (
+        SELECT 1
+        FROM project_stages ps
+        JOIN projects p ON p.id = ps.project_id
+        WHERE ps.id = $3::uuid
+          AND ps.project_id = $1::uuid
+          AND p.user_id = $2::uuid
+          AND p.deleted = false
+      ),
+      notes_upd AS (
+        UPDATE notes n
+        SET project_stage_id = NULL, updated_at = NOW()
+        WHERE n.project_id = $1::uuid
+          AND n.project_stage_id = $3::uuid
+          AND n.deleted = false
+          AND EXISTS (SELECT 1 FROM auth)
+        RETURNING n.id
+      ),
+      del AS (
+        DELETE FROM project_stages ps
+        WHERE ps.id = $3::uuid
+          AND ps.project_id = $1::uuid
+          AND EXISTS (SELECT 1 FROM auth)
+        RETURNING
+          ps.id::text,
+          ps.project_id::text,
+          ps.name,
+          ps."position",
+          ps.color,
+          ps.properties,
+          ps.created_at,
+          ps.updated_at
+      ),
+      proj_upd AS (
+        UPDATE projects p
+        SET
+          properties = COALESCE(p.properties, '{}'::jsonb)
+            || jsonb_build_object('progress', (${progressExpr})),
+          updated_at = NOW()
+        WHERE p.id = $1::uuid
+          AND p.user_id = $2::uuid
+          AND p.deleted = false
+          AND EXISTS (SELECT 1 FROM del)
+        RETURNING p.id
+      )
+      SELECT row_to_json(d.*) AS stage FROM del d;
+    `;
+
+    const rows = await executeQuery(query, [projectId, userId, stageId]);
+    if (!rows?.length || !rows[0].stage) {
+      return [];
+    }
+    const s = rows[0].stage;
+    return [
+      {
+        color: s.color,
+        created_at: s.created_at,
+        id: s.id,
+        name: s.name,
+        position: s.position,
+        project_id: s.project_id,
+        properties: s.properties,
+        updated_at: s.updated_at,
+      },
+    ];
+  }
+
+  async deleteProjectStageInOrganization(
+    projectId,
+    organizationId,
+    stageId
+  ) {
+    const progressExpr = this._projectProgressExpr();
+    const query = `
+      WITH auth AS (
+        SELECT 1
+        FROM project_stages ps
+        JOIN projects p ON p.id = ps.project_id
+        WHERE ps.id = $3::uuid
+          AND ps.project_id = $1::uuid
+          AND p.org_id = $2::uuid
+          AND p.deleted = false
+      ),
+      notes_upd AS (
+        UPDATE notes n
+        SET project_stage_id = NULL, updated_at = NOW()
+        WHERE n.project_id = $1::uuid
+          AND n.project_stage_id = $3::uuid
+          AND n.deleted = false
+          AND EXISTS (SELECT 1 FROM auth)
+        RETURNING n.id
+      ),
+      del AS (
+        DELETE FROM project_stages ps
+        WHERE ps.id = $3::uuid
+          AND ps.project_id = $1::uuid
+          AND EXISTS (SELECT 1 FROM auth)
+        RETURNING
+          ps.id::text,
+          ps.project_id::text,
+          ps.name,
+          ps."position",
+          ps.color,
+          ps.properties,
+          ps.created_at,
+          ps.updated_at
+      ),
+      proj_upd AS (
+        UPDATE projects p
+        SET
+          properties = COALESCE(p.properties, '{}'::jsonb)
+            || jsonb_build_object('progress', (${progressExpr})),
+          updated_at = NOW()
+        WHERE p.id = $1::uuid
+          AND p.org_id = $2::uuid
+          AND p.deleted = false
+          AND EXISTS (SELECT 1 FROM del)
+        RETURNING p.id
+      )
+      SELECT row_to_json(d.*) AS stage FROM del d;
+    `;
+
+    const rows = await executeQuery(query, [
+      projectId,
+      organizationId,
+      stageId,
+    ]);
+    if (!rows?.length || !rows[0].stage) {
+      return [];
+    }
+    const s = rows[0].stage;
+    return [
+      {
+        color: s.color,
+        created_at: s.created_at,
+        id: s.id,
+        name: s.name,
+        position: s.position,
+        project_id: s.project_id,
+        properties: s.properties,
+        updated_at: s.updated_at,
+      },
+    ];
+  }
 }
 
 module.exports = new ProjectsDeleteRepository();

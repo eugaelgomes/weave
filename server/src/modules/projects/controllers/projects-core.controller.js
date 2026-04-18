@@ -231,6 +231,27 @@ class ProjectsCoreController extends ProjectsBaseController {
     };
   }
 
+  /** Formato estável da linha `project_stages` (todas as colunas). */
+  _formatProjectStage(row) {
+    if (!row) return null;
+    return {
+      color: row.color,
+      created_at: row.created_at,
+      id: row.id,
+      name: row.name,
+      position:
+        row.position !== undefined && row.position !== null
+          ? Number(row.position)
+          : row.position,
+      project_id: row.project_id,
+      properties:
+        row.properties && typeof row.properties === "object"
+          ? row.properties
+          : {},
+      updated_at: row.updated_at,
+    };
+  }
+
   /**
    * Trata erros específicos e retorna resposta HTTP apropriada
    * @param {Error} error - Erro capturado

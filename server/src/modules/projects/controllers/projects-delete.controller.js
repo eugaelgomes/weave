@@ -145,6 +145,46 @@ class ProjectsDeleteController extends ProjectsCoreController {
       this._handleError(error, res, next);
     }
   }
+
+  /**
+   * DELETE /api/projects/:id/stages/:stageId
+   * Remove o estágio; notas associadas ficam com project_stage_id nulo.
+   */
+  async deleteProjectStage(req, res, next) {
+    try {
+      const { id, stageId } = req.params;
+
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      const ctx = await this._getProjectOwnershipContext(id, userId);
+
+      const result = ctx.orgWide
+        ? await this.projectsRepository.deleteProjectStageInOrganization(
+            id,
+            ctx.membership.id,
+            stageId
+          )
+        : await this.projectsRepository.deleteProjectStage(
+            id,
+            userId,
+            stageId
+          );
+
+      if (!result || result.length === 0) {
+        return res.status(404).json({
+          error: "Estágio não encontrado ou você não tem permissão",
+        });
+      }
+
+      res.status(200).json({
+        message: "Estágio removido com sucesso",
+        stage: this._formatProjectStage(result[0]),
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
 }
 
 module.exports = new ProjectsDeleteController();
