@@ -66,19 +66,16 @@ jobs:
             REPO_URL="https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
 
             mkdir -p "$APP_DIR"
-
-            if [ -d "$APP_DIR/.git" ]; then
-              cd "$APP_DIR"
+            cd "$APP_DIR"
+            if [ -d ".git" ]; then
               git remote set-url origin "$REPO_URL"
-              git pull origin main
             else
-              if [ -n "$(ls -A "$APP_DIR" 2>/dev/null || true)" ]; then
-                echo "Directory exists but is not empty and is not a git repository: $APP_DIR" >&2
-                exit 1
-              fi
-              git clone "$REPO_URL" "$APP_DIR"
-              cd "$APP_DIR"
+              git init
+              git remote add origin "$REPO_URL"
             fi
+            git fetch origin
+            git checkout -B main origin/main
+            git reset --hard origin/main
 
             # Non-interactive SSH often skips login PATH (e.g. Docker in /usr/local or snap).
             [ -f /etc/profile ] && . /etc/profile
