@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - "server/**"
-      - ".github/workflows/deploy.yml"
+      - ".github/workflows/deploy-server.yml"
   workflow_dispatch:
 
 permissions:
@@ -56,16 +56,28 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-            
-            REPO_URL="https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-            
-            if [ ! -d "${{ secrets.SERVER_APP_DIR }}" ]; then
-              git clone $REPO_URL "${{ secrets.SERVER_APP_DIR }}"
-              cd "${{ secrets.SERVER_APP_DIR }}"
-            else
-              cd "${{ secrets.SERVER_APP_DIR }}"
-              git remote set-url origin $REPO_URL
-              git pull origin main
+
+            APP_DIR="${{ secrets.SERVER_APP_DIR }}"
+            if [ -z "$APP_DIR" ]; then
+              echo "SERVER_APP_DIR is not set" >&2
+              exit 1
             fi
-            
+
+            REPO_URL="https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+            mkdir -p "$APP_DIR"
+
+            if [ -d "$APP_DIR/.git" ]; then
+              cd "$APP_DIR"
+              git remote set-url origin "$REPO_URL"
+              git pull origin main
+            else
+              if [ -n "$(ls -A "$APP_DIR" 2>/dev/null || true)" ]; then
+                echo "Directory exists but is not empty and is not a git repository: $APP_DIR" >&2
+                exit 1
+              fi
+              git clone "$REPO_URL" "$APP_DIR"
+              cd "$APP_DIR"
+            fi
+
             docker compose up -d --build
