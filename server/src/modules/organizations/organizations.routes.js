@@ -7,12 +7,12 @@ const organizationAreasController = require("@/modules/organizations/controllers
 const organizationDomainsController = require("@/modules/organizations/controllers/domains.controller");
 
 // Middlewares
-const { verifyToken } = require("@/middlewares/verify-token");
+const { verifyToken } = require("@/middlewares/auth/verify-token");
 const {
   structuralLimiter,
   standardTrafficLimiter,
   highTrafficLimiter,
-} = require("@/middlewares/request-limiters");
+} = require("@/middlewares/security/request-limiters");
 
 // Utils
 const upload = require("@/utils/data/profile-img");

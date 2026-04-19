@@ -1,10 +1,10 @@
 const express = require("express");
-const { verifyToken } = require("@/middlewares/verify-token");
+const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { commentFilesUpload, noteUpdateUpload } = require("@/utils/data/note-upload");
 const {
   highTrafficLimiter,
   standardTrafficLimiter,
-} = require("@/middlewares/request-limiters");
+} = require("@/middlewares/security/request-limiters");
 
 const NotesReadController = require("@/modules/notes/controllers/notes-read.controller");
 const NotesWriteController = require("@/modules/notes/controllers/notes-write.controller");

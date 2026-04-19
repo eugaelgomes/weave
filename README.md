@@ -253,11 +253,11 @@ const { pool } = require('@/services/db/index');
 
 - JWT em cookie `HttpOnly`
 - `req.user.userId` disponível em rotas protegidas após middleware de auth
-- CORS e domínio de cookie configurados em `src/config/allowed-origins.js`
+- CORS e domínio de cookie configurados em `server/src/config/allowed-origins.js`
 
 ### Tratamento de erros
 
-Handler global em `src/middlewares/error-handler.js`. Controllers lançam erros descritivos; respostas seguem o formato `{ "error": "mensagem" }`.
+Handler global em `server/src/middlewares/errors/error-handler.js`. Controllers lançam erros descritivos; respostas seguem o formato `{ "error": "mensagem" }`.
 
 ---
 

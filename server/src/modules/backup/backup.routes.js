@@ -1,5 +1,5 @@
 const express = require("express");
-const { verifyToken } = require("@/middlewares/verify-token");
+const { verifyToken } = require("@/middlewares/auth/verify-token");
 
 const DownloadBackupController = require("@/modules/backup/controllers/download-backup.controller");
 const BackupExportController = require("@/modules/backup/controllers/backup-export.controller");

@@ -3,14 +3,14 @@ const ProjectsReadController = require("@/modules/projects/controllers/projects-
 const ProjectsCreateController = require("@/modules/projects/controllers/projects-create.controller");
 const ProjectsUpdateController = require("@/modules/projects/controllers/projects-update.controller");
 const ProjectsDeleteController = require("@/modules/projects/controllers/projects-delete.controller");
-const { verifyToken } = require("@/middlewares/verify-token");
-const { requireOrgPermission } = require("@/middlewares/require-org-permission");
+const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { requireOrgPermission } = require("@/middlewares/auth/require-org-permission");
 const { ORG_PERMISSIONS } = require("@/modules/organizations/organization-role-policy");
 const { projectUpdateUpload } = require("@/utils/data/project-upload");
 const {
   highTrafficLimiter,
   standardTrafficLimiter,
-} = require("@/middlewares/request-limiters");
+} = require("@/middlewares/security/request-limiters");
 
 const router = express.Router();
 

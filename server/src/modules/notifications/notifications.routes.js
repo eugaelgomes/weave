@@ -3,11 +3,11 @@ const NotificationsListController = require("@/modules/notifications/controllers
 const NotificationsCreateController = require("@/modules/notifications/controllers/notifications-create.controller");
 const NotificationsUpdateController = require("@/modules/notifications/controllers/notifications-update.controller");
 const NotificationsDeleteController = require("@/modules/notifications/controllers/notifications-delete.controller");
-const { verifyToken } = require("@/middlewares/verify-token");
+const { verifyToken } = require("@/middlewares/auth/verify-token");
 const {
   highTrafficLimiter,
   standardTrafficLimiter,
-} = require("@/middlewares/request-limiters");
+} = require("@/middlewares/security/request-limiters");
 
 const router = express.Router();
 

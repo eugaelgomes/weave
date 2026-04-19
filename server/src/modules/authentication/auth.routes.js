@@ -1,7 +1,7 @@
 const express = require("express");
 
-const { verifyToken } = require("@/middlewares/verify-token");
-const { authLimiter } = require("@/middlewares/request-limiters");
+const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { authLimiter } = require("@/middlewares/security/request-limiters");
 const toString = require("@/utils/data/stringfy");
 
 const SigninController = require("@/modules/authentication/controllers/signin.controller");

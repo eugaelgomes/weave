@@ -1,11 +1,11 @@
 const express = require("express");
 const calendarEventsController = require("@/modules/calendar-events/controllers/calendar-events.controller");
 const eventInvitesController = require("@/modules/calendar-events/controllers/event-invites.controller");
-const { verifyToken } = require("@/middlewares/verify-token");
+const { verifyToken } = require("@/middlewares/auth/verify-token");
 const {
   highTrafficLimiter,
   standardTrafficLimiter,
-} = require("@/middlewares/request-limiters");
+} = require("@/middlewares/security/request-limiters");
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 const express = require("express");
-const { verifyToken } = require("@/middlewares/verify-token");
+const { verifyToken } = require("@/middlewares/auth/verify-token");
 
 const DEFAULT_VERSION = "v1";
 

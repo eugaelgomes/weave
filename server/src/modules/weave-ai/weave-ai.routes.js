@@ -3,10 +3,10 @@ const multer = require("multer");
 
 const aiController = require("./controllers/chat.controller");
 const agentController = require("./controllers/agents.controller");
-const { verifyToken } = require("@/middlewares/verify-token");
-const { requireOrgPermission } = require("@/middlewares/require-org-permission");
+const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { requireOrgPermission } = require("@/middlewares/auth/require-org-permission");
 const { ORG_PERMISSIONS } = require("@/modules/organizations/organization-role-policy");
-const { strictLimiter } = require("@/middlewares/request-limiters");
+const { strictLimiter } = require("@/middlewares/security/request-limiters");
 
 const router = express.Router();
 

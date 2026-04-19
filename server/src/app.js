@@ -1,8 +1,8 @@
 const express = require("express");
 const {
   configureGlobalMiddlewares,
-} = require("@/middlewares/global-middleware");
-const { errorHandler } = require("@/middlewares/error-handler");
+} = require("@/middlewares/http/apply-http-middleware");
+const { errorHandler } = require("@/middlewares/errors/error-handler");
 const { registerApiRoutes } = require("./routes");
 
 require("@/services/jobs/index");

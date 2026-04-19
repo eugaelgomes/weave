@@ -7,11 +7,11 @@ const {
   structuralLimiter,
   standardTrafficLimiter,
   highTrafficLimiter,
-} = require("@/middlewares/request-limiters");
+} = require("@/middlewares/security/request-limiters");
 const { inputValidation } = require("@/utils/data/input-validation");
 const upload = require("@/utils/data/profile-img");
 const validateCompressedImageSize = require("@/utils/image-validator");
-const { verifyToken } = require("@/middlewares/verify-token");
+const { verifyToken } = require("@/middlewares/auth/verify-token");
 
 const router = express.Router();
 

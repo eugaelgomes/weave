@@ -1,4 +1,8 @@
 const express = require("express");
+const {
+  issueInternalChallenge,
+  verifyInternalWebChallenge,
+} = require("@/middlewares/security/internal-web-challenge");
 
 const authRoutes = require("@/modules/authentication/auth.routes");
 const userRoutes = require("@/modules/users/users.routes");
@@ -122,6 +126,9 @@ const createInternalRouter = ({ version = DEFAULT_VERSION } = {}) => {
 
     return next();
   });
+
+  router.get("/_internal/challenge", issueInternalChallenge);
+  router.use(verifyInternalWebChallenge);
 
   routeRegistry.forEach(({ basePath, handler }) =>
     router.use(basePath, handler)

@@ -1,7 +1,7 @@
 const express = require("express");
 const GoogleOauthController = require("@/modules/webhooks/controllers/google-oauth.controller");
 const GoogleCalendarController = require("@/modules/webhooks/controllers/google-calendar.controller");
-const { verifyToken } = require("@/middlewares/verify-token");
+const { verifyToken } = require("@/middlewares/auth/verify-token");
 
 const router = express.Router();
 

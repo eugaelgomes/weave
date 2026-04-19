@@ -15,11 +15,10 @@ src/
 │   ├── allowed-origins.js   # Lista CORS + getCookieDomain()
 │   └── module-alias.ts      # Alias @/ → src/
 ├── middlewares/
-│   ├── global-middleware.js # configureGlobalMiddlewares()
-│   ├── error-handler.js     # notFoundHandler + globalErrorHandler
-│   ├── authentication/      # Validação JWT
-│   ├── data/                # Validação de entrada + upload (multer)
-│   └── security/            # Rate limiters, sessão, IP
+│   ├── http/                # apply-http-middleware (pilha base), cors, sessão, IP
+│   ├── auth/                # verify-token, require-org-permission
+│   ├── security/            # request-limiters (rate limit)
+│   └── errors/              # error-handler (404 + global)
 ├── modules/                 # Features — cada uma com routes/controller/repository
 │   ├── auth/
 │   ├── backup/
@@ -162,11 +161,15 @@ const AuthController = require("@/modules/auth/auth.controller");
 
 - JWT em cookie `HttpOnly`
 - `req.user.userId` disponível após middleware de auth
-- Middleware: `src/middlewares/authentication/`
+- Middleware: `src/middlewares/auth/verify-token.js`
+
+### API interna (`/api/v1/*`) e desafio web
+
+Além do guard de `Origin`, rotas internas exigem o header `X-Weave-Internal-Challenge` com JWT curto (4 min), emitido por `GET /api/v1/_internal/challenge` e assinado com `INTERNAL_WEB_CHALLENGE_SECRET`. O token carrega o `Origin` da emissão; o backend confere com o `Origin` de cada requisição. Em desenvolvimento, sem secret configurado, a verificação é ignorada. Em produção o secret é obrigatório. O front renova o token automaticamente (`web/app/_services/internal-challenge.ts`).
 
 ### Tratamento de erros
 
-Handler global em `src/middlewares/error-handler.js`. Controllers lançam erros descritivos; o handler formata a resposta:
+Handler global em `src/middlewares/errors/error-handler.js`. Controllers lançam erros descritivos; o handler formata a resposta:
 
 ```javascript
 // Controller

@@ -1,0 +1,69 @@
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const cookieParser = require("cookie-parser");
+const { getClientIp } = require("./ip-address");
+const { sessionMiddleware } = require("./session");
+const { makeCorsOptions } = require("./cors");
+
+function configureGlobalMiddlewares(app) {
+  app.use(cookieParser());
+  app.use(sessionMiddleware);
+
+  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
+
+  app.set("trust proxy", 1);
+  app.use(getClientIp);
+
+  const corsMiddleware = cors(makeCorsOptions());
+  app.use((req, res, next) => {
+    // Ignore CORS for:
+    // - Webhooks (POST do Google Calendar)
+    // - SSO OAuth (GET redirects do browser, wi header Origin)
+    if (
+      req.method === "POST" &&
+      req.path === "/api/v1/webhooks/google/calendar"
+    ) {
+      return next();
+    }
+    if (
+      req.method === "GET" &&
+      req.path.startsWith("/api/v1/auth/signin/sso/")
+    ) {
+      return next();
+    }
+    if (
+      req.method === "GET" &&
+      req.path.startsWith("/api/v1/webhooks/google/callback")
+    ) {
+      return next();
+    }
+    if (
+      req.method === "GET" &&
+      req.path.startsWith("/api/v1/webhooks/google/auth")
+    ) {
+      return next();
+    }
+    return corsMiddleware(req, res, next);
+  });
+
+  app.use(
+    helmet({
+      hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", process.env.TRUSTED_CDN || "'self'"],
+          objectSrc: ["'none'"],
+          upgradeInsecureRequests: [],
+        },
+      },
+      frameguard: { action: "deny" },
+      noSniff: true,
+      referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    })
+  );
+}
+
+module.exports = { configureGlobalMiddlewares };

@@ -1,4 +1,8 @@
 import { ApiError } from "./api-error";
+import {
+  clearInternalChallengeCache,
+  getInternalChallengeHeaders,
+} from "./internal-challenge";
 
 export { ApiError };
 
@@ -160,17 +164,57 @@ class ApiClient {
       credentials: "include", // HttpOnly
     };
 
+    const internal = await getInternalChallengeHeaders();
     if (!(options.body instanceof FormData)) {
       config.headers = {
         ...this.defaultHeaders,
-        ...options.headers,
+        ...internal,
+        ...((options.headers as Record<string, string>) || {}),
       };
     } else {
-      config.headers = options.headers;
+      config.headers = {
+        ...internal,
+        ...(options.headers || {}),
+      } as HeadersInit;
     }
 
     try {
-      const response = await fetch(url, config);
+      let response = await fetch(url, config);
+
+      if (response.status === 403) {
+        let code: string | undefined;
+        try {
+          const ct = response.headers.get("content-type");
+          if (ct?.includes("application/json")) {
+            const j = (await response.clone().json()) as { code?: unknown };
+            if (j?.code != null) code = String(j.code);
+          }
+        } catch {
+          // ignore
+        }
+        if (
+          code === "INTERNAL_CHALLENGE_REQUIRED" ||
+          code === "INTERNAL_CHALLENGE_INVALID" ||
+          code === "INTERNAL_CHALLENGE_ORIGIN_MISMATCH"
+        ) {
+          clearInternalChallengeCache();
+          const internalRetry = await getInternalChallengeHeaders();
+          if (!(options.body instanceof FormData)) {
+            config.headers = {
+              ...this.defaultHeaders,
+              ...internalRetry,
+              ...((options.headers as Record<string, string>) || {}),
+            };
+          } else {
+            config.headers = {
+              ...internalRetry,
+              ...(options.headers || {}),
+            } as HeadersInit;
+          }
+          response = await fetch(url, config);
+        }
+      }
+
       return response;
     } catch (error) {
       throw new ApiError(

@@ -126,10 +126,10 @@ const verifyToken = async (req, res, next) => {
     req.user = decoded;
 
     return next();
-  } catch (error) {
-    return res
-      .status(401)
-      .json(error, { message: "Sessão inválida ou expirada." });
+  } catch {
+    return res.status(401).json({
+      message: "Sessão inválida ou expirada.",
+    });
   }
 };
 
