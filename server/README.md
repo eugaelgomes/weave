@@ -189,24 +189,24 @@ if (!note) throw new Error('Nota não encontrada');
 
 ## Dependências principais
 
-| Pacote                                 | Uso                        |
-| -------------------------------------- | -------------------------- |
-| `express`                              | Framework HTTP             |
-| `jsonwebtoken` / `express-jwt`         | Geração e validação de JWT |
-| `bcrypt`                               | Hash de senhas             |
-| `passport` / `passport-google-oauth20` | OAuth Google               |
-| `pg`                                   | Cliente PostgreSQL         |
-| `connect-pg-simple`                    | Sessões no PostgreSQL      |
+| Pacote                                 | Uso                          |
+| -------------------------------------- | ---------------------------- |
+| `express`                              | Framework HTTP               |
+| `jsonwebtoken` / `express-jwt`         | Geração e validação de JWT   |
+| `bcrypt`                               | Hash de senhas               |
+| `passport` / `passport-google-oauth20` | OAuth Google                 |
+| `pg`                                   | Cliente PostgreSQL           |
+| `connect-pg-simple`                    | Sessões no PostgreSQL        |
 | `resend`                               | Envio de emails transacional |
-| `@aws-sdk/client-s3`                   | Upload para S3/DO Spaces   |
-| `@google/generative-ai`                | Google Gemini AI           |
-| `multer`                               | Upload de arquivos         |
-| `sharp`                                | Processamento de imagens   |
-| `helmet`                               | Headers de segurança HTTP  |
-| `express-rate-limit`                   | Rate limiting              |
-| `module-alias`                         | Alias `@/` para imports    |
-| `nodemon` + `ts-node`                  | Hot reload em dev          |
-| `@babel/core` + presets                | Build para produção        |
+| `@aws-sdk/client-s3`                   | Upload para S3/DO Spaces     |
+| `@google/generative-ai`                | Google Gemini AI             |
+| `multer`                               | Upload de arquivos           |
+| `sharp`                                | Processamento de imagens     |
+| `helmet`                               | Headers de segurança HTTP    |
+| `express-rate-limit`                   | Rate limiting                |
+| `module-alias`                         | Alias `@/` para imports      |
+| `nodemon` + `ts-node`                  | Hot reload em dev            |
+| `@babel/core` + presets                | Build para produção          |
 
 ---
 

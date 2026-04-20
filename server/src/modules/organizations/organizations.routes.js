@@ -23,7 +23,9 @@ const router = express.Router();
 router.get(
   "/invites/preview",
   standardTrafficLimiter,
-  organizationMembersController.previewInvite.bind(organizationMembersController)
+  organizationMembersController.previewInvite.bind(
+    organizationMembersController
+  )
 );
 
 router.post(

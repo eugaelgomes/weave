@@ -226,12 +226,10 @@ class CreateUsersController extends BaseController {
     const { token, code, email } = req.body;
 
     if (!token && (!code || !email)) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Activation token or both verification code and email are required",
-        });
+      return res.status(400).json({
+        message:
+          "Activation token or both verification code and email are required",
+      });
     }
 
     try {
@@ -248,11 +246,9 @@ class CreateUsersController extends BaseController {
       }
 
       if (!tokenRecord) {
-        return res
-          .status(400)
-          .json({
-            message: "Invalid or expired activation token or verification code",
-          });
+        return res.status(400).json({
+          message: "Invalid or expired activation token or verification code",
+        });
       }
 
       // Verifica o email

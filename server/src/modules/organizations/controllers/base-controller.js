@@ -90,10 +90,7 @@ class OrganizationsBaseController {
       return false;
     }
     const role = organization.member_role;
-    if (
-      !role ||
-      !permissions.some((p) => orgRoleHasPermission(role, p))
-    ) {
+    if (!role || !permissions.some((p) => orgRoleHasPermission(role, p))) {
       res.status(403).json({
         success: false,
         error: "Insufficient organization permissions",

@@ -5,9 +5,7 @@ const {
   orgRoleHasPermission,
   ORG_PERMISSIONS,
 } = require("@/modules/organizations/organization-role-policy");
-const {
-  cloneDefaultNoteDocumentState,
-} = require("../document-normalizer");
+const { cloneDefaultNoteDocumentState } = require("../document-normalizer");
 const { documentToBlocks } = require("../document-blocks-adapter");
 
 /**

@@ -28,11 +28,27 @@ function makeCorsOptions() {
   const matchers = WHITELIST.map(buildMatcher).concat(devMatchers);
 
   return {
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+      "Cookie",
+      "X-Weave-Internal-Challenge",
+    ],
+    credentials: true,
+    exposedHeaders: ["Content-Range", "X-Content-Range", "Set-Cookie"],
+    maxAge: 600,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    optionsSuccessStatus: 204,
     origin(origin, cb) {
+      // In development, allow every origin (including tool-specific schemes)
+      // so API clients like Postman/Insomnia can run tests without CORS blocks.
+      if (isDev) {
+        return cb(null, true);
+      }
+
       if (!origin) {
-        if (isDev) {
-          return cb(null, true);
-        }
         return cb(
           new Error("Headless requests are not allowed in production.")
         );
@@ -46,19 +62,6 @@ function makeCorsOptions() {
       }
       return cb(new Error("Origin not allowed by CORS."));
     },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-      "Cookie",
-      "X-Weave-Internal-Challenge",
-    ],
-    exposedHeaders: ["Content-Range", "X-Content-Range", "Set-Cookie"],
-    maxAge: 600,
-    optionsSuccessStatus: 204,
   };
 }
 

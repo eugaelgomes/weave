@@ -1,5 +1,8 @@
 const { MailService } = require("@/services/email/config");
-const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
+const {
+  buildMailTemplate,
+  escapeHtml,
+} = require("@/services/email/mail-template");
 
 async function mail_rescue_pass(email, token, name) {
   const env = process.env.NODE_ENV || "development";

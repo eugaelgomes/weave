@@ -1,5 +1,7 @@
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
-const { orgRoleHasPermission } = require("@/modules/organizations/organization-role-policy");
+const {
+  orgRoleHasPermission,
+} = require("@/modules/organizations/organization-role-policy");
 
 /**
  * Exige organização ativa com papel que tenha a permissão indicada (ex.: super_admin).

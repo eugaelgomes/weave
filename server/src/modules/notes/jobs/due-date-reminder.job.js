@@ -1,6 +1,8 @@
 const notesRepository = require("@/modules/notes/notes.repository");
 const mutateNotesRepository = require("@/modules/notes/repositories/mutate-notes.repository");
-const { sendDueReminderEmail } = require("@/services/email/templates/due-reminder");
+const {
+  sendDueReminderEmail,
+} = require("@/services/email/templates/due-reminder");
 
 /**
  * Envia e-mails de véspera (prazo amanhã em UTC) e marca controle em properties.
@@ -38,7 +40,9 @@ async function runDueDateReminderEmails() {
       }
     }
     const props =
-      rawProps && typeof rawProps === "object" && !Array.isArray(rawProps) ? rawProps : {};
+      rawProps && typeof rawProps === "object" && !Array.isArray(rawProps)
+        ? rawProps
+        : {};
 
     const recipients = [];
     if (row.owner_email) {
@@ -52,7 +56,10 @@ async function runDueDateReminderEmails() {
       const collabs = await notesRepository.getActiveCollaboratorEmails(noteId);
       for (const c of collabs) {
         if (c.email) {
-          recipients.push({ email: String(c.email).trim(), name: c.name || "" });
+          recipients.push({
+            email: String(c.email).trim(),
+            name: c.name || "",
+          });
         }
       }
     } catch (e) {
@@ -100,9 +107,14 @@ async function runDueDateReminderEmails() {
     };
 
     try {
-      await mutateNotesRepository.updateNoteById(noteId, { properties: nextProps });
+      await mutateNotesRepository.updateNoteById(noteId, {
+        properties: nextProps,
+      });
     } catch (e) {
-      console.error(`[due-date-reminder] Falha ao marcar properties note=${noteId}:`, e);
+      console.error(
+        `[due-date-reminder] Falha ao marcar properties note=${noteId}:`,
+        e
+      );
     }
   }
 }
@@ -113,7 +125,10 @@ async function runDueDateReminderEmails() {
 function scheduleDueDateReminderEmails() {
   const hourUtc = Math.min(
     23,
-    Math.max(0, parseInt(process.env.DUE_DATE_REMINDER_HOUR_UTC || "8", 10) || 8)
+    Math.max(
+      0,
+      parseInt(process.env.DUE_DATE_REMINDER_HOUR_UTC || "8", 10) || 8
+    )
   );
 
   const msUntilNextRun = () => {

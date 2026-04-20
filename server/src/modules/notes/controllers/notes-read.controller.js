@@ -1,8 +1,6 @@
 const NotesBaseController = require("./base.controller");
 const { documentToBlocks } = require("../document-blocks-adapter");
-const {
-  cloneDefaultNoteDocumentState,
-} = require("../document-normalizer");
+const { cloneDefaultNoteDocumentState } = require("../document-normalizer");
 
 /**
  * Leitura: lista, detalhe e estatísticas.
@@ -130,12 +128,8 @@ class NotesReadController extends NotesBaseController {
       if (!userId) return;
 
       // Validação de acesso à nota (proprietário ou colaborador)
-      const {
-        note,
-        isOwner,
-        isCollaborator,
-        hasOrgProjectAccess,
-      } = await this._validateNoteAccess(id, userId);
+      const { note, isOwner, isCollaborator, hasOrgProjectAccess } =
+        await this._validateNoteAccess(id, userId);
 
       const noteDocument = note.document || cloneDefaultNoteDocumentState();
 

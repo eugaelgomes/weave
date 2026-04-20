@@ -9,7 +9,9 @@ const {
   getDefaultOrganizationProperties,
   orgDataResponse,
 } = require("../normalizer");
-const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
+const {
+  ORG_ROLES,
+} = require("@/modules/organizations/organization-role-policy");
 
 /**
  * Controller for organization management.
@@ -277,9 +279,15 @@ class OrganizationsController extends OrganizationsBaseController {
         "properties",
       ].some((k) => Object.prototype.hasOwnProperty.call(body, k));
 
-      if (touchesDomains && !this._ensureOrgPermission(currentOrg, P.MANAGE_DOMAINS, res))
+      if (
+        touchesDomains &&
+        !this._ensureOrgPermission(currentOrg, P.MANAGE_DOMAINS, res)
+      )
         return;
-      if (touchesBrand && !this._ensureOrgPermission(currentOrg, P.MANAGE_BRAND, res))
+      if (
+        touchesBrand &&
+        !this._ensureOrgPermission(currentOrg, P.MANAGE_BRAND, res)
+      )
         return;
 
       let updatedUniqueName = currentOrg.unique_name;
@@ -526,11 +534,10 @@ class OrganizationsController extends OrganizationsBaseController {
         });
       }
 
-      const memberRole =
-        await this.organizationsRepository.getMembershipRole(
-          organization.id,
-          userId
-        );
+      const memberRole = await this.organizationsRepository.getMembershipRole(
+        organization.id,
+        userId
+      );
       const orgWithRole = {
         ...organization,
         member_role: memberRole || ORG_ROLES.SUPER_ADMIN,

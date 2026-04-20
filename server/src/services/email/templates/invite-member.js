@@ -1,12 +1,15 @@
 const { MailService } = require("@/services/email/config");
-const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
+const {
+  buildMailTemplate,
+  escapeHtml,
+} = require("@/services/email/mail-template");
 
 async function send_organization_invite(
   invitedEmail,
   organizationName,
   inviterName,
   inviteToken,
-  role,
+  role
 ) {
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
   const acceptInviteLink = `${frontendUrl}/auth?invite_token=${inviteToken}`;

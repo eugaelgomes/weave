@@ -30,7 +30,9 @@ class CalendarEventsController {
   }
 
   async _syncEventToGoogle(payload) {
-    const tokens = await GoogleOauthTokensRepository.getGoogleTokens(payload.creatorId);
+    const tokens = await GoogleOauthTokensRepository.getGoogleTokens(
+      payload.creatorId
+    );
     if (!tokens) {
       throw new Error("Google Calendar nao conectado");
     }
@@ -275,7 +277,8 @@ class CalendarEventsController {
       const creatorId = this._requireAuthentication(req, res);
       if (!creatorId) return;
 
-      const tokens = await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
+      const tokens =
+        await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
       if (!tokens)
         return res.status(400).json({ error: "Google Calendar não conectado" });
 
@@ -299,7 +302,8 @@ class CalendarEventsController {
       const creatorId = this._requireAuthentication(req, res);
       if (!creatorId) return;
 
-      const tokens = await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
+      const tokens =
+        await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
       if (!tokens)
         return res.status(400).json({ error: "Google Calendar não conectado" });
 
@@ -323,7 +327,8 @@ class CalendarEventsController {
       const creatorId = this._requireAuthentication(req, res);
       if (!creatorId) return;
 
-      const tokens = await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
+      const tokens =
+        await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
       if (!tokens)
         return res.status(400).json({ error: "Google Calendar não conectado" });
 

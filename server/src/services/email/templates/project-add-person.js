@@ -1,9 +1,18 @@
 const { MailService } = require("@/services/email/config");
-const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
+const {
+  buildMailTemplate,
+  escapeHtml,
+} = require("@/services/email/mail-template");
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
-async function inviteProjectMember(nome, email, projectName, projectId, addedByName) {
+async function inviteProjectMember(
+  nome,
+  email,
+  projectName,
+  projectId,
+  addedByName
+) {
   const firstName = (nome || "").split(" ")[0] || "Ola";
   const projectUrl = `${frontendUrl}/app/home/projects/${projectId}`;
 

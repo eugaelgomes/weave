@@ -510,7 +510,9 @@ Inclua apenas os campos que devem ser atualizados.`,
             throw new Error("noteId é obrigatório para atualizar conteúdo");
           }
 
-          const existingNote = await notesRepository.getNoteById(context.noteId);
+          const existingNote = await notesRepository.getNoteById(
+            context.noteId
+          );
           if (!existingNote) {
             throw new Error("Nota não encontrada");
           }

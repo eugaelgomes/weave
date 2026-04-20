@@ -113,7 +113,9 @@ class ProjectsDeleteController extends ProjectsCoreController {
       if (!userId) return;
 
       const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+        await organizationsRepository.getActiveOrganizationWithMembership(
+          userId
+        );
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       await this._validateProjectAccess(projectId, userId);
@@ -165,11 +167,7 @@ class ProjectsDeleteController extends ProjectsCoreController {
             ctx.membership.id,
             stageId
           )
-        : await this.projectsRepository.deleteProjectStage(
-            id,
-            userId,
-            stageId
-          );
+        : await this.projectsRepository.deleteProjectStage(id, userId, stageId);
 
       if (!result || result.length === 0) {
         return res.status(404).json({

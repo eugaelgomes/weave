@@ -21,8 +21,7 @@ class BackupSummaryController extends BackupBaseController {
       const summary = {
         total_notes: rawData.length,
         owned_notes: rawData.filter((n) => n.owner_id === userId).length,
-        collaborated_notes: rawData.filter((n) => n.owner_id !== userId)
-          .length,
+        collaborated_notes: rawData.filter((n) => n.owner_id !== userId).length,
         total_blocks: rawData.reduce(
           (sum, n) => sum + (n.blocks?.filter((b) => !b.deleted).length || 0),
           0

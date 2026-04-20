@@ -5,21 +5,21 @@ const LookupApiTokensRepository = require("@/modules/api-tokens/repositories/loo
 const APPLICATION_SECRET_KEY = process.env.SECRET_KEY;
 
 /**
- * Middleware unificado para verificar a autenticação da requisição.
- * Suporta dois fluxos:
- * 1. Sessão de Usuário Web: Tokens JWT vindos dos cookies.
- * 2. Autenticação de API (Pública): Tokens via header 'Authorization: Bearer wn_prefix.secret'.
+ * Middlare that verifies the authentication of the request.
+ * Supports two flows:
+ * 1. Web User Session: JWT tokens coming from cookies.
+ * 2. Public API Authentication: Tokens via header 'Authorization: Bearer wn_prefix.secret'.
  *
- * Em produção, inclui logs detalhados para problemas de autenticação.
+ * In production, includes detailed logs for authentication problems.
  *
- * @param {import('express').Request} req O objeto de requisição do Express
- * @param {import('express').Response} res O objeto de resposta do Express
- * @param {import('express').NextFunction} next O callback para passar ao próximo middleware
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
  */
 const verifyToken = async (req, res, next) => {
   const isProduction = process.env.NODE_ENV === "production";
 
-  // ====== 1. TENTATIVA VIA TOKEN DE API (BEARER) ======
+  // 1. Public API Authentication: Tokens via header 'Authorization: Bearer wn_prefix.secret'.
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith("Bearer wn_")) {
     try {
@@ -43,30 +43,30 @@ const verifyToken = async (req, res, next) => {
       if (!tokenRecord) {
         return res
           .status(401)
-          .json({ error: "Token de API não encontrado ou inativo." });
+          .json({ error: "API Token not found or inactive." });
       }
 
       if (tokenRecord.revoked_at) {
         return res
           .status(401)
-          .json({ error: "Este token de API foi revogado." });
+          .json({ error: "This API token has been revoked." });
       }
 
       if (
         tokenRecord.expires_at &&
         new Date() > new Date(tokenRecord.expires_at)
       ) {
-        return res.status(401).json({ error: "Este token de API expirou." });
+        return res.status(401).json({ error: "This API token has expired." });
       }
 
       const isValid = await bcrypt.compare(secretPart, tokenRecord.token_hash);
       if (!isValid) {
         return res
           .status(401)
-          .json({ error: "Token de API inválido (Secret incorreto)." });
+          .json({ error: "Invalid API token (Secret incorrect)." });
       }
 
-      // Preenche os dados da requisição com o proprietário do Token
+      // Populates the request data with the token owner
       req.apiToken = {
         id: tokenRecord.id,
         scopes: tokenRecord.scopes || ["read"],
@@ -78,27 +78,27 @@ const verifyToken = async (req, res, next) => {
         isApiCall: true,
       };
 
-      return next(); // Segue fluxo da API Pública
+      return next(); // Follows the public API flow
     } catch (error) {
       console.error(
-        "[Auth Error] Erro ao validar token de API pública:",
+        "[Auth Error] Error validating public API token:",
         error.message
       );
       return res
         .status(500)
-        .json({ error: "Erro interno ao validar o token de API." });
+        .json({ error: "Internal error validating the API token." });
     }
   }
 
-  // ====== 2. TENTATIVA VIA SESSÃO WEB (COOKIES/JWT Padrão) ======
+  // 2. Web User Session: JWT tokens coming from cookies.
   let token = req.cookies?.token;
 
-  // Como fallback alternativo, verifica no Header se for JWT comum sem ser prefixado "wn_"
+  // As a fallback alternative, checks in the Header if it is a common JWT without the "wn_" prefix
   if (!token && authHeader && !authHeader.startsWith("Bearer wn_")) {
     token = authHeader.split(" ")[1];
   }
 
-  // Debug em produção para identificar o problema de requisições perdidas
+  // Debug in production to identify the problem of lost requests
   if (isProduction && !token) {
     console.error("[Auth Error] Token de sessão não encontrado", {
       hasCookies: !!req.cookies,
@@ -113,7 +113,7 @@ const verifyToken = async (req, res, next) => {
 
   if (!token) {
     return res.status(401).json({
-      message: "Acesso negado. Token de sessão ou API não fornecido.",
+      message: "Access denied. Session token or API token not provided.",
     });
   }
 
@@ -122,13 +122,13 @@ const verifyToken = async (req, res, next) => {
       algorithms: ["HS256"],
     });
 
-    // Anexa as credenciais web normais à request
+    // Attaches the normal web credentials to the request
     req.user = decoded;
 
     return next();
   } catch {
     return res.status(401).json({
-      message: "Sessão inválida ou expirada.",
+      message: "Invalid or expired session.",
     });
   }
 };

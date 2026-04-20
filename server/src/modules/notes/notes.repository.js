@@ -24,10 +24,8 @@ module.exports = {
     createNotesRepository.createNotesQuery(...args),
   createCompleteNote: (...args) =>
     createNotesRepository.createCompleteNote(...args),
-  updateNoteById: (...args) =>
-    mutateNotesRepository.updateNoteById(...args),
-  deleteNoteById: (...args) =>
-    mutateNotesRepository.deleteNoteById(...args),
+  updateNoteById: (...args) => mutateNotesRepository.updateNoteById(...args),
+  deleteNoteById: (...args) => mutateNotesRepository.deleteNoteById(...args),
   addCollaborator: (...args) =>
     noteCollaboratorsRepository.addCollaborator(...args),
   removeCollaborator: (...args) =>

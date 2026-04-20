@@ -210,10 +210,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
               projectId,
               ctx.membership.id
             )
-          : await this.projectsRepository.getCollaborators(
-              projectId,
-              userId
-            );
+          : await this.projectsRepository.getCollaborators(projectId, userId);
         const currentCollaborators = collaborators[0]?.collaborators || [];
         const maxCollaborators =
           planDetails.details?.limits?.max_collaborators_per_project;
@@ -565,7 +562,9 @@ class ProjectsUpdateController extends ProjectsCoreController {
       }
 
       const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+        await organizationsRepository.getActiveOrganizationWithMembership(
+          userId
+        );
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       await this._validateProjectAccess(projectId, userId);
@@ -660,7 +659,9 @@ class ProjectsUpdateController extends ProjectsCoreController {
       }
 
       const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+        await organizationsRepository.getActiveOrganizationWithMembership(
+          userId
+        );
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       await this._validateProjectAccess(projectId, userId);
@@ -706,7 +707,9 @@ class ProjectsUpdateController extends ProjectsCoreController {
       if (!userId) return;
 
       const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+        await organizationsRepository.getActiveOrganizationWithMembership(
+          userId
+        );
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       await this._validateProjectAccess(projectId, userId);
@@ -809,8 +812,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
           const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
           if (!hexRegex.test(color)) {
             return res.status(400).json({
-              error:
-                "Color deve ser uma cor hexadecimal válida (ex: #E2E8F0)",
+              error: "Color deve ser uma cor hexadecimal válida (ex: #E2E8F0)",
             });
           }
         }

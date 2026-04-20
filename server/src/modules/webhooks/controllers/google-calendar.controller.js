@@ -267,9 +267,8 @@ class GoogleCalendarController extends WebhooksBaseController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (userId == null) return;
 
-      const connected = await GoogleOauthTokensRepository.hasGoogleTokens(
-        userId
-      );
+      const connected =
+        await GoogleOauthTokensRepository.hasGoogleTokens(userId);
       res.json({ connected });
     } catch {
       res
@@ -334,9 +333,7 @@ class GoogleCalendarController extends WebhooksBaseController {
   }) {
     try {
       const webhook =
-        await GoogleCalendarWebhooksRepository.getWebhookByChannelId(
-          channelId
-        );
+        await GoogleCalendarWebhooksRepository.getWebhookByChannelId(channelId);
       if (!webhook?.user_id) return;
 
       this._broadcastCalendarUpdate(webhook.user_id, {

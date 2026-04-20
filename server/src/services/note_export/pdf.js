@@ -102,7 +102,8 @@ export class PDFService {
         const start = Number(node?.attrs?.start) || 1;
         const items = Array.isArray(node.content) ? node.content : [];
         items.forEach((item, index) => {
-          const marker = node.type === "orderedList" ? `${start + index}.` : "•";
+          const marker =
+            node.type === "orderedList" ? `${start + index}.` : "•";
           const text = this.extractInlineText(item?.content);
           doc
             .font("Helvetica")

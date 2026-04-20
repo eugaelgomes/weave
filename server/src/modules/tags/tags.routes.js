@@ -1,8 +1,12 @@
 const { Router } = require("express");
 const TagsController = require("@/modules/tags/controllers/tags.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
-const { requireOrgPermission } = require("@/middlewares/auth/require-org-permission");
-const { ORG_PERMISSIONS } = require("@/modules/organizations/organization-role-policy");
+const {
+  requireOrgPermission,
+} = require("@/middlewares/auth/require-org-permission");
+const {
+  ORG_PERMISSIONS,
+} = require("@/modules/organizations/organization-role-policy");
 
 const router = Router({ mergeParams: true });
 

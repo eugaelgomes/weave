@@ -1,5 +1,8 @@
 const { MailService } = require("@/services/email/config");
-const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
+const {
+  buildMailTemplate,
+  escapeHtml,
+} = require("@/services/email/mail-template");
 
 function createCollabTemplate({ noteName, ownerName, noteUrl }) {
   const subject = `Nova colaboracao: ${noteName}`;
@@ -29,7 +32,7 @@ async function collabMail(
   collaboratorName,
   noteName,
   ownerName,
-  noteId = null,
+  noteId = null
 ) {
   try {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s | Weave Notes",
   },
   description:
-    "O workspace inteligente para gestão de projetos, notas e tarefas com IA.",
+    "Workspace inteligente para quem pensa inteligente!",
   keywords: [
     "gestão de projetos",
     "gerenciamento de tarefas",
@@ -38,14 +38,14 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     title: "Weave Notes",
     description:
-      "O workspace inteligente para gestão de projetos, notas e tarefas com IA.",
+      "Workspace inteligente para quem pensa inteligente!",
     siteName: "Weave Notes",
   },
   twitter: {
     card: "summary_large_image",
     title: "Weave Notes",
     description:
-      "O workspace inteligente para gestão de projetos, notas e tarefas com IA.",
+      "Workspace inteligente para quem pensa inteligente!",
   },
   icons: {
     icon: "/favicon.ico",

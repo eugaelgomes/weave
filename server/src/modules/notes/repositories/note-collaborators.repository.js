@@ -20,7 +20,10 @@ class NoteCollaboratorsRepository extends BaseRepository {
           WHERE note_id = $1 AND user_id = $2
           RETURNING *;
         `;
-        const results = await this.executeQuery(reactivateQuery, [noteId, userId]);
+        const results = await this.executeQuery(reactivateQuery, [
+          noteId,
+          userId,
+        ]);
         return results[0];
       }
       return null;

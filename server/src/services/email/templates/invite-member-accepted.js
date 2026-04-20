@@ -1,10 +1,13 @@
 const { MailService } = require("@/services/email/config");
-const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
+const {
+  buildMailTemplate,
+  escapeHtml,
+} = require("@/services/email/mail-template");
 
 async function send_organization_invite_accepted(
   toEmail,
   organizationName,
-  homeUrl,
+  homeUrl
 ) {
   const safeOrg = organizationName || "organizacao";
 

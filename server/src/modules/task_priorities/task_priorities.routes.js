@@ -1,8 +1,12 @@
 const { Router } = require("express");
 const TaskPrioritiesController = require("@/modules/task_priorities/controllers/task-priorities.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
-const { requireOrgPermission } = require("@/middlewares/auth/require-org-permission");
-const { ORG_PERMISSIONS } = require("@/modules/organizations/organization-role-policy");
+const {
+  requireOrgPermission,
+} = require("@/middlewares/auth/require-org-permission");
+const {
+  ORG_PERMISSIONS,
+} = require("@/modules/organizations/organization-role-policy");
 
 const router = Router({ mergeParams: true });
 

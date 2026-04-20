@@ -112,7 +112,8 @@ class GithubOauthController extends AuthBaseController {
       let user = await GithubOauthRepository.findUserByGithubId(githubId);
 
       if (!user) {
-        const existingUser = await FindUserRepository.findUserByEmail(userEmail);
+        const existingUser =
+          await FindUserRepository.findUserByEmail(userEmail);
 
         if (existingUser) {
           await GithubOauthRepository.updateUserWithGithub(

@@ -247,7 +247,12 @@ class ProjectsCreateRepository {
 
     return executeQuery(query, [projectId, noteId, userId]);
   }
-  async addNoteToProjectWithOrgScope(projectId, noteId, userId, organizationId) {
+  async addNoteToProjectWithOrgScope(
+    projectId,
+    noteId,
+    userId,
+    organizationId
+  ) {
     const query = `
       WITH updated_note AS (
         UPDATE notes

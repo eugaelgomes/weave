@@ -81,7 +81,10 @@ class ReadNotesRepository extends BaseRepository {
       )
     ORDER BY n.updated_at DESC;
     `;
-    const results = await this.executeQuery(query, [userId, orgWideOrganizationId]);
+    const results = await this.executeQuery(query, [
+      userId,
+      orgWideOrganizationId,
+    ]);
     return await this.processNotesWithSignedUrls(results);
   }
 

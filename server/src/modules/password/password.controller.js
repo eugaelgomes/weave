@@ -2,7 +2,9 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const { validationResult } = require("express-validator");
 const PasswordRepository = require("@/modules/password/password.repository");
-const { mail_rescue_pass } = require("@/services/email/templates/rescue-password");
+const {
+  mail_rescue_pass,
+} = require("@/services/email/templates/rescue-password");
 
 class PasswordController {
   // FORGOT PASSWORD

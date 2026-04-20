@@ -1,6 +1,8 @@
 const { executeQuery } = require("@/database/connection");
 const { normalizeNotificationPayload } = require("../normalize");
-const { mapNotificationRow } = require("@/modules/notifications/repositories/notification-mapping");
+const {
+  mapNotificationRow,
+} = require("@/modules/notifications/repositories/notification-mapping");
 
 class NotificationsCreateRepository {
   async createNotification({

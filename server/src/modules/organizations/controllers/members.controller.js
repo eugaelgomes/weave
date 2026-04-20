@@ -283,11 +283,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
           targetUser.user_id
         );
         if (isMember) {
-          return res
-            .status(400)
-            .json({
-              error: "This user is already a member of the organization",
-            });
+          return res.status(400).json({
+            error: "This user is already a member of the organization",
+          });
         }
       }
 
@@ -463,12 +461,10 @@ class OrganizationMembersController extends OrganizationsBaseController {
         targetUserId = targetUser.user_id;
 
         if (authUserId && authUserId !== targetUserId) {
-          return res
-            .status(403)
-            .json({
-              error:
-                "You are logged in with a different account than the invited one.",
-            });
+          return res.status(403).json({
+            error:
+              "You are logged in with a different account than the invited one.",
+          });
         }
 
         if (!targetUser.email_verified && password) {
@@ -528,7 +524,10 @@ class OrganizationMembersController extends OrganizationsBaseController {
         homePath
       );
       if (!confirmEmail.success) {
-        console.warn("Failed to send invite-accepted email:", confirmEmail.error);
+        console.warn(
+          "Failed to send invite-accepted email:",
+          confirmEmail.error
+        );
       }
 
       res.status(200).json({

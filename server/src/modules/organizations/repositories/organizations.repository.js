@@ -3,7 +3,9 @@ const {
   rowCount,
   getConnection,
 } = require("@/database/connection");
-const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
+const {
+  ORG_ROLES,
+} = require("@/modules/organizations/organization-role-policy");
 
 class OrganizationsRepository {
   /**

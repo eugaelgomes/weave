@@ -1,5 +1,8 @@
 const { MailService } = require("@/services/email/config");
-const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
+const {
+  buildMailTemplate,
+  escapeHtml,
+} = require("@/services/email/mail-template");
 
 async function sendEmailChangeValidation(currentEmail, newEmail, token) {
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
@@ -27,9 +30,7 @@ async function sendEmailChangeValidation(currentEmail, newEmail, token) {
           <p style="margin: 6px 0 0; font-size: 16px; color: #111827; font-weight: 700; letter-spacing: 1px;">${escapeHtml(token)}</p>
         </div>
       `,
-      outroLines: [
-        "Se voce nao solicitou essa alteracao, ignore este email.",
-      ],
+      outroLines: ["Se voce nao solicitou essa alteracao, ignore este email."],
     });
 
     await MailService().sendMail({

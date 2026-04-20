@@ -16,7 +16,9 @@ router.use(verifyToken);
 router.get(
   "/",
   highTrafficLimiter,
-  NotificationsListController.listNotifications.bind(NotificationsListController)
+  NotificationsListController.listNotifications.bind(
+    NotificationsListController
+  )
 );
 
 router.post(
@@ -30,7 +32,9 @@ router.post(
 router.patch(
   "/mark-all-read",
   standardTrafficLimiter,
-  NotificationsUpdateController.markAllAsRead.bind(NotificationsUpdateController)
+  NotificationsUpdateController.markAllAsRead.bind(
+    NotificationsUpdateController
+  )
 );
 
 router.patch(

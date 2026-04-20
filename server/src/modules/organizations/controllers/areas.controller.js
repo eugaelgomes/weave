@@ -286,12 +286,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       }
 
       if (
-        !(await this._requireAreaWriteAccess(
-          res,
-          organization,
-          areaId,
-          userId
-        ))
+        !(await this._requireAreaWriteAccess(res, organization, areaId, userId))
       ) {
         return;
       }
@@ -416,12 +411,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       }
 
       if (
-        !(await this._requireAreaWriteAccess(
-          res,
-          organization,
-          areaId,
-          userId
-        ))
+        !(await this._requireAreaWriteAccess(res, organization, areaId, userId))
       ) {
         return;
       }
@@ -509,12 +499,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       }
 
       if (
-        !(await this._requireAreaWriteAccess(
-          res,
-          organization,
-          areaId,
-          userId
-        ))
+        !(await this._requireAreaWriteAccess(res, organization, areaId, userId))
       ) {
         return;
       }
@@ -617,12 +602,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       }
 
       if (
-        !(await this._requireAreaWriteAccess(
-          res,
-          organization,
-          areaId,
-          userId
-        ))
+        !(await this._requireAreaWriteAccess(res, organization, areaId, userId))
       ) {
         return;
       }
@@ -685,12 +665,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       }
 
       if (
-        !(await this._requireAreaWriteAccess(
-          res,
-          organization,
-          areaId,
-          userId
-        ))
+        !(await this._requireAreaWriteAccess(res, organization, areaId, userId))
       ) {
         return;
       }

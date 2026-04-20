@@ -1,16 +1,22 @@
 const { MailService } = require("@/services/email/config");
-const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
+const {
+  buildMailTemplate,
+  escapeHtml,
+} = require("@/services/email/mail-template");
 
-function buildDueReminderTemplate({ recipientName, noteTitle, dueDateLabel, noteUrl }) {
+function buildDueReminderTemplate({
+  recipientName,
+  noteTitle,
+  dueDateLabel,
+  noteUrl,
+}) {
   const subject = `Lembrete: prazo amanha - ${noteTitle}`;
   const { html, text } = buildMailTemplate({
     preheader: "Lembrete de prazo da sua nota.",
     title: "Lembrete de prazo",
     subtitle: "Vencimento da nota",
     greeting: `${recipientName || "Ola"},`,
-    introLines: [
-      `A nota "${noteTitle}" vence amanha (${dueDateLabel}).`,
-    ],
+    introLines: [`A nota "${noteTitle}" vence amanha (${dueDateLabel}).`],
     ctaText: "Abrir nota",
     ctaUrl: noteUrl,
     infoText: "Recomendamos revisar a nota hoje para evitar atrasos.",
@@ -25,7 +31,13 @@ function buildDueReminderTemplate({ recipientName, noteTitle, dueDateLabel, note
   return { subject, text, html };
 }
 
-async function sendDueReminderEmail(toEmail, recipientName, noteTitle, dueDate, noteId) {
+async function sendDueReminderEmail(
+  toEmail,
+  recipientName,
+  noteTitle,
+  dueDate,
+  noteId
+) {
   try {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const noteUrl = noteId

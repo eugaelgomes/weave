@@ -3,5 +3,22 @@
     "figma": {
       "enabled": true
     }
-  }
+  },
+  
+  "telemetry.telemetryLevel": "off",
+  "cursor.telemetry.enabled": false,
+
+  "security.workspace.trust.enabled": true,
+  "security.workspace.trust.untrustedFiles": "prompt",
+
+  "files.exclude": {
+    "**/.env*": true,
+    "**/*.pem": true,
+    "**/*.key": true,
+    "**/secrets.json": true
+  },
+
+  "extensions.verifySignature": true,
+
+  "terminal.integrated.enablePersistentSessions": false
 }

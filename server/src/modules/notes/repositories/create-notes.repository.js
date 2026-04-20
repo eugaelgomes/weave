@@ -1,7 +1,5 @@
 const BaseRepository = require("./base.repository");
-const {
-  cloneDefaultNoteDocumentState,
-} = require("../document-normalizer");
+const { cloneDefaultNoteDocumentState } = require("../document-normalizer");
 
 const DEFAULT_NOTE_PROPERTIES = {
   icon: { path: "", name: "", type: "" },

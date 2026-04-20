@@ -23,7 +23,9 @@ class NotesWriteController extends NotesBaseController {
     const byOriginalName = new Map(
       uploadedImages.map((item) => [item.originalName, item])
     );
-    const byIndex = new Map(uploadedImages.map((item, index) => [String(index), item]));
+    const byIndex = new Map(
+      uploadedImages.map((item, index) => [String(index), item])
+    );
     let cursor = 0;
 
     const resolveUpload = (token) => {
@@ -59,7 +61,9 @@ class NotesWriteController extends NotesBaseController {
       }
 
       if (Array.isArray(node.content)) {
-        node.content.forEach((child, index) => walk(child, `${path}.content[${index}]`));
+        node.content.forEach((child, index) =>
+          walk(child, `${path}.content[${index}]`)
+        );
       }
     };
 
@@ -72,11 +76,15 @@ class NotesWriteController extends NotesBaseController {
       if (!node || typeof node !== "object") return;
 
       if (node.type === "image" && node.attrs?.src?.startsWith?.("upload://")) {
-        throw new Error(`${path}: placeholder de upload pendente em image.attrs.src`);
+        throw new Error(
+          `${path}: placeholder de upload pendente em image.attrs.src`
+        );
       }
 
       if (Array.isArray(node.content)) {
-        node.content.forEach((child, index) => walk(child, `${path}.content[${index}]`));
+        node.content.forEach((child, index) =>
+          walk(child, `${path}.content[${index}]`)
+        );
       }
     };
 
@@ -85,8 +93,14 @@ class NotesWriteController extends NotesBaseController {
 
   async createNote(req, res, next) {
     try {
-      const { title, description, tags = [], status, project_id, document } =
-        req.body;
+      const {
+        title,
+        description,
+        tags = [],
+        status,
+        project_id,
+        document,
+      } = req.body;
 
       // 1. Validação de autenticação
       const userId = this._validateAuthentication(req, res);
@@ -339,16 +353,14 @@ class NotesWriteController extends NotesBaseController {
       if (!userId) return;
 
       // Validação de acesso à nota (proprietário ou colaborador pode editar)
-      const {
-        note,
-        isOwner,
-        isCollaborator,
-        hasOrgProjectAccess,
-      } = await this._validateNoteAccess(id, userId);
+      const { note, isOwner, isCollaborator, hasOrgProjectAccess } =
+        await this._validateNoteAccess(id, userId);
 
       if (priority_id !== undefined) {
         const pid =
-          priority_id === null || priority_id === undefined || priority_id === ""
+          priority_id === null ||
+          priority_id === undefined ||
+          priority_id === ""
             ? null
             : String(priority_id);
         if (pid) {
@@ -414,7 +426,9 @@ class NotesWriteController extends NotesBaseController {
       }
       if (priority_id !== undefined) {
         updateData.priority_id =
-          priority_id === null || priority_id === undefined || priority_id === ""
+          priority_id === null ||
+          priority_id === undefined ||
+          priority_id === ""
             ? null
             : String(priority_id);
       }
@@ -710,7 +724,9 @@ class NotesWriteController extends NotesBaseController {
 
       const usageRecord = await PlanUsageManager.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
-      const planDetails = await PlansRepository.getPlanById(getUserPlan.plan_id);
+      const planDetails = await PlansRepository.getPlanById(
+        getUserPlan.plan_id
+      );
 
       if (!usageRecord || !planDetails) {
         return res.status(404).json({
@@ -718,7 +734,8 @@ class NotesWriteController extends NotesBaseController {
         });
       }
 
-      const maxFileSizeMb = planDetails.details?.limits?.storage?.max_file_size_mb;
+      const maxFileSizeMb =
+        planDetails.details?.limits?.storage?.max_file_size_mb;
       const totalMonthlyUploadMb =
         planDetails.details?.limits?.storage?.total_monthly_upload_mb;
 
@@ -774,7 +791,10 @@ class NotesWriteController extends NotesBaseController {
       );
 
       if (totalUploadSizeMb > 0) {
-        await PlanUsageManager.consumeStorage(usageRecord.id, totalUploadSizeMb);
+        await PlanUsageManager.consumeStorage(
+          usageRecord.id,
+          totalUploadSizeMb
+        );
       }
 
       return res.status(201).json({ files });

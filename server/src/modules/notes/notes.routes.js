@@ -1,6 +1,9 @@
 const express = require("express");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
-const { commentFilesUpload, noteUpdateUpload } = require("@/utils/data/note-upload");
+const {
+  commentFilesUpload,
+  noteUpdateUpload,
+} = require("@/utils/data/note-upload");
 const {
   highTrafficLimiter,
   standardTrafficLimiter,

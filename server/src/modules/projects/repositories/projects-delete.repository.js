@@ -306,11 +306,7 @@ class ProjectsDeleteRepository {
     ];
   }
 
-  async deleteProjectStageInOrganization(
-    projectId,
-    organizationId,
-    stageId
-  ) {
+  async deleteProjectStageInOrganization(projectId, organizationId, stageId) {
     const progressExpr = this._projectProgressExpr();
     const query = `
       WITH auth AS (

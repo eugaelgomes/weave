@@ -40,6 +40,10 @@ router.get(
   GithubOauthController.githubCallback.bind(GithubOauthController)
 );
 
-router.post("/logout", verifyToken, LogoutController.logout.bind(LogoutController));
+router.post(
+  "/logout",
+  verifyToken,
+  LogoutController.logout.bind(LogoutController)
+);
 
 module.exports = router;

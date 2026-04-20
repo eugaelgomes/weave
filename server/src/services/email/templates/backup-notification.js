@@ -1,10 +1,13 @@
 const { MailService } = require("@/services/email/config");
-const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
+const {
+  buildMailTemplate,
+  escapeHtml,
+} = require("@/services/email/mail-template");
 
 async function sendBackupEmail(userEmail, userName, downloadUrl, expiresAt) {
   try {
     const hoursUntilExpiration = Math.round(
-      (new Date(expiresAt) - new Date()) / (1000 * 60 * 60),
+      (new Date(expiresAt) - new Date()) / (1000 * 60 * 60)
     );
 
     const expiresLabel = new Date(expiresAt).toLocaleString("pt-BR");

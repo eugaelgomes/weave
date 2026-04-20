@@ -1,12 +1,15 @@
 const { MailService } = require("@/services/email/config");
-const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
+const {
+  buildMailTemplate,
+  escapeHtml,
+} = require("@/services/email/mail-template");
 
 async function delete_account_request(nome, email, username, token) {
   try {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const confirmationLink = `${frontendUrl}/auth/confirm-delete-account?token=${token}`;
     const expiration = new Date(
-      Date.now() + 7 * 24 * 60 * 60 * 1000,
+      Date.now() + 7 * 24 * 60 * 60 * 1000
     ).toLocaleDateString("pt-BR");
 
     const { html, text } = buildMailTemplate({

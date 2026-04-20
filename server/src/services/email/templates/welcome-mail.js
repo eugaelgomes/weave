@@ -1,5 +1,8 @@
 const { MailService } = require("@/services/email/config");
-const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
+const {
+  buildMailTemplate,
+  escapeHtml,
+} = require("@/services/email/mail-template");
 
 async function welcome_message(nome, email, username, activationToken, code) {
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
@@ -33,7 +36,8 @@ async function welcome_message(nome, email, username, activationToken, code) {
         `Token: ${activationToken}`,
         "Se voce nao se cadastrou, ignore este email.",
       ],
-      footerNote: "Voce recebeu este email porque criou uma conta no Weave Notes.",
+      footerNote:
+        "Voce recebeu este email porque criou uma conta no Weave Notes.",
     });
 
     await MailService().sendMail({

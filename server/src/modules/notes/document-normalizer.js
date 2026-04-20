@@ -18,7 +18,9 @@ const NOTE_DOCUMENT_HEX_COLOR_PALETTE = Object.freeze([
   "#ec4899",
 ]);
 
-const NOTE_DOCUMENT_HEX_COLOR_PALETTE_SET = new Set(NOTE_DOCUMENT_HEX_COLOR_PALETTE);
+const NOTE_DOCUMENT_HEX_COLOR_PALETTE_SET = new Set(
+  NOTE_DOCUMENT_HEX_COLOR_PALETTE
+);
 
 const expandShorthandHex = (hexBody) => {
   if (hexBody.length === 3) {
@@ -221,7 +223,9 @@ const validateNodeAttrs = (type, attrs, path) => {
         attrs.start !== undefined &&
         (!Number.isInteger(attrs.start) || attrs.start < 1)
       ) {
-        throw new Error(`${path}: orderedList attrs.start deve ser inteiro >= 1`);
+        throw new Error(
+          `${path}: orderedList attrs.start deve ser inteiro >= 1`
+        );
       }
       break;
     }
@@ -276,7 +280,9 @@ const validateNodeAttrs = (type, attrs, path) => {
           attrs.colwidth.every((w) => Number.isInteger(w) && w > 0)
         )
       ) {
-        throw new Error(`${path}: attrs.colwidth deve ser array de inteiros > 0`);
+        throw new Error(
+          `${path}: attrs.colwidth deve ser array de inteiros > 0`
+        );
       }
       validateOptionalLineBackgroundColor(attrs, path);
       break;
@@ -299,7 +305,9 @@ const validateChildConstraint = (parentType, childType, path) => {
         NOTE_DOCUMENT_NODE_TYPES.TASK_ITEM,
       ].includes(childType)
     ) {
-      throw new Error(`${path}: node '${childType}' inválido na raiz do documento`);
+      throw new Error(
+        `${path}: node '${childType}' inválido na raiz do documento`
+      );
     }
   }
 
@@ -316,7 +324,9 @@ const validateChildConstraint = (parentType, childType, path) => {
         NOTE_DOCUMENT_NODE_TYPES.IMAGE,
       ].includes(childType)
     ) {
-      throw new Error(`${path}: '${childType}' inválido dentro de '${parentType}'`);
+      throw new Error(
+        `${path}: '${childType}' inválido dentro de '${parentType}'`
+      );
     }
   }
 
@@ -351,9 +361,10 @@ const validateChildConstraint = (parentType, childType, path) => {
   }
 
   if (
-    [NOTE_DOCUMENT_NODE_TYPES.BULLET_LIST, NOTE_DOCUMENT_NODE_TYPES.ORDERED_LIST].includes(
-      parentType
-    )
+    [
+      NOTE_DOCUMENT_NODE_TYPES.BULLET_LIST,
+      NOTE_DOCUMENT_NODE_TYPES.ORDERED_LIST,
+    ].includes(parentType)
   ) {
     if (childType !== NOTE_DOCUMENT_NODE_TYPES.LIST_ITEM) {
       throw new Error(`${path}: listas aceitam apenas 'listItem'`);
@@ -379,14 +390,17 @@ const validateChildConstraint = (parentType, childType, path) => {
         NOTE_DOCUMENT_NODE_TYPES.TABLE_HEADER,
       ].includes(childType)
     ) {
-      throw new Error(`${path}: tableRow aceita apenas 'tableCell' e 'tableHeader'`);
+      throw new Error(
+        `${path}: tableRow aceita apenas 'tableCell' e 'tableHeader'`
+      );
     }
   }
 
   if (
-    [NOTE_DOCUMENT_NODE_TYPES.TABLE_CELL, NOTE_DOCUMENT_NODE_TYPES.TABLE_HEADER].includes(
-      parentType
-    )
+    [
+      NOTE_DOCUMENT_NODE_TYPES.TABLE_CELL,
+      NOTE_DOCUMENT_NODE_TYPES.TABLE_HEADER,
+    ].includes(parentType)
   ) {
     if (
       ![
@@ -515,7 +529,9 @@ const normalizeNoteDocumentPayload = (raw) => {
   }
 
   validateNode(parsed.document, "document.document");
-  const documentWithOrdering = assignNodeIntegerOrdering(parsed.document, { value: 1 });
+  const documentWithOrdering = assignNodeIntegerOrdering(parsed.document, {
+    value: 1,
+  });
 
   return {
     document: documentWithOrdering,

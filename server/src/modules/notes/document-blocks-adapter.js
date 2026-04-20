@@ -1,6 +1,4 @@
-const {
-  cloneDefaultNoteDocumentState,
-} = require("./document-normalizer");
+const { cloneDefaultNoteDocumentState } = require("./document-normalizer");
 
 const createBlockId = () => {
   return `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -53,7 +51,13 @@ const lineBackgroundFromAttrs = (attrs) => {
   return { backgroundColor: bg.trim() };
 };
 
-const mapNodeToBlock = (node, noteId, level = 0, position = 0, parentId = null) => {
+const mapNodeToBlock = (
+  node,
+  noteId,
+  level = 0,
+  position = 0,
+  parentId = null
+) => {
   if (!node || typeof node !== "object") return null;
 
   const base = {
@@ -258,7 +262,9 @@ const buildNodeFromBlock = (block) => {
   if (block?.type === "list") {
     if (children.some((child) => child?.type === "todo")) {
       return {
-        content: children.map((child) => buildNodeFromBlock(child)).filter(Boolean),
+        content: children
+          .map((child) => buildNodeFromBlock(child))
+          .filter(Boolean),
         type: "taskList",
       };
     }

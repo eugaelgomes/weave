@@ -76,5 +76,5 @@ export default tseslint.config(
       semi: ["error", "always"],
       "sort-keys": ["warn", "asc", { caseSensitive: false, natural: true }],
     },
-  },
+  }
 );

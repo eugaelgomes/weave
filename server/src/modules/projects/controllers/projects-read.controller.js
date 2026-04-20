@@ -13,7 +13,9 @@ class ProjectsReadController extends ProjectsCoreController {
       if (!userId) return;
 
       const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+        await organizationsRepository.getActiveOrganizationWithMembership(
+          userId
+        );
 
       const projects =
         this._canAccessAllOrganizationProjects(membership) && membership.id
@@ -190,7 +192,9 @@ class ProjectsReadController extends ProjectsCoreController {
       if (!userId) return;
 
       const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+        await organizationsRepository.getActiveOrganizationWithMembership(
+          userId
+        );
 
       let project;
       if (this._canAccessAllOrganizationProjects(membership) && membership.id) {
@@ -230,17 +234,16 @@ class ProjectsReadController extends ProjectsCoreController {
       await this._validateProjectAccess(projectId, userId);
 
       const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+        await organizationsRepository.getActiveOrganizationWithMembership(
+          userId
+        );
       const notes =
         this._canAccessAllOrganizationProjects(membership) && membership.id
           ? await this.projectsRepository.getAssociatedNotesWithOrgScope(
               projectId,
               membership.id
             )
-          : await this.projectsRepository.getAssociatedNotes(
-              projectId,
-              userId
-            );
+          : await this.projectsRepository.getAssociatedNotes(projectId, userId);
 
       res.status(200).json({
         notes: notes,
@@ -289,7 +292,9 @@ class ProjectsReadController extends ProjectsCoreController {
       filters.parent_only = req.query.parent_only !== "false";
 
       const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+        await organizationsRepository.getActiveOrganizationWithMembership(
+          userId
+        );
 
       const result =
         this._canAccessAllOrganizationProjects(membership) && membership.id

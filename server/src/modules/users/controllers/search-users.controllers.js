@@ -26,8 +26,7 @@ class SearchUsersController extends BaseController {
 
       const searchTerm = q.trim();
 
-      const search_users =
-        await SearchUsersRepository.searchUsers(searchTerm);
+      const search_users = await SearchUsersRepository.searchUsers(searchTerm);
 
       const filteredUsers = search_users
         .filter((user) => user && user.user_id !== userId)
