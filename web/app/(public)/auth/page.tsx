@@ -21,6 +21,7 @@ export type AuthView =
 
 export interface PendingAuthData {
   email?: string;
+  login?: string;
   password?: string;
 }
 
@@ -28,19 +29,39 @@ export default function AuthPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get("invite_token");
+  const basePath = "/auth";
   const [currentView, setCurrentView] = useState<AuthView>("signin");
-  const [pendingEmail, setPendingEmail] = useState<string>("");
+  const [pendingLogin, setPendingLogin] = useState<string | null>(null);
   const [pendingAuth, setPendingAuth] = useState<PendingAuthData>({});
   const [error, setError] = useState<string | null>(null);
 
   const handleNavigate = (view: AuthView, payload?: PendingAuthData) => {
     setCurrentView(view);
-    if (payload?.email) {
-      setPendingEmail(payload.email);
+    const confirmIdentifier = payload?.email ?? payload?.login;
+    if (confirmIdentifier) {
+      setPendingLogin(confirmIdentifier);
     }
     if (payload) {
       setPendingAuth((prev) => ({ ...prev, ...payload }));
     }
+
+    if (view === "accept-invite") {
+      return;
+    }
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", view);
+
+    if (view === "confirm" && confirmIdentifier) {
+      params.set("login", confirmIdentifier);
+    } else if (view !== "confirm") {
+      params.delete("token");
+      params.delete("code");
+      params.delete("login");
+    }
+
+    const query = params.toString();
+    router.replace(query ? `${basePath}?${query}` : basePath, { scroll: false });
   };
 
   useEffect(() => {
@@ -53,25 +74,28 @@ export default function AuthPage() {
     const view = searchParams.get("view");
     const token = searchParams.get("token");
     const code = searchParams.get("code");
-    const queryEmail = searchParams.get("email");
+    const queryLogin = searchParams.get("login");
 
     if (view === "confirm" || token || code) {
       setCurrentView("confirm");
-      if (queryEmail) {
-        setPendingEmail(queryEmail);
+      if (queryLogin) {
+        setPendingLogin(queryLogin);
       }
       return;
     }
 
-    setCurrentView((prev) => (prev === "accept-invite" ? "signin" : prev));
+    if (view === "signup" || view === "forgot") {
+      setCurrentView(view);
+      return;
+    }
+
+    setCurrentView("signin");
   }, [searchParams]);
 
   return (
     <div className="relative flex h-[100dvh] w-full flex-col text-slate-950 lg:flex-row">
-      <div className="bg-brand-secondary-200 border-brand-secondary-200 relative z-10 hidden flex-col items-center justify-center overflow-hidden rounded-r-xl border-r-2 p-8 shadow-xl lg:flex lg:w-[45%] xl:w-1/2">
-        <div className="mx-auto mt-4 w-full origin-top scale-95 transform lg:scale-100">
-          <AuthMarketing />
-        </div>
+      <div className="bg-brand-secondary-200 relative z-10 border-r border-brand-secondary-300/10 hidden overflow-hidden rounded-r-xl shadow-xl lg:flex lg:w-[45%] xl:w-1/2">
+        <AuthMarketing />
       </div>
 
       <div className="flex w-full flex-1 items-center justify-center bg-white p-4 sm:p-8 lg:w-1/2">
@@ -112,7 +136,7 @@ export default function AuthPage() {
             {currentView === "confirm" && (
               <ConfirmCreateAccount
                 onNavigate={handleNavigate}
-                email={pendingEmail}
+                email={pendingLogin ?? undefined}
                 pendingAuth={pendingAuth}
               />
             )}

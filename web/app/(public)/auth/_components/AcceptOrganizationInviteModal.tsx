@@ -136,46 +136,46 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
   if (!isOpen || !token) return null;
 
   return (
-    <div className="relative flex w-full flex-col px-3 py-1.5 sm:px-4 sm:py-2">
+    <div className="relative flex w-full flex-col px-6 py-4 sm:px-8">
       <button
         type="button"
         onClick={onClose}
-        className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute top-0.5 right-0.5 z-10 rounded-full p-0.5 transition-colors hover:bg-slate-100 sm:top-1 sm:right-1"
+        className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute top-2 right-2 z-10 rounded-full p-1 transition-colors hover:bg-brand-secondary-100"
         aria-label="Fechar"
       >
         <X className="h-3.5 w-3.5" />
       </button>
 
-      <div className="mt-0.5">
-        <div className="border-brand-secondary-100 mb-2 border-b pb-2">
-          <div className="mb-1 flex justify-center">
-            <div className="bg-brand-primary-100 flex h-8 w-8 items-center justify-center rounded-full">
-              <Building2 className="text-brand-primary-800 h-4 w-4" />
+      <div className="mt-2">
+        <div className="border-brand-secondary-100 mb-5 border-b pb-4">
+          <div className="mb-3 flex justify-center">
+            <div className="bg-brand-secondary-100 flex h-10 w-10 items-center justify-center rounded-full">
+              <Building2 className="text-brand-primary-500 h-5 w-5" />
             </div>
           </div>
-          <h2 className="text-brand-secondary-900 text-center text-sm leading-tight font-bold">
+          <h2 className="text-brand-secondary-900 text-center text-xl leading-tight font-bold">
             Convite para organização
           </h2>
-          <p className="text-brand-secondary-500 mt-0.5 text-center text-[11px] leading-snug font-medium">
+          <p className="text-brand-secondary-500 mt-2 text-center text-sm leading-snug font-medium">
             Você foi convidado para colaborar no Weave Notes.
           </p>
         </div>
 
         <div>
           {loading && (
-            <div className="flex flex-col items-center gap-1.5 py-3">
+            <div className="flex flex-col items-center gap-2 py-3">
               <Loader2 className="text-brand-primary-600 h-5 w-5 animate-spin" />
-              <p className="text-brand-secondary-500 text-[11px]">Carregando convite…</p>
+              <p className="text-brand-secondary-500 text-sm">Carregando convite...</p>
             </div>
           )}
 
           {loadError && !loading && (
-            <div className="space-y-1.5">
-              <p className="text-center text-[11px] leading-snug text-red-600">{loadError}</p>
+            <div className="space-y-2">
+              <p className="text-center text-sm leading-snug text-red-600">{loadError}</p>
               <button
                 type="button"
                 onClick={onClose}
-                className="bg-brand-primary-500 hover:bg-brand-primary-800 w-full rounded-md py-1 text-[11px] font-medium text-white transition-colors"
+                className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 w-full rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95"
               >
                 Voltar ao login
               </button>
@@ -184,7 +184,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
 
           {!loading && !loadError && preview && (
             <>
-              <div className="bg-brand-secondary-100 mb-2 rounded-md px-2 py-1.5 text-[11px] leading-snug">
+              <div className="bg-brand-secondary-100 mb-4 rounded-md px-3 py-2 text-sm leading-snug">
                 <p className="text-brand-secondary-800">
                   <span className="font-semibold">Organização:</span> {preview.org_name}
                 </p>
@@ -210,32 +210,32 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
               </div>
 
               {success && (
-                <p className="mb-1.5 rounded-md bg-emerald-50 px-2 py-1 text-center text-[11px] leading-snug text-emerald-800">
+                <p className="mb-2 rounded-md bg-emerald-50 px-3 py-2 text-center text-sm leading-snug text-emerald-800">
                   {success}
                 </p>
               )}
 
               {formError && (
-                <p className="mb-1.5 text-center text-[11px] leading-snug text-red-600">
+                <p className="mb-2 text-center text-sm leading-snug text-red-600">
                   {formError}
                 </p>
               )}
 
               {preview.has_account ? (
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {!success && (
                     <>
-                      <p className="text-brand-secondary-600 text-center text-[11px] leading-snug">
+                      <p className="text-brand-secondary-600 text-center text-sm leading-snug">
                         Sua conta já existe. Aceite o convite e, em seguida, entre com este e-mail.
                       </p>
                       <button
                         type="button"
                         disabled={submitting}
                         onClick={handleAcceptExisting}
-                        className="bg-brand-primary-500 hover:bg-brand-primary-800 flex w-full items-center justify-center gap-1 rounded-md py-1 text-[11px] font-medium text-white transition-colors disabled:opacity-60"
+                        className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-60"
                       >
                         {submitting ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           "Aceitar convite"
                         )}
@@ -245,19 +245,19 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
                   <button
                     type="button"
                     onClick={onClose}
-                    className="text-brand-secondary-600 hover:bg-brand-secondary-100 w-full rounded-md py-0.5 text-[11px] font-medium transition-colors"
+                    className="text-brand-secondary-600 hover:bg-brand-secondary-100 w-full rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
                   >
                     {success ? "Fechar" : "Entrar com outra conta"}
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleAcceptNew} className="space-y-1.5">
-                  <p className="text-brand-secondary-600 mb-0.5 text-center text-[11px] leading-snug">
+                <form onSubmit={handleAcceptNew} className="space-y-2">
+                  <p className="text-brand-secondary-600 mb-1 text-center text-sm leading-snug">
                     Crie sua conta com os dados abaixo. O e-mail será o do convite.
                   </p>
                   <div className="relative">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
-                      <User className="text-brand-secondary-400 h-3 w-3" />
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                      <User className="text-brand-secondary-400 h-4 w-4" />
                     </div>
                     <input
                       type="text"
@@ -266,12 +266,12 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
                       placeholder="Nome completo"
                       autoComplete="name"
                       disabled={submitting}
-                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1 pr-2 pl-7 text-[11px] focus:ring-1 focus:outline-none disabled:opacity-60"
+                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60"
                     />
                   </div>
                   <div className="relative">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
-                      <User className="text-brand-secondary-400 h-3 w-3" />
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                      <User className="text-brand-secondary-400 h-4 w-4" />
                     </div>
                     <input
                       type="text"
@@ -280,12 +280,12 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
                       placeholder="Nome de usuário"
                       autoComplete="username"
                       disabled={submitting}
-                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1 pr-2 pl-7 text-[11px] focus:ring-1 focus:outline-none disabled:opacity-60"
+                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60"
                     />
                   </div>
                   <div className="relative">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
-                      <Lock className="text-brand-secondary-400 h-3 w-3" />
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                      <Lock className="text-brand-secondary-400 h-4 w-4" />
                     </div>
                     <input
                       type={showPassword ? "text" : "password"}
@@ -294,25 +294,25 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
                       placeholder="Senha"
                       autoComplete="new-password"
                       disabled={submitting}
-                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1 pr-8 pl-7 text-[11px] focus:ring-1 focus:outline-none disabled:opacity-60"
+                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60"
                     />
                     <button
                       type="button"
                       tabIndex={-1}
                       onClick={() => setShowPassword((v) => !v)}
-                      className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute inset-y-0 right-0 flex items-center pr-1.5"
+                      className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
                       aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                     >
-                      {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="bg-brand-primary-500 hover:bg-brand-primary-800 flex w-full items-center justify-center gap-1 rounded-md py-1 text-[11px] font-medium text-white transition-colors disabled:opacity-60"
+                    className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-60"
                   >
                     {submitting ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       "Criar conta e aceitar convite"
                     )}
@@ -320,7 +320,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
                   <button
                     type="button"
                     onClick={onClose}
-                    className="text-brand-secondary-600 hover:bg-brand-secondary-100 w-full rounded-md py-0.5 text-[11px] font-medium transition-colors"
+                    className="text-brand-secondary-600 hover:bg-brand-secondary-100 w-full rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
                   >
                     Cancelar
                   </button>

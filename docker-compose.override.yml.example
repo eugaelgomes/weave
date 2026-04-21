@@ -1,5 +1,3 @@
-# docker-compose.override.yml
-
 # Para desenvolvimento local.
 services:
   server:
@@ -35,37 +33,20 @@ services:
           target: /app
           ignore:
             - node_modules/
-
-  discover:
+  
+  worker:
     build:
-      context: ./discover
+      context: ./worker
       dockerfile: Dockerfile.dev
     ports:
-      - "3001:3001"
+      - "8081:8081"
     environment:
       - NODE_ENV=development
     command: npm run dev
     develop:
       watch:
         - action: sync
-          path: ./discover
-          target: /app
-          ignore:
-            - node_modules/
-
-  admin-console:
-    build:
-      context: ./admin-console
-      dockerfile: Dockerfile.dev
-    ports:
-      - "3003:3003"
-    environment:
-      - NODE_ENV=development
-    command: npm run dev
-    develop:
-      watch:
-        - action: sync
-          path: ./admin-console
+          path: ./worker
           target: /app
           ignore:
             - node_modules/

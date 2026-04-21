@@ -46,7 +46,7 @@ export function ForgotPassword({ onNavigate, locale = "pt-br" }: Props) {
   };
 
   return (
-    <div className="flex w-full flex-col px-6 py-4 sm:px-8 sm:py-6">
+    <div className="flex w-full flex-col px-6 py-4 sm:px-8">
       <ErrorModal
         isOpen={!!error}
         onClose={() => setError(null)}
@@ -54,9 +54,9 @@ export function ForgotPassword({ onNavigate, locale = "pt-br" }: Props) {
         locale={locale}
       />
       <div className="mt-2">
-        <h1 className="mb-5 text-3xl leading-tight font-bold text-slate-950 sm:text-4xl">
-          {t.forgotPassword.title}
-        </h1>
+        <div className="mb-6 flex flex-col gap-1.5 text-center">
+          <p className="text-brand-secondary-500 text-sm font-medium">{t.forgotPassword.title}</p>
+        </div>
 
         {success ? (
           <div className="mb-4 flex items-start rounded-md bg-green-50 p-4">
@@ -65,30 +65,28 @@ export function ForgotPassword({ onNavigate, locale = "pt-br" }: Props) {
           </div>
         ) : (
           <form className="space-y-2" onSubmit={handleSubmit}>
-            {/* Email */}
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                <Mail className="h-4 w-4 text-slate-400" />
+                <Mail className="text-brand-secondary-400 h-4 w-4" />
               </div>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t.forgotPassword.emailPlaceholder}
-                className="w-full rounded-md bg-slate-100 py-2.5 pr-4 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+                className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
                 disabled={isLoading}
               />
             </div>
 
-            {/* Send Code Button Area */}
             <div className="mt-2 flex items-center justify-between sm:mt-4">
-              <p className="max-w-[200px] text-[10px] leading-tight text-slate-500">
+              <p className="text-brand-secondary-500 max-w-[220px] text-xs leading-tight">
                 {t.forgotPassword.infoText}
               </p>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="bg-brand-primary-500 flex items-center justify-center rounded-md px-4 py-2 text-white shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] hover:bg-yellow-600 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:py-1.5"
+                className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
               >
                 {isLoading ? "Enviando..." : t.forgotPassword.submitButton}
               </button>
@@ -100,10 +98,10 @@ export function ForgotPassword({ onNavigate, locale = "pt-br" }: Props) {
       <div className="mt-8 flex flex-col items-center">
         <button
           onClick={() => onNavigate("signin")}
-          className="mt-8 text-sm font-medium text-slate-500"
+          className="text-brand-secondary-500 hover:text-brand-secondary-700 mt-8 text-xs font-medium transition-colors duration-200"
         >
           {t.forgotPassword.rememberedPassword}{" "}
-          <span className="hover:text-brand-primary-500 font-semibold text-yellow-600 transition-colors">
+          <span className="text-brand-primary-500 hover:text-brand-primary-500 font-semibold transition-colors duration-200">
             {t.forgotPassword.loginNow}
           </span>
         </button>

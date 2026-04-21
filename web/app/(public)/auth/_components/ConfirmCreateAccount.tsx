@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronRight, KeyRound } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { ChevronRight, KeyRound, MailCheck } from "lucide-react";
 import { getTranslations, LocaleKey } from "@/app/(public)/auth/_i18n";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -13,7 +13,7 @@ interface Props {
     payload?: { email?: string; password?: string }
   ) => void;
   email?: string;
-  pendingAuth?: { email?: string; password?: string };
+  pendingAuth?: { email?: string; login?: string; password?: string };
   locale?: LocaleKey;
 }
 
@@ -26,12 +26,17 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
 
   const initialToken = useMemo(() => searchParams.get("token") || "", [searchParams]);
   const initialEmail = useMemo(
-    () => searchParams.get("email") || email || "",
+    () => searchParams.get("email") || searchParams.get("login") || email || "",
     [searchParams, email]
   );
   const initialCode = useMemo(() => searchParams.get("code") || "", [searchParams]);
 
-  const [code, setCode] = useState(initialCode);
+  // Inicializa os 6 dígitos separadamente
+  const [codeArray, setCodeArray] = useState<string[]>(() => {
+    const chars = initialCode.replace(/\D/g, "").slice(0, 6).split("");
+    return [...chars, ...Array(6 - chars.length).fill("")];
+  });
+  
   const [verificationEmail, setVerificationEmail] = useState(initialEmail);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,14 +44,20 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [canSetupProfile, setCanSetupProfile] = useState(false);
 
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
   const handleActivation = useCallback(
     async (payload?: { token?: string; code?: string; email?: string }) => {
       setIsLoading(true);
       setError(null);
 
-      const data = payload || { code: code.trim(), email: verificationEmail.trim() };
+      const currentCode = payload?.code || codeArray.join("");
+      const data: { token?: string; code?: string; email?: string } = payload || {
+        code: currentCode,
+        email: verificationEmail.trim(),
+      };
 
-      if (!data.token && (!data.code || !data.email)) {
+      if (!data.token && (!data.code || data.code.length < 6 || !data.email)) {
         setError(confirmT.missingDataError);
         setIsLoading(false);
         return;
@@ -61,9 +72,8 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
 
       setSuccessMessage(activationResult.message || confirmT.successMessage);
 
-      // Para executar o passo 3 (update profile/preferences), precisamos da sessao autenticada.
-      // Tentamos login automatico com os dados recem-usados no fluxo de cadastro.
-      const autoLoginEmail = pendingAuth?.email || verificationEmail;
+      const autoLoginEmail =
+        pendingAuth?.email || pendingAuth?.login || verificationEmail;
       if (autoLoginEmail && pendingAuth?.password) {
         const loginResult = await login(autoLoginEmail, pendingAuth.password);
         if (loginResult.success) {
@@ -75,12 +85,13 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
     },
     [
       activateAccount,
-      code,
+      codeArray,
       confirmT.activationError,
       confirmT.missingDataError,
       confirmT.successMessage,
       login,
       pendingAuth?.email,
+      pendingAuth?.login,
       pendingAuth?.password,
       verificationEmail,
     ]
@@ -92,6 +103,39 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
     }
   }, [handleActivation, initialToken]);
 
+  // Gestão avançada dos inputs de Código (OTP)
+  const handleCodeChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    const newArray = [...codeArray];
+    newArray[index] = digit;
+    setCodeArray(newArray);
+
+    if (digit && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleCodeKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !codeArray[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleCodePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pastedData) {
+      const newArray = [...codeArray];
+      for (let i = 0; i < pastedData.length; i++) {
+        newArray[i] = pastedData[i];
+      }
+      setCodeArray(newArray);
+      
+      const nextFocusIndex = Math.min(pastedData.length, 5);
+      inputRefs.current[nextFocusIndex]?.focus();
+    }
+  };
+
   if (showProfileSetup) {
     return (
       <SetProfileSettings
@@ -102,89 +146,108 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
     );
   }
 
-  return (
-    <div className="flex w-full flex-col px-4 py-4">
-      <div className="mt-8 flex flex-col items-center text-center">
-        {/*<div className="bg-brand-primary-50 mb-6 flex h-12 w-12 items-center justify-center rounded-full">
-          <CheckCircle2 className="text-brand-primary-500 h-6 w-6" />
-        </div>
-        */}
-        <h1 className="mb-3 text-xl font-bold tracking-tight text-neutral-800">{confirmT.title}</h1>
+  const isCodeComplete = codeArray.join("").length === 6;
 
-        <p className="text-brand-secondary-500 mb-8 max-w-sm text-xs leading-relaxed">
+  return (
+    <div className="flex w-full flex-col items-center justify-center px-6 py-4 sm:px-8">
+      <div className="flex w-full max-w-sm flex-col items-center text-center">
+
+        <div className="bg-brand-secondary-100 text-brand-primary-500 mb-6 flex h-12 w-12 items-center justify-center rounded-xl">
+          <MailCheck className="h-7 w-7" />
+        </div>
+
+        <h1 className="text-brand-secondary-900 mb-2 text-xl font-bold tracking-tight sm:text-2xl">
+          {confirmT.title}
+        </h1>
+
+        <p className="text-brand-secondary-500 mb-6 text-sm leading-relaxed">
           {confirmT.subtitle}
         </p>
 
-        {/*{email && (
-          <div className="bg-brand-secondary-100 text-brand-secondary-700 mb-8 flex w-full max-w-xs items-center justify-center gap-2 rounded-lg px-4 py-3 text-xs font-medium">
-            <Mail className="text-brand-secondary-400 h-4 w-4" />
-            <span className="truncate">{email}</span>
-          </div>
-        )}
-        */}
-
-        {!successMessage && (
-          <div className="mb-4 flex w-full max-w-sm flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-left">
-            <div className="mb-1 flex items-center gap-2 px-1 text-xs font-medium text-slate-700">
-              <KeyRound className="h-4 w-4" />
+        {!successMessage ? (
+          <div className="border-brand-secondary-200 w-full rounded-xl border bg-white p-5 shadow-sm sm:p-6">
+            <div className="text-brand-secondary-800 mb-5 flex items-center gap-2 text-sm font-semibold">
+              <KeyRound className="text-brand-secondary-500 h-4 w-4" />
               <span>{confirmT.sectionTitle}</span>
             </div>
 
-            {!initialEmail && (
-              <input
-                value={verificationEmail}
-                onChange={(e) => setVerificationEmail(e.target.value)}
-                placeholder={confirmT.emailPlaceholder}
-                type="email"
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs"
-                disabled={isLoading}
-              />
+            <div className="flex flex-col gap-5 text-left">
+              {!initialEmail && (
+                <div className="space-y-1.5">
+                  <label className="text-brand-secondary-600 text-xs font-medium">E-mail</label>
+                  <input
+                    value={verificationEmail}
+                    onChange={(e) => setVerificationEmail(e.target.value)}
+                    placeholder={confirmT.emailPlaceholder}
+                    type="email"
+                    className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white px-3 py-2 text-sm transition-colors focus:ring-2 focus:outline-none"
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-brand-secondary-600 text-xs font-medium">
+                  Código de Verificação
+                </label>
+                <div className="flex justify-between gap-2" onPaste={handleCodePaste}>
+                  {codeArray.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => { inputRefs.current[index] = el; }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleCodeChange(index, e.target.value)}
+                      onKeyDown={(e) => handleCodeKeyDown(index, e)}
+                      disabled={isLoading}
+                      className="border-brand-secondary-200 text-brand-secondary-900 focus:ring-brand-primary-700 h-10 w-10 rounded-md border-2 bg-white text-center text-base font-bold transition-all focus:ring-2 focus:outline-none disabled:opacity-50 sm:h-11 sm:w-11 sm:text-lg"
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {error && (
+                <p className="mt-1 text-sm font-medium text-red-600">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="button"
+                onClick={() => void handleActivation()}
+                disabled={isLoading || !isCodeComplete}
+                className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 mt-2 w-full rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+              >
+                {isLoading ? confirmT.validating : confirmT.confirmButton}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full">
+            <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm font-medium text-emerald-800 shadow-sm">
+              {successMessage}
+            </div>
+
+            {canSetupProfile && (
+              <div className="flex w-full flex-col gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowProfileSetup(true)}
+                  className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 w-full rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95"
+                >
+                  {confirmT.setupProfile}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push("/home")}
+                  className="border-brand-secondary-200 text-brand-secondary-700 hover:bg-brand-secondary-100 w-full rounded-md border-2 bg-white px-4 py-2 text-sm font-medium transition-colors"
+                >
+                  {confirmT.skipAndEnter}
+                </button>
+              </div>
             )}
-
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder={confirmT.codePlaceholder}
-              inputMode="numeric"
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-center text-xs"
-              disabled={isLoading}
-            />
-
-            {error && <p className="text-xs text-red-600">{error}</p>}
-
-            <button
-              type="button"
-              onClick={() => void handleActivation()}
-              disabled={isLoading || code.length < 6}
-              className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 mt-1 rounded-md px-4 py-2 text-xs font-semibold text-white shadow-lg disabled:opacity-50"
-            >
-              {isLoading ? confirmT.validating : confirmT.confirmButton}
-            </button>
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="mb-6 w-full max-w-sm rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-700">
-            {successMessage}
-          </div>
-        )}
-
-        {successMessage && canSetupProfile && (
-          <div className="mb-4 flex w-full max-w-sm flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => setShowProfileSetup(true)}
-              className="bg-brand-primary-500 hover:bg-brand-primary-800 rounded-md px-4 py-2 text-xs font-semibold text-white"
-            >
-              {confirmT.setupProfile}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("/home")}
-              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-xs font-medium text-slate-700"
-            >
-              {confirmT.skipAndEnter}
-            </button>
           </div>
         )}
 
@@ -192,7 +255,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
           type="button"
           onClick={() => onNavigate("signin")}
           disabled={isLoading}
-          className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 group flex items-center justify-center gap-2 rounded-md px-4 py-2 font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95"
+          className="text-brand-secondary-500 hover:text-brand-secondary-700 group mt-8 flex items-center gap-2 text-xs font-medium transition-colors"
         >
           {t.signUp.loginNowCta}
           <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

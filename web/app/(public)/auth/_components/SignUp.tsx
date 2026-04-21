@@ -5,7 +5,6 @@ import { User, Lock, Eye, EyeOff, Mail } from "lucide-react";
 import { getTranslations, LocaleKey } from "@/app/(public)/auth/_i18n";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { ErrorModal } from "./ErrorsModal";
-import { useRouter } from "next/navigation";
 
 interface Props {
   onNavigate: (
@@ -14,6 +13,11 @@ interface Props {
   ) => void;
   locale?: LocaleKey;
 }
+
+const NAME_REGEX = /^[\p{L}\s]+$/u;
+const USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 function TermsModal({
   isOpen,
@@ -123,35 +127,105 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showFieldErrors, setShowFieldErrors] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
   const t = getTranslations(locale);
   const { createUser, loginWithGoogle, loginWithGithub } = useAuth();
-  const router = useRouter();
+
+  const trimmedName = name.trim();
+  const trimmedUsername = username.trim();
+  const trimmedEmail = email.trim();
+
+  const nameError =
+    !trimmedName
+      ? "Nome é obrigatório."
+      : !NAME_REGEX.test(trimmedName)
+        ? "Apenas letras e espaços são permitidos."
+        : trimmedName.length > 100
+          ? "O nome não pode estar vazio ou ser muito longo."
+          : "";
+
+  const usernameError =
+    !trimmedUsername
+      ? "Nome de usuário é obrigatório."
+      : !USERNAME_REGEX.test(trimmedUsername)
+        ? "Apenas letras, números, ., - ou _ são permitidos."
+        : trimmedUsername.length < 6 || trimmedUsername.length > 18
+          ? "O nome de usuário deve ter entre 6 e 18 caracteres."
+          : "";
+
+  const emailError = !trimmedEmail
+    ? "E-mail é obrigatório."
+    : !EMAIL_REGEX.test(trimmedEmail)
+      ? "E-mail inválido."
+      : "";
+
+  const passwordError = !password
+    ? "Senha é obrigatória."
+    : !PASSWORD_REGEX.test(password)
+      ? "A senha deve conter no mínimo 8 caracteres, incluindo letras maiúsculas, minúsculas e números."
+      : "";
+
+  const confirmPasswordError = !confirmPassword
+    ? "Confirme sua senha."
+    : confirmPassword !== password
+      ? "As senhas não coincidem."
+      : "";
+
+  const hasFieldErrors = Boolean(
+    nameError || usernameError || emailError || passwordError || confirmPasswordError
+  );
+
+  const shouldShowError = (fieldName: string) => showFieldErrors || touchedFields[fieldName];
+
+  const getInputClassName = (hasError: boolean, withRightPadding = false) =>
+    `text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 ${withRightPadding ? "pr-10" : "pr-4"} pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
+      hasError
+        ? "border-red-400 focus:ring-red-500"
+        : "border-brand-secondary-200"
+    }`;
+
+  const handleBlur = (fieldName: string) => {
+    setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
+  };
+
+  const handleTouchedChange = (fieldName: string) => {
+    if (touchedFields[fieldName]) return;
+    setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true);
+    setShowFieldErrors(true);
 
-    if (!name || !username || !email || !password || !confirmPassword) {
+    if (hasFieldErrors) {
+      return;
+    }
+
+    if (!trimmedName || !trimmedUsername || !trimmedEmail || !password || !confirmPassword) {
       setError("Por favor, preencha todos os campos.");
-      setIsLoading(false);
       return;
     }
 
     if (!acceptTerms) {
       setError("Você precisa aceitar os Termos de Uso e Política de Privacidade.");
-      setIsLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
       setError("As senhas não coincidem.");
-      setIsLoading(false);
       return;
     }
 
-    const createResult = await createUser({ username, email, password, name } as any);
+    setIsLoading(true);
+    const createResult = await createUser({
+      username: trimmedUsername.toLowerCase(),
+      email: trimmedEmail,
+      password,
+      name: trimmedName,
+    } as any);
 
     if (!createResult.success) {
       setError(createResult.message || "Erro ao criar conta.");
@@ -160,11 +234,11 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
     }
 
     setIsLoading(false);
-    onNavigate("confirm", { email, password });
+    onNavigate("confirm", { email: trimmedEmail, password });
   };
 
   return (
-    <div className="flex w-full flex-col px-6 py-4 sm:px-8 sm:py-6">
+    <div className="flex w-full flex-col px-6 py-4 sm:px-8">
       <ErrorModal
         isOpen={!!error}
         onClose={() => setError(null)}
@@ -193,13 +267,20 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                handleTouchedChange("name");
+              }}
+              onBlur={() => handleBlur("name")}
               placeholder={t.signUp.namePlaceholder || "Nome completo"}
               autoComplete="off"
-              className="border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className={getInputClassName(Boolean(shouldShowError("name") && nameError))}
               disabled={isLoading}
             />
           </div>
+          {shouldShowError("name") && nameError && (
+            <p className="px-1 text-xs text-red-600">{nameError}</p>
+          )}
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -208,13 +289,20 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <input
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                handleTouchedChange("username");
+              }}
+              onBlur={() => handleBlur("username")}
               placeholder={t.signUp.usernamePlaceholder}
               autoComplete="off"
-              className="border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className={getInputClassName(Boolean(shouldShowError("username") && usernameError))}
               disabled={isLoading}
             />
           </div>
+          {shouldShowError("username") && usernameError && (
+            <p className="px-1 text-xs text-red-600">{usernameError}</p>
+          )}
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -223,13 +311,20 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                handleTouchedChange("email");
+              }}
+              onBlur={() => handleBlur("email")}
               placeholder={t.forgotPassword?.emailPlaceholder || "Email"}
               autoComplete="off"
-              className="border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className={getInputClassName(Boolean(shouldShowError("email") && emailError))}
               disabled={isLoading}
             />
           </div>
+          {shouldShowError("email") && emailError && (
+            <p className="px-1 text-xs text-red-600">{emailError}</p>
+          )}
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -238,10 +333,14 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <input
               type={showPassword ? "text" : "password"}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                handleTouchedChange("password");
+              }}
+              onBlur={() => handleBlur("password")}
               placeholder={t.signUp.passwordPlaceholder}
               autoComplete="new-password"
-              className="border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className={getInputClassName(Boolean(shouldShowError("password") && passwordError), true)}
               disabled={isLoading}
             />
             <button
@@ -254,6 +353,9 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+          {shouldShowError("password") && passwordError && (
+            <p className="px-1 text-xs text-red-600">{passwordError}</p>
+          )}
 
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -262,10 +364,17 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <input
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                handleTouchedChange("confirmPassword");
+              }}
+              onBlur={() => handleBlur("confirmPassword")}
               placeholder={t.signUp.confirmPasswordPlaceholder}
               autoComplete="new-password"
-              className="border-brand-gray-200 text-brand-gray-900 placeholder:text-brand-gray-400 focus:ring-brand-blue-700 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className={getInputClassName(
+                Boolean(shouldShowError("confirmPassword") && confirmPasswordError),
+                true
+              )}
               disabled={isLoading}
             />
             <button
@@ -278,6 +387,9 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+          {shouldShowError("confirmPassword") && confirmPasswordError && (
+            <p className="px-1 text-xs text-red-600">{confirmPasswordError}</p>
+          )}
 
           <div className="mt-2 flex flex-col justify-between gap-4 sm:mt-4 sm:flex-row sm:items-center">
             <div className="flex items-center gap-2">
@@ -286,9 +398,9 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
                 id="terms"
                 checked={acceptTerms}
                 onChange={(e) => setAcceptTerms(e.target.checked)}
-                className="border-brand-gray-300 text-brand-blue-700 focus:ring-brand-blue-700 h-5 w-5 rounded"
+                className="border-brand-secondary-300 text-brand-primary-500 focus:ring-brand-primary-300 h-4 w-4 rounded"
               />
-              <label htmlFor="terms" className="text-brand-secondary-500 text-[10px] leading-tight">
+              <label htmlFor="terms" className="text-brand-secondary-500 text-xs leading-tight">
                 {t.signUp.termsText1}
                 <button
                   type="button"
@@ -309,8 +421,8 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             </div>
             <button
               type="submit"
-              disabled={isLoading}
-              className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center rounded-md py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-[150px] sm:px-4 sm:py-1"
+              disabled={isLoading || hasFieldErrors}
+              className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-[150px]"
             >
               {isLoading ? "Criando..." : t.signUp.submitButton}
             </button>
@@ -324,7 +436,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <div className="border-brand-secondary-200 w-full border-t"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="text-brand-gray-500 bg-white px-2">{t.signUp.orRegisterWith}</span>
+            <span className="text-brand-secondary-500 bg-white px-2">{t.signUp.orRegisterWith}</span>
           </div>
         </div>
 
@@ -341,7 +453,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
           <button
             type="button"
             onClick={loginWithGithub}
-            className="border-brand-secondary-200 hover:bg-brand-secondary-300 focus:ring-brand-secondary-500 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold text-[#171515] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
           >
             <GitHubIcon className="h-4 w-4" />
             GitHub
@@ -350,7 +462,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
 
         <button
           onClick={() => onNavigate("signin")}
-          className="text-brand-secondary-500 mt-8 text-sm font-medium"
+          className="text-brand-secondary-500 hover:text-brand-secondary-700 mt-8 text-xs font-medium transition-colors duration-200"
         >
           {t.signUp.alreadyHaveAccount}{" "}
           <span className="text-brand-primary-500 hover:text-brand-primary-500 font-semibold transition-colors">
