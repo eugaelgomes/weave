@@ -44,6 +44,7 @@ const ptBR = {
     openSidebar: "Abrir menu lateral",
     backToHome: "Voltar para o início",
     areas: "Áreas",
+    weaveAiOpenFull: "Abrir em tela cheia",
   },
 
   home: {

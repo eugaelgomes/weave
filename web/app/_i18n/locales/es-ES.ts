@@ -46,6 +46,7 @@ const esES: TranslationKeys = {
     openSidebar: "Abrir menú lateral",
     backToHome: "Volver al inicio",
     areas: "Áreas",
+    weaveAiOpenFull: "Abrir a pantalla completa",
   },
 
   home: {

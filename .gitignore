@@ -1,6 +1,6 @@
 # Docker files and directories
 .docker/
-# docker-compose.override.yml
+docker-compose.override.yml
 # !docker-compose.yml
 
 # Docker build output

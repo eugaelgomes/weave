@@ -46,6 +46,7 @@ const enUS: TranslationKeys = {
     openSidebar: "Open sidebar",
     backToHome: "Back to home",
     areas: "Areas",
+    weaveAiOpenFull: "Open full page",
   },
 
   home: {

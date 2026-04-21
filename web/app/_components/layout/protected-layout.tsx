@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "@/app/(protected)/_components/layout/navbar";
 import Sidebar from "@/app/(protected)/_components/layout/sidebar";
 import PagesFooter from "@/app/(protected)/_components/layout/footer";
+import WeaveAi from "@/app/(protected)/_components/layout/WeaveAi";
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -85,6 +86,8 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
           </div>
         </div>
       </div>
+
+      <WeaveAi />
     </div>
   );
 };
