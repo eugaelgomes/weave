@@ -13,13 +13,16 @@ function getChallengeSecret() {
 }
 
 function shouldSkipInternalChallenge(path) {
+  const isSsoAuthPath =
+    path.startsWith("/auth/signin/sso") || path.startsWith("/auth/sso");
+
   if (
     path === "/_internal/challenge" ||
     path.startsWith("/_internal/challenge/")
   ) {
     return true;
   }
-  if (path.startsWith("/webhooks") || path.startsWith("/auth/sso/")) {
+  if (path.startsWith("/webhooks") || isSsoAuthPath) {
     return true;
   }
   return false;
