@@ -107,7 +107,7 @@ class OrganizationsBaseController {
   }
 
   /**
-   * Papel em `organizations_members` (via getActiveOrganizationWithMembership).
+   * Papel em `organization_members` (via getActiveOrganizationWithMembership).
    * @param {Object|null} organization
    * @param {string} permission — ORG_PERMISSIONS.*
    */

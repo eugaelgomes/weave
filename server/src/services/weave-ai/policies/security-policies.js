@@ -9,6 +9,8 @@ const {
   ALLOWED_NOTE_STATUSES,
   ALLOWED_BLOCK_TYPES,
   PROJECT_FIELDS,
+  normalizeNoteStatus,
+  normalizeProjectStatus,
 } = require("@/utils/patterns/product-patterns");
 
 /**
@@ -202,45 +204,94 @@ function getOwnershipRules(functionName) {
   return ownershipValidation[functionName] || null;
 }
 
+/** Mapeia nome do parâmetro da tool → chave em `parameterValidations`. */
+const PARAM_VALIDATION_TYPE = {
+  status: "status",
+  title: "title",
+  description: "description",
+  noteId: "uuid",
+  projectId: "uuid",
+  blockId: "uuid",
+  collaboratorId: "uuid",
+  tags: "tags",
+  type: "blockType",
+};
+
 /**
- * Valida um parâmetro baseado em seu tipo
+ * Valida um parâmetro de tool da IA.
+ * @param {string} _functionName nome da função (reservado para regras futuras)
+ * @param {string} paramName nome do argumento
+ * @param {unknown} value valor recebido
  */
-function validateParameter(paramName, value, validationType) {
+function validateParameter(_functionName, paramName, value) {
+  if (value === undefined || value === null) return { valid: true };
+
+  const validationType = PARAM_VALIDATION_TYPE[paramName];
+  if (!validationType) return { valid: true };
+
   const validation = parameterValidations[validationType];
   if (!validation) return { valid: true };
 
-  // Validação de pattern (regex)
-  if (validation.pattern && !validation.pattern.test(value)) {
-    return {
-      valid: false,
-      error: validation.errorMessage,
-    };
+  if (validationType === "uuid") {
+    const str = String(value);
+    if (validation.pattern && !validation.pattern.test(str)) {
+      return {
+        valid: false,
+        error: validation.errorMessage,
+      };
+    }
+    return { valid: true };
   }
 
-  // Validação de valores permitidos
-  if (validation.allowedValues && !validation.allowedValues.includes(value)) {
-    return {
-      valid: false,
-      error: validation.errorMessage,
-    };
+  if (validation.pattern && typeof value === "string") {
+    if (!validation.pattern.test(value)) {
+      return {
+        valid: false,
+        error: validation.errorMessage,
+      };
+    }
   }
 
-  // Validação de tamanho de string
-  if (validation.maxLength && value.length > validation.maxLength) {
-    return {
-      valid: false,
-      error: validation.errorMessage,
-    };
+  if (validation.allowedValues) {
+    if (validationType === "status") {
+      const okNote = (() => {
+        const n = normalizeNoteStatus(value);
+        return n && ALLOWED_NOTE_STATUSES.includes(n);
+      })();
+      const okProj = (() => {
+        const n = normalizeProjectStatus(value);
+        return n && ALLOWED_PROJECT_STATUSES.includes(n);
+      })();
+      if (!okNote && !okProj) {
+        return {
+          valid: false,
+          error: validation.errorMessage,
+        };
+      }
+    } else if (!validation.allowedValues.includes(value)) {
+      return {
+        valid: false,
+        error: validation.errorMessage,
+      };
+    }
   }
 
-  if (validation.minLength && value.length < validation.minLength) {
-    return {
-      valid: false,
-      error: validation.errorMessage,
-    };
+  if (typeof value === "string") {
+    if (validation.maxLength && value.length > validation.maxLength) {
+      return {
+        valid: false,
+        error: validation.errorMessage,
+      };
+    }
+
+    if (validation.minLength && value.length < validation.minLength) {
+      return {
+        valid: false,
+        error: validation.errorMessage,
+      };
+    }
   }
 
-  // Validação de array
   if (Array.isArray(value)) {
     if (validation.maxItems && value.length > validation.maxItems) {
       return {
@@ -251,7 +302,8 @@ function validateParameter(paramName, value, validationType) {
 
     if (validation.itemMaxLength) {
       const invalidItem = value.find(
-        (item) => item.length > validation.itemMaxLength
+        (item) =>
+          typeof item === "string" && item.length > validation.itemMaxLength
       );
       if (invalidItem) {
         return {

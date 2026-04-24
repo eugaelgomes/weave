@@ -209,7 +209,7 @@ class JobManager {
           AND j.type = 'backup_export' 
           AND j.result IS NOT NULL
           AND j.result->>'downloadToken' = t.token
-        WHERE t.type = 'backup_download' 
+        WHERE t.type = 'BACKUP_DOWNLOAD' 
         AND t.expires_at < NOW()
       `;
 

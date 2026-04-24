@@ -11,12 +11,6 @@ import {
   Loader2,
   Plus,
   X,
-  Code,
-  Quote,
-  List,
-  CheckSquare,
-  Heading,
-  Type,
   GripVertical,
   Save,
   Clock,
@@ -30,10 +24,6 @@ import {
   Kanban,
   FolderKanban,
   Flag,
-  Image as ImageIcon,
-  ListOrdered,
-  Minus,
-  Table,
 } from "lucide-react";
 import {
   DndContext,
@@ -90,8 +80,7 @@ interface BlockComponentProps {
   block: Block & { children?: Block[] };
   noteId: string;
   onUpdate: (blockId: string, data: Partial<Block>) => Promise<void>;
-  onDelete: (blockId: string) => Promise<void>;
-  onAddBlock: (parentId?: string) => void;
+  onPasteLines?: (blockId: string, lines: string[]) => Promise<void>;
   onAddBlockAfter: (afterBlockId: string) => void;
   onBackspaceEmpty?: (blockId: string) => void;
   focusBlockId?: string | null;
@@ -103,8 +92,7 @@ const SortableBlockComponent: React.FC<BlockComponentProps> = ({
   block,
   noteId,
   onUpdate,
-  onDelete,
-  onAddBlock,
+  onPasteLines,
   onAddBlockAfter,
   onBackspaceEmpty,
   focusBlockId,
@@ -132,8 +120,7 @@ const SortableBlockComponent: React.FC<BlockComponentProps> = ({
         block={block}
         noteId={noteId}
         onUpdate={onUpdate}
-        onDelete={onDelete}
-        onAddBlock={onAddBlock}
+        onPasteLines={onPasteLines}
         onAddBlockAfter={onAddBlockAfter}
         onBackspaceEmpty={onBackspaceEmpty}
         focusBlockId={focusBlockId}
@@ -150,8 +137,7 @@ interface BlockInnerProps {
   block: Block & { children?: Block[] };
   noteId: string;
   onUpdate: (blockId: string, data: Partial<Block>) => Promise<void>;
-  onDelete: (blockId: string) => Promise<void>;
-  onAddBlock: (parentId?: string) => void;
+  onPasteLines?: (blockId: string, lines: string[]) => Promise<void>;
   onAddBlockAfter: (afterBlockId: string) => void;
   onBackspaceEmpty?: (blockId: string) => void;
   focusBlockId?: string | null;
@@ -173,58 +159,11 @@ const useAutoResize = (text: string) => {
   return ref;
 };
 
-// =================== RENDERIZADOR DE LINKS ===================
-const URL_REGEX = /(https?:\/\/[^\s<>"'()]+(?:\([^\s<>"'()]*\))*[^\s<>"'.,;:!?)\]]*)/gi;
-
-const LinkifiedText: React.FC<{
-  text: string;
-  className?: string;
-}> = ({ text, className = "" }) => {
-  if (!text) return <span className={className}>&nbsp;</span>;
-
-  const parts: React.ReactNode[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-  const regex = new RegExp(URL_REGEX.source, "gi");
-
-  while ((match = regex.exec(text)) !== null) {
-    // Texto antes do link
-    if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
-    }
-    // O link
-    const url = match[1];
-    parts.push(
-      <a
-        key={match.index}
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        className="text-blue-500 underline decoration-blue-500/40 transition-colors hover:text-blue-400 hover:decoration-blue-400 dark:text-blue-400 dark:decoration-blue-400/40 dark:hover:text-blue-300"
-      >
-        {url.length > 60 ? `${url.slice(0, 57)}...` : url}
-      </a>
-    );
-    lastIndex = match.index + match[0].length;
-  }
-
-  // Texto restante
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
-  }
-
-  return <span className={className}>{parts}</span>;
-};
-
-const hasLinks = (text: string) => URL_REGEX.test(text);
-
 const BlockComponent: React.FC<BlockInnerProps> = ({
   block,
   noteId,
   onUpdate,
-  onDelete,
-  onAddBlock,
+  onPasteLines,
   onAddBlockAfter,
   onBackspaceEmpty,
   focusBlockId,
@@ -235,7 +174,6 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
   const [localText, setLocalText] = useState(block.text || "");
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [showInlineTypeSelector, setShowInlineTypeSelector] = useState(false);
   const textareaRef = useAutoResize(localText);
 
   // Auto-focus quando este bloco é o focusBlockId
@@ -247,56 +185,17 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
     }
   }, [focusBlockId, block.id, onFocused, textareaRef]);
 
-  // Fechar seletor ao clicar fora
-  useEffect(() => {
-    if (!showInlineTypeSelector) return;
-    const handleClickOutside = () => setShowInlineTypeSelector(false);
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [showInlineTypeSelector]);
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Em blocos de código, Enter funciona normalmente
-    if (block.type === "code") return;
-
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       onAddBlockAfter(block.id);
-    }
-
-    if ((e.key === " " || e.key === "/") && localText === "") {
-      e.preventDefault();
-      setShowInlineTypeSelector(true);
     }
 
     if (e.key === "Backspace" && localText === "" && onBackspaceEmpty) {
       e.preventDefault();
       onBackspaceEmpty(block.id);
     }
-
-    if (e.key === "Escape" && showInlineTypeSelector) {
-      e.preventDefault();
-      setShowInlineTypeSelector(false);
-    }
   };
-
-  const inlineBlockOptions = [
-    { type: "paragraph", label: "Parágrafo", icon: Type, description: "Texto simples" },
-    { type: "heading", label: "Título", icon: Heading, description: "Título de seção" },
-    { type: "todo", label: "Tarefa", icon: CheckSquare, description: "Item de checklist" },
-    { type: "list", label: "Lista", icon: List, description: "Item de lista" },
-    {
-      type: "orderedList",
-      label: "Lista numerada",
-      icon: ListOrdered,
-      description: "Lista ordenada",
-    },
-    { type: "quote", label: "Citação", icon: Quote, description: "Bloco de citação" },
-    { type: "code", label: "Código", icon: Code, description: "Bloco de código" },
-    { type: "divider", label: "Divisor", icon: Minus, description: "Separador visual" },
-    { type: "image", label: "Imagem", icon: ImageIcon, description: "URL da imagem" },
-    { type: "table", label: "Tabela", icon: Table, description: "Tabela simples" },
-  ];
 
   // Sincroniza apenas quando block.text muda externamente (ex: do servidor)
   const prevBlockText = React.useRef(block.text);
@@ -309,9 +208,6 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
 
   const handleBlur = () => {
     setIsEditing(false);
-    if (localText !== block.text) {
-      onUpdate(block.id, { text: localText });
-    }
   };
 
   const handleFocus = () => {
@@ -325,250 +221,56 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
     }
   }, [isEditing, textareaRef]);
 
-  // Auto-save com debounce
+  // Auto-save com debounce mais conservador para evitar travar a digitação
   useEffect(() => {
     if (localText === block.text) return;
 
     const timeoutId = setTimeout(() => {
       onUpdate(block.id, { text: localText });
-    }, 1000);
+    }, 1800);
 
     return () => clearTimeout(timeoutId);
   }, [localText, block.id, block.text, onUpdate]);
 
-  const handleToggleDone = async (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (block.type === "todo") {
-      await onUpdate(block.id, { done: !block.done });
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (!onPasteLines) return;
+
+    const pastedText = e.clipboardData.getData("text");
+    if (!pastedText || !pastedText.includes("\n")) return;
+
+    e.preventDefault();
+
+    const textarea = e.currentTarget;
+    const selectionStart = textarea.selectionStart ?? localText.length;
+    const selectionEnd = textarea.selectionEnd ?? localText.length;
+    const beforeSelection = localText.slice(0, selectionStart);
+    const afterSelection = localText.slice(selectionEnd);
+    const merged = `${beforeSelection}${pastedText.replace(/\r\n/g, "\n")}${afterSelection}`;
+    const [firstLine = "", ...nextLines] = merged.split("\n");
+
+    setLocalText(firstLine);
+    void onUpdate(block.id, { text: firstLine });
+
+    if (nextLines.length > 0) {
+      void onPasteLines(block.id, nextLines);
     }
   };
 
   const renderBlockContent = () => {
-    switch (block.type) {
-      case "heading":
-        if (!isEditing && localText && hasLinks(localText)) {
-          return (
-            <div
-              onClick={() => setIsEditing(true)}
-              className="cursor-text text-3xl leading-tight font-semibold tracking-tight break-words whitespace-pre-wrap text-neutral-900 dark:text-neutral-100"
-            >
-              <LinkifiedText text={localText} />
-            </div>
-          );
-        }
-        return (
-          <textarea
-            ref={textareaRef}
-            value={localText}
-            onChange={(e) => setLocalText(e.target.value)}
-            onBlur={handleBlur}
-            onFocus={handleFocus}
-            onKeyDown={handleKeyDown}
-            className="w-full resize-none overflow-hidden bg-transparent text-3xl leading-tight font-semibold tracking-tight text-neutral-900 placeholder-neutral-400 outline-none dark:text-neutral-100 dark:placeholder-neutral-500"
-            placeholder="Título..."
-            rows={1}
-          />
-        );
-
-      case "todo":
-        return (
-          <div className="flex items-start gap-3">
-            <button
-              onClick={handleToggleDone}
-              className={`mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-all ${
-                block.done
-                  ? "bg-brand-primary-500 border-yellow-500 text-white"
-                  : "border-neutral-300 hover:border-yellow-500 dark:border-neutral-600 dark:hover:border-yellow-500"
-              }`}
-            >
-              {block.done && <CheckSquare size={10} />}
-            </button>
-            {!isEditing && localText && hasLinks(localText) ? (
-              <div
-                onClick={() => setIsEditing(true)}
-                className={`w-full cursor-text break-words whitespace-pre-wrap text-neutral-800 dark:text-neutral-200 ${
-                  block.done ? "text-neutral-400 line-through dark:text-neutral-500" : ""
-                }`}
-              >
-                <LinkifiedText text={localText} />
-              </div>
-            ) : (
-              <textarea
-                ref={textareaRef}
-                value={localText}
-                onChange={(e) => setLocalText(e.target.value)}
-                onBlur={handleBlur}
-                onFocus={handleFocus}
-                onKeyDown={handleKeyDown}
-                className={`w-full resize-none overflow-hidden bg-transparent text-[15px] leading-7 text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500 ${
-                  block.done ? "text-neutral-400 line-through dark:text-neutral-500" : ""
-                }`}
-                placeholder="Tarefa..."
-                rows={1}
-              />
-            )}
-          </div>
-        );
-
-      case "list":
-      case "orderedList":
-        return (
-          <div className="flex items-start gap-3">
-            {block.type === "orderedList" ? (
-              <span className="mt-0.5 min-w-6 text-right text-xs font-semibold text-neutral-500 dark:text-neutral-400">
-                {(block.position || 0) + 1}.
-              </span>
-            ) : (
-              <span className="bg-brand-primary-500 mt-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full" />
-            )}
-            {!isEditing && localText && hasLinks(localText) ? (
-              <div
-                onClick={() => setIsEditing(true)}
-                className="w-full cursor-text break-words whitespace-pre-wrap text-neutral-800 dark:text-neutral-200"
-              >
-                <LinkifiedText text={localText} />
-              </div>
-            ) : (
-              <textarea
-                ref={textareaRef}
-                value={localText}
-                onChange={(e) => setLocalText(e.target.value)}
-                onBlur={handleBlur}
-                onFocus={handleFocus}
-                onKeyDown={handleKeyDown}
-                className="w-full resize-none overflow-hidden bg-transparent text-[15px] leading-7 text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500"
-                placeholder="Item da lista..."
-                rows={1}
-              />
-            )}
-          </div>
-        );
-
-      case "divider":
-        return <div className="my-2 border-t border-neutral-200 dark:border-neutral-700" />;
-
-      case "image":
-        return (
-          <div className="space-y-2">
-            <textarea
-              ref={textareaRef}
-              value={localText}
-              onChange={(e) => setLocalText(e.target.value)}
-              onBlur={handleBlur}
-              onFocus={handleFocus}
-              onKeyDown={handleKeyDown}
-              className="w-full resize-none overflow-hidden rounded-md border border-neutral-200 bg-transparent px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500"
-              placeholder="Cole a URL da imagem..."
-              rows={1}
-            />
-            {localText ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={localText}
-                alt="Imagem do bloco"
-                className="max-h-72 w-auto rounded-md border border-neutral-200 object-contain dark:border-neutral-700"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.display = "none";
-                }}
-              />
-            ) : null}
-          </div>
-        );
-
-      case "table":
-        return (
-          <div className="space-y-2">
-            <textarea
-              ref={textareaRef}
-              value={localText}
-              onChange={(e) => setLocalText(e.target.value)}
-              onBlur={handleBlur}
-              onFocus={handleFocus}
-              onKeyDown={handleKeyDown}
-              className="w-full resize-none overflow-hidden rounded-md border border-neutral-200 bg-transparent px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500"
-              placeholder="Ex.: Coluna A | Coluna B"
-              rows={2}
-            />
-            <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-              Use `|` para separar colunas e quebra de linha para novas linhas.
-            </p>
-          </div>
-        );
-
-      case "quote":
-        return (
-            <div className="border-l-2 border-neutral-300 pl-4 dark:border-neutral-700">
-            {!isEditing && localText && hasLinks(localText) ? (
-              <div
-                onClick={() => setIsEditing(true)}
-                className="w-full cursor-text break-words whitespace-pre-wrap text-neutral-600 italic dark:text-neutral-300"
-              >
-                <LinkifiedText text={localText} />
-              </div>
-            ) : (
-              <textarea
-                ref={textareaRef}
-                value={localText}
-                onChange={(e) => setLocalText(e.target.value)}
-                onBlur={handleBlur}
-                onFocus={handleFocus}
-                onKeyDown={handleKeyDown}
-                className="w-full resize-none overflow-hidden bg-transparent text-[15px] leading-7 text-neutral-600 italic placeholder-neutral-400 outline-none dark:text-neutral-300 dark:placeholder-neutral-500"
-                placeholder="Citação..."
-                rows={1}
-              />
-            )}
-          </div>
-        );
-
-      case "code":
-        return (
-          <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-50/70 dark:border-neutral-700 dark:bg-neutral-900/60">
-            <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-100/70 px-3 py-1.5 dark:border-neutral-700 dark:bg-neutral-800/80">
-              <span className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                {(block.properties as { language?: string })?.language || "código"}
-              </span>
-              <Code size={12} className="text-neutral-400 dark:text-neutral-500" />
-            </div>
-            <textarea
-              ref={textareaRef}
-              value={localText}
-              onChange={(e) => setLocalText(e.target.value)}
-              onBlur={handleBlur}
-              className="w-full resize-none overflow-hidden bg-neutral-50/60 p-3 font-mono text-[13px] leading-6 text-neutral-700 placeholder-neutral-400 outline-none dark:bg-neutral-900/70 dark:text-neutral-200 dark:placeholder-neutral-600"
-              placeholder="// Seu código aqui..."
-              rows={3}
-            />
-          </div>
-        );
-
-      case "paragraph":
-      case "text":
-      default:
-        if (!isEditing && localText && hasLinks(localText)) {
-          return (
-            <div
-              onClick={() => setIsEditing(true)}
-              className="w-full cursor-text text-[16px] leading-7 break-words whitespace-pre-wrap text-neutral-800 dark:text-neutral-200"
-            >
-              <LinkifiedText text={localText} />
-            </div>
-          );
-        }
-        return (
-          <textarea
-            ref={textareaRef}
-            value={localText}
-            onChange={(e) => setLocalText(e.target.value)}
-            onBlur={handleBlur}
-            onFocus={handleFocus}
-            onKeyDown={handleKeyDown}
-            className="w-full resize-none overflow-hidden bg-transparent text-[16px] leading-7 text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500"
-            placeholder="Digite seu texto..."
-            rows={1}
-          />
-        );
-    }
+    return (
+      <textarea
+        ref={textareaRef}
+        value={localText}
+        onChange={(e) => setLocalText(e.target.value)}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
+        className="w-full resize-none overflow-hidden bg-transparent text-[16px] leading-7 text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500"
+        placeholder="Digite seu texto..."
+        rows={1}
+      />
+    );
   };
 
   return (
@@ -594,7 +296,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
 
       {/* Conteúdo do bloco */}
       <div
-        className={`rounded-md px-2 py-1 transition-colors hover:bg-neutral-100/70 dark:hover:bg-neutral-800/45 ${
+        className={`rounded-md px-1.5 py-0 ${
           isDragging
             ? "bg-neutral-100 shadow-lg ring-2 ring-yellow-500/20 dark:bg-neutral-800 dark:ring-yellow-500/40"
             : ""
@@ -603,62 +305,16 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
         {renderBlockContent()}
       </div>
 
-      {/* Botão de deletar */}
-      {isHovered && (
-        <button
-          onClick={() => onDelete(block.id)}
-          className="absolute top-1.5 -right-3 rounded-md p-1 text-neutral-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 dark:text-neutral-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-          title="Remover bloco"
-        >
-          <X size={14} />
-        </button>
-      )}
-
-      {/* Seletor de tipo de bloco inline */}
-      {showInlineTypeSelector && (
-        <div
-          className="animate-in fade-in slide-in-from-top-1 absolute left-0 z-30 mt-1 w-64 rounded-md border border-neutral-200 bg-white p-1.5 shadow-xl duration-150 dark:border-neutral-700 dark:bg-neutral-900"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="mb-1.5 px-2.5 pt-1 pb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-            Tipo de bloco
-          </div>
-          {inlineBlockOptions.map((option) => (
-            <button
-              key={option.type}
-              onClick={() => {
-                onUpdate(block.id, { type: option.type as Block["type"] });
-                setShowInlineTypeSelector(false);
-              }}
-              className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
-            >
-              <div className="dark:bg-brand-primary-500/10 dark:text-brand-primary-500 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-yellow-50 text-yellow-600">
-                <option.icon size={14} />
-              </div>
-              <div>
-                <div className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                  {option.label}
-                </div>
-                <div className="text-[11px] text-neutral-500 dark:text-neutral-500">
-                  {option.description}
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Blocos filhos (recursivo) */}
       {block.children && block.children.length > 0 && (
-        <div className="mt-2 ml-6 border-l-2 border-neutral-200 pl-4 dark:border-neutral-800">
+        <div className="mt-0.5 ml-6 border-l-2 border-neutral-200 pl-4 dark:border-neutral-800">
           {block.children.map((child) => (
             <BlockComponent
               key={child.id}
               block={child}
               noteId={noteId}
               onUpdate={onUpdate}
-              onDelete={onDelete}
-              onAddBlock={onAddBlock}
+              onPasteLines={onPasteLines}
               onAddBlockAfter={onAddBlockAfter}
               onBackspaceEmpty={onBackspaceEmpty}
               focusBlockId={focusBlockId}
@@ -707,62 +363,6 @@ const NoteDetailSkeleton = () => (
     </div>
   </div>
 );
-
-// =================== SELETOR DE TIPO DE BLOCO ===================
-interface BlockTypeSelectorProps {
-  onSelect: (type: string) => void;
-  onClose: () => void;
-}
-
-const BlockTypeSelector: React.FC<BlockTypeSelectorProps> = ({ onSelect, onClose }) => {
-  const blockOptions = [
-    { type: "paragraph", label: "Parágrafo", icon: Type, description: "Texto simples" },
-    { type: "heading", label: "Título", icon: Heading, description: "Título de seção" },
-    { type: "todo", label: "Tarefa", icon: CheckSquare, description: "Item de checklist" },
-    { type: "list", label: "Lista", icon: List, description: "Item de lista" },
-    {
-      type: "orderedList",
-      label: "Lista numerada",
-      icon: ListOrdered,
-      description: "Lista ordenada",
-    },
-    { type: "quote", label: "Citação", icon: Quote, description: "Bloco de citação" },
-    { type: "code", label: "Código", icon: Code, description: "Bloco de código" },
-    { type: "divider", label: "Divisor", icon: Minus, description: "Separador visual" },
-    { type: "image", label: "Imagem", icon: ImageIcon, description: "URL da imagem" },
-    { type: "table", label: "Tabela", icon: Table, description: "Tabela simples" },
-  ];
-
-  return (
-    <div className="animate-in fade-in slide-in-from-top-1 absolute bottom-full left-0 z-20 mb-2 w-64 rounded-md border border-neutral-200 bg-white p-1.5 shadow-xl duration-150 dark:border-neutral-700 dark:bg-neutral-900">
-      <div className="mb-1.5 px-2.5 pt-1 pb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-        Tipo de bloco
-      </div>
-      {blockOptions.map((option) => (
-        <button
-          key={option.type}
-          onClick={() => {
-            onSelect(option.type);
-            onClose();
-          }}
-          className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
-        >
-          <div className="dark:bg-brand-primary-500/10 dark:text-brand-primary-500 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-yellow-50 text-yellow-600">
-            <option.icon size={14} />
-          </div>
-          <div>
-            <div className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
-              {option.label}
-            </div>
-            <div className="text-[11px] text-neutral-500 dark:text-neutral-500">
-              {option.description}
-            </div>
-          </div>
-        </button>
-      ))}
-    </div>
-  );
-};
 
 const NoteDetail = () => {
   const params = useParams();
@@ -820,7 +420,6 @@ const NoteDetail = () => {
     useNoteCommentsPanel();
 
   const [showTagModal, setShowTagModal] = useState(false);
-  const [showBlockTypeSelector, setShowBlockTypeSelector] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [newTag, setNewTag] = useState("");
@@ -1330,7 +929,7 @@ const NoteDetail = () => {
         description: editingDescription,
         title: editingTitle,
       });
-    }, 750);
+    }, 1500);
 
     return () => {
       if (metadataDebounceRef.current) {
@@ -1387,8 +986,13 @@ const NoteDetail = () => {
   const handleUpdateBlock = async (blockId: string, data: Partial<Block>) => {
     if (!note) return;
 
+    const isTextOnlyUpdate =
+      Object.keys(data).length === 1 && Object.prototype.hasOwnProperty.call(data, "text");
+
     try {
-      setIsSaving(true);
+      if (!isTextOnlyUpdate) {
+        setIsSaving(true);
+      }
       await updateBlockService(note.id, blockId, data);
 
       // Atualizar estado local
@@ -1416,42 +1020,9 @@ const NoteDetail = () => {
     } catch (error) {
       console.error("Erro ao atualizar bloco:", error);
     } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDeleteBlock = async (blockId: string) => {
-    if (!note) return;
-
-    if (!window.confirm("Tem certeza que deseja remover este bloco?")) return;
-
-    try {
-      await deleteBlockService(note.id, blockId);
-
-      // Remover do estado local
-      setBlocks((prevBlocks) => {
-        const removeBlockRecursive = (
-          blockList: (Block & { children?: Block[] })[]
-        ): (Block & { children?: Block[] })[] => {
-          return blockList
-            .filter((block) => block.id !== blockId)
-            .map((block) => {
-              if (block.children && block.children.length > 0) {
-                return {
-                  ...block,
-                  children: removeBlockRecursive(
-                    block.children as (Block & { children?: Block[] })[]
-                  ),
-                };
-              }
-              return block;
-            });
-        };
-        return removeBlockRecursive(prevBlocks);
-      });
-    } catch (error) {
-      console.error("Erro ao deletar bloco:", error);
-      alert("Erro ao remover bloco. Tente novamente.");
+      if (!isTextOnlyUpdate) {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -1468,7 +1039,6 @@ const NoteDetail = () => {
 
       if (newBlock) {
         setBlocks((prev) => [...prev, { ...newBlock, children: [] }]);
-        setShowBlockTypeSelector(false);
         setFocusBlockId(newBlock.id);
       }
     } catch (error) {
@@ -1501,6 +1071,47 @@ const NoteDetail = () => {
       }
     } catch (error) {
       console.error("Erro ao criar bloco:", error);
+    }
+  };
+
+  const handlePasteLines = async (blockId: string, lines: string[]) => {
+    if (!note) return;
+
+    const normalizedLines = lines.map((line) => line.replace(/\r/g, ""));
+    if (normalizedLines.length === 0) return;
+
+    const blockIndex = blocks.findIndex((b) => b.id === blockId);
+    if (blockIndex === -1) return;
+
+    const createdBlocks: (Block & { children?: Block[] })[] = [];
+    let position = blockIndex + 1;
+
+    try {
+      for (const line of normalizedLines) {
+        const created = await createBlock(note.id, {
+          type: "paragraph",
+          text: line,
+          position,
+        });
+
+        if (created) {
+          createdBlocks.push({ ...created, children: [] });
+          position += 1;
+        }
+      }
+
+      if (createdBlocks.length > 0) {
+        setBlocks((prev) => {
+          const insertionIndex = prev.findIndex((b) => b.id === blockId);
+          if (insertionIndex === -1) return prev;
+          const next = [...prev];
+          next.splice(insertionIndex + 1, 0, ...createdBlocks);
+          return next.map((block, index) => ({ ...block, position: index }));
+        });
+        setFocusBlockId(createdBlocks[createdBlocks.length - 1].id);
+      }
+    } catch (error) {
+      console.error("Erro ao colar conteúdo em múltiplos blocos:", error);
     }
   };
 
@@ -2667,7 +2278,7 @@ const NoteDetail = () => {
                   </div>
 
                   {/* =================== EDITOR =================== */}
-                  <div className="w-full space-y-1">
+                  <div className="w-full space-y-0">
                     {blocks.length > 0 ? (
                       <DndContext
                         sensors={sensors}
@@ -2685,8 +2296,7 @@ const NoteDetail = () => {
                               block={block}
                               noteId={note.id}
                               onUpdate={handleUpdateBlock}
-                              onDelete={handleDeleteBlock}
-                              onAddBlock={() => setShowBlockTypeSelector(true)}
+                              onPasteLines={handlePasteLines}
                               onAddBlockAfter={handleAddBlockAfter}
                               onBackspaceEmpty={handleBackspaceEmpty}
                               focusBlockId={focusBlockId}
@@ -2703,8 +2313,7 @@ const NoteDetail = () => {
                                 block={activeBlock}
                                 noteId={note.id}
                                 onUpdate={handleUpdateBlock}
-                                onDelete={handleDeleteBlock}
-                                onAddBlock={() => {}}
+                                onPasteLines={async () => {}}
                                 onAddBlockAfter={() => {}}
                                 isDragging={true}
                               />
@@ -2723,21 +2332,14 @@ const NoteDetail = () => {
 
                     {/* Botão para adicionar novo bloco */}
                     {note.access?.canEdit && (
-                      <div className="relative pt-4">
+                      <div className="pt-4">
                         <button
-                          onClick={() => setShowBlockTypeSelector(!showBlockTypeSelector)}
+                          onClick={() => handleAddBlock("paragraph")}
                           className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-400 transition-all hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-700 dark:text-neutral-500 dark:hover:border-yellow-500/50"
                         >
                           <Plus size={14} />
-                          Adicionar bloco
+                          Nova linha
                         </button>
-
-                        {showBlockTypeSelector && (
-                          <BlockTypeSelector
-                            onSelect={(type) => handleAddBlock(type)}
-                            onClose={() => setShowBlockTypeSelector(false)}
-                          />
-                        )}
                       </div>
                     )}
                   </div>

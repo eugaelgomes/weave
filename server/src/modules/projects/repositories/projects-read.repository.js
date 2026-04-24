@@ -19,7 +19,7 @@ class ProjectsReadRepository {
         u.email AS owner_email,
         u.name AS owner_name,
         u.avatar_url AS owner_avatar_url,
-        p.org_id as organization_id,
+        p.organization_id as organization_id,
         o.org_name as organization_name,
         o.unique_name as organization_unique_name,
         o.logo_url as organization_logo_url,
@@ -76,15 +76,15 @@ class ProjectsReadRepository {
         ) AS subprojects
       FROM projects p
       JOIN users u ON u.user_id = p.user_id
-      LEFT JOIN organizations o ON o.id = p.org_id
-      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN organizations o ON o.id = p.organization_id
+      LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users cu ON cu.user_id = pm.user_id
       WHERE p.deleted = false
         AND p.parent_project_id IS NULL
         AND (
           p.user_id = $1::uuid
           OR EXISTS (
-            SELECT 1 FROM projects_members pm2
+            SELECT 1 FROM project_members pm2
             WHERE pm2.project_id = p.id
               AND pm2.user_id = $1::uuid
               AND pm2.deleted = false
@@ -136,7 +136,7 @@ class ProjectsReadRepository {
         u.email AS owner_email,
         u.name AS owner_name,
         u.avatar_url AS owner_avatar_url,
-        p.org_id as organization_id,
+        p.organization_id as organization_id,
         o.org_name as organization_name,
         o.unique_name as organization_unique_name,
         o.logo_url as organization_logo_url,
@@ -178,15 +178,15 @@ class ProjectsReadRepository {
         ) AS associated_notes
       FROM projects p
       JOIN users u ON u.user_id = p.user_id
-      LEFT JOIN organizations o ON o.id = p.org_id
-      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN organizations o ON o.id = p.organization_id
+      LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users cu ON cu.user_id = pm.user_id
       WHERE p.id = $1::uuid
         AND p.deleted = false
         AND (
           p.user_id = $2::uuid
           OR EXISTS (
-            SELECT 1 FROM projects_members pm2
+            SELECT 1 FROM project_members pm2
             WHERE pm2.project_id = p.id
               AND pm2.user_id = $2::uuid
               AND pm2.deleted = false
@@ -218,7 +218,7 @@ class ProjectsReadRepository {
         u.email AS owner_email,
         u.name AS owner_name,
         u.avatar_url AS owner_avatar_url,
-        p.org_id as organization_id,
+        p.organization_id as organization_id,
         o.org_name as organization_name,
         o.unique_name as organization_unique_name,
         o.logo_url as organization_logo_url,
@@ -275,12 +275,12 @@ class ProjectsReadRepository {
         ) AS subprojects
       FROM projects p
       JOIN users u ON u.user_id = p.user_id
-      LEFT JOIN organizations o ON o.id = p.org_id
-      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN organizations o ON o.id = p.organization_id
+      LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users cu ON cu.user_id = pm.user_id
       WHERE p.deleted = false
         AND p.parent_project_id IS NULL
-        AND p.org_id = $1::uuid
+        AND p.organization_id = $1::uuid
       GROUP BY p.id, u.username, u.email, u.name, u.avatar_url, o.org_name, o.unique_name, o.logo_url
       ORDER BY p.created_at DESC;
     `;
@@ -305,7 +305,7 @@ class ProjectsReadRepository {
         u.email AS owner_email,
         u.name AS owner_name,
         u.avatar_url AS owner_avatar_url,
-        p.org_id as organization_id,
+        p.organization_id as organization_id,
         o.org_name as organization_name,
         o.unique_name as organization_unique_name,
         o.logo_url as organization_logo_url,
@@ -347,12 +347,12 @@ class ProjectsReadRepository {
         ) AS associated_notes
       FROM projects p
       JOIN users u ON u.user_id = p.user_id
-      LEFT JOIN organizations o ON o.id = p.org_id
-      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN organizations o ON o.id = p.organization_id
+      LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users cu ON cu.user_id = pm.user_id
       WHERE p.id = $1::uuid
         AND p.deleted = false
-        AND p.org_id = $2::uuid
+        AND p.organization_id = $2::uuid
       GROUP BY p.id, u.username, u.email, u.name, u.avatar_url, o.org_name, o.unique_name, o.logo_url
       LIMIT 1;
     `;
@@ -420,14 +420,14 @@ class ProjectsReadRepository {
           '[]'::jsonb
         ) AS collaborators
       FROM projects p
-      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users u ON u.user_id = pm.user_id
       WHERE p.id = $1::uuid
         AND p.deleted = false
         AND (
           p.user_id = $2::uuid
           OR EXISTS (
-            SELECT 1 FROM projects_members pm2
+            SELECT 1 FROM project_members pm2
             WHERE pm2.project_id = p.id
               AND pm2.user_id = $2::uuid
               AND pm2.deleted = false
@@ -462,10 +462,10 @@ class ProjectsReadRepository {
           '[]'::jsonb
         ) AS collaborators
       FROM projects p
-      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users u ON u.user_id = pm.user_id
       WHERE p.id = $1::uuid
-        AND p.org_id = $2::uuid
+        AND p.organization_id = $2::uuid
         AND p.deleted = false
       GROUP BY p.id;
     `;
@@ -476,7 +476,7 @@ class ProjectsReadRepository {
     const query = `
       SELECT EXISTS (
         SELECT 1
-        FROM projects_members pm
+        FROM project_members pm
         WHERE pm.project_id = $1::uuid
           AND pm.user_id = $2::uuid
           AND pm.deleted = false
@@ -488,11 +488,25 @@ class ProjectsReadRepository {
     return result[0]?.is_collaborator || false;
   }
 
+  async getProjectMemberRole(projectId, userId) {
+    const query = `
+      SELECT pm.role
+      FROM project_members pm
+      WHERE pm.project_id = $1::uuid
+        AND pm.user_id = $2::uuid
+        AND pm.deleted = false
+        AND pm.suspended = false
+      LIMIT 1;
+    `;
+    const result = await executeQuery(query, [projectId, userId]);
+    return result[0]?.role || null;
+  }
+
   async isSuspendedCollaborator(projectId, userId) {
     const query = `
       SELECT EXISTS (
         SELECT 1
-        FROM projects_members pm
+        FROM project_members pm
         WHERE pm.project_id = $1::uuid
           AND pm.user_id = $2::uuid
           AND pm.deleted = false
@@ -508,7 +522,7 @@ class ProjectsReadRepository {
     const query = `
       SELECT EXISTS (
         SELECT 1
-        FROM projects_members pm
+        FROM project_members pm
         WHERE pm.project_id = $1::uuid
           AND pm.user_id = $2::uuid
           AND pm.deleted = false
@@ -538,7 +552,7 @@ class ProjectsReadRepository {
         AND EXISTS (
           SELECT 1 FROM projects p
           WHERE p.id = $1::uuid
-            AND p.org_id = $2::uuid
+            AND p.organization_id = $2::uuid
             AND p.deleted = false
         )
       ORDER BY n.updated_at DESC;
@@ -570,7 +584,7 @@ class ProjectsReadRepository {
             AND (
               p.user_id = $2::uuid
               OR EXISTS (
-                SELECT 1 FROM projects_members pm
+                SELECT 1 FROM project_members pm
                 WHERE pm.project_id = $1::uuid
                   AND pm.user_id = $2::uuid
                   AND pm.deleted = false
@@ -592,7 +606,7 @@ class ProjectsReadRepository {
       `(
         p.user_id = $1::uuid
         OR EXISTS (
-          SELECT 1 FROM projects_members pm2
+          SELECT 1 FROM project_members pm2
           WHERE pm2.project_id = p.id
             AND pm2.user_id = $1::uuid
             AND pm2.deleted = false
@@ -606,13 +620,13 @@ class ProjectsReadRepository {
 
     if (status) {
       conditions.push(`p.status = $${paramIndex}::project_status`);
-      params.push(status);
+      params.push(String(status).toUpperCase());
       paramIndex++;
     }
 
     if (methodology) {
       conditions.push(`p.methodology = $${paramIndex}::project_methodology`);
-      params.push(methodology);
+      params.push(String(methodology).toUpperCase());
       paramIndex++;
     }
 
@@ -651,20 +665,20 @@ class ProjectsReadRepository {
             COUNT(*)                                                      AS total,
             COUNT(*) FILTER (WHERE ownership = 'owned')                  AS owned,
             COUNT(*) FILTER (WHERE ownership = 'collaborating')          AS collaborating,
-            COUNT(*) FILTER (WHERE status IN ('open','in_progress'))     AS active,
-            COUNT(*) FILTER (WHERE status = 'open')                      AS open,
-            COUNT(*) FILTER (WHERE status = 'in_progress')               AS in_progress,
-            COUNT(*) FILTER (WHERE status = 'paused')                    AS paused,
-            COUNT(*) FILTER (WHERE status = 'completed')                 AS completed,
-            COUNT(*) FILTER (WHERE status = 'archived')                  AS archived
+            COUNT(*) FILTER (WHERE status IN ('OPEN','IN_PROGRESS'))     AS active,
+            COUNT(*) FILTER (WHERE status = 'OPEN')                      AS open,
+            COUNT(*) FILTER (WHERE status = 'IN_PROGRESS')               AS in_progress,
+            COUNT(*) FILTER (WHERE status = 'PAUSED')                    AS paused,
+            COUNT(*) FILTER (WHERE status = 'COMPLETED')                 AS completed,
+            COUNT(*) FILTER (WHERE status = 'ARCHIVED')                  AS archived
           FROM user_projects
         ),
         methodology_stats AS (
           SELECT
-            COUNT(*) FILTER (WHERE methodology = 'kanban')    AS kanban,
-            COUNT(*) FILTER (WHERE methodology = 'scrum')     AS scrum,
-            COUNT(*) FILTER (WHERE methodology = 'waterfall') AS waterfall,
-            COUNT(*) FILTER (WHERE methodology = 'custom')    AS custom
+            COUNT(*) FILTER (WHERE methodology = 'KANBAN')    AS kanban,
+            COUNT(*) FILTER (WHERE methodology = 'SCRUM')     AS scrum,
+            COUNT(*) FILTER (WHERE methodology = 'WATERFALL') AS waterfall,
+            COUNT(*) FILTER (WHERE methodology = 'CUSTOM')    AS custom
           FROM user_projects
         ),
         progress_stats AS (
@@ -680,9 +694,9 @@ class ProjectsReadRepository {
         notes_stats AS (
           SELECT
             COUNT(*)                                         AS total,
-            COUNT(*) FILTER (WHERE n.status = 'visible')    AS visible,
-            COUNT(*) FILTER (WHERE n.status = 'archived')   AS archived,
-            COUNT(*) FILTER (WHERE n.status = 'secure')     AS secure
+            COUNT(*) FILTER (WHERE n.status = 'VISIBLE')    AS visible,
+            COUNT(*) FILTER (WHERE n.status = 'ARCHIVED') AS archived,
+            COUNT(*) FILTER (WHERE n.status = 'SECURE')    AS secure
           FROM notes n
           WHERE n.project_id IN (SELECT id FROM user_projects)
             AND n.deleted = false
@@ -717,7 +731,7 @@ class ProjectsReadRepository {
     const conditions = [
       "p.deleted = false",
       "p.active = true",
-      "p.org_id = $1::uuid",
+      "p.organization_id = $1::uuid",
     ];
 
     const params = [organizationId, userId];
@@ -725,13 +739,13 @@ class ProjectsReadRepository {
 
     if (status) {
       conditions.push(`p.status = $${paramIndex}::project_status`);
-      params.push(status);
+      params.push(String(status).toUpperCase());
       paramIndex++;
     }
 
     if (methodology) {
       conditions.push(`p.methodology = $${paramIndex}::project_methodology`);
-      params.push(methodology);
+      params.push(String(methodology).toUpperCase());
       paramIndex++;
     }
 
@@ -770,20 +784,20 @@ class ProjectsReadRepository {
             COUNT(*)                                                      AS total,
             COUNT(*) FILTER (WHERE ownership = 'owned')                  AS owned,
             COUNT(*) FILTER (WHERE ownership = 'collaborating')          AS collaborating,
-            COUNT(*) FILTER (WHERE status IN ('open','in_progress'))     AS active,
-            COUNT(*) FILTER (WHERE status = 'open')                      AS open,
-            COUNT(*) FILTER (WHERE status = 'in_progress')               AS in_progress,
-            COUNT(*) FILTER (WHERE status = 'paused')                    AS paused,
-            COUNT(*) FILTER (WHERE status = 'completed')                 AS completed,
-            COUNT(*) FILTER (WHERE status = 'archived')                  AS archived
+            COUNT(*) FILTER (WHERE status IN ('OPEN','IN_PROGRESS'))     AS active,
+            COUNT(*) FILTER (WHERE status = 'OPEN')                      AS open,
+            COUNT(*) FILTER (WHERE status = 'IN_PROGRESS')               AS in_progress,
+            COUNT(*) FILTER (WHERE status = 'PAUSED')                    AS paused,
+            COUNT(*) FILTER (WHERE status = 'COMPLETED')                 AS completed,
+            COUNT(*) FILTER (WHERE status = 'ARCHIVED')                  AS archived
           FROM user_projects
         ),
         methodology_stats AS (
           SELECT
-            COUNT(*) FILTER (WHERE methodology = 'kanban')    AS kanban,
-            COUNT(*) FILTER (WHERE methodology = 'scrum')     AS scrum,
-            COUNT(*) FILTER (WHERE methodology = 'waterfall') AS waterfall,
-            COUNT(*) FILTER (WHERE methodology = 'custom')    AS custom
+            COUNT(*) FILTER (WHERE methodology = 'KANBAN')    AS kanban,
+            COUNT(*) FILTER (WHERE methodology = 'SCRUM')     AS scrum,
+            COUNT(*) FILTER (WHERE methodology = 'WATERFALL') AS waterfall,
+            COUNT(*) FILTER (WHERE methodology = 'CUSTOM')    AS custom
           FROM user_projects
         ),
         progress_stats AS (
@@ -799,9 +813,9 @@ class ProjectsReadRepository {
         notes_stats AS (
           SELECT
             COUNT(*)                                         AS total,
-            COUNT(*) FILTER (WHERE n.status = 'visible')    AS visible,
-            COUNT(*) FILTER (WHERE n.status = 'archived')   AS archived,
-            COUNT(*) FILTER (WHERE n.status = 'secure')     AS secure
+            COUNT(*) FILTER (WHERE n.status = 'VISIBLE')    AS visible,
+            COUNT(*) FILTER (WHERE n.status = 'ARCHIVED') AS archived,
+            COUNT(*) FILTER (WHERE n.status = 'SECURE')    AS secure
           FROM notes n
           WHERE n.project_id IN (SELECT id FROM user_projects)
             AND n.deleted = false

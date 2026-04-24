@@ -1,4 +1,11 @@
 const { executeQuery } = require("@/database/connection");
+const {
+  PROJECT_WRITE_CAPABLE_ROLES,
+} = require("@/modules/projects/project-role-policy");
+
+const PROJECT_WRITE_CAPABLE_ROLES_SQL = PROJECT_WRITE_CAPABLE_ROLES.map(
+  (role) => `'${role}'`
+).join(", ");
 
 class ProjectsUpdateRepository {
   async updateProject(projectId, userId, updates) {
@@ -133,7 +140,7 @@ class ProjectsUpdateRepository {
     const query = `
       UPDATE projects
       SET ${setQuery}, updated_at = NOW()
-      WHERE id = $1 AND org_id = $2::uuid AND deleted = false
+      WHERE id = $1 AND organization_id = $2::uuid AND deleted = false
       RETURNING 
         id::text,
         user_id::text,
@@ -167,14 +174,14 @@ class ProjectsUpdateRepository {
   ) {
     const query = `
       WITH updated_member AS (
-        UPDATE projects_members
-        SET role = $4, updated_at = NOW()
+        UPDATE project_members
+        SET role = UPPER($4), updated_at = NOW()
         WHERE project_id = $1::uuid
           AND user_id = $3::uuid
           AND deleted = false
           AND EXISTS (
             SELECT 1 FROM projects
-            WHERE id = $1::uuid AND org_id = $2::uuid AND deleted = false
+            WHERE id = $1::uuid AND organization_id = $2::uuid AND deleted = false
           )
         RETURNING *
       )
@@ -197,7 +204,7 @@ class ProjectsUpdateRepository {
           '[]'::jsonb
         ) AS collaborators
       FROM projects p
-      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users u ON u.user_id = pm.user_id
       WHERE p.id = $1::uuid
       GROUP BY p.id;
@@ -219,13 +226,13 @@ class ProjectsUpdateRepository {
   ) {
     const query = `
       WITH updated_member AS (
-        UPDATE projects_members
+        UPDATE project_members
         SET suspended = $4, updated_at = NOW()
         WHERE project_id = $1::uuid
           AND user_id = $3::uuid
           AND deleted = false
           AND EXISTS (
-            SELECT 1 FROM projects WHERE id = $1::uuid AND org_id = $2::uuid AND deleted = false
+            SELECT 1 FROM projects WHERE id = $1::uuid AND organization_id = $2::uuid AND deleted = false
           )
         RETURNING project_id
       )
@@ -246,7 +253,7 @@ class ProjectsUpdateRepository {
           ) FILTER (WHERE pm.id IS NOT NULL),
           '[]'::jsonb
         ) AS collaborators
-      FROM projects_members pm
+      FROM project_members pm
       JOIN users u ON pm.user_id = u.user_id
       WHERE pm.project_id = $1::uuid
         AND pm.deleted = false
@@ -269,8 +276,8 @@ class ProjectsUpdateRepository {
   ) {
     const query = `
       WITH updated_member AS (
-        UPDATE projects_members
-        SET role = $4, updated_at = NOW()
+        UPDATE project_members
+        SET role = UPPER($4), updated_at = NOW()
         WHERE project_id = $1::uuid
           AND user_id = $3::uuid
           AND deleted = false
@@ -299,7 +306,7 @@ class ProjectsUpdateRepository {
           '[]'::jsonb
         ) AS collaborators
       FROM projects p
-      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users u ON u.user_id = pm.user_id
       WHERE p.id = $1::uuid
       GROUP BY p.id;
@@ -321,7 +328,7 @@ class ProjectsUpdateRepository {
   ) {
     const query = `
       WITH updated_member AS (
-        UPDATE projects_members
+        UPDATE project_members
         SET suspended = $4, updated_at = NOW()
         WHERE project_id = $1::uuid
           AND user_id = $3::uuid
@@ -348,7 +355,7 @@ class ProjectsUpdateRepository {
           ) FILTER (WHERE pm.id IS NOT NULL),
           '[]'::jsonb
         ) AS collaborators
-      FROM projects_members pm
+      FROM project_members pm
       JOIN users u ON pm.user_id = u.user_id
       WHERE pm.project_id = $1::uuid
         AND pm.deleted = false
@@ -398,14 +405,15 @@ class ProjectsUpdateRepository {
         AND (
           EXISTS (
             SELECT 1 FROM projects p_org
-            WHERE p_org.id = $1::uuid AND p_org.org_id = $4::uuid AND p_org.deleted = false
+            WHERE p_org.id = $1::uuid AND p_org.organization_id = $4::uuid AND p_org.deleted = false
           )
           OR (user_id = $3::uuid OR EXISTS (
-            SELECT 1 FROM projects_members pm
+            SELECT 1 FROM project_members pm
             WHERE pm.project_id = $1::uuid
               AND pm.user_id = $3::uuid
               AND pm.deleted = false
               AND pm.suspended = false
+              AND pm.role IN (${PROJECT_WRITE_CAPABLE_ROLES_SQL})
           ))
         )
         AND deleted = false
@@ -466,11 +474,12 @@ class ProjectsUpdateRepository {
           SELECT 1 FROM notes WHERE id = $2::uuid AND project_id = $1::uuid AND deleted = false
         )
         AND (user_id = $3::uuid OR EXISTS (
-          SELECT 1 FROM projects_members pm
+          SELECT 1 FROM project_members pm
           WHERE pm.project_id = $1::uuid
             AND pm.user_id = $3::uuid
             AND pm.deleted = false
             AND pm.suspended = false
+            AND pm.role IN (${PROJECT_WRITE_CAPABLE_ROLES_SQL})
         ))
         AND deleted = false
       RETURNING 
@@ -654,7 +663,7 @@ class ProjectsUpdateRepository {
         WHERE ps.id = $3::uuid
           AND ps.project_id = $1::uuid
           AND p.id = ps.project_id
-          AND p.org_id = $2::uuid
+          AND p.organization_id = $2::uuid
           AND p.deleted = false
         RETURNING
           ps.id::text,
@@ -672,7 +681,7 @@ class ProjectsUpdateRepository {
           || jsonb_build_object('progress', (${progressFrag})),
         updated_at = NOW()
       WHERE p.id = $1::uuid
-        AND p.org_id = $2::uuid
+        AND p.organization_id = $2::uuid
         AND p.deleted = false
         AND EXISTS (SELECT 1 FROM stage_upd)
       RETURNING (SELECT row_to_json(su.*) FROM stage_upd su LIMIT 1) AS stage;

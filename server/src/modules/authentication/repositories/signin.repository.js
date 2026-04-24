@@ -44,15 +44,17 @@ class SigninRepository extends BaseRepository {
           SELECT row_to_json(org_data)
           FROM (
             SELECT 
-              om.org_id, 
+              om.organization_id AS org_id, 
               om.role AS org_member_role, 
               om.created_at AS org_member_since, 
               o.unique_name AS org_unique_name, 
               o.org_name, 
               o.logo_url AS org_logo_url
-            FROM organizations_members om
-            JOIN organizations o ON o.id = om.org_id
+            FROM organization_members om
+            JOIN organizations o ON o.id = om.organization_id
             WHERE om.user_id = u.user_id
+              AND om.area_id IS NULL
+              AND om.deleted = false
             ORDER BY om.created_at DESC 
             LIMIT 1
           ) org_data
@@ -68,7 +70,7 @@ class SigninRepository extends BaseRepository {
               pu.period_start, 
               pu.period_end,
               p2.name AS usage_plan_name
-            FROM plans_usage pu
+            FROM plan_usages pu
             LEFT JOIN plans p2 ON p2.plan_id = pu.plan_id
             WHERE pu.user_id = u.user_id
             ORDER BY pu.period_end DESC 
@@ -82,21 +84,26 @@ class SigninRepository extends BaseRepository {
             SELECT 
               oam.area_id AS org_default_area_id,
               oam.role AS org_default_area_role,
-              oam.joined_at AS org_default_area_member_since,
+              oam.created_at AS org_default_area_member_since,
               oa.area_name AS org_default_area_name,
               oa.slug AS org_default_area_slug,
               oa.description AS org_default_area_description,
               oa.properties AS org_default_area_properties
-            FROM organizations_areas_members oam
-            JOIN organizations_areas oa ON oa.id = oam.area_id
+            FROM organization_members oam
+            JOIN organization_areas oa ON oa.id = oam.area_id
             WHERE oam.user_id = u.user_id
               AND oam.deleted = false
+              AND oam.area_id IS NOT NULL
               AND oa.deleted = false
               AND oam.organization_id = (
-                  SELECT org_id FROM organizations_members 
-                  WHERE user_id = u.user_id ORDER BY created_at DESC LIMIT 1
+                  SELECT organization_id FROM organization_members 
+                  WHERE user_id = u.user_id
+                    AND area_id IS NULL
+                    AND deleted = false
+                  ORDER BY created_at DESC
+                  LIMIT 1
               )
-            ORDER BY oam.joined_at ASC 
+            ORDER BY oam.created_at ASC 
             LIMIT 1
           ) area_data
         ) AS default_area

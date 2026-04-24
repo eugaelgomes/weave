@@ -22,13 +22,45 @@ const {
   send_organization_invite_accepted,
 } = require("@/services/email/templates/invite-member-accepted");
 const { validRoles } = require("../normalizer");
+const {
+  ORG_ROLES,
+} = require("@/modules/organizations/organization-role-policy");
 
 const AREA_MEMBER_ROLES = ["manager", "editor", "viewer"];
+const MAX_SUPER_ADMINS = 3;
 
 class OrganizationMembersController extends OrganizationsBaseController {
   constructor() {
     super();
     this.areasRepository = areasRepository;
+  }
+
+  async _ensureCanManageMembers(currentOrg, res) {
+    if (
+      !this._ensureOrgPermission(
+        currentOrg,
+        this._orgPermissions.MANAGE_MEMBERS,
+        res
+      )
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  async _ensureSuperAdminLimit(orgId, nextRole, res) {
+    if (nextRole !== ORG_ROLES.SUPER_ADMIN) return true;
+    const total = await this.organizationsRepository.countActiveMembersByRole(
+      orgId,
+      ORG_ROLES.SUPER_ADMIN
+    );
+    if (total >= MAX_SUPER_ADMINS) {
+      res.status(400).json({
+        error: `Limite de ${MAX_SUPER_ADMINS} super administradores por workspace foi atingido`,
+      });
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -52,6 +84,14 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const currentOrg = await this._getUserOrganization(authUserId);
       if (!currentOrg) {
         return res.status(404).json({ error: "Organization not found" });
+      }
+
+      if (!(await this._ensureCanManageMembers(currentOrg, res))) {
+        return;
+      }
+
+      if (!(await this._ensureSuperAdminLimit(currentOrg.id, role, res))) {
+        return;
       }
 
       if (currentOrg.user_id === memberId) {
@@ -97,7 +137,11 @@ class OrganizationMembersController extends OrganizationsBaseController {
           .json({ success: false, error: "Organization not found" });
       }
 
-      if (currentOrg.user_id === parseInt(memberId, 10)) {
+      if (!(await this._ensureCanManageMembers(currentOrg, res))) {
+        return;
+      }
+
+      if (String(currentOrg.user_id) === String(memberId)) {
         return res.status(400).json({
           success: false,
           error: "Cannot remove the organization owner",
@@ -145,6 +189,16 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return res
           .status(404)
           .json({ success: false, error: "Organization not found" });
+      }
+
+      if (
+        !this._ensureOrgPermission(
+          currentOrg,
+          this._orgPermissions.VIEW_MEMBER_DIRECTORY,
+          res
+        )
+      ) {
+        return;
       }
 
       const members = await this.organizationsRepository.getOrganizationMembers(
@@ -237,13 +291,22 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
       if (!validRoles.includes(role)) {
         return res.status(400).json({
-          error: "Invalid role. Valid roles: admin, member, guest",
+          error:
+            "Invalid role. Valid roles: super_admin, admin, billing_manager, member, guest",
         });
       }
 
       const currentOrg = await this._getUserOrganization(authUserId);
       if (!currentOrg) {
         return res.status(404).json({ error: "Organization not found" });
+      }
+
+      if (!(await this._ensureCanManageMembers(currentOrg, res))) {
+        return;
+      }
+
+      if (!(await this._ensureSuperAdminLimit(currentOrg.id, role, res))) {
+        return;
       }
 
       let resolvedAreaMemberRole = null;
@@ -563,6 +626,10 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return res.status(404).json({ error: "Organization not found" });
       }
 
+      if (!(await this._ensureCanManageMembers(currentOrg, res))) {
+        return;
+      }
+
       const invites = await this.organizationsRepository.getAllOrgInvites(
         currentOrg.id
       );
@@ -589,6 +656,14 @@ class OrganizationMembersController extends OrganizationsBaseController {
       if (!userId) return;
 
       const { invite_id } = req.params;
+      const currentOrg = await this._getUserOrganization(userId);
+      if (!currentOrg) {
+        return res.status(404).json({ error: "Organization not found" });
+      }
+
+      if (!(await this._ensureCanManageMembers(currentOrg, res))) {
+        return;
+      }
 
       const invite =
         await this.organizationsRepository.findOrgInviteByToken(invite_id);
@@ -596,11 +671,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return res.status(404).json({ error: "Invite not found" });
       }
 
-      const isMember = await this.organizationsRepository.isMember(
-        invite.org_id,
-        userId
-      );
-      if (!isMember) {
+      if (String(invite.org_id) !== String(currentOrg.id)) {
         return res
           .status(403)
           .json({ error: "No permission to cancel this invite" });

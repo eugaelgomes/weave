@@ -17,24 +17,26 @@ import {
   ArrowRight,
   ChevronDown,
 } from "lucide-react";
+import { PROJECT_STATUS } from "@/app/_utils/db-enums";
 
 const statusLabels: Record<string, string> = {
-  open: "Aberto",
-  in_progress: "Em Andamento",
-  paused: "Pausado",
-  completed: "Concluído",
-  archived: "Arquivado",
+  [PROJECT_STATUS.OPEN]: "Aberto",
+  [PROJECT_STATUS.IN_PROGRESS]: "Em Andamento",
+  [PROJECT_STATUS.PAUSED]: "Pausado",
+  [PROJECT_STATUS.COMPLETED]: "Concluído",
+  [PROJECT_STATUS.ARCHIVED]: "Arquivado",
 };
 
 const statusColors: Record<string, string> = {
-  open: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800",
-  in_progress:
+  [PROJECT_STATUS.OPEN]:
+    "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800",
+  [PROJECT_STATUS.IN_PROGRESS]:
     "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-  paused:
+  [PROJECT_STATUS.PAUSED]:
     "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
-  completed:
+  [PROJECT_STATUS.COMPLETED]:
     "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800",
-  archived:
+  [PROJECT_STATUS.ARCHIVED]:
     "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700",
 };
 
@@ -48,9 +50,11 @@ const ProjectsManagementPage = () => {
 
   const metrics = useMemo(() => {
     const total = projects.length;
-    const active = projects.filter((p) => p.status === "in_progress").length;
-    const completed = projects.filter((p) => p.status === "completed").length;
-    const pausedOrBlocked = projects.filter((p) => p.status === "paused").length;
+    const active = projects.filter(
+      (p) => p.status === PROJECT_STATUS.OPEN || p.status === PROJECT_STATUS.IN_PROGRESS
+    ).length;
+    const completed = projects.filter((p) => p.status === PROJECT_STATUS.COMPLETED).length;
+    const pausedOrBlocked = projects.filter((p) => p.status === PROJECT_STATUS.PAUSED).length;
     const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
     return { total, active, completed, pausedOrBlocked, completionRate };
   }, [projects]);
@@ -190,10 +194,11 @@ const ProjectsManagementPage = () => {
                 className="h-8 appearance-none rounded border border-neutral-300 bg-white pr-8 pl-2.5 text-xs text-neutral-700 focus:border-yellow-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
               >
                 <option value="all">Todos os Status</option>
-                <option value="open">Abertos</option>
-                <option value="in_progress">Em Andamento</option>
-                <option value="paused">Pausados</option>
-                <option value="completed">Concluídos</option>
+                <option value={PROJECT_STATUS.OPEN}>Abertos</option>
+                <option value={PROJECT_STATUS.IN_PROGRESS}>Em Andamento</option>
+                <option value={PROJECT_STATUS.PAUSED}>Pausados</option>
+                <option value={PROJECT_STATUS.COMPLETED}>Concluídos</option>
+                <option value={PROJECT_STATUS.ARCHIVED}>Arquivados</option>
               </select>
               <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
             </div>
@@ -258,7 +263,7 @@ const ProjectsManagementPage = () => {
                         </td>
                         <td className="px-3 py-1.5">
                           <span
-                            className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-medium ${statusColors[project.status] || statusColors.open}`}
+                            className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-medium ${statusColors[project.status] || statusColors[PROJECT_STATUS.OPEN]}`}
                           >
                             {statusLabels[project.status] || project.status}
                           </span>

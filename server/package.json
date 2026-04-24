@@ -57,7 +57,7 @@
     "express-session": "^1.18.0",
     "express-validator": "^7.0.1",
     "google-auth-library": "^9.14.1",
-    "googleapis": "^144.0.0",
+    "googleapis": "^171.4.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",
@@ -68,10 +68,10 @@
     "pdfkit": "^0.17.2",
     "pg": "^8.16.3",
     "request-ip": "^3.3.0",
-    "resend": "^6.11.0",
+    "resend": "^6.1.3",
     "sharp": "^0.33.0",
     "ts-node": "^10.9.2",
-    "uuid": "^13.0.0"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.3",

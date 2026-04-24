@@ -1,4 +1,5 @@
 const PlansRepository = require("@/modules/plans/plans.repository");
+const { executeQuery } = require("@/database/connection");
 const { USAGE_PATHS } = require("@/services/plans/plan-paths");
 
 class PlanUsageManager {
@@ -179,7 +180,7 @@ class PlanUsageManager {
     await PlansRepository.saveUsageHistory({
       plan_usage_id: usageRecord.id,
       user_id: usageRecord.user_id,
-      org_id: usageRecord.org_id,
+      organization_id: usageRecord.organization_id,
       plan_id: usageRecord.plan_id,
       period_start: periodStart,
       period_end: periodEnd,
@@ -298,7 +299,21 @@ class PlanUsageManager {
 
   async _initializeFirstUsage(userId, orgId) {
     const user = await PlansRepository.getUserWithPlan(userId);
-    if (!user || !user.plan_id) return null;
+    if (!user) return null;
+
+    let planId = user.plan_id;
+    if (!planId) {
+      const starter = await PlansRepository.getPlanByName("starter");
+      planId = starter?.plan_id;
+    }
+    if (!planId) return null;
+
+    if (!user.plan_id) {
+      await executeQuery(
+        `UPDATE users SET plan_id = $1 WHERE user_id = $2 AND plan_id IS NULL`,
+        [planId, userId]
+      );
+    }
 
     const startDate = new Date();
     const endDate = new Date();
@@ -324,7 +339,7 @@ class PlanUsageManager {
     };
 
     return await PlansRepository.createInitialUsage(
-      user.plan_id,
+      planId,
       userId,
       orgId ? "organization" : "user",
       initialUsageDetails,

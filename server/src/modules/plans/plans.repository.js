@@ -35,6 +35,31 @@ class PlansRepository {
     return results[0];
   }
 
+  /**
+   * Plano atribuído a novos usuários (signup e OAuth).
+   * Prioriza nomes comuns; se nenhum existir, usa o plano ativo com menor `plan_value`.
+   */
+  async getDefaultSignupPlanId() {
+    const query = `
+      SELECT plan_id
+      FROM plans
+      WHERE deleted = FALSE
+      ORDER BY
+        CASE LOWER(TRIM(name))
+          WHEN 'starter' THEN 1
+          WHEN 'basic' THEN 2
+          WHEN 'free' THEN 3
+          WHEN 'gratuito' THEN 4
+          ELSE 99
+        END,
+        COALESCE(plan_value, 0) ASC,
+        name ASC
+      LIMIT 1
+    `;
+    const results = await executeQuery(query);
+    return results[0]?.plan_id ?? null;
+  }
+
   async getUserAndPlan(userId) {
     const query = `
       SELECT u.user_id, u.plan_id, p.details as plan_details
@@ -69,10 +94,10 @@ class PlansRepository {
 
   async getPlanUsage(userId, orgId = null) {
     const query = `
-      SELECT id, plan_id, client_type, user_id, org_id, usage_details, 
+      SELECT id, plan_id, client_type, user_id, organization_id, usage_details, 
              lifetime_stats, last_reset_at, created_at, updated_at
-      FROM plans_usage 
-      WHERE (user_id = $1 AND $1 IS NOT NULL) OR (org_id = $2 AND $2 IS NOT NULL)
+      FROM plan_usages 
+      WHERE (user_id = $1 AND $1 IS NOT NULL) OR (organization_id = $2 AND $2 IS NOT NULL)
       LIMIT 1`;
     const results = await executeQuery(query, [userId, orgId]);
     return results[0];
@@ -90,7 +115,7 @@ class PlansRepository {
     orgId = null
   ) {
     const query = `
-      INSERT INTO plans_usage (plan_id, user_id, org_id, client_type, usage_details, last_reset_at)
+      INSERT INTO plan_usages (plan_id, user_id, organization_id, client_type, usage_details, last_reset_at)
       VALUES ($1, $2, $3, $4, $5, NOW())
       RETURNING *`;
     const results = await executeQuery(query, [
@@ -120,7 +145,7 @@ class PlansRepository {
     const castType = isStorage ? "numeric" : "int";
 
     const query = `
-      UPDATE plans_usage 
+      UPDATE plan_usages 
       SET 
         usage_details = jsonb_set(
           usage_details, 
@@ -139,7 +164,7 @@ class PlansRepository {
 
   async updateJsonValue(usageId, jsonPath, value) {
     const query = `
-      UPDATE plans_usage 
+      UPDATE plan_usages 
       SET usage_details = jsonb_set(usage_details, $1, $2::jsonb),
           updated_at = NOW()
       WHERE id = $3
@@ -158,7 +183,7 @@ class PlansRepository {
 
   async updateFullUsage(usageId, usageDetails, lastResetAt = null) {
     const query = `
-      UPDATE plans_usage 
+      UPDATE plan_usages 
       SET usage_details = $1, 
           last_reset_at = COALESCE($2, last_reset_at),
           updated_at = NOW() 
@@ -179,7 +204,7 @@ class PlansRepository {
     const {
       plan_usage_id,
       user_id,
-      org_id,
+      organization_id,
       plan_id,
       period_start,
       period_end,
@@ -193,7 +218,7 @@ class PlansRepository {
 
     const query = `
       INSERT INTO plan_usage_history 
-        (plan_usage_id, user_id, org_id, plan_id, period_start, period_end, 
+        (plan_usage_id, user_id, organization_id, plan_id, period_start, period_end, 
          final_usage_details, total_notes_created, total_projects_created,
          total_ai_messages, total_storage_mb, total_exports)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
@@ -202,7 +227,7 @@ class PlansRepository {
     const results = await executeQuery(query, [
       plan_usage_id,
       user_id,
-      org_id,
+      organization_id,
       plan_id,
       period_start,
       period_end,
@@ -222,7 +247,7 @@ class PlansRepository {
    */
   async updateLifetimeStats(usageId, increments) {
     const query = `
-      UPDATE plans_usage
+      UPDATE plan_usages
       SET 
         lifetime_stats = jsonb_set(
           jsonb_set(

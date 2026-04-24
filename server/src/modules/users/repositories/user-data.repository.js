@@ -88,8 +88,11 @@ class UserDataRepository extends BaseRepository {
       values.push(updates.username);
     }
     if (updates.theme_mode !== undefined) {
-      fields.push(`theme_mode = $${paramIndex++}`);
-      values.push(updates.theme_mode);
+      const upper = String(updates.theme_mode).trim().toUpperCase();
+      if (upper === "LIGHT" || upper === "DARK") {
+        fields.push(`theme_mode = $${paramIndex++}`);
+        values.push(upper);
+      }
     }
     if (updates.birth_date !== undefined) {
       fields.push(`birth_date = $${paramIndex++}`);

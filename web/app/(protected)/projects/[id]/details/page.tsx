@@ -19,18 +19,25 @@ import { useAuth } from "@/app/_contexts/auth-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { useNotes } from "@/app/_contexts/notes-context";
 import getStorageUrl from "@/app/_utils/get-storage-url";
+import { PROJECT_STATUS, type ProjectStatus } from "@/app/_utils/db-enums";
 
-const STATUS_OPTIONS = ["open", "in_progress", "paused", "completed", "archived"] as const;
+const STATUS_OPTIONS: ProjectStatus[] = [
+  PROJECT_STATUS.OPEN,
+  PROJECT_STATUS.IN_PROGRESS,
+  PROJECT_STATUS.PAUSED,
+  PROJECT_STATUS.COMPLETED,
+  PROJECT_STATUS.ARCHIVED,
+];
 const METHODOLOGY_OPTIONS = ["kanban", "scrum", "waterfall", "custom"] as const;
 const VIEW_OPTIONS = ["board", "list", "calendar", "timeline", "gantt"] as const;
 const LEVEL_OPTIONS = ["alta", "media", "baixa"] as const;
 
 const STATUS_LABELS: Record<string, string> = {
-  open: "Aberto",
-  in_progress: "Em progresso",
-  paused: "Pausado",
-  completed: "Concluído",
-  archived: "Arquivado",
+  [PROJECT_STATUS.OPEN]: "Aberto",
+  [PROJECT_STATUS.IN_PROGRESS]: "Em progresso",
+  [PROJECT_STATUS.PAUSED]: "Pausado",
+  [PROJECT_STATUS.COMPLETED]: "Concluído",
+  [PROJECT_STATUS.ARCHIVED]: "Arquivado",
 };
 
 const METHODOLOGY_LABELS: Record<string, string> = {
@@ -170,7 +177,7 @@ export default function ProjectDetailsPage() {
     const freshFormData = {
       title: project.title || "",
       description: project.description || "",
-      status: project.status || "open",
+      status: project.status || PROJECT_STATUS.OPEN,
       methodology: project.methodology || "kanban",
       default_view: project.default_view || "board",
       active: project.active ?? true,
@@ -238,7 +245,7 @@ export default function ProjectDetailsPage() {
       let payload: any = {
         title: formData.title,
         description: formData.description || undefined,
-        status: formData.status as (typeof STATUS_OPTIONS)[number],
+        status: formData.status as ProjectStatus,
         methodology: formData.methodology as (typeof METHODOLOGY_OPTIONS)[number],
         default_view: formData.default_view as (typeof VIEW_OPTIONS)[number],
         active: formData.active,

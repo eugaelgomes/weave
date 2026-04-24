@@ -87,15 +87,19 @@ async function getStatsContext(userId) {
 
     // Calcula estatísticas de notas
     const notesByStatus = {
-      open: notes.filter((n) => n.status === "open").length,
-      archived: notes.filter((n) => n.status === "archived").length,
+      VISIBLE: notes.filter((n) => n.status === "VISIBLE").length,
+      SECURE: notes.filter((n) => n.status === "SECURE").length,
+      ARCHIVED: notes.filter((n) => n.status === "ARCHIVED").length,
       total: notes.length,
     };
 
-    // Calcula estatísticas de projetos
+    // Calcula estatísticas de projetos (enum `project_status`)
     const projectsByStatus = {
-      ativo: projects.filter((p) => p.status === "ativo").length,
-      concluído: projects.filter((p) => p.status === "concluído").length,
+      OPEN: projects.filter((p) => p.status === "OPEN").length,
+      IN_PROGRESS: projects.filter((p) => p.status === "IN_PROGRESS").length,
+      PAUSED: projects.filter((p) => p.status === "PAUSED").length,
+      COMPLETED: projects.filter((p) => p.status === "COMPLETED").length,
+      ARCHIVED: projects.filter((p) => p.status === "ARCHIVED").length,
       total: projects.length,
     };
 
@@ -156,7 +160,7 @@ async function getActiveProjectsContext(userId, limit = 10) {
     const projects = await projectsRepository.getAllProjects(userId);
 
     return projects
-      .filter((p) => p.status === "ativo")
+      .filter((p) => p.status === "OPEN" || p.status === "IN_PROGRESS")
       .slice(0, limit)
       .map((project) => ({
         id: project.id,
@@ -331,8 +335,9 @@ async function getProjectContext(userId, projectId) {
       stats: {
         totalNotes: notes.length,
         notesByStatus: {
-          open: notes.filter((n) => n.status === "open").length,
-          archived: notes.filter((n) => n.status === "archived").length,
+          VISIBLE: notes.filter((n) => n.status === "VISIBLE").length,
+          SECURE: notes.filter((n) => n.status === "SECURE").length,
+          ARCHIVED: notes.filter((n) => n.status === "ARCHIVED").length,
         },
       },
     };

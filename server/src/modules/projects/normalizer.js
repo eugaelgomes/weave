@@ -137,12 +137,12 @@ const normalizeNewProject = (payload, userId, orgId, userProps = {}) => {
 
   const projectData = {
     user_id: userId,
-    org_id: orgId || null,
+    organization_id: orgId || null,
     title,
     description,
-    methodology,
-    default_view,
-    status: payload.status || "open",
+    methodology: methodology.toUpperCase(),
+    default_view: String(default_view).toUpperCase(),
+    status: String(payload.status || "OPEN").toUpperCase(),
     properties: JSON.stringify(mergedProjectProperties),
     parent_project_id: payload.parent_project_id || null,
   };

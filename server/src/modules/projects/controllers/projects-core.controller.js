@@ -5,6 +5,10 @@ const {
   orgRoleHasPermission,
   ORG_PERMISSIONS,
 } = require("@/modules/organizations/organization-role-policy");
+const {
+  projectRoleHasPermission,
+  PROJECT_PERMISSIONS,
+} = require("@/modules/projects/project-role-policy");
 
 class ProjectsCoreController extends ProjectsBaseController {
   constructor() {
@@ -129,7 +133,7 @@ class ProjectsCoreController extends ProjectsBaseController {
   }
 
   /**
-   * Dono do projeto ou admin/super_admin com acesso a todos os projetos da org ativa.
+   * Dono do projeto ou papel de workspace com acesso a todos os projetos da org ativa.
    * @returns {Promise<{ project: Object, orgWide: boolean, membership: Object }>}
    */
   async _getProjectOwnershipContext(projectId, userId) {
@@ -174,7 +178,7 @@ class ProjectsCoreController extends ProjectsBaseController {
   }
 
   /**
-   * Valida se o usuário tem acesso ao projeto (dono/colaborador ou admin org na mesma org_id).
+   * Valida se o usuário tem acesso ao projeto (dono/colaborador ou role org-wide na mesma org_id).
    * @param {string} projectId - ID do projeto
    * @param {string} userId - ID do usuário
    * @returns {Object} - Projeto encontrado com dados completos
@@ -209,6 +213,32 @@ class ProjectsCoreController extends ProjectsBaseController {
     }
 
     return result[0];
+  }
+
+  /**
+   * Permissão de escrita no conteúdo do projeto:
+   * - Dono do projeto
+   * - Administração org-wide (ACCESS_ALL_ORG_PROJECTS)
+   * - Membro do projeto com role que tenha WRITE_PROJECT_CONTENT
+   */
+  async _ensureProjectWriteAccess(projectId, userId) {
+    const project = await this._validateProjectAccess(projectId, userId);
+    if (project.user_id === userId) return true;
+
+    const membership =
+      await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    if (this._canAccessAllOrganizationProjects(membership)) {
+      return true;
+    }
+
+    const projectRole = await this.projectsRepository.getProjectMemberRole(
+      projectId,
+      userId
+    );
+    return projectRoleHasPermission(
+      projectRole,
+      PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT
+    );
   }
 
   /**

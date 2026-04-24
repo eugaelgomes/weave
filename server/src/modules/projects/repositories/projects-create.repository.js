@@ -1,4 +1,11 @@
 const { executeQuery } = require("@/database/connection");
+const {
+  PROJECT_WRITE_CAPABLE_ROLES,
+} = require("@/modules/projects/project-role-policy");
+
+const PROJECT_WRITE_CAPABLE_ROLES_SQL = PROJECT_WRITE_CAPABLE_ROLES.map(
+  (role) => `'${role}'`
+).join(", ");
 
 class ProjectsCreateRepository {
   async createProjectWithStages(projectData, stagesData) {
@@ -7,7 +14,7 @@ class ProjectsCreateRepository {
       WITH new_project AS (
         INSERT INTO projects (
           user_id, 
-          org_id, 
+          organization_id, 
           title, 
           description, 
           methodology, 
@@ -47,7 +54,7 @@ class ProjectsCreateRepository {
       SELECT 
         np.id::text,
         np.user_id::text,
-        np.org_id::text,
+        np.organization_id::text,
         np.title,
         np.description,
         np.methodology,
@@ -73,7 +80,7 @@ class ProjectsCreateRepository {
 
     const values = [
       projectData.user_id,
-      projectData.org_id || null,
+      projectData.organization_id || null,
       projectData.title,
       projectData.description || null,
       projectData.methodology,
@@ -94,8 +101,8 @@ class ProjectsCreateRepository {
   ) {
     const query = `
       WITH inserted_member AS (
-        INSERT INTO projects_members (project_id, user_id, role, added_by)
-        VALUES ($1, $3, $4, $2)
+        INSERT INTO project_members (project_id, user_id, role, added_by)
+        VALUES ($1, $3, UPPER($4), $2)
         RETURNING *
       )
       SELECT 
@@ -117,7 +124,7 @@ class ProjectsCreateRepository {
           '[]'::jsonb
         ) AS collaborators
       FROM projects p
-      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users u ON u.user_id = pm.user_id
       WHERE p.id = $1::uuid
       GROUP BY p.id;
@@ -134,10 +141,10 @@ class ProjectsCreateRepository {
   ) {
     const query = `
       WITH inserted_member AS (
-        INSERT INTO projects_members (project_id, user_id, role, added_by)
-        SELECT $1::uuid, $4::uuid, $5, $3::uuid
+        INSERT INTO project_members (project_id, user_id, role, added_by)
+        SELECT $1::uuid, $4::uuid, UPPER($5), $3::uuid
         FROM projects p
-        WHERE p.id = $1::uuid AND p.org_id = $2::uuid AND p.deleted = false
+        WHERE p.id = $1::uuid AND p.organization_id = $2::uuid AND p.deleted = false
         RETURNING *
       )
       SELECT 
@@ -159,7 +166,7 @@ class ProjectsCreateRepository {
           '[]'::jsonb
         ) AS collaborators
       FROM projects p
-      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users u ON u.user_id = pm.user_id
       WHERE p.id = $1::uuid
       GROUP BY p.id;
@@ -211,11 +218,12 @@ class ProjectsCreateRepository {
           updated_at = NOW()
         WHERE id = $1::uuid
           AND (user_id = $3::uuid OR EXISTS (
-            SELECT 1 FROM projects_members pm
+            SELECT 1 FROM project_members pm
             WHERE pm.project_id = $1::uuid
               AND pm.user_id = $3::uuid
               AND pm.deleted = false
               AND pm.suspended = false
+              AND pm.role IN (${PROJECT_WRITE_CAPABLE_ROLES_SQL})
           ))
           AND deleted = false
           AND EXISTS (SELECT 1 FROM updated_note)
@@ -292,14 +300,15 @@ class ProjectsCreateRepository {
           AND (
             EXISTS (
               SELECT 1 FROM projects p_org
-              WHERE p_org.id = $1::uuid AND p_org.org_id = $4::uuid AND p_org.deleted = false
+              WHERE p_org.id = $1::uuid AND p_org.organization_id = $4::uuid AND p_org.deleted = false
             )
             OR (user_id = $3::uuid OR EXISTS (
-              SELECT 1 FROM projects_members pm
+              SELECT 1 FROM project_members pm
               WHERE pm.project_id = $1::uuid
                 AND pm.user_id = $3::uuid
                 AND pm.deleted = false
                 AND pm.suspended = false
+                AND pm.role IN (${PROJECT_WRITE_CAPABLE_ROLES_SQL})
             ))
           )
           AND deleted = false

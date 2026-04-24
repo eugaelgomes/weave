@@ -4,7 +4,7 @@ class OrganizationAreasRepository {
   async listOrganizationAreas(organizationId) {
     const query = `
 			SELECT *
-			FROM organizations_areas
+			FROM organization_areas
 			WHERE organization_id = $1 AND deleted = false
 			ORDER BY area_name ASC;
 		`;
@@ -14,7 +14,7 @@ class OrganizationAreasRepository {
   async getAreaById(areaId, organizationId) {
     const query = `
 			SELECT *
-			FROM organizations_areas
+			FROM organization_areas
 			WHERE id = $1 AND organization_id = $2 AND deleted = false
 			LIMIT 1;
 		`;
@@ -25,7 +25,7 @@ class OrganizationAreasRepository {
   async getAreaBySlug(organizationId, slug) {
     const query = `
 			SELECT *
-			FROM organizations_areas
+			FROM organization_areas
 			WHERE organization_id = $1 AND slug = $2 AND deleted = false
 			LIMIT 1;
 		`;
@@ -36,7 +36,7 @@ class OrganizationAreasRepository {
   async getMatchingSlugs(organizationId, slugBase) {
     const query = `
 			SELECT slug
-			FROM organizations_areas
+			FROM organization_areas
 			WHERE organization_id = $1 AND deleted = false AND slug LIKE $2;
 		`;
     const rows = await executeQuery(query, [organizationId, `${slugBase}%`]);
@@ -53,7 +53,7 @@ class OrganizationAreasRepository {
     createdBy,
   }) {
     const query = `
-			INSERT INTO organizations_areas (
+			INSERT INTO organization_areas (
 				organization_id,
 				parent_area_id,
 				area_name,
@@ -113,7 +113,7 @@ class OrganizationAreasRepository {
     setClauses.push("updated_at = CURRENT_TIMESTAMP");
 
     const query = `
-			UPDATE organizations_areas
+			UPDATE organization_areas
 			SET ${setClauses.join(", ")}
 			WHERE id = $${index} AND organization_id = $${index + 1}
 			RETURNING *;
@@ -127,7 +127,7 @@ class OrganizationAreasRepository {
 
   async softDeleteArea(areaId, organizationId) {
     const query = `
-			UPDATE organizations_areas
+			UPDATE organization_areas
 			SET deleted = true,
 					active = false,
 					updated_at = CURRENT_TIMESTAMP
@@ -146,7 +146,7 @@ class OrganizationAreasRepository {
 				u.username,
 				u.email,
 				u.avatar_url
-			FROM organizations_areas_members m
+			FROM organization_members m
 			JOIN users u ON u.user_id = m.user_id
 			WHERE m.organization_id = $1
 				AND m.area_id = $2
@@ -159,7 +159,7 @@ class OrganizationAreasRepository {
   async getAreaMember(areaId, organizationId, userId) {
     const query = `
 			SELECT *
-			FROM organizations_areas_members
+			FROM organization_members
 			WHERE organization_id = $1
 				AND area_id = $2
 				AND user_id = $3
@@ -172,14 +172,15 @@ class OrganizationAreasRepository {
 
   async addAreaMember(areaId, organizationId, userId, role, addedBy) {
     const query = `
-			INSERT INTO organizations_areas_members (
+			INSERT INTO organization_members (
 				organization_id,
 				area_id,
 				user_id,
 				role,
-				added_by
+				invited_by,
+				status
 			)
-			VALUES ($1, $2, $3, $4, $5)
+			VALUES ($1, $2, $3, UPPER($4), $5, 'ACTIVE')
 			RETURNING *;
 		`;
     const results = await executeQuery(query, [
@@ -192,12 +193,11 @@ class OrganizationAreasRepository {
     return results[0];
   }
 
-  async updateAreaMemberRole(areaId, organizationId, userId, role, updatedBy) {
+  async updateAreaMemberRole(areaId, organizationId, userId, role) {
     const query = `
-			UPDATE organizations_areas_members
-			SET role = $4,
-					updated_at = CURRENT_TIMESTAMP,
-					updated_by = $5
+			UPDATE organization_members
+			SET role = UPPER($4),
+					updated_at = CURRENT_TIMESTAMP
 			WHERE organization_id = $1
 				AND area_id = $2
 				AND user_id = $3
@@ -209,20 +209,17 @@ class OrganizationAreasRepository {
       areaId,
       userId,
       role,
-      updatedBy,
     ]);
     return results[0];
   }
 
   async removeAreaMember(areaId, organizationId, userId, removedBy) {
     const query = `
-			UPDATE organizations_areas_members
+			UPDATE organization_members
 			SET deleted = true,
-					active = false,
 					removed_at = CURRENT_TIMESTAMP,
 					removed_by = $4,
-					updated_at = CURRENT_TIMESTAMP,
-					updated_by = $4
+					updated_at = CURRENT_TIMESTAMP
 			WHERE organization_id = $1
 				AND area_id = $2
 				AND user_id = $3

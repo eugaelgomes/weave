@@ -94,8 +94,8 @@ const notesFunctions = {
         },
         status: {
           type: "string",
-          enum: ["open", "archived", "deleted"],
-          description: "Filtrar por status da nota",
+          enum: ALLOWED_NOTE_STATUSES,
+          description: "Filtrar por status da nota (enum notes_status)",
         },
         projectId: {
           type: "string",

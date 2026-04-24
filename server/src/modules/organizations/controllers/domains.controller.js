@@ -248,11 +248,23 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       /**
        * Update member role to super_admin if domain verification is successful and user is not already a super_admin.
        */
-      await this.organizationsRepository.updateMemberRole(
-        organization.id,
-        userId,
-        "super_admin"
+      const currentSuperAdmins =
+        await this.organizationsRepository.countActiveMembersByRole(
+          organization.id,
+          "super_admin"
+        );
+      const canPromoteToSuperAdmin = !(
+        organization.member_role !== "super_admin" &&
+        currentSuperAdmins >= 3
       );
+
+      if (canPromoteToSuperAdmin) {
+        await this.organizationsRepository.updateMemberRole(
+          organization.id,
+          userId,
+          "super_admin"
+        );
+      }
 
       const orgDomains =
         await this.organizationsRepository.refreshOrgDomainsCache(

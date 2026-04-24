@@ -9,18 +9,21 @@ const {
 
 class OrganizationsRepository {
   /**
-   * Papel do utilizador na organização (organizations_members.role).
-   * @param {string} org_id
+   * Papel do utilizador na organização (organization_members.role).
+   * @param {string} organization_id
    * @param {string} user_id
    * @returns {Promise<string|null>}
    */
-  async getMembershipRole(org_id, user_id) {
+  async getMembershipRole(organization_id, user_id) {
     const query = `
-      SELECT role FROM organizations_members
-      WHERE org_id = $1 AND user_id = $2 AND deleted = false
+      SELECT role FROM organization_members
+      WHERE organization_id = $1
+        AND user_id = $2
+        AND area_id IS NULL
+        AND deleted = false
       LIMIT 1;
     `;
-    const rows = await executeQuery(query, [org_id, user_id]);
+    const rows = await executeQuery(query, [organization_id, user_id]);
     return rows[0]?.role ?? null;
   }
 
@@ -46,7 +49,7 @@ class OrganizationsRepository {
       o.settings,
       o.plan AS plan_snapshot,
       o.address,
-      o.delete_at,
+      o.deleted_at,
       o.deleted_by,
       o.plan_id,
       o.branding_properties,
@@ -61,11 +64,12 @@ class OrganizationsRepository {
       u.username,
       u.email,
       om.role AS member_role
-    FROM organizations_members om
-    INNER JOIN organizations o ON o.id = om.org_id AND o.deleted = false
+    FROM organization_members om
+    INNER JOIN organizations o ON o.id = om.organization_id AND o.deleted = false
     LEFT JOIN plans p ON p.plan_id = o.plan_id
     LEFT JOIN users u ON u.user_id = o.user_id
     WHERE om.user_id = $1 AND om.deleted = false
+      AND om.area_id IS NULL
     ORDER BY om.created_at ASC
     LIMIT 1;
     `;
@@ -99,7 +103,7 @@ class OrganizationsRepository {
       o.settings,
       o.plan AS plan_snapshot,
       o.address,
-      o.delete_at,
+      o.deleted_at,
       o.deleted_by,
       o.plan_id,
       o.branding_properties,
@@ -150,7 +154,7 @@ class OrganizationsRepository {
            'project_name', p.title,
            'role', pm.role
          )), '[]'::json)
-         FROM projects_members pm
+         FROM project_members pm
          JOIN projects p ON p.id = pm.project_id
          WHERE pm.user_id = u1.user_id
            AND pm.deleted = false 
@@ -160,34 +164,52 @@ class OrganizationsRepository {
            'area_name', a.area_name,
            'role', am.role
          )), '[]'::json)
-         FROM organizations_areas_members am
-         JOIN organizations_areas a ON a.id = am.area_id
+         FROM organization_members am
+         JOIN organization_areas a ON a.id = am.area_id
          WHERE am.user_id = u1.user_id
            AND am.deleted = false 
+           AND am.area_id IS NOT NULL
            AND a.deleted = false
            AND am.organization_id = $1) as areas,
         (SELECT ul.created_at as last_login_at
-         FROM users_logs ul
+         FROM user_logs ul
          WHERE ul.user_id = u1.user_id 
-           AND ul.log_type = 'auth_login'
+           AND ul.log_type = 'AUTH_LOGIN'
          ORDER BY ul.created_at DESC
          LIMIT 1) as last_login
-      FROM organizations_members om
+      FROM organization_members om
       LEFT JOIN users u1 ON om.user_id = u1.user_id
       LEFT JOIN users u2 ON om.invited_by = u2.user_id
-      WHERE om.org_id = $1
+      WHERE om.organization_id = $1
+        AND om.area_id IS NULL
+        AND om.deleted = false
       ORDER BY 
         CASE om.role 
-          WHEN 'super_admin' THEN 1
-          WHEN 'admin' THEN 2
-          WHEN 'member' THEN 3
-          WHEN 'guest' THEN 4
-          ELSE 5
+          WHEN 'SUPER_ADMIN' THEN 1
+          WHEN 'ADMIN' THEN 2
+          WHEN 'BILLING_MANAGER' THEN 3
+          WHEN 'MEMBER' THEN 4
+          WHEN 'GUEST' THEN 5
+          ELSE 6
         END,
         om.created_at ASC;
     `;
     const results = await executeQuery(query, [organization_id]);
     return results;
+  }
+
+  async countActiveMembersByRole(organization_id, role) {
+    const query = `
+      SELECT COUNT(*)::int AS total
+      FROM organization_members
+      WHERE organization_id = $1
+        AND area_id IS NULL
+        AND role = UPPER($2)
+        AND deleted = false
+        AND suspended = false;
+    `;
+    const results = await executeQuery(query, [organization_id, role]);
+    return results[0]?.total || 0;
   }
 
   async addOrganizationMember(
@@ -200,8 +222,8 @@ class OrganizationsRepository {
   ) {
     const inviterId = invited_by || user_id;
     const query = `
-      INSERT INTO organizations_members (org_id, user_id, role, status, invited_by)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO organization_members (organization_id, user_id, area_id, role, status, invited_by)
+      VALUES ($1, $2, NULL, UPPER($3), UPPER($4), $5)
       RETURNING *;
     `;
     const params = [organization_id, user_id, role, status, inviterId];
@@ -217,9 +239,9 @@ class OrganizationsRepository {
 
   async removeOrganizationMember(organization_id, user_id) {
     const query = `
-      UPDATE organizations_members
+      UPDATE organization_members
       SET deleted = true, updated_at = now()
-      WHERE org_id = $1 AND user_id = $2
+      WHERE organization_id = $1 AND user_id = $2 AND area_id IS NULL
       RETURNING *;
     `;
     const results = await executeQuery(query, [organization_id, user_id]);
@@ -228,9 +250,9 @@ class OrganizationsRepository {
 
   async updateMemberRole(organization_id, user_id, role) {
     const query = `
-      UPDATE organizations_members
-      SET role = $3, updated_at = now()
-      WHERE org_id = $1 AND user_id = $2
+      UPDATE organization_members
+      SET role = UPPER($3), updated_at = now()
+      WHERE organization_id = $1 AND user_id = $2 AND area_id IS NULL
       RETURNING *;
     `;
     const results = await executeQuery(query, [organization_id, user_id, role]);
@@ -239,9 +261,9 @@ class OrganizationsRepository {
 
   async updateMemberStatus(organization_id, user_id, status) {
     const query = `
-      UPDATE organizations_members
-      SET status = $3, updated_at = now()
-      WHERE org_id = $1 AND user_id = $2
+      UPDATE organization_members
+      SET status = UPPER($3), updated_at = now()
+      WHERE organization_id = $1 AND user_id = $2 AND area_id IS NULL
       RETURNING *;
     `;
     const results = await executeQuery(query, [
@@ -254,8 +276,12 @@ class OrganizationsRepository {
 
   async isMember(organization_id, user_id) {
     const query = `
-      SELECT 1 FROM organizations_members
-      WHERE org_id = $1 AND user_id = $2;
+      SELECT 1 FROM organization_members
+      WHERE organization_id = $1
+        AND user_id = $2
+        AND area_id IS NULL
+        AND deleted = false
+      LIMIT 1;
     `;
     const results = await executeQuery(query, [organization_id, user_id]);
     return results.length > 0;
@@ -264,10 +290,12 @@ class OrganizationsRepository {
   async getOrganizationOwner(organization_id) {
     const query = `
       SELECT om.*, u.name, u.username, u.email, u.avatar_url
-      FROM organizations_members om
+      FROM organization_members om
       LEFT JOIN users u ON om.user_id = u.user_id
-      INNER JOIN organizations o ON o.id = om.org_id
-      WHERE om.org_id = $1 AND om.user_id = o.user_id
+      INNER JOIN organizations o ON o.id = om.organization_id
+      WHERE om.organization_id = $1 AND om.user_id = o.user_id
+        AND om.area_id IS NULL
+        AND om.deleted = false
       LIMIT 1;
     `;
     const results = await executeQuery(query, [organization_id]);
@@ -328,10 +356,10 @@ class OrganizationsRepository {
 
       const organization = orgResult.rows[0];
 
-      // Atualiza o usuário com o org_id criado
+      // Atualiza o usuário com o organization_id criado
       const updateUserQuery = `
       UPDATE users
-      SET org_id = $1
+      SET organization_id = $1
       WHERE user_id = $2;
     `;
 
@@ -341,8 +369,8 @@ class OrganizationsRepository {
       await this.addOrganizationMember(
         organization.id,
         user_id,
-        "super_admin",
-        "active",
+        "SUPER_ADMIN",
+        "ACTIVE",
         null,
         client
       );
@@ -360,7 +388,7 @@ class OrganizationsRepository {
   }
 
   async updateOrg(
-    org_id,
+    organization_id,
     user_id,
     org_name,
     unique_name,
@@ -386,11 +414,12 @@ class OrganizationsRepository {
         AND (
           o.user_id = $2
           OR EXISTS (
-            SELECT 1 FROM organizations_members om
-            WHERE om.org_id = o.id
+            SELECT 1 FROM organization_members om
+            WHERE om.organization_id = o.id
               AND om.user_id = $2
+              AND om.area_id IS NULL
               AND om.deleted = false
-              AND om.role = 'super_admin'
+              AND om.role IN ('SUPER_ADMIN', 'ADMIN')
           )
         )
       RETURNING
@@ -408,7 +437,7 @@ class OrganizationsRepository {
         deleted;
     `;
     const results = await executeQuery(query, [
-      org_id,
+      organization_id,
       user_id,
       org_name,
       unique_name,
@@ -424,7 +453,7 @@ class OrganizationsRepository {
 
   // Organization Invites
   async createOrgInvite(
-    org_id,
+    organization_id,
     email,
     role,
     invited_by,
@@ -434,15 +463,15 @@ class OrganizationsRepository {
     area_member_role = null
   ) {
     const query = `
-      INSERT INTO organization_invites_members (
-        org_id, email, name, username, role, invited_by, expires_at,
+      INSERT INTO organization_member_invites (
+        organization_id, email, name, username, role, invited_by, expires_at,
         area_id, area_member_role
       )
-      VALUES ($1, $2, $3, $4, $5, $6, NOW() + INTERVAL '7 days', $7, $8)
+      VALUES ($1, $2, $3, $4, UPPER($5), $6, NOW() + INTERVAL '7 days', $7, CASE WHEN $8 IS NULL THEN NULL ELSE UPPER($8) END)
       RETURNING *;
     `;
     const results = await executeQuery(query, [
-      org_id,
+      organization_id,
       email,
       name,
       username,
@@ -458,10 +487,10 @@ class OrganizationsRepository {
     const query = `
       SELECT i.*, o.org_name, o.unique_name as org_unique_name,
         a.area_name AS area_name
-      FROM organization_invites_members i
-      JOIN organizations o ON o.id = i.org_id
-      LEFT JOIN organizations_areas a
-        ON a.id = i.area_id AND a.organization_id = i.org_id AND a.deleted = false
+      FROM organization_member_invites i
+      JOIN organizations o ON o.id = i.organization_id
+      LEFT JOIN organization_areas a
+        ON a.id = i.area_id AND a.organization_id = i.organization_id AND a.deleted = false
       WHERE i.invite_id = $1 
         AND i.deleted = false 
         AND i.invite_verified = false
@@ -471,30 +500,30 @@ class OrganizationsRepository {
     return results[0];
   }
 
-  async getAllOrgInvites(org_id) {
+  async getAllOrgInvites(organization_id) {
     const query = `
-      SELECT * FROM organization_invites_members
-      WHERE org_id = $1 
+      SELECT * FROM organization_member_invites
+      WHERE organization_id = $1 
       ORDER BY created_at DESC;
     `;
-    return await executeQuery(query, [org_id]);
+    return await executeQuery(query, [organization_id]);
   }
 
-  async getPendingOrgInvites(org_id) {
+  async getPendingOrgInvites(organization_id) {
     const query = `
-      SELECT * FROM organization_invites_members
-      WHERE org_id = $1 
+      SELECT * FROM organization_member_invites
+      WHERE organization_id = $1 
         AND deleted = false 
         AND invite_verified = false
         AND expires_at > NOW()
       ORDER BY created_at DESC;
     `;
-    return await executeQuery(query, [org_id]);
+    return await executeQuery(query, [organization_id]);
   }
 
   async verifyOrgInvite(invite_id) {
     const query = `
-      UPDATE organization_invites_members
+      UPDATE organization_member_invites
       SET invite_verified = true, updated_at = NOW()
       WHERE invite_id = $1
       RETURNING *;
@@ -505,7 +534,7 @@ class OrganizationsRepository {
 
   async deleteOrgInvite(invite_id) {
     const query = `
-      UPDATE organization_invites_members
+      UPDATE organization_member_invites
       SET deleted = true, updated_at = NOW()
       WHERE invite_id = $1
       RETURNING *;
@@ -514,46 +543,46 @@ class OrganizationsRepository {
     return results[0];
   }
 
-  async checkExistingInvite(org_id, email) {
+  async checkExistingInvite(organization_id, email) {
     const query = `
-      SELECT * FROM organization_invites_members
-      WHERE org_id = $1 
+      SELECT * FROM organization_member_invites
+      WHERE organization_id = $1 
         AND LOWER(email) = LOWER($2)
         AND deleted = false 
         AND invite_verified = false
         AND expires_at > NOW();
     `;
-    const results = await executeQuery(query, [org_id, email]);
+    const results = await executeQuery(query, [organization_id, email]);
     return results[0];
   }
 
-  async updateOrgLogo(org_id, logo_url, user_id) {
+  async updateOrgLogo(organization_id, logo_url, user_id) {
     const query = `
 WITH user_check AS (
-    SELECT 1 FROM organizations_members 
-    WHERE org_id = $1 AND user_id = $3 AND role = 'super_admin' AND deleted = false
+    SELECT 1 FROM organization_members 
+    WHERE organization_id = $1 AND user_id = $3 AND area_id IS NULL AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
 )
 UPDATE organizations
 SET logo_url = $2, updated_at = NOW()
 WHERE id = $1 AND EXISTS (SELECT 1 FROM user_check)
 RETURNING *;
     `;
-    const results = await executeQuery(query, [org_id, logo_url, user_id]);
+    const results = await executeQuery(query, [organization_id, logo_url, user_id]);
     return results[0];
   }
 
-  async updateOrgBanner(org_id, banner_url, user_id) {
+  async updateOrgBanner(organization_id, banner_url, user_id) {
     const query = `
 WITH user_check AS (
-    SELECT 1 FROM organizations_members 
-    WHERE org_id = $1 AND user_id = $3 AND role = 'super_admin' AND deleted = false
+    SELECT 1 FROM organization_members 
+    WHERE organization_id = $1 AND user_id = $3 AND area_id IS NULL AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
 )
 UPDATE organizations
 SET banner_url = $2, updated_at = NOW()
 WHERE id = $1 AND EXISTS (SELECT 1 FROM user_check)
 RETURNING *;
     `;
-    const results = await executeQuery(query, [org_id, banner_url, user_id]);
+    const results = await executeQuery(query, [organization_id, banner_url, user_id]);
     return results[0];
   }
 
@@ -564,17 +593,17 @@ RETURNING *;
         p.title,
         p.description,
         p.user_id as owner_user_id,
-        p.org_id,
+        p.organization_id,
         p.properties,
         p.created_at,
         p.updated_at,
         pm.user_id as project_member_user_id,
         (SELECT COUNT(*) 
-         FROM projects_members pm 
+         FROM project_members pm 
          WHERE pm.project_id = p.id AND pm.deleted = false) as members_count
       FROM projects p
-      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.user_id = p.user_id AND pm.deleted = false
-      WHERE p.org_id = $1 AND p.deleted = false
+      LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = p.user_id AND pm.deleted = false
+      WHERE p.organization_id = $1 AND p.deleted = false
       ORDER BY p.created_at DESC;
     `;
     const results = await executeQuery(query, [organization_id]);

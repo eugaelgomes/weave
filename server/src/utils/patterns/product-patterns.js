@@ -1,13 +1,12 @@
 // Usar Object.freeze impede que você altere esses valores acidentalmente em outro lugar
 
-// --- PROJECTS ---
+// --- PROJECTS (enum `public.project_status` no PostgreSQL) ---
 export const PROJECT_STATUS = Object.freeze({
-  OPEN: "open",
-  RUNNING: "running",
-  COMPLETED: "completed",
-  ON_HOLD: "on-hold",
-  DELETED: "deleted",
-  ARCHIVED: "archived",
+  ARCHIVED: "ARCHIVED",
+  COMPLETED: "COMPLETED",
+  IN_PROGRESS: "IN_PROGRESS",
+  OPEN: "OPEN",
+  PAUSED: "PAUSED",
 });
 
 export const PROJECT_FIELDS = Object.freeze({
@@ -16,11 +15,11 @@ export const PROJECT_FIELDS = Object.freeze({
   ALLOWED_PRIORITIES: ["low", "medium", "high", "critical"],
 });
 
-// --- NOTES ---
+// --- NOTES (enum `public.notes_status` no PostgreSQL) ---
 export const NOTE_STATUS = Object.freeze({
-  VISIBLE: "visible",
-  SECURE: "secure",
-  ARCHIVED: "archived",
+  ARCHIVED: "ARCHIVED",
+  SECURE: "SECURE",
+  VISIBLE: "VISIBLE",
 });
 
 export const NOTE_TYPES = Object.freeze({
@@ -63,3 +62,37 @@ export const ALLOWED_COLOR_TYPES = Object.freeze({
 export const ALLOWED_PROJECT_STATUSES = Object.values(PROJECT_STATUS);
 export const ALLOWED_NOTE_STATUSES = Object.values(NOTE_STATUS);
 export const ALLOWED_BLOCK_TYPES = Object.values(BLOCK_TYPES);
+
+const LEGACY_PROJECT_STATUS = Object.freeze({
+  ON_HOLD: "PAUSED",
+  RUNNING: "IN_PROGRESS",
+});
+
+/**
+ * Normaliza status de nota para o valor do enum `notes_status` (maiúsculas).
+ * Aceita legado em minúsculas (`visible` → `VISIBLE`).
+ * @param {unknown} input
+ * @returns {string | null}
+ */
+export function normalizeNoteStatus(input) {
+  if (input === undefined || input === null || input === "") {
+    return NOTE_STATUS.VISIBLE;
+  }
+  const s = String(input).trim().toUpperCase().replace(/-/g, "_");
+  return ALLOWED_NOTE_STATUSES.includes(s) ? s : null;
+}
+
+/**
+ * Normaliza status de projeto para o enum `project_status`.
+ * Aceita legado (`open`, `running`, `on-hold`, …).
+ * @param {unknown} input
+ * @returns {string | null}
+ */
+export function normalizeProjectStatus(input) {
+  if (input === undefined || input === null || input === "") {
+    return PROJECT_STATUS.OPEN;
+  }
+  let s = String(input).trim().toUpperCase().replace(/-/g, "_");
+  s = LEGACY_PROJECT_STATUS[s] || s;
+  return ALLOWED_PROJECT_STATUSES.includes(s) ? s : null;
+}

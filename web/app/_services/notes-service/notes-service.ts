@@ -1,6 +1,7 @@
 import { apiClient, handleResponse } from "../api-methods";
 import { API_ENDPOINTS } from "../api-methods";
 import { type CollaboratorObject } from "@/app/_utils/collaborators";
+import type { NoteStatus } from "@/app/_utils/db-enums";
 
 // =================== TYPES / INTERFACES ===================
 
@@ -70,7 +71,7 @@ export interface Note {
   assigned_to?: string | null;
   deleted_by?: string | null;
   deleted?: boolean;
-  status?: string;
+  status?: NoteStatus;
   created_at: string;
   updated_at: string;
   lastModified?: string;
@@ -134,6 +135,8 @@ export interface Block {
 }
 
 export interface NoteDocumentNode {
+  id?: string | number;
+  order?: number;
   type: string;
   attrs?: Record<string, unknown>;
   content?: NoteDocumentNode[];
@@ -179,7 +182,7 @@ export interface UpdateNoteData {
   title?: string;
   description?: string;
   tags?: string[];
-  status?: string;
+  status?: NoteStatus;
   project_id?: string | null;
   priority_id?: string | null;
   due_date?: string | null;

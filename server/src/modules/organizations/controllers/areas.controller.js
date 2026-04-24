@@ -15,7 +15,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
     this.areasRepository = areasRepository;
   }
 
-  /** Papel em `organizations_members` (alinhado ao motor de permissões). */
+  /** Papel em `organization_members` (alinhado ao motor de permissões). */
   _canManageOrgStructure(organization) {
     return this._orgRoleHasPermission(
       organization,
@@ -517,7 +517,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
         });
       }
 
-      const targetUser = await this.SearchUsersRepository.findById(user_id);
+      const targetUser = await SearchUsersRepository.findById(user_id);
       if (!targetUser) {
         return res
           .status(404)

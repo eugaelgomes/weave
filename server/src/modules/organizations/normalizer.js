@@ -1,6 +1,9 @@
 const {
   getAvailableOrgNames,
 } = require("@/modules/organizations/repositories/organizations.repository");
+const {
+  ORG_ROLES,
+} = require("@/modules/organizations/organization-role-policy");
 
 const PREDEFINED_PROPERTIES = Object.freeze({
   theme: {
@@ -170,7 +173,7 @@ const getPropertiesSchema = () => {
   return JSON.parse(JSON.stringify(PREDEFINED_PROPERTIES));
 };
 
-const validRoles = ["admin", "member", "guest"];
+const validRoles = Object.freeze(Object.values(ORG_ROLES));
 
 const orgDataResponse = (organization) => {
   return {

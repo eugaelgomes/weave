@@ -4,20 +4,27 @@
  */
 
 const ORG_ROLES = Object.freeze({
-  SUPER_ADMIN: "super_admin",
-  ADMIN: "admin",
-  MEMBER: "member",
-  GUEST: "guest",
+  SUPER_ADMIN: "SUPER_ADMIN",
+  ADMIN: "ADMIN",
+  BILLING_MANAGER: "BILLING_MANAGER",
+  MEMBER: "MEMBER",
+  GUEST: "GUEST",
 });
 
 /** Permissões atómicas (ações sensíveis). */
 const ORG_PERMISSIONS = Object.freeze({
   /** Ver/editar/gestão de qualquer projeto com org_id = organização ativa (admin / super_admin) */
   ACCESS_ALL_ORG_PROJECTS: "access_all_org_projects",
+  /** Visualização de diretório de membros da organização */
+  VIEW_MEMBER_DIRECTORY: "view_member_directory",
+  /** Convidar/remover membros e alterar papéis */
+  MANAGE_MEMBERS: "manage_members",
   /** Estrutura de áreas; super_admin (papel em DB), alinhado a gestores de área no controlador */
   MANAGE_AREAS: "manage_areas",
   /** Alterar plano / billing da organização (quando existir endpoint self-service) */
   MANAGE_BILLING_PLANS: "manage_billing_plans",
+  /** Definir integrações globais da organização */
+  MANAGE_GLOBAL_INTEGRATIONS: "manage_global_integrations",
   /** Logo, banner, nome, descrição, unique_name, propriedades/branding */
   MANAGE_BRAND: "manage_brand",
   /** Domínios customizados, verificação DNS, SSO */
@@ -34,18 +41,25 @@ const ORG_PERMISSIONS = Object.freeze({
   MANAGE_WEAVE_AI: "manage_weave_ai",
 });
 
-/** Mapa papel → permissões. `super_admin` tudo; `admin` + áreas + Weave AI; `member` só projetos/tags/prioridades. */
+/** Mapa papel → permissões. `super_admin` tudo; `admin` gestão diária; `billing_manager` só financeiro. */
 const PERMISSIONS_BY_ROLE = Object.freeze({
   [ORG_ROLES.SUPER_ADMIN]: Object.values(ORG_PERMISSIONS),
   [ORG_ROLES.ADMIN]: [
     ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS,
+    ORG_PERMISSIONS.VIEW_MEMBER_DIRECTORY,
+    ORG_PERMISSIONS.MANAGE_MEMBERS,
     ORG_PERMISSIONS.MANAGE_AREAS,
+    ORG_PERMISSIONS.MANAGE_GLOBAL_INTEGRATIONS,
+    ORG_PERMISSIONS.MANAGE_BRAND,
+    ORG_PERMISSIONS.MANAGE_DOMAINS,
     ORG_PERMISSIONS.MANAGE_PROJECTS,
     ORG_PERMISSIONS.MANAGE_TAGS,
     ORG_PERMISSIONS.MANAGE_TASK_PRIORITIES,
     ORG_PERMISSIONS.MANAGE_WEAVE_AI,
   ],
+  [ORG_ROLES.BILLING_MANAGER]: [ORG_PERMISSIONS.MANAGE_BILLING_PLANS],
   [ORG_ROLES.MEMBER]: [
+    ORG_PERMISSIONS.VIEW_MEMBER_DIRECTORY,
     ORG_PERMISSIONS.MANAGE_PROJECTS,
     ORG_PERMISSIONS.MANAGE_TAGS,
     ORG_PERMISSIONS.MANAGE_TASK_PRIORITIES,
@@ -59,7 +73,10 @@ const PERMISSIONS_BY_ROLE = Object.freeze({
  */
 function getPermissionsForRole(role) {
   if (!role || typeof role !== "string") return [];
-  return PERMISSIONS_BY_ROLE[role] ? [...PERMISSIONS_BY_ROLE[role]] : [];
+  const normalizedRole = role.toUpperCase();
+  return PERMISSIONS_BY_ROLE[normalizedRole]
+    ? [...PERMISSIONS_BY_ROLE[normalizedRole]]
+    : [];
 }
 
 /**

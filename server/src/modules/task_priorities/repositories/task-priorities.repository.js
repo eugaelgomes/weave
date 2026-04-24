@@ -5,11 +5,11 @@ class TaskPrioritiesRepository {
    * Busca prioridade ativa por id (escopo não filtrado — validar no serviço).
    *
    * @param {string} id
-   * @returns {Promise<{ id: string; project_id: string | null; org_id: string | null } | undefined>}
+   * @returns {Promise<{ id: string; project_id: string | null; organization_id: string | null } | undefined>}
    */
   async findActiveById(id) {
     const query = `
-      SELECT id, project_id, org_id
+      SELECT id, project_id, organization_id AS org_id
       FROM task_priorities
       WHERE id = $1 AND deleted = false
       LIMIT 1;
@@ -39,7 +39,7 @@ class TaskPrioritiesRepository {
     createdBy,
   }) {
     const query = `
-      INSERT INTO task_priorities (project_id, org_id, name, color_hex, sort_order, user_id)
+      INSERT INTO task_priorities (project_id, organization_id, name, color_hex, sort_order, user_id)
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *;
     `;
@@ -68,7 +68,7 @@ class TaskPrioritiesRepository {
       WHERE deleted = false
         AND (
           ($1::uuid IS NOT NULL AND project_id = $1)
-          OR ($1::uuid IS NULL AND $2::uuid IS NOT NULL AND org_id = $2)
+          OR ($1::uuid IS NULL AND $2::uuid IS NOT NULL AND organization_id = $2)
         )
       ORDER BY sort_order ASC;
     `;
@@ -103,7 +103,7 @@ class TaskPrioritiesRepository {
         AND deleted = false
         AND (
           ($5::uuid IS NOT NULL AND project_id = $5)
-          OR ($5::uuid IS NULL AND $6::uuid IS NOT NULL AND org_id = $6)
+          OR ($5::uuid IS NULL AND $6::uuid IS NOT NULL AND organization_id = $6)
         )
       RETURNING *;
     `;
@@ -138,7 +138,7 @@ class TaskPrioritiesRepository {
       WHERE id = $2
         AND (
           ($3::uuid IS NOT NULL AND project_id = $3)
-          OR ($3::uuid IS NULL AND $4::uuid IS NOT NULL AND org_id = $4)
+          OR ($3::uuid IS NULL AND $4::uuid IS NOT NULL AND organization_id = $4)
         )
       RETURNING *;
     `;

@@ -6,6 +6,7 @@ const sessionConfig = {
   store: new pgSession({
     pool,
     tableName: "sessions",
+    createTableIfMissing: true,
   }),
   name: "auth.sid",
   secret: process.env.SESSION_SECRET,

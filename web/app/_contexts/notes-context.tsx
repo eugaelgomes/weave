@@ -120,6 +120,35 @@ export function useNotes(): NotesContextType {
 
 const createLocalBlockId = () => `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+const normalizeNodeId = (value: unknown, fallback: string): string => {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return fallback;
+};
+
+const withBlockNodeMeta = (
+  node: NoteDocumentNode,
+  block: Block & { children?: Block[] }
+): NoteDocumentNode => ({
+  ...node,
+  id: block.id,
+  order: Number.isFinite(block.position) ? block.position : 0,
+});
+
+const findBlockById = (
+  blocks: (Block & { children?: Block[] })[],
+  blockId: string
+): (Block & { children?: Block[] }) | null => {
+  for (const block of blocks) {
+    if (block.id === blockId) return block;
+    if (Array.isArray(block.children) && block.children.length > 0) {
+      const nested = findBlockById(block.children, blockId);
+      if (nested) return nested;
+    }
+  }
+  return null;
+};
+
 const emptyDocument = (): NoteDocumentState => ({
   version: 1,
   document: {
@@ -150,10 +179,13 @@ const mapNodeToBlock = (
   noteId: string,
   position: number,
   level = 0,
-  parentId: string | null = null
+  parentId: string | null = null,
+  path = String(position)
 ): (Block & { children?: Block[] }) | null => {
+  const nodeId = normalizeNodeId((node as NoteDocumentNode & { id?: unknown }).id, path);
+
   const base: Block & { children?: Block[] } = {
-    id: createLocalBlockId(),
+    id: nodeId,
     note_id: noteId,
     parent_id: parentId || undefined,
     position,
@@ -198,7 +230,10 @@ const mapNodeToBlock = (
       const listId = base.id;
       const children = (node.content || []).map((item, idx) => ({
         ...base,
-        id: createLocalBlockId(),
+        id: normalizeNodeId(
+          (item as NoteDocumentNode & { id?: unknown }).id,
+          `${path}.${idx}`
+        ),
         type: "todo",
         text: extractText(item.content),
         done: item.attrs?.checked === true,
@@ -214,7 +249,10 @@ const mapNodeToBlock = (
       const listId = base.id;
       const children = (node.content || []).map((item, idx) => ({
         ...base,
-        id: createLocalBlockId(),
+        id: normalizeNodeId(
+          (item as NoteDocumentNode & { id?: unknown }).id,
+          `${path}.${idx}`
+        ),
         type: "list",
         text: extractText(item.content),
         level: level + 1,
@@ -240,43 +278,55 @@ const documentToBlocks = (
 ): (Block & { children?: Block[] })[] => {
   const content = noteDocument?.document?.content || emptyDocument().document.content;
   return content
-    .map((node, index) => mapNodeToBlock(node, noteId, index, 0, null))
+    .map((node, index) => mapNodeToBlock(node, noteId, index, 0, null, String(index)))
     .filter((block): block is Block & { children?: Block[] } => Boolean(block));
 };
 
 const mapBlockToNode = (block: Block & { children?: Block[] }): NoteDocumentNode => {
   if (block.type === "heading") {
-    return {
+    return withBlockNodeMeta(
+      {
       type: "heading",
       attrs: { level: Number(block.properties?.level) || 1 },
       content: block.text ? [{ type: "text", text: block.text }] : [],
-    };
+      },
+      block
+    );
   }
 
   if (block.type === "code") {
-    return {
+    return withBlockNodeMeta(
+      {
       type: "codeBlock",
       content: block.text ? [{ type: "text", text: block.text }] : [],
-    };
+      },
+      block
+    );
   }
 
   if (block.type === "quote") {
-    return { type: "blockquote", content: [paragraphFromText(block.text)] };
+    return withBlockNodeMeta(
+      { type: "blockquote", content: [paragraphFromText(block.text)] },
+      block
+    );
   }
 
   if (block.type === "divider") {
-    return { type: "horizontalRule" };
+    return withBlockNodeMeta({ type: "horizontalRule" }, block);
   }
 
   if (block.type === "image") {
-    return {
+    return withBlockNodeMeta(
+      {
       type: "image",
       attrs: {
         src: block.text || "",
         alt: typeof block.properties?.alt === "string" ? block.properties.alt : "",
         title: typeof block.properties?.title === "string" ? block.properties.title : "",
       },
-    };
+      },
+      block
+    );
   }
 
   if (block.type === "table") {
@@ -290,7 +340,8 @@ const mapBlockToNode = (block: Block & { children?: Block[] }): NoteDocumentNode
       )
       .filter((cells) => cells.length > 0);
 
-    return {
+    return withBlockNodeMeta(
+      {
       type: "table",
       content: rows.map((cells) => ({
         type: "tableRow",
@@ -299,7 +350,9 @@ const mapBlockToNode = (block: Block & { children?: Block[] }): NoteDocumentNode
           content: [paragraphFromText(cell)],
         })),
       })),
-    };
+      },
+      block
+    );
   }
 
   if (block.type === "orderedList") {
@@ -308,44 +361,61 @@ const mapBlockToNode = (block: Block & { children?: Block[] }): NoteDocumentNode
       .map((line) => line.trim())
       .filter(Boolean);
 
-    return {
+    return withBlockNodeMeta(
+      {
       type: "orderedList",
       content: (lines.length > 0 ? lines : [""]).map((line) => ({
         type: "listItem",
         content: [paragraphFromText(line)],
       })),
-    };
+      },
+      block
+    );
   }
 
   if (block.type === "todo") {
-    return {
+    return withBlockNodeMeta(
+      {
       type: "taskItem",
       attrs: { checked: block.done === true },
       content: [paragraphFromText(block.text)],
-    };
+      },
+      block
+    );
   }
 
   if (block.type === "list") {
     const children = Array.isArray(block.children) ? block.children : [];
     if (children.some((child) => child.type === "todo")) {
-      return {
+      return withBlockNodeMeta(
+        {
         type: "taskList",
         content: children.map((child) => mapBlockToNode({ ...child, type: "todo" })),
-      };
+        },
+        block
+      );
     }
 
     if (children.length > 0) {
-      return {
+      return withBlockNodeMeta(
+        {
         type: block.properties?.ordered ? "orderedList" : "bulletList",
-        content: children.map((child) => ({
-          type: "listItem",
-          content: [paragraphFromText(child.text || "")],
-        })),
-      };
+        content: children.map((child) =>
+          withBlockNodeMeta(
+            {
+              type: "listItem",
+              content: [paragraphFromText(child.text || "")],
+            },
+            child
+          )
+        ),
+        },
+        block
+      );
     }
   }
 
-  return paragraphFromText(block.text || "");
+  return withBlockNodeMeta(paragraphFromText(block.text || ""), block);
 };
 
 const blocksToDocument = (blocks: (Block & { children?: Block[] })[]): NoteDocumentState => ({
@@ -440,9 +510,11 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       const notes = notesRaw.map((note) => ({
         ...note,
         blocks:
-          Array.isArray(note.blocks) && note.blocks.length > 0
-            ? note.blocks
-            : documentToBlocks(note.document || null, note.id),
+          note.document?.document
+            ? documentToBlocks(note.document, note.id)
+            : Array.isArray(note.blocks)
+              ? note.blocks
+              : [],
       }));
 
       setNotes(notes);
@@ -496,9 +568,11 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
         return {
           ...noteData,
           blocks:
-            Array.isArray(noteData.blocks) && noteData.blocks.length > 0
-              ? noteData.blocks
-              : documentToBlocks(noteData.document || null, noteId),
+            noteData.document?.document
+              ? documentToBlocks(noteData.document, noteId)
+              : Array.isArray(noteData.blocks)
+                ? noteData.blocks
+                : [],
         };
       } catch (err: unknown) {
         console.error("Erro ao buscar tarefa:", err);
@@ -769,11 +843,22 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
           const nextBlocks = addChild(blocks);
           const nextDocument = blocksToDocument(nextBlocks);
           const updatedNote = await updateNoteService(noteId, { document: nextDocument });
+          const persistedDocument = updatedNote?.document || nextDocument;
+          const persistedBlocks = documentToBlocks(persistedDocument, noteId);
+          const persistedParent = findBlockById(persistedBlocks, blockData.parentId);
+          const persistedChildren = Array.isArray(persistedParent?.children)
+            ? persistedParent.children
+            : [];
+          const persistedPosition =
+            typeof blockData.position === "number" ? blockData.position : persistedChildren.length - 1;
+          const persistedCreated =
+            persistedChildren[Math.min(Math.max(persistedPosition, 0), persistedChildren.length - 1)];
           applyLocalDocumentUpdate(
             noteId,
-            updatedNote?.document || nextDocument,
+            persistedDocument,
             updatedNote?.updated_at
           );
+          return persistedCreated || null;
         } else {
           const nextBlocks = [...blocks, newBlock].map((block, index) => ({
             ...block,
@@ -781,14 +866,18 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
           }));
           const nextDocument = blocksToDocument(nextBlocks);
           const updatedNote = await updateNoteService(noteId, { document: nextDocument });
+          const persistedDocument = updatedNote?.document || nextDocument;
+          const persistedBlocks = documentToBlocks(persistedDocument, noteId);
+          const persistedPosition = blockData.position ?? blocks.length;
+          const persistedCreated =
+            persistedBlocks[Math.min(Math.max(persistedPosition, 0), persistedBlocks.length - 1)];
           applyLocalDocumentUpdate(
             noteId,
-            updatedNote?.document || nextDocument,
+            persistedDocument,
             updatedNote?.updated_at
           );
+          return persistedCreated || null;
         }
-
-        return newBlock;
       } catch (err: unknown) {
         console.error("Erro ao criar bloco:", err);
         throw err;
@@ -821,6 +910,9 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
           });
 
         const nextBlocks = patchBlock(blocks);
+        if (!updated) {
+          return null;
+        }
         const nextDocument = blocksToDocument(nextBlocks);
         const updatedNote = await updateNoteService(noteId, { document: nextDocument });
         applyLocalDocumentUpdate(

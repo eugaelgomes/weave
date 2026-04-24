@@ -1,5 +1,6 @@
 import { apiClient, handleResponse } from "../api-methods";
 import { API_ENDPOINTS } from "../api-methods";
+import type { ProjectStatus } from "@/app/_utils/db-enums";
 
 export interface ProjectProperties {
   // UI & Design
@@ -96,7 +97,7 @@ export interface Project {
   title: string;
   description?: string;
   properties?: ProjectProperties;
-  status: "open" | "in_progress" | "paused" | "completed" | "archived";
+  status: ProjectStatus;
   methodology: "scrum" | "kanban" | "waterfall" | "custom";
   default_view: "board" | "list" | "calendar" | "timeline" | "gantt";
   created_at: string;
@@ -119,7 +120,7 @@ export interface ProjectsResponse {
 export interface CreateProjectData {
   title: string;
   description?: string;
-  status?: "open" | "in_progress" | "paused" | "completed" | "archived";
+  status?: ProjectStatus;
   methodology?: "scrum" | "kanban" | "waterfall" | "custom";
   default_view?: "board" | "list" | "calendar" | "timeline" | "gantt";
   properties?: Omit<ProjectProperties, "progress">;
@@ -130,7 +131,7 @@ export interface CreateProjectData {
 export interface UpdateProjectData {
   title?: string;
   description?: string;
-  status?: "open" | "in_progress" | "paused" | "completed" | "archived";
+  status?: ProjectStatus;
   methodology?: "scrum" | "kanban" | "waterfall" | "custom";
   default_view?: "board" | "list" | "calendar" | "timeline" | "gantt";
   properties?: Omit<ProjectProperties, "progress">;
@@ -296,11 +297,11 @@ export interface ProjectDashboardStats {
     collaborating: number;
     active: number;
     by_status: {
-      open: number;
-      in_progress: number;
-      paused: number;
-      completed: number;
-      archived: number;
+      OPEN: number;
+      IN_PROGRESS: number;
+      PAUSED: number;
+      COMPLETED: number;
+      ARCHIVED: number;
     };
   };
   methodology: {
@@ -316,9 +317,9 @@ export interface ProjectDashboardStats {
   };
   notes: {
     total: number;
-    visible: number;
-    archived: number;
-    secure: number;
+    VISIBLE: number;
+    ARCHIVED: number;
+    SECURE: number;
   };
   tasks: {
     total: number;

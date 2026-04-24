@@ -1,5 +1,6 @@
 const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
+const { normalizeProjectStatus } = require("@/utils/patterns/product-patterns");
 
 class ProjectsReadController extends ProjectsCoreController {
   /**
@@ -257,19 +258,13 @@ class ProjectsReadController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const VALID_STATUSES = [
-        "open",
-        "in_progress",
-        "paused",
-        "completed",
-        "archived",
-      ];
       const VALID_METHODOLOGIES = ["kanban", "scrum", "waterfall", "custom"];
 
       const filters = {};
 
-      if (req.query.status && VALID_STATUSES.includes(req.query.status)) {
-        filters.status = req.query.status;
+      if (req.query.status) {
+        const normalizedStatus = normalizeProjectStatus(req.query.status);
+        if (normalizedStatus) filters.status = normalizedStatus;
       }
 
       if (
@@ -317,11 +312,11 @@ class ProjectsReadController extends ProjectsCoreController {
         collaborating: parseInt(overview.collaborating) || 0,
         active: parseInt(overview.active) || 0,
         by_status: {
-          open: parseInt(overview.open) || 0,
-          in_progress: parseInt(overview.in_progress) || 0,
-          paused: parseInt(overview.paused) || 0,
-          completed: parseInt(overview.completed) || 0,
-          archived: parseInt(overview.archived) || 0,
+          OPEN: parseInt(overview.open) || 0,
+          IN_PROGRESS: parseInt(overview.in_progress) || 0,
+          PAUSED: parseInt(overview.paused) || 0,
+          COMPLETED: parseInt(overview.completed) || 0,
+          ARCHIVED: parseInt(overview.archived) || 0,
         },
       };
 
@@ -335,9 +330,9 @@ class ProjectsReadController extends ProjectsCoreController {
       const notes = row.notes;
       const formattedNotes = {
         total: parseInt(notes.total) || 0,
-        visible: parseInt(notes.visible) || 0,
-        archived: parseInt(notes.archived) || 0,
-        secure: parseInt(notes.secure) || 0,
+        VISIBLE: parseInt(notes.visible) || 0,
+        ARCHIVED: parseInt(notes.archived) || 0,
+        SECURE: parseInt(notes.secure) || 0,
       };
 
       res.status(200).json({

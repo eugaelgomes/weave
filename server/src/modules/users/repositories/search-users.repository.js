@@ -82,7 +82,7 @@ class SearchUsersRepository extends BaseRepository {
     FROM users u
     LEFT JOIN organizations o ON o.user_id = u.user_id
     LEFT JOIN plans p ON p.plan_id = u.plan_id
-    LEFT JOIN plans_usage pu ON pu.user_id = u.user_id
+    LEFT JOIN plan_usages pu ON pu.user_id = u.user_id
     WHERE (
       (u.username IS NOT NULL AND u.username = $1)
       OR (u.email IS NOT NULL AND u.email = $1)

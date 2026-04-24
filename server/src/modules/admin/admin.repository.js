@@ -34,7 +34,7 @@ class AdminRepository {
         COALESCE(AVG(
           COALESCE((usage_details->'history_metadata'->>'usage_percentage_total')::float, 0)
         ), 0) AS usage_avg_percentage
-      FROM plans_usage
+      FROM plan_usages
       WHERE usage_details IS NOT NULL
     `;
 
@@ -98,12 +98,12 @@ class AdminRepository {
         u.user_id, u.name, u.email, u.username,
         u.email_verified, u.deleted, u.created_at, u.updated_at,
         u.last_login, u.auth_with_google, u.auth_with_github,
-        u.private_profile, u.timezone, u.org_id, u.plan_id,
+        u.private_profile, u.timezone, u.organization_id AS org_id, u.plan_id,
         CASE WHEN u.avatar_url IS NOT NULL THEN true ELSE false END AS has_avatar,
         o.org_name,
         p.name AS plan_name
       FROM users u
-      LEFT JOIN organizations o ON u.org_id = o.id
+      LEFT JOIN organizations o ON u.organization_id = o.id
       LEFT JOIN plans p ON u.plan_id = p.plan_id
       ${whereClause}
       ORDER BY u.${safeOrderBy} ${safeOrder}
@@ -132,12 +132,12 @@ class AdminRepository {
         u.last_login, u.email_verified, u.deleted,
         u.auth_with_google, u.auth_with_github,
         u.theme_mode, u.phone_number, u.birth_date,
-        u.private_profile, u.timezone, u.org_id, u.plan_id,
+        u.private_profile, u.timezone, u.organization_id AS org_id, u.plan_id,
         u.email_verified_at,
         o.org_name, o.unique_name AS org_unique_name,
         p.name AS plan_name
       FROM users u
-      LEFT JOIN organizations o ON u.org_id = o.id
+      LEFT JOIN organizations o ON u.organization_id = o.id
       LEFT JOIN plans p ON u.plan_id = p.plan_id
       WHERE u.user_id = $1
     `;
@@ -151,7 +151,7 @@ class AdminRepository {
         (SELECT COUNT(*) FROM notes WHERE user_id = $1 AND deleted = false) AS total_notes,
         (SELECT COUNT(*) FROM projects WHERE user_id = $1 AND deleted = false) AS total_projects,
         (SELECT COUNT(*) FROM note_collaborators WHERE user_id = $1 AND removed = false) AS shared_notes,
-        (SELECT COUNT(*) FROM organizations_members WHERE user_id = $1 AND deleted = false) AS org_memberships
+        (SELECT COUNT(*) FROM organization_members WHERE user_id = $1 AND deleted = false AND area_id IS NULL) AS org_memberships
     `;
     const results = await executeQuery(query, [userId]);
     return results[0];
@@ -168,7 +168,7 @@ class AdminRepository {
       "phone_number",
       "birth_date",
       "timezone",
-      "org_id",
+      "organization_id",
       "plan_id",
     ];
 
@@ -265,7 +265,7 @@ class AdminRepository {
         CASE WHEN o.logo_url IS NOT NULL THEN true ELSE false END AS has_logo,
         u.name AS owner_name, u.email AS owner_email,
         p.name AS plan_name,
-        (SELECT COUNT(*) FROM organizations_members om WHERE om.org_id = o.id AND om.deleted = false) AS member_count
+        (SELECT COUNT(*) FROM organization_members om WHERE om.organization_id = o.id AND om.deleted = false AND om.area_id IS NULL) AS member_count
       FROM organizations o
       LEFT JOIN users u ON o.user_id = u.user_id
       LEFT JOIN plans p ON o.plan_id = p.plan_id
@@ -294,7 +294,7 @@ class AdminRepository {
         o.*,
         u.name AS owner_name, u.email AS owner_email, u.username AS owner_username,
         p.name AS plan_name,
-        (SELECT COUNT(*) FROM organizations_members om WHERE om.org_id = o.id AND om.deleted = false) AS member_count
+        (SELECT COUNT(*) FROM organization_members om WHERE om.organization_id = o.id AND om.deleted = false AND om.area_id IS NULL) AS member_count
       FROM organizations o
       LEFT JOIN users u ON o.user_id = u.user_id
       LEFT JOIN plans p ON o.plan_id = p.plan_id
@@ -312,10 +312,10 @@ class AdminRepository {
         u.user_id, u.name, u.email, u.username,
         CASE WHEN u.avatar_url IS NOT NULL THEN true ELSE false END AS has_avatar,
         inv.name AS invited_by_name
-      FROM organizations_members om
+      FROM organization_members om
       JOIN users u ON om.user_id = u.user_id
       LEFT JOIN users inv ON om.invited_by = inv.user_id
-      WHERE om.org_id = $1 AND om.deleted = false
+      WHERE om.organization_id = $1 AND om.deleted = false AND om.area_id IS NULL
       ORDER BY om.created_at ASC
     `;
     return await executeQuery(query, [orgId]);

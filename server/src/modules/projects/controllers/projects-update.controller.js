@@ -3,6 +3,7 @@ const organizationsRepository = require("@/modules/organizations/repositories/or
 const NotificationsRepository = require("@/modules/notifications/repositories/notifications.repository");
 const {
   ALLOWED_PROJECT_STATUSES,
+  normalizeProjectStatus,
 } = require("@/utils/patterns/product-patterns");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
@@ -11,6 +12,9 @@ const {
   inviteProjectMember,
 } = require("@/services/email/templates/project-add-person");
 const spacesService = require("@/services/storage");
+const {
+  ASSIGNABLE_PROJECT_ROLES,
+} = require("@/modules/projects/project-role-policy");
 
 class ProjectsUpdateController extends ProjectsCoreController {
   /**
@@ -31,18 +35,20 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const ctx = await this._getProjectOwnershipContext(id, userId);
       const currentProject = ctx.project;
 
-      // Validar status se fornecido
-      if (status !== undefined && !ALLOWED_PROJECT_STATUSES.includes(status)) {
-        return res.status(400).json({
-          error: `Status inválido. Permitidos: ${ALLOWED_PROJECT_STATUSES.join(", ")}`,
-        });
+      if (status !== undefined) {
+        const normalized = normalizeProjectStatus(status);
+        if (!normalized || !ALLOWED_PROJECT_STATUSES.includes(normalized)) {
+          return res.status(400).json({
+            error: `Status inválido. Permitidos: ${ALLOWED_PROJECT_STATUSES.join(", ")}`,
+          });
+        }
       }
 
       // Construir objeto de atualização apenas com campos enviados
       const updates = {};
       if (title !== undefined) updates.title = title;
       if (description !== undefined) updates.description = description;
-      if (status !== undefined) updates.status = status;
+      if (status !== undefined) updates.status = normalizeProjectStatus(status);
 
       // Inicializar propertiesUpdate para acumular mudanças de properties
       let propertiesUpdate = {};
@@ -164,7 +170,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const {
         action = null,
         userId: collaboratorId,
-        role = "member",
+        role = "contributor",
         suspended = null,
       } = req.body;
 
@@ -236,9 +242,10 @@ class ProjectsUpdateController extends ProjectsCoreController {
       switch (effectiveAction) {
         case "add": {
           // Validar role
-          const validRoles = ["admin", "viewer", "member"];
-          if (!validRoles.includes(role)) {
-            throw new Error("Role inválido. Use 'admin', 'viewer' ou 'member'");
+          if (!ASSIGNABLE_PROJECT_ROLES.includes(role)) {
+            throw new Error(
+              "Role inválido. Use 'project_manager', 'contributor', 'commenter' ou 'viewer'"
+            );
           }
 
           // Verificar se o usuário não está tentando adicionar a si mesmo
@@ -365,8 +372,10 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
         case "update": {
           // Validar role
-          if (!role || !["admin", "viewer"].includes(role)) {
-            throw new Error("Role inválido. Use 'admin' ou 'viewer'");
+          if (!ASSIGNABLE_PROJECT_ROLES.includes(role)) {
+            throw new Error(
+              "Role inválido. Use 'project_manager', 'contributor', 'commenter' ou 'viewer'"
+            );
           }
 
           // Verificar se o colaborador existe
@@ -497,9 +506,10 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const ctx = await this._getProjectOwnershipContext(projectId, userId);
 
       // Validar role
-      const validRoles = ["admin", "viewer"];
-      if (!role || !validRoles.includes(role)) {
-        throw new Error("Role inválido. Use 'admin' ou 'viewer'");
+      if (!ASSIGNABLE_PROJECT_ROLES.includes(role)) {
+        throw new Error(
+          "Role inválido. Use 'project_manager', 'contributor', 'commenter' ou 'viewer'"
+        );
       }
 
       // Verificar se o colaborador existe no projeto
@@ -568,6 +578,12 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       await this._validateProjectAccess(projectId, userId);
+      const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
+      if (!canWrite) {
+        throw new Error(
+          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
+        );
+      }
 
       let result;
       let message;
@@ -665,6 +681,12 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       await this._validateProjectAccess(projectId, userId);
+      const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
+      if (!canWrite) {
+        throw new Error(
+          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
+        );
+      }
 
       const result =
         orgWide && membership.id
@@ -713,6 +735,12 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       await this._validateProjectAccess(projectId, userId);
+      const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
+      if (!canWrite) {
+        throw new Error(
+          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
+        );
+      }
 
       const result =
         orgWide && membership.id
@@ -758,6 +786,12 @@ class ProjectsUpdateController extends ProjectsCoreController {
       // Validação de segurança: O usuário tem acesso ao projeto?
       // O método _validateProjectAccess já lança throw se não tiver acesso
       await this._validateProjectAccess(projectId, userId);
+      const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
+      if (!canWrite) {
+        throw new Error(
+          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
+        );
+      }
 
       // Atualizar
       const result = await this.projectsRepository.updateNoteStage(

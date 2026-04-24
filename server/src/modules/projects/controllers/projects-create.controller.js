@@ -1,11 +1,15 @@
 const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
 const {
   ALLOWED_PROJECT_STATUSES,
+  normalizeProjectStatus,
 } = require("@/utils/patterns/product-patterns");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
 const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
 const { normalizeNewProject } = require("../normalizer");
+const {
+  ASSIGNABLE_PROJECT_ROLES,
+} = require("@/modules/projects/project-role-policy");
 
 class ProjectsCreateController extends ProjectsCoreController {
   /**
@@ -81,10 +85,8 @@ class ProjectsCreateController extends ProjectsCoreController {
         throw new Error("Título é obrigatório");
       }
 
-      const projectStatus =
-        status === undefined || status === null ? "open" : status;
-
-      if (!ALLOWED_PROJECT_STATUSES.includes(projectStatus)) {
+      const projectStatus = normalizeProjectStatus(status);
+      if (!projectStatus || !ALLOWED_PROJECT_STATUSES.includes(projectStatus)) {
         return res.status(400).json({
           error: `Status inválido. Permitidos: ${ALLOWED_PROJECT_STATUSES.join(", ")}`,
         });
@@ -148,7 +150,7 @@ class ProjectsCreateController extends ProjectsCoreController {
   async addCollaborator(req, res, next) {
     try {
       const { projectId } = req.params;
-      const { userId: collaboratorId, role = "viewer" } = req.body;
+      const { userId: collaboratorId, role = "contributor" } = req.body;
 
       // Validação de autenticação
       const userId = this._requireAuthenticatedUser(req, res);
@@ -195,9 +197,10 @@ class ProjectsCreateController extends ProjectsCoreController {
       }
 
       // Validar role
-      const validRoles = ["admin", "viewer"];
-      if (!validRoles.includes(role)) {
-        throw new Error("Role inválido. Use 'admin' ou 'viewer'");
+      if (!ASSIGNABLE_PROJECT_ROLES.includes(role)) {
+        throw new Error(
+          "Role inválido. Use 'project_manager', 'contributor', 'commenter' ou 'viewer'"
+        );
       }
 
       // Verificar se o usuário não está tentando adicionar a si mesmo

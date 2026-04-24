@@ -15,8 +15,8 @@ const USER_ID_PREFIX = "userId_";
 const NOTE_ID_PREFIX = "noteId_";
 const PROJECT_ID_PREFIX = "projectId_";
 const NOTE_COLLAB_TABLE = "note_collaborators";
-const PROJECTS_MEMBERS_TABLE = "projects_members";
-const ORGANIZATIONS_MEMBERS_TABLE = "organizations_members";
+const PROJECTS_MEMBERS_TABLE = "project_members";
+const ORGANIZATIONS_MEMBERS_TABLE = "organization_members";
 const PATH_NAMESPACE_PREFIX = "weave-notes/";
 
 const normalizeKey = (key = "") => key.replace(/\/+/g, "/").replace(/^\/+/, "");
@@ -166,7 +166,7 @@ const hasOrganizationAccess = async (userId, organizationId) => {
       AND (
         o.user_id = $2 OR EXISTS (
           SELECT 1 FROM ${ORGANIZATIONS_MEMBERS_TABLE} om
-          WHERE om.org_id = o.id
+          WHERE om.organization_id = o.id
             AND om.user_id = $2
             AND om.deleted = false
             AND om.suspended = false

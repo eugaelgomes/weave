@@ -3,6 +3,9 @@ const bcrypt = require("bcrypt");
 
 const CreateApiTokensRepository = require("@/modules/api-tokens/repositories/create-api-tokens.repository");
 const ApiTokensNormalizer = require("@/modules/api-tokens/normalizer");
+const {
+  ORG_ROLES,
+} = require("@/modules/organizations/organization-role-policy");
 
 const TOKEN_PREFIX = "wn_";
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS, 10) || 12;
@@ -64,7 +67,7 @@ class CreateApiTokensController {
           organizationId
         );
 
-        if (role !== "super_admin") {
+        if (role !== ORG_ROLES.SUPER_ADMIN) {
           return res.status(403).json({
             error:
               "Apenas super administradores podem criar tokens de API com permissões organizacionais.",

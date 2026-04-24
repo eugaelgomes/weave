@@ -96,7 +96,7 @@ const PLAN_PATHS = {
 };
 
 /**
- * PATHS DE USO (plans_usage.usage_details)
+ * PATHS DE USO (plan_usages.usage_details)
  * Facilita referência aos caminhos do JSONB de uso
  */
 const USAGE_PATHS = {

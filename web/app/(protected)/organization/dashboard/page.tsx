@@ -6,22 +6,23 @@ import { OrganizationHeader } from "@/app/(protected)/_components/ui/headers/org
 import { useProjects } from "@/app/_contexts/projects-context";
 import { Project } from "@/app/_services/projects-service/projects-service";
 import { Layers, Search, Plus, Folder, Clock, Flag, Activity, ArrowRight } from "lucide-react";
+import { PROJECT_STATUS } from "@/app/_utils/db-enums";
 
 // Reaproveitando seus dicionários de status para consistência visual em todo o SaaS
 const statusLabels: Record<string, string> = {
-  open: "Aberto",
-  in_progress: "Em Andamento",
-  paused: "Pausado",
-  completed: "Concluído",
-  archived: "Arquivado",
+  [PROJECT_STATUS.OPEN]: "Aberto",
+  [PROJECT_STATUS.IN_PROGRESS]: "Em Andamento",
+  [PROJECT_STATUS.PAUSED]: "Pausado",
+  [PROJECT_STATUS.COMPLETED]: "Concluído",
+  [PROJECT_STATUS.ARCHIVED]: "Arquivado",
 };
 
 const statusColors: Record<string, string> = {
-  open: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
-  in_progress: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  paused: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  completed: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  archived: "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400",
+  [PROJECT_STATUS.OPEN]: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
+  [PROJECT_STATUS.IN_PROGRESS]: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  [PROJECT_STATUS.PAUSED]: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+  [PROJECT_STATUS.COMPLETED]: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  [PROJECT_STATUS.ARCHIVED]: "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400",
 };
 
 const priorityLabels: Record<string, string> = {
@@ -127,7 +128,7 @@ const ProjectsPage = () => {
                         <Folder className="h-5 w-5" />
                       </div>
                       <span
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase ${statusColors[project.status] || statusColors.open}`}
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase ${statusColors[project.status] || statusColors[PROJECT_STATUS.OPEN]}`}
                       >
                         {statusLabels[project.status] || project.status}
                       </span>

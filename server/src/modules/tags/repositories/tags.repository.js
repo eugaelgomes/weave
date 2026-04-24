@@ -14,7 +14,7 @@ class TagsRepository {
    */
   async createTag({ projectId = null, orgId = null, name, color, createdBy }) {
     const query = `
-      INSERT INTO tags (project_id, org_id, name, color_hex, user_id)
+      INSERT INTO tags (project_id, organization_id, name, color_hex, user_id)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *;
     `;
@@ -42,7 +42,7 @@ class TagsRepository {
       WHERE deleted = false
         AND (
           ($1::uuid IS NOT NULL AND project_id = $1)
-          OR ($1::uuid IS NULL AND $2::uuid IS NOT NULL AND org_id = $2)
+          OR ($1::uuid IS NULL AND $2::uuid IS NOT NULL AND organization_id = $2)
         )
       ORDER BY name ASC;
     `;
@@ -72,7 +72,7 @@ class TagsRepository {
         AND deleted = false
         AND (
           ($4::uuid IS NOT NULL AND project_id = $4)
-          OR ($4::uuid IS NULL AND $5::uuid IS NOT NULL AND org_id = $5)
+          OR ($4::uuid IS NULL AND $5::uuid IS NOT NULL AND organization_id = $5)
         )
       RETURNING *;
     `;
@@ -103,7 +103,7 @@ class TagsRepository {
       WHERE id = $2
         AND (
           ($3::uuid IS NOT NULL AND project_id = $3)
-          OR ($3::uuid IS NULL AND $4::uuid IS NOT NULL AND org_id = $4)
+          OR ($3::uuid IS NULL AND $4::uuid IS NOT NULL AND organization_id = $4)
         )
       RETURNING *;
     `;

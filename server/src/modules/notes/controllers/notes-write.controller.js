@@ -2,7 +2,10 @@ const NotesBaseController = require("./base.controller");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
 const taskPrioritiesRepository = require("@/modules/task_priorities/repositories/task-priorities.repository");
-const { ALLOWED_NOTE_STATUSES } = require("@/utils/patterns/product-patterns");
+const {
+  ALLOWED_NOTE_STATUSES,
+  normalizeNoteStatus,
+} = require("@/utils/patterns/product-patterns");
 const spacesService = require("@/services/storage");
 const {
   cloneDefaultNoteDocumentState,
@@ -143,10 +146,8 @@ class NotesWriteController extends NotesBaseController {
         });
       }
 
-      const noteStatus =
-        status === undefined || status === null ? "visible" : status;
-
-      if (!ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
+      const noteStatus = normalizeNoteStatus(status);
+      if (!noteStatus || !ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
         return res.status(400).json({
           error: `Status inválido. Permitidos: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
         });
@@ -238,12 +239,8 @@ class NotesWriteController extends NotesBaseController {
         throw new Error("Título é obrigatório");
       }
 
-      // Definir status padrão se não fornecido
-      const noteStatus =
-        status === undefined || status === null ? "visible" : status;
-
-      // Validar status
-      if (!ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
+      const noteStatus = normalizeNoteStatus(status);
+      if (!noteStatus || !ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
         return res.status(400).json({
           error: `Status inválido. Permitidos: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
         });
@@ -399,11 +396,13 @@ class NotesWriteController extends NotesBaseController {
         throw new Error("Apenas o proprietário pode excluir a nota");
       }
 
-      // Validar status se fornecido
-      if (status !== undefined && !ALLOWED_NOTE_STATUSES.includes(status)) {
-        return res.status(400).json({
-          error: `Status inválido. Permitidos: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
-        });
+      if (status !== undefined) {
+        const normalized = normalizeNoteStatus(status);
+        if (!normalized || !ALLOWED_NOTE_STATUSES.includes(normalized)) {
+          return res.status(400).json({
+            error: `Status inválido. Permitidos: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
+          });
+        }
       }
 
       // Prepara os dados para atualização (apenas campos fornecidos)
@@ -411,7 +410,7 @@ class NotesWriteController extends NotesBaseController {
       if (title !== undefined) updateData.title = title;
       if (description !== undefined) updateData.description = description;
       if (tags !== undefined) updateData.tags = tags;
-      if (status !== undefined) updateData.status = status;
+      if (status !== undefined) updateData.status = normalizeNoteStatus(status);
       if (deleted !== undefined) updateData.deleted = deleted;
       if (project_id !== undefined) {
         const nextProjectId =

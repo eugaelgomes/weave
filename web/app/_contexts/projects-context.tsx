@@ -44,6 +44,7 @@ import {
   type CreateTaskPriorityData,
   type UpdateTaskPriorityData,
 } from "../_services/projects-service/project-taxonomy-service";
+import { PROJECT_STATUS } from "@/app/_utils/db-enums";
 
 // Tipos específicos do contexto / Overview
 export type { Project, ProjectStage } from "../_services/projects-service/projects-service";
@@ -205,7 +206,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         id: project.id,
         title: project.title || "Projeto sem título",
         description: project.description,
-        status: project.status || "open",
+        status: project.status || PROJECT_STATUS.OPEN,
         methodology: project.methodology || "kanban",
         default_view: project.default_view || "board",
         progress: project.properties?.progress || 0,
@@ -339,11 +340,17 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
 
   const getProjectsStats = useCallback((): ProjectsStats => {
     const totalProjects = projectsOverview.length;
-    const openProjects = projectsOverview.filter((p) => p.status === "open").length;
-    const inProgressProjects = projectsOverview.filter((p) => p.status === "in_progress").length;
-    const completedProjects = projectsOverview.filter((p) => p.status === "completed").length;
-    const pausedProjects = projectsOverview.filter((p) => p.status === "paused").length;
-    const archivedProjects = projectsOverview.filter((p) => p.status === "archived").length;
+    const openProjects = projectsOverview.filter((p) => p.status === PROJECT_STATUS.OPEN).length;
+    const inProgressProjects = projectsOverview.filter(
+      (p) => p.status === PROJECT_STATUS.IN_PROGRESS
+    ).length;
+    const completedProjects = projectsOverview.filter(
+      (p) => p.status === PROJECT_STATUS.COMPLETED
+    ).length;
+    const pausedProjects = projectsOverview.filter((p) => p.status === PROJECT_STATUS.PAUSED).length;
+    const archivedProjects = projectsOverview.filter(
+      (p) => p.status === PROJECT_STATUS.ARCHIVED
+    ).length;
     const activeProjects = openProjects + inProgressProjects;
     const totalNotes = projectsOverview.reduce((acc, p) => acc + p.notesCount, 0);
     const totalCollaborators = projectsOverview.reduce((acc, p) => acc + p.collaboratorsCount, 0);
@@ -353,11 +360,11 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         : 0;
 
     const statusDistribution: Record<string, number> = {
-      open: openProjects,
-      in_progress: inProgressProjects,
-      completed: completedProjects,
-      paused: pausedProjects,
-      archived: archivedProjects,
+      OPEN: openProjects,
+      IN_PROGRESS: inProgressProjects,
+      COMPLETED: completedProjects,
+      PAUSED: pausedProjects,
+      ARCHIVED: archivedProjects,
     };
 
     const priorityDistribution: Record<string, number> = {

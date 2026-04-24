@@ -119,6 +119,12 @@ class ProjectsDeleteController extends ProjectsCoreController {
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       await this._validateProjectAccess(projectId, userId);
+      const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
+      if (!canWrite) {
+        throw new Error(
+          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
+        );
+      }
 
       const result =
         orgWide && membership.id

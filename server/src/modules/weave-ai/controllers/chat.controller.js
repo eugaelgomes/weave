@@ -34,6 +34,10 @@ const {
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const { callAIProvider } = require("@/services/weave-ai/ai-service");
 const reasoningEngine = require("@/services/weave-ai/context-reasoning/reasoning-engine");
+const {
+  NOTE_STATUS,
+  PROJECT_STATUS,
+} = require("@/utils/patterns/product-patterns");
 
 const responseCache = new Map();
 
@@ -444,7 +448,7 @@ Inclua apenas os campos que devem ser atualizados.`,
             parsedResponse.title,
             parsedResponse.description,
             uniqueTags,
-            "visible",
+            NOTE_STATUS.VISIBLE,
             null,
             null,
             null,
@@ -467,7 +471,7 @@ Inclua apenas os campos que devem ser atualizados.`,
             userId,
             parsedResponse.title,
             parsedResponse.description,
-            parsedResponse.status || "ativo",
+            parsedResponse.status || PROJECT_STATUS.OPEN,
             parsedResponse.properties || {}
           );
 
@@ -721,7 +725,7 @@ Inclua apenas os campos que devem ser atualizados.`,
           args.title,
           args.description || "",
           args.tags || [],
-          "visible",
+          NOTE_STATUS.VISIBLE,
           null,
           null,
           null,
@@ -792,7 +796,7 @@ Inclua apenas os campos que devem ser atualizados.`,
           userId,
           args.title,
           args.description || "",
-          args.status || "open",
+          args.status || PROJECT_STATUS.OPEN,
           args.properties || {}
         );
 

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import type { ProjectOverview } from "@/app/_contexts/projects-context";
 import { getTagColor } from "@/app/_utils/tag-colors";
+import { PROJECT_STATUS } from "@/app/_utils/db-enums";
 
 interface ProjectsCarouselProps {
   projects: ProjectOverview[];
@@ -29,35 +30,35 @@ interface ProjectsCarouselProps {
 }
 
 const STATUS_CONFIG = {
-  open: {
+  [PROJECT_STATUS.OPEN]: {
     label: "Aberto",
     icon: CircleDot,
     color: "text-cyan-600 dark:text-cyan-400",
     bg: "bg-cyan-50 dark:bg-cyan-500/10",
     border: "border-cyan-200 dark:border-cyan-500/20",
   },
-  running: {
+  [PROJECT_STATUS.IN_PROGRESS]: {
     label: "Em Andamento",
     icon: PlayCircle,
     color: "text-blue-600 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-500/10",
     border: "border-blue-200 dark:border-blue-500/20",
   },
-  completed: {
+  [PROJECT_STATUS.COMPLETED]: {
     label: "Concluído",
     icon: CheckCircle2,
     color: "text-green-600 dark:text-green-400",
     bg: "bg-green-50 dark:bg-green-500/10",
     border: "border-green-200 dark:border-green-500/20",
   },
-  "on-hold": {
+  [PROJECT_STATUS.PAUSED]: {
     label: "Pausado",
     icon: PauseCircle,
     color: "text-yellow-600 dark:text-yellow-400",
     bg: "bg-yellow-50 dark:bg-brand-primary-500/10",
     border: "border-yellow-200 dark:border-yellow-500/20",
   },
-  archived: {
+  [PROJECT_STATUS.ARCHIVED]: {
     label: "Arquivado",
     icon: Archive,
     color: "text-neutral-500 dark:text-neutral-500",

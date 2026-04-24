@@ -52,8 +52,12 @@ class CreateApiTokensRepository extends BaseRepository {
    */
   async getUserOrgRole(userId, organizationId) {
     const query = `
-      SELECT role FROM organizations_members 
-      WHERE user_id = $1 AND org_id = $2
+      SELECT role FROM organization_members 
+      WHERE user_id = $1
+        AND organization_id = $2
+        AND area_id IS NULL
+        AND deleted = false
+      LIMIT 1
     `;
     const result = await this.executeQuery(query, [userId, organizationId]);
     return result.length > 0 ? result[0].role : null;

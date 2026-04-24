@@ -74,7 +74,7 @@ class ReadNotesRepository extends BaseRepository {
           AND EXISTS (
             SELECT 1 FROM projects p_org
             WHERE p_org.id = n.project_id
-              AND p_org.org_id = $2::uuid
+              AND p_org.organization_id = $2::uuid
               AND p_org.deleted = false
           )
         )
@@ -153,7 +153,7 @@ class ReadNotesRepository extends BaseRepository {
           AND EXISTS (
             SELECT 1 FROM projects p_org
             WHERE p_org.id = n.project_id
-              AND p_org.org_id = $2::uuid
+              AND p_org.organization_id = $2::uuid
               AND p_org.deleted = false
           )
         )
@@ -198,7 +198,7 @@ class ReadNotesRepository extends BaseRepository {
       `(n.user_id = $1 OR EXISTS (SELECT 1 FROM note_collaborators nc2 WHERE nc2.note_id = n.id AND nc2.user_id = $1)
         OR ($2::uuid IS NOT NULL AND n.project_id IS NOT NULL AND EXISTS (
           SELECT 1 FROM projects p_org
-          WHERE p_org.id = n.project_id AND p_org.org_id = $2::uuid AND p_org.deleted = false
+          WHERE p_org.id = n.project_id AND p_org.organization_id = $2::uuid AND p_org.deleted = false
         )))`,
       `n.deleted = false`,
     ];
@@ -252,7 +252,7 @@ class ReadNotesRepository extends BaseRepository {
         n.project_id::text,
         p.title as project_name,
         -- organização associada
-        p.org_id::text,
+        p.organization_id::text AS org_id,
         o.org_name,
         o.unique_name as org_unique_name,
         o.logo_url as org_logo_url,
@@ -275,7 +275,7 @@ class ReadNotesRepository extends BaseRepository {
     LEFT JOIN task_priorities tp ON n.priority_id = tp.id AND tp.deleted = false
       LEFT JOIN note_collaborators nc ON n.id = nc.note_id
       LEFT JOIN users c ON nc.user_id = c.user_id
-      LEFT JOIN organizations o ON p.org_id = o.id AND o.deleted = false
+      LEFT JOIN organizations o ON p.organization_id = o.id AND o.deleted = false
       WHERE ${whereConditions.join(" AND ")}
       GROUP BY 
         n.id,
@@ -336,7 +336,7 @@ class ReadNotesRepository extends BaseRepository {
         n.updated_at,
         n.deleted,
         n.due_date,
-        COALESCE(n.org_id, p.org_id)::text AS scope_org_id,
+        COALESCE(n.organization_id, p.organization_id)::text AS scope_organization_id,
         -- criador da nota
         n.user_id::text,
         u.name AS user_name,
@@ -359,7 +359,7 @@ class ReadNotesRepository extends BaseRepository {
            FROM tags t WHERE t.id = ANY(n.tags)), '[]'::json
         ) AS resolved_tags,
         -- organização associada
-        p.org_id::text,
+        p.organization_id::text AS org_id,
         o.org_name,
         o.unique_name AS org_unique_name,
         o.logo_url AS org_logo_url,
@@ -382,13 +382,13 @@ class ReadNotesRepository extends BaseRepository {
     LEFT JOIN task_priorities tp ON n.priority_id = tp.id AND tp.deleted = false
     LEFT JOIN note_collaborators nc ON n.id = nc.note_id
     LEFT JOIN users c ON nc.user_id = c.user_id
-    LEFT JOIN organizations o ON p.org_id = o.id AND o.deleted = false
+    LEFT JOIN organizations o ON p.organization_id = o.id AND o.deleted = false
     WHERE n.id = $1 AND n.deleted = false AND n.deleted = false
     GROUP BY 
         n.id, 
         u.user_id, 
         p.id,
-        p.org_id,
+        p.organization_id,
         o.id,
         tp.id,
         pst.id
@@ -427,7 +427,7 @@ class ReadNotesRepository extends BaseRepository {
               AND EXISTS (
                 SELECT 1 FROM projects p_org
                 WHERE p_org.id = n.project_id
-                  AND p_org.org_id = $2::uuid
+                  AND p_org.organization_id = $2::uuid
                   AND p_org.deleted = false
               )
             )
@@ -452,7 +452,7 @@ class ReadNotesRepository extends BaseRepository {
         (SELECT COUNT(DISTINCT tag_name) FROM all_tags_unnested)::int AS unique_tags_count,
 
         -- 4. Distribuição por Status (Tratando NULL)
-        -- Exemplo de saída: {"visible": 10, "archived": 2, "no_status": 5}
+        -- Exemplo de saída: {"VISIBLE": 10, "ARCHIVED": 2, "no_status": 5}
         COALESCE((
             SELECT json_object_agg(s.status_key, s.count)
             FROM (

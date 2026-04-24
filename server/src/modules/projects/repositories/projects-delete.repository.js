@@ -1,4 +1,11 @@
 const { executeQuery } = require("@/database/connection");
+const {
+  PROJECT_WRITE_CAPABLE_ROLES,
+} = require("@/modules/projects/project-role-policy");
+
+const PROJECT_WRITE_CAPABLE_ROLES_SQL = PROJECT_WRITE_CAPABLE_ROLES.map(
+  (role) => `'${role}'`
+).join(", ");
 
 class ProjectsDeleteRepository {
   async deleteProject(projectId, userId) {
@@ -15,7 +22,7 @@ class ProjectsDeleteRepository {
     const query = `
       UPDATE projects
       SET deleted = true, updated_at = NOW()
-      WHERE id = $1 AND org_id = $2::uuid AND deleted = false
+      WHERE id = $1 AND organization_id = $2::uuid AND deleted = false
       RETURNING id::text, user_id::text;
     `;
 
@@ -24,7 +31,7 @@ class ProjectsDeleteRepository {
   async removeCollaborator(projectId, ownerId, collaboratorUserId) {
     const query = `
       WITH deleted_member AS (
-        UPDATE projects_members
+        UPDATE project_members
         SET deleted = true, updated_at = NOW()
         WHERE project_id = $1::uuid
           AND user_id = $3::uuid
@@ -53,7 +60,7 @@ class ProjectsDeleteRepository {
           '[]'::jsonb
         ) AS collaborators
       FROM projects p
-      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users u ON u.user_id = pm.user_id
       WHERE p.id = $1::uuid
       GROUP BY p.id;
@@ -68,13 +75,13 @@ class ProjectsDeleteRepository {
   ) {
     const query = `
       WITH deleted_member AS (
-        UPDATE projects_members
+        UPDATE project_members
         SET deleted = true, updated_at = NOW()
         WHERE project_id = $1::uuid
           AND user_id = $3::uuid
           AND EXISTS (
             SELECT 1 FROM projects
-            WHERE id = $1::uuid AND org_id = $2::uuid AND deleted = false
+            WHERE id = $1::uuid AND organization_id = $2::uuid AND deleted = false
           )
         RETURNING *
       )
@@ -97,7 +104,7 @@ class ProjectsDeleteRepository {
           '[]'::jsonb
         ) AS collaborators
       FROM projects p
-      LEFT JOIN projects_members pm ON pm.project_id = p.id AND pm.deleted = false
+      LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users u ON u.user_id = pm.user_id
       WHERE p.id = $1::uuid
       GROUP BY p.id;
@@ -138,12 +145,12 @@ class ProjectsDeleteRepository {
           updated_at = NOW()
         WHERE id = $1::uuid
           AND (user_id = $3::uuid OR EXISTS (
-            SELECT 1 FROM projects_members pm
+            SELECT 1 FROM project_members pm
             WHERE pm.project_id = $1::uuid
               AND pm.user_id = $3::uuid
               AND pm.deleted = false
               AND pm.suspended = false
-              AND pm.role = 'admin'
+              AND pm.role IN (${PROJECT_WRITE_CAPABLE_ROLES_SQL})
           ))
           AND deleted = false
           AND EXISTS (SELECT 1 FROM updated_note)
@@ -194,15 +201,15 @@ class ProjectsDeleteRepository {
           AND (
             EXISTS (
               SELECT 1 FROM projects p_org
-              WHERE p_org.id = $1::uuid AND p_org.org_id = $4::uuid AND p_org.deleted = false
+              WHERE p_org.id = $1::uuid AND p_org.organization_id = $4::uuid AND p_org.deleted = false
             )
             OR (user_id = $3::uuid OR EXISTS (
-              SELECT 1 FROM projects_members pm
+              SELECT 1 FROM project_members pm
               WHERE pm.project_id = $1::uuid
                 AND pm.user_id = $3::uuid
                 AND pm.deleted = false
                 AND pm.suspended = false
-                AND pm.role = 'admin'
+                AND pm.role IN (${PROJECT_WRITE_CAPABLE_ROLES_SQL})
             ))
           )
           AND deleted = false
@@ -315,7 +322,7 @@ class ProjectsDeleteRepository {
         JOIN projects p ON p.id = ps.project_id
         WHERE ps.id = $3::uuid
           AND ps.project_id = $1::uuid
-          AND p.org_id = $2::uuid
+          AND p.organization_id = $2::uuid
           AND p.deleted = false
       ),
       notes_upd AS (
@@ -349,7 +356,7 @@ class ProjectsDeleteRepository {
             || jsonb_build_object('progress', (${progressExpr})),
           updated_at = NOW()
         WHERE p.id = $1::uuid
-          AND p.org_id = $2::uuid
+          AND p.organization_id = $2::uuid
           AND p.deleted = false
           AND EXISTS (SELECT 1 FROM del)
         RETURNING p.id

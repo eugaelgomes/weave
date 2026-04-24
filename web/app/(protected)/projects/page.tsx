@@ -17,13 +17,14 @@ import {
   Folder,
   ChevronRight,
 } from "lucide-react";
+import { PROJECT_STATUS } from "@/app/_utils/db-enums";
 
 const statusLabels: Record<string, string> = {
-  open: "Aberto",
-  in_progress: "Em andamento",
-  paused: "Pausado",
-  completed: "Concluído",
-  archived: "Arquivado",
+  [PROJECT_STATUS.OPEN]: "Aberto",
+  [PROJECT_STATUS.IN_PROGRESS]: "Em andamento",
+  [PROJECT_STATUS.PAUSED]: "Pausado",
+  [PROJECT_STATUS.COMPLETED]: "Concluído",
+  [PROJECT_STATUS.ARCHIVED]: "Arquivado",
 };
 
 type ProjectNoteLike = {
@@ -138,7 +139,7 @@ function buildProjectStats(
   return {
     id: project.id,
     title: project.title || "Projeto sem título",
-    status: project.status || "open",
+    status: project.status || PROJECT_STATUS.OPEN,
     color: project.properties?.color,
     totalNotes: notes.length,
     notesWithoutCollaborators,
@@ -205,7 +206,7 @@ const ProjectsPage = () => {
     try {
       const created = await createProject({
         title: title.trim(),
-        status: "open",
+        status: PROJECT_STATUS.OPEN,
         methodology: "kanban",
         default_view: "board",
       });

@@ -1,6 +1,7 @@
 const BaseRepository = require("./base.repository");
 const { executeQuery } = require("@/database/connection");
 const { defaultAppPreferences } = require("@/modules/users/normalize");
+const PlansRepository = require("@/modules/plans/plans.repository");
 
 /**
  * @typedef {Object} CreateUserRow
@@ -47,6 +48,9 @@ class CreateUsersRepository extends BaseRepository {
       plan_id,
     } = userData;
 
+    const resolvedPlanId =
+      plan_id || (await PlansRepository.getDefaultSignupPlanId());
+
     const query = `
     INSERT INTO users (
       name, 
@@ -63,15 +67,7 @@ class CreateUsersRepository extends BaseRepository {
     ) 
     VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-      COALESCE(
-        $11,
-        (
-          SELECT plan_id
-          FROM plans
-          WHERE LOWER(name) = 'starter' AND deleted = FALSE
-          LIMIT 1
-        )
-      )
+      $11
     )
     RETURNING user_id, email, name, avatar_url, created_at;
   `;
@@ -87,7 +83,7 @@ class CreateUsersRepository extends BaseRepository {
       phone_number,
       avatar_url,
       defaultAppPreferences,
-      plan_id || null,
+      resolvedPlanId,
     ]);
   }
 
@@ -98,21 +94,16 @@ class CreateUsersRepository extends BaseRepository {
    * @returns {Promise<Array<{ user_id: string|number }>>}
    */
   async createGithubUser(username, name, githubId) {
+    const planId = await PlansRepository.getDefaultSignupPlanId();
     const query = `
       INSERT INTO 
         users (username, name, github_id, plan_id) 
       VALUES (
-        $1, $2, $3,
-        (
-          SELECT plan_id
-          FROM plans
-          WHERE LOWER(name) = 'starter' AND deleted = FALSE
-          LIMIT 1
-        )
+        $1, $2, $3, $4
       )
       RETURNING user_id;
     `;
-    return await executeQuery(query, [username, name, githubId]);
+    return await executeQuery(query, [username, name, githubId, planId]);
   }
 }
 module.exports = new CreateUsersRepository();

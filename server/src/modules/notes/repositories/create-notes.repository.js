@@ -1,4 +1,5 @@
 const BaseRepository = require("./base.repository");
+const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
 const { cloneDefaultNoteDocumentState } = require("../document-normalizer");
 
 const DEFAULT_NOTE_PROPERTIES = {
@@ -19,7 +20,7 @@ class CreateNotesRepository extends BaseRepository {
     title,
     content,
     tags = [],
-    status = "visible",
+    status = NOTE_STATUS.VISIBLE,
     projectId = null,
     priorityId = null,
     assignedTo = null,
@@ -52,7 +53,7 @@ class CreateNotesRepository extends BaseRepository {
     description,
     tags = [],
     initialBlockContent = "",
-    status = "visible",
+    status = NOTE_STATUS.VISIBLE,
     projectId = null,
     noteDocument = null
   ) {
