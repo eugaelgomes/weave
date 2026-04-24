@@ -30,7 +30,8 @@
     "url": "git+https://github.com/eugaelgomes/weave-notes.git"
   },
   "dependencies": {
-    "dotenv": "^16.6.1"
+    "dotenv": "^16.6.1",
+    "ioredis": "^5.10.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

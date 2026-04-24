@@ -1,4 +1,5 @@
 const { Resend } = require("resend");
+const redis = require("../redis/connection"); // Importando conexão ioredis
 
 let mailServiceInstance = null;
 
@@ -26,12 +27,6 @@ function MailService() {
   if (mailServiceInstance) {
     return mailServiceInstance;
   }
-
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("Configuração de email faltando: RESEND_API_KEY");
-  }
-
-  const resend = new Resend(process.env.RESEND_API_KEY);
 
   mailServiceInstance = {
     async sendMail(mailOptions = {}) {
@@ -75,29 +70,22 @@ function MailService() {
         to: normalizeRecipients(to, "to"),
       };
 
-      let { data, error } = await resend.emails.send(payload);
-
-      const errorMessage = error?.message || "";
-      const shouldRetryWithOnboardingSender =
-        process.env.NODE_ENV !== "production" &&
-        payload.from !== "Weave Notes <onboarding@resend.dev>" &&
-        /domain|verify|verified/i.test(errorMessage);
-
-      if (shouldRetryWithOnboardingSender) {
-        ({ data, error } = await resend.emails.send({
-          ...payload,
-          from: "Weave Notes <onboarding@resend.dev>",
-        }));
+      try {
+        // Agora enfileira no Redis (valkey) ao invés de enviar sincronamente
+        await redis.lpush(
+          "weave:emails:queue",
+          JSON.stringify({
+            payload,
+            queuedAt: new Date().toISOString(),
+          })
+        );
+        return { success: true, queued: true };
+      } catch (error) {
+        console.error("Erro ao enfileirar email no Redis:", error);
+        // Fallback em caso de erro no Redis não está implementado,
+        // pode-se repassar o erro dependendo da necessidade:
+        throw new Error("Erro ao enfileirar email");
       }
-
-      if (error) {
-        const details = [error.message, error.name, error.statusCode]
-          .filter(Boolean)
-          .join(" | ");
-        throw new Error(details || "Erro ao enviar email com Resend");
-      }
-
-      return data;
     },
   };
 
@@ -105,3 +93,4 @@ function MailService() {
 }
 
 module.exports = { MailService };
+
