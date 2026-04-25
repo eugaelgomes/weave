@@ -1,20 +1,22 @@
 const axios = require("axios");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 const {
-  getProviderConfig,
-  getProviderForUseCase,
-  AI_PROVIDERS,
-  fallbackConfig,
+  buildSystemMessage,
+  callAIProvider,
+  generateSmartResponse,
+  getFewShotExamples,
+  processThinkingPhase,
+} = require("@/services/weave-ai/ai-service");
+const {
   cacheConfig,
 } = require("@/services/weave-ai/config/config");
 const {
-  buildSystemMessage,
-  getFewShotExamples,
-} = require("@/services/weave-ai/config/agent-prompts");
+  resolveAuthorizedFunctions,
+} = require("@/services/weave-ai/capabilities/authorized-functions");
 const {
+  FunctionCategory,
   getAllInOpenAIFormat,
-  getFunctionSchema,
-  isFunctionAvailable,
+  getFunctionsByCategory,
+  getFunctionsBySecurityLevel,
 } = require("@/services/weave-ai/functions/function-schemas");
 const {
   validateParameter,
@@ -32,14 +34,122 @@ const {
   documentToBlocks,
 } = require("@/modules/notes/document-blocks-adapter");
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
-const { callAIProvider } = require("@/services/weave-ai/ai-service");
-const reasoningEngine = require("@/services/weave-ai/context-reasoning/reasoning-engine");
 const {
   NOTE_STATUS,
   PROJECT_STATUS,
 } = require("@/utils/patterns/product-patterns");
 
 const responseCache = new Map();
+
+/**
+ * Creates a standardized validation error.
+ *
+ * @param {string} message
+ * @returns {Error}
+ */
+function createValidationError(message) {
+  const error = new Error(message);
+  error.statusCode = 400;
+  return error;
+}
+
+/**
+ * Parses booleans from JSON or multipart payloads.
+ *
+ * @param {unknown} value
+ * @param {boolean} [fallback=false]
+ * @returns {boolean}
+ */
+function parseBoolean(value, fallback = false) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+  return fallback;
+}
+
+/**
+ * Parses an optional object from payload.
+ *
+ * @param {unknown} value
+ * @param {string} fieldName
+ * @returns {Record<string, unknown>}
+ */
+function parseOptionalObject(value, fieldName) {
+  if (value === undefined || value === null || value === "") return {};
+  if (typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch (error) {
+      throw createValidationError(`Campo "${fieldName}" deve ser um objeto JSON válido.`);
+    }
+  }
+
+  throw createValidationError(`Campo "${fieldName}" deve ser um objeto.`);
+}
+
+/**
+ * Parses an optional string array from payload.
+ *
+ * @param {unknown} value
+ * @param {string} fieldName
+ * @returns {string[]}
+ */
+function parseOptionalStringArray(value, fieldName) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) {
+    const invalid = value.some((item) => typeof item !== "string" || item.trim() === "");
+    if (invalid) {
+      throw createValidationError(`Campo "${fieldName}" deve conter apenas strings não vazias.`);
+    }
+    return value.map((item) => item.trim());
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    if (trimmed.startsWith("[")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return parseOptionalStringArray(parsed, fieldName);
+      } catch (error) {
+        throw createValidationError(`Campo "${fieldName}" deve ser um array JSON válido.`);
+      }
+    }
+
+    return trimmed
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  throw createValidationError(`Campo "${fieldName}" deve ser um array de strings.`);
+}
+
+/**
+ * Normalizes uploaded files metadata for prompt/context usage.
+ *
+ * @param {Array<import("multer").File>} files
+ * @returns {Array<{name: string, mimeType: string, sizeBytes: number}>}
+ */
+function normalizeUploadedFiles(files) {
+  if (!Array.isArray(files) || files.length === 0) {
+    return [];
+  }
+
+  return files.map((file) => ({
+    mimeType: file.mimetype,
+    name: file.originalname,
+    sizeBytes: file.size,
+  }));
+}
 
 const toDocumentFromAiBlocks = (blocks) => {
   if (!Array.isArray(blocks) || blocks.length === 0) return null;
@@ -118,7 +228,7 @@ class AIController {
       }
 
       // Determina o provider ideal
-      const provider = requestedProvider || getProviderForUseCase(useCase);
+      const provider = requestedProvider || "auto";
 
       // Enriquece contexto com Context Provider dinâmico
       const enrichedContext = await this._enrichContext(
@@ -128,10 +238,10 @@ class AIController {
       );
 
       // Constrói mensagem do sistema
-      const systemMessage = buildSystemMessage(useCase, enrichedContext);
+      const systemMessage = await buildSystemMessage(useCase, enrichedContext);
 
       // Adiciona few-shot examples se disponível
-      const examples = getFewShotExamples(useCase);
+      const examples = await getFewShotExamples(useCase);
       let fullPrompt = prompt;
       if (examples.length > 0) {
         const examplesText = examples
@@ -145,44 +255,10 @@ class AIController {
         fullPrompt = this._buildActionPrompt(context.action, prompt, context);
       }
 
-      let response;
-      let usedProvider = provider;
-
-      try {
-        // Tenta com provider primário
-        response = await callAIProvider(provider, fullPrompt, systemMessage);
-      } catch (error) {
-        console.error(`Erro ao chamar ${provider}:`, error.message);
-
-        // Tenta fallback se habilitado
-        if (fallbackConfig.enableFallback) {
-          const fallbackProvider = fallbackConfig.fallbackPriority.find(
-            (p) => p !== provider
-          );
-
-          if (fallbackProvider) {
-            console.log(`Tentando fallback para ${fallbackProvider}...`);
-            try {
-              response = await callAIProvider(
-                fallbackProvider,
-                fullPrompt,
-                systemMessage
-              );
-              usedProvider = fallbackProvider;
-            } catch (fallbackError) {
-              console.error(
-                `Erro no fallback ${fallbackProvider}:`,
-                fallbackError.message
-              );
-              throw error; // Lança erro original
-            }
-          } else {
-            throw error;
-          }
-        } else {
-          throw error;
-        }
-      }
+      const response = await callAIProvider(provider, fullPrompt, systemMessage, {
+        useCase,
+      });
+      const usedProvider = response.providerUsed || provider;
 
       // Se context tem action, executa ação de criar dados
       let createdData = null;
@@ -200,7 +276,10 @@ class AIController {
         success: true,
         useCase,
         provider: usedProvider,
-        response: typeof response === "string" ? response : response.content,
+        response:
+          typeof response === "string"
+            ? response
+            : response.content || response.text,
         citations: response.citations || null,
         createdData: createdData || null,
         timestamp: new Date().toISOString(),
@@ -242,16 +321,25 @@ class AIController {
    */
   async listUseCases(req, res) {
     try {
-      const {
-        allUseCases,
-        preferredProviders,
-      } = require("@/services/weave-ai/config/config");
-
       res.json({
+        capabilities: {
+          byCategory: {
+            blocks: getFunctionsByCategory(FunctionCategory.BLOCKS).length,
+            chat: getFunctionsByCategory(FunctionCategory.CHAT).length,
+            notes: getFunctionsByCategory(FunctionCategory.NOTES).length,
+            projects: getFunctionsByCategory(FunctionCategory.PROJECTS).length,
+            search: getFunctionsByCategory(FunctionCategory.SEARCH).length,
+            stats: getFunctionsByCategory(FunctionCategory.STATS).length,
+            users: getFunctionsByCategory(FunctionCategory.USERS).length,
+          },
+          bySecurityLevel: {
+            moderate: getFunctionsBySecurityLevel("moderate").length,
+            restricted: getFunctionsBySecurityLevel("restricted").length,
+            safe: getFunctionsBySecurityLevel("safe").length,
+          },
+        },
+        note: "As capacidades sao orientadas por funcoes autorizadas pelo server antes de qualquer processamento no engine.",
         success: true,
-        allUseCases,
-        preferredProviders,
-        note: "Todos os providers suportam todos os casos de uso. Os providers preferenciais indicam qual é otimizado para cada caso.",
       });
     } catch (error) {
       console.error("Erro ao listar casos de uso:", error);
@@ -269,10 +357,6 @@ class AIController {
   async listAvailableFunctions(req, res) {
     try {
       const functions = getAllInOpenAIFormat();
-      const {
-        getFunctionsBySecurityLevel,
-        getFunctionsByCategory,
-      } = require("@/services/weave-ai/function-schemas");
 
       res.json({
         success: true,
@@ -701,6 +785,14 @@ Inclua apenas os campos que devem ser atualizados.`,
    */
   async _executeFunctionCall(userId, functionCall, context) {
     const { name, arguments: args } = functionCall;
+    const allowedFunctionNames = context?.allowedFunctionNames;
+
+    if (
+      Array.isArray(allowedFunctionNames) &&
+      !allowedFunctionNames.includes(name)
+    ) {
+      throw new Error(`Funcao ${name} nao autorizada para este contexto`);
+    }
 
     // Valida se a função não é proibida
     if (isFunctionForbidden(name)) {
@@ -842,7 +934,6 @@ Inclua apenas os campos que devem ser atualizados.`,
    */
   async getAvailableModels(req, res) {
     try {
-      const { allUseCases } = require("@/services/weave-ai/config/config");
       const geminiAvailable = !!process.env.GEMINI_API_KEY;
       const perplexityAvailable = !!process.env.PERPLEXITY_API_KEY;
 
@@ -859,7 +950,7 @@ Inclua apenas os campos que devem ser atualizados.`,
             "Sugestões criativas",
             "Formatação estruturada",
           ],
-          useCases: allUseCases || [],
+          mode: "funcoes autorizadas por contexto",
           isAvailable: geminiAvailable,
         },
         {
@@ -873,7 +964,7 @@ Inclua apenas os campos que devem ser atualizados.`,
             "Análise de tendências",
             "Verificação de fatos",
           ],
-          useCases: allUseCases || [],
+          mode: "funcoes autorizadas por contexto",
           isAvailable: perplexityAvailable,
         },
       ];
@@ -902,20 +993,28 @@ Inclua apenas os campos que devem ser atualizados.`,
   async chat(req, res) {
     try {
       const userId = req.user?.userId;
+      const parsedContext = parseOptionalObject(req.body?.context, "context");
       const {
         message,
-        allowEdit = false,
+        allowEdit: rawAllowEdit,
         useCase = "chat",
         provider: requestedProvider,
+        model: selectedModel,
         sessionId,
-        context = {},
       } = req.body;
+      const allowEdit = parseBoolean(rawAllowEdit, false);
+      const requestFiles = normalizeUploadedFiles(req.files);
+      const noteIds = parseOptionalStringArray(
+        req.body?.noteIds ?? parsedContext.noteIds,
+        "noteIds"
+      );
+      const projectIds = parseOptionalStringArray(
+        req.body?.projectIds ?? parsedContext.projectIds,
+        "projectIds"
+      );
 
-      if (!message) {
-        return res.status(400).json({
-          success: false,
-          error: "Mensagem é obrigatória",
-        });
+      if (typeof message !== "string" || !message.trim()) {
+        throw createValidationError("Campo \"message\" é obrigatório.");
       }
 
       const chatRepository = require("@/modules/weave-ai/repositories/chat.repository");
@@ -929,26 +1028,29 @@ Inclua apenas os campos que devem ser atualizados.`,
 
       // Enriquece contexto com notas e projetos do usuário via Context Provider
       const enrichedContext = await this._enrichContext(userId, useCase, {
-        ...context,
+        ...parsedContext,
+        fileAttachments: requestFiles,
+        noteIds,
+        projectIds,
         sessionId: currentSessionId,
       });
 
       // Determina provider (usa preferredProvider se não especificado)
-      const provider = requestedProvider || getProviderForUseCase(useCase);
+      const provider = selectedModel || requestedProvider || "auto";
 
       // --- PASSO 1: GERAÇÃO DE CONTEÚDO (THINKING PHASE) ---
       // Delegado para o Reasoning Engine
-      const generatedContent = await reasoningEngine.processThinkingPhase(
+      const generatedContent = await processThinkingPhase({
+        allowEdit,
         message,
+        provider,
         useCase,
         enrichedContext,
-        provider,
-        allowEdit
-      );
+      });
 
       // --- PASSO 2: EXECUÇÃO (ACTION PHASE) ---
       // Constrói system message com contexto enriquecido
-      let systemMessage = buildSystemMessage(useCase, enrichedContext);
+      let systemMessage = await buildSystemMessage(useCase, enrichedContext);
       let finalPrompt = message;
 
       // Se geramos conteúdo, injetamos no prompt final para a IA usar
@@ -958,10 +1060,21 @@ Inclua apenas os campos que devem ser atualizados.`,
 
       // Se allowEdit=true, prepara funções para o modelo
       let functions = null;
+      let allowedFunctionNames = [];
       let forceToolUse = false;
 
       if (allowEdit) {
-        functions = getAllInOpenAIFormat();
+        const capabilityResolution = await resolveAuthorizedFunctions({
+          allowEdit,
+          context: {
+            ...parsedContext,
+            noteIds,
+            projectIds,
+          },
+          userId,
+        });
+        functions = capabilityResolution.functions;
+        allowedFunctionNames = functions.map((tool) => tool.name);
 
         // Detecta se o usuário está pedindo explicitamente para criar/editar/deletar
         const actionKeywords = {
@@ -974,20 +1087,20 @@ Inclua apenas os campos que devem ser atualizados.`,
         };
 
         // Se detectar palavras de ação, FORÇA uso de função
-        forceToolUse = Object.values(actionKeywords).some((pattern) =>
-          pattern.test(message)
-        );
+        forceToolUse =
+          functions.length > 0 &&
+          Object.values(actionKeywords).some((pattern) => pattern.test(message));
 
         systemMessage +=
-          '\n\n## ⚡ MODO DE EXECUÇÃO ATIVADO\n\n**IMPORTANTE: Você TEM funções disponíveis e DEVE usá-las.**\n\nQuando o usuário pedir:\n- "Crie..." → use create_note ou create_project\n- "Edite..." → use update_note ou update_project\n- "Delete..." → use delete_note ou delete_project\n- "Adicione conteúdo..." → use update_note com document/blocos\n\n**NUNCA retorne JSON no texto. SEMPRE use as funções.**';
+          "\n\n## CAPACIDADES AUTORIZADAS\n\nAs ferramentas disponiveis nesta execucao ja foram autorizadas pelo servidor para este usuario e contexto. Use apenas as funcoes fornecidas.";
 
         // Reforço de contexto específico para evitar buscas desnecessárias
-        if (context.noteId) {
-          systemMessage += `\n\n## 🎯 CONTEXTO DE NOTA ATIVO (PRIORIDADE MÁXIMA)\n\nO usuário está visualizando a nota ID: "${context.noteId}".\n\nSE o usuário pedir para editar/alterar/atualizar:\n1. IGNORE qualquer texto que pareça uma busca por título.\n2. USE a função \`update_note\` DIRETAMENTE com \`noteId: "${context.noteId}"\`.\n3. NÃO use \`search_notes\`.`;
+        if (parsedContext.noteId) {
+          systemMessage += `\n\n## 🎯 CONTEXTO DE NOTA ATIVO (PRIORIDADE MÁXIMA)\n\nO usuário está visualizando a nota ID: "${parsedContext.noteId}".\n\nSE o usuário pedir para editar/alterar/atualizar:\n1. IGNORE qualquer texto que pareça uma busca por título.\n2. USE a função \`update_note\` DIRETAMENTE com \`noteId: "${parsedContext.noteId}"\`.\n3. NÃO use \`search_notes\`.`;
         }
 
-        if (context.projectId) {
-          systemMessage += `\n\n## 🎯 CONTEXTO DE PROJETO ATIVO (PRIORIDADE MÁXIMA)\n\nO usuário está visualizando o projeto ID: "${context.projectId}".\n\nSE o usuário pedir para editar/alterar/atualizar:\n1. USE a função \`update_project\` DIRETAMENTE com \`projectId: "${context.projectId}"\`.\n2. NÃO use buscas.`;
+        if (parsedContext.projectId) {
+          systemMessage += `\n\n## 🎯 CONTEXTO DE PROJETO ATIVO (PRIORIDADE MÁXIMA)\n\nO usuário está visualizando o projeto ID: "${parsedContext.projectId}".\n\nSE o usuário pedir para editar/alterar/atualizar:\n1. USE a função \`update_project\` DIRETAMENTE com \`projectId: "${parsedContext.projectId}"\`.\n2. NÃO use buscas.`;
         }
       }
 
@@ -998,7 +1111,14 @@ Inclua apenas os campos que devem ser atualizados.`,
         role: "user",
         content: message,
         model: provider,
-        metadata: { ...context, useCase, allowEdit },
+        metadata: {
+          ...parsedContext,
+          files: requestFiles,
+          noteIds,
+          projectIds,
+          useCase,
+          allowEdit,
+        },
       });
 
       // Chama IA com suporte a function calling (agora com o prompt possivelmente enriquecido)
@@ -1010,6 +1130,7 @@ Inclua apenas os campos que devem ser atualizados.`,
           allowEdit,
           functions,
           forceToolUse,
+          useCase,
         }
       );
 
@@ -1023,18 +1144,23 @@ Inclua apenas os campos que devem ser atualizados.`,
           executionResult = await this._executeFunctionCall(
             userId,
             aiResponse.functionCall,
-            context
+            {
+              ...parsedContext,
+              noteIds,
+              projectIds,
+              allowedFunctionNames,
+            }
           );
 
           // --- SMART RESPONSE: Re-prompt para gerar resposta natural ---
           // Delegado para o Reasoning Engine
-          finalContent = await reasoningEngine.generateSmartResponse(
-            message,
-            aiResponse.functionCall,
+          finalContent = await generateSmartResponse({
             executionResult,
+            functionName: aiResponse.functionCall,
+            originalMessage: message,
             provider,
             systemMessage
-          );
+          });
         } catch (error) {
           console.error("Erro ao executar função:", error);
           finalContent = `❌ **Erro ao executar função:** ${error.message}`;
@@ -1080,6 +1206,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         success: true,
         message: assistantMessage,
         sessionId: currentSessionId,
+        model: provider,
         provider,
         useCase,
         allowEdit,
@@ -1087,9 +1214,11 @@ Inclua apenas os campos que devem ser atualizados.`,
       });
     } catch (error) {
       console.error("Erro no chat:", error);
-      res.status(500).json({
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({
         success: false,
-        error: "Erro ao processar mensagem",
+        error:
+          statusCode === 400 ? error.message : "Erro ao processar mensagem",
       });
     }
   }

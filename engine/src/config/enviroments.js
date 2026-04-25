@@ -1,8 +1,14 @@
 require("dotenv").config();
 
-const requiredEnvVars = [];
+const requiredEnvVars = ["REDIS_URL"];
 
-const optionalEnvVars = ["NODE_ENV"];
+const optionalEnvVars = [
+  "GEMINI_API_KEY",
+  "NODE_ENV",
+  "PERPLEXITY_API_KEY",
+  "REDIS_ENGINE_LLM_REQUEST_QUEUE_KEY",
+  "REDIS_ENGINE_LLM_RESPONSE_PREFIX",
+];
 
 function validateEnv() {
   const missing = requiredEnvVars.filter((key) => !process.env[key]);

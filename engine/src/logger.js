@@ -1,4 +1,4 @@
-const { env } = require("../config/env");
+const { env } = require("./config/enviroments");
 
 const LOG_LEVELS = {
   debug: 0,
