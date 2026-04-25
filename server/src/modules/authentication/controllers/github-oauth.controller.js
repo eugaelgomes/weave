@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
+const { matchedData } = require("express-validator");
 
 const AuthBaseController = require("./base.controller");
 const GithubOauthRepository = require("@/modules/authentication/repositories/github-oauth.repository");
@@ -7,9 +8,12 @@ const FindUserRepository = require("@/modules/authentication/repositories/find-u
 const OrganizationDomainsRepository = require("@/modules/organizations/repositories/domains.repository");
 const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 const cookieHelper = require("@/utils/cookie-helper");
+const oauthState = require("@/modules/authentication/oauth-state");
 const secretsService = require("@/services/secrets");
 
 const setAuthCookie = cookieHelper.setAuthCookie;
+const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
+const issueOauthState = oauthState.issueOauthState;
 const secretsManager = secretsService.secretsManager;
 
 /** Callback fixo; cadastrar a mesma URL na OAuth App do GitHub. */
@@ -27,7 +31,8 @@ class GithubOauthController extends AuthBaseController {
    * @param {import('express').Response} res
    */
   async githubAuth(req, res) {
-    const githubOAuthURL = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(GITHUB_OAUTH_REDIRECT_URI)}&scope=user:email`;
+    const state = issueOauthState({ provider: "github", req, res });
+    const githubOAuthURL = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(GITHUB_OAUTH_REDIRECT_URI)}&scope=user:email&state=${encodeURIComponent(state)}`;
 
     res.redirect(githubOAuthURL);
   }
@@ -41,7 +46,19 @@ class GithubOauthController extends AuthBaseController {
     const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
 
     try {
-      const { code, error } = req.query;
+      const { code, error, state } = matchedData(req, {
+        includeOptionals: true,
+        locations: ["query"],
+      });
+      const isValidOauthState = consumeAndValidateOauthState({
+        provider: "github",
+        req,
+        res,
+        state,
+      });
+      if (!isValidOauthState) {
+        return res.redirect(`${frontendURL}/?error=invalid_oauth_state`);
+      }
 
       if (error) {
         console.error("Erro durante a autenticação com o GitHub", error);

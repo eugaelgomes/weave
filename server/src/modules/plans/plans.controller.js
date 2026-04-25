@@ -8,6 +8,12 @@ class PlanUsageManager {
    * Gerencia o ciclo de uso: busca o registro e cria se não existir.
    * O rollover mensal agora é executado pelo worker.
    */
+  /**
+   * 
+   * @param {string} userId 
+   * @param {string | null} orgId 
+   * @returns {Promise<Record<string, any>>}
+   */
   async managePlanUsage(userId, orgId = null) {
     let usageRecord = await PlansRepository.getPlanUsage(userId, orgId);
 
@@ -179,10 +185,13 @@ class PlanUsageManager {
     let appliedPlanVersion = effectivePlan?.plan_version || null;
 
     if (!planId) {
-      const starter = await PlansRepository.getPlanByName("starter");
-      planId = starter?.plan_id;
-      appliedPlanSnapshot = starter?.details || null;
-      appliedPlanVersion = starter?.plan_version || 1;
+      const defaultPlanId = await PlansRepository.getDefaultSignupPlanId();
+      if (defaultPlanId) {
+        const defaultPlan = await PlansRepository.getPlanById(defaultPlanId);
+        planId = defaultPlan?.plan_id || null;
+        appliedPlanSnapshot = defaultPlan?.details || null;
+        appliedPlanVersion = defaultPlan?.plan_version || 1;
+      }
     }
     if (!planId || !appliedPlanSnapshot) return null;
 

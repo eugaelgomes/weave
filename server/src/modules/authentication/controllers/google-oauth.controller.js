@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
+const { matchedData } = require("express-validator");
 
 const AuthBaseController = require("./base.controller");
 const GoogleOauthRepository = require("@/modules/authentication/repositories/google-oauth.repository");
@@ -7,9 +8,12 @@ const FindUserRepository = require("@/modules/authentication/repositories/find-u
 const OrganizationDomainsRepository = require("@/modules/organizations/repositories/domains.repository");
 const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 const cookieHelper = require("@/utils/cookie-helper");
+const oauthState = require("@/modules/authentication/oauth-state");
 const secretsService = require("@/services/secrets");
 
 const setAuthCookie = cookieHelper.setAuthCookie;
+const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
+const issueOauthState = oauthState.issueOauthState;
 const secretsManager = secretsService.secretsManager;
 
 /** Callback fixo; cadastrar a mesma URL no Google Cloud Console. */
@@ -27,7 +31,8 @@ class GoogleOauthController extends AuthBaseController {
    * @param {import('express').Response} res
    */
   async googleAuth(req, res) {
-    const googleOAuthURL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_OAUTH_REDIRECT_URI)}&response_type=code&scope=openid%20email%20profile&prompt=select_account`;
+    const state = issueOauthState({ provider: "google", req, res });
+    const googleOAuthURL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_OAUTH_REDIRECT_URI)}&response_type=code&scope=openid%20email%20profile&prompt=select_account&state=${encodeURIComponent(state)}`;
     res.redirect(googleOAuthURL);
   }
 
@@ -37,17 +42,29 @@ class GoogleOauthController extends AuthBaseController {
    */
   async googleCallback(req, res) {
     try {
-      const { code, error } = req.query;
+      const { code, error, state } = matchedData(req, {
+        includeOptionals: true,
+        locations: ["query"],
+      });
+      const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
+
+      const isValidOauthState = consumeAndValidateOauthState({
+        provider: "google",
+        req,
+        res,
+        state,
+      });
+      if (!isValidOauthState) {
+        return res.redirect(`${frontendURL}/?error=invalid_oauth_state`);
+      }
 
       if (error) {
         console.error("Erro na autorização Google:", error);
-        const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
         return res.redirect(`${frontendURL}/?error=authorization_denied`);
       }
 
       if (!code) {
         console.error("Código de autorização não encontrado");
-        const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
         return res.redirect(`${frontendURL}/?error=missing_auth_code`);
       }
 
@@ -159,7 +176,6 @@ class GoogleOauthController extends AuthBaseController {
         maxAge: 24 * 60 * 60 * 1000,
       });
 
-      const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
       res.redirect(`${frontendURL}/app/home?auth=success`);
     } catch (error) {
       console.error("Google OAuth callback error:", error.message);

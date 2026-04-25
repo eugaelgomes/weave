@@ -15,6 +15,15 @@ class SigninRepository extends BaseRepository {
           UNION ALL
           SELECT * FROM users WHERE email = $1 AND deleted = false
           LIMIT 1
+      ),
+      latest_org AS (
+        SELECT om.user_id, om.organization_id
+        FROM organization_members om
+        INNER JOIN target_user tu ON tu.user_id = om.user_id
+        WHERE om.area_id IS NULL
+          AND om.deleted = false
+        ORDER BY om.created_at DESC
+        LIMIT 1
       )
       SELECT
         u.user_id,
@@ -67,13 +76,27 @@ class SigninRepository extends BaseRepository {
               pu.plan_id AS usage_plan_id, 
               pu.client_type AS usage_client_type, 
               pu.usage_details, 
-              pu.period_start, 
-              pu.period_end,
+              (pu.usage_details #>> '{monthly_cycle,current_period_start}')::timestamptz AS period_start,
+              (pu.usage_details #>> '{monthly_cycle,current_period_end}')::timestamptz AS period_end,
               p2.name AS usage_plan_name
             FROM plan_usages pu
             LEFT JOIN plans p2 ON p2.plan_id = pu.plan_id
-            WHERE pu.user_id = u.user_id
-            ORDER BY pu.period_end DESC 
+            LEFT JOIN latest_org lo ON lo.user_id = u.user_id
+            WHERE (
+              pu.subscriber_type = 'organization'
+              AND lo.organization_id IS NOT NULL
+              AND pu.subscriber_id = lo.organization_id
+            ) OR (
+              pu.subscriber_type = 'user'
+              AND pu.subscriber_id = u.user_id
+            )
+            ORDER BY
+              CASE
+                WHEN pu.subscriber_type = 'organization' THEN 1
+                ELSE 2
+              END,
+              period_end DESC NULLS LAST,
+              pu.updated_at DESC
             LIMIT 1
           ) usage_data
         ) AS current_usage,

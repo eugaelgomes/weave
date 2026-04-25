@@ -65,24 +65,33 @@ class PlansRepository {
   }
 
   /**
-   * Plano atribuído a novos usuários (signup e OAuth).
-   * Prioriza nomes comuns; se nenhum existir, usa o plano ativo com menor `plan_value`.
+   * Default signup plan.
+   * Prioritizes plans explicitly marked as default in details.metadata.is_signup_default.
+   * Falls back to the cheapest active plan when no default flag is present.
    */
   async getDefaultSignupPlanId() {
     const query = `
+      WITH candidates AS (
+        SELECT plan_id
+             , 1 AS priority
+             , COALESCE(plan_value, 0) AS sort_value
+             , created_at
+        FROM plans
+        WHERE deleted = FALSE
+          AND is_active = TRUE
+          AND COALESCE((details #>> '{metadata,is_signup_default}')::boolean, false) = true
+        UNION ALL
       SELECT plan_id
+           , 2 AS priority
+           , COALESCE(plan_value, 0) AS sort_value
+           , created_at
       FROM plans
       WHERE deleted = FALSE
-      ORDER BY
-        CASE LOWER(TRIM(name))
-          WHEN 'starter' THEN 1
-          WHEN 'basic' THEN 2
-          WHEN 'free' THEN 3
-          WHEN 'gratuito' THEN 4
-          ELSE 99
-        END,
-        COALESCE(plan_value, 0) ASC,
-        name ASC
+        AND is_active = TRUE
+      )
+      SELECT plan_id
+      FROM candidates
+      ORDER BY priority ASC, sort_value ASC, created_at ASC
       LIMIT 1
     `;
     const results = await executeQuery(query);
@@ -493,6 +502,15 @@ class PlansRepository {
    */
   async getUsageHistory(userId, limit = 12) {
     const query = `
+      WITH latest_org AS (
+        SELECT om.organization_id
+        FROM organization_members om
+        WHERE om.user_id = $1
+          AND om.area_id IS NULL
+          AND om.deleted = false
+        ORDER BY om.created_at DESC
+        LIMIT 1
+      )
       SELECT 
         id, period_start, period_end,
         total_notes_created, total_projects_created,
@@ -500,7 +518,16 @@ class PlansRepository {
         created_at
       FROM plan_usage_history
       WHERE user_id = $1
-      ORDER BY period_end DESC
+         OR (
+           organization_id = (SELECT organization_id FROM latest_org)
+           AND (SELECT organization_id FROM latest_org) IS NOT NULL
+         )
+      ORDER BY
+        CASE
+          WHEN organization_id = (SELECT organization_id FROM latest_org) THEN 1
+          ELSE 2
+        END,
+        period_end DESC
       LIMIT $2`;
 
     return await executeQuery(query, [userId, limit]);

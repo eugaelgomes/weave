@@ -120,12 +120,12 @@ class PlansManager {
       return user;
     }
 
-    const starterPlan = await PlansRepository.getPlanByName("starter");
-    if (!starterPlan) {
-      throw new Error("Default starter plan not found.");
+    const defaultPlanId = await PlansRepository.getDefaultSignupPlanId();
+    if (!defaultPlanId) {
+      throw new Error("Default signup plan not found.");
     }
 
-    return await PlansRepository.assignPlanToUser(userId, starterPlan.plan_id);
+    return await PlansRepository.assignPlanToUser(userId, defaultPlanId);
   }
 }
 

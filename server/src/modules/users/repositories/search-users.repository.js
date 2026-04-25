@@ -51,6 +51,21 @@ class SearchUsersRepository extends BaseRepository {
    */
   async getUserByUsername(username) {
     const query = `
+    WITH target_user AS (
+      SELECT * FROM users WHERE username = $1 AND deleted = false
+      UNION ALL
+      SELECT * FROM users WHERE email = $1 AND deleted = false
+      LIMIT 1
+    ),
+    latest_org AS (
+      SELECT om.user_id, om.organization_id
+      FROM organization_members om
+      INNER JOIN target_user tu ON tu.user_id = om.user_id
+      WHERE om.area_id IS NULL
+        AND om.deleted = false
+      ORDER BY om.created_at DESC
+      LIMIT 1
+    )
     SELECT
       u.user_id,
       u.username,
@@ -74,20 +89,40 @@ class SearchUsersRepository extends BaseRepository {
       p.plan_id AS user_plan_id,
       p.name AS plan_name,
       p.details AS plan_details,
-      pu.plan_id AS usage_plan_id,
-      pu.client_type,
-      pu.usage_details,
-      pu.period_start,
-      pu.period_end
-    FROM users u
-    LEFT JOIN organizations o ON o.user_id = u.user_id
+      cu.usage_plan_id,
+      cu.client_type,
+      cu.usage_details,
+      cu.period_start,
+      cu.period_end
+    FROM target_user u
+    LEFT JOIN latest_org lo ON lo.user_id = u.user_id
+    LEFT JOIN organizations o ON o.id = lo.organization_id AND o.deleted = false
     LEFT JOIN plans p ON p.plan_id = u.plan_id
-    LEFT JOIN plan_usages pu ON pu.user_id = u.user_id
-    WHERE (
-      (u.username IS NOT NULL AND u.username = $1)
-      OR (u.email IS NOT NULL AND u.email = $1)
-    )
-    AND u.deleted = false
+    LEFT JOIN LATERAL (
+      SELECT
+        pu.plan_id AS usage_plan_id,
+        pu.client_type,
+        pu.usage_details,
+        (pu.usage_details #>> '{monthly_cycle,current_period_start}')::timestamptz AS period_start,
+        (pu.usage_details #>> '{monthly_cycle,current_period_end}')::timestamptz AS period_end
+      FROM plan_usages pu
+      WHERE (
+        pu.subscriber_type = 'organization'
+        AND lo.organization_id IS NOT NULL
+        AND pu.subscriber_id = lo.organization_id
+      ) OR (
+        pu.subscriber_type = 'user'
+        AND pu.subscriber_id = u.user_id
+      )
+      ORDER BY
+        CASE
+          WHEN pu.subscriber_type = 'organization' THEN 1
+          ELSE 2
+        END,
+        period_end DESC NULLS LAST,
+        pu.updated_at DESC
+      LIMIT 1
+    ) cu ON TRUE
     LIMIT 1;
   `;
 

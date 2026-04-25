@@ -1,7 +1,7 @@
 /* eslint-disable sort-keys */
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { validationResult } = require("express-validator");
+const { matchedData } = require("express-validator");
 
 const AuthBaseController = require("./base.controller");
 const SigninRepository = require("@/modules/authentication/repositories/signin.repository");
@@ -24,17 +24,11 @@ class SigninController extends AuthBaseController {
    * @returns {Promise<import('express').Response>}
    */
   async userSignin(req, res) {
-    const { login, password } = req.body;
+    const { login, password } = matchedData(req, {
+      includeOptionals: false,
+      locations: ["body"],
+    });
     const username = login;
-
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        message: "Auth data validation failed, please check it and try again.",
-        errors: errors.array(),
-      });
-    }
 
     try {
       const user = await SigninRepository.findUserByUsername(username);
