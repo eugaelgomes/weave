@@ -3,9 +3,6 @@ require("dotenv").config();
 const http = require("http");
 const { app } = require("@/app");
 const { pool } = require("@/database/connection");
-const {
-  scheduleDueDateReminderEmails,
-} = require("@/modules/notes/jobs/due-date-reminder.job");
 
 /**
  * @param {*} val
@@ -52,11 +49,6 @@ server.on("listening", () => {
   const addr = server.address();
   const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
   console.log(`Weave Notes API running on ${bind}`);
-  try {
-    scheduleDueDateReminderEmails();
-  } catch (error) {
-    console.error("[due-date-reminder] Falha ao agendar:", error);
-  }
 });
 
 /**

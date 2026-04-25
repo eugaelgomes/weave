@@ -1,7 +1,6 @@
 const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
-const { USAGE_PATHS } = require("@/services/plans/plan-paths");
 
 class ProjectsDeleteController extends ProjectsCoreController {
   async deleteProject(req, res, next) {
@@ -30,11 +29,7 @@ class ProjectsDeleteController extends ProjectsCoreController {
 
       // Decrementar o uso de projetos
       if (usageRecord) {
-        await PlanUsageManager.incrementUsage(
-          usageRecord.id,
-          USAGE_PATHS.SUMMARY.PROJECTS_TOTAL,
-          -1
-        );
+        await PlanUsageManager.decrementProjectUsage(usageRecord.id);
       }
 
       res.status(200).json({

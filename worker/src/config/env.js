@@ -18,6 +18,10 @@ const optionalEnvVars = [
   "DO_SPACES_BUCKET_NAME",
   "DO_SPACES_REGION",
   "CONTACT_EMAIL",
+  "API_URL",
+  "FRONTEND_URL",
+  "DUE_DATE_REMINDER_ENABLED",
+  "DUE_DATE_REMINDER_HOUR_UTC",
 ];
 
 function validateEnv() {

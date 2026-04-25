@@ -1,5 +1,4 @@
-const { Resend } = require("resend");
-const redis = require("../redis/connection"); // Importando conexão ioredis
+const { enqueueEmailJob } = require("../queue/queue-controller");
 
 let mailServiceInstance = null;
 
@@ -71,19 +70,9 @@ function MailService() {
       };
 
       try {
-        // Agora enfileira no Redis (valkey) ao invés de enviar sincronamente
-        await redis.lpush(
-          "weave:emails:queue",
-          JSON.stringify({
-            payload,
-            queuedAt: new Date().toISOString(),
-          })
-        );
-        return { success: true, queued: true };
+        return await enqueueEmailJob(payload);
       } catch (error) {
         console.error("Erro ao enfileirar email no Redis:", error);
-        // Fallback em caso de erro no Redis não está implementado,
-        // pode-se repassar o erro dependendo da necessidade:
         throw new Error("Erro ao enfileirar email");
       }
     },

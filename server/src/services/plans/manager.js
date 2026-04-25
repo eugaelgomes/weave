@@ -37,7 +37,7 @@ class PlansManager {
   }
 
   /**
-   * MÉTODOS DE CONSUMO ESPECÍFICOS
+   * METODOS DE CONSUMO ESPECIFICOS
    */
 
   // Consumir Mensagem de IA
@@ -58,7 +58,7 @@ class PlansManager {
     }
   }
 
-  // Consumir Criação de Nota
+  // Consumir Criacao de Nota
   async consumeNoteCreation(usageId) {
     return await PlansRepository.incrementUsageCounter(
       usageId,
@@ -75,7 +75,7 @@ class PlansManager {
       this.toPgPath(USAGE_PATHS.MONTHLY.STORAGE.FILES_COUNT),
       1
     );
-    // Soma o peso do arquivo ao total do mês
+    // Soma o peso do arquivo ao total do mes
     return await PlansRepository.incrementUsageCounter(
       usageId,
       this.toPgPath(USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB),
@@ -83,7 +83,7 @@ class PlansManager {
     );
   }
 
-  // Consumir Exportação
+  // Consumir Exportacao
   async consumeExport(usageId, type = "notes") {
     const path =
       type === "backup"
@@ -98,7 +98,7 @@ class PlansManager {
   }
 
   /**
-   * Atualiza metadados gerais (Ex: data da última atividade)
+   * Atualiza metadados gerais (Ex: data da ultima atividade)
    */
   async updateLastActivity(usageId) {
     return await PlansRepository.updateJsonValue(
@@ -109,7 +109,7 @@ class PlansManager {
   }
 
   /**
-   *  Padrão de plano ao criar novo user
+   * Padrao de plano ao criar novo user
    */
   async setDefaultPlanForNewUser(userId) {
     const user = await PlansRepository.getUserAndPlan(userId);

@@ -5,8 +5,6 @@ const {
 const { errorHandler } = require("@/middlewares/errors/error-handler");
 const { registerApiRoutes } = require("./routes");
 
-require("@/services/jobs/index");
-
 const app = express();
 
 /**

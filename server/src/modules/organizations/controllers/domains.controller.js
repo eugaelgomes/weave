@@ -8,7 +8,9 @@ const crypto = require("crypto");
 
 const OrganizationsBaseController = require("./base-controller");
 const domainRepository = require("../repositories/domains.repository");
-const { verifyDomainToken } = require("@/services/domains/domain-verifier");
+const {
+  enqueueDomainVerificationJob,
+} = require("@/services/queue/queue-controller");
 
 /**
  * Controller for organizations domains management.
@@ -187,11 +189,11 @@ class OrganizationDomainsController extends OrganizationsBaseController {
   }
 
   /**
-   * Verify domain ownership via DNS TXT record.
-   * Checks if verification token exists in domain's DNS records.
+   * Enqueue domain ownership verification via DNS TXT record.
+   * Worker checks DNS and retries every 30 minutes until verified.
    * @param {Request & AuthenticatedRequest} req - Express request object with domainId in params
    * @param {Response} res - Express response object
-   * @returns {Promise<void|Response>} JSON response with verification result and DNS check details
+   * @returns {Promise<void|Response>} JSON response with queueing status
    */
   async verifyDomain(req, res) {
     try {
@@ -223,60 +225,16 @@ class OrganizationDomainsController extends OrganizationsBaseController {
           .json({ success: false, error: "Domain not found" });
       }
 
-      const { isVerified, checkedHosts } = await verifyDomainToken(
-        domain.domain_name,
-        domain.verification_token
-      );
-
-      if (!isVerified) {
-        await this.domainRepository.updateVerificationFailure(domain.id);
-        return res.status(400).json({
-          success: false,
-          error:
-            "Token not found in domain's DNS TXT records. Wait for propagation and try again.",
-          dns_checks: checkedHosts,
-        });
-      }
-
-      const updatedDomain =
-        await this.domainRepository.updateVerificationStatus({
-          domainId: domain.id,
-          status: "VERIFIED",
-          verified: true,
-        });
-
-      /**
-       * Update member role to super_admin if domain verification is successful and user is not already a super_admin.
-       */
-      const currentSuperAdmins =
-        await this.organizationsRepository.countActiveMembersByRole(
-          organization.id,
-          "super_admin"
-        );
-      const canPromoteToSuperAdmin = !(
-        organization.member_role !== "super_admin" &&
-        currentSuperAdmins >= 3
-      );
-
-      if (canPromoteToSuperAdmin) {
-        await this.organizationsRepository.updateMemberRole(
-          organization.id,
-          userId,
-          "super_admin"
-        );
-      }
-
-      const orgDomains =
-        await this.organizationsRepository.refreshOrgDomainsCache(
-          organization.id
-        );
+      await enqueueDomainVerificationJob({
+        domainId: domain.id,
+        requestedByUserId: userId,
+      });
 
       res.status(200).json({
         status: "OK",
-        message: "Domain verified successfully",
-        data: this._serializeDomain(updatedDomain),
-        org_domains: orgDomains,
-        dns_checks: checkedHosts,
+        message:
+          "Domain verification queued. Worker will retry DNS every 30 minutes until verified.",
+        data: this._serializeDomain(domain),
       });
     } catch (error) {
       console.error("Error verifying domain:", error);

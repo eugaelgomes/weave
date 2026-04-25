@@ -1,7 +1,6 @@
 const { Resend } = require("resend");
 const redis = require("../../config/redis");
-
-const QUEUE_NAME = "weave:emails:queue";
+const { getEmailQueueRedisKey } = require("../../config/redis-queue-keys");
 
 class EmailProcessor {
   constructor() {
@@ -12,19 +11,20 @@ class EmailProcessor {
   async start() {
     if (this.isRunning) return;
     this.isRunning = true;
-    
+
     if (!process.env.RESEND_API_KEY) {
       console.warn("[Email Processor] RESEND_API_KEY is not defined. Email queue processor will exit.");
       return;
     }
 
-    console.log(`[Email Processor] Listening for jobs on list: ${QUEUE_NAME}`);
-    
+    const queueName = getEmailQueueRedisKey();
+    console.log(`[Email Processor] Listening for jobs on list: ${queueName}`);
+
     while (this.isRunning) {
       try {
         // block waiting for a job
-        const result = await redis.blpop(QUEUE_NAME, 0); // 0 means wait indefinitely
-        
+        const result = await redis.blpop(queueName, 0); // 0 means wait indefinitely
+
         if (result) {
           const [, jobDataStr] = result;
           await this.processJob(JSON.parse(jobDataStr));
@@ -40,9 +40,9 @@ class EmailProcessor {
 
   async processJob(jobData) {
     const { payload } = jobData;
-    
+
     console.log(`[Email Processor] Processing email job to: ${payload.to.join(", ")}`);
-    
+
     try {
       let { data, error } = await this.resend.emails.send(payload);
 

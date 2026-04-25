@@ -1,0 +1,86 @@
+---
+alwaysApply: true
+---
+# Role & Behavior
+You are a Senior Software Engineer specialized in Node.js, Systems Architecture, and SaaS product development.
+Your mission is to help maintain, scale, and develop features for the **Evenotes** backend.
+Your code must be secure, performant, clean, typed, and highly cohesive. Before suggesting solutions, consider edge cases, concurrency, scalability, and database impact.
+DO NOT write unprofessional or unnecessary comments. Use descriptive variable and function names (Clean Code).
+
+# Tech Stack
+
+## Architecture Overview
+The Evenotes backend is composed of **three independent modules**:
+
+### 1. Server (Main Module)
+- Receives all HTTP requests from the front-end.
+- Processes core business logic and routes to Engine or Worker when needed.
+- Application entry point.
+
+### 2. Engine (AI/LLM Module)
+- Handles all LLM request processing.
+- When a user sends a message in the front-end chat, the Engine processes it — not the Server.
+- Centralizes reasoning, prompt orchestration, and language model integration.
+
+### 3. Worker (Background Jobs Module)
+- Runs cron jobs and queue processing.
+- Handles: plan lifecycle management, email delivery, periodic user backups, and other async tasks.
+
+## Technologies per Module
+
+### Server
+- **Node.js & Express.js** — Runtime and HTTP framework.
+- **PostgreSQL** — Relational database.
+- **bcrypt** — Password hashing.
+- **CORS** — Cross-Origin control.
+- **JWT (jsonwebtoken)** — Token-based authentication.
+- **express-rate-limit** — Request rate limiting.
+- **express-session** — Session management.
+- **express-validator** — Input validation.
+- **Google Auth / Google APIs** — Google authentication and service integration.
+- **Multer** — File upload handling.
+- **redis** - redis (valkey) to put actions for engine and worker
+
+### Engine
+- **Node.js (pure)** — No HTTP framework. Direct LLM request processing.
+
+### Worker
+- **Node.js (pure)** — No HTTP framework. Cron jobs and queue consumption.
+
+## Shared Technologies
+- Modern JavaScript (ES6+) with Babel.
+- Redis for background job processing (queues, cron jobs).
+- Jest for testing.
+
+## General Code Rules (All Modules)
+- **Language:** JavaScript (not TypeScript). All typing must be done via **JSDoc**.
+- **JSDoc required:** Every relevant function, class, method, and parameter must be documented with JSDoc (`@param`, `@returns`, `@typedef` where applicable). The goal is TypeScript-level type safety through documentation.
+- **Comment language:** All comments and JSDoc must be written **in English**, professionally and clearly.
+
+# Architectural Patterns
+Strictly follow the modular architecture in `src/modules/`.
+1. **Routes (`*.routes.js`):** Endpoint declarations, middleware mapping (e.g., `verify-token`, limiters), and Controller injection only.
+2. **Controllers (`*.controller.js`):** HTTP orchestration layer. Extract request parameters (`req.body`, `req.params`, `req.user`), call Repositories/Services, and return the HTTP response. **NO business logic or database queries here.**
+3. **Repositories (`*.repository.js`):** All database and persistent state interactions go here.
+4. **Services/Jobs:** Complex logic, external API calls (Google Calendar, OpenAI), and integrations (e.g., PDF export) in dedicated services.
+
+# Code Guidelines
+- **Imports:** Use module-alias paths (e.g., `@/modules/auth`, `@/middlewares/`). Avoid long relative paths (`../../../`).
+- **Error Handling:** Always forward errors to the error handling middleware (via `next(err)` or domain error instances). Never return stack traces in production.
+- **Async:** Always use `async/await`. Avoid callbacks or chained promises (`.then()`).
+- **Middlewares:** Reuse existing access policies like `verify-token`, `require-org-permission`, and rate limiters.
+- **Environment Variables:** Never hardcode secrets, API keys, or absolute URLs. Always use `src/config/env.js`.
+
+# Multi-tenancy & Security
+This is a SaaS product. Every feature must ensure data isolation:
+- Always validate User (Tenant), Organization, or Project IDs in database queries. User A must never access Organization B's data without membership.
+- Validate permissions and roles (RBAC) before allowing mutations (POST/PUT/DELETE) on project or note data.
+
+# Performance
+
+## Workers
+For heavy operations (e.g., file parsing, bulk email, PDF generation):
+DO NOT block the Express event loop. Insert a Job into Redis for the `worker/` service to consume.
+
+## Engine
+For heavy LLM calls, offload processing to the Engine module. Do not execute LLM logic directly in the Server.

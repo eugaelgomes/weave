@@ -1,5 +1,5 @@
 const BackupBaseController = require("./base.controller");
-const jobManager = require("@/services/jobs/index");
+const backupJobsRepository = require("@/modules/backup/repositories/backup-jobs.repository");
 
 /**
  * Estado e histórico de jobs de backup.
@@ -17,7 +17,7 @@ class BackupJobsController extends BackupBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const job = await jobManager.getJob(jobId);
+      const job = await backupJobsRepository.getJob(jobId);
       if (!job)
         return res.status(404).json({
           status: "Not Found",
@@ -68,7 +68,7 @@ class BackupJobsController extends BackupBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const jobs = (await jobManager.getUserJobs(userId))
+      const jobs = (await backupJobsRepository.getUserJobs(userId))
         .filter((job) => job.type === "backup_export")
         .slice(0, 10);
 

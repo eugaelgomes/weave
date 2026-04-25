@@ -1,11 +1,12 @@
 const PlansRepository = require("@/modules/plans/plans.repository");
 const { executeQuery } = require("@/database/connection");
 const { USAGE_PATHS } = require("@/services/plans/plan-paths");
+const { enqueuePlanUsageJob } = require("@/services/queue/queue-controller");
 
 class PlanUsageManager {
   /**
-   * Gerencia o ciclo de uso: busca o registro, cria se não existir
-   * e reseta se o mês tiver virado.
+   * Gerencia o ciclo de uso: busca o registro e cria se não existir.
+   * O rollover mensal agora é executado pelo worker.
    */
   async managePlanUsage(userId, orgId = null) {
     let usageRecord = await PlansRepository.getPlanUsage(userId, orgId);
@@ -19,20 +20,6 @@ class PlanUsageManager {
       throw new Error(
         "Não foi possível inicializar o uso: Usuário sem plano atribuído."
       );
-    }
-
-    const now = new Date();
-    const periodEnd = new Date(
-      this.getNestedValue(
-        usageRecord.usage_details,
-        USAGE_PATHS.MONTHLY.PERIOD_END
-      )
-    );
-
-    // 2. Reset de Ciclo Mensal
-    if (now > periodEnd) {
-      const updatedDetails = await this.resetMonthlyCycle(usageRecord);
-      return { ...usageRecord, usage_details: updatedDetails };
     }
 
     return usageRecord;
@@ -79,195 +66,80 @@ class PlanUsageManager {
    * Incrementa o total de notas criadas
    */
   async consumeNoteCreation(usageId) {
-    return await this.incrementUsage(
+    return enqueuePlanUsageJob({
+      operation: "consume_note_creation",
       usageId,
-      USAGE_PATHS.SUMMARY.NOTES_TOTAL,
-      1
-    );
+    });
   }
 
   /**
    *  Delete Note
    */
   async decrementNoteUsage(usageId) {
-    // Passamos -1 para o incrementUsage
-    return await this.incrementUsage(
+    return enqueuePlanUsageJob({
+      operation: "consume_note_creation",
+      payload: { amount: -1 },
       usageId,
-      USAGE_PATHS.SUMMARY.NOTES_TOTAL,
-      -1
-    );
+    });
   }
 
   /**
    * Incrementa o total de projetos criados
    */
   async consumeProjectCreation(usageId) {
-    return await this.incrementUsage(
+    return enqueuePlanUsageJob({
+      operation: "consume_project_creation",
       usageId,
-      USAGE_PATHS.SUMMARY.PROJECTS_TOTAL,
-      1
-    );
+    });
+  }
+
+  /**
+   * Decrementa o total de projetos
+   */
+  async decrementProjectUsage(usageId) {
+    return enqueuePlanUsageJob({
+      operation: "consume_project_creation",
+      payload: { amount: -1 },
+      usageId,
+    });
   }
 
   /**
    * Incrementa uso de IA (mensagens e opcionalmente tokens)
    */
   async consumeAiMessage(usageId, tokens = 0) {
-    await this.incrementUsage(
+    return enqueuePlanUsageJob({
+      operation: "consume_ai_message",
+      payload: { tokens },
       usageId,
-      USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT,
-      1
-    );
-    if (tokens > 0) {
-      await this.incrementUsage(
-        usageId,
-        USAGE_PATHS.MONTHLY.WEAVE_AI.TOKENS_ESTIMATED,
-        tokens
-      );
-    }
+    });
   }
 
   /**
    * Incrementa uso de storage (arquivos e MB)
    */
   async consumeStorage(usageId, fileSizeMb) {
-    await this.incrementUsage(
+    return enqueuePlanUsageJob({
+      operation: "consume_storage",
+      payload: { fileSizeMb },
       usageId,
-      USAGE_PATHS.MONTHLY.STORAGE.FILES_COUNT,
-      1
-    );
-    return await this.incrementUsage(
-      usageId,
-      USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB,
-      fileSizeMb
-    );
+    });
   }
 
   /**
    * Incrementa contadores de exportação
    */
   async consumeExport(usageId, type = "notes") {
-    const path =
-      type === "backup"
-        ? USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
-        : USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT;
-    return await this.incrementUsage(usageId, path, 1);
+    return enqueuePlanUsageJob({
+      operation: "consume_export",
+      payload: { type },
+      usageId,
+    });
   }
 
   // ==========================================
   // LÓGICA INTERNA E HELPERS
   // ==========================================
-
-  async incrementUsage(usageId, dotPath, amount = 1) {
-    const pgPath = `{${dotPath.replace(/\./g, ",")}}`;
-    return await PlansRepository.incrementUsageCounter(usageId, pgPath, amount);
-  }
-
-  // No PlanUsageManager.js
-
-  async resetMonthlyCycle(usageRecord) {
-    const oldDetails = usageRecord.usage_details;
-    const periodStart = this.getNestedValue(
-      oldDetails,
-      USAGE_PATHS.MONTHLY.PERIOD_START
-    );
-    const periodEnd = this.getNestedValue(
-      oldDetails,
-      USAGE_PATHS.MONTHLY.PERIOD_END
-    );
-
-    // 1. SALVAR SNAPSHOT NO HISTÓRICO com agregações
-    await PlansRepository.saveUsageHistory({
-      plan_usage_id: usageRecord.id,
-      user_id: usageRecord.user_id,
-      organization_id: usageRecord.organization_id,
-      plan_id: usageRecord.plan_id,
-      period_start: periodStart,
-      period_end: periodEnd,
-      final_usage_details: oldDetails,
-      // Agregações denormalizadas para queries rápidas
-      total_notes_created:
-        this.getNestedValue(oldDetails, USAGE_PATHS.SUMMARY.NOTES_TOTAL) || 0,
-      total_projects_created:
-        this.getNestedValue(oldDetails, USAGE_PATHS.SUMMARY.PROJECTS_TOTAL) ||
-        0,
-      total_ai_messages:
-        this.getNestedValue(
-          oldDetails,
-          USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT
-        ) || 0,
-      total_storage_mb:
-        this.getNestedValue(
-          oldDetails,
-          USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB
-        ) || 0,
-      total_exports:
-        (this.getNestedValue(
-          oldDetails,
-          USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT
-        ) || 0) +
-        (this.getNestedValue(
-          oldDetails,
-          USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
-        ) || 0),
-    });
-
-    // 2. ATUALIZAR LIFETIME STATS
-    await this._updateLifetimeStats(usageRecord.id, oldDetails);
-
-    // 3. PREPARAR NOVOS DADOS
-    const newStartDate = new Date();
-    const newEndDate = new Date();
-    newEndDate.setMonth(newEndDate.getMonth() + 1);
-
-    const updatedDetails = {
-      ...oldDetails,
-      monthly_cycle: {
-        current_period_start: newStartDate.toISOString(),
-        current_period_end: newEndDate.toISOString(),
-        exports: { notes_count: 0, backups_count: 0 },
-        storage: { total_uploaded_mb: 0, files_count: 0 },
-        weave_ai: { messages_sent: 0, tokens_estimated: 0 },
-      },
-    };
-
-    // 4. ATUALIZAR TABELA PRINCIPAL (Resetando e atualizando last_reset_at)
-    const result = await PlansRepository.updateFullUsage(
-      usageRecord.id,
-      updatedDetails,
-      newStartDate
-    );
-
-    return result.usage_details;
-  }
-
-  /**
-   * Atualiza estatísticas de lifetime
-   */
-  async _updateLifetimeStats(usageId, monthDetails) {
-    const notesCount =
-      this.getNestedValue(monthDetails, USAGE_PATHS.SUMMARY.NOTES_TOTAL) || 0;
-    const projectsCount =
-      this.getNestedValue(monthDetails, USAGE_PATHS.SUMMARY.PROJECTS_TOTAL) ||
-      0;
-    const aiMessages =
-      this.getNestedValue(
-        monthDetails,
-        USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT
-      ) || 0;
-    const storageMb =
-      this.getNestedValue(
-        monthDetails,
-        USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB
-      ) || 0;
-
-    return await PlansRepository.updateLifetimeStats(usageId, {
-      notes: notesCount,
-      projects: projectsCount,
-      ai_messages: aiMessages,
-      storage_mb: storageMb,
-    });
-  }
 
   /**
    * Busca histórico de uso do usuário
