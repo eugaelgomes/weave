@@ -1,3 +1,4 @@
+const { randomUUID } = require("crypto");
 const redis = require("./connection");
 const {
   getBackupExportQueueRedisKey,
@@ -59,11 +60,18 @@ async function enqueueDomainVerificationJob({
  * @param {object} params
  * @param {string} params.usageId
  * @param {"consume_ai_message"|"consume_export"|"consume_note_creation"|"consume_project_creation"|"consume_storage"} params.operation
+ * @param {string} [params.eventId]
  * @param {object} [params.payload]
  * @returns {Promise<{ success: true, queued: true }>}
  */
-async function enqueuePlanUsageJob({ operation, payload = {}, usageId }) {
+async function enqueuePlanUsageJob({
+  operation,
+  payload = {},
+  usageId,
+  eventId = randomUUID(),
+}) {
   await enqueueRedisListJob(getPlanUsageQueueRedisKey(), {
+    eventId,
     operation,
     payload,
     queuedAt: new Date().toISOString(),

@@ -61,6 +61,7 @@ class PlansUsageProcessor {
   }
 
   async processJob(job) {
+    const eventId = job?.eventId;
     const operation = job?.operation;
     const payload = job?.payload || {};
     const retryCount = Number(job?.retryCount || 0);
@@ -69,6 +70,22 @@ class PlansUsageProcessor {
     if (!usageId || !operation) {
       logger.warn("Skipping invalid plans usage job", { job });
       return;
+    }
+
+    if (eventId) {
+      const isNewEvent = await this.registerUsageEvent({
+        eventId,
+        operation,
+        payload,
+        usageId,
+      });
+      if (!isNewEvent) {
+        logger.debug("Skipping duplicated plans usage event", {
+          eventId,
+          usageId,
+        });
+        return;
+      }
     }
 
     try {
@@ -138,7 +155,12 @@ class PlansUsageProcessor {
         usageId,
       });
 
+      if (eventId) {
+        await this.rollbackUsageEvent(eventId);
+      }
+
       await this.scheduleRetry({
+        eventId,
         operation,
         payload,
         retryCount: retryCount + 1,
@@ -181,6 +203,29 @@ class PlansUsageProcessor {
     if (!results[0]) {
       throw new Error(`plan_usage not found: ${usageId}`);
     }
+  }
+
+  async registerUsageEvent({ eventId, operation, payload, usageId }) {
+    const rows = await executeQuery(
+      `
+        INSERT INTO usage_events (
+          event_id,
+          operation,
+          payload,
+          plan_usage_id,
+          processed_at
+        )
+        VALUES ($1, $2, $3::jsonb, $4, NOW())
+        ON CONFLICT (event_id) DO NOTHING
+        RETURNING event_id
+      `,
+      [eventId, operation, JSON.stringify(payload || {}), usageId]
+    );
+    return Boolean(rows[0]);
+  }
+
+  async rollbackUsageEvent(eventId) {
+    await executeQuery("DELETE FROM usage_events WHERE event_id = $1", [eventId]);
   }
 
   async moveDueDelayedJobs() {

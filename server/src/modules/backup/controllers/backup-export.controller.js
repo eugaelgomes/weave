@@ -38,11 +38,13 @@ class BackupExportController extends BackupBaseController {
         });
       }
 
-      const planDetails = await PlansRepository.getPlanById(userPlan.plan_id);
       const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const planDetails = await PlansRepository.getPlanById(userPlan.plan_id);
+      const appliedPlanDetails =
+        usageRecord?.applied_plan_snapshot || userPlan.plan_details || planDetails?.details;
 
       const canBackup = PlanUsageManager.checkLimit(
-        planDetails.details,
+        appliedPlanDetails,
         usageRecord.usage_details,
         USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT,
         PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
@@ -54,7 +56,7 @@ class BackupExportController extends BackupBaseController {
           USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
         );
         const limit = PlanUsageManager.getNestedValue(
-          planDetails.details,
+          appliedPlanDetails,
           PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
         );
 
@@ -117,7 +119,7 @@ class BackupExportController extends BackupBaseController {
           USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
         ) + 1;
       const monthlyLimit = PlanUsageManager.getNestedValue(
-        planDetails.details,
+        appliedPlanDetails,
         PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
       );
 

@@ -170,22 +170,32 @@ class PlanUsageManager {
   }
 
   async _initializeFirstUsage(userId, orgId) {
+    const effectivePlan = await PlansRepository.getEffectivePlanByUserId(userId);
     const user = await PlansRepository.getUserWithPlan(userId);
-    if (!user) return null;
+    if (!user && !effectivePlan) return null;
 
-    let planId = user.plan_id;
+    let planId = effectivePlan?.plan_id;
+    let appliedPlanSnapshot = effectivePlan?.plan_details || null;
+    let appliedPlanVersion = effectivePlan?.plan_version || null;
+
     if (!planId) {
       const starter = await PlansRepository.getPlanByName("starter");
       planId = starter?.plan_id;
+      appliedPlanSnapshot = starter?.details || null;
+      appliedPlanVersion = starter?.plan_version || 1;
     }
-    if (!planId) return null;
+    if (!planId || !appliedPlanSnapshot) return null;
 
-    if (!user.plan_id) {
+    if (user && !user.plan_id) {
       await executeQuery(
         `UPDATE users SET plan_id = $1 WHERE user_id = $2 AND plan_id IS NULL`,
         [planId, userId]
       );
     }
+
+    const subscriberType =
+      orgId ? "organization" : effectivePlan?.subscriber_type || "user";
+    const subscriberId = orgId || effectivePlan?.subscriber_id || userId;
 
     const startDate = new Date();
     const endDate = new Date();
@@ -215,7 +225,11 @@ class PlanUsageManager {
       userId,
       orgId ? "organization" : "user",
       initialUsageDetails,
-      orgId
+      orgId,
+      subscriberType,
+      subscriberId,
+      appliedPlanSnapshot,
+      appliedPlanVersion || 1
     );
   }
 

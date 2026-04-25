@@ -1,6 +1,35 @@
 const { executeQuery } = require("@/database/connection");
 
 class PlansRepository {
+  /**
+   * @param {Record<string, any>} base
+   * @param {Record<string, any>} override
+   * @returns {Record<string, any>}
+   */
+  mergePlanDetails(base = {}, override = {}) {
+    if (!override || typeof override !== "object") {
+      return base || {};
+    }
+
+    const output = { ...(base || {}) };
+    for (const [key, value] of Object.entries(override)) {
+      const current = output[key];
+      if (
+        value &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        current &&
+        typeof current === "object" &&
+        !Array.isArray(current)
+      ) {
+        output[key] = this.mergePlanDetails(current, value);
+      } else {
+        output[key] = value;
+      }
+    }
+    return output;
+  }
+
   // ==========================================
   // Query com todos os planos (not-deleted)
   // ==========================================
@@ -16,7 +45,7 @@ class PlansRepository {
 
   async getPlanById(planId) {
     const query = `
-    SELECT plan_id, name, details, created_at 
+    SELECT plan_id, name, details, plan_version, created_at 
     FROM plans 
     WHERE plan_id = $1
       `;
@@ -26,7 +55,7 @@ class PlansRepository {
 
   async getPlanByName(name) {
     const query = `
-    SELECT plan_id, name, details, created_at
+    SELECT plan_id, name, details, plan_version, created_at
     FROM plans
     WHERE LOWER(name) = LOWER($1) AND deleted = FALSE
     LIMIT 1
@@ -61,14 +90,15 @@ class PlansRepository {
   }
 
   async getUserAndPlan(userId) {
-    const query = `
-      SELECT u.user_id, u.plan_id, p.details as plan_details
-      FROM users u
-      LEFT JOIN plans p ON u.plan_id = p.plan_id
-      WHERE u.user_id = $1
-      LIMIT 1`;
-    const results = await executeQuery(query, [userId]);
-    return results[0];
+    const effective = await this.getEffectivePlanByUserId(userId);
+    if (!effective) return null;
+    return {
+      plan_details: effective.plan_details,
+      plan_id: effective.plan_id,
+      subscriber_id: effective.subscriber_id,
+      subscriber_type: effective.subscriber_type,
+      user_id: userId,
+    };
   }
 
   async getPlanUsageCount(planId) {
@@ -82,24 +112,154 @@ class PlansRepository {
   }
 
   async getUserWithPlan(userId) {
-    const query = `
-      SELECT u.user_id, u.plan_id, p.details as plan_details
-      FROM users u
-      LEFT JOIN plans p ON u.plan_id = p.plan_id
-      WHERE u.user_id = $1
-      LIMIT 1`;
-    const results = await executeQuery(query, [userId]);
-    return results[0];
+    return this.getUserAndPlan(userId);
+  }
+
+  /**
+   * Resolve effective plan source (organization subscription preferred).
+   * @param {string} userId
+   * @returns {Promise<{
+   *   plan_id: string|null,
+   *   plan_name?: string|null,
+   *   plan_version?: number|null,
+   *   plan_details: object|null,
+   *   subscriber_type: "organization"|"user",
+   *   subscriber_id: string|null,
+   *   subscription_id: string|null
+   * }|null>}
+   */
+  async getEffectivePlanByUserId(userId) {
+    const rows = await executeQuery(
+      `
+        WITH user_ctx AS (
+          SELECT u.user_id, u.organization_id, u.plan_id AS legacy_plan_id
+          FROM users u
+          WHERE u.user_id = $1
+          LIMIT 1
+        ),
+        org_sub AS (
+          SELECT s.*
+          FROM subscriptions s
+          INNER JOIN user_ctx u ON u.organization_id = s.subscriber_id
+          WHERE s.subscriber_type = 'organization'
+            AND s.status IN ('active', 'past_due', 'trialing')
+          ORDER BY s.updated_at DESC
+          LIMIT 1
+        ),
+        user_sub AS (
+          SELECT s.*
+          FROM subscriptions s
+          INNER JOIN user_ctx u ON u.user_id = s.subscriber_id
+          WHERE s.subscriber_type = 'user'
+            AND s.status IN ('active', 'past_due', 'trialing')
+          ORDER BY s.updated_at DESC
+          LIMIT 1
+        ),
+        effective AS (
+          SELECT
+            COALESCE(org_sub.plan_id, user_sub.plan_id, user_ctx.legacy_plan_id) AS plan_id,
+            COALESCE(org_sub.id, user_sub.id, NULL) AS subscription_id,
+            COALESCE(
+              org_sub.subscriber_type,
+              user_sub.subscriber_type,
+              CASE WHEN user_ctx.organization_id IS NOT NULL THEN 'organization' ELSE 'user' END
+            ) AS subscriber_type,
+            COALESCE(org_sub.subscriber_id, user_sub.subscriber_id, user_ctx.user_id) AS subscriber_id
+          FROM user_ctx
+          LEFT JOIN org_sub ON TRUE
+          LEFT JOIN user_sub ON TRUE
+        )
+        SELECT
+          e.plan_id,
+          e.subscription_id,
+          e.subscriber_type,
+          e.subscriber_id,
+          p.details AS plan_details,
+          p.name AS plan_name,
+          p.plan_version
+        FROM effective e
+        LEFT JOIN plans p ON p.plan_id = e.plan_id
+        LIMIT 1
+      `,
+      [userId]
+    );
+
+    const effective = rows[0];
+    if (!effective) {
+      return null;
+    }
+
+    const overrides = await this.getPlanLimitOverrides({
+      planId: effective.plan_id,
+      subscriberId: effective.subscriber_id,
+      subscriberType: effective.subscriber_type,
+    });
+
+    return {
+      ...effective,
+      plan_details: this.mergePlanDetails(
+        effective.plan_details || {},
+        overrides || {}
+      ),
+    };
+  }
+
+  /**
+   * @param {object} params
+   * @param {string} params.planId
+   * @param {string} params.subscriberId
+   * @param {"organization"|"user"} params.subscriberType
+   * @returns {Promise<Record<string, any>|null>}
+   */
+  async getPlanLimitOverrides({ planId, subscriberId, subscriberType }) {
+    if (!planId || !subscriberId || !subscriberType) {
+      return null;
+    }
+
+    const rows = await executeQuery(
+      `
+        SELECT override_details
+        FROM plan_limit_overrides
+        WHERE plan_id = $1
+          AND subscriber_type = $2
+          AND subscriber_id = $3
+          AND is_active = true
+          AND (starts_at IS NULL OR starts_at <= NOW())
+          AND (ends_at IS NULL OR ends_at >= NOW())
+        ORDER BY created_at DESC
+        LIMIT 1
+      `,
+      [planId, subscriberType, subscriberId]
+    );
+
+    return rows[0]?.override_details || null;
   }
 
   async getPlanUsage(userId, orgId = null) {
+    const effective = orgId
+      ? {
+          subscriber_id: orgId,
+          subscriber_type: "organization",
+        }
+      : await this.getEffectivePlanByUserId(userId);
+
+    if (!effective?.subscriber_id || !effective?.subscriber_type) {
+      return null;
+    }
+
     const query = `
-      SELECT id, plan_id, client_type, user_id, organization_id, usage_details, 
-             lifetime_stats, last_reset_at, created_at, updated_at
-      FROM plan_usages 
-      WHERE (user_id = $1 AND $1 IS NOT NULL) OR (organization_id = $2 AND $2 IS NOT NULL)
-      LIMIT 1`;
-    const results = await executeQuery(query, [userId, orgId]);
+      SELECT id, plan_id, client_type, user_id, organization_id, usage_details,
+             lifetime_stats, last_reset_at, created_at, updated_at,
+             subscriber_type, subscriber_id, applied_plan_snapshot, applied_plan_version
+      FROM plan_usages
+      WHERE subscriber_type = $1
+        AND subscriber_id = $2
+      LIMIT 1
+    `;
+    const results = await executeQuery(query, [
+      effective.subscriber_type,
+      effective.subscriber_id,
+    ]);
     return results[0];
   }
 
@@ -112,11 +272,26 @@ class PlansRepository {
     userId,
     clientType,
     initialUsageJson,
-    orgId = null
+    orgId = null,
+    subscriberType = "user",
+    subscriberId = userId,
+    appliedPlanSnapshot = {},
+    appliedPlanVersion = 1
   ) {
     const query = `
-      INSERT INTO plan_usages (plan_id, user_id, organization_id, client_type, usage_details, last_reset_at)
-      VALUES ($1, $2, $3, $4, $5, NOW())
+      INSERT INTO plan_usages (
+        plan_id,
+        user_id,
+        organization_id,
+        client_type,
+        usage_details,
+        last_reset_at,
+        subscriber_type,
+        subscriber_id,
+        applied_plan_snapshot,
+        applied_plan_version
+      )
+      VALUES ($1, $2, $3, $4, $5, NOW(), $6, $7, $8, $9)
       RETURNING *`;
     const results = await executeQuery(query, [
       planId,
@@ -124,8 +299,40 @@ class PlansRepository {
       orgId,
       clientType,
       initialUsageJson,
+      subscriberType,
+      subscriberId,
+      appliedPlanSnapshot,
+      appliedPlanVersion,
     ]);
     return results[0];
+  }
+
+  /**
+   * Register usage event for idempotency.
+   * @param {object} params
+   * @param {string} params.eventId
+   * @param {string} params.operation
+   * @param {object} params.payload
+   * @param {string} params.planUsageId
+   * @returns {Promise<boolean>}
+   */
+  async registerUsageEvent({ eventId, operation, payload, planUsageId }) {
+    const rows = await executeQuery(
+      `
+        INSERT INTO usage_events (
+          event_id,
+          operation,
+          payload,
+          plan_usage_id,
+          processed_at
+        )
+        VALUES ($1, $2, $3::jsonb, $4, NOW())
+        ON CONFLICT (event_id) DO NOTHING
+        RETURNING event_id
+      `,
+      [eventId, operation, JSON.stringify(payload || {}), planUsageId]
+    );
+    return Boolean(rows[0]);
   }
 
   // ==========================================
@@ -300,14 +507,44 @@ class PlansRepository {
   }
 
   async assignPlanToUser(userId, planId) {
-    const query = `
-      UPDATE users
-      SET plan_id = $2, updated_at = NOW()
-      WHERE user_id = $1
-      RETURNING user_id, plan_id
-    `;
-    const results = await executeQuery(query, [userId, planId]);
-    return results[0];
+    const rows = await executeQuery(
+      `
+        UPDATE users
+        SET plan_id = $2, updated_at = NOW()
+        WHERE user_id = $1
+        RETURNING user_id, plan_id
+      `,
+      [userId, planId]
+    );
+
+    const now = new Date();
+    const periodEnd = new Date(now);
+    periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+    await executeQuery(
+      `
+        INSERT INTO subscriptions (
+          subscriber_type,
+          subscriber_id,
+          plan_id,
+          status,
+          provider,
+          current_period_start,
+          current_period_end
+        )
+        VALUES ('user', $1, $2, 'active', 'internal', $3, $4)
+        ON CONFLICT (subscriber_type, subscriber_id)
+        DO UPDATE SET
+          plan_id = EXCLUDED.plan_id,
+          status = EXCLUDED.status,
+          current_period_start = EXCLUDED.current_period_start,
+          current_period_end = EXCLUDED.current_period_end,
+          updated_at = NOW()
+      `,
+      [userId, planId, now, periodEnd]
+    );
+
+    return rows[0];
   }
 }
 

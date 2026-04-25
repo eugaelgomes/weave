@@ -1,7 +1,7 @@
 const NotesBaseController = require("./base.controller");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
-const { PDFService } = require("@/services/note_export/pdf");
+const { PDFService } = require("@/modules/notes/services/pdf.service");
 
 /**
  * Exportação de nota em PDF.

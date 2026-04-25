@@ -38,6 +38,21 @@ const PLAN_STRUCTURE = {
     is_trial_available: false, // Se oferece período trial
   },
 
+  // Regras comerciais/billing para este plano
+  billing: {
+    billing_cycle: "monthly", // monthly | yearly
+    price: {
+      amount: 0,
+      currency: "BRL",
+    },
+    trial_days: 0,
+  },
+
+  // Governança de capacidades (feature flags por plano)
+  governance: {
+    feature_flags: {},
+  },
+
   // Configurações de IA (Weave AI)
   weave_ai: {
     enabled: false, // Se a IA está habilitada
@@ -92,6 +107,17 @@ const PLAN_PATHS = {
       CONTEXT_WINDOW: "weave_ai.config.context_window_messages",
     },
     FEATURES: "weave_ai.features",
+  },
+
+  BILLING: {
+    BILLING_CYCLE: "billing.billing_cycle",
+    PRICE_AMOUNT: "billing.price.amount",
+    PRICE_CURRENCY: "billing.price.currency",
+    TRIAL_DAYS: "billing.trial_days",
+  },
+
+  GOVERNANCE: {
+    FEATURE_FLAGS: "governance.feature_flags",
   },
 };
 

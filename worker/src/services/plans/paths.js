@@ -29,6 +29,17 @@ const PLAN_STRUCTURE = {
     plan_tier: "free",
     version: "1.0",
   },
+  billing: {
+    billing_cycle: "monthly",
+    price: {
+      amount: 0,
+      currency: "BRL",
+    },
+    trial_days: 0,
+  },
+  governance: {
+    feature_flags: {},
+  },
   weave_ai: {
     config: {
       available_models: [],
@@ -76,6 +87,15 @@ const PLAN_PATHS = {
     },
     ENABLED: "weave_ai.enabled",
     FEATURES: "weave_ai.features",
+  },
+  BILLING: {
+    BILLING_CYCLE: "billing.billing_cycle",
+    PRICE_AMOUNT: "billing.price.amount",
+    PRICE_CURRENCY: "billing.price.currency",
+    TRIAL_DAYS: "billing.trial_days",
+  },
+  GOVERNANCE: {
+    FEATURE_FLAGS: "governance.feature_flags",
   },
 };
 
