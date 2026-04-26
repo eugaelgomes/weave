@@ -7,7 +7,6 @@ on:
     paths:
       - "weave-engine/**"
       - "compose.engine.yml"
-      - "docs/vault-deploy.md"
       - ".github/workflows/deploy-engine.yml"
   workflow_dispatch:
 
@@ -56,22 +55,12 @@ jobs:
           ENGINE_REMOTE_USER: ${{ secrets.ENGINE_REMOTE_USER }}
           ENGINE_SSH_PRIVATE_KEY: ${{ secrets.ENGINE_SSH_PRIVATE_KEY }}
           ENGINE_APP_DIR: ${{ secrets.ENGINE_APP_DIR }}
-          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
-          VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
-          VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
-          ENGINE_VAULT_SECRET_PATH: ${{ secrets.ENGINE_VAULT_SECRET_PATH }}
         run: |
           set -e
           [ -n "$ENGINE_REMOTE_HOST" ] || { echo "Missing secret: ENGINE_REMOTE_HOST" >&2; exit 1; }
           [ -n "$ENGINE_REMOTE_USER" ] || { echo "Missing secret: ENGINE_REMOTE_USER" >&2; exit 1; }
           [ -n "$ENGINE_SSH_PRIVATE_KEY" ] || { echo "Missing secret: ENGINE_SSH_PRIVATE_KEY" >&2; exit 1; }
           [ -n "$ENGINE_APP_DIR" ] || { echo "Missing secret: ENGINE_APP_DIR" >&2; exit 1; }
-          if [ -n "$VAULT_ADDR" ] || [ -n "$VAULT_ROLE_ID" ] || [ -n "$VAULT_SECRET_ID" ] || [ -n "$ENGINE_VAULT_SECRET_PATH" ]; then
-            [ -n "$VAULT_ADDR" ] || { echo "Missing secret: VAULT_ADDR" >&2; exit 1; }
-            [ -n "$VAULT_ROLE_ID" ] || { echo "Missing secret: VAULT_ROLE_ID" >&2; exit 1; }
-            [ -n "$VAULT_SECRET_ID" ] || { echo "Missing secret: VAULT_SECRET_ID" >&2; exit 1; }
-            [ -n "$ENGINE_VAULT_SECRET_PATH" ] || { echo "Missing secret: ENGINE_VAULT_SECRET_PATH" >&2; exit 1; }
-          fi
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -83,10 +72,6 @@ jobs:
             set -e
 
             APP_DIR="${{ secrets.ENGINE_APP_DIR }}"
-            VAULT_ADDR="${{ secrets.VAULT_ADDR }}"
-            VAULT_ROLE_ID="${{ secrets.VAULT_ROLE_ID }}"
-            VAULT_SECRET_ID="${{ secrets.VAULT_SECRET_ID }}"
-            VAULT_SECRET_PATH="${{ secrets.ENGINE_VAULT_SECRET_PATH }}"
             if [ -z "$APP_DIR" ]; then
               echo "ENGINE_APP_DIR is not set" >&2
               exit 1
@@ -111,17 +96,11 @@ jobs:
             [ -f "$HOME/.profile" ] && . "$HOME/.profile"
             export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH"
 
-            if [ -n "$VAULT_ADDR" ] && [ -n "$VAULT_ROLE_ID" ] && [ -n "$VAULT_SECRET_ID" ] && [ -n "$VAULT_SECRET_PATH" ]; then
-              echo "Generating weave-engine/.env from Vault..."
-              LOGIN_RESPONSE="$(curl -fsS --request POST --header "Content-Type: application/json" --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}" "$VAULT_ADDR/v1/auth/approle/login")"
-              VAULT_TOKEN="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["auth"]["client_token"])' <<<"$LOGIN_RESPONSE")"
-              SECRET_RESPONSE="$(curl -fsS --header "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/$VAULT_SECRET_PATH")"
-              mkdir -p weave-engine
-              python3 -c 'import json,sys; data=json.load(sys.stdin)["data"]["data"]; [print(f"{k}={v}") for k,v in data.items()]' <<<"$SECRET_RESPONSE" > weave-engine/.env
-              chmod 600 weave-engine/.env
-            else
-              [ -f weave-engine/.env ] || { echo "weave-engine/.env not found and Vault is not configured" >&2; exit 1; }
-            fi
+            [ -f weave-engine/.env ] || { echo "weave-engine/.env not found on VM" >&2; exit 1; }
+
+            # Clean stale build cache and dangling images before each deploy.
+            docker builder prune -af || true
+            docker image prune -af || true
 
             if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
               docker compose -f compose.engine.yml up -d --build
