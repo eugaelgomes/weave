@@ -48,12 +48,25 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
+      - name: Validate deploy secrets
+        env:
+          ENGINE_REMOTE_HOST: ${{ secrets.ENGINE_REMOTE_HOST }}
+          ENGINE_REMOTE_USER: ${{ secrets.ENGINE_REMOTE_USER }}
+          ENGINE_SSH_PRIVATE_KEY: ${{ secrets.ENGINE_SSH_PRIVATE_KEY }}
+          ENGINE_APP_DIR: ${{ secrets.ENGINE_APP_DIR }}
+        run: |
+          set -e
+          [ -n "$ENGINE_REMOTE_HOST" ] || { echo "Missing secret: ENGINE_REMOTE_HOST" >&2; exit 1; }
+          [ -n "$ENGINE_REMOTE_USER" ] || { echo "Missing secret: ENGINE_REMOTE_USER" >&2; exit 1; }
+          [ -n "$ENGINE_SSH_PRIVATE_KEY" ] || { echo "Missing secret: ENGINE_SSH_PRIVATE_KEY" >&2; exit 1; }
+          [ -n "$ENGINE_APP_DIR" ] || { echo "Missing secret: ENGINE_APP_DIR" >&2; exit 1; }
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.ENGINE_REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ${{ secrets.ENGINE_REMOTE_USER }}
+          key: ${{ secrets.ENGINE_SSH_PRIVATE_KEY }}
           script: |
             set -e
 
