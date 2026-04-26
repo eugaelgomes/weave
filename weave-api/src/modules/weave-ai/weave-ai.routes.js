@@ -158,10 +158,7 @@ router.use(verifyToken, strictLimiter);
 router.post("/chat", handleChatFilesUpload, bind(aiController, "chat"));
 router.get("/chat/history", bind(aiController, "getChatHistory"));
 
-// AI catalog endpoints
-router.get("/use-cases", bind(aiController, "listUseCases"));
 router.get("/models", bind(aiController, "getAvailableModels"));
-router.get("/functions", bind(aiController, "listAvailableFunctions"));
 
 // Agent management endpoints
 router.get("/agents", bind(agentController, "getUserAgents"));

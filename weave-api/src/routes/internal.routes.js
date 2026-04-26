@@ -18,6 +18,7 @@ const calendarEventsRoutes = require("@/modules/calendar-events/calendar-events.
 const apiTokensRoutes = require("@/modules/api-tokens/api-tokens.routes");
 const tagsRoutes = require("@/modules/tags/tags.routes");
 const taskPrioritiesRoutes = require("@/modules/task_priorities/task_priorities.routes");
+const weaveAiRoutes = require("@/modules/weave-ai/weave-ai.routes");
 
 const DEFAULT_VERSION = "v1";
 const DEV_ORIGIN_REGEX = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
@@ -99,6 +100,7 @@ const routeRegistry = [
   { basePath: "/task-priorities", handler: taskPrioritiesRoutes },
   { basePath: "/users", handler: userRoutes },
   { basePath: "/webhooks", handler: webhooksRoutes },
+  { basePath: "/weave-ai", handler: weaveAiRoutes },
 ];
 
 const createInternalRouter = ({ version = DEFAULT_VERSION } = {}) => {
