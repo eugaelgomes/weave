@@ -10,13 +10,58 @@ const {
 
 let geminiClient = null;
 
+function createProviderError(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
+
+/**
+ * Gemini function declarations do not accept some JSON Schema fields
+ * like "additionalProperties". This sanitizer removes unsupported keys.
+ *
+ * @param {unknown} schema
+ * @returns {unknown}
+ */
+function sanitizeGeminiSchema(schema) {
+  if (Array.isArray(schema)) {
+    return schema.map((item) => sanitizeGeminiSchema(item));
+  }
+
+  if (!schema || typeof schema !== "object") {
+    return schema;
+  }
+
+  const next = {};
+  for (const [key, value] of Object.entries(schema)) {
+    if (key === "additionalProperties") {
+      continue;
+    }
+
+    if (key === "type" && Array.isArray(value)) {
+      const nonNullTypes = value.filter(
+        (item) => typeof item === "string" && item !== "null"
+      );
+      next[key] = nonNullTypes[0] || "string";
+      continue;
+    }
+
+    next[key] = sanitizeGeminiSchema(value);
+  }
+
+  return next;
+}
+
 function getGeminiClient() {
   if (geminiClient) {
     return geminiClient;
   }
 
   if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY is required to call Gemini provider");
+    throw createProviderError(
+      "ENGINE_GEMINI_API_KEY_MISSING",
+      "GEMINI_API_KEY is required to call Gemini provider"
+    );
   }
 
   geminiClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -38,7 +83,10 @@ async function callGeminiApi(prompt, systemMessage, config, options = {}, modelN
   if (options.allowEdit && options.functions) {
     modelConfig.tools = [
       {
-        functionDeclarations: options.functions,
+        functionDeclarations: options.functions.map((fn) => ({
+          ...fn,
+          parameters: sanitizeGeminiSchema(fn.parameters),
+        })),
       },
     ];
 
@@ -90,10 +138,14 @@ async function callGeminiApi(prompt, systemMessage, config, options = {}, modelN
 
 async function callOpenAiApi(prompt, systemMessage, config, options = {}, modelName) {
   if (!config.apiKey) {
-    throw new Error("OPENAI_API_KEY is required to call OpenAI provider");
+    throw createProviderError(
+      "ENGINE_OPENAI_API_KEY_MISSING",
+      "OPENAI_API_KEY is required to call OpenAI provider"
+    );
   }
 
   const payload = {
+    max_tokens: config.maxTokens,
     messages: [
       {
         content: systemMessage,
@@ -105,7 +157,6 @@ async function callOpenAiApi(prompt, systemMessage, config, options = {}, modelN
       },
     ],
     model: modelName || config.model,
-    max_tokens: config.maxTokens,
     temperature: config.temperature,
     top_p: config.topP,
   };
@@ -208,16 +259,23 @@ function resolveModelName(modelName) {
 }
 
 async function callAIProvider({ options = {}, prompt, model, systemMessage }) {
-  const resolvedModel = resolveModelName(model);
-  const primaryProvider = resolveProviderByModel(resolvedModel);
-  const data = await callProviderWithRetry(
-    primaryProvider,
-    resolvedModel,
-    prompt,
-    systemMessage,
-    options
-  );
-  return { data, model: resolvedModel, provider: primaryProvider };
+  try {
+    const resolvedModel = resolveModelName(model);
+    const primaryProvider = resolveProviderByModel(resolvedModel);
+    const data = await callProviderWithRetry(
+      primaryProvider,
+      resolvedModel,
+      prompt,
+      systemMessage,
+      options
+    );
+    return { data, model: resolvedModel, provider: primaryProvider };
+  } catch (error) {
+    if (!error.code) {
+      error.code = "ENGINE_PROVIDER_CALL_FAILED";
+    }
+    throw error;
+  }
 }
 
 function resolveProviderByModel(modelName) {

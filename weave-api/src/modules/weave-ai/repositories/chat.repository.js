@@ -34,13 +34,51 @@ class WeaveAIRepository {
    * Salva uma mensagem
    */
   async saveMessage(data) {
-    const { sessionId, userId, role, content, model, metadata = {} } = data;
+    const {
+      sessionId,
+      userId,
+      role,
+      content,
+      model,
+      metadata = {},
+      requestId = null,
+      provider = null,
+      status = "ok",
+      errorCode = null,
+      errorMessage = null,
+      latencyMs = null,
+      inputTokens = null,
+      outputTokens = null,
+      totalTokens = null,
+      agentId = null,
+      allowEdit = false,
+    } = data;
 
     const query = `
     INSERT INTO ai_chat_messages (
-      session_id, user_id, role, content, model, metadata, created_at
+      session_id,
+      user_id,
+      role,
+      content,
+      model,
+      metadata,
+      request_id,
+      provider,
+      status,
+      error_code,
+      error_message,
+      latency_ms,
+      input_tokens,
+      output_tokens,
+      total_tokens,
+      agent_id,
+      allow_edit,
+      created_at
     )
-    VALUES ($1, $2, $3, $4, $5, $6, NOW())
+    VALUES (
+      $1, $2, $3, $4, $5, $6,
+      $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW()
+    )
     RETURNING *
   `;
 
@@ -51,12 +89,33 @@ class WeaveAIRepository {
       content,
       model,
       JSON.stringify(metadata),
+      requestId,
+      provider,
+      status,
+      errorCode,
+      errorMessage,
+      latencyMs,
+      inputTokens,
+      outputTokens,
+      totalTokens,
+      agentId,
+      allowEdit,
     ]);
 
-    // Atualiza timestamp da sessão
+    // Atualiza resumo da sessão
     await pool.query(
-      "UPDATE ai_chat_sessions SET updated_at = NOW() WHERE id = $1",
-      [sessionId]
+      `
+        UPDATE ai_chat_sessions
+        SET
+          updated_at = NOW(),
+          last_message_at = NOW(),
+          last_model = $2,
+          last_provider = COALESCE($3, last_provider),
+          message_count = COALESCE(message_count, 0) + 1,
+          total_tokens = COALESCE(total_tokens, 0) + COALESCE($4, 0)
+        WHERE id = $1
+      `,
+      [sessionId, model, provider, totalTokens]
     );
 
     return result.rows[0];
@@ -86,11 +145,26 @@ class WeaveAIRepository {
       s.title,
       s.created_at,
       s.updated_at,
-      COUNT(m.id) as message_count
+      s.last_message_at,
+      s.last_model,
+      s.last_provider,
+      s.archived,
+      s.total_tokens,
+      COALESCE(s.message_count, COUNT(m.id)::int) as message_count
     FROM ai_chat_sessions s
     LEFT JOIN ai_chat_messages m ON m.session_id = s.id
     WHERE s.user_id = $1
-    GROUP BY s.id, s.title, s.created_at, s.updated_at
+    GROUP BY
+      s.id,
+      s.title,
+      s.created_at,
+      s.updated_at,
+      s.last_message_at,
+      s.last_model,
+      s.last_provider,
+      s.archived,
+      s.total_tokens,
+      s.message_count
     ORDER BY s.updated_at DESC
     LIMIT $2
   `;

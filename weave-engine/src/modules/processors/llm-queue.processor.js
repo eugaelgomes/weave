@@ -1,3 +1,4 @@
+/* eslint-disable sort-keys */
 const redis = require("../../services/redis.client");
 const {
   getEngineLlmRequestQueueRedisKey,
@@ -84,14 +85,39 @@ class LlmQueueProcessor {
         success: true,
       });
     } catch (error) {
+      const normalizedError = this.normalizeTaskError(error, taskType);
+      logger.error("Engine LLM task failed", {
+        code: normalizedError.code,
+        message: normalizedError.message,
+        taskType,
+      });
       responsePayload = JSON.stringify({
-        error: error.message,
+        error: normalizedError,
         success: false,
       });
     }
 
     await redis.lpush(responseQueueKey, responsePayload);
     await redis.expire(responseQueueKey, RESPONSE_TTL_SECONDS);
+  }
+
+  /**
+   * @param {unknown} error
+   * @param {string} taskType
+   * @returns {{ code: string, message: string, taskType: string }}
+   */
+  normalizeTaskError(error, taskType) {
+    return {
+      code:
+        typeof error?.code === "string" && error.code
+          ? error.code
+          : "ENGINE_TASK_FAILED",
+      message:
+        typeof error?.message === "string" && error.message
+          ? error.message
+          : "Engine task failed",
+      taskType,
+    };
   }
 
   /**
@@ -204,6 +230,7 @@ class LlmQueueProcessor {
       userLanguage: payload.userLanguage || payload.context?.userLanguage,
     });
     const agentInstructions = this.extractAgentInstructions(payload.agent);
+    const noteDocumentContract = payload?.context?.noteDocumentContract || null;
 
     const fileSummary =
       files.length === 0
@@ -229,7 +256,20 @@ class LlmQueueProcessor {
 ## Temporary files
 ${fileSummary}
 
-Respond to the user clearly. If database action is needed, return a structured function call.${agentInstructions ? `\n\n## Selected agent\n${agentInstructions}` : ""}`;
+${noteDocumentContract ? `## Note document contract for update_note_content
+- When updating note body, prefer returning "document" (full payload) or "blocks" (array) in function arguments.
+- Allowed document node types: ${Array.isArray(noteDocumentContract.allowedNodeTypes) ? noteDocumentContract.allowedNodeTypes.join(", ") : "unknown"}
+- Allowed mark types: ${Array.isArray(noteDocumentContract.allowedMarkTypes) ? noteDocumentContract.allowedMarkTypes.join(", ") : "unknown"}
+- Avoid unsupported node/mark types outside this contract.
+- Prefer structured output by intent:
+  - sections/titles -> heading + paragraph
+  - enumerations/checklists -> bulletList, orderedList, taskList/taskItem
+  - emphasis/callout -> blockquote
+  - snippets/technical commands -> codeBlock
+  - plain prose only when user asks for short/simple text
+- Never return empty content for update_note_content. Ensure at least one text node with meaningful text.
+
+` : ""}Respond to the user clearly. If database action is needed, return a structured function call.${agentInstructions ? `\n\n## Selected agent\n${agentInstructions}` : ""}`;
   }
 
   /**

@@ -5,7 +5,35 @@ const OWNERSHIP_RULES = Object.freeze({
     allowCollaborator: true,
     requiresOwnership: false,
   },
+  update_note_collaborator_add: {
+    allowCollaborator: true,
+    requiresOwnership: false,
+  },
+  update_note_collaborator_remove: {
+    allowCollaborator: true,
+    requiresOwnership: false,
+  },
   update_note_content: {
+    allowCollaborator: true,
+    requiresOwnership: false,
+  },
+  update_note_due_date: {
+    allowCollaborator: true,
+    requiresOwnership: false,
+  },
+  update_note_priority: {
+    allowCollaborator: true,
+    requiresOwnership: false,
+  },
+  update_note_stage: {
+    allowCollaborator: true,
+    requiresOwnership: false,
+  },
+  update_note_tags: {
+    allowCollaborator: true,
+    requiresOwnership: false,
+  },
+  update_note_title: {
     allowCollaborator: true,
     requiresOwnership: false,
   },

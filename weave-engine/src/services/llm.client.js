@@ -72,6 +72,17 @@ const cacheConfig = {
 };
 
 /**
+ * @param {string} code
+ * @param {string} message
+ * @returns {Error}
+ */
+function createLlmConfigError(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
+
+/**
  * @param {string|undefined|null} modelName
  * @returns {string}
  */
@@ -109,7 +120,10 @@ function getProviderConfig(provider) {
     case AI_PROVIDERS.OPENAI:
       return openaiConfig;
     default:
-      throw new Error(`Unknown LLM provider: ${provider}`);
+      throw createLlmConfigError(
+        "ENGINE_UNKNOWN_PROVIDER",
+        `Unknown LLM provider: ${provider}`
+      );
   }
 }
 
@@ -119,7 +133,7 @@ function getProviderConfig(provider) {
  */
 function getProviderByModelName(modelName) {
   if (!modelName) {
-    throw new Error("Model name is required");
+    throw createLlmConfigError("ENGINE_MODEL_REQUIRED", "Model name is required");
   }
 
   const normalized = normalizeModelName(modelName);
@@ -150,7 +164,10 @@ function getProviderByModelName(modelName) {
     return AI_PROVIDERS.OPENAI;
   }
 
-  throw new Error(`Unsupported model: ${normalized}`);
+  throw createLlmConfigError(
+    "ENGINE_UNSUPPORTED_MODEL",
+    `Unsupported model: ${normalized}`
+  );
 }
 
 module.exports = {

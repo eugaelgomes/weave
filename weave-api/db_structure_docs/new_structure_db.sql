@@ -1539,4 +1539,3 @@ ALTER TABLE public.organization_members
 COMMENT ON TABLE public.organization_members IS
   'Workspace membership. "owner" is represented by "SUPER_ADMIN".';
 
-COMMIT;
