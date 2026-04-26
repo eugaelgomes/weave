@@ -1,45 +1,37 @@
-const axios = require("axios");
 const {
   buildSystemMessage,
   callAIProvider,
   generateSmartResponse,
   getFewShotExamples,
-  processThinkingPhase,
-} = require("@/services/weave-ai/ai-service");
-const {
-  cacheConfig,
-} = require("@/services/weave-ai/config/config");
-const {
-  resolveAuthorizedFunctions,
-} = require("@/services/weave-ai/capabilities/authorized-functions");
+  processChatV2,
+} = require("@/modules/weave-ai/ai-service");
 const {
   FunctionCategory,
   getAllInOpenAIFormat,
   getFunctionsByCategory,
   getFunctionsBySecurityLevel,
-} = require("@/services/weave-ai/functions/function-schemas");
-const {
-  validateParameter,
-  sanitizeParameter,
-  getConfirmationMessage,
-  isFunctionForbidden,
-} = require("@/services/weave-ai/policies/security-policies");
-const {
-  buildContext,
-  formatContextForPrompt,
-} = require("@/services/weave-ai/context-reasoning/context-provider");
+} = require("@/modules/weave-ai/function-schemas");
 const notesRepository = require("@/modules/notes/notes.repository");
 const {
   blocksToDocument,
   documentToBlocks,
 } = require("@/modules/notes/document-blocks-adapter");
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
+const agentsRepository = require("@/modules/weave-ai/repositories/agents.repository");
 const {
   NOTE_STATUS,
   PROJECT_STATUS,
 } = require("@/utils/patterns/product-patterns");
 
 const responseCache = new Map();
+const cacheConfig = {
+  cacheKey(provider, prompt, context) {
+    return JSON.stringify({ context, prompt, provider });
+  },
+  enabled: false,
+  maxSize: 100,
+  ttl: 300,
+};
 
 /**
  * Creates a standardized validation error.
@@ -86,7 +78,7 @@ function parseOptionalObject(value, fieldName) {
       if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
         return parsed;
       }
-    } catch (error) {
+    } catch {
       throw createValidationError(`Campo "${fieldName}" deve ser um objeto JSON válido.`);
     }
   }
@@ -119,7 +111,7 @@ function parseOptionalStringArray(value, fieldName) {
       try {
         const parsed = JSON.parse(trimmed);
         return parseOptionalStringArray(parsed, fieldName);
-      } catch (error) {
+      } catch {
         throw createValidationError(`Campo "${fieldName}" deve ser um array JSON válido.`);
       }
     }
@@ -755,19 +747,9 @@ Inclua apenas os campos que devem ser atualizados.`,
         }
       }
 
-      // Usa o context provider dinâmico
-      const dynamicContext = await buildContext(userId, useCase, {
-        noteId: context.noteId,
-        projectId: context.projectId,
-        sessionId: context.sessionId,
-        notesLimit: context.notesLimit || 10,
-        projectsLimit: context.projectsLimit || 10,
-      });
-
       // Mescla com contexto fornecido
       return {
         ...context,
-        ...dynamicContext,
         // Adiciona notas e projetos indexados ao contexto
         indexedNotes: indexedNotes.length > 0 ? indexedNotes : undefined,
         indexedProjects:
@@ -792,19 +774,6 @@ Inclua apenas os campos que devem ser atualizados.`,
       !allowedFunctionNames.includes(name)
     ) {
       throw new Error(`Funcao ${name} nao autorizada para este contexto`);
-    }
-
-    // Valida se a função não é proibida
-    if (isFunctionForbidden(name)) {
-      throw new Error(`Função ${name} é proibida de ser executada`);
-    }
-
-    // Valida parâmetros usando security policies
-    for (const [paramName, paramValue] of Object.entries(args)) {
-      const validation = validateParameter(name, paramName, paramValue);
-      if (!validation.valid) {
-        throw new Error(`Parâmetro ${paramName} inválido: ${validation.error}`);
-      }
     }
 
     // Executa a função apropriada
@@ -1000,6 +969,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         useCase = "chat",
         provider: requestedProvider,
         model: selectedModel,
+        agentId,
         sessionId,
       } = req.body;
       const allowEdit = parseBoolean(rawAllowEdit, false);
@@ -1026,83 +996,17 @@ Inclua apenas os campos que devem ser atualizados.`,
         currentSessionId = session.id;
       }
 
-      // Enriquece contexto com notas e projetos do usuário via Context Provider
-      const enrichedContext = await this._enrichContext(userId, useCase, {
-        ...parsedContext,
-        fileAttachments: requestFiles,
-        noteIds,
-        projectIds,
-        sessionId: currentSessionId,
-      });
-
       // Determina provider (usa preferredProvider se não especificado)
       const provider = selectedModel || requestedProvider || "auto";
-
-      // --- PASSO 1: GERAÇÃO DE CONTEÚDO (THINKING PHASE) ---
-      // Delegado para o Reasoning Engine
-      const generatedContent = await processThinkingPhase({
-        allowEdit,
-        message,
-        provider,
-        useCase,
-        enrichedContext,
-      });
-
-      // --- PASSO 2: EXECUÇÃO (ACTION PHASE) ---
-      // Constrói system message com contexto enriquecido
-      let systemMessage = await buildSystemMessage(useCase, enrichedContext);
-      let finalPrompt = message;
-
-      // Se geramos conteúdo, injetamos no prompt final para a IA usar
-      if (generatedContent) {
-        finalPrompt = `${message}\n\n### 🧠 CONTEÚDO GERADO PREVIAMENTE (USE ISTO):\n${generatedContent}\n\n### INSTRUÇÃO DE EXECUÇÃO:\nUse o conteúdo acima para realizar a ação solicitada (criar/editar nota). Preencha os campos de texto/blocos com as informações do conteúdo gerado. NÃO invente novo conteúdo, use o que foi fornecido acima.`;
-      }
-
-      // Se allowEdit=true, prepara funções para o modelo
-      let functions = null;
-      let allowedFunctionNames = [];
-      let forceToolUse = false;
-
-      if (allowEdit) {
-        const capabilityResolution = await resolveAuthorizedFunctions({
-          allowEdit,
-          context: {
-            ...parsedContext,
-            noteIds,
-            projectIds,
-          },
-          userId,
-        });
-        functions = capabilityResolution.functions;
-        allowedFunctionNames = functions.map((tool) => tool.name);
-
-        // Detecta se o usuário está pedindo explicitamente para criar/editar/deletar
-        const actionKeywords = {
-          create:
-            /\b(crie|criar|cria|adicione|adicionar|gere|gerar|nova nota|novo projeto)\b/i,
-          update:
-            /\b(edite|editar|atualize|atualizar|modifique|modificar|altere|alterar|mude|mudar)\b/i,
-          delete:
-            /\b(delete|deletar|remova|remover|exclua|excluir|apague|apagar)\b/i,
-        };
-
-        // Se detectar palavras de ação, FORÇA uso de função
-        forceToolUse =
-          functions.length > 0 &&
-          Object.values(actionKeywords).some((pattern) => pattern.test(message));
-
-        systemMessage +=
-          "\n\n## CAPACIDADES AUTORIZADAS\n\nAs ferramentas disponiveis nesta execucao ja foram autorizadas pelo servidor para este usuario e contexto. Use apenas as funcoes fornecidas.";
-
-        // Reforço de contexto específico para evitar buscas desnecessárias
-        if (parsedContext.noteId) {
-          systemMessage += `\n\n## 🎯 CONTEXTO DE NOTA ATIVO (PRIORIDADE MÁXIMA)\n\nO usuário está visualizando a nota ID: "${parsedContext.noteId}".\n\nSE o usuário pedir para editar/alterar/atualizar:\n1. IGNORE qualquer texto que pareça uma busca por título.\n2. USE a função \`update_note\` DIRETAMENTE com \`noteId: "${parsedContext.noteId}"\`.\n3. NÃO use \`search_notes\`.`;
-        }
-
-        if (parsedContext.projectId) {
-          systemMessage += `\n\n## 🎯 CONTEXTO DE PROJETO ATIVO (PRIORIDADE MÁXIMA)\n\nO usuário está visualizando o projeto ID: "${parsedContext.projectId}".\n\nSE o usuário pedir para editar/alterar/atualizar:\n1. USE a função \`update_project\` DIRETAMENTE com \`projectId: "${parsedContext.projectId}"\`.\n2. NÃO use buscas.`;
+      let selectedAgent = null;
+      if (typeof agentId === "string" && agentId.trim()) {
+        selectedAgent = await agentsRepository.getAgentById(agentId.trim(), userId);
+        if (!selectedAgent) {
+          throw createValidationError("Agent selecionado não encontrado.");
         }
       }
+      const authorizedFunctions = allowEdit ? getAllInOpenAIFormat() : [];
+      const allowedFunctionNames = authorizedFunctions.map((tool) => tool.name);
 
       // Salva mensagem do usuário
       await chatRepository.saveMessage({
@@ -1112,6 +1016,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         content: message,
         model: provider,
         metadata: {
+          agentId: selectedAgent?.id || null,
           ...parsedContext,
           files: requestFiles,
           noteIds,
@@ -1121,58 +1026,104 @@ Inclua apenas os campos que devem ser atualizados.`,
         },
       });
 
-      // Chama IA com suporte a function calling (agora com o prompt possivelmente enriquecido)
-      const aiResponse = await callAIProvider(
-        provider,
-        finalPrompt,
-        systemMessage,
-        {
-          allowEdit,
-          functions,
-          forceToolUse,
-          useCase,
-        }
-      );
-
-      // Se allowEdit=true e resposta contém função, executar função
-      let executionResult = null;
-      let finalContent = null;
-
-      if (allowEdit && aiResponse.type === "function_call") {
-        try {
-          // Executa a função chamada pela IA
-          executionResult = await this._executeFunctionCall(
-            userId,
-            aiResponse.functionCall,
-            {
-              ...parsedContext,
-              noteIds,
-              projectIds,
-              allowedFunctionNames,
+      const engineResponse = await processChatV2({
+        agent: selectedAgent
+          ? {
+              id: selectedAgent.id,
+              personality: selectedAgent.personality || {},
             }
-          );
+          : null,
+        agentId: selectedAgent?.id || null,
+        allowEdit,
+        context: parsedContext,
+        files: requestFiles,
+        functions: authorizedFunctions,
+        message,
+        model: provider,
+        noteIds,
+        projectIds,
+        sessionId: currentSessionId,
+        useCase,
+        userId,
+      });
 
-          // --- SMART RESPONSE: Re-prompt para gerar resposta natural ---
-          // Delegado para o Reasoning Engine
-          finalContent = await generateSmartResponse({
-            executionResult,
-            functionName: aiResponse.functionCall,
-            originalMessage: message,
-            provider,
-            systemMessage
+      const engineData =
+        engineResponse && typeof engineResponse.data === "object"
+          ? engineResponse.data
+          : {};
+      const requestedFunctions = Array.isArray(engineResponse?.functions)
+        ? engineResponse.functions
+        : engineData.functionCall
+          ? [engineData.functionCall]
+          : [];
+
+      const executedFunctions = [];
+      const blockedFunctions = [];
+      for (const functionCall of requestedFunctions) {
+        if (!allowEdit) {
+          blockedFunctions.push({
+            functionCall,
+            reason: "allowEdit=false",
           });
-        } catch (error) {
-          console.error("Erro ao executar função:", error);
-          finalContent = `❌ **Erro ao executar função:** ${error.message}`;
-          executionResult = { error: error.message };
+          continue;
         }
-      } else if (allowEdit && forceToolUse) {
-        // Se forçamos tool use mas IA retornou texto, é erro
-        finalContent = `❌ **Erro:** A IA deveria ter executado uma função mas retornou apenas texto.\n\nResposta recebida: ${aiResponse.text || aiResponse.content || aiResponse}`;
-        console.warn("IA não usou função mesmo com forceToolUse=true");
-      } else {
-        // Resposta normal de texto
-        finalContent = aiResponse.text || aiResponse.content || aiResponse;
+
+        try {
+          const result = await this._executeFunctionCall(userId, functionCall, {
+            ...parsedContext,
+            allowedFunctionNames,
+            noteIds,
+            projectIds,
+          });
+          executedFunctions.push({
+            functionCall,
+            result,
+            success: true,
+          });
+        } catch (executionError) {
+          executedFunctions.push({
+            error: executionError.message,
+            functionCall,
+            success: false,
+          });
+        }
+      }
+
+      const successfulExecutions = executedFunctions
+        .filter((item) => item.success)
+        .map((item) => item.result);
+      const executionResult = successfulExecutions.length > 0
+        ? successfulExecutions
+        : null;
+
+      let finalContent =
+        engineData.response ||
+        engineData.text ||
+        engineData.content ||
+        null;
+
+      if (!finalContent && successfulExecutions.length > 0) {
+        const systemMessage = await buildSystemMessage(useCase, {
+          ...parsedContext,
+          noteIds,
+          projectIds,
+        });
+        finalContent = await generateSmartResponse({
+          executionResult: successfulExecutions,
+          functionName: requestedFunctions[0]?.name || "multiple_functions",
+          originalMessage: message,
+          provider,
+          systemMessage,
+        });
+      }
+
+      if (!finalContent && blockedFunctions.length > 0) {
+        finalContent =
+          "Recebi instruções de escrita da engine, mas ignorei as actions porque allowEdit está desativado.";
+      }
+
+      if (!finalContent) {
+        finalContent = "Não foi possível gerar uma resposta para essa solicitação.";
       }
 
       // Salva resposta da IA
@@ -1183,13 +1134,13 @@ Inclua apenas os campos que devem ser atualizados.`,
         content: finalContent,
         model: provider,
         metadata: {
-          citations: aiResponse.citations || null,
+          agentId: selectedAgent?.id || null,
+          blockedFunctions,
+          citations: engineData.citations || null,
           executionResult,
           allowEdit,
-          functionCall:
-            aiResponse.type === "function_call"
-              ? aiResponse.functionCall
-              : null,
+          requestedFunctions,
+          providerUsed: engineResponse?.providerUsed || provider,
         },
       });
 
@@ -1210,6 +1161,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         provider,
         useCase,
         allowEdit,
+        agentId: selectedAgent?.id || null,
         executionResult,
       });
     } catch (error) {

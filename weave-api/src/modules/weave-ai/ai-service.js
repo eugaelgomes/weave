@@ -151,10 +151,25 @@ async function generateSmartResponse(params) {
   return response.smartResponse;
 }
 
+/**
+ * Sends chat v2 processing request to the engine.
+ * Engine is responsible for reasoning and returning `{ data, functions }`.
+ *
+ * @param {object} payload
+ * @returns {Promise<{data: object, functions: Array<object>, providerUsed?: string}>}
+ */
+async function processChatV2(payload) {
+  return callEngineTask({
+    payload,
+    taskType: "chat_v2_process",
+  });
+}
+
 module.exports = {
   buildSystemMessage,
   callAIProvider,
   generateSmartResponse,
   getFewShotExamples,
+  processChatV2,
   processThinkingPhase,
 };

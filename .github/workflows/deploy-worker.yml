@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "worker/**"
+      - "weave-worker/**"
       - ".github/workflows/deploy-worker.yml"
   workflow_dispatch:
 
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: worker
+        working-directory: weave-worker
 
     steps:
       - name: Checkout
@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: worker/package-lock.json
+          cache-dependency-path: weave-worker/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -51,9 +51,9 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.WORKER_REMOTE_HOST }}
-          username: ${{ secrets.WORKER_REMOTE_USER }}
-          key: ${{ secrets.WORKER_SSH_PRIVATE_KEY }}
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
 
