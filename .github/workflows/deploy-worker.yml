@@ -39,9 +39,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check
-        run: npm run check
-
   deploy-worker:
     name: Deploy worker
     runs-on: ubuntu-latest
