@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "weave-api/**"
+      - "compose.server.yml"
       - ".github/workflows/deploy-server.yml"
   workflow_dispatch:
 
@@ -96,9 +97,9 @@ jobs:
             export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH"
 
             if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
-              docker compose up -d --build
+              docker compose -f compose.server.yml up -d --build
             elif command -v docker-compose >/dev/null 2>&1; then
-              docker-compose up -d --build
+              docker-compose -f compose.server.yml up -d --build
             else
               echo "Docker not found or Compose plugin missing. On the server, install Docker Engine" >&2
               echo "and ensure 'docker compose' works for this SSH user (same as in an interactive shell)." >&2

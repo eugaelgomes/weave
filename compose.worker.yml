@@ -1,0 +1,11 @@
+services:
+  worker:
+    build:
+      context: ./weave-worker
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./weave-worker/.env
+    environment:
+      - NODE_ENV=production
+    command: npm start

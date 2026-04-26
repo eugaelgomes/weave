@@ -16,11 +16,37 @@ services:
   # Sua API Node.js
   server:
     build:
-      context: ./server
+      context: ./weave-api
       dockerfile: Dockerfile
     restart: always
     env_file:
-      - ./server/.env
+      - ./weave-api/.env
+    environment:
+      - NODE_ENV=production
+    networks:
+      - app-network
+    command: npm start
+
+  worker:
+    build:
+      context: ./weave-worker
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./weave-worker/.env
+    environment:
+      - NODE_ENV=production
+    networks:
+      - app-network
+    command: npm start
+
+  engine:
+    build:
+      context: ./weave-engine
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./weave-engine/.env
     environment:
       - NODE_ENV=production
     networks:

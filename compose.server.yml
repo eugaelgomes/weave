@@ -1,0 +1,34 @@
+services:
+  caddy:
+    image: caddy:2
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app-network
+
+  server:
+    build:
+      context: ./weave-api
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./weave-api/.env
+    environment:
+      - NODE_ENV=production
+    networks:
+      - app-network
+    command: npm start
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
