@@ -4,8 +4,8 @@ import { API_ENDPOINTS } from "../api-methods";
 export interface AIModel {
   id: string;
   name: string;
-  version?: string;
-  provider: "gemini" | "perplexity";
+  version: string;
+  provider: string;
   description: string;
   capabilities: string[];
   isAvailable: boolean;
@@ -24,6 +24,10 @@ export interface ChatMessage {
   created_at?: string;
   model?: string;
   sessionId?: string;
+  citations?: unknown[];
+  functions?: Array<{ name: string; arguments?: Record<string, unknown> }>;
+  functionExecution?: Array<{ name: string; success: boolean; result?: unknown }>;
+  provider?: string;
   metadata?: Record<string, any>;
 }
 
@@ -51,12 +55,11 @@ export interface SendMessageData {
 export interface SendMessageResult {
   message: ChatMessage;
   sessionId: string;
-  model?: ChatModelSelection | string;
+  model?: ChatModelSelection;
   provider?: string;
-  useCase?: string;
-  allowEdit?: boolean;
-  agentId?: string | null;
-  executionResult?: unknown;
+  functions?: Array<{ name: string; arguments?: Record<string, unknown> }>;
+  functionExecution?: Array<{ name: string; success: boolean; result?: unknown }>;
+  citations?: unknown[];
 }
 
 export interface GenerateContentData {
@@ -65,6 +68,13 @@ export interface GenerateContentData {
   context?: Record<string, any>;
   provider?: string;
 }
+
+type RawModelsResponse = {
+  providers?: Array<{
+    name: string;
+    models: Record<string, string>;
+  }>;
+};
 
 export interface KnowledgeFile {
   original_name: string;
@@ -152,8 +162,31 @@ function normalizeChatSession(session: RawChatSession): ChatSession {
 
 export async function fetchAvailableModels(): Promise<AIModel[]> {
   const response = await apiClient.get(API_ENDPOINTS.AI_MODELS);
-  const data = await handleResponse<{ models: AIModel[] }>(response);
-  return data.models;
+  const data = await handleResponse<RawModelsResponse>(response);
+  const providers = Array.isArray(data.providers) ? data.providers : [];
+
+  const models: AIModel[] = [];
+  for (const providerEntry of providers) {
+    const provider = String(providerEntry.name || "").toLowerCase();
+    const providerModels = providerEntry.models || {};
+    for (const [modelLabel, modelVersion] of Object.entries(providerModels)) {
+      const version = String(modelVersion || "").trim();
+      if (!version) {
+        continue;
+      }
+      models.push({
+        id: `${provider}:${version}`,
+        name: provider,
+        version,
+        provider,
+        description: modelLabel,
+        capabilities: [],
+        isAvailable: true,
+      });
+    }
+  }
+
+  return models;
 }
 
 export async function sendChatMessage(data: SendMessageData): Promise<SendMessageResult> {
@@ -176,7 +209,6 @@ export async function sendChatMessage(data: SendMessageData): Promise<SendMessag
     if (data.sessionId) formData.append("sessionId", data.sessionId);
     if (data.agentId) formData.append("agentId", data.agentId);
     formData.append("allowEdit", String(Boolean(data.allowEdit)));
-    if (data.useCase) formData.append("useCase", data.useCase);
     if (data.context) formData.append("context", JSON.stringify(data.context));
     if (Array.isArray(data.noteIds) && data.noteIds.length > 0) {
       formData.append("noteIds", JSON.stringify(data.noteIds));
@@ -188,36 +220,87 @@ export async function sendChatMessage(data: SendMessageData): Promise<SendMessag
 
     const response = await apiClient.post(API_ENDPOINTS.AI_CHAT, formData);
     const result = await handleResponse<{
-      message: RawChatMessage;
       sessionId: string;
-      model?: string;
-      provider?: string;
-      useCase?: string;
-      allowEdit?: boolean;
-      agentId?: string | null;
-      executionResult?: unknown;
+      response: {
+        role: "assistant";
+        content: string;
+        citations?: unknown[];
+        functions?: Array<{ name: string; arguments?: Record<string, unknown> }>;
+        functionExecution?: Array<{ name: string; success: boolean; result?: unknown }>;
+        model?: ChatModelSelection;
+        provider?: string;
+      };
     }>(response);
 
+    const assistantMessage: ChatMessage = {
+      id: `${result.sessionId}-assistant-${Date.now()}`,
+      role: "assistant",
+      content: result.response?.content || "",
+      timestamp: new Date(),
+      sessionId: result.sessionId,
+      citations: result.response?.citations || [],
+      functions: result.response?.functions || [],
+      functionExecution: result.response?.functionExecution || [],
+      provider: result.response?.provider,
+      metadata: {
+        citations: result.response?.citations || [],
+        functions: result.response?.functions || [],
+        functionExecution: result.response?.functionExecution || [],
+        provider: result.response?.provider || null,
+      },
+    };
+
     return {
-      ...result,
-      message: normalizeChatMessage(result.message),
+      sessionId: result.sessionId,
+      message: assistantMessage,
+      model: result.response?.model,
+      provider: result.response?.provider,
+      citations: result.response?.citations || [],
+      functions: result.response?.functions || [],
+      functionExecution: result.response?.functionExecution || [],
     };
   }
 
   const response = await apiClient.post(API_ENDPOINTS.AI_CHAT, payload);
   const result = await handleResponse<{
-    message: RawChatMessage;
     sessionId: string;
-    model?: string;
-    provider?: string;
-    useCase?: string;
-    allowEdit?: boolean;
-    agentId?: string | null;
-    executionResult?: unknown;
+    response: {
+      role: "assistant";
+      content: string;
+      citations?: unknown[];
+      functions?: Array<{ name: string; arguments?: Record<string, unknown> }>;
+      functionExecution?: Array<{ name: string; success: boolean; result?: unknown }>;
+      model?: ChatModelSelection;
+      provider?: string;
+    };
   }>(response);
+
+  const assistantMessage: ChatMessage = {
+    id: `${result.sessionId}-assistant-${Date.now()}`,
+    role: "assistant",
+    content: result.response?.content || "",
+    timestamp: new Date(),
+    sessionId: result.sessionId,
+    citations: result.response?.citations || [],
+    functions: result.response?.functions || [],
+    functionExecution: result.response?.functionExecution || [],
+    provider: result.response?.provider,
+    metadata: {
+      citations: result.response?.citations || [],
+      functions: result.response?.functions || [],
+      functionExecution: result.response?.functionExecution || [],
+      provider: result.response?.provider || null,
+    },
+  };
+
   return {
-    ...result,
-    message: normalizeChatMessage(result.message),
+    sessionId: result.sessionId,
+    message: assistantMessage,
+    model: result.response?.model,
+    provider: result.response?.provider,
+    citations: result.response?.citations || [],
+    functions: result.response?.functions || [],
+    functionExecution: result.response?.functionExecution || [],
   };
 }
 

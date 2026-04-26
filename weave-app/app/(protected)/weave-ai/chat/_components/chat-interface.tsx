@@ -41,7 +41,10 @@ const ModelIcon = ({ provider }: { provider?: string }) => {
 };
 
 function formatModelLabel(model: AIModel) {
-  return model.version ? `${model.name} (${model.version})` : model.name;
+  const providerLabel = model.name ? model.name.toUpperCase() : "MODEL";
+  return model.description
+    ? `${providerLabel} - ${model.description} (${model.version})`
+    : `${providerLabel} (${model.version})`;
 }
 
 function validateChatFile(file: File): string | null {
@@ -132,7 +135,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
     await sendMessage({
       message,
       model: {
-        name: selectedModel?.id || "auto",
+        name: selectedModel?.provider || selectedModel?.name || "auto",
         version: selectedModel?.version,
       },
       sessionId: currentSession?.id || chatId,
@@ -318,6 +321,17 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                         >
                           {msg.content}
                         </ReactMarkdown>
+                      </div>
+                    )}
+
+                    {!isUser && Array.isArray(msg.functionExecution) && msg.functionExecution.length > 0 && (
+                      <div className="mt-2 rounded border border-emerald-200 bg-emerald-50 p-1.5 text-[10px] text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-900/20 dark:text-emerald-300">
+                        <p className="mb-1 font-semibold uppercase tracking-wide">Acoes executadas</p>
+                        {msg.functionExecution.map((execution: any, index: number) => (
+                          <p key={`${execution.name}-${index}`}>
+                            {execution.name} - {execution.success ? "ok" : "erro"}
+                          </p>
+                        ))}
                       </div>
                     )}
 

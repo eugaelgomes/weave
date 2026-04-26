@@ -278,11 +278,20 @@ export async function handleResponse<T = unknown>(response: Response): Promise<T
       if (contentType?.includes("application/json")) {
         errorData = await response.json();
         if (typeof errorData === "object" && errorData !== null) {
-          const obj = errorData as { message?: unknown; error?: unknown };
+          const obj = errorData as {
+            message?: unknown;
+            error?: unknown;
+          };
           if (typeof obj.message === "string") {
             errorMessage = obj.message;
           } else if (typeof obj.error === "string") {
             errorMessage = obj.error;
+          } else if (
+            obj.error &&
+            typeof obj.error === "object" &&
+            typeof (obj.error as { message?: unknown }).message === "string"
+          ) {
+            errorMessage = String((obj.error as { message?: unknown }).message);
           }
         }
       } else {
