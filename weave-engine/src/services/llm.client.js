@@ -1,0 +1,166 @@
+const crypto = require("crypto");
+
+const AI_PROVIDERS = {
+  GEMINI: "gemini",
+  OPENAI: "openai",
+};
+
+const AI_MODELS = {
+  GEMINI_FLASH_2_5: "gemini-2.0-flash",
+  OPENAI_GPT_4O_MINI: "gpt-4o-mini",
+};
+
+const geminiConfig = {
+  apiKey: process.env.GEMINI_API_KEY,
+  maxOutputTokens: 8192,
+  model: AI_MODELS.GEMINI_FLASH_2_5,
+  provider: AI_PROVIDERS.GEMINI,
+  retry: {
+    backoffFactor: 2,
+    initialDelay: 1000,
+    maxRetries: 3,
+  },
+  safetySettings: [
+    {
+      category: "HARM_CATEGORY_HARASSMENT",
+      threshold: "BLOCK_MEDIUM_AND_ABOVE",
+    },
+    {
+      category: "HARM_CATEGORY_HATE_SPEECH",
+      threshold: "BLOCK_MEDIUM_AND_ABOVE",
+    },
+    {
+      category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+      threshold: "BLOCK_MEDIUM_AND_ABOVE",
+    },
+    {
+      category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+      threshold: "BLOCK_MEDIUM_AND_ABOVE",
+    },
+  ],
+  temperature: 0.7,
+  timeout: 30000,
+  topK: 40,
+  topP: 0.95,
+};
+
+const openaiConfig = {
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://api.openai.com/v1",
+  maxTokens: 4096,
+  model: AI_MODELS.OPENAI_GPT_4O_MINI,
+  provider: AI_PROVIDERS.OPENAI,
+  retry: {
+    backoffFactor: 2,
+    initialDelay: 1000,
+    maxRetries: 3,
+  },
+  temperature: 0.7,
+  timeout: 30000,
+  topP: 0.9,
+};
+
+const cacheConfig = {
+  cacheKey: (provider, prompt, context) => {
+    const hash = crypto.createHash("sha256");
+    hash.update(`${provider}-${prompt}-${JSON.stringify(context)}`);
+    return hash.digest("hex");
+  },
+  enabled: true,
+  maxSize: 100,
+  ttl: 3600,
+};
+
+/**
+ * @param {string|undefined|null} modelName
+ * @returns {string}
+ */
+function normalizeModelName(modelName) {
+  if (typeof modelName !== "string") {
+    return "";
+  }
+
+  return modelName.trim().toLowerCase().replace(/^models\//, "");
+}
+
+/**
+ * @returns {string}
+ */
+function resolveDefaultModelName() {
+  if (openaiConfig.apiKey) {
+    return openaiConfig.model;
+  }
+
+  if (geminiConfig.apiKey) {
+    return geminiConfig.model;
+  }
+
+  return openaiConfig.model;
+}
+
+/**
+ * @param {string} provider
+ * @returns {object}
+ */
+function getProviderConfig(provider) {
+  switch (provider) {
+    case AI_PROVIDERS.GEMINI:
+      return geminiConfig;
+    case AI_PROVIDERS.OPENAI:
+      return openaiConfig;
+    default:
+      throw new Error(`Unknown LLM provider: ${provider}`);
+  }
+}
+
+/**
+ * @param {string} modelName
+ * @returns {string}
+ */
+function getProviderByModelName(modelName) {
+  if (!modelName) {
+    throw new Error("Model name is required");
+  }
+
+  const normalized = normalizeModelName(modelName);
+
+  if (normalized === "auto") {
+    return getProviderByModelName(resolveDefaultModelName());
+  }
+
+  if (normalized === "openai") {
+    return AI_PROVIDERS.OPENAI;
+  }
+
+  if (normalized === "gemini") {
+    return AI_PROVIDERS.GEMINI;
+  }
+
+  if (normalized.startsWith("gemini-")) {
+    return AI_PROVIDERS.GEMINI;
+  }
+
+  if (
+    normalized.startsWith("gpt-") ||
+    normalized.startsWith("o1") ||
+    normalized.startsWith("o3") ||
+    normalized.startsWith("o4") ||
+    normalized.startsWith("chatgpt-")
+  ) {
+    return AI_PROVIDERS.OPENAI;
+  }
+
+  throw new Error(`Unsupported model: ${normalized}`);
+}
+
+module.exports = {
+  AI_MODELS,
+  AI_PROVIDERS,
+  cacheConfig,
+  geminiConfig,
+  getProviderByModelName,
+  getProviderConfig,
+  normalizeModelName,
+  openaiConfig,
+  resolveDefaultModelName,
+};

@@ -10,7 +10,6 @@ const passwordRoutes = require("@/modules/password/password.routes");
 const notesRoutes = require("@/modules/notes/notes.routes");
 const backupRoutes = require("@/modules/backup/backup.routes");
 const projectsRoutes = require("@/modules/projects/projects.routes");
-const aiRoutes = require("@/modules/weave-ai/weave-ai.routes");
 const organizationsRoutes = require("@/modules/organizations/organizations.routes");
 const plansRoutes = require("@/modules/plans/plans.routes");
 const webhooksRoutes = require("@/modules/webhooks/webhooks.routes");
@@ -87,7 +86,6 @@ const routeRegistry = [
   { basePath: "/auth", handler: authRoutes },
   { basePath: "/backup", handler: backupRoutes },
   { basePath: "/calendar-events", handler: calendarEventsRoutes },
-  { basePath: "/weave-ai", handler: aiRoutes },
   { basePath: "/notes", handler: notesRoutes },
   { basePath: "/organizations", handler: organizationsRoutes },
   { basePath: "/projects", handler: tagsRoutes },

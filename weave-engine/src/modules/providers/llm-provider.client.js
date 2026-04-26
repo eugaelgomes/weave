@@ -2,9 +2,11 @@ const axios = require("axios");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const {
   AI_PROVIDERS,
+  getProviderByModelName,
   getProviderConfig,
-  getProviderForUseCase,
-} = require("../../config/llm.config");
+  normalizeModelName,
+  resolveDefaultModelName,
+} = require("../../services/llm.client");
 
 let geminiClient = null;
 
@@ -21,7 +23,7 @@ function getGeminiClient() {
   return geminiClient;
 }
 
-async function callGeminiApi(prompt, systemMessage, config, options = {}) {
+async function callGeminiApi(prompt, systemMessage, config, options = {}, modelName) {
   const modelConfig = {
     generationConfig: {
       maxOutputTokens: config.maxOutputTokens,
@@ -29,7 +31,7 @@ async function callGeminiApi(prompt, systemMessage, config, options = {}) {
       topK: config.topK,
       topP: config.topP,
     },
-    model: config.model,
+    model: modelName || config.model,
     safetySettings: config.safetySettings,
   };
 
@@ -86,13 +88,12 @@ async function callGeminiApi(prompt, systemMessage, config, options = {}) {
   };
 }
 
-async function callPerplexityApi(prompt, systemMessage, config, options = {}) {
+async function callOpenAiApi(prompt, systemMessage, config, options = {}, modelName) {
   if (!config.apiKey) {
-    throw new Error("PERPLEXITY_API_KEY is required to call Perplexity provider");
+    throw new Error("OPENAI_API_KEY is required to call OpenAI provider");
   }
 
   const payload = {
-    max_tokens: config.maxTokens,
     messages: [
       {
         content: systemMessage,
@@ -103,18 +104,19 @@ async function callPerplexityApi(prompt, systemMessage, config, options = {}) {
         role: "user",
       },
     ],
-    model: config.model,
-    return_citations: config.returnCitations,
-    return_images: config.returnImages,
-    search_domain_filter: config.searchDomainFilter,
-    search_recency_filter: config.searchRecencyFilter,
+    model: modelName || config.model,
+    max_tokens: config.maxTokens,
     temperature: config.temperature,
     top_p: config.topP,
   };
 
   if (options.allowEdit && options.functions) {
     payload.tools = options.functions.map((fn) => ({
-      function: fn,
+      function: {
+        description: fn.description,
+        name: fn.name,
+        parameters: fn.parameters,
+      },
       type: "function",
     }));
     payload.tool_choice = options.forceToolUse ? "required" : "auto";
@@ -132,9 +134,8 @@ async function callPerplexityApi(prompt, systemMessage, config, options = {}) {
   if (message?.tool_calls?.length) {
     const toolCall = message.tool_calls[0];
     return {
-      citations: response.data.citations || [],
       functionCall: {
-        arguments: JSON.parse(toolCall.function.arguments),
+        arguments: JSON.parse(toolCall.function.arguments || "{}"),
         name: toolCall.function.name,
       },
       text: null,
@@ -143,7 +144,6 @@ async function callPerplexityApi(prompt, systemMessage, config, options = {}) {
   }
 
   return {
-    citations: response.data.citations || [],
     functionCall: null,
     text: message?.content || "",
     type: "text",
@@ -156,6 +156,7 @@ async function sleep(delayMs) {
 
 async function callProviderWithRetry(
   provider,
+  model,
   prompt,
   systemMessage,
   options = {},
@@ -165,11 +166,11 @@ async function callProviderWithRetry(
 
   try {
     if (provider === AI_PROVIDERS.GEMINI) {
-      return await callGeminiApi(prompt, systemMessage, config, options);
+      return await callGeminiApi(prompt, systemMessage, config, options, model);
     }
 
-    if (provider === AI_PROVIDERS.PERPLEXITY) {
-      return await callPerplexityApi(prompt, systemMessage, config, options);
+    if (provider === AI_PROVIDERS.OPENAI) {
+      return await callOpenAiApi(prompt, systemMessage, config, options, model);
     }
 
     throw new Error(`Unsupported LLM provider: ${provider}`);
@@ -183,6 +184,7 @@ async function callProviderWithRetry(
     await sleep(delayMs);
     return callProviderWithRetry(
       provider,
+      model,
       prompt,
       systemMessage,
       options,
@@ -191,23 +193,35 @@ async function callProviderWithRetry(
   }
 }
 
-function resolvePrimaryProvider(provider, useCase) {
-  if (provider && provider !== "auto") {
-    return provider;
+function resolveModelName(modelName) {
+  const normalizedModelName = normalizeModelName(modelName);
+  if (!normalizedModelName || normalizedModelName === "auto") {
+    return resolveDefaultModelName();
   }
-
-  return getProviderForUseCase(useCase || "chat");
+  if (normalizedModelName === "openai") {
+    return "gpt-4o-mini";
+  }
+  if (normalizedModelName === "gemini") {
+    return "gemini-2.0-flash";
+  }
+  return normalizedModelName;
 }
 
-async function callAIProvider({ options = {}, prompt, provider, systemMessage, useCase }) {
-  const primaryProvider = resolvePrimaryProvider(provider, useCase);
+async function callAIProvider({ options = {}, prompt, model, systemMessage }) {
+  const resolvedModel = resolveModelName(model);
+  const primaryProvider = resolveProviderByModel(resolvedModel);
   const data = await callProviderWithRetry(
     primaryProvider,
+    resolvedModel,
     prompt,
     systemMessage,
     options
   );
-  return { data, provider: primaryProvider };
+  return { data, model: resolvedModel, provider: primaryProvider };
+}
+
+function resolveProviderByModel(modelName) {
+  return getProviderByModelName(modelName);
 }
 
 module.exports = {

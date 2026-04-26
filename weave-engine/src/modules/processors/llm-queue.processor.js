@@ -1,12 +1,10 @@
-const redis = require("../../config/redis.client");
+const redis = require("../../services/redis.client");
 const {
   getEngineLlmRequestQueueRedisKey,
-} = require("../../config/redis-queue-keys");
+} = require("../../services/redis-queue-keys");
 const { logger } = require("../../logger");
-const {
-  buildSystemMessage,
-  getFewShotExamples,
-} = require("../prompts/agent-prompts");
+const { buildSystemMessage } = require("../prompts/agent-prompts");
+const { buildEntityContext } = require("../context/entity-context.loader");
 const {
   generateSmartResponse,
   processThinkingPhase,
@@ -14,6 +12,20 @@ const {
 const { callAIProvider } = require("../providers/llm-provider.client");
 
 const RESPONSE_TTL_SECONDS = 60;
+
+function resolveOrganizationId(payload = {}, context = {}) {
+  return (
+    payload.organizationId ||
+    payload.organization_id ||
+    payload.orgId ||
+    payload.orgWideOrganizationId ||
+    context.organizationId ||
+    context.organization_id ||
+    context.orgId ||
+    context.orgWideOrganizationId ||
+    null
+  );
+}
 
 class LlmQueueProcessor {
   constructor() {
@@ -90,9 +102,25 @@ class LlmQueueProcessor {
   async executeTask(taskType, payload) {
     switch (taskType) {
       case "build_system_message":
-        return {
-          systemMessage: buildSystemMessage(payload.useCase, payload.additionalContext),
-        };
+        {
+          const additionalContext = payload.additionalContext || {};
+          const organizationId = resolveOrganizationId(payload, additionalContext);
+          const entityContext = await buildEntityContext({
+            noteIds: payload.noteIds || additionalContext.noteIds,
+            projectIds: payload.projectIds || additionalContext.projectIds,
+            userId: payload.userId || additionalContext.userId,
+            organizationId,
+          });
+
+          return {
+            systemMessage: buildSystemMessage({
+              ...additionalContext,
+              indexedNotes: entityContext.indexedNotes,
+              indexedProjects: entityContext.indexedProjects,
+              userLanguage: payload.userLanguage || additionalContext.userLanguage,
+            }),
+          };
+        }
 
       case "generate_smart_response":
         return {
@@ -101,7 +129,7 @@ class LlmQueueProcessor {
 
       case "get_few_shot_examples":
         return {
-          examples: getFewShotExamples(payload.useCase),
+          examples: [],
         };
 
       case "process_thinking_phase":
@@ -119,16 +147,15 @@ class LlmQueueProcessor {
       }
 
       case "chat_v2_process": {
-        const systemMessage = this.buildChatV2SystemMessage(payload);
+        const systemMessage = await this.buildChatV2SystemMessage(payload);
         const { data, provider: providerUsed } = await callAIProvider({
           options: {
             allowEdit: Boolean(payload.allowEdit),
             functions: Array.isArray(payload.functions) ? payload.functions : [],
           },
+          model: payload.model || null,
           prompt: payload.message || "",
-          provider: payload.model || payload.provider || "auto",
           systemMessage,
-          useCase: payload.useCase || "chat",
         });
 
         const functions =
@@ -154,42 +181,55 @@ class LlmQueueProcessor {
    * Build chat-v2 system prompt using request metadata.
    *
    * @param {object} payload
-   * @returns {string}
+   * @returns {Promise<string>}
    */
-  buildChatV2SystemMessage(payload = {}) {
+  async buildChatV2SystemMessage(payload = {}) {
     const noteIds = Array.isArray(payload.noteIds) ? payload.noteIds : [];
     const projectIds = Array.isArray(payload.projectIds) ? payload.projectIds : [];
     const files = Array.isArray(payload.files) ? payload.files : [];
-    const baseMessage = buildSystemMessage(payload.useCase || "chat", {
+    const organizationId = resolveOrganizationId(payload, payload.context || {});
+    const entityContext = await buildEntityContext({
+      noteIds,
+      projectIds,
+      userId: payload.userId,
+      organizationId,
+    });
+
+    const baseMessage = buildSystemMessage({
       ...payload.context,
       projectIds,
       noteIds,
+      indexedNotes: entityContext.indexedNotes,
+      indexedProjects: entityContext.indexedProjects,
+      userLanguage: payload.userLanguage || payload.context?.userLanguage,
     });
     const agentInstructions = this.extractAgentInstructions(payload.agent);
 
     const fileSummary =
       files.length === 0
-        ? "Nenhum arquivo anexado."
+        ? "No files attached."
         : files
             .map(
               (file, index) =>
-                `${index + 1}. ${file.name || "arquivo"} (${file.mimeType || "application/octet-stream"}, ${file.sizeBytes || 0} bytes)`
+                `${index + 1}. ${file.name || "file"} (${file.mimeType || "application/octet-stream"}, ${file.sizeBytes || 0} bytes)`
             )
             .join("\n");
 
     return `${baseMessage}
 
-## Contexto recebido do Server (v2)
+## Context received from Server (v2)
 - userId: ${payload.userId || "unknown"}
 - sessionId: ${payload.sessionId || "unknown"}
-- noteIds: ${noteIds.length > 0 ? noteIds.join(", ") : "nenhum"}
-- projectIds: ${projectIds.length > 0 ? projectIds.join(", ") : "nenhum"}
+- noteIds: ${noteIds.length > 0 ? noteIds.join(", ") : "none"}
+- projectIds: ${projectIds.length > 0 ? projectIds.join(", ") : "none"}
+- organizationId: ${organizationId || "unknown"}
+- userLanguage: ${payload.userLanguage || payload.context?.userLanguage || "unknown"}
 - allowEdit: ${payload.allowEdit ? "true" : "false"}
 
-## Arquivos temporários
+## Temporary files
 ${fileSummary}
 
-Responda ao usuário com clareza. Se precisar de ação no banco, retorne function call estruturada.${agentInstructions ? `\n\n## Agent selecionado\n${agentInstructions}` : ""}`;
+Respond to the user clearly. If database action is needed, return a structured function call.${agentInstructions ? `\n\n## Selected agent\n${agentInstructions}` : ""}`;
   }
 
   /**
@@ -209,22 +249,18 @@ Responda ao usuário com clareza. Se precisar de ação no banco, retorne functi
     const behavior = personality.behavior || {};
     const systemInstructions = behavior.system_instructions || {};
     const contextText = systemInstructions.context || "";
-    const objectives = Array.isArray(systemInstructions.objectives)
-      ? systemInstructions.objectives.filter(Boolean).join(" | ")
-      : "";
     const rules = Array.isArray(systemInstructions.rules)
       ? systemInstructions.rules.filter(Boolean).join(" | ")
       : "";
 
     const lines = [
       `agentId: ${agent.id || "unknown"}`,
-      metadata.name ? `nome: ${metadata.name}` : "",
-      persona.role ? `papel: ${persona.role}` : "",
-      persona.tone ? `tom: ${persona.tone}` : "",
-      persona.language ? `idioma: ${persona.language}` : "",
-      contextText ? `instrucoes: ${contextText}` : "",
-      objectives ? `objetivos: ${objectives}` : "",
-      rules ? `regras: ${rules}` : "",
+      metadata.name ? `name: ${metadata.name}` : "",
+      persona.role ? `role: ${persona.role}` : "",
+      persona.tone ? `tone: ${persona.tone}` : "",
+      persona.language ? `language: ${persona.language}` : "",
+      contextText ? `instructions: ${contextText}` : "",
+      rules ? `rules: ${rules}` : "",
     ].filter(Boolean);
 
     return lines.join("\n");

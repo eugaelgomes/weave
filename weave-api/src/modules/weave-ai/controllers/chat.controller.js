@@ -1,8 +1,4 @@
 const {
-  buildSystemMessage,
-  callAIProvider,
-  generateSmartResponse,
-  getFewShotExamples,
   processChatV2,
 } = require("@/modules/weave-ai/ai-service");
 const {
@@ -12,26 +8,60 @@ const {
   getFunctionsBySecurityLevel,
 } = require("@/modules/weave-ai/function-schemas");
 const notesRepository = require("@/modules/notes/notes.repository");
+const searchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const {
   blocksToDocument,
   documentToBlocks,
 } = require("@/modules/notes/document-blocks-adapter");
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const agentsRepository = require("@/modules/weave-ai/repositories/agents.repository");
-const {
-  NOTE_STATUS,
-  PROJECT_STATUS,
-} = require("@/utils/patterns/product-patterns");
 
 const responseCache = new Map();
 const cacheConfig = {
-  cacheKey(provider, prompt, context) {
-    return JSON.stringify({ context, prompt, provider });
+  cacheKey(model, prompt, context) {
+    return JSON.stringify({ context, model, prompt });
   },
   enabled: false,
   maxSize: 100,
   ttl: 300,
 };
+
+const MODEL_ALIASES = {
+  auto: "auto",
+  gemini: "gemini-2.0-flash",
+  openai: "gpt-4o-mini",
+};
+
+function normalizeModelInput(rawModel) {
+  if (typeof rawModel !== "string") {
+    return "";
+  }
+
+  const normalized = rawModel.trim().toLowerCase();
+  if (!normalized) {
+    return "";
+  }
+
+  if (normalized.startsWith("models/")) {
+    return normalized.slice("models/".length);
+  }
+
+  return normalized;
+}
+
+function isGeminiModel(modelName) {
+  return modelName.startsWith("gemini-");
+}
+
+function isOpenAiModel(modelName) {
+  return (
+    modelName.startsWith("gpt-") ||
+    modelName.startsWith("o1") ||
+    modelName.startsWith("o3") ||
+    modelName.startsWith("o4") ||
+    modelName.startsWith("chatgpt-")
+  );
+}
 
 /**
  * Creates a standardized validation error.
@@ -43,6 +73,63 @@ function createValidationError(message) {
   const error = new Error(message);
   error.statusCode = 400;
   return error;
+}
+
+/**
+ * Resolves incoming payload to an engine-supported model name.
+ *
+ * @param {{name?: string}|null} modelSelection
+ * @param {unknown} requestedProvider
+ * @returns {string}
+ */
+function resolveEngineModel(modelSelection, requestedProvider) {
+  const candidates = [modelSelection?.name, requestedProvider, "auto"];
+
+  for (const raw of candidates) {
+    const input = normalizeModelInput(raw);
+    if (!input) {
+      continue;
+    }
+
+    const normalized = MODEL_ALIASES[input] || input;
+
+    if (normalized === "auto") {
+      return "auto";
+    }
+
+    if (isOpenAiModel(normalized)) {
+      return normalized;
+    }
+
+    if (isGeminiModel(normalized)) {
+      return normalized;
+    }
+  }
+
+  throw createValidationError(
+    "Unsupported model. Use 'auto', a Gemini model (gemini-*), or an OpenAI model (gpt-*, o3-*)."
+  );
+}
+
+function formatExecutionSummary(functionName, successfulExecutions = [], userLanguage) {
+  const firstResult = successfulExecutions[0];
+  const isPortuguese =
+    typeof userLanguage === "string" &&
+    userLanguage.toLowerCase().startsWith("pt");
+
+  if (functionName === "get_user_profile" && firstResult && typeof firstResult === "object") {
+    const userName = firstResult.name || firstResult.username || "User";
+    const userEmail = firstResult.email || "not provided";
+    if (isPortuguese) {
+      return `Perfil localizado com sucesso.\n\nNome: ${userName}\nEmail: ${userEmail}`;
+    }
+    return `Profile fetched successfully.\n\nName: ${userName}\nEmail: ${userEmail}`;
+  }
+
+  if (isPortuguese) {
+    return "A ação foi executada com sucesso e os dados foram processados corretamente.";
+  }
+  return "The action was executed successfully and data was processed correctly.";
 }
 
 /**
@@ -143,7 +230,7 @@ function parseModelSelection(value) {
       try {
         return parseModelSelection(JSON.parse(trimmed));
       } catch {
-        throw createValidationError('Campo "model" deve ser um JSON válido.');
+        throw createValidationError("Campo \"model\" deve ser um JSON válido.");
       }
     }
 
@@ -155,7 +242,9 @@ function parseModelSelection(value) {
     const modelVersion = typeof value.version === "string" ? value.version.trim() : "";
 
     if (!modelName) {
-      throw createValidationError('Campo "model.name" é obrigatório quando model é objeto.');
+      throw createValidationError(
+        "Campo \"model.name\" é obrigatório quando model é objeto."
+      );
     }
 
     return {
@@ -164,7 +253,7 @@ function parseModelSelection(value) {
     };
   }
 
-  throw createValidationError('Campo "model" deve ser string ou objeto.');
+  throw createValidationError("Campo \"model\" deve ser string ou objeto.");
 }
 
 /**
@@ -243,10 +332,12 @@ class AIController {
         });
       }
 
+      const selectedModelName = resolveEngineModel(null, requestedProvider);
+
       // Verifica cache
       if (cacheConfig.enabled) {
         const cacheKey = cacheConfig.cacheKey(
-          requestedProvider || "auto",
+          selectedModelName,
           prompt,
           context
         );
@@ -261,68 +352,44 @@ class AIController {
         }
       }
 
-      // Determina o provider ideal
-      const provider = requestedProvider || "auto";
-
-      // Enriquece contexto com Context Provider dinâmico
-      const enrichedContext = await this._enrichContext(
+      const engineResponse = await processChatV2({
+        allowEdit: false,
+        context,
+        files: [],
+        functions: [],
+        message: prompt,
+        model: selectedModelName,
+        noteIds: Array.isArray(context.noteIds) ? context.noteIds : [],
+        projectIds: Array.isArray(context.projectIds) ? context.projectIds : [],
+        useCase,
         userId,
-        useCase,
-        context
-      );
-
-      // Constrói mensagem do sistema
-      const systemMessage = await buildSystemMessage(useCase, enrichedContext);
-
-      // Adiciona few-shot examples se disponível
-      const examples = await getFewShotExamples(useCase);
-      let fullPrompt = prompt;
-      if (examples.length > 0) {
-        const examplesText = examples
-          .map((ex) => `Usuário: ${ex.user}\n\nAssistente: ${ex.assistant}`)
-          .join("\n\n---\n\n");
-        fullPrompt = `${examplesText}\n\n---\n\nUsuário: ${prompt}`;
-      }
-
-      // Se há uma action, instrui a IA a retornar JSON estruturado
-      if (context.action) {
-        fullPrompt = this._buildActionPrompt(context.action, prompt, context);
-      }
-
-      const response = await callAIProvider(provider, fullPrompt, systemMessage, {
-        useCase,
       });
-      const usedProvider = response.providerUsed || provider;
 
-      // Se context tem action, executa ação de criar dados
-      let createdData = null;
-      if (context.action) {
-        createdData = await this._executeAction(
-          userId,
-          context.action,
-          response,
-          context
-        );
-      }
+      const engineData =
+        engineResponse && typeof engineResponse.data === "object"
+          ? engineResponse.data
+          : {};
+      const response =
+        engineData.response ||
+        engineData.text ||
+        engineData.content ||
+        "";
+      const usedProvider = engineResponse?.providerUsed || selectedModelName;
 
       // Prepara resposta
       const result = {
         success: true,
         useCase,
         provider: usedProvider,
-        response:
-          typeof response === "string"
-            ? response
-            : response.content || response.text,
-        citations: response.citations || null,
-        createdData: createdData || null,
+        response,
+        citations: engineData.citations || null,
+        createdData: null,
         timestamp: new Date().toISOString(),
       };
 
-      // Salva no cache apenas se não houver ação de criação
-      if (cacheConfig.enabled && !context.action) {
+      if (cacheConfig.enabled) {
         const cacheKey = cacheConfig.cacheKey(
-          requestedProvider || "auto",
+          selectedModelName,
           prompt,
           context
         );
@@ -421,389 +488,6 @@ class AIController {
   }
 
   /**
-   * Constrói prompt específico para ações que precisam de JSON
-   * @private
-   */
-  _buildActionPrompt(action, originalPrompt, context) {
-    const actionPrompts = {
-      create_note: `${originalPrompt}
-
-IMPORTANTE: Retorne APENAS um JSON válido, sem texto adicional, seguindo esta estrutura exata:
-{
-  "title": "Título da nota (máximo 100 caracteres)",
-  "description": "Descrição detalhada em markdown",
-  "tags": ["tag1", "tag2", "tag3"],
-  "blocks": [
-    {"type": "paragraph", "text": "Conteúdo do parágrafo"},
-    {"type": "heading", "text": "Título da seção"},
-    {"type": "list", "text": "Item da lista"}
-  ]
-}
-
-Tipos de blocos permitidos: text, paragraph, heading, h1, h2, h3, todo, list, page, code, quote, image, divider
-${context.includeBlocks === false ? "NÃO inclua a propriedade blocks." : ""}`,
-
-      create_project: `${originalPrompt}
-
-IMPORTANTE: Retorne APENAS um JSON válido, sem texto adicional, seguindo esta estrutura exata:
-{
-  "title": "Título do projeto",
-  "description": "Descrição do projeto",
-  "status": "ativo",
-  "properties": {
-    "priority": "alta",
-    "category": "categoria"
-  }${
-    context.includeNotes
-      ? `,
-  "notes": [
-    {
-      "title": "Título da nota",
-      "description": "Descrição da nota",
-      "tags": ["tag1", "tag2"]
-    }
-  ]`
-      : ""
-  }
-}`,
-
-      create_blocks: `${originalPrompt}
-
-IMPORTANTE: Retorne APENAS um JSON válido, sem texto adicional, seguindo esta estrutura exata:
-{
-  "blocks": [
-    {"type": "paragraph", "text": "Conteúdo", "properties": {}},
-    {"type": "heading", "text": "Título", "properties": {}},
-    {"type": "list", "text": "Item", "properties": {}}
-  ]
-}
-
-Tipos permitidos: text, paragraph, heading, h1, h2, h3, todo, list, page, code, quote, image, divider`,
-
-      update_note: `${originalPrompt}
-
-IMPORTANTE: Retorne APENAS um JSON válido com os campos a atualizar:
-{
-  "title": "Título atualizado",
-  "description": "Descrição atualizada",
-  "tags": ["tags", "atualizadas"],
-  "status": "status"
-}
-
-Inclua apenas os campos que devem ser atualizados.`,
-
-      update_project: `${originalPrompt}
-
-IMPORTANTE: Retorne APENAS um JSON válido com os campos a atualizar:
-{
-  "title": "Título atualizado",
-  "description": "Descrição atualizada",
-  "status": "ativo",
-  "properties": {
-    "priority": "alta",
-    "category": "categoria"
-  }
-}
-
-Inclua apenas os campos que devem ser atualizados.`,
-    };
-
-    return actionPrompts[action] || originalPrompt;
-  }
-
-  /**
-   * Executa ações de criar/atualizar dados baseado na resposta da IA
-   * @private
-   */
-  async _executeAction(userId, action, aiResponse, context) {
-    try {
-      // Parse da resposta se for string
-      let parsedResponse = aiResponse;
-      if (typeof aiResponse === "string") {
-        // Remove markdown code blocks se existirem
-        const cleanResponse = aiResponse
-          .replace(/```json\n?/g, "")
-          .replace(/```\n?/g, "")
-          .trim();
-
-        try {
-          parsedResponse = JSON.parse(cleanResponse);
-        } catch (parseError) {
-          // Se não conseguir parsear, retorna erro
-          console.error("Erro ao parsear resposta da IA:", parseError);
-          throw new Error("Resposta da IA não está em formato JSON válido");
-        }
-      } else if (aiResponse.content) {
-        const cleanContent = aiResponse.content
-          .replace(/```json\n?/g, "")
-          .replace(/```\n?/g, "")
-          .trim();
-
-        try {
-          parsedResponse = JSON.parse(cleanContent);
-        } catch (parseError) {
-          console.error("Erro ao parsear conteúdo da IA:", parseError);
-          throw new Error("Conteúdo da IA não está em formato JSON válido");
-        }
-      }
-
-      switch (action) {
-        case "create_note": {
-          // Cria nota
-          const tags = [
-            ...(context.tags || []),
-            ...(parsedResponse.tags || []),
-          ];
-          const uniqueTags = [...new Set(tags)];
-
-          const generatedDocument =
-            context.includeBlocks !== false
-              ? toDocumentFromAiBlocks(parsedResponse.blocks)
-              : null;
-
-          const note = await notesRepository.createNotesQuery(
-            userId,
-            parsedResponse.title,
-            parsedResponse.description,
-            uniqueTags,
-            NOTE_STATUS.VISIBLE,
-            null,
-            null,
-            null,
-            generatedDocument
-          );
-
-          return {
-            type: "note",
-            blocks:
-              generatedDocument && note?.id
-                ? documentToBlocks(generatedDocument, String(note.id))
-                : null,
-            note,
-          };
-        }
-
-        case "create_project": {
-          // Cria projeto
-          const project = await projectsRepository.createProject(
-            userId,
-            parsedResponse.title,
-            parsedResponse.description,
-            parsedResponse.status || PROJECT_STATUS.OPEN,
-            parsedResponse.properties || {}
-          );
-
-          // Cria notas associadas se fornecidas
-          const notes = [];
-          if (
-            context.includeNotes &&
-            parsedResponse.notes &&
-            parsedResponse.notes.length > 0
-          ) {
-            for (const noteData of parsedResponse.notes) {
-              const note = await notesRepository.createNotesQuery(
-                userId,
-                noteData.title,
-                noteData.description || "",
-                noteData.tags || []
-              );
-
-              // Associa nota ao projeto
-              await projectsRepository.addNoteToProject(
-                project[0].id,
-                note.id,
-                userId
-              );
-
-              notes.push(note);
-            }
-          }
-
-          return {
-            type: "project",
-            project: project[0],
-            notes: notes.length > 0 ? notes : null,
-          };
-        }
-
-        case "create_blocks": {
-          // Adiciona conteúdo no documento de uma nota existente
-          if (!context.noteId) {
-            throw new Error("noteId é obrigatório para atualizar conteúdo");
-          }
-
-          const existingNote = await notesRepository.getNoteById(
-            context.noteId
-          );
-          if (!existingNote) {
-            throw new Error("Nota não encontrada");
-          }
-
-          const currentBlocks = documentToBlocks(
-            existingNote.document,
-            String(context.noteId)
-          );
-          const newBlocks = Array.isArray(parsedResponse.blocks)
-            ? parsedResponse.blocks.map((block, index) => ({
-                id: `ai-${Date.now()}-${index}`,
-                note_id: String(context.noteId),
-                position: currentBlocks.length + index,
-                properties: block?.properties || {},
-                text: block?.text || "",
-                type: block?.type || "paragraph",
-              }))
-            : [];
-          const mergedBlocks = [...currentBlocks, ...newBlocks];
-          const nextDocument = blocksToDocument(mergedBlocks);
-
-          await notesRepository.updateNoteById(context.noteId, {
-            document: nextDocument,
-          });
-
-          return {
-            type: "blocks",
-            blocks: newBlocks,
-            noteId: context.noteId,
-          };
-        }
-
-        case "update_note": {
-          // Atualiza nota existente
-          if (!context.noteId) {
-            throw new Error("noteId é obrigatório para atualizar nota");
-          }
-
-          const updateData = {};
-          if (parsedResponse.title) updateData.title = parsedResponse.title;
-          if (parsedResponse.description)
-            updateData.description = parsedResponse.description;
-          if (parsedResponse.tags) updateData.tags = parsedResponse.tags;
-          if (parsedResponse.status) updateData.status = parsedResponse.status;
-          if (Array.isArray(parsedResponse.blocks)) {
-            updateData.document = blocksToDocument(
-              parsedResponse.blocks.map((block, index) => ({
-                id: `ai-${Date.now()}-${index}`,
-                note_id: String(context.noteId),
-                position: index,
-                properties: block?.properties || {},
-                text: block?.text || "",
-                type: block?.type || "paragraph",
-              }))
-            );
-          }
-
-          const updatedNote = await notesRepository.updateNoteById(
-            context.noteId,
-            updateData
-          );
-
-          return {
-            type: "note_updated",
-            note: updatedNote,
-          };
-        }
-
-        case "update_project": {
-          // Atualiza projeto existente
-          if (!context.projectId) {
-            throw new Error("projectId é obrigatório para atualizar projeto");
-          }
-
-          const updateData = {};
-          if (parsedResponse.title) updateData.title = parsedResponse.title;
-          if (parsedResponse.description)
-            updateData.description = parsedResponse.description;
-          if (parsedResponse.status) updateData.status = parsedResponse.status;
-          if (parsedResponse.properties)
-            updateData.properties = parsedResponse.properties;
-
-          const updatedProject = await projectsRepository.updateProject(
-            context.projectId,
-            userId,
-            updateData
-          );
-
-          return {
-            type: "project_updated",
-            project: updatedProject[0],
-          };
-        }
-
-        default:
-          return null;
-      }
-    } catch (error) {
-      console.error(`Erro ao executar ação ${action}:`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Enriquece o contexto com dados do usuário usando Context Provider
-   * @private
-   */
-  async _enrichContext(userId, useCase, context) {
-    try {
-      // Buscar dados completos de notas e projetos indexados
-      const indexedNotes = [];
-      const indexedProjects = [];
-
-      if (context.noteIds && Array.isArray(context.noteIds)) {
-        for (const noteId of context.noteIds) {
-          try {
-            const note = await notesRepository.getNoteById(noteId, userId);
-            if (note) {
-              indexedNotes.push({
-                id: note.id,
-                title: note.title,
-                description: note.description,
-                tags: note.tags,
-                status: note.status,
-              });
-            }
-          } catch (err) {
-            console.warn(`Nota ${noteId} não encontrada ou sem acesso`);
-          }
-        }
-      }
-
-      if (context.projectIds && Array.isArray(context.projectIds)) {
-        for (const projectId of context.projectIds) {
-          try {
-            const project = await projectsRepository.getProjectById(
-              projectId,
-              userId
-            );
-            if (project) {
-              indexedProjects.push({
-                id: project.id,
-                title: project.title,
-                description: project.description,
-                status: project.status,
-                properties: project.properties,
-              });
-            }
-          } catch (err) {
-            console.warn(`Projeto ${projectId} não encontrado ou sem acesso`);
-          }
-        }
-      }
-
-      // Mescla com contexto fornecido
-      return {
-        ...context,
-        // Adiciona notas e projetos indexados ao contexto
-        indexedNotes: indexedNotes.length > 0 ? indexedNotes : undefined,
-        indexedProjects:
-          indexedProjects.length > 0 ? indexedProjects : undefined,
-      };
-    } catch (error) {
-      console.warn("Erro ao enriquecer contexto:", error.message);
-      return context;
-    }
-  }
-
-  /**
    * Executa uma função chamada pela IA
    * @private
    */
@@ -821,6 +505,19 @@ Inclua apenas os campos que devem ser atualizados.`,
     // Executa a função apropriada
     switch (name) {
       // ========== NOTAS ==========
+      case "get_user_notes":
+        return await notesRepository.getAllNotesByUserId(userId);
+
+      case "get_notes_with_pagination":
+        return await notesRepository.getAllNotesWithPagination(userId, {
+          limit: args.limit,
+          page: args.page,
+          search: args.searchTerm || args.search || "",
+          sortBy: args.sortBy,
+          sortOrder: args.sortOrder,
+          tags: args.tags,
+        });
+
       case "create_note":
         const createdDocument = toDocumentFromAiBlocks(args.blocks);
         const newNote = await notesRepository.createNotesQuery(
@@ -871,6 +568,18 @@ Inclua apenas os campos que devem ser atualizados.`,
         }
         return note;
 
+      case "get_note_by_id":
+        return await this._executeFunctionCall(
+          userId,
+          {
+            arguments: {
+              noteId: args.noteId,
+            },
+            name: "get_note",
+          },
+          context
+        );
+
       case "search_notes":
         const allNotes = await notesRepository.getAllNotesByUserId(userId);
         const query = args.query || args.title || "";
@@ -893,7 +602,13 @@ Inclua apenas os campos que devem ser atualizados.`,
 
         return filteredNotes.slice(0, limit);
 
+      case "get_notes_stats":
+        return await notesRepository.getAllNotesStats(userId);
+
       // ========== PROJETOS ==========
+      case "get_user_projects":
+        return await projectsRepository.getAllProjects(userId);
+
       case "create_project":
         return await projectsRepository.createProject(
           userId,
@@ -920,6 +635,21 @@ Inclua apenas os campos que devem ser atualizados.`,
           userId
         );
 
+      case "get_project_by_id":
+        return await this._executeFunctionCall(
+          userId,
+          {
+            arguments: {
+              projectId: args.projectId,
+            },
+            name: "get_project",
+          },
+          context
+        );
+
+      case "get_project_notes":
+        return await projectsRepository.getAssociatedNotes(args.projectId, userId);
+
       case "add_note_to_project":
         return await projectsRepository.addNoteToProject(
           args.projectId,
@@ -933,6 +663,13 @@ Inclua apenas os campos que devem ser atualizados.`,
           args.noteId,
           userId
         );
+
+      // ========== USERS ==========
+      case "get_user_profile":
+        return await searchUsersRepository.getUserById(userId);
+
+      case "search_users":
+        return await searchUsersRepository.searchUsers(args.searchTerm || "");
 
       default:
         throw new Error(`Função ${name} não implementada`);
@@ -1025,8 +762,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         currentSessionId = session.id;
       }
 
-      // Determina provider (usa preferredProvider se não especificado)
-      const provider = modelSelection?.name || requestedProvider || "auto";
+      const selectedModelName = resolveEngineModel(modelSelection, requestedProvider);
       let selectedAgent = null;
       if (typeof agentId === "string" && agentId.trim()) {
         selectedAgent = await agentsRepository.getAgentById(agentId.trim(), userId);
@@ -1043,7 +779,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         userId,
         role: "user",
         content: message,
-        model: provider,
+        model: selectedModelName,
         metadata: {
           agentId: selectedAgent?.id || null,
           modelSelection,
@@ -1069,7 +805,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         files: requestFiles,
         functions: authorizedFunctions,
         message,
-        model: provider,
+        model: selectedModelName,
         noteIds,
         projectIds,
         sessionId: currentSessionId,
@@ -1122,6 +858,7 @@ Inclua apenas os campos que devem ser atualizados.`,
       const successfulExecutions = executedFunctions
         .filter((item) => item.success)
         .map((item) => item.result);
+      const failedExecutions = executedFunctions.filter((item) => !item.success);
       const executionResult = successfulExecutions.length > 0
         ? successfulExecutions
         : null;
@@ -1133,23 +870,21 @@ Inclua apenas os campos que devem ser atualizados.`,
         null;
 
       if (!finalContent && successfulExecutions.length > 0) {
-        const systemMessage = await buildSystemMessage(useCase, {
-          ...parsedContext,
-          noteIds,
-          projectIds,
-        });
-        finalContent = await generateSmartResponse({
-          executionResult: successfulExecutions,
-          functionName: requestedFunctions[0]?.name || "multiple_functions",
-          originalMessage: message,
-          provider,
-          systemMessage,
-        });
+        finalContent = formatExecutionSummary(
+          requestedFunctions[0]?.name || "multiple_functions",
+          successfulExecutions,
+          req.body?.userLanguage || parsedContext?.userLanguage
+        );
       }
 
       if (!finalContent && blockedFunctions.length > 0) {
         finalContent =
           "Recebi instruções de escrita da engine, mas ignorei as actions porque allowEdit está desativado.";
+      }
+
+      if (!finalContent && failedExecutions.length > 0) {
+        const firstFailure = failedExecutions[0];
+        finalContent = `A função solicitada pela IA falhou: ${firstFailure.error || "erro desconhecido"}.`;
       }
 
       if (!finalContent) {
@@ -1162,15 +897,16 @@ Inclua apenas os campos que devem ser atualizados.`,
         userId,
         role: "assistant",
         content: finalContent,
-        model: provider,
+        model: selectedModelName,
         metadata: {
           agentId: selectedAgent?.id || null,
           blockedFunctions,
           citations: engineData.citations || null,
           executionResult,
+          failedExecutions,
           allowEdit,
           requestedFunctions,
-          providerUsed: engineResponse?.providerUsed || provider,
+          providerUsed: engineResponse?.providerUsed || selectedModelName,
         },
       });
 
@@ -1187,8 +923,8 @@ Inclua apenas os campos que devem ser atualizados.`,
         success: true,
         message: assistantMessage,
         sessionId: currentSessionId,
-        model: modelSelection || provider,
-        provider,
+        model: selectedModelName,
+        provider: engineResponse?.providerUsed || selectedModelName,
         useCase,
         allowEdit,
         agentId: selectedAgent?.id || null,

@@ -1,9 +1,9 @@
-const { validateEnv, env } = require("./config");
+const { validateEnv, env } = require("./config/enviroments");
 const { logger } = require("./logger");
 const { registerShutdownHandler, setupGracefulShutdown } = require("./graceful-shutdown");
-const redis = require("./config/redis.client");
-const { closeDatabase, connectDatabase } = require("./config/database.client");
-const { initializeServices, llmQueueProcessor } = require("./services");
+const redis = require("./services/redis.client");
+const { closeDatabase, connectDatabase } = require("./services/postgres.client");
+const llmQueueProcessor = require("./modules/processors/llm-queue.processor");
 
 async function bootstrap() {
   logger.info("weave-engine starting", { env: env.NODE_ENV });
@@ -12,7 +12,7 @@ async function bootstrap() {
   logger.info("Environment validated");
 
   await connectDatabase();
-  await initializeServices();
+  await llmQueueProcessor.start();
 
   registerShutdownHandler("llm-queue-processor", async () => {
     llmQueueProcessor.stop();
