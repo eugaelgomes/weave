@@ -55,7 +55,10 @@ export default function ChatWidget({
 
     await sendMessage({
       message: value,
-      model: selectedModel.id,
+      model: {
+        name: selectedModel.id,
+        version: selectedModel.version,
+      },
       sessionId: currentSession?.id,
     });
   };
@@ -160,6 +163,8 @@ export default function ChatWidget({
           <button
             onClick={handleSend}
             disabled={!input.trim() || isTyping}
+            title="Enviar mensagem"
+            aria-label="Enviar mensagem"
             className="bg-brand-primary-500 flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white transition-all hover:bg-yellow-600 disabled:opacity-50"
           >
             <Send className="h-3.5 w-3.5" />

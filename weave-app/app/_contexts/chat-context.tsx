@@ -68,46 +68,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
   }, [authenticated]);
 
-  const sendMessage = useCallback(
-    async (data: SendMessageData): Promise<ChatMessage | null> => {
-      if (!authenticated) return null;
-
-      try {
-        setIsTyping(true);
-        setError(null);
-
-        const userMessage: ChatMessage = {
-          id: Date.now().toString(),
-          role: "user",
-          content: data.message,
-          timestamp: new Date(),
-          model: data.model,
-          metadata: {
-            allowEdit: data.allowEdit,
-            useCase: data.useCase,
-          },
-        };
-
-        setMessages((prev) => [...prev, userMessage]);
-
-        const response = await sendChatMessage(data);
-
-        if (response) {
-          setMessages((prev) => [...prev, response]);
-        }
-
-        return response;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao enviar mensagem");
-        console.error("Erro ao enviar mensagem:", err);
-        return null;
-      } finally {
-        setIsTyping(false);
-      }
-    },
-    [authenticated]
-  );
-
   const loadChatHistory = useCallback(
     async (sessionId?: string) => {
       if (!authenticated) return;
@@ -134,6 +94,64 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     [authenticated]
   );
 
+  const sendMessage = useCallback(
+    async (data: SendMessageData): Promise<ChatMessage | null> => {
+      if (!authenticated) return null;
+
+      try {
+        setIsTyping(true);
+        setError(null);
+
+        const userMessage: ChatMessage = {
+          id: Date.now().toString(),
+          role: "user",
+          content: data.message,
+          timestamp: new Date(),
+          model: data.model.version ? `${data.model.name}:${data.model.version}` : data.model.name,
+          metadata: {
+            allowEdit: data.allowEdit,
+          },
+        };
+
+        setMessages((prev) => [...prev, userMessage]);
+
+        const response = await sendChatMessage(data);
+
+        if (response?.message) {
+          setMessages((prev) => [...prev, response.message]);
+
+          if (response.sessionId) {
+            setCurrentSessionState((prev) => {
+              if (prev?.id === response.sessionId) return prev;
+
+              const existingSession = chatHistory.find((session) => session.id === response.sessionId);
+              if (existingSession) return existingSession;
+
+              return {
+                id: response.sessionId,
+                title: data.message.substring(0, 50) + (data.message.length > 50 ? "..." : ""),
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                messageCount: 2,
+              };
+            });
+
+            await loadChatHistory();
+          }
+        }
+
+        return response?.message || null;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erro ao enviar mensagem");
+        console.error("Erro ao enviar mensagem:", err);
+        return null;
+      } finally {
+        setIsTyping(false);
+      }
+    },
+    [authenticated, chatHistory, loadChatHistory]
+  );
+
   const loadSession = useCallback(
     async (sessionId: string) => {
       if (!authenticated) return;
@@ -145,9 +163,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         setMessages(history as ChatMessage[]);
 
         // Atualiza a sessão atual
-        const session = chatHistory.find((s) => s.id === sessionId);
+        const session = chatHistory.find((s) => s.id === sessionId) || null;
         if (session) {
           setCurrentSessionState(session);
+        } else {
+          setCurrentSessionState({
+            id: sessionId,
+            title: "Conversa",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            messageCount: (history as ChatMessage[]).length,
+          });
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erro ao carregar sessão");

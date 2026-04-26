@@ -14,6 +14,7 @@ import {
   Lock,
   Unlock,
   Paperclip,
+  NotebookPen,
   FileText,
   FolderKanban,
 } from "lucide-react";
@@ -21,58 +22,136 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 
-// Certifique-se de que os caminhos destes contextos estão corretos no seu projeto
 import { useChat } from "@/app/_contexts/chat-context";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useNotes } from "@/app/_contexts/notes-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { type AIModel } from "@/app/_contexts/chat-context";
+import { useAgent } from "@/app/_contexts/agent-context";
 import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
 
-/* -------------------------------- Icons e Subcomponentes -------------------------------- */
+const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
+const ACCEPTED_EXTENSIONS = ["png", "jpg", "jpeg", "pdf", "csv", "xls"];
 
 const ModelIcon = ({ provider }: { provider?: string }) => {
   if (provider === "perplexity") return <Globe className="h-3 w-3 text-blue-500" />;
   return <Sparkles className="text-brand-primary-500 h-3 w-3" />;
 };
 
-/* -------------------------------- Componente Principal -------------------------------- */
+function formatModelLabel(model: AIModel) {
+  return model.version ? `${model.name} (${model.version})` : model.name;
+}
+
+function validateChatFile(file: File): string | null {
+  const extension = file.name.split(".").pop()?.toLowerCase() || "";
+  if (!ACCEPTED_EXTENSIONS.includes(extension)) {
+    return `Arquivo "${file.name}" inválido. Formatos aceitos: PNG, JPG, PDF, CSV e XLS.`;
+  }
+
+  const maxSize = ["png", "jpg", "jpeg"].includes(extension) ? IMAGE_MAX_BYTES : DOCUMENT_MAX_BYTES;
+  if (file.size > maxSize) {
+    const maxSizeMb = maxSize / (1024 * 1024);
+    return `Arquivo "${file.name}" excede o limite de ${maxSizeMb}MB.`;
+  }
+
+  return null;
+}
 
 export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
-  const { messages, loading, isTyping, currentSession } = useChat();
+  const {
+    models,
+    messages,
+    loading,
+    isTyping,
+    currentSession,
+    loadModels,
+    loadSession,
+    sendMessage,
+    createNewSession,
+  } = useChat();
   const { user } = useAuth();
   const { notesOverview } = useNotes();
   const { projectsOverview } = useProjects();
+  const { agents, loadAgents } = useAgent();
 
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<AIModel | null>(null);
+  const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [input, setInput] = useState("");
-  const [allowEdit, setAllowEdit] = useState(false);
-  const [selectedUseCase, setSelectedUseCase] = useState("general");
+  const [allowEdit, setAllowEdit] = useState(true);
   const [showContextMenu, setShowContextMenu] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [contextItems, setContextItems] = useState<{ type: string; id: string; title: string }[]>(
     []
   );
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const models: AIModel[] = [
-    { id: "gpt-4", name: "GPT-4", provider: "openai" },
-    { id: "claude-3", name: "Claude 3", provider: "anthropic" },
-  ] as unknown as AIModel[];
+  useEffect(() => {
+    loadModels();
+  }, [loadModels]);
 
-  const useCases = [
-    { value: "general", label: "Geral" },
-    { value: "code", label: "Programação" },
-    { value: "writing", label: "Escrita" },
-  ];
+  useEffect(() => {
+    loadAgents();
+  }, [loadAgents]);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    console.log("A enviar:", input, "com contexto:", contextItems);
+  useEffect(() => {
+    if (models.length > 0 && !selectedModel) {
+      setSelectedModel(models[0]);
+    }
+  }, [models, selectedModel]);
+
+  useEffect(() => {
+    if (chatId) {
+      loadSession(chatId);
+      return;
+    }
+
+    createNewSession();
+  }, [chatId, loadSession, createNewSession]);
+
+  const handleSend = async () => {
+    if (!input.trim() || isTyping) return;
+
+    const noteIds = contextItems
+      .filter((item) => item.type === "note")
+      .map((item) => item.id);
+    const projectIds = contextItems
+      .filter((item) => item.type === "project")
+      .map((item) => item.id);
+
+    const message = input.trim();
     setInput("");
+
+    await sendMessage({
+      message,
+      model: {
+        name: selectedModel?.id || "auto",
+        version: selectedModel?.version,
+      },
+      sessionId: currentSession?.id || chatId,
+      allowEdit,
+      agentId: selectedAgentId || undefined,
+      context: {
+        selectedContextItems: contextItems.map((item) => ({
+          type: item.type,
+          id: item.id,
+          title: item.title,
+        })),
+      },
+      noteIds,
+      projectIds,
+      files: selectedFiles.length > 0 ? selectedFiles : undefined,
+    });
+
+    setSelectedFiles([]);
+    setFileError(null);
   };
 
   const handleAddContext = (type: string, id: string, title: string) => {
@@ -86,9 +165,42 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
     setContextItems((prev) => prev.filter((item) => item.id !== id));
   };
 
+  const handleFilesSelected = (filesList: FileList | null) => {
+    if (!filesList || filesList.length === 0) return;
+
+    const incomingFiles = Array.from(filesList);
+    for (const file of incomingFiles) {
+      const validationError = validateChatFile(file);
+      if (validationError) {
+        setFileError(validationError);
+        return;
+      }
+    }
+
+    setFileError(null);
+    setSelectedFiles((prev) => {
+      const nextFiles = [...prev];
+      incomingFiles.forEach((file) => {
+        const alreadyExists = nextFiles.some(
+          (existing) => existing.name === file.name && existing.size === file.size
+        );
+        if (!alreadyExists) {
+          nextFiles.push(file);
+        }
+      });
+      return nextFiles;
+    });
+  };
+
+  const handleRemoveFile = (fileToRemove: File) => {
+    setSelectedFiles((prev) => prev.filter((file) => file !== fileToRemove));
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
+
+  const selectedAgent = agents.find((agent) => agent.id === selectedAgentId) || null;
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-neutral-950">
@@ -107,7 +219,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
               className="flex items-center gap-1.5 rounded bg-neutral-100 p-1.5 text-[10px] font-medium transition-colors hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800"
             >
               <ModelIcon provider={selectedModel?.provider} />
-              <span>{selectedModel?.name || "Modelo"}</span>
+              <span>{selectedModel ? formatModelLabel(selectedModel) : "Modelo"}</span>
               <ChevronDown className="h-3 w-3 text-neutral-500" />
             </button>
 
@@ -127,7 +239,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                       }`}
                     >
                       <ModelIcon provider={model.provider} />
-                      {model.name}
+                      {formatModelLabel(model)}
                     </button>
                   ))}
                 </div>
@@ -147,7 +259,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
               </div>
               <h2 className="text-sm font-semibold tracking-tight">Como posso ajudar?</h2>
               <p className="mt-1 text-xs text-neutral-500">
-                Selecione um contexto e inicie a conversa.
+                Selecione contexto, arquivos opcionais e inicie a conversa.
               </p>
             </div>
           )}
@@ -257,6 +369,24 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
           <div className="flex flex-wrap items-center justify-between gap-2">
             {/* Contextos Ativos */}
             <div className="flex flex-wrap gap-1">
+              {selectedFiles.map((file) => (
+                <div
+                  key={`${file.name}-${file.size}`}
+                  className="flex items-center gap-1 rounded border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-800 dark:border-amber-800/50 dark:bg-amber-900/30 dark:text-amber-300"
+                >
+                  <Paperclip className="h-2.5 w-2.5" />
+                  <span className="font-medium">{file.name}</span>
+                  <button
+                    onClick={() => handleRemoveFile(file)}
+                    title="Remover arquivo"
+                    aria-label="Remover arquivo"
+                    className="hover:text-amber-900 dark:hover:text-amber-100"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </div>
+              ))}
+
               {contextItems.map((item) => (
                 <div
                   key={`${item.type}-${item.id}`}
@@ -270,6 +400,8 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                   <span className="font-medium">{item.title}</span>
                   <button
                     onClick={() => handleRemoveContext(item.type, item.id)}
+                    title="Remover contexto"
+                    aria-label="Remover contexto"
                     className="hover:text-blue-900 dark:hover:text-blue-100"
                   >
                     <X className="h-2.5 w-2.5" />
@@ -280,17 +412,51 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
 
             {/* Configurações da Mensagem */}
             <div className="ml-auto flex items-center gap-2">
-              <select
-                value={selectedUseCase}
-                onChange={(e) => setSelectedUseCase(e.target.value)}
-                className="cursor-pointer rounded border border-transparent bg-transparent px-1 py-0.5 text-[10px] font-medium text-neutral-600 transition-all outline-none hover:border-neutral-200 hover:bg-neutral-200 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
-              >
-                {useCases.map((uc) => (
-                  <option key={uc.value} value={uc.value}>
-                    {uc.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <button
+                  onClick={() => setIsAgentMenuOpen((prev) => !prev)}
+                  className="flex items-center gap-1 rounded border border-transparent px-1.5 py-0.5 text-[10px] font-medium text-neutral-600 transition-all hover:border-neutral-200 hover:bg-neutral-200 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
+                >
+                  <Bot className="h-2.5 w-2.5" />
+                  <span>{selectedAgent ? selectedAgent.name : "Agente padrão"}</span>
+                  <ChevronDown className="h-2.5 w-2.5 text-neutral-500" />
+                </button>
+
+                {isAgentMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsAgentMenuOpen(false)} />
+                    <div className="absolute top-full right-0 z-20 mt-1 w-56 rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+                      <button
+                        onClick={() => {
+                          setSelectedAgentId(null);
+                          setIsAgentMenuOpen(false);
+                        }}
+                        className={`flex w-full items-center gap-2 p-2 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+                          !selectedAgentId ? "bg-neutral-100 dark:bg-neutral-800" : ""
+                        }`}
+                      >
+                        <Bot className="h-3 w-3" />
+                        Agente padrão
+                      </button>
+                      {agents.map((agent) => (
+                        <button
+                          key={agent.id}
+                          onClick={() => {
+                            setSelectedAgentId(agent.id);
+                            setIsAgentMenuOpen(false);
+                          }}
+                          className={`flex w-full items-center gap-2 p-2 text-left text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+                            selectedAgentId === agent.id ? "bg-neutral-100 dark:bg-neutral-800" : ""
+                          }`}
+                        >
+                          <Bot className="h-3 w-3" />
+                          <span className="truncate">{agent.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
 
               <button
                 onClick={() => setAllowEdit(!allowEdit)}
@@ -308,16 +474,39 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
 
           {/* Unified Input Box (Pílula) */}
           <div className="relative flex items-end gap-1 rounded-lg border border-neutral-300 bg-white p-1 shadow-sm transition-all focus-within:border-neutral-400 focus-within:ring-1 focus-within:ring-neutral-200 dark:border-neutral-700 dark:bg-neutral-900 dark:focus-within:border-neutral-600 dark:focus-within:ring-neutral-800">
-            {/* Botão de Anexo Integrado */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".png,.jpg,.jpeg,.pdf,.csv,.xls"
+              className="hidden"
+              onChange={(event) => {
+                handleFilesSelected(event.target.files);
+                event.currentTarget.value = "";
+              }}
+            />
+
             <div className="relative mb-0.5 ml-0.5">
               <button
-                onClick={() => setShowContextMenu(!showContextMenu)}
+                onClick={() => fileInputRef.current?.click()}
+                title="Anexar arquivos"
+                aria-label="Anexar arquivos"
                 className="flex h-7 w-7 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
               >
                 <Paperclip className="h-3.5 w-3.5" />
               </button>
+            </div>
 
-              {/* Dropdown de Contexto (Menor e mais direto) */}
+            <div className="relative mb-0.5 ml-0.5">
+              <button
+                onClick={() => setShowContextMenu(!showContextMenu)}
+                title="Indexar contexto"
+                aria-label="Indexar contexto"
+                className="flex h-7 w-7 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+              >
+                <NotebookPen className="h-3.5 w-3.5" />
+              </button>
+
               {showContextMenu && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowContextMenu(false)} />
@@ -376,11 +565,15 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
             <button
               onClick={handleSend}
               disabled={!input.trim()}
+              title="Enviar mensagem"
+              aria-label="Enviar mensagem"
               className="mr-0.5 mb-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded bg-neutral-900 text-white transition-colors hover:bg-black disabled:opacity-30 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
             >
               <Send className="ml-0.5 h-3 w-3" />
             </button>
           </div>
+
+          {fileError ? <p className="text-[11px] text-red-500">{fileError}</p> : null}
         </div>
       </div>
     </div>

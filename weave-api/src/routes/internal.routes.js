@@ -13,9 +13,6 @@ const projectsRoutes = require("@/modules/projects/projects.routes");
 const aiRoutes = require("@/modules/weave-ai/weave-ai.routes");
 const organizationsRoutes = require("@/modules/organizations/organizations.routes");
 const plansRoutes = require("@/modules/plans/plans.routes");
-const adminRoutes = require("@/modules/admin/admin.routes");
-const systemAuthRoutes = require("@/modules/system-auth/system-auth.routes");
-const systemAdminsRoutes = require("@/modules/system-admins/system-admins.routes");
 const webhooksRoutes = require("@/modules/webhooks/webhooks.routes");
 const notificationsRoutes = require("@/modules/notifications/notifications.routes");
 const calendarEventsRoutes = require("@/modules/calendar-events/calendar-events.routes");
@@ -86,7 +83,6 @@ const isAllowedOrigin = (origin, isDev) => {
 };
 
 const routeRegistry = [
-  { basePath: "/admin", handler: adminRoutes },
   { basePath: "/api-tokens", handler: apiTokensRoutes },
   { basePath: "/auth", handler: authRoutes },
   { basePath: "/backup", handler: backupRoutes },
@@ -103,8 +99,6 @@ const routeRegistry = [
   { basePath: "/notifications", handler: notificationsRoutes },
   { basePath: "/projects", handler: projectsRoutes },
   { basePath: "/task-priorities", handler: taskPrioritiesRoutes },
-  { basePath: "/system-admins", handler: systemAdminsRoutes },
-  { basePath: "/system-auth", handler: systemAuthRoutes },
   { basePath: "/users", handler: userRoutes },
   { basePath: "/webhooks", handler: webhooksRoutes },
 ];

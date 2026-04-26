@@ -4,11 +4,16 @@ import { API_ENDPOINTS } from "../api-methods";
 export interface AIModel {
   id: string;
   name: string;
+  version?: string;
   provider: "gemini" | "perplexity";
   description: string;
   capabilities: string[];
-  useCases: string[];
   isAvailable: boolean;
+}
+
+export interface ChatModelSelection {
+  name: string;
+  version?: string;
 }
 
 export interface ChatMessage {
@@ -32,11 +37,26 @@ export interface ChatSession {
 
 export interface SendMessageData {
   message: string;
-  model: string;
+  model: ChatModelSelection;
   sessionId?: string;
+  noteIds?: string[];
+  projectIds?: string[];
+  files?: File[];
+  agentId?: string;
   allowEdit?: boolean;
   useCase?: string;
   context?: Record<string, any>;
+}
+
+export interface SendMessageResult {
+  message: ChatMessage;
+  sessionId: string;
+  model?: ChatModelSelection | string;
+  provider?: string;
+  useCase?: string;
+  allowEdit?: boolean;
+  agentId?: string | null;
+  executionResult?: unknown;
 }
 
 export interface GenerateContentData {
@@ -89,16 +109,116 @@ export interface CreateAgentData {
   knowledge_files?: File[];
 }
 
+type RawChatMessage = {
+  id: string | number;
+  role: "user" | "assistant";
+  content: string;
+  created_at?: string;
+  model?: string;
+  session_id?: string;
+  metadata?: Record<string, any>;
+};
+
+type RawChatSession = {
+  id: string;
+  title: string;
+  created_at?: string;
+  updated_at?: string;
+  message_count?: string | number;
+};
+
+function normalizeChatMessage(message: RawChatMessage): ChatMessage {
+  return {
+    id: String(message.id),
+    role: message.role,
+    content: message.content,
+    timestamp: message.created_at ? new Date(message.created_at) : new Date(),
+    created_at: message.created_at,
+    model: message.model,
+    sessionId: message.session_id,
+    metadata: message.metadata,
+  };
+}
+
+function normalizeChatSession(session: RawChatSession): ChatSession {
+  return {
+    id: session.id,
+    title: session.title,
+    createdAt: session.created_at ? new Date(session.created_at) : new Date(),
+    updatedAt: session.updated_at ? new Date(session.updated_at) : new Date(),
+    messageCount: Number(session.message_count || 0),
+  };
+}
+
 export async function fetchAvailableModels(): Promise<AIModel[]> {
   const response = await apiClient.get(API_ENDPOINTS.AI_MODELS);
   const data = await handleResponse<{ models: AIModel[] }>(response);
   return data.models;
 }
 
-export async function sendChatMessage(data: SendMessageData): Promise<ChatMessage> {
-  const response = await apiClient.post(API_ENDPOINTS.AI_CHAT, data);
-  const result = await handleResponse<{ message: ChatMessage }>(response);
-  return result.message;
+export async function sendChatMessage(data: SendMessageData): Promise<SendMessageResult> {
+  const payload = {
+    message: data.message,
+    model: data.model,
+    sessionId: data.sessionId,
+    noteIds: data.noteIds,
+    projectIds: data.projectIds,
+    agentId: data.agentId,
+    allowEdit: data.allowEdit,
+    useCase: data.useCase,
+    context: data.context,
+  };
+
+  if (Array.isArray(data.files) && data.files.length > 0) {
+    const formData = new FormData();
+    formData.append("message", data.message);
+    formData.append("model", JSON.stringify(data.model));
+    if (data.sessionId) formData.append("sessionId", data.sessionId);
+    if (data.agentId) formData.append("agentId", data.agentId);
+    formData.append("allowEdit", String(Boolean(data.allowEdit)));
+    if (data.useCase) formData.append("useCase", data.useCase);
+    if (data.context) formData.append("context", JSON.stringify(data.context));
+    if (Array.isArray(data.noteIds) && data.noteIds.length > 0) {
+      formData.append("noteIds", JSON.stringify(data.noteIds));
+    }
+    if (Array.isArray(data.projectIds) && data.projectIds.length > 0) {
+      formData.append("projectIds", JSON.stringify(data.projectIds));
+    }
+    data.files.forEach((file) => formData.append("files", file));
+
+    const response = await apiClient.post(API_ENDPOINTS.AI_CHAT, formData);
+    const result = await handleResponse<{
+      message: RawChatMessage;
+      sessionId: string;
+      model?: string;
+      provider?: string;
+      useCase?: string;
+      allowEdit?: boolean;
+      agentId?: string | null;
+      executionResult?: unknown;
+    }>(response);
+
+    return {
+      ...result,
+      message: normalizeChatMessage(result.message),
+    };
+  }
+
+  const response = await apiClient.post(API_ENDPOINTS.AI_CHAT, payload);
+  const result = await handleResponse<{
+    message: RawChatMessage;
+    sessionId: string;
+    model?: string;
+    provider?: string;
+    useCase?: string;
+    allowEdit?: boolean;
+    agentId?: string | null;
+    executionResult?: unknown;
+  }>(response);
+  return {
+    ...result,
+    message: normalizeChatMessage(result.message),
+  };
 }
 
 export async function fetchChatHistory(sessionId?: string): Promise<ChatMessage[] | ChatSession[]> {
@@ -110,12 +230,12 @@ export async function fetchChatHistory(sessionId?: string): Promise<ChatMessage[
 
   if (sessionId) {
     // Retorna mensagens de uma sessão específica
-    const data = await handleResponse<{ messages: ChatMessage[] }>(response);
-    return data.messages;
+    const data = await handleResponse<{ messages: RawChatMessage[] }>(response);
+    return data.messages.map(normalizeChatMessage);
   } else {
     // Retorna lista de sessões
-    const data = await handleResponse<{ sessions: ChatSession[] }>(response);
-    return data.sessions;
+    const data = await handleResponse<{ sessions: RawChatSession[] }>(response);
+    return data.sessions.map(normalizeChatSession);
   }
 }
 

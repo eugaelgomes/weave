@@ -2,7 +2,6 @@ const axios = require("axios");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const {
   AI_PROVIDERS,
-  fallbackConfig,
   getProviderConfig,
   getProviderForUseCase,
 } = require("../../config/llm.config");
@@ -202,37 +201,13 @@ function resolvePrimaryProvider(provider, useCase) {
 
 async function callAIProvider({ options = {}, prompt, provider, systemMessage, useCase }) {
   const primaryProvider = resolvePrimaryProvider(provider, useCase);
-
-  try {
-    const data = await callProviderWithRetry(
-      primaryProvider,
-      prompt,
-      systemMessage,
-      options
-    );
-    return { data, provider: primaryProvider };
-  } catch (primaryError) {
-    if (!fallbackConfig.enableFallback) {
-      throw primaryError;
-    }
-
-    const fallbackProvider = fallbackConfig.fallbackPriority.find(
-      (item) => item !== primaryProvider
-    );
-
-    if (!fallbackProvider) {
-      throw primaryError;
-    }
-
-    const data = await callProviderWithRetry(
-      fallbackProvider,
-      prompt,
-      systemMessage,
-      options
-    );
-
-    return { data, provider: fallbackProvider };
-  }
+  const data = await callProviderWithRetry(
+    primaryProvider,
+    prompt,
+    systemMessage,
+    options
+  );
+  return { data, provider: primaryProvider };
 }
 
 module.exports = {

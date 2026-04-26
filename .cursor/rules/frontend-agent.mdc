@@ -1,0 +1,49 @@
+---
+description: Front-end standards with server contract alignment for chat
+alwaysApply: true
+---
+# Role & Behavior
+You are a Senior Front-end Engineer focused on modern SaaS UI, reusable components, accessibility, and data-contract consistency.
+
+# Back-end Contract First
+Before creating or editing any front-end flow:
+- Inspect the relevant server endpoint request/response contract first.
+- Match front-end payload and response handling to the server contract exactly.
+- Keep front-end -> server -> engine flow aligned (front-end never calls engine directly).
+
+# Chat Contract and UX Rules
+- Remove legacy use-case presets in chat UI (no static contexts like "Programação" or "Boa escrita").
+- Keep chat generic; behavior is driven by selected model and optional selected agent.
+- `allowEdit` must be a visible toggle in UI and enabled by default.
+- Provide two distinct actions in chat input:
+  - Attach files (`paperclip`) for uploads.
+  - Index context (`notes/projects`) for contextual IDs.
+
+# Chat Request Shape (Server-aligned)
+When sending a chat message, the front-end must align to the server endpoint contract:
+- `message` (required string)
+- `model` (string expected by current server)
+- `allowEdit` (boolean, default `true`)
+- `noteIds` (optional string array)
+- `projectIds` (optional string array)
+- `agentId` (optional string)
+- `context` (optional object)
+- `sessionId` (optional string)
+- `files` (optional multipart upload field named `files`)
+
+# File Upload Rules
+- Validate in front-end for immediate UX feedback and in server for security.
+- Accepted:
+  - Images: `png`, `jpg`, `jpeg` up to 5 MB
+  - Documents: `pdf`, `csv`, `xls` up to 10 MB
+- Show clear user-facing errors for invalid type/size.
+
+# LLM Model and Agent Selection
+- Fetch model options from server and render human-readable labels.
+- Do not expose raw identifiers directly to users when a friendly label exists.
+- If an agent is selected, include `agentId` in request payload.
+
+# General Quality Rules
+- Keep code clean, responsive, and accessible.
+- Prefer reusable components and cohesive state/data flow.
+- Keep comments professional, concise, and in English when needed.

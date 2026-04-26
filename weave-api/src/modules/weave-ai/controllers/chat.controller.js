@@ -126,6 +126,48 @@ function parseOptionalStringArray(value, fieldName) {
 }
 
 /**
+ * Parses model payload from JSON or multipart input.
+ * Supports legacy string model and object model `{ name, version }`.
+ *
+ * @param {unknown} value
+ * @returns {{name: string, version?: string}|null}
+ */
+function parseModelSelection(value) {
+  if (value === undefined || value === null || value === "") return null;
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    if (trimmed.startsWith("{")) {
+      try {
+        return parseModelSelection(JSON.parse(trimmed));
+      } catch {
+        throw createValidationError('Campo "model" deve ser um JSON válido.');
+      }
+    }
+
+    return { name: trimmed };
+  }
+
+  if (typeof value === "object" && !Array.isArray(value)) {
+    const modelName = typeof value.name === "string" ? value.name.trim() : "";
+    const modelVersion = typeof value.version === "string" ? value.version.trim() : "";
+
+    if (!modelName) {
+      throw createValidationError('Campo "model.name" é obrigatório quando model é objeto.');
+    }
+
+    return {
+      name: modelName,
+      version: modelVersion || undefined,
+    };
+  }
+
+  throw createValidationError('Campo "model" deve ser string ou objeto.');
+}
+
+/**
  * Normalizes uploaded files metadata for prompt/context usage.
  *
  * @param {Array<import("multer").File>} files
@@ -904,12 +946,12 @@ Inclua apenas os campos que devem ser atualizados.`,
   async getAvailableModels(req, res) {
     try {
       const geminiAvailable = !!process.env.GEMINI_API_KEY;
-      const perplexityAvailable = !!process.env.PERPLEXITY_API_KEY;
 
       const models = [
         {
           id: "gemini",
           name: "Gemini Flash 2.0",
+          version: "2.0-flash",
           provider: "gemini",
           description:
             "Modelo rápido e eficiente para criação de conteúdo e análise",
@@ -921,20 +963,6 @@ Inclua apenas os campos que devem ser atualizados.`,
           ],
           mode: "funcoes autorizadas por contexto",
           isAvailable: geminiAvailable,
-        },
-        {
-          id: "perplexity",
-          name: "Perplexity Sonar Pro",
-          provider: "perplexity",
-          description: "Modelo focado em pesquisa e informações atualizadas",
-          capabilities: [
-            "Pesquisa em tempo real",
-            "Citação de fontes",
-            "Análise de tendências",
-            "Verificação de fatos",
-          ],
-          mode: "funcoes autorizadas por contexto",
-          isAvailable: perplexityAvailable,
         },
       ];
 
@@ -972,6 +1000,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         agentId,
         sessionId,
       } = req.body;
+      const modelSelection = parseModelSelection(selectedModel);
       const allowEdit = parseBoolean(rawAllowEdit, false);
       const requestFiles = normalizeUploadedFiles(req.files);
       const noteIds = parseOptionalStringArray(
@@ -997,7 +1026,7 @@ Inclua apenas os campos que devem ser atualizados.`,
       }
 
       // Determina provider (usa preferredProvider se não especificado)
-      const provider = selectedModel || requestedProvider || "auto";
+      const provider = modelSelection?.name || requestedProvider || "auto";
       let selectedAgent = null;
       if (typeof agentId === "string" && agentId.trim()) {
         selectedAgent = await agentsRepository.getAgentById(agentId.trim(), userId);
@@ -1017,6 +1046,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         model: provider,
         metadata: {
           agentId: selectedAgent?.id || null,
+          modelSelection,
           ...parsedContext,
           files: requestFiles,
           noteIds,
@@ -1157,7 +1187,7 @@ Inclua apenas os campos que devem ser atualizados.`,
         success: true,
         message: assistantMessage,
         sessionId: currentSessionId,
-        model: provider,
+        model: modelSelection || provider,
         provider,
         useCase,
         allowEdit,
