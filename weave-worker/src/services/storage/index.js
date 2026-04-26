@@ -106,27 +106,27 @@ class SpacesService {
         : Buffer.from(fileContent, "utf-8");
 
       const uploadParams = {
-        Bucket: this.bucketName,
-        Key: key,
-        Body: buffer,
-        ContentType: "text/csv",
         ACL: "private",
+        Body: buffer,
+        Bucket: this.bucketName,
         CacheControl: "no-cache, no-store, must-revalidate",
+        ContentType: "text/csv",
         Expires: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48H
+        Key: key,
       };
 
       const command = new PutObjectCommand(uploadParams);
       await this.s3Client.send(command);
 
       return {
-        success: true,
-        key: key,
-        fileName: uniqueFileName,
-        size: buffer.length,
         expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+        fileName: uniqueFileName,
+        key: key,
+        size: buffer.length,
+        success: true,
       };
     } catch (error) {
-      console.error("Erro ao fazer upload do backup:", error);
+      logger.error("Erro ao fazer upload do backup:", error);
       throw new Error(`Upload de backup falhou: ${error.message}`);
     }
   }
@@ -159,34 +159,28 @@ class SpacesService {
           );
 
       const uploadParams = {
-        Bucket: this.bucketName,
-        Key: key,
-        Body: imageBuffer,
-        ContentType: mimeType,
         ACL: "public-read",
+        Body: imageBuffer,
+        Bucket: this.bucketName,
         CacheControl: "max-age=31536000", // Cache por 1 ano
+        ContentType: mimeType,
+        Key: key,
       };
 
       const command = new PutObjectCommand(uploadParams);
       await this.s3Client.send(command);
 
-      const publicUrl =
-        `${this.spacesEndpoint}/${this.bucketName}/${key}`.replace(
-          "digitaloceanspaces.com",
-          `${this.region}.digitaloceanspaces.com`
-        );
-
       const simpleUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
 
       return {
+        fileName: uniqueFileName,
+        key: key,
+        size: imageBuffer.length,
         success: true,
         url: simpleUrl,
-        key: key,
-        fileName: uniqueFileName,
-        size: imageBuffer.length,
       };
     } catch (error) {
-      console.error("Erro ao fazer upload para Digital Ocean Spaces:", error);
+      logger.error("Erro ao fazer upload para Digital Ocean Spaces:", error);
       throw new Error(`Upload failed: ${error.message}`);
     }
   }
@@ -206,7 +200,7 @@ class SpacesService {
 
       return true;
     } catch (error) {
-      console.error("Erro ao deletar imagem do Digital Ocean Spaces:", error);
+      logger.error("Erro ao deletar imagem do Digital Ocean Spaces:", error);
       return false;
     }
   }
@@ -231,7 +225,7 @@ class SpacesService {
 
       return Buffer.concat(chunks);
     } catch (error) {
-      console.error("Erro ao fazer download do arquivo:", error);
+      logger.error("Erro ao fazer download do arquivo:", error);
       throw new Error(`Download falhou: ${error.message}`);
     }
   }
@@ -241,30 +235,30 @@ class SpacesService {
    */
   getFileExtensionFromMimeType(mimeType) {
     const mimeToExt = {
-      "image/jpeg": ".jpg",
-      "image/jpg": ".jpg",
-      "image/png": ".png",
-      "image/webp": ".webp",
-      "image/gif": ".gif",
-      "image/svg+xml": ".svg",
-      "application/pdf": ".pdf",
+      "application/gzip": ".gz",
+      "application/json": ".json",
       "application/msword": ".doc",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        ".docx",
+      "application/pdf": ".pdf",
       "application/vnd.ms-excel": ".xls",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-        ".xlsx",
       "application/vnd.ms-powerpoint": ".ppt",
       "application/vnd.openxmlformats-officedocument.presentationml.presentation":
         ".pptx",
-      "text/plain": ".txt",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+        ".xlsx",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        ".docx",
+      "application/x-rar-compressed": ".rar",
+      "application/xml": ".xml",
+      "application/zip": ".zip",
+      "image/gif": ".gif",
+      "image/jpeg": ".jpg",
+      "image/jpg": ".jpg",
+      "image/png": ".png",
+      "image/svg+xml": ".svg",
+      "image/webp": ".webp",
       "text/csv": ".csv",
       "text/markdown": ".md",
-      "application/zip": ".zip",
-      "application/x-rar-compressed": ".rar",
-      "application/gzip": ".gz",
-      "application/json": ".json",
-      "application/xml": ".xml",
+      "text/plain": ".txt",
     };
 
     return mimeToExt[mimeType] || ".bin";
@@ -428,7 +422,7 @@ class SpacesService {
 
       return path;
     } catch (error) {
-      console.error("Erro ao extrair key da URL:", error);
+      logger.error("Erro ao extrair key da URL:", error);
       return null;
     }
   }
@@ -516,18 +510,18 @@ class SpacesService {
 
   validateConfiguration() {
     const config = {
-      endpoint: !!this.spacesEndpoint,
       accessKey: !!this.accessKeyId,
-      secretKey: !!this.secretAccessKey,
       bucket: !!this.bucketName,
+      endpoint: !!this.spacesEndpoint,
       region: !!this.region,
+      secretKey: !!this.secretAccessKey,
     };
 
     const isValid = Object.values(config).every(Boolean);
 
     return {
-      isValid,
       config,
+      isValid,
       missing: Object.keys(config).filter((key) => !config[key]),
     };
   }
