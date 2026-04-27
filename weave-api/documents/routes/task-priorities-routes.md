@@ -1,0 +1,20 @@
+# Task Priorities Routes (`src/modules/task_priorities/task_priorities.routes.js`)
+
+## What it does
+
+Manages task priority CRUD for project scope and legacy org scope.
+
+## Base paths
+
+Mounted in internal router under both `/projects`, `/organizations`, and `/task-priorities` contexts.
+
+## Main endpoints
+
+- Project scope: `/:project_id/create-priority`, `/:project_id/task-priorities`, `/:project_id/task-priorities/:priority_id`
+- Legacy org scope: `/:org_id/task-priorities`, `/:org_id/task-priorities/:priority_id`
+
+## Middleware and security notes
+
+- Global `verifyToken`.
+- Write operations require `requireOrgPermission(MANAGE_TASK_PRIORITIES)`.
+- Router uses `mergeParams: true` to support nested route mounting.
