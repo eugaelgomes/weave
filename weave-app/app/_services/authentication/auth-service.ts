@@ -94,6 +94,8 @@ export interface User {
   theme_mode?: string;
   private_profile?: boolean;
   auth_with_google?: boolean;
+  auth_with_github?: boolean;
+  auth_with_microsoft?: boolean;
 
   // App preferences
   usage_preference?: UserPreferences;
@@ -535,6 +537,11 @@ export const initiateGoogleLogin = (): void => {
 export const initiateGithubLogin = (): void => {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
   window.location.href = `${baseUrl}${API_ENDPOINTS.GITHUB_AUTH}`;
+};
+
+export const initiateMicrosoftLogin = (): void => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
+  window.location.href = `${baseUrl}${API_ENDPOINTS.MICROSOFT_AUTH}`;
 };
 
 export const updateUserData = async (

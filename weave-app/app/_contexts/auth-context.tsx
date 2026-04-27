@@ -14,6 +14,7 @@ import {
   deleteUser,
   initiateGoogleLogin,
   initiateGithubLogin,
+  initiateMicrosoftLogin,
   type User,
   type CreateUserData,
   type ActivateAccountPayload,
@@ -40,6 +41,7 @@ type AuthContextType = {
   ) => Promise<{ success: boolean; message?: string; data?: any }>;
   loginWithGoogle: () => void;
   loginWithGithub: () => void;
+  loginWithMicrosoft: () => void;
   logout: () => void;
 
   // User Profile
@@ -161,6 +163,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initiateGithubLogin();
   };
 
+  const loginWithMicrosoft = () => {
+    initiateMicrosoftLogin();
+  };
+
   const logout = async () => {
     try {
       // O logout avisa o backend para invalidar a sessão e limpar o cookie (Set-Cookie: expires=1970)
@@ -261,6 +267,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         loginWithGoogle,
         loginWithGithub,
+        loginWithMicrosoft,
         logout,
         createUser,
         activateAccount,

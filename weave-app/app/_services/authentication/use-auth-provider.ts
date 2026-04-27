@@ -11,6 +11,7 @@ import {
   updatePassword,
   initiateGoogleLogin,
   initiateGithubLogin,
+  initiateMicrosoftLogin,
   deleteUser,
   type User,
   type LoginCredentials,
@@ -41,6 +42,7 @@ export interface AuthActions {
   getUserData: () => Promise<{ success: boolean; data?: User; message?: string }>;
   loginWithGoogle: () => void;
   loginWithGithub: () => void;
+  loginWithMicrosoft: () => void;
   deleteUserPermanently: () => Promise<{ success: boolean; message?: string }>;
 }
 
@@ -198,6 +200,10 @@ export function useAuthProvider(): AuthState & AuthActions {
     initiateGithubLogin();
   };
 
+  const loginWithMicrosoft = () => {
+    initiateMicrosoftLogin();
+  };
+
   const deleteUserPermanently = async () => {
     try {
       await deleteUser();
@@ -223,6 +229,7 @@ export function useAuthProvider(): AuthState & AuthActions {
     getUserData: getCurrentUser,
     loginWithGoogle,
     loginWithGithub,
+    loginWithMicrosoft,
     deleteUserPermanently,
   };
 }

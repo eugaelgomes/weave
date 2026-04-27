@@ -11,7 +11,7 @@ const getAuthCookieOptions = cookieHelper.getAuthCookieOptions;
 const secretsManager = secretsService.secretsManager;
 
 /**
- * @param {"google"|"github"} provider
+ * @param {"google"|"github"|"microsoft"} provider
  * @returns {string}
  */
 function getOauthStateCookieName(provider) {
@@ -22,7 +22,7 @@ function getOauthStateCookieName(provider) {
  * Creates a signed OAuth state token and stores it in a short-lived cookie.
  *
  * @param {object} params
- * @param {"google"|"github"} params.provider
+ * @param {"google"|"github"|"microsoft"} params.provider
  * @param {import("express").Request} params.req
  * @param {import("express").Response} params.res
  * @returns {string}
@@ -52,7 +52,7 @@ function issueOauthState({ provider, req, res }) {
  * Validates and consumes OAuth state (double-submit cookie strategy).
  *
  * @param {object} params
- * @param {"google"|"github"} params.provider
+ * @param {"google"|"github"|"microsoft"} params.provider
  * @param {import("express").Request} params.req
  * @param {import("express").Response} params.res
  * @param {string} params.state

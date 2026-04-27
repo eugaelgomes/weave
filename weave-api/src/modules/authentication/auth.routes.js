@@ -6,6 +6,7 @@ const { authLimiter } = require("@/middlewares/security/request-limiters");
 const SigninController = require("@/modules/authentication/controllers/signin.controller");
 const GoogleOauthController = require("@/modules/authentication/controllers/google-oauth.controller");
 const GithubOauthController = require("@/modules/authentication/controllers/github-oauth.controller");
+const MicrosoftOauthController = require("@/modules/authentication/controllers/microsoft-oauth.controller");
 const LogoutController = require("@/modules/authentication/controllers/logout.controller");
 const {
   enforceSigninBodyShape,
@@ -49,6 +50,19 @@ router.get(
   validateOauthCallbackPayload(),
   handleAuthPayloadValidation,
   GithubOauthController.githubCallback.bind(GithubOauthController)
+);
+
+router.get(
+  "/signin/sso/microsoft",
+  MicrosoftOauthController.microsoftAuth.bind(MicrosoftOauthController)
+);
+
+router.get(
+  "/signin/sso/microsoft/callback",
+  authLimiter,
+  validateOauthCallbackPayload(),
+  handleAuthPayloadValidation,
+  MicrosoftOauthController.microsoftCallback.bind(MicrosoftOauthController)
 );
 
 router.post(

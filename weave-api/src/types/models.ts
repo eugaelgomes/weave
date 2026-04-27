@@ -14,6 +14,10 @@ export interface User {
   private_profile?: boolean;
   phone_number?: string;
   auth_with_google?: boolean;
+  auth_with_github?: boolean;
+  auth_with_microsoft?: boolean;
+  github_id?: string;
+  microsoft_id?: string;
   theme_mode?: string;
   email_verified?: boolean;
   email_verified_at?: Date;

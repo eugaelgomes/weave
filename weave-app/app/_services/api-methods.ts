@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
   REFRESH: "/auth/refresh",
   GOOGLE_AUTH: "/auth/signin/sso/google",
   GITHUB_AUTH: "/auth/signin/sso/github",
+  MICROSOFT_AUTH: "/auth/signin/sso/microsoft",
   ACTIVATE_ACCOUNT: "/users/activate-account",
 
   // User Management

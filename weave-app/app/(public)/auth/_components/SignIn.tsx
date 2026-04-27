@@ -47,6 +47,17 @@ function GitHubIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+function MicrosoftIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
+      <rect x="2" y="2" width="9" height="9" fill="#F25022" />
+      <rect x="13" y="2" width="9" height="9" fill="#7FBA00" />
+      <rect x="2" y="13" width="9" height="9" fill="#00A4EF" />
+      <rect x="13" y="13" width="9" height="9" fill="#FFB900" />
+    </svg>
+  );
+}
+
 export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
@@ -54,7 +65,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const t = getTranslations(locale);
-  const { login, loginWithGoogle, loginWithGithub } = useAuth();
+  const { login, loginWithGoogle, loginWithGithub, loginWithMicrosoft } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -166,7 +177,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
           </div>
         </div>
 
-        <div className="grid w-full grid-cols-2 gap-3">
+        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
           <button
             type="button"
             onClick={loginWithGoogle}
@@ -183,6 +194,15 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
           >
             <GitHubIcon className="h-4 w-4" />
             GitHub
+          </button>
+
+          <button
+            type="button"
+            onClick={loginWithMicrosoft}
+            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+          >
+            <MicrosoftIcon className="h-4 w-4" />
+            Microsoft
           </button>
         </div>
 

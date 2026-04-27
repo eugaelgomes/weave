@@ -2,20 +2,20 @@ const BaseRepository = require("./base.repository");
 const PlansRepository = require("@/modules/plans/plans.repository");
 
 /**
- * Persistência relacionada ao fluxo GitHub OAuth.
+ * Persistence for Microsoft OAuth flow.
  */
-class GithubOauthRepository extends BaseRepository {
+class MicrosoftOauthRepository extends BaseRepository {
   /**
-   * @param {string} githubId
+   * @param {string} microsoftId
    * @returns {Promise<import('@/types/models').User | null>}
    */
-  async findUserByGithubId(githubId) {
+  async findUserByMicrosoftId(microsoftId) {
     const query = `
       SELECT
         u.user_id, u.username, u.name, u.email, u.password,
         u.avatar_url, u.auth_with_google, u.auth_with_github, u.auth_with_microsoft, u.github_id, u.microsoft_id, u.theme_mode,
         u.private_profile, u.plan_id, u.created_at,
-
+        
         (SELECT p.name FROM plans p WHERE p.plan_id = u.plan_id) AS plan_name,
 
         (
@@ -34,7 +34,7 @@ class GithubOauthRepository extends BaseRepository {
         (
           SELECT row_to_json(area_data)
           FROM (
-            SELECT
+            SELECT 
               oam.area_id AS org_default_area_id, oam.role AS org_default_area_role,
               oam.created_at AS org_default_area_member_since, oa.area_name AS org_default_area_name,
               oa.slug AS org_default_area_slug, oa.description AS org_default_area_description,
@@ -44,7 +44,7 @@ class GithubOauthRepository extends BaseRepository {
             WHERE oam.user_id = u.user_id AND oam.deleted = false AND oa.deleted = false
               AND oam.area_id IS NOT NULL
               AND oam.organization_id = (
-                  SELECT organization_id FROM organization_members
+                  SELECT organization_id FROM organization_members 
                   WHERE user_id = u.user_id
                     AND area_id IS NULL
                     AND deleted = false
@@ -56,65 +56,61 @@ class GithubOauthRepository extends BaseRepository {
         ) AS default_area
 
       FROM users u
-      WHERE u.github_id = $1 AND u.deleted = false
+      WHERE u.microsoft_id = $1 AND u.deleted = false
       LIMIT 1;
     `;
-    const results = await this.executeQuery(query, [githubId]);
+    const results = await this.executeQuery(query, [microsoftId]);
+    return results[0];
+  }
+
+  /**
+   * @param {string} microsoftId
+   * @param {string} name
+   * @param {string} email
+   * @returns {Promise<import('@/types/models').User>}
+   */
+  async createUserWithMicrosoft(microsoftId, name, email) {
+    const rawUsername = `${email.split("@")[0]}_${Date.now()}`;
+    const username = rawUsername.slice(0, 80);
+    const planId = await PlansRepository.getDefaultSignupPlanId();
+
+    const query = `
+      INSERT INTO users (
+        microsoft_id, name, email, username, auth_with_microsoft,
+        password, email_verified, email_verified_at, plan_id
+      )
+      VALUES (
+        $1, $2, $3, $4, true,
+        '', true, NOW(), $5
+      )
+      RETURNING user_id, username, name, email, auth_with_microsoft, created_at;
+    `;
+
+    const results = await this.executeQuery(query, [
+      microsoftId,
+      name,
+      email,
+      username,
+      planId,
+    ]);
     return results[0];
   }
 
   /**
    * @param {string} userId
-   * @param {string} githubId
-   * @param {string|null} avatarUrl
+   * @param {string} microsoftId
    * @returns {Promise<import('@/types/models').User>}
    */
-  async updateUserWithGithub(userId, githubId, avatarUrl) {
+  async updateUserWithMicrosoft(userId, microsoftId) {
     const query = `
-      UPDATE users 
-      SET github_id = $1, auth_with_github = true, email_verified = true, email_verified_at = COALESCE(email_verified_at, NOW()), avatar_url = COALESCE($2, avatar_url), updated_at = NOW() 
-      WHERE user_id = $3
-      RETURNING *
+      UPDATE users
+      SET microsoft_id = $1, auth_with_microsoft = true, email_verified = true, email_verified_at = COALESCE(email_verified_at, NOW()), updated_at = NOW()
+      WHERE user_id = $2
+      RETURNING user_id, username, name, email, auth_with_microsoft, created_at;
     `;
-    const results = await this.executeQuery(query, [
-      githubId,
-      avatarUrl,
-      userId,
-    ]);
-    return results[0];
-  }
-
-  /**
-   * @param {string} githubId
-   * @param {string} name
-   * @param {string} username
-   * @param {string} email
-   * @param {string|null} avatarUrl
-   * @returns {Promise<import('@/types/models').User>}
-   */
-  async createUserWithGithub(githubId, name, username, email, avatarUrl) {
-    const planId = await PlansRepository.getDefaultSignupPlanId();
-    const query = `
-      INSERT INTO users (
-        github_id, name, username, email, avatar_url, password,
-        auth_with_github, email_verified, email_verified_at, created_at, updated_at, plan_id
-      ) 
-      VALUES (
-        $1, $2, $3, $4, $5, '', true, true, NOW(), NOW(), NOW(),
-        $6
-      ) 
-      RETURNING *
-    `;
-    const results = await this.executeQuery(query, [
-      githubId,
-      name,
-      username,
-      email,
-      avatarUrl,
-      planId,
-    ]);
+    const results = await this.executeQuery(query, [microsoftId, userId]);
     return results[0];
   }
 }
 
-module.exports = new GithubOauthRepository();
+module.exports = new MicrosoftOauthRepository();

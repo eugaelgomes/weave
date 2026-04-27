@@ -317,6 +317,8 @@ CREATE TABLE public.users (
   google_id varchar(255) NULL UNIQUE,
   auth_with_github bool NOT NULL DEFAULT false,
   github_id varchar(255) NULL UNIQUE,
+  auth_with_microsoft bool NOT NULL DEFAULT false,
+  microsoft_id varchar(255) NULL UNIQUE,
   theme_mode public.theme_mode_pattern NOT NULL DEFAULT 'DARK',
   phone_number varchar(20) NULL UNIQUE,
   birth_date date NULL,
