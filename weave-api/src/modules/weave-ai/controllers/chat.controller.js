@@ -22,6 +22,14 @@ const ENGINE_CHAT_TIMEOUT_SECONDS = Number.parseInt(
   process.env.WEAVE_ENGINE_CHAT_TIMEOUT_SECONDS || "45",
   10
 );
+const CHAT_CONTEXT_MAX_MESSAGES = Number.parseInt(
+  process.env.WEAVE_CHAT_CONTEXT_MAX_MESSAGES || "20",
+  10
+);
+const CHAT_CONTEXT_MAX_MESSAGE_CHARS = Number.parseInt(
+  process.env.WEAVE_CHAT_CONTEXT_MAX_MESSAGE_CHARS || "1500",
+  10
+);
 
 /**
  * @typedef {Object} ChatModelInput
@@ -235,6 +243,39 @@ class ChatController {
       name: file.originalname || "file",
       sizeBytes: Number(file.size || 0),
     }));
+  }
+
+  /**
+   * Normalizes persisted messages into compact conversation history.
+   *
+   * @param {Array<{role?: string, content?: string, created_at?: string}>} messages
+   * @returns {Array<{role: "user"|"assistant", content: string, createdAt: string|null}>}
+   */
+  _normalizeConversationHistory(messages = []) {
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return [];
+    }
+
+    return messages
+      .map((message) => {
+        const role = message?.role === "assistant" ? "assistant" : "user";
+        const rawContent = typeof message?.content === "string" ? message.content.trim() : "";
+        if (!rawContent) {
+          return null;
+        }
+
+        const content =
+          rawContent.length > CHAT_CONTEXT_MAX_MESSAGE_CHARS
+            ? `${rawContent.slice(0, CHAT_CONTEXT_MAX_MESSAGE_CHARS)}...`
+            : rawContent;
+
+        return {
+          content,
+          createdAt: message?.created_at || null,
+          role,
+        };
+      })
+      .filter(Boolean);
   }
 
   /**
@@ -650,6 +691,13 @@ class ChatController {
         sessionId = session.id;
       }
 
+      const rawConversationHistory = await chatRepository.getSessionMessagesForContext(
+        sessionId,
+        userId,
+        CHAT_CONTEXT_MAX_MESSAGES
+      );
+      const conversationHistory = this._normalizeConversationHistory(rawConversationHistory);
+
       const filesMetadata = this._buildFilesMetadata(req.files);
       await chatRepository.saveMessage({
         sessionId,
@@ -709,6 +757,7 @@ class ChatController {
         noteIds: Array.isArray(payload.noteIds) ? payload.noteIds : [],
         organizationId,
         projectIds: Array.isArray(payload.projectIds) ? payload.projectIds : [],
+        conversationHistory,
         sessionId,
         userId,
         userLanguage,

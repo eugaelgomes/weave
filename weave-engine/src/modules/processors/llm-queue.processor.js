@@ -13,6 +13,18 @@ const {
 const { callAIProvider } = require("../providers/llm-provider.client");
 
 const RESPONSE_TTL_SECONDS = 60;
+const CHAT_HISTORY_MAX_MESSAGES = Number.parseInt(
+  process.env.WEAVE_CHAT_CONTEXT_MAX_MESSAGES || "20",
+  10
+);
+const CHAT_HISTORY_MAX_MESSAGE_CHARS = Number.parseInt(
+  process.env.WEAVE_CHAT_CONTEXT_MAX_MESSAGE_CHARS || "1500",
+  10
+);
+const CHAT_HISTORY_MAX_TOTAL_CHARS = Number.parseInt(
+  process.env.WEAVE_CHAT_CONTEXT_MAX_TOTAL_CHARS || "12000",
+  10
+);
 
 function resolveOrganizationId(payload = {}, context = {}) {
   return (
@@ -231,6 +243,8 @@ class LlmQueueProcessor {
     });
     const agentInstructions = this.extractAgentInstructions(payload.agent);
     const noteDocumentContract = payload?.context?.noteDocumentContract || null;
+    const conversationHistory = this.normalizeConversationHistory(payload.conversationHistory);
+    const conversationHistoryBlock = this.serializeConversationHistory(conversationHistory);
 
     const fileSummary =
       files.length === 0
@@ -255,6 +269,14 @@ class LlmQueueProcessor {
 
 ## Temporary files
 ${fileSummary}
+
+## Conversation memory (same session)
+${conversationHistoryBlock}
+
+Guidelines for continuity:
+- Use the conversation memory to keep consistency across turns in this same session.
+- Prefer the latest user instruction if it conflicts with older turns.
+- Do not invent previous messages that are not listed above.
 
 ${noteDocumentContract ? `## Note document contract for update_note_content
 - When updating note body, prefer returning "document" (full payload) or "blocks" (array) in function arguments.
@@ -304,6 +326,66 @@ ${noteDocumentContract ? `## Note document contract for update_note_content
     ].filter(Boolean);
 
     return lines.join("\n");
+  }
+
+  /**
+   * Normalizes raw conversation history sent by server.
+   *
+   * @param {unknown} rawHistory
+   * @returns {Array<{role: "user"|"assistant", content: string}>}
+   */
+  normalizeConversationHistory(rawHistory) {
+    if (!Array.isArray(rawHistory) || rawHistory.length === 0) {
+      return [];
+    }
+
+    return rawHistory
+      .slice(-CHAT_HISTORY_MAX_MESSAGES)
+      .map((entry) => {
+        const role = entry?.role === "assistant" ? "assistant" : "user";
+        const rawContent = typeof entry?.content === "string" ? entry.content.trim() : "";
+        if (!rawContent) {
+          return null;
+        }
+
+        const content =
+          rawContent.length > CHAT_HISTORY_MAX_MESSAGE_CHARS
+            ? `${rawContent.slice(0, CHAT_HISTORY_MAX_MESSAGE_CHARS)}...`
+            : rawContent;
+
+        return { content, role };
+      })
+      .filter(Boolean);
+  }
+
+  /**
+   * Converts normalized history to a bounded prompt block.
+   *
+   * @param {Array<{role: "user"|"assistant", content: string}>} history
+   * @returns {string}
+   */
+  serializeConversationHistory(history = []) {
+    if (!Array.isArray(history) || history.length === 0) {
+      return "No prior messages in this session.";
+    }
+
+    let totalChars = 0;
+    const lines = [];
+
+    for (const [index, entry] of history.entries()) {
+      const label = entry.role === "assistant" ? "ASSISTANT" : "USER";
+      const line = `${index + 1}. ${label}: ${entry.content}`;
+      totalChars += line.length;
+
+      if (totalChars > CHAT_HISTORY_MAX_TOTAL_CHARS) {
+        lines.push("... (older messages truncated due to context size)");
+        break;
+      }
+
+      lines.push(line);
+    }
+
+    return lines.length > 0 ? lines.join("\n") : "No prior messages in this session.";
   }
 
   stop() {
