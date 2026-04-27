@@ -7,39 +7,8 @@ const {
   mergeAgentUpdates,
   ensureArrayField,
 } = require("@/modules/weave-ai/normalize");
+const { getProvidersWithModels } = require("@/modules/weave-ai/llm-catalog");
 const spacesService = require("@/services/storage");
-
-const LLM_PROVIDERS = {
-  CLAUDE: "claude",
-  GEMINI: "gemini",
-  OPENAI: "openai",
-  PERPLEXITY: "perplexity",
-};
-
-const LLM_MODELS = {
-  [LLM_PROVIDERS.PERPLEXITY]: {
-    DEFAULT: "sonar-pro",
-    LEGACY: "pplx-online",
-    REASONING: "sonar-reasoning-pro",
-  },
-  [LLM_PROVIDERS.OPENAI]: {
-    DEFAULT: "gpt-5.4",
-    LEGACY: "gpt-4o",
-    LIGHT: "gpt-4o-mini",
-    REASONING: "o3-mini",
-  },
-  [LLM_PROVIDERS.GEMINI]: {
-    DEFAULT: "gemini-3.1-flash",
-    LEGACY: "gemini-2.0-flash",
-    PRO: "gemini-3.1-pro",
-    REASONING: "gemini-3.1-pro-deep-think",
-  },
-  [LLM_PROVIDERS.CLAUDE]: {
-    DEFAULT: "claude-4.6-sonnet-latest",
-    LEGACY: "claude-3-5-sonnet-latest",
-    LIGHT: "claude-4.6-haiku-latest",
-  },
-};
 
 /**
  * Controller para gerenciamento User Agents no Weave AI.
@@ -424,10 +393,7 @@ class agentsController {
     this._validateAuthentication(req);
 
     try {
-      const providers = Object.values(LLM_PROVIDERS).map((provider) => ({
-        name: provider,
-        models: LLM_MODELS[provider] || [],
-      }));
+      const providers = getProvidersWithModels();
 
       res.json({ status: "OK", providers });
     } catch (error) {

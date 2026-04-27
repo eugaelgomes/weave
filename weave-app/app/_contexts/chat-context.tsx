@@ -6,6 +6,7 @@ import {
   fetchAvailableModels,
   sendChatMessage,
   fetchChatHistory,
+  deleteChatSession as deleteChatSessionService,
   type AIModel,
   type ChatMessage,
   type SendMessageData,
@@ -28,6 +29,7 @@ export interface ChatContextType {
   loadChatHistory: (sessionId?: string) => Promise<void>;
   loadSession: (sessionId: string) => Promise<void>;
   createNewSession: () => void;
+  deleteSession: (sessionId: string) => Promise<boolean>;
   setCurrentSession: (session: ChatSession | null) => void;
 }
 
@@ -191,6 +193,30 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setError(null);
   }, []);
 
+  const deleteSession = useCallback(
+    async (sessionId: string): Promise<boolean> => {
+      if (!authenticated) return false;
+
+      try {
+        setError(null);
+        await deleteChatSessionService(sessionId);
+
+        setChatHistory((prev) => prev.filter((session) => session.id !== sessionId));
+
+        setCurrentSessionState((prev) => (prev?.id === sessionId ? null : prev));
+        setMessages((prev) =>
+          currentSession?.id === sessionId ? [] : prev
+        );
+
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erro ao excluir conversa");
+        return false;
+      }
+    },
+    [authenticated, currentSession?.id]
+  );
+
   const setCurrentSession = useCallback(
     (session: ChatSession | null) => {
       setCurrentSessionState(session);
@@ -214,6 +240,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     loadChatHistory,
     loadSession,
     createNewSession,
+    deleteSession,
     setCurrentSession,
   };
 

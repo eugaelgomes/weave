@@ -20,6 +20,14 @@ import {
 } from "../_services/authentication/auth-service";
 import { useTheme } from "./theme-context";
 
+const toUiThemeMode = (themeMode?: string): "light" | "dark" | null => {
+  if (!themeMode) return null;
+  const normalized = themeMode.toUpperCase();
+  if (normalized === "LIGHT") return "light";
+  if (normalized === "DARK") return "dark";
+  return null;
+};
+
 type AuthContextType = {
   user: User | null;
   loading: boolean;
@@ -69,11 +77,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setUser(profileData);
 
-        if (
-          profileData.theme_mode &&
-          (profileData.theme_mode === "light" || profileData.theme_mode === "dark")
-        ) {
-          setTheme(profileData.theme_mode as "light" | "dark");
+        const profileThemeMode = toUiThemeMode(profileData.theme_mode);
+        if (profileThemeMode) {
+          setTheme(profileThemeMode);
         }
       } catch (error) {
         // Se falhar (401/403), o usuário não está logado - ignora o erro silenciosamente
@@ -122,20 +128,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           const fullUserData = await getUserDataService();
           setUser(fullUserData);
-          if (
-            fullUserData.theme_mode &&
-            (fullUserData.theme_mode === "light" || fullUserData.theme_mode === "dark")
-          ) {
-            setTheme(fullUserData.theme_mode as "light" | "dark");
+          const fullUserThemeMode = toUiThemeMode(fullUserData.theme_mode);
+          if (fullUserThemeMode) {
+            setTheme(fullUserThemeMode);
           }
         } catch {
           // Se falhar ao buscar dados completos, usa o que veio do login
           setUser(response.user);
-          if (
-            response.user.theme_mode &&
-            (response.user.theme_mode === "light" || response.user.theme_mode === "dark")
-          ) {
-            setTheme(response.user.theme_mode as "light" | "dark");
+          const responseUserThemeMode = toUiThemeMode(response.user.theme_mode);
+          if (responseUserThemeMode) {
+            setTheme(responseUserThemeMode);
           }
         }
 
@@ -201,11 +203,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ) as Partial<User>;
 
       setUser((prev) => (prev ? { ...prev, ...cleanedData } : null));
-      if (
-        updatedData.theme_mode &&
-        (updatedData.theme_mode === "light" || updatedData.theme_mode === "dark")
-      ) {
-        setTheme(updatedData.theme_mode as "light" | "dark");
+      const updatedThemeMode = toUiThemeMode(updatedData.theme_mode);
+      if (updatedThemeMode) {
+        setTheme(updatedThemeMode);
       }
       return { success: true };
     } catch (error) {

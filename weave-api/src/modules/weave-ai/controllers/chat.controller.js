@@ -2,6 +2,7 @@
 const { randomUUID } = require("crypto");
 const chatRepository = require("@/modules/weave-ai/repositories/chat.repository");
 const agentsRepository = require("@/modules/weave-ai/repositories/agents.repository");
+const { getProvidersWithModels } = require("@/modules/weave-ai/llm-catalog");
 const notesRepository = require("@/modules/notes/notes.repository");
 const { blocksToDocument } = require("@/modules/notes/document-blocks-adapter");
 const {
@@ -16,38 +17,6 @@ const {
   getEngineLlmRequestQueueRedisKey,
   getEngineLlmResponsePrefixRedisKey,
 } = require("@/services/queue/queue-keys");
-
-const LLM_PROVIDERS = {
-  CLAUDE: "claude",
-  GEMINI: "gemini",
-  OPENAI: "openai",
-  PERPLEXITY: "perplexity",
-};
-
-const LLM_MODELS = {
-  [LLM_PROVIDERS.PERPLEXITY]: {
-    DEFAULT: "sonar-pro",
-    LEGACY: "pplx-online",
-    REASONING: "sonar-reasoning-pro",
-  },
-  [LLM_PROVIDERS.OPENAI]: {
-    DEFAULT: "gpt-5.4",
-    LEGACY: "gpt-4o",
-    LIGHT: "gpt-4o-mini",
-    REASONING: "o3-mini",
-  },
-  [LLM_PROVIDERS.GEMINI]: {
-    DEFAULT: "gemini-3.1-flash",
-    LEGACY: "gemini-2.0-flash",
-    PRO: "gemini-3.1-pro",
-    REASONING: "gemini-3.1-pro-deep-think",
-  },
-  [LLM_PROVIDERS.CLAUDE]: {
-    DEFAULT: "claude-4.6-sonnet-latest",
-    LEGACY: "claude-3-5-sonnet-latest",
-    LIGHT: "claude-4.6-haiku-latest",
-  },
-};
 
 const ENGINE_CHAT_TIMEOUT_SECONDS = Number.parseInt(
   process.env.WEAVE_ENGINE_CHAT_TIMEOUT_SECONDS || "45",
@@ -874,6 +843,59 @@ class ChatController {
   }
 
   /**
+   * Soft deletes a user chat session.
+   *
+   * @param {import("express").Request} req
+   * @param {import("express").Response} res
+   * @returns {Promise<void>}
+   */
+  async deleteChatSession(req, res) {
+    try {
+      const userId = this._validateAuthentication(req);
+      const sessionId = String(req.params?.sessionId || "").trim();
+
+      if (!sessionId) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "CHAT_SESSION_ID_REQUIRED",
+            message: "ID da sessão é obrigatório",
+          },
+        });
+      }
+
+      const deleted = await chatRepository.deleteSession(sessionId, userId);
+      if (!deleted) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: "CHAT_SESSION_NOT_FOUND",
+            message: "Sessão não encontrada para o usuário",
+          },
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        sessionId,
+      });
+    } catch (error) {
+      const normalizedError = this._normalizeApiError(error, {
+        code: "CHAT_SESSION_DELETE_FAILED",
+        message: "Erro ao excluir sessão do chat",
+        statusCode: 500,
+      });
+      return res.status(normalizedError.statusCode).json({
+        success: false,
+        error: {
+          code: normalizedError.code,
+          message: normalizedError.message,
+        },
+      });
+    }
+  }
+
+  /**
    * Returns available providers and models.
    *
    * @param {import("express").Request} req
@@ -883,10 +905,7 @@ class ChatController {
   getAvailableModels(req, res) {
     try {
       this._validateAuthentication(req);
-      const providers = Object.values(LLM_PROVIDERS).map((provider) => ({
-        name: provider,
-        models: LLM_MODELS[provider] || {},
-      }));
+      const providers = getProvidersWithModels();
 
       return res.json({
         success: true,

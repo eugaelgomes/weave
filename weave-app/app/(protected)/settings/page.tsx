@@ -33,6 +33,9 @@ export interface FormData {
   usage_preference: Record<string, any>;
 }
 
+const normalizeThemeMode = (themeMode?: string): "LIGHT" | "DARK" =>
+  themeMode?.toUpperCase() === "DARK" ? "DARK" : "LIGHT";
+
 const SettingsPage = () => {
   const { user, updateUser, deleteUserPermanently } = useAuth();
   const [userData, setUserData] = useState<User | null>(null);
@@ -58,7 +61,7 @@ const SettingsPage = () => {
     profilePicture: null,
     birth_date: "",
     phone_number: "",
-    theme_mode: "system",
+    theme_mode: "LIGHT",
     private_profile: false,
     currentPassword: "",
     newPassword: "",
@@ -78,7 +81,7 @@ const SettingsPage = () => {
         profilePicture: null,
         birth_date: user.birth_date || "",
         phone_number: user.phone_number || "",
-        theme_mode: user.theme_mode || "system",
+        theme_mode: normalizeThemeMode(user.theme_mode),
         private_profile: user.private_profile || false,
         currentPassword: "",
         newPassword: "",
@@ -135,7 +138,7 @@ const SettingsPage = () => {
         profilePicture: null,
         birth_date: userData.birth_date || "",
         phone_number: userData.phone_number || "",
-        theme_mode: userData.theme_mode || "system",
+        theme_mode: normalizeThemeMode(userData.theme_mode),
         private_profile: userData.private_profile || false,
         currentPassword: "",
         newPassword: "",
@@ -176,7 +179,7 @@ const SettingsPage = () => {
         username: formData.username,
         phone_number: formData.phone_number,
         birth_date: formData.birth_date,
-        theme_mode: formData.theme_mode,
+        theme_mode: normalizeThemeMode(formData.theme_mode),
         private_profile: formData.private_profile,
         usage_preference: formData.usage_preference,
       };

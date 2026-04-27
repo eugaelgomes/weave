@@ -10,6 +10,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        "brand-navy": "#083D77",
+        "brand-beige": "#EBEBD3",
+        "brand-yellow": "#FAD158",
+        "brand-orange": "#EE964B",
+        "brand-red": "#F95738",
         "brand-primary": {
           50: "#FFFCE7",
           100: "#FFF9C1",

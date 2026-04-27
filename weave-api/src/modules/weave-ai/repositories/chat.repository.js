@@ -113,7 +113,7 @@ class WeaveAIRepository {
           last_provider = COALESCE($3, last_provider),
           message_count = COALESCE(message_count, 0) + 1,
           total_tokens = COALESCE(total_tokens, 0) + COALESCE($4, 0)
-        WHERE id = $1
+        WHERE id = $1 AND COALESCE(deleted, false) = false
       `,
       [sessionId, model, provider, totalTokens]
     );
@@ -127,7 +127,15 @@ class WeaveAIRepository {
   async getSessionMessages(sessionId, userId) {
     const query = `
     SELECT * FROM ai_chat_messages
-    WHERE session_id = $1 AND user_id = $2
+    WHERE session_id = $1
+      AND user_id = $2
+      AND EXISTS (
+        SELECT 1
+        FROM ai_chat_sessions s
+        WHERE s.id = ai_chat_messages.session_id
+          AND s.user_id = $2
+          AND COALESCE(s.deleted, false) = false
+      )
     ORDER BY created_at ASC
   `;
 
@@ -148,12 +156,14 @@ class WeaveAIRepository {
       s.last_message_at,
       s.last_model,
       s.last_provider,
-      s.archived,
+      s.deleted,
+      s.deleted_at,
       s.total_tokens,
       COALESCE(s.message_count, COUNT(m.id)::int) as message_count
     FROM ai_chat_sessions s
     LEFT JOIN ai_chat_messages m ON m.session_id = s.id
     WHERE s.user_id = $1
+      AND COALESCE(s.deleted, false) = false
     GROUP BY
       s.id,
       s.title,
@@ -162,7 +172,8 @@ class WeaveAIRepository {
       s.last_message_at,
       s.last_model,
       s.last_provider,
-      s.archived,
+      s.deleted,
+      s.deleted_at,
       s.total_tokens,
       s.message_count
     ORDER BY s.updated_at DESC
@@ -194,31 +205,20 @@ class WeaveAIRepository {
    * @returns {Promise<boolean>} Retorna true se a sessão foi deletada com sucesso
    */
   async deleteSession(sessionId, userId) {
-    const client = await pool.connect();
+    const query = `
+      UPDATE ai_chat_sessions
+      SET
+        deleted = true,
+        deleted_at = NOW(),
+        updated_at = NOW()
+      WHERE id = $1
+        AND user_id = $2
+        AND COALESCE(deleted, false) = false
+      RETURNING id
+    `;
 
-    try {
-      await client.query("BEGIN");
-
-      // Delete messages
-      await client.query(
-        "DELETE FROM ai_chat_messages WHERE session_id = $1 AND user_id = $2",
-        [sessionId, userId]
-      );
-
-      // Delete session
-      await client.query(
-        "DELETE FROM ai_chat_sessions WHERE id = $1 AND user_id = $2",
-        [sessionId, userId]
-      );
-
-      await client.query("COMMIT");
-      return true;
-    } catch (error) {
-      await client.query("ROLLBACK");
-      throw error;
-    } finally {
-      client.release();
-    }
+    const result = await pool.query(query, [sessionId, userId]);
+    return result.rowCount > 0;
   }
 }
 

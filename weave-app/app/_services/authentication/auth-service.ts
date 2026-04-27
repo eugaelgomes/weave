@@ -286,6 +286,14 @@ const normalizeStorageUrl = (value?: string | null): string => {
   return getStorageUrl(value);
 };
 
+const normalizeThemeMode = (value?: string): "LIGHT" | "DARK" | undefined => {
+  if (!value) return undefined;
+  const normalized = value.toUpperCase();
+  if (normalized === "DARK") return "DARK";
+  if (normalized === "LIGHT") return "LIGHT";
+  return undefined;
+};
+
 // --- 3. Helpers & Mappers (Adapter Pattern) ---
 
 export const decodeToken = (token: string) => {
@@ -317,7 +325,7 @@ const _mapBackendDataToUser = (data: BackendUserData): User => {
     phone_number: profile.phone_number,
 
     // Settings
-    theme_mode: settings?.theme_mode,
+    theme_mode: normalizeThemeMode(settings?.theme_mode),
     private_profile: settings?.private_profile,
     auth_with_google: settings?.auth_with_google,
 
@@ -364,7 +372,7 @@ const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
     avatar_url: getStorageUrl(user.user_profile.avatar_url),
 
     // Settings
-    theme_mode: user.user_settings.theme_mode,
+    theme_mode: normalizeThemeMode(user.user_settings.theme_mode),
     private_profile: user.user_settings.private_profile,
 
     // Organization
@@ -402,7 +410,7 @@ const mapMeResponseToUser = (data: BackendMeResponse): User => {
     updated_at: user.user_profile.updated_at,
 
     // Settings
-    theme_mode: user.user_settings.theme_mode,
+    theme_mode: normalizeThemeMode(user.user_settings.theme_mode),
     private_profile: user.user_settings.private_profile,
     auth_with_google: user.user_settings.auth_with_google,
 
@@ -532,12 +540,17 @@ export const initiateGithubLogin = (): void => {
 export const updateUserData = async (
   userData: Partial<User> & { profilePicture?: File }
 ): Promise<Partial<User>> => {
+  const normalizedUserData: Partial<User> & { profilePicture?: File } = {
+    ...userData,
+    ...(userData.theme_mode ? { theme_mode: normalizeThemeMode(userData.theme_mode) } : {}),
+  };
+
   let body: FormData | Partial<User>;
 
-  if (userData.profilePicture instanceof File) {
+  if (normalizedUserData.profilePicture instanceof File) {
     const formData = new FormData();
-    formData.append("profilePicture", userData.profilePicture);
-    const { profilePicture, ...rest } = userData;
+    formData.append("profilePicture", normalizedUserData.profilePicture);
+    const { profilePicture, ...rest } = normalizedUserData;
     for (const [key, value] of Object.entries(rest)) {
       if (value !== undefined && value !== null) {
         formData.append(key, typeof value === "object" ? JSON.stringify(value) : String(value));
@@ -545,7 +558,7 @@ export const updateUserData = async (
     }
     body = formData;
   } else {
-    const { profilePicture, ...rest } = userData;
+    const { profilePicture, ...rest } = normalizedUserData;
     body = rest;
   }
 
@@ -577,7 +590,7 @@ export const updateUserData = async (
     phone_number: data.user.user_profile.phone_number,
     created_at: data.user.user_profile.created_at,
     updated_at: data.user.user_profile.updated_at,
-    theme_mode: data.user.user_settings.theme_mode,
+    theme_mode: normalizeThemeMode(data.user.user_settings.theme_mode),
     private_profile: data.user.user_settings.private_profile,
     auth_with_google: data.user.user_settings.auth_with_google,
     usage_preference: data.user.usage_preference || {},

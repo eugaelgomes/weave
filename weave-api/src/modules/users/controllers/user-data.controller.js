@@ -274,7 +274,10 @@ class UserDataController extends BaseController {
         return res.status(404).json({ message: "User not found" });
       }
 
-      if (theme_mode && !["light", "dark"].includes(theme_mode)) {
+      const normalizedThemeMode =
+        theme_mode !== undefined ? String(theme_mode).trim().toUpperCase() : undefined;
+
+      if (normalizedThemeMode && !["LIGHT", "DARK"].includes(normalizedThemeMode)) {
         return res.status(400).json({ message: "Invalid theme mode" });
       }
 
@@ -357,7 +360,7 @@ class UserDataController extends BaseController {
 
       const updates = {};
       if (name !== undefined) updates.name = name;
-      if (theme_mode !== undefined) updates.theme_mode = theme_mode;
+      if (normalizedThemeMode !== undefined) updates.theme_mode = normalizedThemeMode;
       if (birth_date !== undefined) updates.birth_date = birth_date || null;
       if (phone_number !== undefined)
         updates.phone_number = phone_number || null;

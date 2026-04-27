@@ -157,6 +157,7 @@ router.use(verifyToken, strictLimiter);
 // Chat endpoints
 router.post("/chat", handleChatFilesUpload, bind(aiController, "chat"));
 router.get("/chat/history", bind(aiController, "getChatHistory"));
+router.delete("/chat/:sessionId", bind(aiController, "deleteChatSession"));
 
 router.get("/models", bind(aiController, "getAvailableModels"));
 

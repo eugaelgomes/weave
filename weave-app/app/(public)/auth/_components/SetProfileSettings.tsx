@@ -16,7 +16,7 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
   const t = getTranslations(locale);
   const profileT = t.profileSettings;
 
-  const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
+  const [themeMode, setThemeMode] = useState<"LIGHT" | "DARK">("LIGHT");
   const [privateProfile, setPrivateProfile] = useState(false);
   const [interfaceLanguage, setInterfaceLanguage] = useState("pt-BR");
   const [density, setDensity] = useState<"compact" | "comfortable" | "spacious">("comfortable");
@@ -124,11 +124,11 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
               <select
                 id="theme-mode"
                 value={themeMode}
-                onChange={(e) => setThemeMode(e.target.value as "light" | "dark")}
+                onChange={(e) => setThemeMode(e.target.value as "LIGHT" | "DARK")}
                 className="border-brand-secondary-200 text-brand-secondary-900 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white px-3 py-2 text-sm transition-colors focus:ring-2 focus:outline-none"
               >
-                <option value="light">{profileT.themeOptions.light}</option>
-                <option value="dark">{profileT.themeOptions.dark}</option>
+                <option value="LIGHT">{profileT.themeOptions.light}</option>
+                <option value="DARK">{profileT.themeOptions.dark}</option>
               </select>
             </div>
 

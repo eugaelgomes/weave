@@ -30,14 +30,25 @@ import { type AIModel } from "@/app/_contexts/chat-context";
 import { useAgent } from "@/app/_contexts/agent-context";
 import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
 const ACCEPTED_EXTENSIONS = ["png", "jpg", "jpeg", "pdf", "csv", "xls"];
 
-const ModelIcon = ({ provider }: { provider?: string }) => {
-  if (provider === "perplexity") return <Globe className="h-3 w-3 text-blue-500" />;
-  return <Sparkles className="text-brand-primary-500 h-3 w-3" />;
+const ModelIcon = ({ model, className }: { model?: AIModel | null; className?: string }) => {
+  if (model?.logoUrl) {
+    return (
+      <img
+        src={model.logoUrl}
+        alt={`${model.provider || model.name || "model"} logo`}
+        className={className || "h-3 w-3 rounded-sm object-contain"}
+      />
+    );
+  }
+
+  if (model?.provider === "perplexity") return <Globe className="h-3 w-3 text-brand-navy" />;
+  return <Sparkles className="h-3 w-3 text-brand-yellow" />;
 };
 
 function formatModelLabel(model: AIModel) {
@@ -63,6 +74,7 @@ function validateChatFile(file: File): string | null {
 }
 
 export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
+  const router = useRouter();
   const {
     models,
     messages,
@@ -112,12 +124,22 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
 
   useEffect(() => {
     if (chatId) {
+      // Prevent overwriting freshly rendered messages right after first-send route replace.
+      if (currentSession?.id === chatId && messages.length > 0) {
+        return;
+      }
       loadSession(chatId);
       return;
     }
 
     createNewSession();
-  }, [chatId, loadSession, createNewSession]);
+  }, [chatId, loadSession, createNewSession, currentSession?.id, messages.length]);
+
+  useEffect(() => {
+    if (!chatId && currentSession?.id) {
+      router.replace(`/weave-ai/chat/${currentSession.id}`);
+    }
+  }, [chatId, currentSession?.id, router]);
 
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
@@ -207,7 +229,6 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-neutral-950">
-      {/* ============================ HEADER ============================ */}
       <div className="flex h-12 flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 dark:border-neutral-800">
         <div className="flex items-center gap-2">
           <h1 className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
@@ -216,49 +237,26 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <button
-              onClick={() => setIsModelMenuOpen((v) => !v)}
-              className="flex items-center gap-1.5 rounded bg-neutral-100 p-1.5 text-[10px] font-medium transition-colors hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800"
-            >
-              <ModelIcon provider={selectedModel?.provider} />
-              <span>{selectedModel ? formatModelLabel(selectedModel) : "Modelo"}</span>
-              <ChevronDown className="h-3 w-3 text-neutral-500" />
-            </button>
-
-            {isModelMenuOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setIsModelMenuOpen(false)} />
-                <div className="absolute top-full right-0 z-20 mt-1 w-40 rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
-                  {models.map((model) => (
-                    <button
-                      key={model.id}
-                      onClick={() => {
-                        setSelectedModel(model);
-                        setIsModelMenuOpen(false);
-                      }}
-                      className={`flex w-full items-center gap-2 p-2 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
-                        selectedModel?.id === model.id ? "bg-neutral-100 dark:bg-neutral-800" : ""
-                      }`}
-                    >
-                      <ModelIcon provider={model.provider} />
-                      {formatModelLabel(model)}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          <button
+            onClick={() => setAllowEdit(!allowEdit)}
+            className={`flex items-center gap-1.5 rounded px-2 py-1.5 text-xs font-medium transition-all ${
+              allowEdit
+                ? "bg-brand-yellow text-brand-navy"
+                : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+            }`}
+          >
+            {allowEdit ? <Unlock className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+            <span>Permitir editar</span>
+          </button>
         </div>
       </div>
 
-      {/* ============================ CHAT AREA ============================ */}
       <div className="flex-1 flex-shrink-0 overflow-y-auto scroll-smooth p-2">
         <div className="mx-auto w-full max-w-4xl space-y-4">
           {messages?.length === 0 && !loading && (
             <div className="animate-in fade-in mt-12 flex flex-col items-center text-center duration-500">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded bg-neutral-100 dark:bg-neutral-900">
-                <Sparkles className="h-5 w-5 text-neutral-400" />
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded bg-brand-beige dark:bg-brand-navy/30">
+                <Sparkles className="h-5 w-5 text-brand-orange" />
               </div>
               <h2 className="text-sm font-semibold tracking-tight">Como posso ajudar?</h2>
               <p className="mt-1 text-xs text-neutral-500">
@@ -275,11 +273,10 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                 key={msg.id}
                 className={`flex gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}
               >
-                {/* Avatar Compacto */}
                 <div className="mt-0.5 flex-shrink-0">
                   <div
                     className={`flex h-6 w-6 items-center justify-center overflow-hidden rounded shadow-sm ${
-                      isUser ? "bg-blue-600" : "bg-emerald-500"
+                      isUser ? "bg-brand-yellow" : "bg-brand-navy"
                     }`}
                   >
                     {isUser ? (
@@ -292,7 +289,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <User className="h-3 w-3 text-white" />
+                        <User className="h-3 w-3 text-brand-navy" />
                       )
                     ) : (
                       <Bot className="h-3 w-3 text-white" />
@@ -300,14 +297,13 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                   </div>
                 </div>
 
-                {/* Message Bubble Compacto */}
                 <div
                   className={`flex max-w-[85%] flex-col ${isUser ? "items-end" : "items-start"}`}
                 >
                   <div
                     className={`relative rounded border p-2 text-xs leading-relaxed ${
                       isUser
-                        ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900"
+                        ? "border-brand-yellow bg-brand-yellow text-brand-navy"
                         : "border-neutral-200 bg-white text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200"
                     }`}
                   >
@@ -325,7 +321,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                     )}
 
                     {!isUser && Array.isArray(msg.functionExecution) && msg.functionExecution.length > 0 && (
-                      <div className="mt-2 rounded border border-emerald-200 bg-emerald-50 p-1.5 text-[10px] text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-900/20 dark:text-emerald-300">
+                      <div className="mt-2 rounded border border-brand-orange/50 bg-brand-beige p-1.5 text-[10px] text-brand-navy dark:border-brand-orange/40 dark:bg-brand-navy/20 dark:text-brand-beige">
                         <p className="mb-1 font-semibold uppercase tracking-wide">Acoes executadas</p>
                         {msg.functionExecution.map((execution: any, index: number) => (
                           <p key={`${execution.name}-${index}`}>
@@ -359,14 +355,14 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
 
           {isTyping && (
             <div className="flex gap-2">
-              <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-emerald-500">
+              <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-brand-navy">
                 <Bot className="h-3 w-3 text-white" />
               </div>
               <div className="flex items-center rounded border border-neutral-200 bg-white px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900">
                 <div className="flex gap-1">
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-neutral-400 [animation-delay:-0.3s]"></span>
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-neutral-400 [animation-delay:-0.15s]"></span>
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-neutral-400"></span>
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-yellow [animation-delay:-0.3s]"></span>
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-yellow [animation-delay:-0.15s]"></span>
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-yellow"></span>
                 </div>
               </div>
             </div>
@@ -376,17 +372,14 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
         </div>
       </div>
 
-      {/* ============================ INPUT AREA REDISTRIBUÍDA ============================ */}
       <div className="border-t border-neutral-200 bg-neutral-50/50 p-2 dark:border-neutral-800 dark:bg-neutral-950/50">
         <div className="mx-auto flex max-w-4xl flex-col gap-2">
-          {/* Header do Input (Ferramentas e Contextos Integrados) */}
           <div className="flex flex-wrap items-center justify-between gap-2">
-            {/* Contextos Ativos */}
             <div className="flex flex-wrap gap-1">
               {selectedFiles.map((file) => (
                 <div
                   key={`${file.name}-${file.size}`}
-                  className="flex items-center gap-1 rounded border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-800 dark:border-amber-800/50 dark:bg-amber-900/30 dark:text-amber-300"
+                  className="flex items-center gap-1 rounded border border-brand-orange/50 bg-brand-orange/15 px-1.5 py-0.5 text-[10px] text-brand-orange dark:border-brand-orange/40 dark:bg-brand-orange/20 dark:text-brand-yellow"
                 >
                   <Paperclip className="h-2.5 w-2.5" />
                   <span className="font-medium">{file.name}</span>
@@ -394,7 +387,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                     onClick={() => handleRemoveFile(file)}
                     title="Remover arquivo"
                     aria-label="Remover arquivo"
-                    className="hover:text-amber-900 dark:hover:text-amber-100"
+                    className="hover:text-brand-red dark:hover:text-brand-red"
                   >
                     <X className="h-2.5 w-2.5" />
                   </button>
@@ -404,7 +397,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
               {contextItems.map((item) => (
                 <div
                   key={`${item.type}-${item.id}`}
-                  className="flex items-center gap-1 rounded border border-blue-200 bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-800 dark:border-blue-800/50 dark:bg-blue-900/40 dark:text-blue-300"
+                  className="flex items-center gap-1 rounded border border-brand-navy/30 bg-brand-beige px-1.5 py-0.5 text-[10px] text-brand-navy dark:border-brand-beige/20 dark:bg-brand-navy/30 dark:text-brand-beige"
                 >
                   {item.type === "note" ? (
                     <FileText className="h-2.5 w-2.5" />
@@ -416,78 +409,16 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                     onClick={() => handleRemoveContext(item.type, item.id)}
                     title="Remover contexto"
                     aria-label="Remover contexto"
-                    className="hover:text-blue-900 dark:hover:text-blue-100"
+                    className="hover:text-brand-red dark:hover:text-brand-red"
                   >
                     <X className="h-2.5 w-2.5" />
                   </button>
                 </div>
               ))}
             </div>
-
-            {/* Configurações da Mensagem */}
-            <div className="ml-auto flex items-center gap-2">
-              <div className="relative">
-                <button
-                  onClick={() => setIsAgentMenuOpen((prev) => !prev)}
-                  className="flex items-center gap-1 rounded border border-transparent px-1.5 py-0.5 text-[10px] font-medium text-neutral-600 transition-all hover:border-neutral-200 hover:bg-neutral-200 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
-                >
-                  <Bot className="h-2.5 w-2.5" />
-                  <span>{selectedAgent ? selectedAgent.name : "Agente padrão"}</span>
-                  <ChevronDown className="h-2.5 w-2.5 text-neutral-500" />
-                </button>
-
-                {isAgentMenuOpen && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setIsAgentMenuOpen(false)} />
-                    <div className="absolute top-full right-0 z-20 mt-1 w-56 rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
-                      <button
-                        onClick={() => {
-                          setSelectedAgentId(null);
-                          setIsAgentMenuOpen(false);
-                        }}
-                        className={`flex w-full items-center gap-2 p-2 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
-                          !selectedAgentId ? "bg-neutral-100 dark:bg-neutral-800" : ""
-                        }`}
-                      >
-                        <Bot className="h-3 w-3" />
-                        Agente padrão
-                      </button>
-                      {agents.map((agent) => (
-                        <button
-                          key={agent.id}
-                          onClick={() => {
-                            setSelectedAgentId(agent.id);
-                            setIsAgentMenuOpen(false);
-                          }}
-                          className={`flex w-full items-center gap-2 p-2 text-left text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
-                            selectedAgentId === agent.id ? "bg-neutral-100 dark:bg-neutral-800" : ""
-                          }`}
-                        >
-                          <Bot className="h-3 w-3" />
-                          <span className="truncate">{agent.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <button
-                onClick={() => setAllowEdit(!allowEdit)}
-                className={`flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-medium transition-all ${
-                  allowEdit
-                    ? "border-green-300 bg-green-50 text-green-700 dark:border-green-800/50 dark:bg-green-900/20 dark:text-green-400"
-                    : "border-transparent text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-800"
-                }`}
-              >
-                {allowEdit ? <Unlock className="h-2.5 w-2.5" /> : <Lock className="h-2.5 w-2.5" />}
-                <span>Ações</span>
-              </button>
-            </div>
           </div>
 
-          {/* Unified Input Box (Pílula) */}
-          <div className="relative flex items-end gap-1 rounded-lg border border-neutral-300 bg-white p-1 shadow-sm transition-all focus-within:border-neutral-400 focus-within:ring-1 focus-within:ring-neutral-200 dark:border-neutral-700 dark:bg-neutral-900 dark:focus-within:border-neutral-600 dark:focus-within:ring-neutral-800">
+          <div className="relative flex flex-col gap-1 rounded-xl border border-neutral-300 bg-white p-2 shadow-sm transition-all focus-within:border-brand-yellow focus-within:ring-1 focus-within:ring-brand-yellow/40 dark:border-neutral-700 dark:bg-neutral-900 dark:focus-within:border-brand-yellow dark:focus-within:ring-brand-yellow/30">
             <input
               ref={fileInputRef}
               type="file"
@@ -500,66 +431,6 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
               }}
             />
 
-            <div className="relative mb-0.5 ml-0.5">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                title="Anexar arquivos"
-                aria-label="Anexar arquivos"
-                className="flex h-7 w-7 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-              >
-                <Paperclip className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            <div className="relative mb-0.5 ml-0.5">
-              <button
-                onClick={() => setShowContextMenu(!showContextMenu)}
-                title="Indexar contexto"
-                aria-label="Indexar contexto"
-                className="flex h-7 w-7 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-              >
-                <NotebookPen className="h-3.5 w-3.5" />
-              </button>
-
-              {showContextMenu && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setShowContextMenu(false)} />
-                  <div className="absolute bottom-full left-0 z-20 mb-2 w-56 overflow-hidden rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
-                    <div className="max-h-48 overflow-y-auto p-1">
-                      <div className="px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase">
-                        Tarefas
-                      </div>
-                      {notesOverview?.slice(0, 5).map((note: any) => (
-                        <button
-                          key={note.id}
-                          onClick={() => handleAddContext("note", note.id, note.title)}
-                          className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                        >
-                          <FileText className="h-3 w-3 text-blue-500" />
-                          <span className="truncate">{note.title}</span>
-                        </button>
-                      ))}
-
-                      <div className="mt-1 border-t border-neutral-100 px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase dark:border-neutral-800">
-                        Projetos
-                      </div>
-                      {projectsOverview?.slice(0, 5).map((project: any) => (
-                        <button
-                          key={project.id}
-                          onClick={() => handleAddContext("project", project.id, project.title)}
-                          className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                        >
-                          <FolderKanban className="h-3 w-3 text-purple-500" />
-                          <span className="truncate">{project.title}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Textarea */}
             <textarea
               ref={textareaRef}
               rows={1}
@@ -572,22 +443,170 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                 }
               }}
               placeholder="Envie uma mensagem..."
-              className="max-h-24 min-h-[32px] flex-1 resize-none bg-transparent px-2 py-1.5 text-xs outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+              className="max-h-32 min-h-[40px] w-full resize-none bg-transparent px-1 py-1 text-sm outline-none placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500"
             />
 
-            {/* Botão de Envio Integrado */}
-            <button
-              onClick={handleSend}
-              disabled={!input.trim()}
-              title="Enviar mensagem"
-              aria-label="Enviar mensagem"
-              className="mr-0.5 mb-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded bg-neutral-900 text-white transition-colors hover:bg-black disabled:opacity-30 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-            >
-              <Send className="ml-0.5 h-3 w-3" />
-            </button>
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Anexar arquivos"
+                  aria-label="Anexar arquivos"
+                  className="flex h-8 w-8 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
+                >
+                  <Paperclip className="h-4 w-4" />
+                </button>
+
+                <div className="relative">
+                  <button
+                    onClick={() => setShowContextMenu(!showContextMenu)}
+                    title="Indexar contexto"
+                    aria-label="Indexar contexto"
+                    className="flex h-8 w-8 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
+                  >
+                    <NotebookPen className="h-4 w-4" />
+                  </button>
+
+                  {showContextMenu && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setShowContextMenu(false)} />
+                      <div className="absolute bottom-full left-0 z-20 mb-2 w-56 overflow-hidden rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+                        <div className="max-h-48 overflow-y-auto p-1">
+                          <div className="px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase">
+                            Tarefas
+                          </div>
+                          {notesOverview?.slice(0, 5).map((note: any) => (
+                            <button
+                              key={note.id}
+                              onClick={() => handleAddContext("note", note.id, note.title)}
+                              className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs hover:bg-brand-beige dark:hover:bg-brand-navy/30"
+                            >
+                              <FileText className="h-3 w-3 text-brand-orange" />
+                              <span className="truncate">{note.title}</span>
+                            </button>
+                          ))}
+
+                          <div className="mt-1 border-t border-neutral-100 px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase dark:border-neutral-800">
+                            Projetos
+                          </div>
+                          {projectsOverview?.slice(0, 5).map((project: any) => (
+                            <button
+                              key={project.id}
+                              onClick={() => handleAddContext("project", project.id, project.title)}
+                              className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs hover:bg-brand-beige dark:hover:bg-brand-navy/30"
+                            >
+                              <FolderKanban className="h-3 w-3 text-brand-navy dark:text-brand-yellow" />
+                              <span className="truncate">{project.title}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="relative ml-1">
+                  <button
+                    onClick={() => setIsModelMenuOpen((v) => !v)}
+                    className="flex h-8 items-center gap-1.5 rounded-md border border-brand-beige bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400 dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
+                  >
+                    <ModelIcon model={selectedModel} className="h-3.5 w-3.5" />
+                    <span>{selectedModel ? formatModelLabel(selectedModel) : "Modelo"}</span>
+                    <ChevronDown className="h-3 w-3 text-neutral-500" />
+                  </button>
+
+                  {isModelMenuOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setIsModelMenuOpen(false)} />
+                      <div className="absolute bottom-full left-0 z-20 mb-2 w-48 overflow-hidden rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+                        <div className="max-h-48 overflow-y-auto p-1">
+                          {models.map((model) => (
+                            <button
+                              key={model.id}
+                              onClick={() => {
+                                setSelectedModel(model);
+                                setIsModelMenuOpen(false);
+                              }}
+                              className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-brand-beige dark:hover:bg-brand-navy/30 ${
+                                selectedModel?.id === model.id
+                                  ? "bg-brand-beige text-brand-navy dark:bg-brand-navy/30 dark:text-brand-beige"
+                                  : ""
+                              }`}
+                            >
+                              <ModelIcon model={model} className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{formatModelLabel(model)}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="relative ml-1">
+                  <button
+                    onClick={() => setIsAgentMenuOpen((prev) => !prev)}
+                    className="flex h-8 items-center gap-1.5 rounded-md border border-brand-beige bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400 dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
+                  >
+                    <Bot className="h-3.5 w-3.5" />
+                    <span>{selectedAgent ? selectedAgent.name : "Agente padrão"}</span>
+                    <ChevronDown className="h-3 w-3 text-neutral-500" />
+                  </button>
+
+                  {isAgentMenuOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setIsAgentMenuOpen(false)} />
+                      <div className="absolute right-0 bottom-full z-20 mb-2 w-56 rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+                        <button
+                          onClick={() => {
+                            setSelectedAgentId(null);
+                            setIsAgentMenuOpen(false);
+                          }}
+                          className={`flex w-full items-center gap-2 rounded p-2 text-xs hover:bg-brand-beige dark:hover:bg-brand-navy/30 ${
+                            !selectedAgentId
+                              ? "bg-brand-beige text-brand-navy dark:bg-brand-navy/30 dark:text-brand-beige"
+                              : ""
+                          }`}
+                        >
+                          <Bot className="h-3 w-3" />
+                          Agente padrão
+                        </button>
+                        {agents.map((agent) => (
+                          <button
+                            key={agent.id}
+                            onClick={() => {
+                              setSelectedAgentId(agent.id);
+                              setIsAgentMenuOpen(false);
+                            }}
+                            className={`flex w-full items-center gap-2 rounded p-2 text-left text-xs hover:bg-brand-beige dark:hover:bg-brand-navy/30 ${
+                              selectedAgentId === agent.id
+                                ? "bg-brand-beige text-brand-navy dark:bg-brand-navy/30 dark:text-brand-beige"
+                                : ""
+                            }`}
+                          >
+                            <Bot className="h-3 w-3" />
+                            <span className="truncate">{agent.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={handleSend}
+                disabled={!input.trim()}
+                title="Enviar mensagem"
+                aria-label="Enviar mensagem"
+                className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-brand-yellow text-brand-navy transition-colors hover:bg-brand-orange disabled:opacity-30 dark:bg-brand-yellow dark:text-brand-navy dark:hover:bg-brand-orange"
+              >
+                <Send className="ml-0.5 h-4 w-4" />
+              </button>
+            </div>
           </div>
 
-          {fileError ? <p className="text-[11px] text-red-500">{fileError}</p> : null}
+          {fileError ? <p className="text-[11px] text-brand-red">{fileError}</p> : null}
         </div>
       </div>
     </div>

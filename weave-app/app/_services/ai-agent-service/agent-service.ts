@@ -7,6 +7,7 @@ export interface AIModel {
   version: string;
   provider: string;
   description: string;
+  logoUrl?: string | null;
   capabilities: string[];
   isAvailable: boolean;
 }
@@ -72,7 +73,13 @@ export interface GenerateContentData {
 type RawModelsResponse = {
   providers?: Array<{
     name: string;
+    logoUrl?: string | null;
     models: Record<string, string>;
+    modelEntries?: Array<{
+      key: string;
+      version: string;
+      logoUrl?: string | null;
+    }>;
   }>;
 };
 
@@ -168,6 +175,32 @@ export async function fetchAvailableModels(): Promise<AIModel[]> {
   const models: AIModel[] = [];
   for (const providerEntry of providers) {
     const provider = String(providerEntry.name || "").toLowerCase();
+    const providerLogoUrl = providerEntry.logoUrl || null;
+    const modelEntries = Array.isArray(providerEntry.modelEntries)
+      ? providerEntry.modelEntries
+      : [];
+
+    if (modelEntries.length > 0) {
+      for (const modelEntry of modelEntries) {
+        const version = String(modelEntry?.version || "").trim();
+        if (!version) {
+          continue;
+        }
+
+        models.push({
+          id: `${provider}:${version}`,
+          name: provider,
+          version,
+          provider,
+          description: String(modelEntry?.key || "").trim() || version,
+          logoUrl: modelEntry?.logoUrl || providerLogoUrl,
+          capabilities: [],
+          isAvailable: true,
+        });
+      }
+      continue;
+    }
+
     const providerModels = providerEntry.models || {};
     for (const [modelLabel, modelVersion] of Object.entries(providerModels)) {
       const version = String(modelVersion || "").trim();
@@ -180,6 +213,7 @@ export async function fetchAvailableModels(): Promise<AIModel[]> {
         version,
         provider,
         description: modelLabel,
+        logoUrl: providerLogoUrl,
         capabilities: [],
         isAvailable: true,
       });
@@ -320,6 +354,11 @@ export async function fetchChatHistory(sessionId?: string): Promise<ChatMessage[
     const data = await handleResponse<{ sessions: RawChatSession[] }>(response);
     return data.sessions.map(normalizeChatSession);
   }
+}
+
+export async function deleteChatSession(sessionId: string): Promise<void> {
+  const response = await apiClient.delete(API_ENDPOINTS.AI_CHAT_BY_ID(sessionId));
+  await handleResponse(response);
 }
 
 export async function generateContent(data: GenerateContentData): Promise<any> {

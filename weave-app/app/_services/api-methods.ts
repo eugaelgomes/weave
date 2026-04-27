@@ -100,6 +100,7 @@ export const API_ENDPOINTS = {
   // AI
   AI_MODELS: "/weave-ai/models",
   AI_CHAT: "/weave-ai/chat",
+  AI_CHAT_BY_ID: (sessionId: string) => `/weave-ai/chat/${sessionId}`,
   AI_CHAT_HISTORY: "/weave-ai/chat/history",
   AI_GENERATE: "/weave-ai/generate",
   AI_ANALYZE_NOTE: "/weave-ai/analyze-note",
