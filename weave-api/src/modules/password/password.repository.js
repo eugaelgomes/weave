@@ -31,14 +31,14 @@ class PasswordRepository {
     // Definindo expiração para 1 hora a partir de agora
     const query = `
     INSERT INTO tokens (user_id, token, type, expires_at, active) 
-    VALUES ($1, $2, 'password_reset', NOW() + INTERVAL '1 hour', TRUE)
+    VALUES ($1, $2, 'PASSWORD_RESET', NOW() + INTERVAL '1 hour', TRUE)
   `;
 
     return await executeQuery(query, [userId, token]);
   }
 
   async findTokenByValue(token) {
-    const query = `SELECT * FROM tokens WHERE token = $1 AND active = TRUE AND type = 'password_reset' AND expires_at > NOW()`;
+    const query = `SELECT * FROM tokens WHERE token = $1 AND active = TRUE AND type = 'PASSWORD_RESET' AND expires_at > NOW()`;
     const results = await executeQuery(query, [token]);
     return results[0];
   }
