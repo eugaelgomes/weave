@@ -10,6 +10,7 @@ import {
   Copy,
   Sparkles,
   ChevronDown,
+  ChevronUp,
   Globe,
   Lock,
   Unlock,
@@ -73,6 +74,28 @@ function validateChatFile(file: File): string | null {
   return null;
 }
 
+function getChatHeaderTitle(messages: any[], fallbackTitle?: string | null): string {
+  const firstUserMessage = messages.find((msg) => msg?.role === "user" && typeof msg?.content === "string");
+  const sourceText = firstUserMessage?.content?.trim() || fallbackTitle?.trim() || "";
+
+  if (!sourceText) {
+    return "Nova Conversa";
+  }
+
+  const firstLine = sourceText.split("\n").find((line) => line.trim().length > 0)?.trim() || sourceText;
+  return firstLine.length > 60 ? `${firstLine.slice(0, 57)}...` : firstLine;
+}
+
+function formatMessageDateTime(dateValue?: string | number): string {
+  return new Date(dateValue || Date.now()).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
   const router = useRouter();
   const {
@@ -106,7 +129,11 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showScrollTopButton, setShowScrollTopButton] = useState(false);
+  const [showScrollBottomButton, setShowScrollBottomButton] = useState(false);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
   useEffect(() => {
     loadModels();
@@ -225,33 +252,108 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
+  const updateScrollButtons = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const threshold = 80;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const distanceToBottom = scrollHeight - (scrollTop + clientHeight);
+
+    setShowScrollTopButton(scrollTop > threshold);
+    setShowScrollBottomButton(distanceToBottom > threshold);
+  };
+
+  const scrollToTop = () => {
+    messagesContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const scrollToBottom = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+  };
+
+  const normalizeMessageContent = (content: unknown): string => {
+    if (typeof content === "string") return content;
+    if (content == null) return "";
+    try {
+      return JSON.stringify(content, null, 2);
+    } catch {
+      return String(content);
+    }
+  };
+
+  const handleCopyMessage = async (messageId: string, content: unknown) => {
+    const textToCopy = normalizeMessageContent(content);
+    if (!textToCopy) return;
+
+    try {
+      if (window.isSecureContext && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(textToCopy);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = textToCopy;
+        textArea.setAttribute("readonly", "");
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        textArea.setSelectionRange(0, textArea.value.length);
+        const copied = document.execCommand("copy");
+        document.body.removeChild(textArea);
+
+        if (!copied) {
+          throw new Error("Falha ao copiar com fallback");
+        }
+      }
+
+      setCopiedMessageId(messageId);
+      window.setTimeout(() => {
+        setCopiedMessageId((prev) => (prev === messageId ? null : prev));
+      }, 1200);
+    } catch {
+      setCopiedMessageId(null);
+    }
+  };
+
+  useEffect(() => {
+    updateScrollButtons();
+  }, [messages, isTyping]);
+
   const selectedAgent = agents.find((agent) => agent.id === selectedAgentId) || null;
+  const chatHeaderTitle = getChatHeaderTitle(messages || [], currentSession?.title);
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-neutral-950">
-      <div className="flex h-12 flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 dark:border-neutral-800">
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-2 dark:border-neutral-800">
         <div className="flex items-center gap-2">
           <h1 className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-            {currentSession?.title || "Nova Conversa"}
+            {chatHeaderTitle}
           </h1>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={() => setAllowEdit(!allowEdit)}
-            className={`flex items-center gap-1.5 rounded px-2 py-1.5 text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 rounded px-1 py-0.5 text-[10px] transition-all ${
               allowEdit
                 ? "bg-brand-yellow text-brand-navy"
                 : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800"
             }`}
           >
-            {allowEdit ? <Unlock className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+            {allowEdit ? <Unlock className="h-2 w-2" /> : <Lock className="h-2 w-2" />}
             <span>Permitir editar</span>
           </button>
         </div>
       </div>
 
-      <div className="flex-1 flex-shrink-0 overflow-y-auto scroll-smooth p-2">
+      <div
+        ref={messagesContainerRef}
+        onScroll={updateScrollButtons}
+        className="relative flex-1 flex-shrink-0 overflow-y-auto scroll-smooth p-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent"
+      >
         <div className="mx-auto w-full max-w-4xl space-y-4">
           {messages?.length === 0 && !loading && (
             <div className="animate-in fade-in mt-12 flex flex-col items-center text-center duration-500">
@@ -301,7 +403,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                   className={`flex max-w-[85%] flex-col ${isUser ? "items-end" : "items-start"}`}
                 >
                   <div
-                    className={`relative rounded border p-2 text-xs leading-relaxed ${
+                    className={`relative rounded-lg border p-1.5 text-xs leading-relaxed ${
                       isUser
                         ? "border-brand-yellow bg-brand-yellow text-brand-navy"
                         : "border-neutral-200 bg-white text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200"
@@ -335,16 +437,15 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                       className={`mt-1.5 flex items-center gap-2 pt-1 opacity-70 ${isUser ? "justify-end" : "justify-between"}`}
                     >
                       <span className="text-[9px]">
-                        {new Date(msg.created_at || msg.timestamp || Date.now()).toLocaleTimeString(
-                          "pt-PT",
-                          { hour: "2-digit", minute: "2-digit" }
-                        )}
+                        {formatMessageDateTime(msg.created_at || msg.timestamp)}
                       </span>
                       <button
-                        onClick={() => navigator.clipboard.writeText(msg.content)}
+                        type="button"
+                        onClick={() => handleCopyMessage(msg.id, msg.content)}
                         className="flex items-center gap-1 text-[9px] uppercase hover:opacity-100"
                       >
-                        <Copy className="h-2.5 w-2.5" /> Copiar
+                        <Copy className="h-2.5 w-2.5" />{" "}
+                        {copiedMessageId === msg.id ? "Copiado!" : ""}
                       </button>
                     </div>
                   </div>
@@ -370,9 +471,34 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
 
           <div ref={messagesEndRef} className="h-2" />
         </div>
+
+        {(showScrollTopButton || showScrollBottomButton) && (
+          <div className="pointer-events-none sticky right-3 z-20 ml-auto flex w-fit flex-col gap-1.5">
+            {showScrollTopButton && (
+              <button
+                onClick={scrollToTop}
+                title="Ir para o topo"
+                aria-label="Ir para o topo"
+                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-700 shadow-sm transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900/95 dark:text-neutral-200 dark:hover:bg-neutral-800"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </button>
+            )}
+            {showScrollBottomButton && (
+              <button
+                onClick={scrollToBottom}
+                title="Ir para o fim"
+                aria-label="Ir para o fim"
+                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-700 shadow-sm transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900/95 dark:text-neutral-200 dark:hover:bg-neutral-800"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="border-t border-neutral-200 bg-neutral-50/50 p-2 dark:border-neutral-800 dark:bg-neutral-950/50">
+      <div className="pb-2">
         <div className="mx-auto flex max-w-4xl flex-col gap-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap gap-1">

@@ -10,6 +10,7 @@ const {
   ALLOWED_NOTE_DOCUMENT_NODES,
   normalizeNoteDocumentPayload,
 } = require("@/modules/notes/document-normalizer");
+const PlansRepository = require("@/modules/plans/plans.repository");
 const projectsUpdateRepository = require("@/modules/projects/repositories/projects-update.repository");
 const { resolveAuthorizedFunctions } = require("@/modules/weave-ai/authorized-functions");
 const redis = require("@/services/queue/connection");
@@ -231,7 +232,7 @@ class ChatController {
    * Converts uploaded files to payload accepted by engine chat-v2 processor.
    *
    * @param {Array<import("multer").File>} files
-   * @returns {Array<{name: string, mimeType: string, sizeBytes: number}>}
+   * @returns {Array<{name: string, mimeType: string, sizeBytes: number, base64Data: string}>}
    */
   _buildEngineFilesPayload(files) {
     if (!Array.isArray(files) || files.length === 0) {
@@ -239,6 +240,7 @@ class ChatController {
     }
 
     return files.map((file) => ({
+      base64Data: Buffer.isBuffer(file.buffer) ? file.buffer.toString("base64") : "",
       mimeType: file.mimetype || "application/octet-stream",
       name: file.originalname || "file",
       sizeBytes: Number(file.size || 0),
@@ -438,6 +440,100 @@ class ChatController {
       allowedNodeTypes: [...ALLOWED_NOTE_DOCUMENT_NODES],
       version: 1,
     };
+  }
+
+  /**
+   * Reads nested property by dot notation.
+   *
+   * @param {Record<string, any>|null|undefined} source
+   * @param {string} path
+   * @returns {unknown}
+   */
+  _getNestedValue(source, path) {
+    if (!source || typeof source !== "object" || !path) {
+      return null;
+    }
+
+    return path.split(".").reduce((acc, key) => {
+      if (!acc || typeof acc !== "object") {
+        return null;
+      }
+      return acc[key];
+    }, source);
+  }
+
+  /**
+   * Builds compact plan usage context for Weave Engine prompts.
+   *
+   * @param {string} userId
+   * @param {string|null} organizationId
+   * @returns {Promise<Record<string, unknown>|null>}
+   */
+  async _buildPlanUsageContext(userId, organizationId = null) {
+    try {
+      const [effectivePlan, usageRecord] = await Promise.all([
+        PlansRepository.getEffectivePlanByUserId(userId),
+        PlansRepository.getPlanUsage(userId, organizationId),
+      ]);
+
+      if (!effectivePlan && !usageRecord) {
+        return null;
+      }
+
+      const planDetails = effectivePlan?.plan_details || {};
+      const usageDetails = usageRecord?.usage_details || {};
+
+      const aiEnabled = Boolean(
+        this._getNestedValue(planDetails, "weave_ai.enabled")
+      );
+      const monthlyMessagesLimit = this._getNestedValue(
+        planDetails,
+        "weave_ai.config.monthly_messages"
+      );
+      const monthlyMessagesUsed = this._getNestedValue(
+        usageDetails,
+        "monthly_cycle.weave_ai.messages_sent"
+      );
+      const monthlyTokensUsed = this._getNestedValue(
+        usageDetails,
+        "monthly_cycle.weave_ai.tokens_estimated"
+      );
+
+      return {
+        plan: {
+          id: effectivePlan?.plan_id || null,
+          name: effectivePlan?.plan_name || null,
+          subscriberType: effectivePlan?.subscriber_type || null,
+        },
+        usage: {
+          periodEnd:
+            this._getNestedValue(usageDetails, "monthly_cycle.current_period_end") || null,
+          periodStart:
+            this._getNestedValue(usageDetails, "monthly_cycle.current_period_start") || null,
+          weaveAi: {
+            aiEnabled,
+            monthlyMessagesLimit:
+              Number.isFinite(Number(monthlyMessagesLimit))
+                ? Number(monthlyMessagesLimit)
+                : null,
+            monthlyMessagesUsed:
+              Number.isFinite(Number(monthlyMessagesUsed))
+                ? Number(monthlyMessagesUsed)
+                : null,
+            monthlyTokensUsed:
+              Number.isFinite(Number(monthlyTokensUsed))
+                ? Number(monthlyTokensUsed)
+                : null,
+          },
+        },
+      };
+    } catch (error) {
+      console.error("[weave-ai/chat] failed to fetch plan usage context", {
+        code: error?.code || null,
+        message: error?.message || String(error),
+      });
+      return null;
+    }
   }
 
   /**
@@ -644,6 +740,12 @@ class ChatController {
    * @param {import("express").Request} req
    * @param {import("express").Response} res
    * @returns {Promise<void>}
+  /**
+   * Handles user chat message ingestion and persistence.
+   *
+   * @param {import("express").Request} req
+   * @param {import("express").Response} res
+   * @returns {Promise<void>}
    */
   async chat(req, res) {
     try {
@@ -656,6 +758,7 @@ class ChatController {
       let authorizedFunctions = [];
       let capabilityRules = {};
       let resourceAccess = {};
+      const planUsageContext = await this._buildPlanUsageContext(userId, organizationId);
 
       if (payload.agentId) {
         selectedAgent = await agentsRepository.getAgentById(payload.agentId, userId);
@@ -722,6 +825,7 @@ class ChatController {
         const authorization = await resolveAuthorizedFunctions({
           allowEdit: payload.allowEdit,
           context: {
+            planUsageContext,
             noteId: Array.isArray(payload.noteIds) && payload.noteIds.length > 0
               ? payload.noteIds[0]
               : null,
@@ -759,7 +863,9 @@ class ChatController {
         projectIds: Array.isArray(payload.projectIds) ? payload.projectIds : [],
         conversationHistory,
         sessionId,
+        user_id: userId,
         userId,
+        ...(organizationId ? { org_id: organizationId } : {}),
         userLanguage,
       }, requestId);
       const enginePayload = engineResponse?.data || {};

@@ -6,14 +6,14 @@ const AI_PROVIDERS = {
 };
 
 const AI_MODELS = {
-  GEMINI_FLASH_2_5: "gemini-2.0-flash",
+  GEMINI_3_1_PRO_PREVIEW: "gemini-3.1-pro-preview",
   OPENAI_GPT_4O_MINI: "gpt-4o-mini",
 };
 
 const geminiConfig = {
   apiKey: process.env.GEMINI_API_KEY,
   maxOutputTokens: 8192,
-  model: AI_MODELS.GEMINI_FLASH_2_5,
+  model: AI_MODELS.GEMINI_3_1_PRO_PREVIEW,
   provider: AI_PROVIDERS.GEMINI,
   retry: {
     backoffFactor: 2,

@@ -10,6 +10,96 @@ const {
 
 let geminiClient = null;
 
+const MAX_INLINE_FILES_PER_REQUEST = Number.parseInt(
+  process.env.WEAVE_MAX_INLINE_FILES_PER_REQUEST || "3",
+  3
+);
+
+/**
+ * @param {unknown} maybeBase64
+ * @returns {string}
+ */
+function normalizeBase64Data(maybeBase64) {
+  if (typeof maybeBase64 !== "string") {
+    return "";
+  }
+
+  const trimmed = maybeBase64.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  const dataUrlMatch = trimmed.match(/^data:[^;]+;base64,(.+)$/i);
+  return (dataUrlMatch?.[1] || trimmed).replace(/\s+/g, "");
+}
+
+/**
+ * @param {unknown} rawFile
+ * @returns {{name: string, mimeType: string, base64Data: string}|null}
+ */
+function normalizeFileInput(rawFile) {
+  if (!rawFile || typeof rawFile !== "object") {
+    return null;
+  }
+
+  const mimeType =
+    typeof rawFile.mimeType === "string" && rawFile.mimeType.trim().length > 0
+      ? rawFile.mimeType.trim()
+      : typeof rawFile.mimetype === "string" && rawFile.mimetype.trim().length > 0
+        ? rawFile.mimetype.trim()
+        : "application/octet-stream";
+  const name =
+    typeof rawFile.name === "string" && rawFile.name.trim().length > 0
+      ? rawFile.name.trim()
+      : typeof rawFile.originalName === "string" &&
+          rawFile.originalName.trim().length > 0
+        ? rawFile.originalName.trim()
+        : typeof rawFile.filename === "string" && rawFile.filename.trim().length > 0
+          ? rawFile.filename.trim()
+          : "file";
+
+  const inlineData = normalizeBase64Data(
+    rawFile.base64Data ||
+      rawFile.base64 ||
+      rawFile.data ||
+      rawFile.content ||
+      rawFile.buffer
+  );
+
+  if (!inlineData) {
+    return null;
+  }
+
+  return {
+    base64Data: inlineData,
+    mimeType,
+    name,
+  };
+}
+
+/**
+ * @param {unknown} files
+ * @returns {Array<{name: string, mimeType: string, base64Data: string}>}
+ */
+function normalizeFiles(files) {
+  if (!Array.isArray(files) || files.length === 0) {
+    return [];
+  }
+
+  return files
+    .slice(0, MAX_INLINE_FILES_PER_REQUEST)
+    .map((file) => normalizeFileInput(file))
+    .filter(Boolean);
+}
+
+/**
+ * @param {string} mimeType
+ * @returns {boolean}
+ */
+function isImageMimeType(mimeType) {
+  return typeof mimeType === "string" && mimeType.toLowerCase().startsWith("image/");
+}
+
 function createProviderError(code, message) {
   const error = new Error(message);
   error.code = code;
@@ -100,8 +190,18 @@ async function callGeminiApi(prompt, systemMessage, config, options = {}, modelN
   }
 
   const model = getGeminiClient().getGenerativeModel(modelConfig);
-  const fullPrompt = `${systemMessage}\n\n---\n\n${prompt}`;
-  const result = await model.generateContent(fullPrompt);
+  const normalizedFiles = normalizeFiles(options.files);
+  const parts = [{ text: `${systemMessage}\n\n---\n\n${prompt}` }];
+  normalizedFiles.forEach((file) => {
+    parts.push({
+      inlineData: {
+        data: file.base64Data,
+        mimeType: file.mimeType,
+      },
+    });
+  });
+
+  const result = await model.generateContent(parts);
   const response = await result.response;
 
   if (response.promptFeedback && response.promptFeedback.blockReason) {
@@ -144,6 +244,31 @@ async function callOpenAiApi(prompt, systemMessage, config, options = {}, modelN
     );
   }
 
+  const normalizedFiles = normalizeFiles(options.files);
+  const userContent = [{ text: prompt, type: "text" }];
+  const ignoredFiles = [];
+
+  normalizedFiles.forEach((file) => {
+    if (isImageMimeType(file.mimeType)) {
+      userContent.push({
+        image_url: {
+          url: `data:${file.mimeType};base64,${file.base64Data}`,
+        },
+        type: "image_url",
+      });
+      return;
+    }
+
+    ignoredFiles.push(`${file.name} (${file.mimeType})`);
+  });
+
+  if (ignoredFiles.length > 0) {
+    userContent.push({
+      text: `Ignored non-image attachments for this provider: ${ignoredFiles.join(", ")}.`,
+      type: "text",
+    });
+  }
+
   const payload = {
     max_tokens: config.maxTokens,
     messages: [
@@ -152,7 +277,7 @@ async function callOpenAiApi(prompt, systemMessage, config, options = {}, modelN
         role: "system",
       },
       {
-        content: prompt,
+        content: userContent,
         role: "user",
       },
     ],

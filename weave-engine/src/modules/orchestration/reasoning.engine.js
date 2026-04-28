@@ -2,7 +2,7 @@ const { buildSystemMessage } = require("../prompts/agent-prompts");
 const { callAIProvider } = require("../providers/llm-provider.client");
 
 const CONTENT_GENERATION_KEYWORDS =
-  /\b(research|write|create content|detail|explain|summarize|elaborate|rich|history|about)\b/i;
+  /\b(research|edit|rewrite|rebuild|write|create content|detail|explain|summarize|elaborate|rich|history|about)\b/i;
 
 /**
  * @param {object} params

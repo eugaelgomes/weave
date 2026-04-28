@@ -189,6 +189,7 @@ class LlmQueueProcessor {
         const { data, provider: providerUsed } = await callAIProvider({
           options: {
             allowEdit: Boolean(payload.allowEdit),
+            files: Array.isArray(payload.files) ? payload.files : [],
             functions: Array.isArray(payload.functions) ? payload.functions : [],
           },
           model: payload.model || null,
