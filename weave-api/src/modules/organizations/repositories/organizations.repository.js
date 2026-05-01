@@ -41,14 +41,15 @@ class OrganizationsRepository {
       o.logo_url,
       o.banner_url,
       o.description,
-      o.basic_properties AS properties,
+      o.default_timezone,
+      o.default_locale,
+      o.country,
       o.org_domains,
       o.deleted,
       o.created_at,
       o.updated_at,
       o.settings,
       o.plan AS plan_snapshot,
-      o.address,
       o.deleted_at,
       o.deleted_by,
       o.plan_id,
@@ -95,14 +96,15 @@ class OrganizationsRepository {
       o.logo_url,
       o.banner_url,
       o.description,
-      o.basic_properties AS properties,
+      o.default_timezone,
+      o.default_locale,
+      o.country,
       o.org_domains,
       o.deleted,
       o.created_at,
       o.updated_at,
       o.settings,
       o.plan AS plan_snapshot,
-      o.address,
       o.deleted_at,
       o.deleted_by,
       o.plan_id,
@@ -223,7 +225,14 @@ class OrganizationsRepository {
     const inviterId = invited_by || user_id;
     const query = `
       INSERT INTO organization_members (organization_id, user_id, area_id, role, status, invited_by)
-      VALUES ($1, $2, NULL, UPPER($3), UPPER($4), $5)
+      VALUES (
+        $1,
+        $2,
+        NULL,
+        UPPER($3)::public.organization_workspace_role_enum,
+        UPPER($4)::public.organization_member_status_enum,
+        $5
+      )
       RETURNING *;
     `;
     const params = [organization_id, user_id, role, status, inviterId];
@@ -251,7 +260,8 @@ class OrganizationsRepository {
   async updateMemberRole(organization_id, user_id, role) {
     const query = `
       UPDATE organization_members
-      SET role = UPPER($3), updated_at = now()
+      SET role = UPPER($3)::public.organization_workspace_role_enum,
+          updated_at = now()
       WHERE organization_id = $1 AND user_id = $2 AND area_id IS NULL
       RETURNING *;
     `;
@@ -262,7 +272,8 @@ class OrganizationsRepository {
   async updateMemberStatus(organization_id, user_id, status) {
     const query = `
       UPDATE organization_members
-      SET status = UPPER($3), updated_at = now()
+      SET status = UPPER($3)::public.organization_member_status_enum,
+          updated_at = now()
       WHERE organization_id = $1 AND user_id = $2 AND area_id IS NULL
       RETURNING *;
     `;
@@ -309,12 +320,49 @@ class OrganizationsRepository {
     logo_url,
     banner_url,
     description,
-    properties,
+    default_timezone,
+    default_locale,
+    country,
+    settings,
     org_domains
   ) {
     const client = await getConnection();
     try {
       await client.query("BEGIN");
+
+      const defaultPlanQuery = `
+        WITH candidates AS (
+          SELECT
+            p.plan_id,
+            p.details,
+            1 AS priority,
+            COALESCE(p.plan_value, 0) AS sort_value,
+            p.created_at
+          FROM plans p
+          WHERE p.deleted = FALSE
+            AND p.is_active = TRUE
+            AND COALESCE((p.details #>> '{metadata,is_signup_default}')::boolean, false) = true
+          UNION ALL
+          SELECT
+            p.plan_id,
+            p.details,
+            2 AS priority,
+            COALESCE(p.plan_value, 0) AS sort_value,
+            p.created_at
+          FROM plans p
+          WHERE p.deleted = FALSE
+            AND p.is_active = TRUE
+        )
+        SELECT plan_id, details
+        FROM candidates
+        ORDER BY priority ASC, sort_value ASC, created_at ASC
+        LIMIT 1;
+      `;
+
+      const defaultPlanResult = await client.query(defaultPlanQuery);
+      const defaultPlan = defaultPlanResult.rows[0] || null;
+      const defaultPlanId = defaultPlan?.plan_id || null;
+      const defaultPlanSnapshot = defaultPlan?.details || {};
 
       const insertOrgQuery = `
       INSERT INTO organizations (
@@ -324,10 +372,15 @@ class OrganizationsRepository {
         logo_url,
         banner_url,
         description,
-        basic_properties,
-        org_domains
+        default_timezone,
+        default_locale,
+        country,
+        settings,
+        org_domains,
+        plan_id,
+        plan
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::text[])
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11::text[], $12, $13::jsonb)
       RETURNING
         id,
         user_id,
@@ -336,8 +389,13 @@ class OrganizationsRepository {
         logo_url,
         banner_url,
         description,
-        basic_properties AS properties,
+        default_timezone,
+        default_locale,
+        country,
+        settings,
         org_domains,
+        plan_id,
+        plan AS plan_snapshot,
         created_at,
         updated_at,
         deleted;
@@ -350,8 +408,13 @@ class OrganizationsRepository {
         logo_url,
         banner_url,
         description,
-        properties,
+        default_timezone,
+        default_locale,
+        country,
+        settings,
         org_domains,
+        defaultPlanId,
+        defaultPlanSnapshot,
       ]);
 
       const organization = orgResult.rows[0];
@@ -359,17 +422,18 @@ class OrganizationsRepository {
       // Atualiza o usuário com o organization_id criado
       const updateUserQuery = `
       UPDATE users
-      SET organization_id = $1
+      SET organization_id = $1,
+          plan_id = COALESCE(plan_id, $3)
       WHERE user_id = $2;
     `;
 
-      await client.query(updateUserQuery, [organization.id, user_id]);
+      await client.query(updateUserQuery, [organization.id, user_id, defaultPlanId]);
 
       // Adiciona associação do usuário à org
       await this.addOrganizationMember(
         organization.id,
         user_id,
-        "SUPER_ADMIN",
+        "ADMIN",
         "ACTIVE",
         null,
         client
@@ -395,7 +459,7 @@ class OrganizationsRepository {
     logo_url,
     banner_url,
     description,
-    properties,
+    settings,
     deleted,
     org_domains
   ) {
@@ -406,7 +470,7 @@ class OrganizationsRepository {
           logo_url = $5,
           banner_url = $6,
           description = $7,
-          basic_properties = $8::jsonb,
+          settings = $8::jsonb,
           deleted = $9,
           org_domains = $10::text[],
           updated_at = NOW()
@@ -430,7 +494,7 @@ class OrganizationsRepository {
         logo_url,
         banner_url,
         description,
-        basic_properties AS properties,
+        settings,
         org_domains,
         created_at,
         updated_at,
@@ -444,11 +508,153 @@ class OrganizationsRepository {
       logo_url,
       banner_url,
       description,
-      properties,
+      settings,
       deleted,
       org_domains,
     ]);
     return results[0];
+  }
+
+  async updateCreationIdentityStep(
+    organization_id,
+    user_id,
+    {
+      org_name,
+      unique_name,
+      logo_url,
+      banner_url,
+      description,
+      default_timezone,
+      default_locale,
+      country,
+      settings,
+    }
+  ) {
+    const query = `
+      UPDATE organizations o
+      SET org_name = $3,
+          unique_name = $4,
+          logo_url = $5,
+          banner_url = $6,
+          description = $7,
+          default_timezone = $8,
+          default_locale = $9,
+          country = $10,
+          settings = $11::jsonb,
+          updated_at = NOW()
+      WHERE o.id = $1
+        AND (
+          o.user_id = $2
+          OR EXISTS (
+            SELECT 1 FROM organization_members om
+            WHERE om.organization_id = o.id
+              AND om.user_id = $2
+              AND om.area_id IS NULL
+              AND om.deleted = false
+              AND om.role IN ('SUPER_ADMIN', 'ADMIN')
+          )
+        )
+      RETURNING
+        id,
+        user_id,
+        org_name,
+        unique_name,
+        logo_url,
+        banner_url,
+        description,
+        default_timezone,
+        default_locale,
+        country,
+        settings,
+        org_domains,
+        plan AS plan_snapshot,
+        plan_id,
+        branding_properties,
+        integrations,
+        created_at,
+        updated_at,
+        deleted;
+    `;
+
+    const results = await executeQuery(query, [
+      organization_id,
+      user_id,
+      org_name,
+      unique_name,
+      logo_url,
+      banner_url,
+      description,
+      default_timezone,
+      default_locale,
+      country,
+      settings,
+    ]);
+    return results[0] || null;
+  }
+
+  async updateCreationConfigurationStep(
+    organization_id,
+    user_id,
+    {
+      settings,
+      branding_properties,
+      integrations,
+      plan_id,
+      plan_snapshot,
+    }
+  ) {
+    const query = `
+      UPDATE organizations o
+      SET settings = $3::jsonb,
+          branding_properties = $4::jsonb,
+          integrations = $5::jsonb,
+          plan_id = $6,
+          plan = $7::jsonb,
+          updated_at = NOW()
+      WHERE o.id = $1
+        AND (
+          o.user_id = $2
+          OR EXISTS (
+            SELECT 1 FROM organization_members om
+            WHERE om.organization_id = o.id
+              AND om.user_id = $2
+              AND om.area_id IS NULL
+              AND om.deleted = false
+              AND om.role IN ('SUPER_ADMIN', 'ADMIN', 'BILLING_MANAGER')
+          )
+        )
+      RETURNING
+        id,
+        user_id,
+        org_name,
+        unique_name,
+        logo_url,
+        banner_url,
+        description,
+        default_timezone,
+        default_locale,
+        country,
+        settings,
+        org_domains,
+        plan AS plan_snapshot,
+        plan_id,
+        branding_properties,
+        integrations,
+        created_at,
+        updated_at,
+        deleted;
+    `;
+
+    const results = await executeQuery(query, [
+      organization_id,
+      user_id,
+      settings,
+      branding_properties,
+      integrations,
+      plan_id,
+      plan_snapshot,
+    ]);
+    return results[0] || null;
   }
 
   // Organization Invites
@@ -460,14 +666,27 @@ class OrganizationsRepository {
     name = null,
     username = null,
     area_id = null,
-    area_member_role = null
+    project_member_role = null
   ) {
     const query = `
       INSERT INTO organization_member_invites (
         organization_id, email, name, username, role, invited_by, expires_at,
-        area_id, area_member_role
+        area_id, project_member_role
       )
-      VALUES ($1, $2, $3, $4, UPPER($5), $6, NOW() + INTERVAL '7 days', $7, CASE WHEN $8 IS NULL THEN NULL ELSE UPPER($8) END)
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        UPPER($5)::public.organization_workspace_role_enum,
+        $6,
+        NOW() + INTERVAL '7 days',
+        $7,
+        CASE
+          WHEN $8 IS NULL THEN NULL
+          ELSE UPPER($8)::public.project_member_role_enum
+        END
+      )
       RETURNING *;
     `;
     const results = await executeQuery(query, [
@@ -478,7 +697,7 @@ class OrganizationsRepository {
       role,
       invited_by,
       area_id,
-      area_member_role,
+      project_member_role,
     ]);
     return results[0];
   }

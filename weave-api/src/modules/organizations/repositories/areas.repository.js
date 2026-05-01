@@ -180,7 +180,14 @@ class OrganizationAreasRepository {
 				invited_by,
 				status
 			)
-			VALUES ($1, $2, $3, UPPER($4), $5, 'ACTIVE')
+			VALUES (
+        $1,
+        $2,
+        $3,
+        UPPER($4)::public.organization_workspace_role_enum,
+        $5,
+        'ACTIVE'::public.organization_member_status_enum
+      )
 			RETURNING *;
 		`;
     const results = await executeQuery(query, [
@@ -196,7 +203,7 @@ class OrganizationAreasRepository {
   async updateAreaMemberRole(areaId, organizationId, userId, role) {
     const query = `
 			UPDATE organization_members
-			SET role = UPPER($4),
+			SET role = UPPER($4)::public.organization_workspace_role_enum,
 					updated_at = CURRENT_TIMESTAMP
 			WHERE organization_id = $1
 				AND area_id = $2

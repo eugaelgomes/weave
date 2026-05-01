@@ -340,27 +340,30 @@ CREATE TABLE public.users (
 COMMENT ON TABLE public.users IS 'Usuários finais da plataforma.';
 
 CREATE TABLE public.organizations (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  public_id varchar(25) NOT NULL DEFAULT public.generate_alphanumeric_id(25) UNIQUE,
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  public_id varchar(25) DEFAULT generate_alphanumeric_id(25) NOT NULL,
   user_id uuid NOT NULL,
-  org_name varchar(80) NOT NULL DEFAULT 'New Organization',
-  unique_name varchar(40) NOT NULL UNIQUE,
+  org_name varchar(80) DEFAULT 'New Organization'::character varying NOT NULL,
+  unique_name varchar(40) NOT NULL,
   logo_url text NULL,
   banner_url text NULL,
-  description text NULL DEFAULT 'Type description here...',
-  basic_properties jsonb NOT NULL DEFAULT '{}'::jsonb,
-  org_domains text[] NULL DEFAULT '{}'::text[],
-  settings jsonb NOT NULL DEFAULT '{}'::jsonb,
-  plan jsonb NOT NULL DEFAULT '{}'::jsonb,
-  address jsonb NULL DEFAULT '{}'::jsonb,
+  description text DEFAULT 'Type description here...'::text NULL,
+  basic_properties jsonb DEFAULT '{}'::jsonb NOT NULL,
+  org_domains text[] DEFAULT '{}'::text[] NULL,
+  settings jsonb DEFAULT '{}'::jsonb NOT NULL,
+  "plan" jsonb DEFAULT '{}'::jsonb NOT NULL,
+  address jsonb DEFAULT '{}'::jsonb NULL,
   plan_id uuid NULL,
-  branding_properties jsonb NULL DEFAULT '{}'::jsonb,
-  integrations jsonb NULL DEFAULT '{}'::jsonb,
-  deleted bool NOT NULL DEFAULT false,
+  branding_properties jsonb DEFAULT '{}'::jsonb NULL,
+  integrations jsonb DEFAULT '{}'::jsonb NULL,
+  deleted bool DEFAULT false NOT NULL,
   deleted_at timestamptz NULL,
   deleted_by uuid NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
+  created_at timestamptz DEFAULT now() NOT NULL,
+  updated_at timestamptz DEFAULT now() NOT NULL,
+  CONSTRAINT organizations_pkey PRIMARY KEY (id),
+  CONSTRAINT organizations_public_id_key UNIQUE (public_id),
+  CONSTRAINT organizations_unique_name_key UNIQUE (unique_name),
   CONSTRAINT organizations_public_id_format_check
     CHECK (public_id ~ '^[a-z0-9]{25}$'),
   CONSTRAINT organizations_unique_name_pattern_check
@@ -1281,15 +1284,15 @@ BEFORE UPDATE ON public.plans
 FOR EACH ROW
 EXECUTE FUNCTION public.set_row_deleted_at();
 
-CREATE TRIGGER trg_organizations_set_updated_at
-BEFORE UPDATE ON public.organizations
-FOR EACH ROW
-EXECUTE FUNCTION public.set_row_updated_at();
-
 CREATE TRIGGER trg_organizations_set_deleted_at
 BEFORE UPDATE ON public.organizations
 FOR EACH ROW
 EXECUTE FUNCTION public.set_row_deleted_at();
+
+CREATE TRIGGER trg_organizations_set_updated_at
+BEFORE UPDATE ON public.organizations
+FOR EACH ROW
+EXECUTE FUNCTION public.set_row_updated_at();
 
 CREATE TRIGGER trg_organization_areas_set_updated_at
 BEFORE UPDATE ON public.organization_areas

@@ -6,8 +6,15 @@ const SearchUsersRepository = require("@/modules/users/repositories/search-users
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 const DeleteUsersRepository = require("@/modules/users/repositories/delete-users.repository");
 const { normalizeOrganizationName } = require("../normalizer");
+const {
+  ORG_ROLES,
+} = require("@/modules/organizations/organization-role-policy");
 
-const AREA_MEMBER_ROLES = ["manager", "editor", "viewer"];
+const AREA_MEMBER_ROLES = [
+  ORG_ROLES.ADMIN,
+  ORG_ROLES.MEMBER,
+  ORG_ROLES.GUEST,
+];
 
 class OrganizationAreasController extends OrganizationsBaseController {
   constructor() {
@@ -29,7 +36,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       organization.id,
       userId
     );
-    return member?.role === "manager";
+    return member?.role === ORG_ROLES.ADMIN;
   }
 
   /**
@@ -213,10 +220,10 @@ class OrganizationAreasController extends OrganizationsBaseController {
             userId
           );
 
-          if (!member || member.role !== "manager") {
+          if (!member || member.role !== ORG_ROLES.ADMIN) {
             return res.status(403).json({
               success: false,
-              error: "Apenas managers da área pai podem criar subáreas",
+              error: "Only area admins of the parent area can create sub-areas",
             });
           }
         }
@@ -504,16 +511,18 @@ class OrganizationAreasController extends OrganizationsBaseController {
         return;
       }
 
-      const { user_id, role = "viewer" } = req.body;
+      const { user_id, role = ORG_ROLES.MEMBER } = req.body;
       if (!user_id) {
         return res
           .status(400)
           .json({ success: false, error: "user_id é obrigatório" });
       }
-      if (!AREA_MEMBER_ROLES.includes(role)) {
+      const normalizedRole =
+        typeof role === "string" ? role.trim().toUpperCase() : "";
+      if (!AREA_MEMBER_ROLES.includes(normalizedRole)) {
         return res.status(400).json({
           success: false,
-          error: "Role inválido para membro da área",
+          error: "Invalid area member role. Use ADMIN, MEMBER or GUEST",
         });
       }
 
@@ -551,7 +560,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
         areaId,
         organization.id,
         user_id,
-        role,
+        normalizedRole,
         userId
       );
 
@@ -584,10 +593,12 @@ class OrganizationAreasController extends OrganizationsBaseController {
       const { areaId, memberId } = req.params;
       const { role } = req.body;
 
-      if (!role || !AREA_MEMBER_ROLES.includes(role)) {
+      const normalizedRole =
+        typeof role === "string" ? role.trim().toUpperCase() : "";
+      if (!normalizedRole || !AREA_MEMBER_ROLES.includes(normalizedRole)) {
         return res.status(400).json({
           success: false,
-          error: "Role inválido para membro da área",
+          error: "Invalid area member role. Use ADMIN, MEMBER or GUEST",
         });
       }
 
@@ -622,7 +633,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
         areaId,
         organization.id,
         memberId,
-        role,
+        normalizedRole,
         userId
       );
 

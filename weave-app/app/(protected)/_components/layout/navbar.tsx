@@ -4,11 +4,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
-import { useAuth } from "@/app/_contexts/auth-context";
+import { useAuth, type User } from "@/app/_contexts/auth-context";
 import { useTheme } from "@/app/_contexts/theme-context";
 import { useLanguage } from "@/app/_contexts/language-context";
-import { Menu, X, Sun, Moon, Search, CircleUserRound } from "lucide-react";
-import { type User } from "@/app/_services/authentication/auth-service";
+import { Menu, X, Sun, Moon, Search, CircleUserRound, MessageSquare } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useNotification } from "@/app/_contexts/notification-context";
 import SearchModal from "@/app/(protected)/_components/ui/navbar/search-modal";
 
 const formatters = {
@@ -59,6 +60,33 @@ interface MenuContentProps {
   theme: string;
   t: ReturnType<typeof useLanguage>["t"];
 }
+
+const notificationsTriggerClass =
+  "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white";
+
+const NavbarNotificationsLink = ({
+  ariaLabel,
+  className,
+}: {
+  ariaLabel: string;
+  className?: string;
+}) => {
+  const { unreadCount } = useNotification();
+  return (
+    <Link
+      href="/notifications"
+      className={cn(notificationsTriggerClass, className)}
+      aria-label={ariaLabel}
+    >
+      <MessageSquare className="h-4 w-4 text-neutral-500 dark:text-neutral-500" />
+      {unreadCount > 0 && (
+        <span className="bg-brand-primary-500 absolute top-1 right-1 flex h-3.5 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-white">
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </span>
+      )}
+    </Link>
+  );
+};
 
 const MenuContent = ({ user, logout, onClose, onToggleTheme, theme, t }: MenuContentProps) => (
   <div className="flex flex-col overflow-hidden">
@@ -200,8 +228,15 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
   return (
     <>
       <nav className="dark:bg-brand-secondary-950/90 sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md print:hidden">
-      <div className="mx-auto w-full max-w-[1920px] pl-2 pr-1">          <div className="flex h-10 items-center justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-2">
+        <div className="mx-auto w-full max-w-[1920px] pl-2 pr-1">
+          <div
+            className={cn(
+              "flex h-10 items-center justify-between gap-2",
+              "md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center md:justify-normal md:gap-4"
+            )}
+          >
+            {/* Frame 1: app name + org/workspace */}
+            <div className="flex min-w-0 items-center gap-2 justify-self-start">
               {authenticated && (
                 <button
                   onClick={onToggleSidebar}
@@ -229,7 +264,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                   <Link
                     href={`/organization/about/${user.org_id}`}
                     title={`Saiba mais sobre ${user.org_name}`}
-                    className="flex items-center gap-1.5 rounded-md transition-opacity hover:opacity-80"
+                    className="flex min-w-0 items-center gap-1.5 rounded-md transition-opacity hover:opacity-80"
                   >
                     <div className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded">
                       <Image
@@ -248,8 +283,9 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
               )}
             </div>
 
+            {/* Frame 2: search + notifications (desktop — grid keeps this column visually centered) */}
             {authenticated && user && (
-              <div className="hidden flex-1 justify-center md:flex">
+              <div className="hidden min-w-0 items-center justify-center gap-2 justify-self-center md:flex">
                 <button
                   onClick={() => setSearchOpen(true)}
                   className="group flex w-full max-w-[360px] items-center gap-2.5 rounded-md border border-neutral-200 bg-neutral-100/50 px-2 py-0.5 transition-all hover:bg-neutral-100 hover:ring-2 hover:ring-yellow-500/20 dark:border-neutral-800 dark:bg-neutral-800/50 dark:hover:bg-neutral-800"
@@ -260,17 +296,19 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                     className="group-hover:text-brand-primary-500 h-3.5 w-3.5 text-neutral-400"
                     strokeWidth={2}
                   />
-                  <span className="flex-1 text-left opacity-50 text-xs text-neutral-500 dark:text-neutral-500">
+                  <span className="flex-1 text-left text-xs text-neutral-500 opacity-50 dark:text-neutral-500">
                     {t.navbar.searchPlaceholder}
                   </span>
                   <div className="flex items-center gap-1 px-1.5 text-[10px] font-medium text-neutral-400">
                     <span>⌘</span>K
                   </div>
                 </button>
+                <NavbarNotificationsLink ariaLabel={t.nav.notifications} />
               </div>
             )}
 
-            <div className="flex shrink-0 items-center gap-1">
+            {/* Frame 3: mobile search + notifications; user + avatar */}
+            <div className="flex shrink-0 items-center justify-end gap-1 justify-self-end md:gap-2">
               {authenticated && user && (
                 <>
                   <button
@@ -281,6 +319,11 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                   >
                     <Search className="h-4 w-4" strokeWidth={2} />
                   </button>
+
+                  <NavbarNotificationsLink
+                    ariaLabel={t.nav.notifications}
+                    className="md:hidden"
+                  />
 
                   <div className="relative" ref={desktopMenuRef}>
                     <button

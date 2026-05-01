@@ -1,6 +1,6 @@
 const { Resend } = require("resend");
-const redis = require("../../config/redis");
-const { getEmailQueueRedisKey } = require("../../config/redis-queue-keys");
+const redis = require("../config/redis");
+const { getEmailQueueRedisKey } = require("../config/redis-queue-keys");
 
 class EmailProcessor {
   constructor() {

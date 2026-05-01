@@ -23,7 +23,6 @@ const OrganizationPage = () => {
     hasOrganization,
     getStats,
     isOwner,
-    createOrganization,
     updateOrganization,
     uploadLogo,
     uploadBanner,
@@ -66,19 +65,7 @@ const OrganizationPage = () => {
 
   const handleCreateOrganization = async () => {
     setIsCreating(true);
-    // Simple placeholder creation logic if needed, usually redirects to a creation page or opens a modal
-    // For now we assume a separate flow or simple creation here
-    try {
-      await createOrganization({
-        org_name: "Nova Organização",
-        description: "Minha nova organização no Weave Notes",
-      });
-      toast.success("Organização criada com sucesso!");
-    } catch (error) {
-      toast.error("Erro ao criar organização");
-    } finally {
-      setIsCreating(false);
-    }
+    router.push("/organization/create");
   };
 
   const handleUpdateInfo = async (e: React.FormEvent) => {

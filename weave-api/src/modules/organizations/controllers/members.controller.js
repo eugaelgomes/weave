@@ -26,7 +26,12 @@ const {
   ORG_ROLES,
 } = require("@/modules/organizations/organization-role-policy");
 
-const AREA_MEMBER_ROLES = ["manager", "editor", "viewer"];
+const PROJECT_MEMBER_ROLES = [
+  "PROJECT_MANAGER",
+  "CONTRIBUTOR",
+  "COMMENTER",
+  "VIEWER",
+];
 const MAX_SUPER_ADMINS = 3;
 
 class OrganizationMembersController extends OrganizationsBaseController {
@@ -61,6 +66,20 @@ class OrganizationMembersController extends OrganizationsBaseController {
       return false;
     }
     return true;
+  }
+
+  _resolveProjectMemberRole(rawRole) {
+    if (!rawRole || typeof rawRole !== "string") {
+      return "CONTRIBUTOR";
+    }
+    return rawRole.trim().toUpperCase();
+  }
+
+  _mapProjectRoleToAreaRole(projectRole) {
+    const normalizedRole = this._resolveProjectMemberRole(projectRole);
+    if (normalizedRole === "PROJECT_MANAGER") return ORG_ROLES.ADMIN;
+    if (normalizedRole === "CONTRIBUTOR") return ORG_ROLES.MEMBER;
+    return ORG_ROLES.GUEST;
   }
 
   /**
@@ -274,11 +293,11 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
       const {
         email,
-        role = "member",
+        role = ORG_ROLES.MEMBER,
         name,
         username,
         area_id,
-        area_member_role,
+        project_member_role,
       } = req.body;
 
       if (!email) {
@@ -289,10 +308,12 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return res.status(400).json({ error: "Name is required" });
       }
 
-      if (!validRoles.includes(role)) {
+      const normalizedRole =
+        typeof role === "string" ? role.trim().toUpperCase() : "";
+      if (!validRoles.includes(normalizedRole)) {
         return res.status(400).json({
           error:
-            "Invalid role. Valid roles: super_admin, admin, billing_manager, member, guest",
+            "Invalid role. Valid roles: SUPER_ADMIN, ADMIN, BILLING_MANAGER, MEMBER, GUEST",
         });
       }
 
@@ -305,21 +326,25 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return;
       }
 
-      if (!(await this._ensureSuperAdminLimit(currentOrg.id, role, res))) {
+      if (
+        !(await this._ensureSuperAdminLimit(currentOrg.id, normalizedRole, res))
+      ) {
         return;
       }
 
-      let resolvedAreaMemberRole = null;
+      let resolvedProjectMemberRole = null;
       if (area_id) {
         const area = await this.areasRepository.getAreaById(
           area_id,
           currentOrg.id
         );
         if (!area) return res.status(404).json({ error: "Area not found" });
-        resolvedAreaMemberRole = area_member_role || "editor";
-        if (!AREA_MEMBER_ROLES.includes(resolvedAreaMemberRole)) {
+        resolvedProjectMemberRole =
+          this._resolveProjectMemberRole(project_member_role);
+        if (!PROJECT_MEMBER_ROLES.includes(resolvedProjectMemberRole)) {
           return res.status(400).json({
-            error: "Invalid area_member_role. Use: manager, editor, viewer",
+            error:
+              "Invalid project_member_role. Use: PROJECT_MANAGER, CONTRIBUTOR, COMMENTER, VIEWER",
           });
         }
       }
@@ -356,12 +381,12 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const invite = await this.organizationsRepository.createOrgInvite(
         currentOrg.id,
         email,
-        role,
+        normalizedRole,
         authUserId,
         usedName,
         username || null,
         area_id || null,
-        resolvedAreaMemberRole
+        resolvedProjectMemberRole
       );
 
       const inviter = await SearchUsersRepository.findById(authUserId);
@@ -372,7 +397,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         currentOrg.org_name,
         inviter.name || inviter.username,
         invite.invite_id,
-        role
+        normalizedRole
       );
 
       if (!emailResult.success) {
@@ -388,7 +413,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
           role: invite.role,
           expires_at: invite.expires_at,
           area_id: invite.area_id || null,
-          area_member_role: invite.area_member_role || null,
+          project_member_role: invite.project_member_role || null,
         },
       });
     } catch (error) {
@@ -433,7 +458,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
           invited_name: invite.name || null,
           area_id: invite.area_id || null,
           area_name: invite.area_name || null,
-          area_member_role: invite.area_member_role || null,
+          project_member_role: invite.project_member_role || null,
         },
       });
     } catch (error) {
@@ -545,36 +570,36 @@ class OrganizationMembersController extends OrganizationsBaseController {
       await this.organizationsRepository.verifyOrgInvite(invite.invite_id);
 
       const isMember = await this.organizationsRepository.isMember(
-        invite.org_id,
+        invite.organization_id,
         targetUserId
       );
       if (!isMember) {
         await this.organizationsRepository.addOrganizationMember(
-          invite.org_id,
+          invite.organization_id,
           targetUserId,
           invite.role,
-          "active",
+          "ACTIVE",
           invite.invited_by
         );
       }
 
       if (invite.area_id) {
-        const areaRole = invite.area_member_role || "editor";
-        if (AREA_MEMBER_ROLES.includes(areaRole)) {
-          const existingAreaMember = await this.areasRepository.getAreaMember(
+        const areaRole = this._mapProjectRoleToAreaRole(
+          invite.project_member_role
+        );
+        const existingAreaMember = await this.areasRepository.getAreaMember(
+          invite.area_id,
+          invite.organization_id,
+          targetUserId
+        );
+        if (!existingAreaMember) {
+          await this.areasRepository.addAreaMember(
             invite.area_id,
-            invite.org_id,
-            targetUserId
+            invite.organization_id,
+            targetUserId,
+            areaRole,
+            invite.invited_by
           );
-          if (!existingAreaMember) {
-            await this.areasRepository.addAreaMember(
-              invite.area_id,
-              invite.org_id,
-              targetUserId,
-              areaRole,
-              invite.invited_by
-            );
-          }
         }
       }
 
@@ -598,7 +623,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         message: "Account activated and invite accepted successfully!",
         data: {
           organization: {
-            id: invite.org_id,
+            id: invite.organization_id,
             name: invite.org_name,
           },
           role: invite.role,
@@ -671,7 +696,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return res.status(404).json({ error: "Invite not found" });
       }
 
-      if (String(invite.org_id) !== String(currentOrg.id)) {
+      if (String(invite.organization_id) !== String(currentOrg.id)) {
         return res
           .status(403)
           .json({ error: "No permission to cancel this invite" });

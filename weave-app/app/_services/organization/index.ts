@@ -208,6 +208,36 @@ export interface CreateOrganizationData {
   org_domains?: string[];
 }
 
+export type OrganizationBusinessRole =
+  | "SOLO_ENTREPRENEUR"
+  | "STARTUP"
+  | "SMALL_BUSINESS"
+  | "AGENCY"
+  | "EDUCATIONAL_INSTITUTION"
+  | "NON_PROFIT"
+  | "ENTERPRISE"
+  | "OTHER";
+
+export interface OrganizationStepOneData {
+  org_name: string;
+  unique_name: string;
+  organization_role: OrganizationBusinessRole;
+  description?: string;
+  logo_url?: string | null;
+  default_locale?: string | null;
+  country?: string | null;
+  language?: string | null;
+}
+
+export interface OrganizationStepOneResponse {
+  step: string;
+  required_fields: string[];
+  optional_fields?: string[];
+  role_options?: OrganizationBusinessRole[];
+  available_roles?: OrganizationBusinessRole[];
+  organization: Organization | null;
+}
+
 export interface UpdateOrganizationData {
   org_name?: string;
   unique_name?: string;
@@ -377,6 +407,72 @@ export const createOrganization = async (
 
   return transformBackendOrganization(data.data);
 };
+
+export const fetchOrganizationCreationStepOne = async (): Promise<OrganizationStepOneResponse> => {
+  const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_CREATION_STEP_ONE);
+  const data = await handleResponse<{
+    status?: string;
+    success?: boolean;
+    data?: OrganizationStepOneResponse;
+    error?: string;
+  }>(response);
+
+  if ((data.status === "OK" || data.success) && data.data) {
+    return {
+      ...data.data,
+      organization: data.data.organization
+        ? transformBackendOrganization(data.data.organization)
+        : null,
+    };
+  }
+
+  throw new Error(data.error || "Erro ao carregar etapa 1 de criação da organização");
+};
+
+export const saveOrganizationCreationStepOne = async (
+  payload: OrganizationStepOneData
+): Promise<OrganizationStepOneResponse> => {
+  const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_CREATION_STEP_ONE, payload);
+  const data = await handleResponse<{
+    status?: string;
+    success?: boolean;
+    data?: OrganizationStepOneResponse;
+    error?: string;
+  }>(response);
+
+  if ((data.status === "OK" || data.success) && data.data) {
+    return {
+      ...data.data,
+      organization: data.data.organization
+        ? transformBackendOrganization(data.data.organization)
+        : null,
+    };
+  }
+
+  throw new Error(data.error || "Erro ao salvar etapa 1 de criação da organização");
+};
+
+export const completeOrganizationCreationStepOne =
+  async (): Promise<OrganizationStepOneResponse> => {
+    const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_CREATION_STEP_ONE_COMPLETE, {});
+    const data = await handleResponse<{
+      status?: string;
+      success?: boolean;
+      data?: OrganizationStepOneResponse;
+      error?: string;
+    }>(response);
+
+    if ((data.status === "OK" || data.success) && data.data) {
+      return {
+        ...data.data,
+        organization: data.data.organization
+          ? transformBackendOrganization(data.data.organization)
+          : null,
+      };
+    }
+
+    throw new Error(data.error || "Erro ao concluir etapa 1 de criação da organização");
+  };
 
 /**
  * Atualiza a organização.

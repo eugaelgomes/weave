@@ -48,9 +48,9 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
 
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
         <div
-          className={`hidden ${
+          className={`hidden min-h-0 flex-col ${
             isCollapsed ? "lg:w-[70px]" : "lg:w-[160px]"
-          } dark:bg-brand-secondary-950 flex-col bg-white transition-all duration-300 lg:flex`}
+          } dark:bg-brand-secondary-950 bg-white transition-all duration-300 lg:flex`}
         >
           <Sidebar
             onLinkClick={closeSidebar}
@@ -68,7 +68,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
               onClick={closeSidebar}
             />
 
-            <div className="relative z-[101] flex h-[85vh] w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-[0_8px_32px_rgba(0,0,0,0.15)] dark:border-neutral-800 dark:bg-neutral-900">
+            <div className="relative z-[101] flex h-[85vh] min-h-0 w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-[0_8px_32px_rgba(0,0,0,0.15)] dark:border-neutral-800 dark:bg-neutral-900">
               <Sidebar
                 onLinkClick={closeSidebar}
                 isCollapsed={false}

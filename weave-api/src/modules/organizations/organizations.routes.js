@@ -5,6 +5,7 @@ const organizationsController = require("@/modules/organizations/controllers/org
 const organizationMembersController = require("@/modules/organizations/controllers/members.controller");
 const organizationAreasController = require("@/modules/organizations/controllers/areas.controller");
 const organizationDomainsController = require("@/modules/organizations/controllers/domains.controller");
+const organizationCreationStepsController = require("@/modules/organizations/controllers/creation-steps.controller");
 
 // Middlewares
 const { verifyToken } = require("@/middlewares/auth/verify-token");
@@ -68,24 +69,12 @@ router.delete(
   organizationDomainsController.deleteDomain.bind(organizationDomainsController)
 );
 
-router.post(
-  "/domains/:domainId/verify",
-  structuralLimiter,
-  organizationDomainsController.verifyDomain.bind(organizationDomainsController)
-);
-
 router.patch(
   "/domains/:domainId/sso",
   structuralLimiter,
   organizationDomainsController.updateSsoSettings.bind(
     organizationDomainsController
   )
-);
-
-router.delete(
-  "/domains/:domainId",
-  structuralLimiter,
-  organizationDomainsController.deleteDomain.bind(organizationDomainsController)
 );
 
 // ------ Areas Routes ------
@@ -146,7 +135,33 @@ router.delete(
 router.post(
   "/",
   structuralLimiter,
-  organizationsController.createOrganization.bind(organizationsController)
+  organizationCreationStepsController.saveStepOne.bind(
+    organizationCreationStepsController
+  )
+);
+
+router.get(
+  "/creation-steps/step-1",
+  highTrafficLimiter,
+  organizationCreationStepsController.getStepOne.bind(
+    organizationCreationStepsController
+  )
+);
+
+router.post(
+  "/creation-steps/step-1",
+  structuralLimiter,
+  organizationCreationStepsController.saveStepOne.bind(
+    organizationCreationStepsController
+  )
+);
+
+router.post(
+  "/creation-steps/step-1/complete",
+  structuralLimiter,
+  organizationCreationStepsController.completeStepOne.bind(
+    organizationCreationStepsController
+  )
 );
 
 router.put(

@@ -4,9 +4,6 @@ const areasRepository = require("@/modules/organizations/repositories/areas.repo
 const {
   normalizeOrganizationName,
   generateUniqueOrganizationName,
-  normalizeOrganizationProperties,
-  updateOrganizationProperties,
-  getDefaultOrganizationProperties,
   orgDataResponse,
 } = require("../normalizer");
 const {
@@ -86,7 +83,7 @@ class OrganizationsController extends OrganizationsBaseController {
         newArea.id,
         organization.id,
         createdBy,
-        "manager",
+        ORG_ROLES.ADMIN,
         createdBy
       );
     } catch (error) {
@@ -120,7 +117,7 @@ class OrganizationsController extends OrganizationsBaseController {
         logo_url,
         banner_url,
         description,
-        properties,
+        settings,
         org_domains,
       } = req.body;
 
@@ -144,10 +141,6 @@ class OrganizationsController extends OrganizationsBaseController {
         unique_name = await generateUniqueOrganizationName(org_name);
       }
 
-      const normalizedProperties = properties
-        ? normalizeOrganizationProperties(properties)
-        : getDefaultOrganizationProperties();
-
       const validatedDomains = this._validateOrgDomains(org_domains);
 
       const newOrganization = await this.organizationsRepository.createOrgs(
@@ -157,7 +150,10 @@ class OrganizationsController extends OrganizationsBaseController {
         logo_url || null,
         banner_url || null,
         description?.trim() || "Type description here...",
-        normalizedProperties,
+        settings?.default_timezone || "America/Sao_Paulo",
+        settings?.default_locale || "en-US",
+        settings?.country || null,
+        settings || {},
         validatedDomains
       );
 
@@ -211,7 +207,7 @@ class OrganizationsController extends OrganizationsBaseController {
           description: organization.description,
           member_role: organization.member_role ?? null,
         },
-        properties: organization.properties,
+        settings: organization.settings || {},
         org_domains: organization.org_domains || [],
         owners: [
           {
@@ -253,7 +249,7 @@ class OrganizationsController extends OrganizationsBaseController {
         logo_url,
         banner_url,
         description,
-        properties,
+        settings,
         org_domains,
       } = req.body;
 
@@ -276,7 +272,7 @@ class OrganizationsController extends OrganizationsBaseController {
         "logo_url",
         "banner_url",
         "description",
-        "properties",
+        "settings",
       ].some((k) => Object.prototype.hasOwnProperty.call(body, k));
 
       if (
@@ -310,13 +306,7 @@ class OrganizationsController extends OrganizationsBaseController {
         updatedUniqueName = normalizedName;
       }
 
-      let updatedProperties = currentOrg.properties;
-      if (properties) {
-        updatedProperties = updateOrganizationProperties(
-          currentOrg.properties,
-          properties
-        );
-      }
+      const updatedSettings = settings ? { ...currentOrg.settings, ...settings } : currentOrg.settings;
 
       const validatedDomains = org_domains
         ? this._validateOrgDomains(org_domains)
@@ -332,7 +322,7 @@ class OrganizationsController extends OrganizationsBaseController {
         description !== undefined
           ? description?.trim()
           : currentOrg.description,
-        updatedProperties,
+        updatedSettings,
         currentOrg.deleted,
         validatedDomains
       );
@@ -375,77 +365,15 @@ class OrganizationsController extends OrganizationsBaseController {
    */
   async updateOrganizationProperties(req, res) {
     try {
-      const userId = this._validateAuthentication(req, res);
-      if (!userId) return;
-
-      const { properties } = req.body;
-      if (!properties || typeof properties !== "object") {
-        return res.status(400).json({
-          success: false,
-          error: "Properties is required and must be an object",
-        });
-      }
-
-      const currentOrg = await this._getUserOrganization(userId);
-      if (!currentOrg) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Organization not found" });
-      }
-
-      if (
-        !this._ensureOrgPermission(
-          currentOrg,
-          this._orgPermissions.MANAGE_BRAND,
-          res
-        )
-      )
-        return;
-
-      const updatedProperties = updateOrganizationProperties(
-        currentOrg.properties,
-        properties
-      );
-
-      const updatedOrg = await this.organizationsRepository.updateOrg(
-        currentOrg.id,
-        userId,
-        currentOrg.org_name,
-        currentOrg.unique_name,
-        currentOrg.logo_url,
-        currentOrg.banner_url,
-        currentOrg.description,
-        updatedProperties,
-        currentOrg.deleted,
-        currentOrg.org_domains
-      );
-
-      if (!updatedOrg) {
-        return res.status(403).json({
-          success: false,
-          error: "Insufficient permissions to update organization",
-          code: "ORG_FORBIDDEN",
-        });
-      }
-
-      res.status(200).json({
-        status: "OK",
-        success: true,
-        message: "Properties updated successfully",
-        data: updatedOrg,
+      return res.status(410).json({
+        success: false,
+        error:
+          "Organization properties column has been removed. Use organization settings fields instead.",
       });
     } catch (error) {
-      console.error("Error updating properties:", error);
-      const statusCode =
-        error.message.includes("not found") ||
-        error.message.includes("nao encontrada") ||
-        error.message.includes("não encontrada")
-          ? 404
-          : 400;
-
-      res.status(statusCode).json({
+      return res.status(500).json({
         success: false,
-        error: error.message || "Error updating properties",
+        error: "Error handling deprecated properties endpoint",
       });
     }
   }
@@ -485,7 +413,7 @@ class OrganizationsController extends OrganizationsBaseController {
         currentOrg.logo_url,
         currentOrg.banner_url,
         currentOrg.description,
-        currentOrg.properties,
+        currentOrg.settings,
         true,
         currentOrg.org_domains
       );
@@ -560,7 +488,7 @@ class OrganizationsController extends OrganizationsBaseController {
         organization.logo_url,
         organization.banner_url,
         organization.description,
-        organization.properties,
+        organization.settings,
         false,
         organization.org_domains
       );
