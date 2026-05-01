@@ -18,12 +18,13 @@ services:
       dockerfile: Dockerfile
     restart: always
     env_file:
-      - ./weave-api/.env
+      - path: ./weave-api/.env
+        required: false
     environment:
       - NODE_ENV=production
+      - DOPPLER_CONFIG=dev
     networks:
       - app-network
-    command: npm start
 
 networks:
   app-network:

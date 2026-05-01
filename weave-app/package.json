@@ -15,8 +15,11 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:doppler": "doppler run --project weave-app --config dev -- npm run dev",
     "build": "next build",
+    "build:doppler": "doppler run --project weave-app --config dev -- npm run build",
     "start": "next start",
+    "start:doppler": "doppler run --project weave-app --config dev -- npm start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",

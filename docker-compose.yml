@@ -20,12 +20,13 @@ services:
       dockerfile: Dockerfile
     restart: always
     env_file:
-      - ./weave-api/.env
+      - path: ./weave-api/.env
+        required: false
     environment:
       - NODE_ENV=production
+      - DOPPLER_CONFIG=dev
     networks:
       - app-network
-    command: npm start
 
   worker:
     build:
@@ -33,12 +34,13 @@ services:
       dockerfile: Dockerfile
     restart: always
     env_file:
-      - ./weave-worker/.env
+      - path: ./weave-worker/.env
+        required: false
     environment:
       - NODE_ENV=production
+      - DOPPLER_CONFIG=dev
     networks:
       - app-network
-    command: npm start
 
   engine:
     build:
@@ -46,12 +48,13 @@ services:
       dockerfile: Dockerfile
     restart: always
     env_file:
-      - ./weave-engine/.env
+      - path: ./weave-engine/.env
+        required: false
     environment:
       - NODE_ENV=production
+      - DOPPLER_CONFIG=dev
     networks:
       - app-network
-    command: npm start
 
   # # Frontend
   # web:

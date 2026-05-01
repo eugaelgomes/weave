@@ -1,0 +1,3 @@
+setup:
+  - project: weave-app
+    config: dev

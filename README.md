@@ -138,6 +138,15 @@ Cada servico possui seu proprio `.env`:
 
 No ambiente Docker de desenvolvimento, parte da configuracao tambem e injetada via `docker-compose.override.yml` (ex.: URLs internas entre API e Worker e token interno compartilhado).
 
+### Doppler (secrets em dev e producao)
+
+O monorepo esta preparado para [Doppler](https://www.doppler.com/): cada servico tem `doppler.yaml` (config padrao `dev`) e um entrypoint nas imagens Docker que, quando `DOPPLER_TOKEN` esta definido, executa o processo com `doppler run` e injeta os secrets no ambiente.
+
+1. **No Doppler**: crie um projeto por servico com os nomes sugeridos em `doppler.yaml` (`weave-api`, `weave-worker`, `weave-engine`, `weave-app`) e configs alinhados (ex.: `dev` e `prd`). Ajuste `doppler.yaml` se os nomes dos projetos forem outros.
+2. **Dev local**: instale o [CLI](https://docs.doppler.com/docs/install-cli), rode `doppler login` e, na pasta do servico, `doppler setup` se precisar. Comandos: `npm run dev:doppler`, `npm run build:doppler` (frontend) e `npm run start:doppler` quando fizer sentido.
+3. **Producao (Docker Compose)**: crie um [Service Token](https://docs.doppler.com/docs/service-tokens) por servico (ou um token com acesso aos projetos corretos) e coloque `DOPPLER_TOKEN=...` no mesmo `weave-*/.env` usado pelo Compose na VM (pode ser o unico conteudo do arquivo). Os arquivos `compose.*.yml` e `docker-compose.yml` definem `DOPPLER_CONFIG=prd` para apontar o CLI ao config de producao.
+4. **Sem Doppler**: se `DOPPLER_TOKEN` nao existir, o entrypoint executa `npm start` diretamente e o comportamento continua baseado apenas no `env_file` (`.env`), como antes.
+
 Variaveis que aparecem explicitamente na configuracao de desenvolvimento:
 
 - `NODE_ENV`
@@ -156,6 +165,7 @@ O repositorio usa GitHub Actions com deploy por SSH em pushes na branch `main`:
 
 - `.github/workflows/deploy-server.yml`
 - `.github/workflows/deploy-worker.yml`
+- `.github/workflows/deploy-engine.yml`
 
 ### Pipeline da API
 
@@ -170,6 +180,13 @@ O repositorio usa GitHub Actions com deploy por SSH em pushes na branch `main`:
 - conecta via SSH no host remoto
 - atualiza o repositorio
 - executa `docker compose -f compose.worker.yml up -d --build`
+
+### Pipeline do Engine
+
+- valida `npm run check` em `weave-engine`
+- conecta via SSH no host remoto
+- atualiza o repositorio
+- executa `docker compose -f compose.engine.yml up -d --build`
 
 ## Compose de producao por servico
 
