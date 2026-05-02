@@ -120,4 +120,37 @@ router.put(
   ProjectsUpdateController.updateNoteStage.bind(ProjectsUpdateController)
 );
 
+// AI Report Config
+router.get(
+  "/:id/ai-report-config",
+  ProjectsReadController.getAiReportConfig.bind(ProjectsReadController)
+);
+router.put(
+  "/:id/ai-report-config",
+  requireManageProjects,
+  ProjectsUpdateController.updateAiReportConfig.bind(ProjectsUpdateController)
+);
+
+// Sprints
+router.get(
+  "/:id/sprints",
+  ProjectsReadController.getProjectSprints.bind(ProjectsReadController)
+);
+router.get(
+  "/:id/sprints/active",
+  ProjectsReadController.getActiveSprint.bind(ProjectsReadController)
+);
+router.post(
+  "/:id/sprints",
+  standardTrafficLimiter,
+  requireManageProjects,
+  ProjectsUpdateController.createSprint.bind(ProjectsUpdateController)
+);
+router.patch(
+  "/:id/sprints/:sprintId/complete",
+  standardTrafficLimiter,
+  requireManageProjects,
+  ProjectsUpdateController.completeSprint.bind(ProjectsUpdateController)
+);
+
 module.exports = router;

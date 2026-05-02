@@ -1,6 +1,8 @@
 const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 const { normalizeProjectStatus } = require("@/utils/patterns/product-patterns");
+const reportConfigRepository = require("@/modules/projects/repositories/report-config.repository");
+const sprintsRepository = require("@/modules/projects/repositories/sprints.repository");
 
 class ProjectsReadController extends ProjectsCoreController {
   /**
@@ -362,6 +364,78 @@ class ProjectsReadController extends ProjectsCoreController {
           parent_only: filters.parent_only,
         },
       });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // AI Report Config & Sprints (Read)
+  // ══════════════════════════════════════════════════════════════════════
+
+  /**
+   * GET /api/projects/:id/ai-report-config
+   * Returns the AI report configuration for a project.
+   */
+  async getAiReportConfig(req, res, next) {
+    try {
+      const { id: projectId } = req.params;
+
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const config = await reportConfigRepository.getByProjectId(projectId);
+
+      if (!config) {
+        return res.status(200).json({ config: null });
+      }
+
+      res.status(200).json({ config });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  /**
+   * GET /api/projects/:id/sprints
+   * Returns sprint history for a project.
+   */
+  async getProjectSprints(req, res, next) {
+    try {
+      const { id: projectId } = req.params;
+
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+      const sprints = await sprintsRepository.getAllByProject(projectId, limit);
+
+      res.status(200).json({ sprints });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  /**
+   * GET /api/projects/:id/sprints/active
+   * Returns the currently active sprint for a project.
+   */
+  async getActiveSprint(req, res, next) {
+    try {
+      const { id: projectId } = req.params;
+
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const sprint = await sprintsRepository.getActiveByProject(projectId);
+
+      res.status(200).json({ sprint: sprint || null });
     } catch (error) {
       this._handleError(error, res, next);
     }

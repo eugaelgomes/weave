@@ -15,6 +15,8 @@ const spacesService = require("@/services/storage");
 const {
   ASSIGNABLE_PROJECT_ROLES,
 } = require("@/modules/projects/project-role-policy");
+const reportConfigRepository = require("@/modules/projects/repositories/report-config.repository");
+const sprintsRepository = require("@/modules/projects/repositories/sprints.repository");
 
 class ProjectsUpdateController extends ProjectsCoreController {
   /**
@@ -904,6 +906,327 @@ class ProjectsUpdateController extends ProjectsCoreController {
     } catch (error) {
       this._handleError(error, res, next);
     }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // AI Report Config & Sprints
+  // ══════════════════════════════════════════════════════════════════════
+
+  /**
+   * PUT /api/projects/:id/ai-report-config
+   * Creates or updates the AI report configuration for a project.
+   */
+  async updateAiReportConfig(req, res, next) {
+    try {
+      const { id: projectId } = req.params;
+
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const {
+        enabled,
+        default_sprint_duration_days,
+        default_workable_days,
+        auto_create_next_sprint,
+        enable_sprint_kickoff,
+        enable_daily_standup,
+        enable_sprint_review,
+        report_time_utc,
+        channels,
+        recipient_scope,
+        custom_recipients,
+      } = req.body;
+
+      // Validate report_time_utc format
+      if (report_time_utc && !/^\d{2}:\d{2}$/.test(report_time_utc)) {
+        return res.status(400).json({
+          error: "report_time_utc deve estar no formato HH:mm",
+        });
+      }
+
+      // Validate channels
+      const validChannels = ["in_app", "email"];
+      if (channels && !channels.every((c) => validChannels.includes(c))) {
+        return res.status(400).json({
+          error: `channels deve conter apenas: ${validChannels.join(", ")}`,
+        });
+      }
+
+      // Validate recipient_scope
+      const validScopes = ["owner_only", "all_members", "custom"];
+      if (recipient_scope && !validScopes.includes(recipient_scope)) {
+        return res.status(400).json({
+          error: `recipient_scope deve ser: ${validScopes.join(", ")}`,
+        });
+      }
+
+      // Validate workable_days
+      if (default_workable_days) {
+        const allValid = default_workable_days.every(
+          (d) => Number.isInteger(d) && d >= 0 && d <= 6
+        );
+        if (!allValid) {
+          return res.status(400).json({
+            error: "default_workable_days deve conter valores entre 0 (Dom) e 6 (Sáb)",
+          });
+        }
+      }
+
+      const config = await reportConfigRepository.upsert(projectId, userId, {
+        enabled,
+        default_sprint_duration_days,
+        default_workable_days,
+        auto_create_next_sprint,
+        enable_sprint_kickoff,
+        enable_daily_standup,
+        enable_sprint_review,
+        report_time_utc,
+        channels,
+        recipient_scope,
+        custom_recipients,
+      });
+
+      // If enabled and no current sprint, calculate next_report_at based on active sprint
+      if (config.enabled && config.current_sprint_id) {
+        const nextAt = this._calculateNextReportAt(config);
+        if (nextAt) {
+          await reportConfigRepository.updateSchedulerState(config.id, {
+            next_report_at: nextAt,
+          });
+          config.next_report_at = nextAt;
+        }
+      }
+
+      res.status(200).json({
+        message: "Configuração de relatório atualizada com sucesso",
+        config,
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  /**
+   * POST /api/projects/:id/sprints
+   * Creates a new sprint for a project.
+   */
+  async createSprint(req, res, next) {
+    try {
+      const { id: projectId } = req.params;
+
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const { title, goal, start_date, end_date, workable_days, activate } =
+        req.body;
+
+      if (!start_date || !end_date) {
+        return res.status(400).json({
+          error: "start_date e end_date são obrigatórios",
+        });
+      }
+
+      const startDate = new Date(start_date);
+      const endDate = new Date(end_date);
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return res.status(400).json({
+          error: "Datas inválidas. Use formato ISO (YYYY-MM-DD)",
+        });
+      }
+      if (endDate < startDate) {
+        return res.status(400).json({
+          error: "end_date deve ser posterior a start_date",
+        });
+      }
+
+      const sprintNumber =
+        await sprintsRepository.getNextSprintNumber(projectId);
+
+      const sprint = await sprintsRepository.create({
+        projectId,
+        sprintNumber,
+        title: title || `Sprint ${sprintNumber}`,
+        goal: goal || null,
+        status: activate ? "active" : "planned",
+        startDate: start_date,
+        endDate: end_date,
+        workableDays: workable_days || [1, 2, 3, 4, 5],
+      });
+
+      // If activating, update the report config to point to this sprint
+      if (activate) {
+        const config = await reportConfigRepository.getByProjectId(projectId);
+        if (config) {
+          const nextAt = this._calculateNextReportAt({
+            ...config,
+            current_sprint_start: start_date,
+            current_sprint_end: end_date,
+            sprint_workable_days: workable_days || [1, 2, 3, 4, 5],
+          });
+          await reportConfigRepository.updateSchedulerState(config.id, {
+            current_sprint_id: sprint.id,
+            next_report_at: nextAt,
+          });
+        }
+      }
+
+      res.status(201).json({
+        message: "Sprint criada com sucesso",
+        sprint,
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  /**
+   * PATCH /api/projects/:id/sprints/:sprintId/complete
+   * Marks a sprint as completed.
+   */
+  async completeSprint(req, res, next) {
+    try {
+      const { id: projectId, sprintId } = req.params;
+
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const { summary, metrics } = req.body;
+
+      const sprint = await sprintsRepository.getById(sprintId);
+      if (!sprint || sprint.project_id !== projectId) {
+        return res.status(404).json({
+          error: "Sprint não encontrada",
+        });
+      }
+      if (sprint.status === "completed") {
+        return res.status(400).json({
+          error: "Sprint já está concluída",
+        });
+      }
+
+      const completedSprint = await sprintsRepository.complete(sprintId, {
+        summary,
+        metrics,
+      });
+
+      // Check if auto_create_next_sprint is enabled
+      const config = await reportConfigRepository.getByProjectId(projectId);
+      let nextSprint = null;
+
+      if (config && config.auto_create_next_sprint) {
+        // Calculate next sprint dates
+        const prevEnd = new Date(completedSprint.end_date);
+        const nextStart = new Date(prevEnd);
+        nextStart.setDate(nextStart.getDate() + 1);
+        const nextEnd = new Date(nextStart);
+        nextEnd.setDate(
+          nextEnd.getDate() + (config.default_sprint_duration_days || 14) - 1
+        );
+
+        const nextNumber =
+          await sprintsRepository.getNextSprintNumber(projectId);
+
+        nextSprint = await sprintsRepository.create({
+          projectId,
+          sprintNumber: nextNumber,
+          title: `Sprint ${nextNumber}`,
+          status: "active",
+          startDate: nextStart.toISOString().split("T")[0],
+          endDate: nextEnd.toISOString().split("T")[0],
+          workableDays: config.default_workable_days || [1, 2, 3, 4, 5],
+        });
+
+        // Update config to point to new sprint
+        const nextAt = this._calculateNextReportAt({
+          ...config,
+          current_sprint_start: nextSprint.start_date,
+          current_sprint_end: nextSprint.end_date,
+          sprint_workable_days: nextSprint.workable_days,
+        });
+
+        await reportConfigRepository.updateSchedulerState(config.id, {
+          current_sprint_id: nextSprint.id,
+          next_report_at: nextAt,
+        });
+      }
+
+      res.status(200).json({
+        message: "Sprint concluída com sucesso",
+        completed_sprint: completedSprint,
+        next_sprint: nextSprint,
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  /**
+   * Calculates the next report timestamp based on sprint config.
+   *
+   * @param {object} config - Report config with sprint dates joined
+   * @returns {string|null} ISO timestamp or null
+   */
+  _calculateNextReportAt(config) {
+    const sprintStart = config.current_sprint_start || config.sprint_start;
+    const sprintEnd = config.current_sprint_end || config.sprint_end;
+    const workableDays = config.sprint_workable_days ||
+      config.default_workable_days || [1, 2, 3, 4, 5];
+
+    if (!sprintStart || !sprintEnd) return null;
+
+    const [hours, minutes] = (config.report_time_utc || "14:00").split(":");
+    const now = new Date();
+    const today = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    );
+
+    const start = new Date(sprintStart + "T00:00:00Z");
+    const end = new Date(sprintEnd + "T00:00:00Z");
+
+    // Iterate from today forward through the sprint to find the next report day
+    let candidate = new Date(Math.max(today.getTime(), start.getTime()));
+
+    while (candidate <= end) {
+      const dayOfWeek = candidate.getUTCDay();
+      const isStartDay =
+        candidate.getTime() === start.getTime();
+      const isEndDay =
+        candidate.getTime() === end.getTime();
+      const isWorkableDay = workableDays.includes(dayOfWeek);
+
+      let hasReport = false;
+
+      if (isStartDay && config.enable_sprint_kickoff) {
+        hasReport = true;
+      } else if (isEndDay && config.enable_sprint_review) {
+        hasReport = true;
+      } else if (
+        !isStartDay &&
+        !isEndDay &&
+        isWorkableDay &&
+        config.enable_daily_standup
+      ) {
+        hasReport = true;
+      }
+
+      if (hasReport) {
+        const reportTime = new Date(candidate);
+        reportTime.setUTCHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+        if (reportTime > now) {
+          return reportTime.toISOString();
+        }
+      }
+
+      candidate.setUTCDate(candidate.getUTCDate() + 1);
+    }
+
+    return null;
   }
 }
 

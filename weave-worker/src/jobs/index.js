@@ -1,4 +1,5 @@
 const { registerJob, getProcessor, listRegisteredJobs } = require("./registry");
+const aiReportSchedulerProcessor = require("./ai-report-scheduler.processor");
 const backupExportProcessor = require("./backup-export.processor");
 const cleanupJob = require("./cleanup.job");
 const domainVerificationProcessor = require("./domain-verification.processor");
@@ -45,8 +46,14 @@ function initializeJobs() {
       error: err.message,
     });
   });
+  aiReportSchedulerProcessor.start().catch((err) => {
+    logger.error("Failed to start AI report scheduler", {
+      error: err.message,
+    });
+  });
 
   logger.info("Job processors initialized", {
+    aiReportSchedulerRunning: true,
     backupExportQueueListening: true,
     domainVerifyQueueListening: true,
     dueDateReminderProcessorRunning: true,
