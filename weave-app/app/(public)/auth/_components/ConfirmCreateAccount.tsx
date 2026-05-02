@@ -44,6 +44,13 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [canSetupProfile, setCanSetupProfile] = useState(false);
 
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleActivation = useCallback(

@@ -39,7 +39,8 @@
     "axios": "^1.15.2",
     "dotenv": "^16.6.1",
     "ioredis": "^5.10.1",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "sentry": "^0.31.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

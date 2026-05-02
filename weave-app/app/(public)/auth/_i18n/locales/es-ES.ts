@@ -13,6 +13,7 @@ export const esES = {
     copyright: "©",
     terms: "Términos de Uso",
     privacy: "Política de Privacidad",
+    invalidCredentials: "Correo o contraseña incorrectos. Por favor, inténtalo de nuevo.",
   },
   signUp: {
     title: "Crear Cuenta",
@@ -154,5 +155,15 @@ export const esES = {
     successMessage: "Cuenta activada con exito.",
     setupProfile: "Configurar perfil y preferencias (opcional)",
     skipAndEnter: "Omitir paso y entrar",
+  },
+  resetPassword: {
+    title: "Restablecer contraseña",
+    subtitle: "Crea una nueva contraseña segura para tu cuenta.",
+    passwordPlaceholder: "Nueva contraseña",
+    confirmPasswordPlaceholder: "Confirmar nueva contraseña",
+    submitButton: "Cambiar contraseña",
+    successTitle: "¡Contraseña cambiada!",
+    successMessage: "Tu contraseña ha sido restablecida con éxito. Ya puedes iniciar sesión con tu nueva contraseña.",
+    loginNow: "Ir al inicio de sesión",
   },
 };

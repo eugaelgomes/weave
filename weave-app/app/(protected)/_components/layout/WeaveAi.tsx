@@ -43,7 +43,7 @@ export default function WeaveAi() {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
-          "print:hidden fixed z-[106] flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition hover:scale-[1.03] active:scale-[0.98]",
+          "print:hidden fixed z-[106] flex h-14 w-14 items-center justify-center rounded-xl shadow-lg transition hover:scale-[1.03] active:scale-[0.98]",
           "bottom-5 right-5 md:bottom-10 md:right-8",
           "bg-brand-primary-500 text-neutral-900 hover:bg-brand-primary-400",
           "focus-visible:ring-brand-primary-400 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none dark:text-neutral-950 dark:focus-visible:ring-offset-neutral-900"
@@ -55,7 +55,7 @@ export default function WeaveAi() {
         {open ? (
           <X className="h-6 w-6" strokeWidth={2} aria-hidden />
         ) : (
-          <Sparkles className="h-6 w-6" strokeWidth={2} aria-hidden />
+          <>W.AI</>
         )}
       </button>
 

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { SignIn } from "@/app/(public)/auth/_components/SignIn";
 import { SignUp } from "@/app/(public)/auth/_components/SignUp";
 import { ForgotPassword } from "@/app/(public)/auth/_components/ForgotPassword";
-import { ErrorModal } from "@/app/(public)/auth/_components/ErrorsModal";
+import { ResetPassword } from "@/app/(public)/auth/_components/ResetPassword";
 import { AuthMarketing } from "@/app/(public)/auth/_components/AuthMarketing";
 import { ConfirmCreateAccount } from "@/app/(public)/auth/_components/ConfirmCreateAccount";
 import { AcceptOrganizationInviteModal } from "@/app/(public)/auth/_components/AcceptOrganizationInviteModal";
@@ -23,6 +23,7 @@ export type AuthView =
   | "signup"
   | "forgot"
   | "confirm"
+  | "reset-password"
   | "profile-settings"
   | "accept-invite";
 
@@ -40,7 +41,6 @@ export default function AuthPage() {
   const [currentView, setCurrentView] = useState<AuthView>("signin");
   const [pendingLogin, setPendingLogin] = useState<string | null>(null);
   const [pendingAuth, setPendingAuth] = useState<PendingAuthData>({});
-  const [error, setError] = useState<string | null>(null);
 
   const handleNavigate = (view: AuthView, payload?: PendingAuthData) => {
     setCurrentView(view);
@@ -79,9 +79,14 @@ export default function AuthPage() {
     }
 
     const view = searchParams.get("view");
-    const token = searchParams.get("token");
+    const token = searchParams.get("token") || searchParams.get("reset_token");
     const code = searchParams.get("code");
     const queryLogin = searchParams.get("login");
+
+    if (view === "reset-password" || searchParams.get("reset_token")) {
+      setCurrentView("reset-password");
+      return;
+    }
 
     if (view === "confirm" || token || code) {
       setCurrentView("confirm");
@@ -92,7 +97,7 @@ export default function AuthPage() {
     }
 
     if (view === "signup" || view === "forgot") {
-      setCurrentView(view);
+      setCurrentView(view as AuthView);
       return;
     }
 
@@ -101,30 +106,23 @@ export default function AuthPage() {
 
   return (
     <div className="relative flex h-[100dvh] w-full flex-col text-slate-950 lg:flex-row">
-      <div className="bg-brand-secondary-200 relative z-10 border-r border-brand-secondary-300/10 hidden overflow-hidden rounded-r-xl shadow-xl lg:flex lg:w-[45%] xl:w-1/2">
+      <div className="relative z-10 border-r border-brand-secondary-300/10 hidden overflow-hidden rounded-r-md shadow-xl lg:flex lg:w-[45%] xl:w-1/2">
         <AuthMarketing />
       </div>
 
       <div className="flex w-full flex-1 items-center justify-center bg-white p-4 sm:p-8 lg:w-1/2">
         <div className="relative z-10 w-full max-w-[440px] overflow-hidden">
-          <ErrorModal
-            isOpen={!!error}
-            onClose={() => setError(null)}
-            title="Ocorreu um erro"
-            message={error || ""}
-          />
-
           <div className="mt-4 flex h-6 items-center justify-center gap-2 text-xl font-bold sm:text-xl">
-            <div className="relative h-6 w-6 shrink-0">
+            <div className="relative h-12 w-12 shrink-0">
               <Image
-                src="/weave.png"
+                src="/weave-notes-nobg.png"
                 alt="Logo Weave Notes"
                 fill
                 className="object-contain"
                 priority
               />
             </div>
-            <span className={cn("text-xl font-semibold tracking-tight", fredoka.className)}>
+            <span className={cn("text-2xl text-neutral-800 font-semibold tracking-tight", fredoka.className)}>
               Weave Notes
             </span>
           </div>
@@ -133,6 +131,12 @@ export default function AuthPage() {
             {currentView === "signin" && <SignIn onNavigate={handleNavigate} />}
             {currentView === "signup" && <SignUp onNavigate={handleNavigate} />}
             {currentView === "forgot" && <ForgotPassword onNavigate={handleNavigate} />}
+            {currentView === "reset-password" && (
+              <ResetPassword
+                onNavigate={handleNavigate}
+                token={searchParams.get("token") || searchParams.get("reset_token") || ""}
+              />
+            )}
             {currentView === "accept-invite" && (
               <AcceptOrganizationInviteModal
                 isOpen={!!inviteToken}

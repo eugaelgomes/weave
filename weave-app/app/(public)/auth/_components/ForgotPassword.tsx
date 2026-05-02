@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Mail, CheckCircle2 } from "lucide-react";
 import { getTranslations, LocaleKey } from "@/app/(public)/auth/_i18n";
 import { useAuth } from "@/app/_contexts/auth-context";
-import { ErrorModal } from "./ErrorsModal";
 
 interface Props {
   onNavigate: (view: "signin" | "signup" | "forgot") => void;
@@ -18,6 +17,13 @@ export function ForgotPassword({ onNavigate, locale = "pt-br" }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const t = getTranslations(locale);
   const { recoverPassword } = useAuth();
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,12 +53,6 @@ export function ForgotPassword({ onNavigate, locale = "pt-br" }: Props) {
 
   return (
     <div className="flex w-full flex-col px-6 py-4 sm:px-8">
-      <ErrorModal
-        isOpen={!!error}
-        onClose={() => setError(null)}
-        message={error || ""}
-        locale={locale}
-      />
       <div className="mt-2">
         <div className="mb-6 flex flex-col gap-1.5 text-center">
           <p className="text-brand-secondary-500 text-sm font-medium">{t.forgotPassword.title}</p>
@@ -91,6 +91,12 @@ export function ForgotPassword({ onNavigate, locale = "pt-br" }: Props) {
                 {isLoading ? "Enviando..." : t.forgotPassword.submitButton}
               </button>
             </div>
+
+            {error && (
+              <p className="mt-4 text-center text-xs font-semibold text-red-500 animate-in fade-in slide-in-from-top-1">
+                {error}
+              </p>
+            )}
           </form>
         )}
       </div>

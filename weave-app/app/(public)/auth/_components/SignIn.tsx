@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User, Lock, Eye, EyeOff, Link } from "lucide-react";
 import { getTranslations, LocaleKey } from "@/app/(public)/auth/_i18n";
 import { useAuth } from "@/app/_contexts/auth-context";
-import { ErrorModal } from "./ErrorsModal";
 import { useRouter } from "next/navigation";
 import { consumeInvitePostLoginPath } from "@/app/_utils/post-login-redirect";
 
@@ -68,6 +67,13 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
   const { login, loginWithGoogle, loginWithGithub, loginWithMicrosoft } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -85,7 +91,8 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
       if (result.data?.error_code === "EMAIL_NOT_VERIFIED") {
         onNavigate("confirm", { email: result.data.email, password });
       } else {
-        setError(result.message || "Ocorreu um erro ao fazer login.");
+        // Mascara o erro real por segurança e UX
+        setError(t.signIn.invalidCredentials);
       }
       setIsLoading(false);
       return;
@@ -98,12 +105,6 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
 
   return (
     <div className="flex w-full flex-col px-6 py-4 sm:px-8">
-      <ErrorModal
-        isOpen={!!error}
-        onClose={() => setError(null)}
-        message={error || ""}
-        locale={locale}
-      />
       <div className="mt-2">
         <div className="mb-6 flex flex-col gap-1.5 text-center">
           {/*<h1 className="text-xl font-bold tracking-tight text-neutral-800 sm:text-2xl">
@@ -122,7 +123,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder={t.signIn.usernamePlaceholder}
-              className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-yellow w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
           </div>
@@ -136,7 +137,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t.signIn.passwordPlaceholder}
-              className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+              className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-yellow w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
               disabled={isLoading}
             />
             <button
@@ -159,11 +160,17 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+              className="bg-brand-primary-500 shadow-brand-yellow/20 hover:bg-brand-primary-800 flex items-center justify-center rounded-md px-4 py-1 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
             >
-              {isLoading ? "running..." : t.signIn.submitButton}
+              {isLoading ? "Entrando..." : t.signIn.submitButton}
             </button>
           </div>
+
+          {error && (
+            <p className="mt-4 text-center text-xs font-semibold text-red-500 animate-in fade-in slide-in-from-top-1">
+              {error}
+            </p>
+          )}
         </form>
       </div>
 
@@ -211,7 +218,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
           className="text-brand-secondary-500 hover:text-brand-secondary-700 mt-8 text-xs font-medium transition-colors duration-200"
         >
           {t.signIn.noAccount}{" "}
-          <span className="text-brand-primary-500 hover:text-brand-primary-500 font-semibold transition-colors duration-200">
+          <span className="text-brand-primary-500 hover:text-brand-yellow font-semibold transition-colors duration-200">
             {t.signIn.createAccount}
           </span>
         </button>

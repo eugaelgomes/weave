@@ -13,6 +13,7 @@ export const enUS = {
     copyright: "©",
     terms: "Terms of Use",
     privacy: "Privacy Policy",
+    invalidCredentials: "Incorrect email or password. Please try again.",
   },
   signUp: {
     title: "Create Account",
@@ -152,5 +153,15 @@ export const enUS = {
     successMessage: "Account activated successfully.",
     setupProfile: "Set up profile and preferences (optional)",
     skipAndEnter: "Skip step and continue",
+  },
+  resetPassword: {
+    title: "Reset Password",
+    subtitle: "Create a new secure password for your account.",
+    passwordPlaceholder: "New password",
+    confirmPasswordPlaceholder: "Confirm new password",
+    submitButton: "Change password",
+    successTitle: "Password changed!",
+    successMessage: "Your password has been successfully reset. You can now log in with your new password.",
+    loginNow: "Go to login",
   },
 };

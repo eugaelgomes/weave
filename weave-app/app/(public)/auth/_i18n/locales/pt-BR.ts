@@ -1,7 +1,7 @@
 export const ptBR = {
   signIn: {
     title: "Bem-vindo de volta!",
-    subtitle: "Workspace inteligente para quem pensa grande!",
+    subtitle: "Workspace inteligente para equipes inteligentes!",
     usernamePlaceholder: "Usuário ou E-mail",
     passwordPlaceholder: "Senha",
     forgotPassword: "Esqueceu a senha?",
@@ -13,6 +13,7 @@ export const ptBR = {
     copyright: "©",
     terms: "Termos de Uso",
     privacy: "Política de Privacidade",
+    invalidCredentials: "E-mail ou senha incorretos. Por favor, tente novamente.",
   },
   signUp: {
     title: "Criar Conta",
@@ -153,5 +154,15 @@ export const ptBR = {
     successMessage: "Conta ativada com sucesso.",
     setupProfile: "Configurar perfil e preferencias (opcional)",
     skipAndEnter: "Pular etapa e entrar",
+  },
+  resetPassword: {
+    title: "Redefinir senha",
+    subtitle: "Crie uma nova senha segura para sua conta.",
+    passwordPlaceholder: "Nova senha",
+    confirmPasswordPlaceholder: "Confirmar nova senha",
+    submitButton: "Alterar senha",
+    successTitle: "Senha alterada!",
+    successMessage: "Sua senha foi redefinida com sucesso. Você já pode entrar com a nova senha.",
+    loginNow: "Ir para o login",
   },
 };

@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User, Lock, Eye, EyeOff, Mail } from "lucide-react";
 import { getTranslations, LocaleKey } from "@/app/(public)/auth/_i18n";
 import { useAuth } from "@/app/_contexts/auth-context";
-import { ErrorModal } from "./ErrorsModal";
 
 interface Props {
   onNavigate: (
@@ -144,6 +143,13 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
   const t = getTranslations(locale);
   const { createUser, loginWithGoogle, loginWithGithub, loginWithMicrosoft } = useAuth();
 
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const trimmedName = name.trim();
   const trimmedUsername = username.trim();
   const trimmedEmail = email.trim();
@@ -250,12 +256,6 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
 
   return (
     <div className="flex w-full flex-col px-6 py-4 sm:px-8">
-      <ErrorModal
-        isOpen={!!error}
-        onClose={() => setError(null)}
-        message={error || ""}
-        locale={locale}
-      />
       <TermsModal
         isOpen={showTermsModal}
         onClose={() => setShowTermsModal(false)}
@@ -438,6 +438,12 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               {isLoading ? "Criando..." : t.signUp.submitButton}
             </button>
           </div>
+
+          {error && (
+            <p className="mt-4 text-center text-xs font-semibold text-red-500 animate-in fade-in slide-in-from-top-1">
+              {error}
+            </p>
+          )}
         </form>
       </div>
 
