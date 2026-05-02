@@ -1,13 +1,13 @@
 import type { MetadataRoute } from "next";
+import { getSiteOrigin } from "@/lib/site-url";
 
-const NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://weavenotes.app";
+const origin = getSiteOrigin();
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: "*",
-        allow: ["/"],
         disallow: [
           "/home/",
           "/notes/",
@@ -19,19 +19,10 @@ export default function robots(): MetadataRoute.Robots {
           "/organization/",
           "/api/",
           "/_next/",
-          "/auth/",
         ],
       },
-      {
-        userAgent: "GPTBot",
-        disallow: ["/"],
-      },
-      {
-        userAgent: "CCBot",
-        disallow: ["/"],
-      },
     ],
-    sitemap: `${NEXT_PUBLIC_APP_URL}/sitemap.xml`,
-    host: NEXT_PUBLIC_APP_URL,
+    sitemap: `${origin}/sitemap.xml`,
+    host: origin,
   };
 }

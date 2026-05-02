@@ -1,28 +1,38 @@
 import type { MetadataRoute } from "next";
+import { getSiteOrigin } from "@/lib/site-url";
 
-const NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://weavenotes.app";
-
+/**
+ * Public indexable routes only (trailing slash matches next.config trailingSlash).
+ * Auth views use query params on a single /auth/ page.
+ */
 export default function sitemap(): MetadataRoute.Sitemap {
+  const origin = getSiteOrigin();
   const lastModified = new Date();
 
   const staticPages: MetadataRoute.Sitemap = [
     {
-      url: NEXT_PUBLIC_APP_URL,
+      url: `${origin}/`,
       lastModified,
       changeFrequency: "weekly",
-      priority: 1.0,
+      priority: 1,
     },
     {
-      url: `${NEXT_PUBLIC_APP_URL}/auth/`,
+      url: `${origin}/auth/`,
       lastModified,
-      changeFrequency: "yearly",
-      priority: 0.5,
+      changeFrequency: "monthly",
+      priority: 0.9,
     },
     {
-      url: `${NEXT_PUBLIC_APP_URL}/auth/signup`,
+      url: `${origin}/auth/?view=signup`,
+      lastModified,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${origin}/activate/`,
       lastModified,
       changeFrequency: "yearly",
-      priority: 0.5,
+      priority: 0.3,
     },
   ];
 
