@@ -3,6 +3,8 @@ const ProjectsReadController = require("@/modules/projects/controllers/projects-
 const ProjectsCreateController = require("@/modules/projects/controllers/projects-create.controller");
 const ProjectsUpdateController = require("@/modules/projects/controllers/projects-update.controller");
 const ProjectsDeleteController = require("@/modules/projects/controllers/projects-delete.controller");
+const ProjectsCollaboratorsCreateController = require("@/modules/projects/controllers/projects-collaborators-create.controller");
+const ProjectsCollaboratorsUpdateController = require("@/modules/projects/controllers/projects-collaborators-update.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const {
   requireOrgPermission,
@@ -101,10 +103,31 @@ router.delete(
 router
   .route("/:projectId/collaborators")
   .get(ProjectsReadController.getCollaborators.bind(ProjectsReadController))
-  .put(
+  .post(
+    standardTrafficLimiter,
     requireManageProjects,
-    ProjectsUpdateController.manageCollaborators.bind(ProjectsUpdateController)
+    ProjectsCollaboratorsCreateController.addCollaborator.bind(
+      ProjectsCollaboratorsCreateController
+    )
   );
+
+router.patch(
+  "/:projectId/collaborators/:collaboratorId",
+  standardTrafficLimiter,
+  requireManageProjects,
+  ProjectsCollaboratorsUpdateController.updateCollaboratorPermission.bind(
+    ProjectsCollaboratorsUpdateController
+  )
+);
+
+router.put(
+  "/:projectId/collaborators/:collaboratorId",
+  standardTrafficLimiter,
+  requireManageProjects,
+  ProjectsCollaboratorsUpdateController.updateCollaboratorPermission.bind(
+    ProjectsCollaboratorsUpdateController
+  )
+);
 
 router
   .route("/:projectId/notes")

@@ -449,9 +449,10 @@ CREATE TABLE public.organization_member_invites (
     )
 );
 
+-- public.projects definition
 CREATE TABLE public.projects (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  public_id varchar(25) NOT NULL DEFAULT public.generate_alphanumeric_id(25) UNIQUE,
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  public_id varchar(25) NOT NULL DEFAULT public.generate_alphanumeric_id(25),
   user_id uuid NOT NULL,
   organization_id uuid NULL,
   parent_project_id uuid NULL,
@@ -471,18 +472,35 @@ CREATE TABLE public.projects (
   deleted_at timestamptz NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT projects_public_id_format_check
-    CHECK (public_id ~ '^[a-z0-9]{25}$'),
-  CONSTRAINT projects_target_end_after_start_check
-    CHECK (target_end_date IS NULL OR start_date IS NULL OR target_end_date >= start_date),
+  progress numeric(5, 2) NOT NULL DEFAULT 0.00,
+  estimated_effort numeric(10, 2) NOT NULL DEFAULT 0.00,
+  color varchar(7) NULL,
+  icon jsonb NULL DEFAULT '{"name": "", "path": "", "size": "", "type": ""}'::jsonb,
   CONSTRAINT projects_actual_end_after_start_check
     CHECK (actual_end_date IS NULL OR start_date IS NULL OR actual_end_date >= start_date),
+  CONSTRAINT projects_color_check
+    CHECK (color::text ~ '^#[a-fA-F0-9]{6}$'::text),
   CONSTRAINT projects_files_is_array_check
-    CHECK (jsonb_typeof(projects_files) = 'array')
+    CHECK (jsonb_typeof(projects_files) = 'array'::text),
+  CONSTRAINT projects_pkey PRIMARY KEY (id),
+  CONSTRAINT projects_progress_check
+    CHECK (progress >= 0.00 AND progress <= 100.00),
+  CONSTRAINT projects_public_id_format_check
+    CHECK (public_id::text ~ '^[a-z0-9]{25}$'::text),
+  CONSTRAINT projects_public_id_key UNIQUE (public_id),
+  CONSTRAINT projects_target_end_after_start_check
+    CHECK (target_end_date IS NULL OR start_date IS NULL OR target_end_date >= start_date),
+  CONSTRAINT projects_org_fk
+    FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE,
+  CONSTRAINT projects_parent_fk
+    FOREIGN KEY (parent_project_id) REFERENCES public.projects(id) ON DELETE CASCADE,
+  CONSTRAINT projects_user_fk
+    FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE RESTRICT
 );
 
+-- public.project_members definition
 CREATE TABLE public.project_members (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
   project_id uuid NOT NULL,
   user_id uuid NOT NULL,
   role public.project_member_role_enum NOT NULL,
@@ -491,7 +509,14 @@ CREATE TABLE public.project_members (
   deleted bool NOT NULL DEFAULT false,
   deleted_at timestamptz NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT project_members_pkey PRIMARY KEY (id),
+  CONSTRAINT project_members_added_by_fk
+    FOREIGN KEY (added_by) REFERENCES public.users(user_id) ON DELETE RESTRICT,
+  CONSTRAINT project_members_project_fk
+    FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE,
+  CONSTRAINT project_members_user_fk
+    FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE RESTRICT
 );
 
 CREATE TABLE public.project_stages (
@@ -946,30 +971,6 @@ ALTER TABLE public.organization_member_invites
   ADD CONSTRAINT organization_invites_area_fk
   FOREIGN KEY (area_id) REFERENCES public.organization_areas(id) ON DELETE SET NULL;
 
-ALTER TABLE public.projects
-  ADD CONSTRAINT projects_user_fk
-  FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE RESTRICT;
-
-ALTER TABLE public.projects
-  ADD CONSTRAINT projects_org_fk
-  FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
-
-ALTER TABLE public.projects
-  ADD CONSTRAINT projects_parent_fk
-  FOREIGN KEY (parent_project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
-
-ALTER TABLE public.project_members
-  ADD CONSTRAINT project_members_project_fk
-  FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
-
-ALTER TABLE public.project_members
-  ADD CONSTRAINT project_members_user_fk
-  FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE RESTRICT;
-
-ALTER TABLE public.project_members
-  ADD CONSTRAINT project_members_added_by_fk
-  FOREIGN KEY (added_by) REFERENCES public.users(user_id) ON DELETE RESTRICT;
-
 ALTER TABLE public.project_stages
   ADD CONSTRAINT project_stages_project_fk
   FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
@@ -1206,19 +1207,21 @@ CREATE INDEX idx_org_domains_org_id ON public.organization_domains(organization_
 CREATE INDEX idx_org_domains_status ON public.organization_domains(status) WHERE deleted = false;
 
 CREATE INDEX idx_projects_org_active
-  ON public.projects(organization_id)
+  ON public.projects USING btree (organization_id)
   WHERE deleted = false AND active = true;
 CREATE INDEX idx_projects_user_active
-  ON public.projects(user_id)
+  ON public.projects USING btree (user_id)
   WHERE deleted = false AND active = true;
 CREATE INDEX idx_projects_parent_project_id
-  ON public.projects(parent_project_id)
+  ON public.projects USING btree (parent_project_id)
   WHERE parent_project_id IS NOT NULL;
 
-CREATE INDEX idx_project_members_project ON public.project_members(project_id);
-CREATE INDEX idx_project_members_user ON public.project_members(user_id);
+CREATE INDEX idx_project_members_project
+  ON public.project_members USING btree (project_id);
+CREATE INDEX idx_project_members_user
+  ON public.project_members USING btree (user_id);
 CREATE UNIQUE INDEX uq_project_members_active
-  ON public.project_members(project_id, user_id)
+  ON public.project_members USING btree (project_id, user_id)
   WHERE deleted = false;
 
 CREATE INDEX idx_project_stages_project ON public.project_stages(project_id);
@@ -1343,18 +1346,13 @@ BEFORE UPDATE ON public.organization_member_invites
 FOR EACH ROW
 EXECUTE FUNCTION public.set_row_deleted_at();
 
-CREATE TRIGGER trg_projects_set_updated_at
-BEFORE UPDATE ON public.projects
-FOR EACH ROW
-EXECUTE FUNCTION public.set_row_updated_at();
-
 CREATE TRIGGER trg_projects_set_deleted_at
 BEFORE UPDATE ON public.projects
 FOR EACH ROW
 EXECUTE FUNCTION public.set_row_deleted_at();
 
-CREATE TRIGGER trg_project_members_set_updated_at
-BEFORE UPDATE ON public.project_members
+CREATE TRIGGER trg_projects_set_updated_at
+BEFORE UPDATE ON public.projects
 FOR EACH ROW
 EXECUTE FUNCTION public.set_row_updated_at();
 
@@ -1362,6 +1360,11 @@ CREATE TRIGGER trg_project_members_set_deleted_at
 BEFORE UPDATE ON public.project_members
 FOR EACH ROW
 EXECUTE FUNCTION public.set_row_deleted_at();
+
+CREATE TRIGGER trg_project_members_set_updated_at
+BEFORE UPDATE ON public.project_members
+FOR EACH ROW
+EXECUTE FUNCTION public.set_row_updated_at();
 
 CREATE TRIGGER trg_project_stages_set_updated_at
 BEFORE UPDATE ON public.project_stages

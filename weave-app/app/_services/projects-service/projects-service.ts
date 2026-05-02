@@ -5,7 +5,8 @@ import type { ProjectStatus } from "@/app/_utils/db-enums";
 export interface ProjectProperties {
   // UI & Design
   color?: string | null;
-  icon?: string | null;
+  /** Emoji (legacy) or image object from storage: `{ name, path, type, size }`. */
+  icon?: string | null | { name: string; path: string; type: string; size: string };
   tags?: string[];
 
   // Gestão de Tempo e Prioridade
@@ -216,6 +217,72 @@ export const deleteProject = async (projectId: string): Promise<void> => {
 /**
  * Busca as etapas (colunas do Board) de um projeto específico
  */
+export interface PatchProjectStagePayload {
+  name?: string;
+  position?: number;
+  color?: string | null;
+  properties?: Record<string, unknown>;
+}
+
+export const patchProjectStage = async (
+  projectId: string,
+  stageId: string,
+  updates: PatchProjectStagePayload
+): Promise<ProjectStage> => {
+  const response = await apiClient.patch(
+    API_ENDPOINTS.PROJECTS_STAGE_BY_ID(projectId, stageId),
+    updates
+  );
+  const data = await handleResponse<{ message: string; stage: ProjectStage }>(response);
+  const stage = data.stage;
+  if (typeof stage.properties === "string") {
+    try {
+      stage.properties = JSON.parse(stage.properties) as ProjectStage["properties"];
+    } catch {
+      console.warn(`Failed to parse properties for stage ${stage.id}`);
+    }
+  }
+  return stage;
+};
+
+export interface PostProjectCollaboratorPayload {
+  userId: string;
+  role: string;
+}
+
+export const postProjectCollaborator = async (
+  projectId: string,
+  body: PostProjectCollaboratorPayload
+): Promise<{ message?: string; collaborators?: unknown[] }> => {
+  const response = await apiClient.post(API_ENDPOINTS.PROJECTS_COLLABORATORS(projectId), body);
+  return handleResponse<{ message?: string; collaborators?: unknown[] }>(response);
+};
+
+export interface AiReportConfigUpsertPayload {
+  enabled?: boolean;
+  default_sprint_duration_days?: number;
+  default_workable_days?: number[];
+  auto_create_next_sprint?: boolean;
+  enable_sprint_kickoff?: boolean;
+  enable_daily_standup?: boolean;
+  enable_sprint_review?: boolean;
+  report_time_utc?: string;
+  channels?: Array<"in_app" | "email">;
+  recipient_scope?: "owner_only" | "all_members" | "custom";
+  custom_recipients?: unknown;
+}
+
+export const putProjectAiReportConfig = async (
+  projectId: string,
+  body: AiReportConfigUpsertPayload
+): Promise<{ message?: string; config?: unknown }> => {
+  const response = await apiClient.put(
+    API_ENDPOINTS.PROJECTS_AI_REPORT_CONFIG(projectId),
+    body
+  );
+  return handleResponse<{ message?: string; config?: unknown }>(response);
+};
+
 export const fetchProjectStages = async (projectId: string): Promise<ProjectStage[]> => {
   // Caso a rota já exista no seu API_ENDPOINTS use-a, caso contrário usamos template literal
   const endpoint = `${API_ENDPOINTS.PROJECTS_BY_ID(projectId)}/stages`;

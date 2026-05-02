@@ -1,7 +1,8 @@
 const Sentry = require("@sentry/node");
 const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+const { env } = require("./config/enviroments");
 
-if (process.env.SENTRY_DSN) {
+if (env.isProduction && process.env.SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     integrations: [nodeProfilingIntegration()],
@@ -11,6 +12,8 @@ if (process.env.SENTRY_DSN) {
     profilesSampleRate: 1.0,
   });
   console.log("Sentry initialized successfully");
+} else if (!env.isProduction) {
+  console.info("Sentry disabled outside production");
 } else {
   console.warn("SENTRY_DSN not found. Sentry will not be initialized.");
 }

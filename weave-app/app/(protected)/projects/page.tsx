@@ -155,7 +155,6 @@ const ProjectsPage = () => {
   const { user } = useAuth();
   const { projects, loading, createProject } = useProjects();
   const { notes } = useNotes();
-  const [creating, setCreating] = useState(false);
 
   const notesById = useMemo(() => {
     const map = new Map<string, FullNoteLike>();
@@ -198,24 +197,8 @@ const ProjectsPage = () => {
     }, initial);
   }, [projectStats]);
 
-  const handleCreateProject = async () => {
-    const title = window.prompt("Nome do novo projeto:");
-    if (!title || !title.trim()) return;
-
-    setCreating(true);
-    try {
-      const created = await createProject({
-        title: title.trim(),
-        status: PROJECT_STATUS.OPEN,
-        methodology: "kanban",
-        default_view: "board",
-      });
-      if (created?.id) {
-        router.push(`/projects/${created.id}`);
-      }
-    } finally {
-      setCreating(false);
-    }
+  const handleCreateProject = () => {
+    router.push("/projects/new");
   };
 
   if (loading && projects.length === 0) {
@@ -243,11 +226,10 @@ const ProjectsPage = () => {
         <button
           type="button"
           onClick={handleCreateProject}
-          disabled={creating}
           className="bg-brand-primary-500 inline-flex h-7 items-center gap-1 rounded px-2.5 text-[11px] font-semibold text-neutral-950 transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Plus className="h-3.5 w-3.5" />
-          {creating ? "Criando..." : "Criar projeto"}
+          {"Criar projeto"}
         </button>
       </div>
 

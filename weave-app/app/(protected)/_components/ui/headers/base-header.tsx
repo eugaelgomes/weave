@@ -18,7 +18,7 @@ export function BaseHeader({ className, leftContent, rightContent }: BaseHeaderP
     <div
       className={cn(
         // items-center garante o alinhamento vertical do container principal
-        "flex flex-row items-center justify-between gap-3 rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:gap-4 sm:px-2 sm:py-1 dark:border-neutral-800 dark:bg-neutral-800",
+        "flex flex-row items-center justify-between gap-3 rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:gap-4 sm:px-2 sm:py-0.5 dark:border-neutral-800 dark:bg-neutral-800",
         className
       )}
     >

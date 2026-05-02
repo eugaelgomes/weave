@@ -102,14 +102,18 @@ class ProjectsCoreController extends ProjectsBaseController {
         validated[key] = value;
       }
 
-      // Validar icon (pode ser string/emoji ou objeto {path, name, type} para imagens)
+      // Validar icon (string legada ou objeto { name, path, type, size } para imagem no storage)
       else if (key === "icon") {
         if (value !== null) {
-          // Aceita string (emoji) ou objeto (imagem do Spaces)
           if (typeof value === "string") {
             validated[key] = value;
           } else if (typeof value === "object" && value.path !== undefined) {
-            validated[key] = value;
+            validated[key] = {
+              name: value.name != null ? String(value.name) : "",
+              path: String(value.path),
+              type: value.type != null ? String(value.type) : "",
+              size: value.size != null ? String(value.size) : "",
+            };
           } else {
             throw new Error(
               "Icon deve ser uma string (emoji) ou objeto de imagem"

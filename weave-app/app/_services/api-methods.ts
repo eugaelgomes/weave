@@ -63,6 +63,10 @@ export const API_ENDPOINTS = {
   PROJECTS_STATS: "/projects/stats",
   PROJECTS_BY_ID: (id: string) => `/projects/${id}`,
   PROJECTS_STAGES: (projectId: string) => `/projects/${projectId}/stages`,
+  PROJECTS_STAGE_BY_ID: (projectId: string, stageId: string) =>
+    `/projects/${projectId}/stages/${stageId}`,
+  PROJECTS_AI_REPORT_CONFIG: (projectId: string) =>
+    `/projects/${projectId}/ai-report-config`,
   PROJECTS_COLLABORATORS: (projectId: string) => `/projects/${projectId}/collaborators`,
   PROJECTS_NOTES: (projectId: string) => `/projects/${projectId}/notes`,
   PROJECTS_NOTE_STAGE: (projectId: string, noteId: string) =>

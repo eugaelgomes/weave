@@ -26,6 +26,9 @@ const logger = {
 
   error(message, meta) {
     console.error(formatMessage("error", message, meta));
+    if (!env.isProduction) {
+      return;
+    }
     if (meta && meta.error instanceof Error) {
       Sentry.captureException(meta.error, { extra: meta });
     } else {

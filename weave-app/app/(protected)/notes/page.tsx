@@ -561,6 +561,14 @@ const NotesWithPagination = () => {
     selectedPriorityIds.length +
     (dueDatePreset !== "none" ? 1 : 0);
 
+  /** Barra superior: mesmo tamanho/padding para busca + todos os botões */
+  const toolbarIconBtn =
+    "inline-flex size-6 shrink-0 items-center justify-center rounded-sm border p-0.5 leading-none transition-colors focus-visible:ring-1 focus-visible:ring-yellow-500 focus-visible:outline-none disabled:opacity-50";
+  const toolbarTextBtn =
+    "inline-flex h-6 min-h-6 shrink-0 items-center justify-center gap-0.5 rounded-sm border px-0.5 py-0.5 text-[10px] font-medium leading-none transition-colors focus-visible:ring-1 focus-visible:ring-yellow-500 focus-visible:outline-none";
+  const toolbarSearchInput =
+    "box-border h-6 min-h-6 w-full rounded-sm border border-neutral-200 bg-white py-0.5 pr-4 pl-5 text-[10px] leading-tight text-neutral-900 placeholder:text-neutral-400 transition-all focus:border-yellow-500 focus:bg-white focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:border-yellow-500/50";
+
   // =================== RENDER ===================
 
   if (error) {
@@ -581,48 +589,54 @@ const NotesWithPagination = () => {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-1">
-      {/* =================== FILTROS + TOOLBAR + CABEÇALHO COLUNAS =================== */}
-      <div className=" bg-white border-b border-neutral-200 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
-        <div className="flex flex-col border-b border-neutral-100 px-2 py-2 dark:border-neutral-800">
-          {/* Linha Única: Título, Busca e Ações */}
-          <div className="flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
+{/* =================== FILTROS + TOOLBAR + CABEÇALHO COLUNAS =================== */}
+<div className="border-b border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+        {/* Container com padding y de 1 orgânico */}
+        <div className="flex flex-col border-b border-neutral-100 px-2 py-1 dark:border-neutral-800">
+          <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
+            
             {/* Lado Esquerdo: Registros & Check */}
             <div className="order-1 flex shrink-0 items-center gap-2">
-              <div className="flex items-center gap-1 text-[11px] text-neutral-500">
+              <div className="flex items-center gap-0.5 px-1 text-[10px] text-neutral-500">
                 <span className="font-semibold text-neutral-900 dark:text-neutral-200">
                   {pagination.total}
                 </span>
                 <span className="hidden sm:inline">registros</span>
               </div>
               <button
+                type="button"
                 onClick={toggleSelectionMode}
-                className={`flex h-7 items-center justify-center rounded px-1.5 transition-colors ${
-                  selectionMode
-                    ? "dark:bg-brand-primary-500/10 dark:text-brand-primary-500 bg-yellow-50 text-yellow-600"
-                    : "text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                }`}
                 title="Modo de seleção"
+                // Altura orgânica com p-0.5
+                className={`flex p-0.5 items-center justify-center rounded ${toolbarIconBtn} ${
+                  selectionMode
+                    ? "dark:bg-brand-primary-500/10 dark:text-brand-primary-500 border-yellow-500 bg-yellow-50 text-yellow-700 dark:border-yellow-500/30"
+                    : "border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300 hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                }`}
               >
-                <FiCheckSquare size={14} />
+                <FiCheckSquare size={11} />
               </button>
             </div>
 
             {/* Centro: Busca */}
-            <div className="relative order-3 w-full min-w-[200px] flex-1 sm:order-2 sm:w-auto sm:max-w-md">
+            <div className="relative order-3 w-full min-w-[140px] flex-1 sm:order-2 sm:w-auto sm:max-w-xs">
               <Search
-                className="absolute top-1/2 left-2.5 -translate-y-1/2 text-neutral-400"
-                size={13}
+                className="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 text-neutral-400"
+                size={11}
+                aria-hidden
               />
               <input
-                type="text"
+                type="search"
+                enterKeyHint="search"
                 placeholder="Buscar tarefas..."
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="h-7 w-full rounded-md border border-neutral-200 bg-white pr-7 pl-8 text-xs text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:bg-white focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                // Altura orgânica com py-0.5
+                className={`w-full py-0.5 pl-6 pr-6 text-[11px] ${toolbarSearchInput}`}
               />
               {(searchTerm !== debouncedSearch || isLoading) && (
-                <div className="absolute top-1/2 right-2.5 -translate-y-1/2">
-                  <Loader2 size={12} className="animate-spin text-neutral-400" />
+                <div className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2">
+                  <Loader2 size={11} className="animate-spin text-neutral-400" />
                 </div>
               )}
             </div>
@@ -630,36 +644,41 @@ const NotesWithPagination = () => {
             {/* Lado Direito: Ações */}
             <div className="order-2 flex shrink-0 items-center gap-1.5 sm:order-3">
               <button
+                type="button"
                 onClick={handleRefresh}
                 disabled={isLoading}
-                className="flex h-7 w-7 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-900 disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200"
                 title="Atualizar"
+                // p-0.5 para botão de ícone
+                className={`flex p-0.5 items-center justify-center rounded ${toolbarIconBtn} border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200`}
               >
-                <RefreshCw size={13} className={isLoading ? "animate-spin" : ""} />
+                <RefreshCw size={11} className={isLoading ? "animate-spin" : ""} />
               </button>
 
               <button
+                type="button"
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex h-7 shrink-0 items-center gap-1.5 rounded-md border px-2 text-[11px] font-medium transition-colors ${
+                // py-0.5 px-2 para botões de texto
+                className={`flex py-0.5 px-2 items-center gap-1 rounded text-[11px] ${toolbarTextBtn} ${
                   showFilters || activeFilterCount > 0
                     ? "dark:bg-brand-primary-500/10 dark:text-brand-primary-500 border-yellow-500 bg-yellow-50 text-yellow-700 dark:border-yellow-500/30"
-                    : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200"
+                    : "border-neutral-200 bg-white font-medium text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200"
                 }`}
               >
-                <Filter size={13} />
+                <Filter size={11} className="shrink-0" />
                 <span className="hidden sm:inline">Filtrar</span>
                 {activeFilterCount > 0 && (
-                  <span className="bg-brand-primary-500 flex h-3.5 min-w-[14px] items-center justify-center rounded-full px-1 text-[8px] font-bold text-white">
+                  <span className="bg-brand-primary-500 flex min-w-[14px] p-0.5 items-center justify-center rounded-full text-[8px] font-bold text-white leading-none">
                     {activeFilterCount}
                   </span>
                 )}
               </button>
 
               <button
+                type="button"
                 onClick={handleCreateNote}
-                className="bg-brand-primary-500 dark:bg-brand-primary-500 flex h-7 shrink-0 items-center gap-1 rounded-md px-2.5 text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-neutral-800 active:scale-95 dark:text-neutral-950 dark:hover:bg-neutral-200"
+                className={`flex py-0.5 px-2 items-center gap-1 rounded text-[11px] ${toolbarTextBtn} bg-brand-primary-500 dark:bg-brand-primary-500 border-neutral-900 font-semibold text-white shadow-sm hover:bg-neutral-800 active:scale-[0.98] dark:border-neutral-200 dark:text-neutral-950 dark:hover:bg-neutral-200`}
               >
-                <Plus size={13} />
+                <Plus size={11} className="shrink-0" />
                 <span className="hidden sm:inline">Criar</span>
               </button>
             </div>
@@ -668,23 +687,23 @@ const NotesWithPagination = () => {
 
         {/* Painel de Filtros */}
         {showFilters && (
-          <div className="animate-in slide-in-from-top-1 mx-3 mb-3 max-h-[60vh] overflow-y-auto rounded-md border border-neutral-200 bg-white p-3 dark:border-neutral-700 dark:bg-neutral-950">
-            <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="animate-in slide-in-from-top-1 mx-1 mb-1 mt-1 max-h-[60vh] overflow-y-auto rounded border border-neutral-200 bg-white p-2 dark:border-neutral-700 dark:bg-neutral-950">
+            <div className="flex flex-col gap-1.5">
               {/* Projetos */}
               {projectsForFilter.length > 0 && (
-                <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/80">
-                  <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
+                <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
+                  <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
                     Projetos ({projectsForFilter.length})
                   </span>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1">
                     {projectsForFilter.map((project) => (
                       <button
                         key={project.id}
                         onClick={() => handleProjectToggle(project.id)}
-                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                        className={`flex py-0.5 px-2 items-center rounded-full border text-[10px] font-medium transition-colors ${
                           selectedProjects.includes(project.id)
                             ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
-                            : "border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
+                            : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
                         }`}
                       >
                         {project.name}
@@ -694,10 +713,10 @@ const NotesWithPagination = () => {
                 </div>
               )}
 
-              {/* Estágios (após escolher projeto) */}
+              {/* Estágios */}
               {selectedProjects.length > 0 && (
-                <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/80">
-                  <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
+                <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
+                  <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
                     Estágios
                     {taxonomyLoading ? (
                       <span className="ml-1 font-normal text-neutral-400">(carregando…)</span>
@@ -708,9 +727,11 @@ const NotesWithPagination = () => {
                     )}
                   </span>
                   {!taxonomyLoading && stageOptions.length === 0 && (
-                    <p className="text-xs text-neutral-400">Nenhum estágio neste(s) projeto(s).</p>
+                    <p className="px-0.5 text-[10px] text-neutral-400">
+                      Nenhum estágio neste(s) projeto(s).
+                    </p>
                   )}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1">
                     {stageOptions.map((st) => {
                       const multi = selectedProjects.length > 1;
                       const label = multi ? `${st.projectName}: ${st.name}` : st.name;
@@ -720,10 +741,10 @@ const NotesWithPagination = () => {
                           type="button"
                           title={label}
                           onClick={() => handleStageToggle(st.id)}
-                          className={`max-w-full truncate rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                          className={`flex py-0.5 px-2 items-center max-w-full truncate rounded-full border text-[10px] font-medium transition-colors ${
                             selectedStageIds.includes(st.id)
                               ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
-                              : "border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
+                              : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
                           }`}
                         >
                           {multi ? (
@@ -744,10 +765,10 @@ const NotesWithPagination = () => {
                 </div>
               )}
 
-              {/* Prioridades (após escolher projeto) */}
+              {/* Prioridades */}
               {selectedProjects.length > 0 && (
-                <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/80">
-                  <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
+                <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
+                  <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
                     Prioridades
                     {taxonomyLoading ? (
                       <span className="ml-1 font-normal text-neutral-400">(carregando…)</span>
@@ -758,11 +779,11 @@ const NotesWithPagination = () => {
                     )}
                   </span>
                   {!taxonomyLoading && priorityOptions.length === 0 && (
-                    <p className="text-xs text-neutral-400">
+                    <p className="px-0.5 text-[10px] text-neutral-400">
                       Nenhuma prioridade neste(s) projeto(s).
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1">
                     {priorityOptions.map((pr) => {
                       const multi = selectedProjects.length > 1;
                       return (
@@ -770,14 +791,14 @@ const NotesWithPagination = () => {
                           key={`${pr.projectId}-${pr.id}`}
                           type="button"
                           onClick={() => handlePriorityToggle(pr.id)}
-                          className={`flex max-w-full items-center gap-1.5 truncate rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                          className={`flex py-0.5 px-2 max-w-full items-center gap-1 truncate rounded-full border text-[10px] font-medium transition-colors ${
                             selectedPriorityIds.includes(pr.id)
                               ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
-                              : "border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
+                              : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
                           }`}
                         >
                           <span
-                            className="h-2 w-2 shrink-0 rounded-full ring-1 ring-neutral-900/15 dark:ring-white/20"
+                            className="h-1.5 w-1.5 shrink-0 rounded-full ring-1 ring-neutral-900/15 dark:ring-white/20"
                             style={{ backgroundColor: pr.colorHex || "#a3a3a3" }}
                             aria-hidden
                           />
@@ -800,15 +821,14 @@ const NotesWithPagination = () => {
               )}
 
               {/* Vencimento */}
-              <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/80">
-                <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
+              <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
+                <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
                   Vencimento
                 </span>
-                <p className="text-[11px] text-neutral-400">
-                  Filtra por data de vencimento da tarefa (tarefas sem vencimento ficam de fora quando
-                  um período está ativo).
+                <p className="px-0.5 text-[9px] leading-snug text-neutral-400">
+                  Filtra por data de vencimento da tarefa.
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1">
                   {DUE_DATE_PRESETS.map((preset) => (
                     <button
                       key={preset.id}
@@ -817,10 +837,10 @@ const NotesWithPagination = () => {
                         setDueDatePreset(preset.id);
                         setCurrentPage(1);
                       }}
-                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                      className={`flex py-0.5 px-2 items-center rounded-full border text-[10px] font-medium transition-colors ${
                         dueDatePreset === preset.id
                           ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
-                          : "border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
+                          : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
                       }`}
                     >
                       {preset.label}
@@ -830,11 +850,11 @@ const NotesWithPagination = () => {
               </div>
 
               {/* Tags */}
-              <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/80">
-                <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
+              <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
+                <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
                   Tags ({availableTags.length})
                 </span>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1">
                   {availableTags.length > 0 ? (
                     availableTags.map((tag) => {
                       const colors = getTagColor(tag);
@@ -842,10 +862,10 @@ const NotesWithPagination = () => {
                         <button
                           key={tag}
                           onClick={() => handleTagToggle(tag)}
-                          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                          className={`flex py-0.5 px-2 items-center rounded-full border text-[10px] font-medium transition-colors ${
                             selectedTags.includes(tag)
                               ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
-                              : `${colors.border} ${colors.bg} ${colors.text} hover:opacity-80`
+                              : `${colors.border} ${colors.bg} ${colors.text} hover:opacity-80 bg-white`
                           }`}
                         >
                           {tag}
@@ -853,33 +873,33 @@ const NotesWithPagination = () => {
                       );
                     })
                   ) : (
-                    <span className="text-sm text-neutral-400 italic">Nenhuma tag disponível.</span>
+                    <span className="px-0.5 text-[10px] text-neutral-400 italic">Nenhuma tag disponível.</span>
                   )}
                 </div>
               </div>
 
               {/* Colaboradores */}
-              <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/80">
-                <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
+              <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
+                <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
                   Colaboradores ({availableCollaborators.length})
                 </span>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1">
                   {availableCollaborators.length > 0 ? (
                     availableCollaborators.map((collaborator) => (
                       <button
                         key={collaborator}
                         onClick={() => handleCollaboratorToggle(collaborator)}
-                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                        className={`flex py-0.5 px-2 items-center rounded-full border text-[10px] font-medium transition-colors ${
                           selectedCollaborators.includes(collaborator)
                             ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
-                            : "border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
+                            : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
                         }`}
                       >
                         {collaborator}
                       </button>
                     ))
                   ) : (
-                    <span className="text-sm text-neutral-400 italic">
+                    <span className="px-0.5 text-[10px] text-neutral-400 italic">
                       Nenhum colaborador disponível.
                     </span>
                   )}
@@ -887,18 +907,18 @@ const NotesWithPagination = () => {
               </div>
 
               {/* Ordenação */}
-              <div className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50 p-3 sm:pt-3 dark:border-neutral-800 dark:bg-neutral-900/80">
+              <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
                 <div className="flex items-center justify-between">
-                  <div className="w-full space-y-3 sm:w-auto sm:min-w-[240px]">
-                    <span className="text-[10px] font-semibold tracking-wider text-neutral-500">
+                  <div className="w-full space-y-1 sm:w-auto sm:min-w-[200px]">
+                    <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
                       Ordenação
                     </span>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1">
                       <select
                         value={sortBy}
                         onChange={(e) => handleSortChange(e.target.value as SortBy)}
                         aria-label="Ordenar por"
-                        className="h-9 flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 text-sm text-neutral-700 focus:border-neutral-400 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300"
+                        className="py-0.5 px-1 min-w-0 flex-1 rounded border border-neutral-200 bg-white text-[10px] text-neutral-700 focus:border-neutral-400 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300"
                       >
                         <option value="updated_at">Data de Atualização</option>
                         <option value="created_at">Data de Criação</option>
@@ -906,13 +926,13 @@ const NotesWithPagination = () => {
                       </select>
                       <button
                         onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
-                        className="flex h-9 w-9 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                        className="flex p-0.5 shrink-0 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800"
                         title={sortOrder === "asc" ? "Crescente" : "Decrescente"}
                       >
                         {sortOrder === "asc" ? (
-                          <SortAsc size={16} className="rotate-180" />
+                          <SortAsc size={11} className="rotate-180" />
                         ) : (
-                          <SortAsc size={16} />
+                          <SortAsc size={11} />
                         )}
                       </button>
                     </div>
@@ -922,22 +942,22 @@ const NotesWithPagination = () => {
             </div>
 
             {(searchTerm || activeFilterCount > 0) && (
-              <div className="mt-3 flex justify-end border-t border-neutral-100 pt-3 dark:border-neutral-800">
+              <div className="mt-1 flex justify-end border-t border-neutral-100 pt-1.5 dark:border-neutral-800">
                 <button
                   onClick={clearFilters}
-                  className="flex items-center gap-1.5 text-xs font-medium text-red-500 transition-colors hover:text-red-600"
+                  className="flex py-0.5 px-1.5 items-center gap-1 rounded text-[10px] font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
                 >
-                  <X size={12} /> Limpar Filtros
+                  <X size={10} /> Limpar Filtros
                 </button>
               </div>
             )}
           </div>
         )}
 
-        {/* Cabeçalho da lista (desktop) — mesmo card de filtros */}
+        {/* Cabeçalho da lista (desktop) */}
         {notes.length > 0 && !showFullSkeleton && !showListSkeleton && (
-          <div className="hidden bg-white px-3 py-2 sm:block dark:bg-neutral-950 ">
-            <div className="grid grid-cols-12 gap-2 text-[9px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
+          <div className="hidden bg-white px-2 py-1.5 sm:block dark:bg-neutral-950">
+            <div className="grid grid-cols-12 gap-3 text-[9px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
               <div className="col-span-3 flex min-w-0 items-center">Título</div>
               <div className="col-span-2 flex min-w-0 items-center">Projeto</div>
               <div className="col-span-2 flex min-w-0 items-center">Tags</div>
@@ -953,36 +973,36 @@ const NotesWithPagination = () => {
 
       {/* =================== BARRA DE AÇÕES EM LOTE =================== */}
       {selectionMode && selectedNotes.size > 0 && (
-        <div className="animate-in slide-in-from-top-2 dark:bg-brand-primary-500/10 flex flex-col gap-2 rounded-md border border-yellow-500/30 bg-yellow-50 p-2 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-yellow-500/20">
-          <div className="flex items-center gap-2">
+        <div className="animate-in slide-in-from-top-2 dark:bg-brand-primary-500/10 flex flex-col gap-1 rounded border border-yellow-500/30 bg-yellow-50 p-0.5 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-yellow-500/20">
+          <div className="flex items-center gap-1 px-0.5">
             <FiCheckSquare
-              size={14}
+              size={12}
               className="dark:text-brand-primary-500 shrink-0 text-yellow-600"
             />
-            <span className="dark:text-brand-primary-500 text-xs font-medium text-yellow-900">
+            <span className="dark:text-brand-primary-500 text-[11px] font-medium text-yellow-900">
               {selectedNotes.size} tarefa(s) selecionada(s)
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <button
               onClick={selectAllNotes}
-              className="dark:text-brand-primary-500 text-[11px] font-medium text-yellow-700 underline hover:text-yellow-800 dark:hover:text-yellow-400"
+              className="dark:text-brand-primary-500 px-0.5 py-0.5 text-[10px] font-medium text-yellow-700 underline hover:text-yellow-800 dark:hover:text-yellow-400"
             >
               {selectedNotes.size === notes.length ? "Desmarcar" : "Selecionar todas"}
             </button>
             <div className="dark:bg-brand-primary-500/30 h-3 w-px bg-yellow-300"></div>
             <button
               onClick={handleBulkDelete}
-              className="flex items-center gap-1 rounded bg-red-500 px-2 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-red-600"
+              className="flex items-center gap-0.5 rounded bg-red-500 px-0.5 py-0.5 text-[10px] font-semibold text-white transition-colors hover:bg-red-600"
             >
-              <Trash2 size={12} />
+              <Trash2 size={11} />
               <span className="hidden sm:inline">Excluir</span>
             </button>
             <button
               onClick={toggleSelectionMode}
-              className="flex items-center gap-1 rounded border border-neutral-300 bg-neutral-50 px-2 py-1 text-[11px] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+              className="flex items-center gap-0.5 rounded border border-neutral-300 bg-neutral-50 px-0.5 py-0.5 text-[10px] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
             >
-              <X size={12} />
+              <X size={11} />
               <span className="hidden sm:inline">Cancelar</span>
             </button>
           </div>
@@ -990,10 +1010,7 @@ const NotesWithPagination = () => {
       )}
 
       {/* =================== CONTEÚDO (LISTA) =================== */}
-      <div
-        id="notes-container"
-        className="flex-1 overflow-y-auto rounded-md  p-1"
-      >
+      <div id="notes-container" className="flex-1 overflow-y-auto rounded-md p-1">
         <div className="flex w-full flex-col gap-1">
           {showFullSkeleton || showListSkeleton ? (
             <>

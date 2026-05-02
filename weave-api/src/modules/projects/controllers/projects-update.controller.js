@@ -86,6 +86,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
           path: result.path || result.key || "",
           name: iconFile.originalname,
           type: iconFile.mimetype,
+          size: String(iconFile.size ?? ""),
         };
       }
 
