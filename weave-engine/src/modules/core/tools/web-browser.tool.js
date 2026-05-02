@@ -15,16 +15,18 @@ async function searchWeb({ query }) {
     const response = await axios.get("https://html.duckduckgo.com/html/", {
       params: { q: query },
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       },
       timeout: 10000,
     });
 
     const html = response.data;
     const results = [];
-    
+
     // Very simple regex-based extraction for duckduckgo html
-    const regex = /<a class="result__url" href="([^"]+)".*?>.*?<\/a>.*?<a class="result__snippet[^>]+>(.*?)<\/a>/gs;
+    const regex =
+      /<a class="result__url" href="([^"]+)".*?>.*?<\/a>.*?<a class="result__snippet[^>]+>(.*?)<\/a>/gs;
     let match;
     let count = 0;
     while ((match = regex.exec(html)) !== null && count < 5) {
@@ -33,10 +35,10 @@ async function searchWeb({ query }) {
         .replace(/&amp;/g, "&")
         .replace(/^\/\/duckduckgo\.com\/l\/\?uddg=/, "")
         .split("&rut=")[0];
-        
+
       const decodedUrl = decodeURIComponent(url);
       const snippet = match[2].replace(/<[^>]+>/g, "").replace(/&quot;/g, '"');
-      
+
       results.push({
         url: decodedUrl,
         snippet,
@@ -81,7 +83,7 @@ async function readUrl({ url }) {
     // Strip scripts, styles, and extract text from body
     const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
     let textContent = bodyMatch ? bodyMatch[1] : html;
-    
+
     textContent = textContent
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")

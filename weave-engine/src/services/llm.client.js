@@ -91,7 +91,10 @@ function normalizeModelName(modelName) {
     return "";
   }
 
-  return modelName.trim().toLowerCase().replace(/^models\//, "");
+  return modelName
+    .trim()
+    .toLowerCase()
+    .replace(/^models\//, "");
 }
 
 /**
@@ -133,7 +136,10 @@ function getProviderConfig(provider) {
  */
 function getProviderByModelName(modelName) {
   if (!modelName) {
-    throw createLlmConfigError("ENGINE_MODEL_REQUIRED", "Model name is required");
+    throw createLlmConfigError(
+      "ENGINE_MODEL_REQUIRED",
+      "Model name is required"
+    );
   }
 
   const normalized = normalizeModelName(modelName);

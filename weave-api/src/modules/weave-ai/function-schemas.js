@@ -7,14 +7,57 @@ const FunctionCategory = Object.freeze({
 const FUNCTION_SCHEMAS = Object.freeze({
   create_note: {
     category: FunctionCategory.NOTES,
-    description: "Create a new note in the user workspace.",
+    description: "Create a new note or task in the user workspace.",
     name: "create_note",
     parameters: {
       additionalProperties: false,
       properties: {
+        collaboratorIds: {
+          items: { type: "string" },
+          type: "array",
+        },
         content: { type: "string" },
+        dueDate: {
+          description: "ISO datetime string.",
+          type: "string",
+        },
+        files: {
+          description: "Array of file references. Each object needs 'name' and 'url'.",
+          items: {
+            properties: {
+              name: { type: "string" },
+              url: { type: "string" },
+            },
+            required: ["name", "url"],
+            type: "object",
+          },
+          type: "array",
+        },
+        priorityId: { type: "string" },
         projectId: { type: "string" },
+        relations: {
+          description: "Array of related note IDs.",
+          items: { type: "string" },
+          type: "array",
+        },
+        stageId: { type: "string" },
+        tags: {
+          items: { type: "string" },
+          type: "array",
+        },
         title: { type: "string" },
+        urls: {
+          description: "Array of external URLs. Each object needs 'title' and 'url'.",
+          items: {
+            properties: {
+              title: { type: "string" },
+              url: { type: "string" },
+            },
+            required: ["title", "url"],
+            type: "object",
+          },
+          type: "array",
+        },
       },
       required: ["title"],
       type: "object",

@@ -1,3 +1,4 @@
+const Sentry = require("@sentry/node");
 const { env } = require("./config/enviroments");
 
 const LOG_LEVELS = {
@@ -11,7 +12,8 @@ const currentLevel = env.isProduction ? LOG_LEVELS.info : LOG_LEVELS.debug;
 
 function formatMessage(level, message, meta = {}) {
   const timestamp = new Date().toISOString();
-  const metaStr = Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : "";
+  const metaStr =
+    Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : "";
   return `[${timestamp}] [${level.toUpperCase()}] ${message}${metaStr}`;
 }
 
@@ -24,6 +26,11 @@ const logger = {
 
   error(message, meta) {
     console.error(formatMessage("error", message, meta));
+    if (meta && meta.error instanceof Error) {
+      Sentry.captureException(meta.error, { extra: meta });
+    } else {
+      Sentry.captureMessage(message, { extra: meta, level: "error" });
+    }
   },
 
   info(message, meta) {

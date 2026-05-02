@@ -30,13 +30,11 @@ pool.on("error", (error) => {
 });
 
 pool.on("connect", (client) => {
-  client
-    .query("SET default_transaction_read_only = on")
-    .catch((error) => {
-      logger.error("Failed to enforce engine read-only transactions", {
-        error: error.message,
-      });
+  client.query("SET default_transaction_read_only = on").catch((error) => {
+    logger.error("Failed to enforce engine read-only transactions", {
+      error: error.message,
     });
+  });
 });
 
 /**

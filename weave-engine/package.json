@@ -20,7 +20,8 @@
     "format": "prettier --write \"src/**/*.js\"",
     "format:check": "prettier --check \"src/**/*.js\"",
     "check": "npm run lint",
-    "test": "echo \"No tests yet\" && exit 0"
+    "build": "npm run lint && npm run format:check",
+    "test": "jest"
   },
   "keywords": [
     "ai",
@@ -33,6 +34,8 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@sentry/node": "^10.51.0",
+    "@sentry/profiling-node": "^10.51.0",
     "axios": "^1.15.2",
     "dotenv": "^16.6.1",
     "ioredis": "^5.10.1",
@@ -42,6 +45,7 @@
     "@eslint/js": "^9.9.0",
     "eslint": "^9.9.0",
     "globals": "^15.9.0",
+    "jest": "^30.3.0",
     "nodemon": "^3.1.4",
     "prettier": "^3.3.3"
   }

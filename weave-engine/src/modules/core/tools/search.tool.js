@@ -1,9 +1,9 @@
-const { pool } = require("../../services/postgres.client");
+const { pool } = require("../../../services/postgres.client");
 
 /**
  * Searches the user's notes using text similarity/keywords.
  * In the future, this will be upgraded to use pgvector.
- * 
+ *
  * @param {object} args
  * @param {string} args.query
  * @param {string} args.userId
@@ -28,7 +28,7 @@ async function searchMyNotes({ query, userId }) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: "text-embedding-3-small",
@@ -62,7 +62,10 @@ async function searchMyNotes({ query, userId }) {
       LIMIT 10;
     `;
 
-    const { rows } = await pool.query(sql, [userId, JSON.stringify(queryEmbedding)]);
+    const { rows } = await pool.query(sql, [
+      userId,
+      JSON.stringify(queryEmbedding),
+    ]);
 
     if (rows.length === 0) {
       return { message: "No semantically similar notes found." };

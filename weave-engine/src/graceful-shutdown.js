@@ -41,7 +41,10 @@ function setupGracefulShutdown() {
   process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
   process.on("uncaughtException", (error) => {
-    logger.error("Uncaught exception", { error: error.message, stack: error.stack });
+    logger.error("Uncaught exception", {
+      error: error.message,
+      stack: error.stack,
+    });
     gracefulShutdown("uncaughtException");
   });
 

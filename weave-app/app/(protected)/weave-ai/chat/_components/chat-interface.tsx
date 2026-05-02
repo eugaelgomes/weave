@@ -120,6 +120,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [allowEdit, setAllowEdit] = useState(true);
+  const [allowWebSearch, setAllowWebSearch] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -189,6 +190,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
       },
       sessionId: currentSession?.id || chatId,
       allowEdit,
+      allowWebSearch,
       agentId: selectedAgentId || undefined,
       context: {
         selectedContextItems: contextItems.map((item) => ({
@@ -335,6 +337,17 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setAllowWebSearch(!allowWebSearch)}
+            className={`flex items-center gap-1.5 rounded px-1 py-0.5 text-[10px] transition-all ${
+              allowWebSearch
+                ? "bg-brand-yellow text-brand-navy"
+                : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+            }`}
+          >
+            <Globe className="h-2 w-2" />
+            <span>Web Search</span>
+          </button>
           <button
             onClick={() => setAllowEdit(!allowEdit)}
             className={`flex items-center gap-1.5 rounded px-1 py-0.5 text-[10px] transition-all ${

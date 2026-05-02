@@ -18,6 +18,7 @@ const {
   getEngineLlmRequestQueueRedisKey,
   getEngineLlmResponsePrefixRedisKey,
 } = require("@/services/queue/queue-keys");
+const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
 
 const ENGINE_CHAT_TIMEOUT_SECONDS = Number.parseInt(
   process.env.WEAVE_ENGINE_CHAT_TIMEOUT_SECONDS || "45",
@@ -180,7 +181,7 @@ class ChatController {
    * @returns {ParsedChatPayload}
    */
   _parseChatPayload(req) {
-    const { message, model, allowEdit, noteIds, projectIds, agentId, sessionId } = req.body;
+    const { message, model, allowEdit, allowWebSearch, noteIds, projectIds, agentId, sessionId } = req.body;
 
     if (typeof message !== "string" || !message.trim()) {
       const error = new Error("Campo \"message\" é obrigatório");
@@ -203,6 +204,7 @@ class ChatController {
       message: message.trim(),
       model: parsedModel,
       allowEdit: this._parseBoolean(allowEdit, true),
+      allowWebSearch: this._parseBoolean(allowWebSearch, false),
       noteIds: this._parseNullableStringArray(noteIds, "noteIds"),
       projectIds: this._parseNullableStringArray(projectIds, "projectIds"),
       agentId: parsedAgentId,
@@ -250,8 +252,8 @@ class ChatController {
   /**
    * Normalizes persisted messages into compact conversation history.
    *
-   * @param {Array<{role?: string, content?: string, created_at?: string}>} messages
-   * @returns {Array<{role: "user"|"assistant", content: string, createdAt: string|null}>}
+   * @param {Array<{role?: string, content?: string, model?: string, created_at?: string}>} messages
+   * @returns {Array<{role: "user"|"assistant", content: string, model: string|null, createdAt: string|null}>}
    */
   _normalizeConversationHistory(messages = []) {
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -274,6 +276,7 @@ class ChatController {
         return {
           content,
           createdAt: message?.created_at || null,
+          model: typeof message?.model === "string" ? message.model : null,
           role,
         };
       })
@@ -613,6 +616,57 @@ class ChatController {
       : {};
 
     switch (name) {
+      case "create_note": {
+        const createdNote = await notesRepository.createNotesQuery(
+          userId,
+          args.title || "Nova Tarefa",
+          args.content || "",
+          Array.isArray(args.tags) ? args.tags : [],
+          NOTE_STATUS.VISIBLE,
+          args.projectId || null,
+          args.priorityId || null
+        );
+
+        if (!createdNote || (!createdNote.id && !createdNote.note_id)) {
+          throw new Error("Falha ao criar nota.");
+        }
+
+        const noteId = createdNote.id || createdNote.note_id;
+
+        const updateData = {};
+        if (args.stageId) updateData.project_stage_id = args.stageId;
+        if (args.dueDate) {
+          try {
+            const normalizedDueDate = new Date(String(args.dueDate)).toISOString();
+            updateData.due_date = normalizedDueDate;
+          } catch (e) {
+            // ignorar data invalida
+          }
+        }
+
+        const propertiesUpdate = {};
+        if (Array.isArray(args.urls) && args.urls.length > 0) propertiesUpdate.urls = args.urls;
+        if (Array.isArray(args.files) && args.files.length > 0) propertiesUpdate.files = args.files;
+        if (Array.isArray(args.relations) && args.relations.length > 0) propertiesUpdate.relations = args.relations;
+
+        if (Object.keys(propertiesUpdate).length > 0) {
+          updateData.properties = propertiesUpdate;
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          await notesRepository.updateNoteById(noteId, updateData);
+        }
+
+        if (Array.isArray(args.collaboratorIds) && args.collaboratorIds.length > 0) {
+          for (const collabId of args.collaboratorIds) {
+            if (collabId && typeof collabId === "string") {
+              await notesRepository.addCollaborator(noteId, collabId);
+            }
+          }
+        }
+
+        return { name, result: { noteId, created: true }, success: true };
+      }
       case "update_note_title": {
         const result = await notesRepository.updateNoteById(args.noteId, {
           title: args.title,
@@ -847,6 +901,7 @@ class ChatController {
       const engineResponse = await this._requestEngineChat({
         agent: selectedAgent,
         allowEdit: payload.allowEdit,
+        allowWebSearch: payload.allowWebSearch,
         context: {
           capabilityRules,
           noteDocumentContract: this._buildNoteDocumentContract(),

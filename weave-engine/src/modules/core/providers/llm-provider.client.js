@@ -6,7 +6,7 @@ const {
   getProviderConfig,
   normalizeModelName,
   resolveDefaultModelName,
-} = require("../../services/llm.client");
+} = require("../../../services/llm.client");
 
 let geminiClient = null;
 
@@ -45,7 +45,8 @@ function normalizeFileInput(rawFile) {
   const mimeType =
     typeof rawFile.mimeType === "string" && rawFile.mimeType.trim().length > 0
       ? rawFile.mimeType.trim()
-      : typeof rawFile.mimetype === "string" && rawFile.mimetype.trim().length > 0
+      : typeof rawFile.mimetype === "string" &&
+          rawFile.mimetype.trim().length > 0
         ? rawFile.mimetype.trim()
         : "application/octet-stream";
   const name =
@@ -54,7 +55,8 @@ function normalizeFileInput(rawFile) {
       : typeof rawFile.originalName === "string" &&
           rawFile.originalName.trim().length > 0
         ? rawFile.originalName.trim()
-        : typeof rawFile.filename === "string" && rawFile.filename.trim().length > 0
+        : typeof rawFile.filename === "string" &&
+            rawFile.filename.trim().length > 0
           ? rawFile.filename.trim()
           : "file";
 
@@ -97,7 +99,9 @@ function normalizeFiles(files) {
  * @returns {boolean}
  */
 function isImageMimeType(mimeType) {
-  return typeof mimeType === "string" && mimeType.toLowerCase().startsWith("image/");
+  return (
+    typeof mimeType === "string" && mimeType.toLowerCase().startsWith("image/")
+  );
 }
 
 function createProviderError(code, message) {
@@ -158,7 +162,13 @@ function getGeminiClient() {
   return geminiClient;
 }
 
-async function callGeminiApi(prompt, systemMessage, config, options = {}, modelName) {
+async function callGeminiApi(
+  prompt,
+  systemMessage,
+  config,
+  options = {},
+  modelName
+) {
   const modelConfig = {
     generationConfig: {
       maxOutputTokens: config.maxOutputTokens,
@@ -195,11 +205,11 @@ async function callGeminiApi(prompt, systemMessage, config, options = {}, modelN
   if (systemMessage) {
     contents.push({
       role: "user",
-      parts: [{ text: `SYSTEM INSTRUCTIONS:\n${systemMessage}` }]
+      parts: [{ text: `SYSTEM INSTRUCTIONS:\n${systemMessage}` }],
     });
     contents.push({
       role: "model",
-      parts: [{ text: "Understood." }]
+      parts: [{ text: "Understood." }],
     });
   }
 
@@ -212,15 +222,32 @@ async function callGeminiApi(prompt, systemMessage, config, options = {}, modelN
           const fn = msg.tool_calls[0].function;
           contents.push({
             role: "model",
-            parts: [{ functionCall: { name: fn.name, args: JSON.parse(fn.arguments) } }]
+            parts: [
+              {
+                functionCall: { name: fn.name, args: JSON.parse(fn.arguments) },
+              },
+            ],
           });
         } else {
-          contents.push({ role: "model", parts: [{ text: msg.content || "" }] });
+          contents.push({
+            role: "model",
+            parts: [{ text: msg.content || "" }],
+          });
         }
       } else if (msg.role === "tool") {
         contents.push({
           role: "user",
-          parts: [{ functionResponse: { name: msg.name, response: typeof msg.content === 'string' ? { result: msg.content } : msg.content } }]
+          parts: [
+            {
+              functionResponse: {
+                name: msg.name,
+                response:
+                  typeof msg.content === "string"
+                    ? { result: msg.content }
+                    : msg.content,
+              },
+            },
+          ],
         });
       }
     }
@@ -280,7 +307,13 @@ async function callGeminiApi(prompt, systemMessage, config, options = {}, modelN
   };
 }
 
-async function callOpenAiApi(prompt, systemMessage, config, options = {}, modelName) {
+async function callOpenAiApi(
+  prompt,
+  systemMessage,
+  config,
+  options = {},
+  modelName
+) {
   if (!config.apiKey) {
     throw createProviderError(
       "ENGINE_OPENAI_API_KEY_MISSING",
@@ -303,9 +336,14 @@ async function callOpenAiApi(prompt, systemMessage, config, options = {}, modelN
       return;
     }
 
-    if (file.mimeType.startsWith("text/") || file.mimeType === "application/json") {
+    if (
+      file.mimeType.startsWith("text/") ||
+      file.mimeType === "application/json"
+    ) {
       try {
-        const textContent = Buffer.from(file.base64Data, "base64").toString("utf-8");
+        const textContent = Buffer.from(file.base64Data, "base64").toString(
+          "utf-8"
+        );
         userContent.push({
           text: `\n\n--- FILE ATTACHED: ${file.name} ---\n${textContent}\n--- END OF FILE ---`,
           type: "text",
@@ -364,13 +402,17 @@ async function callOpenAiApi(prompt, systemMessage, config, options = {}, modelN
     payload.tool_choice = options.forceToolUse ? "required" : "auto";
   }
 
-  const response = await axios.post(`${config.baseURL}/chat/completions`, payload, {
-    headers: {
-      Authorization: `Bearer ${config.apiKey}`,
-      "Content-Type": "application/json",
-    },
-    timeout: config.timeout,
-  });
+  const response = await axios.post(
+    `${config.baseURL}/chat/completions`,
+    payload,
+    {
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      timeout: config.timeout,
+    }
+  );
 
   const message = response.data.choices[0]?.message;
   if (message?.tool_calls?.length) {
@@ -422,7 +464,8 @@ async function callProviderWithRetry(
     }
 
     const delayMs =
-      config.retry.initialDelay * Math.pow(config.retry.backoffFactor, retryCount);
+      config.retry.initialDelay *
+      Math.pow(config.retry.backoffFactor, retryCount);
     await sleep(delayMs);
     return callProviderWithRetry(
       provider,

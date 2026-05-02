@@ -89,7 +89,11 @@ Instructions:
   }
 }
 
-const { isInternalTool, executeInternalTool, getInternalToolDefinitions } = require("../tools/tool-dispatcher");
+const {
+  isInternalTool,
+  executeInternalTool,
+  getInternalToolDefinitions,
+} = require("../tools/tool-dispatcher");
 
 const MAX_REACT_ITERATIONS = 5;
 
@@ -99,6 +103,7 @@ const MAX_REACT_ITERATIONS = 5;
  */
 async function executeAgenticTask({
   allowEdit,
+  allowWebSearch,
   files,
   functions,
   message,
@@ -107,11 +112,11 @@ async function executeAgenticTask({
   conversationHistory = [],
 }) {
   let iterations = 0;
-  
+
   // Combine internal engine tools with API tools
   const availableFunctions = [...(functions || [])];
   if (allowEdit) {
-    availableFunctions.push(...getInternalToolDefinitions());
+    availableFunctions.push(...getInternalToolDefinitions(allowWebSearch));
   }
 
   const currentOptions = {
@@ -133,7 +138,7 @@ async function executeAgenticTask({
       prompt: currentPrompt,
       systemMessage,
     });
-    
+
     providerUsed = provider;
     currentPrompt = ""; // Clear prompt after first turn, history handles the rest
 
@@ -158,13 +163,13 @@ async function executeAgenticTask({
       if (isInternalTool(fnName)) {
         // Execute internally and loop
         const result = await executeInternalTool(fnName, fnArgs);
-        
+
         currentOptions.messages.push({
           role: "tool",
           name: fnName,
-          content: typeof result === 'string' ? result : JSON.stringify(result),
+          content: typeof result === "string" ? result : JSON.stringify(result),
         });
-        
+
         continue;
       } else {
         // External tool: Return to API to be executed
@@ -187,7 +192,8 @@ async function executeAgenticTask({
     data: {
       type: "text",
       text: "Eu pensei por muito tempo, mas não consegui chegar a uma conclusão final.",
-      content: "Eu pensei por muito tempo, mas não consegui chegar a uma conclusão final.",
+      content:
+        "Eu pensei por muito tempo, mas não consegui chegar a uma conclusão final.",
     },
     providerUsed,
   };
@@ -198,4 +204,3 @@ module.exports = {
   generateSmartResponse,
   processThinkingPhase,
 };
-

@@ -4,14 +4,14 @@ const {
   getEngineLlmRequestQueueRedisKey,
 } = require("../../services/redis-queue-keys");
 const { logger } = require("../../logger");
-const { buildSystemMessage } = require("../prompts/agent-prompts");
-const { buildEntityContext } = require("../context/entity-context.loader");
+const { buildSystemMessage } = require("../core/prompts/agent-prompts");
+const { buildEntityContext } = require("../core/context/entity-context.loader");
 const {
   executeAgenticTask,
   generateSmartResponse,
   processThinkingPhase,
-} = require("../orchestration/reasoning.engine");
-const { callAIProvider } = require("../providers/llm-provider.client");
+} = require("../core/orchestration/reasoning.engine");
+const { callAIProvider } = require("../core/providers/llm-provider.client");
 
 const RESPONSE_TTL_SECONDS = 60;
 const CHAT_HISTORY_MAX_MESSAGES = Number.parseInt(
@@ -140,26 +140,29 @@ class LlmQueueProcessor {
    */
   async executeTask(taskType, payload) {
     switch (taskType) {
-      case "build_system_message":
-        {
-          const additionalContext = payload.additionalContext || {};
-          const organizationId = resolveOrganizationId(payload, additionalContext);
-          const entityContext = await buildEntityContext({
-            noteIds: payload.noteIds || additionalContext.noteIds,
-            projectIds: payload.projectIds || additionalContext.projectIds,
-            userId: payload.userId || additionalContext.userId,
-            organizationId,
-          });
+      case "build_system_message": {
+        const additionalContext = payload.additionalContext || {};
+        const organizationId = resolveOrganizationId(
+          payload,
+          additionalContext
+        );
+        const entityContext = await buildEntityContext({
+          noteIds: payload.noteIds || additionalContext.noteIds,
+          projectIds: payload.projectIds || additionalContext.projectIds,
+          userId: payload.userId || additionalContext.userId,
+          organizationId,
+        });
 
-          return {
-            systemMessage: buildSystemMessage({
-              ...additionalContext,
-              indexedNotes: entityContext.indexedNotes,
-              indexedProjects: entityContext.indexedProjects,
-              userLanguage: payload.userLanguage || additionalContext.userLanguage,
-            }),
-          };
-        }
+        return {
+          systemMessage: buildSystemMessage({
+            ...additionalContext,
+            indexedNotes: entityContext.indexedNotes,
+            indexedProjects: entityContext.indexedProjects,
+            userLanguage:
+              payload.userLanguage || additionalContext.userLanguage,
+          }),
+        };
+      }
 
       case "generate_smart_response":
         return {
@@ -187,10 +190,13 @@ class LlmQueueProcessor {
 
       case "chat_v2_process": {
         const systemMessage = await this.buildChatV2SystemMessage(payload);
-        const conversationHistory = this.normalizeConversationHistory(payload.conversationHistory);
-        
+        const conversationHistory = this.normalizeConversationHistory(
+          payload.conversationHistory
+        );
+
         const { data, providerUsed } = await executeAgenticTask({
           allowEdit: Boolean(payload.allowEdit),
+          allowWebSearch: Boolean(payload.allowWebSearch),
           files: Array.isArray(payload.files) ? payload.files : [],
           functions: Array.isArray(payload.functions) ? payload.functions : [],
           message: payload.message || "",
@@ -226,9 +232,14 @@ class LlmQueueProcessor {
    */
   async buildChatV2SystemMessage(payload = {}) {
     const noteIds = Array.isArray(payload.noteIds) ? payload.noteIds : [];
-    const projectIds = Array.isArray(payload.projectIds) ? payload.projectIds : [];
+    const projectIds = Array.isArray(payload.projectIds)
+      ? payload.projectIds
+      : [];
     const files = Array.isArray(payload.files) ? payload.files : [];
-    const organizationId = resolveOrganizationId(payload, payload.context || {});
+    const organizationId = resolveOrganizationId(
+      payload,
+      payload.context || {}
+    );
     const entityContext = await buildEntityContext({
       noteIds,
       projectIds,
@@ -246,8 +257,11 @@ class LlmQueueProcessor {
     });
     const agentInstructions = this.extractAgentInstructions(payload.agent);
     const noteDocumentContract = payload?.context?.noteDocumentContract || null;
-    const conversationHistory = this.normalizeConversationHistory(payload.conversationHistory);
-    const conversationHistoryBlock = this.serializeConversationHistory(conversationHistory);
+    const conversationHistory = this.normalizeConversationHistory(
+      payload.conversationHistory
+    );
+    const conversationHistoryBlock =
+      this.serializeConversationHistory(conversationHistory);
 
     const fileSummary =
       files.length === 0
@@ -281,7 +295,9 @@ Guidelines for continuity:
 - Prefer the latest user instruction if it conflicts with older turns.
 - Do not invent previous messages that are not listed above.
 
-${noteDocumentContract ? `## Note document contract for update_note_content
+${
+  noteDocumentContract
+    ? `## Note document contract for update_note_content
 - When updating note body, prefer returning "document" (full payload) or "blocks" (array) in function arguments.
 - Allowed document node types: ${Array.isArray(noteDocumentContract.allowedNodeTypes) ? noteDocumentContract.allowedNodeTypes.join(", ") : "unknown"}
 - Allowed mark types: ${Array.isArray(noteDocumentContract.allowedMarkTypes) ? noteDocumentContract.allowedMarkTypes.join(", ") : "unknown"}
@@ -294,7 +310,9 @@ ${noteDocumentContract ? `## Note document contract for update_note_content
   - plain prose only when user asks for short/simple text
 - Never return empty content for update_note_content. Ensure at least one text node with meaningful text.
 
-` : ""}Respond to the user clearly. If database action is needed, return a structured function call.${agentInstructions ? `\n\n## Selected agent\n${agentInstructions}` : ""}`;
+`
+    : ""
+}Respond to the user clearly. If database action is needed, return a structured function call.${agentInstructions ? `\n\n## Selected agent\n${agentInstructions}` : ""}`;
   }
 
   /**
@@ -346,7 +364,8 @@ ${noteDocumentContract ? `## Note document contract for update_note_content
       .slice(-CHAT_HISTORY_MAX_MESSAGES)
       .map((entry) => {
         const role = entry?.role === "assistant" ? "assistant" : "user";
-        const rawContent = typeof entry?.content === "string" ? entry.content.trim() : "";
+        const rawContent =
+          typeof entry?.content === "string" ? entry.content.trim() : "";
         if (!rawContent) {
           return null;
         }
@@ -356,7 +375,11 @@ ${noteDocumentContract ? `## Note document contract for update_note_content
             ? `${rawContent.slice(0, CHAT_HISTORY_MAX_MESSAGE_CHARS)}...`
             : rawContent;
 
-        return { content, role };
+        return {
+          content,
+          model: typeof entry?.model === "string" ? entry.model : null,
+          role,
+        };
       })
       .filter(Boolean);
   }
@@ -388,7 +411,9 @@ ${noteDocumentContract ? `## Note document contract for update_note_content
       lines.push(line);
     }
 
-    return lines.length > 0 ? lines.join("\n") : "No prior messages in this session.";
+    return lines.length > 0
+      ? lines.join("\n")
+      : "No prior messages in this session.";
   }
 
   stop() {

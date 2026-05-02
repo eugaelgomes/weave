@@ -2,9 +2,13 @@
  * Internal Tool Dispatcher for Weave Engine
  */
 
-const { logger } = require("../../logger");
+const { logger } = require("../../../logger");
 
-const { searchWeb, readUrl, schemas: webBrowserSchemas } = require("./web-browser.tool");
+const {
+  searchWeb,
+  readUrl,
+  schemas: webBrowserSchemas,
+} = require("./web-browser.tool");
 const { searchMyNotes, schemas: searchSchemas } = require("./search.tool");
 
 const INTERNAL_TOOLS = {
@@ -13,10 +17,7 @@ const INTERNAL_TOOLS = {
   search_my_notes: searchMyNotes,
 };
 
-const internalToolSchemas = [
-  ...webBrowserSchemas,
-  ...searchSchemas,
-];
+const internalToolSchemas = [...webBrowserSchemas, ...searchSchemas];
 
 /**
  * Checks if a function name is an internal tool.
@@ -42,7 +43,9 @@ async function executeInternalTool(functionName, args) {
     const result = await INTERNAL_TOOLS[functionName](args);
     return result;
   } catch (error) {
-    logger.error(`Internal tool ${functionName} failed`, { error: error.message });
+    logger.error(`Internal tool ${functionName} failed`, {
+      error: error.message,
+    });
     return { error: error.message };
   }
 }
@@ -51,8 +54,11 @@ async function executeInternalTool(functionName, args) {
  * Gets definitions for all internal tools.
  * @returns {Array<object>}
  */
-function getInternalToolDefinitions() {
-  return internalToolSchemas;
+function getInternalToolDefinitions(allowWebSearch = true) {
+  if (allowWebSearch) {
+    return internalToolSchemas;
+  }
+  return [...searchSchemas];
 }
 
 module.exports = {

@@ -149,13 +149,13 @@ class WeaveAIRepository {
    * @param {string} sessionId
    * @param {string} userId
    * @param {number} limit
-   * @returns {Promise<Array<{role: string, content: string, created_at: string}>>}
+   * @returns {Promise<Array<{role: string, content: string, model: string|null, created_at: string}>>}
    */
   async getSessionMessagesForContext(sessionId, userId, limit = 20) {
     const query = `
-    SELECT role, content, created_at
+    SELECT role, content, model, created_at
     FROM (
-      SELECT role, content, created_at
+      SELECT role, content, model, created_at
       FROM ai_chat_messages
       WHERE session_id = $1
         AND user_id = $2

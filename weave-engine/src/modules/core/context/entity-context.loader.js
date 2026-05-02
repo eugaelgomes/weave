@@ -1,4 +1,4 @@
-const { pool } = require("../../services/postgres.client");
+const { pool } = require("../../../services/postgres.client");
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -116,7 +116,11 @@ async function loadAccessibleNotes(noteIds, userId, organizationId = null) {
  * @param {string|null} organizationId
  * @returns {Promise<object[]>}
  */
-async function loadAccessibleProjects(projectIds, userId, organizationId = null) {
+async function loadAccessibleProjects(
+  projectIds,
+  userId,
+  organizationId = null
+) {
   if (projectIds.length === 0 || !UUID_REGEX.test(String(userId || ""))) {
     return [];
   }
@@ -201,7 +205,11 @@ async function loadAccessibleProjects(projectIds, userId, organizationId = null)
     ORDER BY p.updated_at DESC;
   `;
 
-  const { rows } = await pool.query(query, [projectIds, userId, organizationId]);
+  const { rows } = await pool.query(query, [
+    projectIds,
+    userId,
+    organizationId,
+  ]);
   return rows;
 }
 

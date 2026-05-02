@@ -49,6 +49,7 @@ export interface SendMessageData {
   files?: File[];
   agentId?: string;
   allowEdit?: boolean;
+  allowWebSearch?: boolean;
   useCase?: string;
   context?: Record<string, any>;
 }
@@ -232,6 +233,7 @@ export async function sendChatMessage(data: SendMessageData): Promise<SendMessag
     projectIds: data.projectIds,
     agentId: data.agentId,
     allowEdit: data.allowEdit,
+    allowWebSearch: data.allowWebSearch,
     useCase: data.useCase,
     context: data.context,
   };
@@ -243,6 +245,7 @@ export async function sendChatMessage(data: SendMessageData): Promise<SendMessag
     if (data.sessionId) formData.append("sessionId", data.sessionId);
     if (data.agentId) formData.append("agentId", data.agentId);
     formData.append("allowEdit", String(Boolean(data.allowEdit)));
+    formData.append("allowWebSearch", String(Boolean(data.allowWebSearch)));
     if (data.context) formData.append("context", JSON.stringify(data.context));
     if (Array.isArray(data.noteIds) && data.noteIds.length > 0) {
       formData.append("noteIds", JSON.stringify(data.noteIds));
