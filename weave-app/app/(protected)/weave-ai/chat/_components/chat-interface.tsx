@@ -82,7 +82,7 @@ function getChatHeaderTitle(messages: any[], fallbackTitle?: string | null): str
     return "Nova Conversa";
   }
 
-  const firstLine = sourceText.split("\n").find((line) => line.trim().length > 0)?.trim() || sourceText;
+  const firstLine = sourceText.split("\n").find((line: string) => line.trim().length > 0)?.trim() || sourceText;
   return firstLine.length > 60 ? `${firstLine.slice(0, 57)}...` : firstLine;
 }
 

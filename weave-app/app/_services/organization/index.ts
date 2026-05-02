@@ -177,6 +177,9 @@ export interface Organization {
   logo_url?: string | null;
   banner_url?: string | null;
   description?: string;
+  /** BCP 47 locale (e.g. en-US); returned during org creation and from the API row. */
+  default_locale?: string | null;
+  country?: string | null;
   properties?: OrganizationProperties;
   org_domains?: string[] | null;
   deleted: boolean;
