@@ -18,6 +18,8 @@ services:
       dockerfile: Dockerfile
     restart: always
     env_file:
+      - path: ./.env
+        required: false
       - path: ./weave-api/.env
         required: false
     environment:

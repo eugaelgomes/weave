@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     restart: always
     env_file:
+      - path: ./.env
+        required: false
       - path: ./weave-engine/.env
         required: false
     environment:
