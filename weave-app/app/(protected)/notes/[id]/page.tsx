@@ -308,7 +308,7 @@ const BlockComponent: React.FC<BlockInnerProps> = ({
       {/* Blocos filhos (recursivo) */}
       {block.children && block.children.length > 0 && (
         <div className="mt-0.5 ml-6 border-l-2 border-neutral-200 pl-4 dark:border-neutral-800">
-          {block.children.map((child) => (
+          {block.children.map((child: Block & { children?: Block[] }) => (
             <BlockComponent
               key={child.id}
               block={child}

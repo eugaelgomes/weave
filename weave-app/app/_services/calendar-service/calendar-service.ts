@@ -1,71 +1,46 @@
 import { apiClient, API_ENDPOINTS } from "@/app/_services/api-methods";
+import { z } from "zod";
+import {
+  GoogleCalendarEventSchema,
+  CalendarEventsResponseSchema,
+  InternalCalendarEventSchema,
+  CreateInternalCalendarEventPayloadSchema,
+  GoogleCalendarSchema,
+  GoogleCalendarSettingSchema,
+  FreeBusyResponseSchema,
+  InternalCalendarEventInviteSchema,
+  CreateCalendarEventInvitePayloadSchema,
+  UpdateCalendarEventInvitePayloadSchema,
+  type GoogleCalendarEvent,
+  type CalendarEventsResponse,
+  type InternalCalendarEvent,
+  type CreateInternalCalendarEventPayload,
+  type GoogleCalendar,
+  type GoogleCalendarSetting,
+  type FreeBusyResponse,
+  type InternalCalendarEventInvite,
+  type CreateCalendarEventInvitePayload,
+  type UpdateCalendarEventInvitePayload,
+} from "./calendar.schema";
 
-export interface GoogleCalendarEvent {
-  id: string;
-  title: string;
-  description: string | null;
-  location: string | null;
-  start: string | null;
-  end: string | null;
-  allDay: boolean;
-  htmlLink: string | null;
-  colorId: string | null;
-}
-
-export interface CalendarEventsResponse {
-  connected: boolean;
-  events: GoogleCalendarEvent[];
-}
-
-export interface InternalCalendarEvent {
-  id: string;
-  organization_id: string | null;
-  creator_id: string;
-  title: string;
-  description: string | null;
-  location: string | null;
-  start_time: string;
-  end_time: string;
-  is_all_day: boolean;
-  note_id: string | null;
-  project_id: string | null;
-  is_from_note: boolean;
-  is_from_project: boolean;
-  google_event_id: string | null;
-  google_calendar_id: string | null;
-  outlook_event_id: string | null;
-  outlook_calendar_id: string | null;
-  last_synced_at: string | null;
-  sync_status: "SYNCED" | "PENDING" | "FAILED" | "OUT_OF_SYNC";
-  etag: string | null;
-  created_at: string;
-  updated_at: string;
-  deleted: boolean;
-  deleted_at: string | null;
-}
-
-export interface CreateInternalCalendarEventPayload {
-  title: string;
-  description?: string;
-  location?: string;
-  start_time: string;
-  end_time: string;
-  is_all_day?: boolean;
-  create_google_meet?: boolean;
-  attendees?: string[];
-  organization_id?: string;
-  note_id?: string;
-  project_id?: string;
-  is_from_note?: boolean;
-  is_from_project?: boolean;
-  sync_with_google?: boolean;
-  google_calendar_id?: string;
-}
+export type {
+  GoogleCalendarEvent,
+  CalendarEventsResponse,
+  InternalCalendarEvent,
+  CreateInternalCalendarEventPayload,
+  GoogleCalendar,
+  GoogleCalendarSetting,
+  FreeBusyResponse,
+  InternalCalendarEventInvite,
+  CreateCalendarEventInvitePayload,
+  UpdateCalendarEventInvitePayload,
+};
 
 export async function fetchGoogleCalendarStatus(): Promise<{ connected: boolean }> {
   const res = await apiClient.get(API_ENDPOINTS.GOOGLE_CALENDAR_STATUS);
   if (!res.ok) return { connected: false };
-  return res.json();
+  const raw = await res.json();
+  return z.object({ connected: z.boolean() }).parse(raw);
 }
 
 export function connectGoogleCalendar() {
@@ -96,7 +71,9 @@ export async function fetchGoogleCalendarEvents(
     const body = await res.json().catch(() => ({}));
     return { connected: body.connected ?? false, events: [] };
   }
-  return res.json();
+  
+  const rawData = await res.json();
+  return CalendarEventsResponseSchema.parse(rawData);
 }
 
 export function subscribeGoogleCalendarUpdates(onUpdate: () => void): () => void {
@@ -136,8 +113,9 @@ export async function fetchInternalCalendarEvents(
     throw new Error(body.error || "Falha ao buscar eventos internos");
   }
 
-  const data = (await res.json()) as { events?: InternalCalendarEvent[] };
-  return data.events || [];
+  const data = await res.json();
+  const parsedData = z.object({ events: z.array(InternalCalendarEventSchema).optional() }).parse(data);
+  return parsedData.events || [];
 }
 
 export async function createInternalCalendarEvent(
@@ -150,8 +128,9 @@ export async function createInternalCalendarEvent(
     throw new Error(body.error || "Falha ao criar evento");
   }
 
-  const data = (await res.json()) as { event: InternalCalendarEvent };
-  return data.event;
+  const data = await res.json();
+  const parsedData = z.object({ event: InternalCalendarEventSchema }).parse(data);
+  return parsedData.event;
 }
 
 export async function updateInternalCalendarEvent(
@@ -165,54 +144,9 @@ export async function updateInternalCalendarEvent(
     throw new Error(body.error || "Falha ao atualizar evento");
   }
 
-  const data = (await res.json()) as { event: InternalCalendarEvent };
-  return data.event;
-}
-
-export interface GoogleCalendar {
-  id: string;
-  summary: string;
-  description?: string;
-  timeZone?: string;
-  primary?: boolean;
-}
-
-export interface GoogleCalendarSetting {
-  id: string;
-  value: string;
-}
-
-export interface FreeBusyResponse {
-  [calendarId: string]: {
-    busy: { start: string; end: string }[];
-  };
-}
-
-export interface InternalCalendarEventInvite {
-  id: string;
-  event_id: string;
-  user_id: string | null;
-  email: string;
-  role: "ORGANIZER" | "REQUIRED" | "OPTIONAL" | "RESOURCE";
-  status: "PENDING" | "ACCEPTED" | "DECLINED" | "TENTATIVE";
-  external_guest_id: string | null;
-  created_at: string;
-  updated_at: string;
-  deleted: boolean;
-  deleted_at: string | null;
-}
-
-export interface CreateCalendarEventInvitePayload {
-  email: string;
-  role?: "ORGANIZER" | "REQUIRED" | "OPTIONAL" | "RESOURCE";
-  status?: "PENDING" | "ACCEPTED" | "DECLINED" | "TENTATIVE";
-  userId?: string;
-  externalGuestId?: string;
-}
-
-export interface UpdateCalendarEventInvitePayload {
-  role?: "ORGANIZER" | "REQUIRED" | "OPTIONAL" | "RESOURCE";
-  status?: "PENDING" | "ACCEPTED" | "DECLINED" | "TENTATIVE";
+  const data = await res.json();
+  const parsedData = z.object({ event: InternalCalendarEventSchema }).parse(data);
+  return parsedData.event;
 }
 
 export async function fetchGoogleCalendarSettings(): Promise<{
@@ -223,7 +157,8 @@ export async function fetchGoogleCalendarSettings(): Promise<{
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || "Falha ao buscar configurações do Google Calendar");
   }
-  return res.json();
+  const data = await res.json();
+  return z.object({ settings: z.array(GoogleCalendarSettingSchema) }).parse(data);
 }
 
 export async function fetchGoogleCalendarsList(): Promise<{ calendars: GoogleCalendar[] }> {
@@ -232,7 +167,8 @@ export async function fetchGoogleCalendarsList(): Promise<{ calendars: GoogleCal
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || "Falha ao buscar calendários do Google");
   }
-  return res.json();
+  const data = await res.json();
+  return z.object({ calendars: z.array(GoogleCalendarSchema) }).parse(data);
 }
 
 export async function fetchGoogleFreeBusy(
@@ -249,7 +185,8 @@ export async function fetchGoogleFreeBusy(
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || "Falha ao verificar disponibilidade (Free/Busy)");
   }
-  return res.json();
+  const data = await res.json();
+  return z.object({ freebusy: FreeBusyResponseSchema }).parse(data);
 }
 
 export async function fetchEventInvites(eventId: string): Promise<InternalCalendarEventInvite[]> {
@@ -258,7 +195,8 @@ export async function fetchEventInvites(eventId: string): Promise<InternalCalend
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || "Falha ao buscar convites do evento");
   }
-  return res.json() as Promise<InternalCalendarEventInvite[]>;
+  const data = await res.json();
+  return z.array(InternalCalendarEventInviteSchema).parse(data);
 }
 
 export async function createEventInvite(
@@ -270,7 +208,8 @@ export async function createEventInvite(
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || "Falha ao criar convite do evento");
   }
-  return res.json() as Promise<InternalCalendarEventInvite>;
+  const data = await res.json();
+  return InternalCalendarEventInviteSchema.parse(data);
 }
 
 export async function updateEventInvite(
@@ -286,7 +225,8 @@ export async function updateEventInvite(
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || "Falha ao atualizar convite do evento");
   }
-  return res.json() as Promise<InternalCalendarEventInvite>;
+  const data = await res.json();
+  return InternalCalendarEventInviteSchema.parse(data);
 }
 
 export async function deleteEventInvite(eventId: string, inviteId: string): Promise<void> {

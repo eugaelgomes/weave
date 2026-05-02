@@ -689,7 +689,6 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         totalAdmins: 0,
         totalInvited: 0,
         featuresEnabled: 0,
-        activeDomains: 0,
       };
     }
 

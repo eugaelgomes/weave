@@ -1,0 +1,15 @@
+app/(protected)/calendar/_components/calendar-component.tsx(90,60): error TS2345: Argument of type 'string | null | undefined' is not assignable to parameter of type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+app/(protected)/calendar/_components/calendar-component.tsx(368,48): error TS2345: Argument of type 'string | null | undefined' is not assignable to parameter of type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+app/(protected)/calendar/_components/calendar-component.tsx(674,21): error TS2345: Argument of type 'string | null | undefined' is not assignable to parameter of type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+app/(protected)/calendar/_components/calendar-component.tsx(876,64): error TS2345: Argument of type 'string | null | undefined' is not assignable to parameter of type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+app/(protected)/calendar/_components/calendar-component.tsx(992,48): error TS2345: Argument of type 'string | null | undefined' is not assignable to parameter of type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+app/(protected)/weave-ai/agent/[id]/page.tsx(109,30): error TS2552: Cannot find name 'duplicateAgent'. Did you mean 'updateAgent'?
+app/(protected)/weave-ai/agent/[id]/page.tsx(124,13): error TS2304: Cannot find name 'toggleAgentActive'.
+app/_contexts/notes-context.tsx(472,39): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+app/_contexts/organization-context.tsx(692,9): error TS2353: Object literal may only specify known properties, and 'activeDomains' does not exist in type 'OrganizationStats'.

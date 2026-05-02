@@ -73,7 +73,7 @@ export function AgentForm({
   isEditing?: boolean;
 }) {
   const router = useRouter();
-  const { createAgent, updateAgent, agentProviders } = useAgent();
+  const { createAgent, updateAgent, agentProviders, duplicateAgent, toggleAgentActive } = useAgent();
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -95,11 +95,43 @@ export function AgentForm({
   const [instructions, setInstructions] = useState(initialData?.instructions || "");
   const [modelId, setModelId] = useState(initialData?.model_name || "gemini-3.1-flash");
   const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.tools ?? []);
+  const [isActive, setIsActive] = useState(initialData?.is_active ?? true);
 
   const [files, setFiles] = useState<File[]>([]);
   const [existingFiles] = useState<{ name: string; url: string }[]>(
     initialData?.knowledge_files?.map((f) => ({ name: f.original_name, url: f.url })) || []
   );
+
+  const handleDuplicate = async () => {
+    if (!initialData?.id) return;
+    setLoading(true);
+    try {
+      const newAgent = await duplicateAgent(initialData.id);
+      toast.success("Agente duplicado com sucesso.");
+      router.push(`/weave-ai/agent/${newAgent.id}`);
+    } catch (error) {
+      console.error("Erro ao duplicar:", error);
+      toast.error("Não foi possível duplicar o agente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleActive = async () => {
+    if (!initialData?.id) return;
+    setLoading(true);
+    try {
+      await toggleAgentActive(initialData.id, !isActive);
+      setIsActive(!isActive);
+      toast.success(isActive ? "Agente desativado." : "Agente ativado.");
+      router.refresh();
+    } catch (error) {
+      console.error("Erro ao alterar status:", error);
+      toast.error("Falha ao alterar o status do agente.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -188,6 +220,34 @@ export function AgentForm({
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
+          {isEditing && (
+            <>
+              <button
+                type="button"
+                onClick={handleToggleActive}
+                disabled={loading}
+                className={cn(
+                  "flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium transition disabled:opacity-50",
+                  isActive
+                    ? "text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                    : "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+                )}
+                title={isActive ? "Desativar agente" : "Ativar agente"}
+              >
+                {isActive ? "Desativar" : "Ativar"}
+              </button>
+              <button
+                type="button"
+                onClick={handleDuplicate}
+                disabled={loading}
+                className="flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium text-neutral-600 transition hover:bg-neutral-100 disabled:opacity-50 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                title="Duplicar agente"
+              >
+                Duplicar
+              </button>
+              <div className="mx-1 h-3 w-px bg-neutral-200 dark:bg-neutral-800" />
+            </>
+          )}
           <button
             type="button"
             onClick={handleCancel}

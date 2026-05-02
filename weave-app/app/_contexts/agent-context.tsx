@@ -27,6 +27,8 @@ interface AgentContextType {
   deleteAgent: (id: string) => Promise<void>;
   shareAgent: (id: string, sharedWith: { userId: string; permission: string }[]) => Promise<Agent>;
   getAgent: (id: string) => Promise<Agent>;
+  toggleAgentActive: (id: string, is_active: boolean) => Promise<Agent>;
+  duplicateAgent: (id: string) => Promise<Agent>;
 }
 
 export type { Agent, CreateAgentData, AgentProviderResponse };
@@ -143,6 +145,38 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const toggleAgentActive = async (id: string, is_active: boolean) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { toggleAgentActive: toggleActiveService } = await import("../_services/ai-agent-service/agent-service");
+      const updatedAgent = await toggleActiveService(id, is_active);
+      setAgents((prev) => prev.map((a) => (a.id === id ? updatedAgent : a)));
+      return updatedAgent;
+    } catch (err: any) {
+      setError(err.message || "Failed to toggle agent status");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const duplicateAgent = async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { duplicateAgent: duplicateAgentService } = await import("../_services/ai-agent-service/agent-service");
+      const newAgent = await duplicateAgentService(id);
+      setAgents((prev) => [...prev, newAgent]);
+      return newAgent;
+    } catch (err: any) {
+      setError(err.message || "Failed to duplicate agent");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (authenticated) {
       loadAgents(); // Initial load
@@ -164,6 +198,8 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
         deleteAgent,
         shareAgent,
         getAgent,
+        toggleAgentActive,
+        duplicateAgent,
       }}
     >
       {children}

@@ -59,7 +59,7 @@ const getMinutesFromMidnight = (dateString: string): number => {
   return date.getHours() * 60 + date.getMinutes();
 };
 
-const getEventDurationMinutes = (start: string, end: string | null): number => {
+const getEventDurationMinutes = (start: string, end: string | null | undefined): number => {
   if (!end) return 60;
   const startDate = new Date(start);
   const endDate = new Date(end);
@@ -159,7 +159,7 @@ const formatTime = (
 
 const formatTimeRange = (
   startStr: string,
-  endStr: string | null,
+  endStr: string | null | undefined,
   allDay: boolean,
   timeFormat: "12h" | "24h" = "24h",
   locale: string = "pt-BR"

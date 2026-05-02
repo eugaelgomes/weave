@@ -71,14 +71,26 @@ function AgentCard({ agent, onOpen }: { agent: Agent; onOpen: () => void }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <span
-            className={cn(
-              "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase ring-1 ring-inset",
-              meta.chip
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase ring-1 ring-inset",
+                meta.chip
+              )}
+            >
+              {meta.label}
+            </span>
+            {agent.is_active === false && (
+              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-600 ring-1 ring-inset ring-neutral-500/20 dark:bg-neutral-800/50 dark:text-neutral-400">
+                Inativo
+              </span>
             )}
-          >
-            {meta.label}
-          </span>
+            {agent.project_id && (
+              <span className="inline-flex items-center rounded-full bg-brand-primary-50 px-2 py-0.5 text-[10px] font-semibold text-brand-primary-700 ring-1 ring-inset ring-brand-primary-500/20 dark:bg-brand-primary-500/10 dark:text-brand-primary-400">
+                Projeto
+              </span>
+            )}
+          </div>
           <h3 className="mt-2 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
             {agent.name}
           </h3>

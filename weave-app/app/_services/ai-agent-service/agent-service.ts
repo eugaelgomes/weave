@@ -108,6 +108,8 @@ export interface Agent {
   knowledge_files?: KnowledgeFile[];
   is_public: boolean;
   user_id?: string;
+  project_id?: string | null;
+  is_active?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -125,6 +127,8 @@ export interface CreateAgentData {
   model_provider: string;
   model_name: string;
   knowledge_files?: File[];
+  project_id?: string | null;
+  is_active?: boolean;
 }
 
 type RawChatMessage = {
@@ -467,6 +471,18 @@ export async function shareAgent(
 
 export async function getAgentById(id: string): Promise<Agent> {
   const response = await apiClient.get(API_ENDPOINTS.AGENT_BY_ID(id));
+  const data = await handleResponse<{ agent: Agent }>(response);
+  return data.agent;
+}
+
+export async function toggleAgentActive(id: string, is_active: boolean): Promise<Agent> {
+  const response = await apiClient.patch(`${API_ENDPOINTS.AGENTS}/${id}/active`, { is_active });
+  const data = await handleResponse<{ agent: Agent }>(response);
+  return data.agent;
+}
+
+export async function duplicateAgent(id: string): Promise<Agent> {
+  const response = await apiClient.post(`${API_ENDPOINTS.AGENTS}/${id}/duplicate`, {});
   const data = await handleResponse<{ agent: Agent }>(response);
   return data.agent;
 }

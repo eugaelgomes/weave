@@ -33,7 +33,7 @@ export interface FormData {
   usage_preference: Record<string, any>;
 }
 
-const normalizeThemeMode = (themeMode?: string): "LIGHT" | "DARK" =>
+const normalizeThemeMode = (themeMode?: string | null): "LIGHT" | "DARK" =>
   themeMode?.toUpperCase() === "DARK" ? "DARK" : "LIGHT";
 
 const SettingsPage = () => {

@@ -1,286 +1,50 @@
 import { jwtDecode } from "jwt-decode";
 import { API_ENDPOINTS } from "../api-methods";
 import { apiClient, handleResponse } from "../api-methods";
-import type { UserPreferences } from "@/types/user-preferences";
 import getStorageUrl from "@/app/_utils/get-storage-url";
+import {
+  type UserPreferences,
+  type PlanDetails,
+  type UsageDetails,
+  type User,
+  type BackendProfile,
+  type BackendSettings,
+  type BackendOrganization,
+  type BackendAuthResponse,
+  type BackendMeResponse,
+  type LoginCredentials,
+  type CreateUserData,
+  type ActivateAccountPayload,
+  BackendAuthResponseSchema,
+  BackendMeResponseSchema,
+  CreateUserDataSchema,
+  LoginCredentialsSchema,
+  ActivateAccountPayloadSchema
+} from "./auth.schema";
 
-export interface PlanDetails {
-  limits?: {
-    max_notes?: number;
-    max_projects?: number;
-    max_team_members?: number;
-    exports?: {
-      notes_monthly?: number;
-      backups_monthly?: number;
-    };
-    storage?: {
-      retention_days?: number | null;
-      max_file_size_mb?: number;
-      total_monthly_upload_mb?: number;
-    };
-  };
-  features?: {
-    dark_mode?: boolean;
-    custom_branding?: boolean;
-    priority_support?: boolean;
-    collaboration_tools?: boolean;
-    [key: string]: boolean | undefined;
-  };
-  metadata?: {
-    version?: string;
-    plan_tier?: string;
-    is_trial_available?: boolean;
-  };
-  weave_ai?: {
-    enabled?: boolean;
-    features?: string[];
-    config?: {
-      default_model?: string;
-      available_models?: string[];
-      monthly_messages?: number;
-      max_tokens_per_message?: number;
-      context_window_messages?: number;
-    };
-  };
-}
+export type {
+  UserPreferences,
+  PlanDetails,
+  UsageDetails,
+  User,
+  LoginCredentials,
+  CreateUserData,
+  ActivateAccountPayload
+};
 
-export interface UsageDetails {
-  monthly_cycle?: {
-    exports?: {
-      notes_count?: number;
-      backups_count?: number;
-    };
-    storage?: {
-      files_count?: number;
-      total_uploaded_mb?: number;
-    };
-    weave_ai?: {
-      messages_sent?: number;
-      tokens_estimated?: number;
-    };
-    current_period_end?: string;
-    current_period_start?: string;
-  };
-  usage_summary?: {
-    notes_total?: number;
-    projects_total?: number;
-    team_members_total?: number;
-  };
-  history_metadata?: {
-    last_activity_at?: string;
-    usage_percentage_total?: number;
-  };
-}
-
-export interface User {
-  id?: string;
-  username?: string;
-  user_name?: string;
-  email?: string;
-  avatar_url?: string;
-  created_at?: string;
-  updated_at?: string;
-  birth_date?: string;
-  phone_number?: string;
-
-  org_id?: string;
-  org_name?: string;
-  org_unique_name?: string;
-  org_logo_url?: string;
-  org_member_role?: string | string[] | null;
-  logo_url?: string;
-  org_member_since?: string;
-
-  theme_mode?: string;
-  private_profile?: boolean;
-  auth_with_google?: boolean;
-  auth_with_github?: boolean;
-  auth_with_microsoft?: boolean;
-
-  // App preferences
-  usage_preference?: UserPreferences;
-
-  // Plan information
-  plan_id?: string;
-  plan_name?: string;
-  plan_client_type?: string;
-  plan_details?: PlanDetails;
-
-  // Plan usage information
-  usage_plan_id?: string;
-  usage_plan_name?: string;
-  usage_client_type?: string;
-  usage_period_start?: string;
-  usage_period_end?: string;
-  usage_details?: UsageDetails;
-}
-
-interface BackendProfile {
-  id: string;
-  user_name: string;
-  username: string;
-  email: string;
-  avatar_url: string;
-  created_at: string;
-  updated_at?: string;
-  birth_date?: string;
-  phone_number?: string;
-}
-
-interface BackendSettings {
-  theme_mode?: string;
-  private_profile?: boolean;
-  auth_with_google?: boolean;
-  usage_preference?: Record<string, unknown>;
-}
-
-interface BackendOrganization {
-  id: string;
-  unique_name: string;
-  org_name: string;
-  org_logo_url?: string;
-  org_member_role?: string | string[] | null;
-  logo_url?: string;
-  org_member_since?: string;
-}
-
-interface BackendPlan {
-  id: string;
-  plan_name: string;
-  client_type: string;
-  details: any;
-}
-
-interface BackendPlanUsage {
-  plan_id: string;
-  plan_name: string;
-  client_type: string;
-  period_start: string;
-  period_end: string;
-  details: any;
-}
-
-// Interface unificada dos dados que vêm dentro de 'user_data'
+// Interface unificada dos dados que vêm dentro de 'user_data' (deprecated func support)
 interface BackendUserData {
   profile: BackendProfile;
   settings?: BackendSettings;
   organization?: BackendOrganization;
-  current_plan?: BackendPlan;
-  current_plan_usage?: BackendPlanUsage;
+  current_plan?: any;
+  current_plan_usage?: any;
   usage_preference?: Record<string, unknown>;
-}
-
-// Interfaces específicas para a resposta de login
-interface BackendLoginUserProfile {
-  id: string;
-  name: string;
-  username: string;
-  email: string;
-  avatar_url: string;
-}
-
-interface BackendLoginUserSettings {
-  theme_mode?: string;
-  private_profile?: boolean;
-}
-
-interface BackendLoginUserOrganization {
-  id: string;
-  unique_name: string;
-  name: string;
-  role?: string | string[] | null;
-  logo_url?: string;
-}
-
-interface BackendLoginUserSubscription {
-  plan_id: string;
-  plan_name: string;
-}
-
-interface BackendAuthResponse {
-  status: string;
-  message?: string;
-  user: {
-    user_profile: BackendLoginUserProfile;
-    user_settings: BackendLoginUserSettings;
-    user_organization: BackendLoginUserOrganization;
-    user_subscription: BackendLoginUserSubscription;
-  };
-  auth: {
-    token: string;
-    expires_in: number;
-    login_time: string;
-  };
-}
-
-interface BackendMeResponse {
-  message?: string;
-  user: {
-    user_profile: {
-      id: string;
-      user_name: string;
-      username: string;
-      email: string;
-      avatar_url: string;
-      birth_date?: string;
-      phone_number?: string;
-      created_at: string;
-      updated_at?: string;
-    };
-    user_settings: {
-      theme_mode?: string;
-      private_profile?: boolean;
-      auth_with_google?: boolean;
-      auth_with_github?: boolean;
-    };
-    user_organization: {
-      id: string;
-      unique_name: string;
-      name: string;
-      logo_url?: string;
-      member_role?: string | string[] | null;
-      member_since?: string;
-    };
-    current_plan: {
-      id: string;
-      plan_name: string;
-      client_type: string;
-      details: any;
-    };
-    current_plan_usage: {
-      plan_id: string;
-      plan_name: string;
-      client_type: string;
-      period_start: string;
-      period_end: string;
-      details: any;
-    };
-    usage_preference?: Record<string, unknown>;
-  };
-}
-
-export interface LoginCredentials {
-  login: string;
-  password: string;
 }
 
 export interface LoginResponse {
   user: User;
   token: string;
-}
-
-export interface CreateUserData {
-  name?: string;
-  username: string;
-  email: string;
-  password: string;
-  user_name?: string;
-}
-
-export interface ActivateAccountPayload {
-  token?: string;
-  code?: string;
-  email?: string;
 }
 
 const normalizeStorageUrl = (value?: string | null): string => {
@@ -446,8 +210,13 @@ const mapMeResponseToUser = (data: BackendMeResponse): User => {
 // --- 4. Serviços de Autenticação ---
 
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
-  const response = await apiClient.post(API_ENDPOINTS.SIGNIN, credentials);
-  const data = await handleResponse<BackendAuthResponse>(response);
+  // Valida o input
+  const validCredentials = LoginCredentialsSchema.parse(credentials);
+  const response = await apiClient.post(API_ENDPOINTS.SIGNIN, validCredentials);
+  const rawData = await handleResponse<unknown>(response);
+  
+  // Valida o output da API
+  const data = BackendAuthResponseSchema.parse(rawData);
 
   if (data.status === "OK" && data.user && data.auth) {
     return {
@@ -468,7 +237,8 @@ export const getUserData = async (): Promise<User> => {
     throw new Error("Erro ao buscar dados do usuário");
   }
 
-  const data = await handleResponse<BackendMeResponse>(response);
+  const rawData = await handleResponse<unknown>(response);
+  const data = BackendMeResponseSchema.parse(rawData);
 
   if (data.user) {
     return mapMeResponseToUser(data);
@@ -485,7 +255,11 @@ export const getUserDataService = getUserData;
 export const createUserService = async (
   userData: CreateUserData | FormData
 ): Promise<{ message: string }> => {
-  const response = await apiClient.post(API_ENDPOINTS.CREATE_ACCOUNT, userData);
+  let body = userData;
+  if (!(userData instanceof FormData)) {
+    body = CreateUserDataSchema.parse(userData);
+  }
+  const response = await apiClient.post(API_ENDPOINTS.CREATE_ACCOUNT, body);
 
   if (!response.ok) {
     const text = await response.text();
@@ -516,7 +290,8 @@ export const createUserService = async (
 export const activateAccountService = async (
   payload: ActivateAccountPayload
 ): Promise<{ message: string }> => {
-  const response = await apiClient.post(API_ENDPOINTS.ACTIVATE_ACCOUNT, payload);
+  const validPayload = ActivateAccountPayloadSchema.parse(payload);
+  const response = await apiClient.post(API_ENDPOINTS.ACTIVATE_ACCOUNT, validPayload);
   const data = await handleResponse<{ message?: string }>(response);
 
   return {

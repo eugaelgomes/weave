@@ -1,218 +1,52 @@
 import { apiClient, handleResponse } from "../api-methods";
 import { API_ENDPOINTS } from "../api-methods";
-import { type CollaboratorObject } from "@/app/_utils/collaborators";
 import type { NoteStatus } from "@/app/_utils/db-enums";
+import { z } from "zod";
 
-// =================== TYPES / INTERFACES ===================
+import {
+  NoteSchema,
+  NotesResponseSchema,
+  NotesStatsResponseSchema,
+  NoteDataResponseSchema,
+  SearchUsersResponseSchema,
+  CollaboratorsResponseSchema,
+  NotesUserSchema,
+  type Collaborator,
+  type NoteProperties,
+  type Tag,
+  type TaskPriority,
+  type Note,
+  type Block,
+  type NoteDocumentNode,
+  type NoteDocumentState,
+  type FetchNotesParams,
+  type NotesResponse,
+  type CreateNoteData,
+  type UpdateNoteData,
+  type CreateBlockData,
+  type ShareNoteData,
+  type NotesUser as User,
+  type NotesStatsResponse,
+} from "./notes.schema";
 
-export type Collaborator = string | CollaboratorObject;
-
-export interface NoteProperties {
-  icon?: {
-    path: string;
-    name: string;
-    type: string;
-  };
-  urls?: string[];
-  color?: string;
-  files?: Array<{
-    id: string;
-    path: string;
-    name: string;
-    type: string;
-  }>;
-  banner?: {
-    path: string;
-    name: string;
-    type: string;
-  };
-  relations?: string[];
-  priority?: string;
-  due_date?: string;
-}
-
-export interface Tag {
-  id: string;
-  org_id: string;
-  name: string;
-  color: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-  deleted: boolean;
-  deleted_at?: string;
-  deleted_by?: string;
-}
-
-export interface TaskPriority {
-  id: string;
-  org_id: string;
-  name: string;
-  color: string;
-  level: number;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-  deleted: boolean;
-  deleted_at?: string;
-  deleted_by?: string;
-}
-
-export interface Note {
-  id: string;
-  title: string;
-  description?: string;
-  properties?: NoteProperties;
-  tags?: string[];
-  priority_id?: string | null;
-  priority_name?: string | null;
-  priority_color?: string | null;
-  due_date?: string | null;
-  assigned_to?: string | null;
-  deleted_by?: string | null;
-  deleted?: boolean;
-  status?: NoteStatus;
-  created_at: string;
-  updated_at: string;
-  lastModified?: string;
-  preview?: string;
-  done?: boolean;
-  user_id?: string;
-  collaborators?: (Collaborator | unknown)[]; // Atualizado com o tipo correto
-  created_by?: string;
-  email?: string;
-  avatar_url?: string;
-  name?: string;
-  blocks?: Block[];
-  project_id?: string;
-  project_name?: string;
-  author?: {
-    id: string;
-    name: string;
-    username: string;
-    email: string;
-    avatar_url: string | null;
-  };
-  access?: {
-    isOwner: boolean;
-    isCollaborator: boolean;
-    canEdit: boolean;
-    canDelete: boolean;
-    canShare: boolean;
-  };
-  associated_project?: {
-    id: string;
-    name: string;
-    stage_id?: string | null;
-    stage_name?: string | null;
-  } | null;
-  associated_organization?: {
-    id: string;
-    name: string;
-    unique_name?: string;
-    logo_url?: string | null;
-  } | null;
-  // Propriedades unificadas do componente de UI
-  owner_name?: string;
-  owner_avatar_url?: string;
-  document?: NoteDocumentState | null;
-}
-
-export interface Block {
-  id: string;
-  type: string;
-  text: string;
-  properties?: Record<string, unknown>;
-  done?: boolean;
-  parentId?: string;
-  parent_id?: string;
-  position: number;
-  note_id: string;
-  level?: number;
-  created_at?: string;
-  updated_at?: string;
-  children?: Block[];
-}
-
-export interface NoteDocumentNode {
-  id?: string | number;
-  order?: number;
-  type: string;
-  attrs?: Record<string, unknown>;
-  content?: NoteDocumentNode[];
-  text?: string;
-  marks?: Array<{ type: string; attrs?: Record<string, unknown> }>;
-}
-
-export interface NoteDocumentState {
-  version: number;
-  document: {
-    type: "doc";
-    content: NoteDocumentNode[];
-  };
-}
-
-export interface FetchNotesParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  tags?: string | string[];
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
-}
-
-export interface NotesResponse {
-  notes: Note[];
-  pagination?: {
-    currentPage: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasMore: boolean;
-  };
-}
-
-export interface CreateNoteData {
-  title: string;
-  description?: string;
-  tags?: string[];
-}
-
-export interface UpdateNoteData {
-  title?: string;
-  description?: string;
-  tags?: string[];
-  status?: NoteStatus;
-  project_id?: string | null;
-  priority_id?: string | null;
-  due_date?: string | null;
-  properties?: Partial<NoteProperties>;
-  document?: NoteDocumentState;
-  icon?: File;
-  banner?: File;
-  files?: File[];
-}
-
-export interface CreateBlockData {
-  type: string;
-  text?: string;
-  properties?: Record<string, unknown>;
-  done?: boolean;
-  parentId?: string;
-  position?: number;
-}
-
-export interface ShareNoteData {
-  userId: string;
-}
-
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  name?: string;
-  avatar_url?: string;
-}
+export type {
+  Collaborator,
+  NoteProperties,
+  Tag,
+  TaskPriority,
+  Note,
+  Block,
+  NoteDocumentNode,
+  NoteDocumentState,
+  FetchNotesParams,
+  NotesResponse,
+  CreateNoteData,
+  UpdateNoteData,
+  CreateBlockData,
+  ShareNoteData,
+  User,
+  NotesStatsResponse,
+};
 
 // =================== NOTES API ===================
 
@@ -235,33 +69,41 @@ export async function fetchNotes(params: FetchNotesParams = {}): Promise<NotesRe
   }
 
   const response = await apiClient.get(url);
-  const data = await handleResponse<NotesResponse | { notes: Note[] }>(response);
+  const rawData = await handleResponse<unknown>(response);
 
-  if ("notes" in data && "pagination" in data) {
-    return data as NotesResponse;
+  if (rawData && typeof rawData === "object" && "notes" in rawData && "pagination" in rawData) {
+    return NotesResponseSchema.parse(rawData);
   }
 
+  const notesRaw = rawData && typeof rawData === "object" && "notes" in rawData ? (rawData as any).notes : rawData;
+  const parsedNotes = z.array(NoteSchema).parse(notesRaw);
+
   if (params.page || params.limit) {
-    const notes = "notes" in data ? data.notes : (data as Note[]);
     return {
-      notes,
+      notes: parsedNotes,
       pagination: {
         currentPage: Number(params.page) || 1,
-        limit: Number(params.limit) || notes.length,
-        total: notes.length,
-        totalPages: Math.ceil(notes.length / (Number(params.limit) || notes.length)),
+        limit: Number(params.limit) || parsedNotes.length,
+        total: parsedNotes.length,
+        totalPages: Math.ceil(parsedNotes.length / (Number(params.limit) || parsedNotes.length || 1)),
         hasMore: false,
       },
     };
   }
 
-  return "notes" in data ? data.notes : (data as Note[]);
+  return parsedNotes;
 }
 
 export async function fetchNoteById(noteId: string): Promise<Note> {
   const response = await apiClient.get(API_ENDPOINTS.NOTES_BY_ID(noteId));
-  const data = await handleResponse<{ data?: Note } | Note>(response);
-  return "data" in data ? data.data! : (data as Note);
+  const rawData = await handleResponse<unknown>(response);
+  
+  if (rawData && typeof rawData === "object" && "data" in rawData) {
+    const parsed = NoteDataResponseSchema.parse(rawData);
+    if (parsed.data) return parsed.data;
+  }
+  
+  return NoteSchema.parse(rawData);
 }
 
 export async function createNote(noteData: CreateNoteData): Promise<Note> {
@@ -271,7 +113,8 @@ export async function createNote(noteData: CreateNoteData): Promise<Note> {
     tags: noteData.tags || [],
   });
 
-  return await handleResponse<Note>(response);
+  const rawData = await handleResponse<unknown>(response);
+  return NoteSchema.parse(rawData);
 }
 
 export async function updateNote(noteId: string, noteData: UpdateNoteData): Promise<Note> {
@@ -298,11 +141,12 @@ export async function updateNote(noteId: string, noteData: UpdateNoteData): Prom
     if (noteData.icon) formData.append("icon", noteData.icon);
     if (noteData.banner) formData.append("banner", noteData.banner);
     if (noteData.files) {
-      noteData.files.forEach((file) => formData.append("files", file));
+      noteData.files.forEach((file: any) => formData.append("files", file));
     }
 
     const response = await apiClient.put(API_ENDPOINTS.NOTES_BY_ID(noteId), formData);
-    return await handleResponse<Note>(response);
+    const rawData = await handleResponse<unknown>(response);
+    return NoteSchema.parse(rawData);
   }
 
   // Enviar como JSON quando não há arquivos
@@ -318,7 +162,8 @@ export async function updateNote(noteId: string, noteData: UpdateNoteData): Prom
     document: noteData.document,
   });
 
-  return await handleResponse<Note>(response);
+  const rawData = await handleResponse<unknown>(response);
+  return NoteSchema.parse(rawData);
 }
 
 export async function deleteNote(noteId: string): Promise<boolean> {
@@ -354,15 +199,14 @@ export async function searchUsers(searchTerm: string): Promise<User[]> {
 
   const url = `/users/search?q=${encodeURIComponent(searchTerm.trim())}`;
   const response = await apiClient.get(url);
-  const data = await handleResponse<
-    { search_users?: User[]; users?: User[]; data?: User[] } | User[]
-  >(response);
+  const rawData = await handleResponse<unknown>(response);
 
-  if (Array.isArray(data)) {
-    return data;
+  if (Array.isArray(rawData)) {
+    return z.array(NotesUserSchema).parse(rawData);
   }
 
-  return data.search_users || data.users || data.data || [];
+  const parsed = SearchUsersResponseSchema.parse(rawData);
+  return parsed.search_users || parsed.users || parsed.data || [];
 }
 
 // ========================================
@@ -371,13 +215,14 @@ export async function searchUsers(searchTerm: string): Promise<User[]> {
 
 export async function getCollaborators(noteId: string): Promise<User[]> {
   const response = await apiClient.get(`${API_ENDPOINTS.NOTES_BY_ID(noteId)}/collaborators`);
-  const data = await handleResponse<{ collaborators?: User[]; data?: User[] } | User[]>(response);
+  const rawData = await handleResponse<unknown>(response);
 
-  if (Array.isArray(data)) {
-    return data;
+  if (Array.isArray(rawData)) {
+    return z.array(NotesUserSchema).parse(rawData);
   }
 
-  return data.collaborators || data.data || [];
+  const parsed = CollaboratorsResponseSchema.parse(rawData);
+  return parsed.collaborators || parsed.data || [];
 }
 
 export async function removeCollaborator(noteId: string, collaboratorId: string): Promise<boolean> {
@@ -400,7 +245,8 @@ export async function recuseCollaboration(noteId: string): Promise<boolean> {
 
 export async function createCompleteNote(noteData: CreateNoteData): Promise<Note> {
   const response = await apiClient.post(`${API_ENDPOINTS.NOTES}/complete`, noteData);
-  return await handleResponse<Note>(response);
+  const rawData = await handleResponse<unknown>(response);
+  return NoteSchema.parse(rawData);
 }
 
 export async function exportNoteAsPDF(noteId: string): Promise<{ blob: Blob; fileName: string }> {
@@ -428,15 +274,9 @@ export async function exportNoteAsPDF(noteId: string): Promise<{ blob: Blob; fil
 }
 
 // --- Notes Stats API ---
-export interface NotesStatsResponse {
-  totalNotes: number;
-  totalTags: number;
-  statusDistribution: Record<string, number>;
-  mostUsedTags: Array<{ tag: string; count: number }>;
-}
 
 export async function fetchNotesStats(): Promise<NotesStatsResponse> {
   const response = await apiClient.get(API_ENDPOINTS.NOTES_STATS);
-  const data = await handleResponse<NotesStatsResponse>(response);
-  return data;
+  const rawData = await handleResponse<unknown>(response);
+  return NotesStatsResponseSchema.parse(rawData);
 }

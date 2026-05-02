@@ -94,7 +94,7 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
     const result = await updateUser({
       theme_mode: themeMode,
       private_profile: privateProfile,
-      usage_preference: mergedUsagePreference,
+      usage_preference: mergedUsagePreference as Record<string, unknown>,
     });
 
     setIsLoading(false);

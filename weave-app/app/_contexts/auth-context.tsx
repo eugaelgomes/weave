@@ -24,7 +24,7 @@ import { useTheme } from "./theme-context";
 /** Consumer-facing user model — import from this module in UI; do not import auth-service types directly. */
 export type { User };
 
-const toUiThemeMode = (themeMode?: string): "light" | "dark" | null => {
+const toUiThemeMode = (themeMode?: string | null): "light" | "dark" | null => {
   if (!themeMode) return null;
   const normalized = themeMode.toUpperCase();
   if (normalized === "LIGHT") return "light";

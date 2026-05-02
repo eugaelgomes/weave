@@ -223,12 +223,12 @@ const mapNodeToBlock = (
         },
       };
     case "table": {
-      const lines = (node.content || []).map((row) => extractText(row.content));
+      const lines = (node.content || []).map((row: NoteDocumentNode) => extractText(row.content));
       return { ...base, type: "table", text: lines.join("\n") };
     }
     case "taskList": {
       const listId = base.id;
-      const children = (node.content || []).map((item, idx) => ({
+      const children = (node.content || []).map((item: NoteDocumentNode, idx: number) => ({
         ...base,
         id: normalizeNodeId(
           (item as NoteDocumentNode & { id?: unknown }).id,
@@ -247,7 +247,7 @@ const mapNodeToBlock = (
     case "bulletList":
     case "orderedList": {
       const listId = base.id;
-      const children = (node.content || []).map((item, idx) => ({
+      const children = (node.content || []).map((item: NoteDocumentNode, idx: number) => ({
         ...base,
         id: normalizeNodeId(
           (item as NoteDocumentNode & { id?: unknown }).id,
@@ -332,20 +332,20 @@ const mapBlockToNode = (block: Block & { children?: Block[] }): NoteDocumentNode
   if (block.type === "table") {
     const rows = (block.text || "")
       .split("\n")
-      .map((line) =>
+      .map((line: string) =>
         line
           .split("|")
-          .map((cell) => cell.trim())
+          .map((cell: string) => cell.trim())
           .filter(Boolean)
       )
-      .filter((cells) => cells.length > 0);
+      .filter((cells: string[]) => cells.length > 0);
 
     return withBlockNodeMeta(
       {
       type: "table",
-      content: rows.map((cells) => ({
+      content: rows.map((cells: string[]) => ({
         type: "tableRow",
-        content: cells.map((cell) => ({
+        content: cells.map((cell: string) => ({
           type: "tableCell",
           content: [paragraphFromText(cell)],
         })),
@@ -358,13 +358,13 @@ const mapBlockToNode = (block: Block & { children?: Block[] }): NoteDocumentNode
   if (block.type === "orderedList") {
     const lines = (block.text || "")
       .split("\n")
-      .map((line) => line.trim())
+      .map((line: string) => line.trim())
       .filter(Boolean);
 
     return withBlockNodeMeta(
       {
       type: "orderedList",
-      content: (lines.length > 0 ? lines : [""]).map((line) => ({
+      content: (lines.length > 0 ? lines : [""]).map((line: string) => ({
         type: "listItem",
         content: [paragraphFromText(line)],
       })),
@@ -386,11 +386,11 @@ const mapBlockToNode = (block: Block & { children?: Block[] }): NoteDocumentNode
 
   if (block.type === "list") {
     const children = Array.isArray(block.children) ? block.children : [];
-    if (children.some((child) => child.type === "todo")) {
+    if (children.some((child: Block) => child.type === "todo")) {
       return withBlockNodeMeta(
         {
         type: "taskList",
-        content: children.map((child) => mapBlockToNode({ ...child, type: "todo" })),
+        content: children.map((child: Block) => mapBlockToNode({ ...child, type: "todo" })),
         },
         block
       );
@@ -400,7 +400,7 @@ const mapBlockToNode = (block: Block & { children?: Block[] }): NoteDocumentNode
       return withBlockNodeMeta(
         {
         type: block.properties?.ordered ? "orderedList" : "bulletList",
-        content: children.map((child) =>
+        content: children.map((child: Block) =>
           withBlockNodeMeta(
             {
               type: "listItem",
@@ -461,14 +461,14 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       properties: note.properties || {},
       tags: note.tags || [],
       lastModified: note.updated_at || note.created_at,
-      preview: extractPreview(note.description),
+      preview: extractPreview(note.description || undefined),
       status: note.status || "sem_status",
       collaboratorsCount: Array.isArray(note.collaborators) ? note.collaborators.length : 0,
       collaborators: Array.isArray(note.collaborators) ? note.collaborators : [],
       created_at: note.created_at,
       updated_at: note.updated_at,
       owner_name:
-        note.author?.name || note.author?.username || note.author?.email || note.name || note.email,
+        note.author?.name || note.author?.username || note.author?.email || note.name || note.email || undefined,
       owner_avatar_url: getStorageUrl(note.author?.avatar_url || note.avatar_url || ""),
     }),
     []

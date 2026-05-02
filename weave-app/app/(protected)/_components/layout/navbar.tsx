@@ -219,7 +219,7 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
     setTheme(newTheme);
 
     if (user) {
-      updateUser({ theme_mode: newTheme.toUpperCase() }).catch((err) =>
+      updateUser({ theme_mode: newTheme }).catch((err) =>
         console.error("Erro ao salvar tema:", err)
       );
     }
