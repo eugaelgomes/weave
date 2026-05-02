@@ -231,7 +231,7 @@ class UserDataController extends BaseController {
             details: user.plan_details || {},
           },
           current_plan_usage: planUsage,
-          usage_preference: user.user_preference || {},
+          usage_preference: normalizeAppPreferences(user.user_preference || {}),
         },
       });
     } catch (error) {

@@ -28,6 +28,7 @@
  * @property {boolean} showLineNumbers
  * @property {boolean} showWordCount
  * @property {boolean} compactMode
+ * @property {string} appBackgroundColor
  */
 
 /**
@@ -112,12 +113,13 @@ const defaultAppPreferences = {
     spellCheck: true,
     syntaxHighlighting: true,
   },
-  display: {
+  Display: {
     density: "comfortable", // compact, comfortable, spacious
     sidebarPosition: "left", // left, right
     showLineNumbers: false,
     showWordCount: true,
     compactMode: false,
+    appBackgroundColor: "#191919",
   },
   language: {
     interface: "pt-BR",
@@ -169,9 +171,9 @@ function normalizeAppPreferences(userPreferences = {}) {
       ...defaultAppPreferences.editor,
       ...(userPreferences.editor || {}),
     },
-    display: {
-      ...defaultAppPreferences.display,
-      ...(userPreferences.display || {}),
+    Display: {
+      ...defaultAppPreferences.Display,
+      ...(userPreferences.Display || userPreferences.display || {}),
     },
     language: {
       ...defaultAppPreferences.language,

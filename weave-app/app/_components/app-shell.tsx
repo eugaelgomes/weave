@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import ProtectedLayout from "@/app/_components/layout/protected-layout";
+import ProtectedLayout from "@/app/_components/protected-layout";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { AuthenticatedProviders } from "@/app/_contexts/authenticated-providers";
 

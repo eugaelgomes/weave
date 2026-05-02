@@ -1,6 +1,6 @@
 "use client";
 
-import AppShell from "@/app/_components/layout/app-shell";
+import AppShell from "@/app/_components/app-shell";
 
 export const dynamicParams = true;
 

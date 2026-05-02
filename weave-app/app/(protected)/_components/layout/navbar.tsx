@@ -9,6 +9,12 @@ import { useTheme } from "@/app/_contexts/theme-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { Menu, X, Sun, Moon, Search, CircleUserRound, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Fredoka } from "next/font/google";
+
+const fredoka = Fredoka({
+  subsets: ["latin"],
+  weight: ["700"],
+});
 import { useNotification } from "@/app/_contexts/notification-context";
 import SearchModal from "@/app/(protected)/_components/ui/navbar/search-modal";
 
@@ -227,8 +233,8 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
 
   return (
     <>
-      <nav className="dark:bg-brand-secondary-950/90 sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md print:hidden">
-        <div className="mx-auto w-full max-w-[1920px] pl-2 pr-1">
+      <nav className=" sticky top-0 z-40 w-full backdrop-blur-md print:hidden">
+        <div className="mx-auto w-full max-w-[1920px] px-2">
           <div
             className={cn(
               "flex h-10 items-center justify-between gap-2",
@@ -253,8 +259,8 @@ const Navbar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                 className="flex min-w-0 items-center"
                 aria-label={t.nav.backToHome}
               >
-                <span className="text-brand-primary-500 truncate text-sm font-bold sm:text-base">
-                  Weave
+                <span className={cn("text-brand-primary-500 truncate text-sm font-bold sm:text-base", fredoka.className)}>
+                  Weave Notes
                 </span>
               </Link>
 

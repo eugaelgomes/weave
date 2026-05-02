@@ -30,6 +30,8 @@
   --color-brand-secondary-800: #262626;
   --color-brand-secondary-900: #171717;
   --color-brand-secondary-950: #0a0a0a;
+
+  --font-fredoka: var(--font-fredoka), ui-sans-serif, system-ui;
 }
 
 @variant dark (&:where(.dark, .dark *));
@@ -118,6 +120,12 @@ body {
   width: 32px;
   height: 32px;
   animation: spin 1s linear infinite;
+}
+
+@layer utilities {
+  .font-fredoka {
+    font-family: var(--font-fredoka), sans-serif;
+  }
 }
 
 @keyframes spin {

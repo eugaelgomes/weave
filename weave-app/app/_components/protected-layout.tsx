@@ -5,6 +5,7 @@ import Navbar from "@/app/(protected)/_components/layout/navbar";
 import Sidebar from "@/app/(protected)/_components/layout/sidebar";
 import PagesFooter from "@/app/(protected)/_components/layout/footer";
 import WeaveAi from "@/app/(protected)/_components/layout/WeaveAi";
+import { useAuth } from "@/app/_contexts/auth-context";
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,13 @@ interface ProtectedLayoutProps {
 const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const { user } = useAuth();
+
+  const appPreferences = (user?.usage_preference as any);
+  const appBackgroundColor: string | undefined =
+    appPreferences?.Display?.appBackgroundColor ||
+    appPreferences?.display?.appBackgroundColor ||
+    undefined;
 
   useEffect(() => {
     const savedState = localStorage.getItem("sidebar-collapsed");
@@ -43,14 +51,17 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   };
 
   return (
-    <div className="dark:bg-brand-secondary-950 flex h-screen flex-col bg-white">
+    <div
+      className="flex h-screen flex-col"
+      style={appBackgroundColor ? { backgroundColor: appBackgroundColor } : undefined}
+    >
       <Navbar onToggleSidebar={toggleSidebar} />
 
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
         <div
           className={`hidden min-h-0 flex-col ${
             isCollapsed ? "lg:w-[70px]" : "lg:w-[160px]"
-          } dark:bg-brand-secondary-950 bg-white transition-all duration-300 lg:flex`}
+          } transition-all duration-300 lg:flex`}
         >
           <Sidebar
             onLinkClick={closeSidebar}
@@ -78,7 +89,9 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
           </div>
         )}
 
-        <div className="bg-brand-secondary-100 dark:bg-brand-secondary-950/60 min-h-0 flex-1 overflow-y-auto scroll-smooth rounded-md border border-t-2 border-neutral-200 p-2 shadow-[0_4px_6px_-1px_rgb(0_0_0/0.1),0_2px_4px_-2px_rgb(0_0_0/0.1),inset_0_2px_8px_rgb(0_0_0/0.06)] md:mr-2 md:mb-2 dark:border-neutral-800 dark:shadow-[0_4px_6px_-1px_rgb(0_0_0/0.25),0_2px_4px_-2px_rgb(0_0_0/0.2),inset_0_2px_10px_rgb(0_0_0/0.35)] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent">
+        <div
+          className="bg-brand-secondary-100 dark:bg-brand-secondary-950/80 min-h-0 flex-1 overflow-y-auto scroll-smooth rounded-md border border-t-2 border-neutral-200 p-2 shadow-[0_4px_6px_-1px_rgb(0_0_0/0.1),0_2px_4px_-2px_rgb(0_0_0/0.1),inset_0_2px_8px_rgb(0_0_0/0.06)] md:mr-2 md:mb-2 dark:border-neutral-800 dark:shadow-[0_4px_6px_-1px_rgb(0_0_0/0.25),0_2px_4px_-2px_rgb(0_0_0/0.2),inset_0_2px_10px_rgb(0_0_0/0.35)] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent"
+        >
           <div className="animate-in fade-in slide-in-from-bottom-2 flex min-h-full flex-col gap-2 duration-500">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
 

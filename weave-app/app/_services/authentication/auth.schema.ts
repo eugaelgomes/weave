@@ -1,7 +1,14 @@
 import { z } from "zod";
 
 // Zod schema for UserPreferences
-export const UserPreferencesSchema = z.record(z.string(), z.unknown()).optional();
+export const UserPreferencesSchema = z.object({
+  Display: z.object({
+    appBackgroundColor: z.string().optional(),
+  }).passthrough().optional(),
+  language: z.object({
+    interface: z.string().optional(),
+  }).passthrough().optional(),
+}).catchall(z.unknown()).optional();
 
 export const PlanDetailsSchema = z.object({
   limits: z.object({
@@ -112,9 +119,9 @@ export const BackendProfileSchema = z.object({
   email: z.string().email(),
   avatar_url: z.string(),
   created_at: z.string(),
-  updated_at: z.string().optional(),
-  birth_date: z.string().optional(),
-  phone_number: z.string().optional(),
+  updated_at: z.string().optional().nullable(),
+  birth_date: z.string().optional().nullable(),
+  phone_number: z.string().optional().nullable(),
 });
 
 export const BackendSettingsSchema = z.object({

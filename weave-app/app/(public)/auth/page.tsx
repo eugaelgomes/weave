@@ -10,6 +10,13 @@ import { ErrorModal } from "@/app/(public)/auth/_components/ErrorsModal";
 import { AuthMarketing } from "@/app/(public)/auth/_components/AuthMarketing";
 import { ConfirmCreateAccount } from "@/app/(public)/auth/_components/ConfirmCreateAccount";
 import { AcceptOrganizationInviteModal } from "@/app/(public)/auth/_components/AcceptOrganizationInviteModal";
+import { Fredoka } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const fredoka = Fredoka({
+  subsets: ["latin"],
+  weight: ["600"],
+});
 
 export type AuthView =
   | "signin"
@@ -117,7 +124,7 @@ export default function AuthPage() {
                 priority
               />
             </div>
-            <span className="font-montserrat text-xl font-semibold tracking-tight">
+            <span className={cn("text-xl font-semibold tracking-tight", fredoka.className)}>
               Weave Notes
             </span>
           </div>

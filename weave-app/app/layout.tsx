@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Fredoka } from "next/font/google";
 import "./globals.css";
 import AuthProviderClient from "./_contexts/auth-provider-client";
 import { Toaster } from "@/app/sonner";
@@ -7,6 +8,14 @@ import { ThemeProvider } from "./_contexts/theme-context";
 import { LanguageProvider } from "./_contexts/language-context";
 import { InternetConnectionMonitor } from "./_components/internet-connection-monitor";
 import { getSiteOrigin } from "@/lib/site-url";
+import { cn } from "@/lib/utils";
+
+const fredoka = Fredoka({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-fredoka",
+  display: "swap",
+});
 
 const siteOrigin = getSiteOrigin();
 
@@ -14,7 +23,7 @@ const siteTitle = "Weave - Intelligent Workspace";
 const siteDescription = "Intelligent workspace for intelligent teams.";
 
 /** Open Graph assets in `public/` (1491×687). PNG first for crawler compatibility; WebP second. */
-const ogImages: NonNullable<Metadata["openGraph"]>["images"] = [
+const ogImages: Metadata["openGraph"] extends { images?: infer T } ? T : never = [
   {
     url: "/og-image.png",
     width: 1491,
@@ -115,7 +124,7 @@ export const metadata: Metadata = {
     title: siteTitle,
     description: siteDescription,
     siteName: siteTitle,
-    images: ogImages,
+    images: ogImages as any,
   },
   twitter: {
     card: "summary_large_image",
@@ -137,7 +146,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en-US" suppressHydrationWarning>
+    <html lang="en-US" className={fredoka.variable} suppressHydrationWarning>
       <head>
         <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml" />
         <script
@@ -146,7 +155,7 @@ export default function RootLayout({
         />
         <Analytics />
       </head>
-      <body className="antialiased" suppressHydrationWarning>
+      <body className={cn("antialiased", fredoka.variable)} suppressHydrationWarning>
         <ThemeProvider>
           <AuthProviderClient>
             <LanguageProvider>{children}</LanguageProvider>

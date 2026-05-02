@@ -1,6 +1,6 @@
 const BaseRepository = require("./base.repository");
 const { executeQuery } = require("@/database/connection");
-const { defaultAppPreferences } = require("@/modules/users/normalize");
+const { defaultAppPreferences, normalizeAppPreferences } = require("@/modules/users/normalize");
 
 /**
  * @typedef {Object} UserProfileUpdates
@@ -188,7 +188,7 @@ class UserDataRepository extends BaseRepository {
       WHERE user_id = $1
     `;
     const results = await executeQuery(query, [userId]);
-    return results[0]?.user_preference || defaultAppPreferences;
+    return normalizeAppPreferences(results[0]?.user_preference || {});
   }
 }
 module.exports = new UserDataRepository();
