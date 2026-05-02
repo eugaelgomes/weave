@@ -7,6 +7,7 @@ const { logger } = require("../../logger");
 const { buildSystemMessage } = require("../prompts/agent-prompts");
 const { buildEntityContext } = require("../context/entity-context.loader");
 const {
+  executeAgenticTask,
   generateSmartResponse,
   processThinkingPhase,
 } = require("../orchestration/reasoning.engine");
@@ -186,15 +187,16 @@ class LlmQueueProcessor {
 
       case "chat_v2_process": {
         const systemMessage = await this.buildChatV2SystemMessage(payload);
-        const { data, provider: providerUsed } = await callAIProvider({
-          options: {
-            allowEdit: Boolean(payload.allowEdit),
-            files: Array.isArray(payload.files) ? payload.files : [],
-            functions: Array.isArray(payload.functions) ? payload.functions : [],
-          },
+        const conversationHistory = this.normalizeConversationHistory(payload.conversationHistory);
+        
+        const { data, providerUsed } = await executeAgenticTask({
+          allowEdit: Boolean(payload.allowEdit),
+          files: Array.isArray(payload.files) ? payload.files : [],
+          functions: Array.isArray(payload.functions) ? payload.functions : [],
+          message: payload.message || "",
           model: payload.model || null,
-          prompt: payload.message || "",
           systemMessage,
+          conversationHistory,
         });
 
         const functions =

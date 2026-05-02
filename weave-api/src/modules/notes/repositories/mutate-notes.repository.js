@@ -1,4 +1,5 @@
 const BaseRepository = require("./base.repository");
+const { enqueueNoteEmbeddingJob } = require("../../../services/queue/queue-controller");
 
 /**
  * Atualização e exclusão lógica de notas.
@@ -60,7 +61,15 @@ class MutateNotesRepository extends BaseRepository {
     `;
 
     const results = await this.executeQuery(query, values);
-    return results[0];
+    const updatedNote = results[0];
+
+    if (updatedNote) {
+      await enqueueNoteEmbeddingJob(updatedNote.id).catch(err => {
+        console.error("[MutateNotesRepository] Failed to enqueue embedding job", err);
+      });
+    }
+
+    return updatedNote;
   }
 
   async deleteNoteById(noteIds) {

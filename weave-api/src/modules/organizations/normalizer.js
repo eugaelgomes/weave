@@ -184,7 +184,6 @@ const orgDataResponse = (organization) => {
     banner_url: organization.banner_url,
     description: organization.description,
     settings: organization.settings || {},
-    org_domains: organization.org_domains || [],
     created_at: organization.created_at,
     updated_at: organization.updated_at,
     deleted: organization.deleted,

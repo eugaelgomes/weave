@@ -349,7 +349,6 @@ CREATE TABLE public.organizations (
   banner_url text NULL,
   description text DEFAULT 'Type description here...'::text NULL,
   basic_properties jsonb DEFAULT '{}'::jsonb NOT NULL,
-  org_domains text[] DEFAULT '{}'::text[] NULL,
   settings jsonb DEFAULT '{}'::jsonb NOT NULL,
   "plan" jsonb DEFAULT '{}'::jsonb NOT NULL,
   address jsonb DEFAULT '{}'::jsonb NULL,

@@ -1,6 +1,7 @@
 const BaseRepository = require("./base.repository");
 const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
 const { cloneDefaultNoteDocumentState } = require("../document-normalizer");
+const { enqueueNoteEmbeddingJob } = require("../../../services/queue/queue-controller");
 
 const DEFAULT_NOTE_PROPERTIES = {
   icon: { path: "", name: "", type: "" },
@@ -44,7 +45,15 @@ class CreateNotesRepository extends BaseRepository {
       priorityId,
       JSON.stringify(persistedDocument),
     ]);
-    return results[0];
+    const createdNote = results[0];
+    
+    if (createdNote) {
+      await enqueueNoteEmbeddingJob(createdNote.id).catch(err => {
+        console.error("[CreateNotesRepository] Failed to enqueue embedding job", err);
+      });
+    }
+
+    return createdNote;
   }
 
   async createCompleteNote(
@@ -96,7 +105,15 @@ class CreateNotesRepository extends BaseRepository {
       JSON.stringify(DEFAULT_NOTE_PROPERTIES),
       JSON.stringify(persistedDocument),
     ]);
-    return results[0];
+    const createdNote = results[0];
+
+    if (createdNote) {
+      await enqueueNoteEmbeddingJob(createdNote.note_id).catch(err => {
+        console.error("[CreateNotesRepository] Failed to enqueue embedding job", err);
+      });
+    }
+
+    return createdNote;
   }
 }
 

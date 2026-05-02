@@ -10,6 +10,7 @@ const DEFAULT_DOMAIN_VERIFY_QUEUE_KEY = "weave:domains:verify:queue";
 const DEFAULT_PLAN_USAGE_QUEUE_KEY = "weave:plans:usage:queue";
 const DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY = "weave:engine:llm:requests";
 const DEFAULT_ENGINE_LLM_RESPONSE_PREFIX = "weave:engine:llm:responses";
+const DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY = "queue:note-embeddings";
 
 /**
  * List key for email jobs consumed by the worker email processor.
@@ -72,6 +73,14 @@ function getEngineLlmResponsePrefixRedisKey() {
 }
 
 /**
+ * List key for note embeddings jobs consumed by worker.
+ * @returns {string}
+ */
+function getNoteEmbeddingsQueueRedisKey() {
+  return process.env.REDIS_NOTE_EMBEDDINGS_QUEUE_KEY || DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY;
+}
+
+/**
  * Resolved queue list keys (env-aware).
  * @readonly
  */
@@ -91,6 +100,9 @@ const REDIS_QUEUE_KEYS = Object.freeze({
   get ENGINE_LLM_RESPONSE_PREFIX() {
     return getEngineLlmResponsePrefixRedisKey();
   },
+  get NOTE_EMBEDDINGS() {
+    return getNoteEmbeddingsQueueRedisKey();
+  },
   get PLAN_USAGE() {
     return getPlanUsageQueueRedisKey();
   },
@@ -102,12 +114,14 @@ module.exports = {
   DEFAULT_EMAIL_QUEUE_KEY,
   DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY,
   DEFAULT_ENGINE_LLM_RESPONSE_PREFIX,
+  DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY,
   DEFAULT_PLAN_USAGE_QUEUE_KEY,
   getBackupExportQueueRedisKey,
   getDomainVerifyQueueRedisKey,
   getEmailQueueRedisKey,
   getEngineLlmRequestQueueRedisKey,
   getEngineLlmResponsePrefixRedisKey,
+  getNoteEmbeddingsQueueRedisKey,
   getPlanUsageQueueRedisKey,
   REDIS_QUEUE_KEYS,
 };

@@ -8,7 +8,6 @@
  *
  * @typedef {Object} OrganizationData
  * @property {string} org_name
- * @property {string[]} [org_domains]
  */
 
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
@@ -171,30 +170,7 @@ class OrganizationsBaseController {
     return normalized;
   }
 
-  /**
-   * Validates an array of domains.
-   * @param {string[]} domains
-   * @returns {string[]|null} Array of validated domains or null.
-   * @throws {Error} Throws an error if the domains parameter is not an array.
-   */
-  _validateOrgDomains(domains) {
-    if (!domains) return null;
-    if (!Array.isArray(domains)) {
-      throw new Error("org_domains must be an array");
-    }
 
-    const validatedDomains = domains
-      .map((domain) => {
-        try {
-          return this._validateDomainName(domain);
-        } catch (error) {
-          return null;
-        }
-      })
-      .filter(Boolean);
-
-    return validatedDomains.length > 0 ? validatedDomains : null;
-  }
 }
 
 module.exports = OrganizationsBaseController;

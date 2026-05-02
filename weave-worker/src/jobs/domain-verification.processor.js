@@ -101,7 +101,6 @@ class DomainVerificationProcessor {
     }
 
     await this.markDomainAsVerified(domain.id);
-    await this.refreshOrganizationDomainsCache(domain.organization_id);
     await this.promoteRequesterToSuperAdminIfAllowed({
       organizationId: domain.organization_id,
       requestedByUserId,
@@ -163,24 +162,7 @@ class DomainVerificationProcessor {
     await executeQuery(query, [domainId]);
   }
 
-  async refreshOrganizationDomainsCache(organizationId) {
-    const query = `
-      UPDATE organizations o
-      SET org_domains = (
-        SELECT COALESCE(
-          array_agg(od.domain_name ORDER BY od.domain_name),
-          '{}'::text[]
-        )
-        FROM organization_domains od
-        WHERE od.organization_id = $1
-          AND od.status = 'VERIFIED'
-          AND od.deleted = false
-      ),
-      updated_at = NOW()
-      WHERE o.id = $1;
-    `;
-    await executeQuery(query, [organizationId]);
-  }
+
 
   async promoteRequesterToSuperAdminIfAllowed({
     organizationId,

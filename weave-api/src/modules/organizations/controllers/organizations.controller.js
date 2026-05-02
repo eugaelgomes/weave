@@ -118,7 +118,6 @@ class OrganizationsController extends OrganizationsBaseController {
         banner_url,
         description,
         settings,
-        org_domains,
       } = req.body;
 
       this._validateRequiredFields({ org_name });
@@ -141,7 +140,7 @@ class OrganizationsController extends OrganizationsBaseController {
         unique_name = await generateUniqueOrganizationName(org_name);
       }
 
-      const validatedDomains = this._validateOrgDomains(org_domains);
+
 
       const newOrganization = await this.organizationsRepository.createOrgs(
         userId,
@@ -153,8 +152,7 @@ class OrganizationsController extends OrganizationsBaseController {
         settings?.default_timezone || "America/Sao_Paulo",
         settings?.default_locale || "en-US",
         settings?.country || null,
-        settings || {},
-        validatedDomains
+        settings || {}
       );
 
       await this._createDefaultOrganizationArea(newOrganization, userId);
@@ -208,7 +206,6 @@ class OrganizationsController extends OrganizationsBaseController {
           member_role: organization.member_role ?? null,
         },
         settings: organization.settings || {},
-        org_domains: organization.org_domains || [],
         owners: [
           {
             id: organization.user_id,
@@ -250,7 +247,6 @@ class OrganizationsController extends OrganizationsBaseController {
         banner_url,
         description,
         settings,
-        org_domains,
       } = req.body;
 
       const currentOrg = await this._getUserOrganization(userId);
@@ -262,10 +258,6 @@ class OrganizationsController extends OrganizationsBaseController {
 
       const P = this._orgPermissions;
       const body = req.body || {};
-      const touchesDomains = Object.prototype.hasOwnProperty.call(
-        body,
-        "org_domains"
-      );
       const touchesBrand = [
         "org_name",
         "unique_name",
@@ -275,11 +267,6 @@ class OrganizationsController extends OrganizationsBaseController {
         "settings",
       ].some((k) => Object.prototype.hasOwnProperty.call(body, k));
 
-      if (
-        touchesDomains &&
-        !this._ensureOrgPermission(currentOrg, P.MANAGE_DOMAINS, res)
-      )
-        return;
       if (
         touchesBrand &&
         !this._ensureOrgPermission(currentOrg, P.MANAGE_BRAND, res)
@@ -308,9 +295,7 @@ class OrganizationsController extends OrganizationsBaseController {
 
       const updatedSettings = settings ? { ...currentOrg.settings, ...settings } : currentOrg.settings;
 
-      const validatedDomains = org_domains
-        ? this._validateOrgDomains(org_domains)
-        : currentOrg.org_domains;
+
 
       const updatedOrg = await this.organizationsRepository.updateOrg(
         currentOrg.id,
@@ -323,8 +308,7 @@ class OrganizationsController extends OrganizationsBaseController {
           ? description?.trim()
           : currentOrg.description,
         updatedSettings,
-        currentOrg.deleted,
-        validatedDomains
+        currentOrg.deleted
       );
 
       if (!updatedOrg) {
@@ -414,8 +398,7 @@ class OrganizationsController extends OrganizationsBaseController {
         currentOrg.banner_url,
         currentOrg.description,
         currentOrg.settings,
-        true,
-        currentOrg.org_domains
+        true
       );
 
       if (!deletedOrg) {
@@ -489,8 +472,7 @@ class OrganizationsController extends OrganizationsBaseController {
         organization.banner_url,
         organization.description,
         organization.settings,
-        false,
-        organization.org_domains
+        false
       );
 
       if (!restoredOrg) {

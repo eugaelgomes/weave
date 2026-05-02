@@ -4,6 +4,7 @@ const cleanupJob = require("./cleanup.job");
 const domainVerificationProcessor = require("./domain-verification.processor");
 const dueDateReminderProcessor = require("./due-date-reminder.processor");
 const emailProcessor = require("./email.processor");
+const embeddingProcessor = require("./embedding.processor");
 const plansCycleProcessor = require("./plans-cycle.processor");
 const plansUsageProcessor = require("./plans-usage.processor");
 const { logger } = require("../lib");
@@ -36,6 +37,11 @@ function initializeJobs() {
   });
   dueDateReminderProcessor.start().catch((err) => {
     logger.error("Failed to start due date reminder processor", {
+      error: err.message,
+    });
+  });
+  embeddingProcessor.start().catch((err) => {
+    logger.error("Failed to start embedding processor", {
       error: err.message,
     });
   });

@@ -89,7 +89,113 @@ Instructions:
   }
 }
 
+const { isInternalTool, executeInternalTool, getInternalToolDefinitions } = require("../tools/tool-dispatcher");
+
+const MAX_REACT_ITERATIONS = 5;
+
+/**
+ * Autonomous ReAct Loop
+ * @param {object} params
+ */
+async function executeAgenticTask({
+  allowEdit,
+  files,
+  functions,
+  message,
+  model,
+  systemMessage,
+  conversationHistory = [],
+}) {
+  let iterations = 0;
+  
+  // Combine internal engine tools with API tools
+  const availableFunctions = [...(functions || [])];
+  if (allowEdit) {
+    availableFunctions.push(...getInternalToolDefinitions());
+  }
+
+  const currentOptions = {
+    allowEdit,
+    files,
+    functions: availableFunctions.length > 0 ? availableFunctions : undefined,
+    messages: [...conversationHistory],
+  };
+
+  let currentPrompt = message;
+  let providerUsed = null;
+
+  while (iterations < MAX_REACT_ITERATIONS) {
+    iterations++;
+
+    const { data, provider } = await callAIProvider({
+      options: currentOptions,
+      model,
+      prompt: currentPrompt,
+      systemMessage,
+    });
+    
+    providerUsed = provider;
+    currentPrompt = ""; // Clear prompt after first turn, history handles the rest
+
+    if (data.type === "function_call" && data.functionCall) {
+      const fnName = data.functionCall.name;
+      const fnArgs = data.functionCall.arguments;
+
+      // Add assistant tool_call message to history
+      currentOptions.messages.push({
+        role: "assistant",
+        content: null,
+        tool_calls: [
+          {
+            function: {
+              name: fnName,
+              arguments: JSON.stringify(fnArgs),
+            },
+          },
+        ],
+      });
+
+      if (isInternalTool(fnName)) {
+        // Execute internally and loop
+        const result = await executeInternalTool(fnName, fnArgs);
+        
+        currentOptions.messages.push({
+          role: "tool",
+          name: fnName,
+          content: typeof result === 'string' ? result : JSON.stringify(result),
+        });
+        
+        continue;
+      } else {
+        // External tool: Return to API to be executed
+        return {
+          data,
+          providerUsed,
+        };
+      }
+    }
+
+    // Return text response
+    return {
+      data,
+      providerUsed,
+    };
+  }
+
+  // Fallback if max iterations reached
+  return {
+    data: {
+      type: "text",
+      text: "Eu pensei por muito tempo, mas não consegui chegar a uma conclusão final.",
+      content: "Eu pensei por muito tempo, mas não consegui chegar a uma conclusão final.",
+    },
+    providerUsed,
+  };
+}
+
 module.exports = {
+  executeAgenticTask,
   generateSmartResponse,
   processThinkingPhase,
 };
+

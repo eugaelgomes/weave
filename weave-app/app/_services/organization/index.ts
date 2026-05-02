@@ -181,7 +181,6 @@ export interface Organization {
   default_locale?: string | null;
   country?: string | null;
   properties?: OrganizationProperties;
-  org_domains?: string[] | null;
   deleted: boolean;
   created_at: string;
   updated_at: string;
@@ -208,7 +207,6 @@ export interface CreateOrganizationData {
   banner_url?: string;
   description?: string;
   properties?: OrganizationProperties;
-  org_domains?: string[];
 }
 
 export type OrganizationBusinessRole =
@@ -248,7 +246,6 @@ export interface UpdateOrganizationData {
   banner_url?: string | null;
   description?: string;
   properties?: OrganizationProperties;
-  org_domains?: string[] | null;
 }
 
 export interface InviteMemberData {
@@ -290,7 +287,6 @@ const transformBackendOrganization = (data: any): Organization => {
     let org = {
       ...data.identity,
       properties: data.properties,
-      org_domains: data.org_domains,
       deleted: data.deleted,
       created_at: data.created_at,
       updated_at: data.updated_at,
@@ -311,13 +307,7 @@ const parseOrganizationProperties = (org: Organization): Organization => {
     }
   }
 
-  if (typeof org.org_domains === "string") {
-    try {
-      org.org_domains = JSON.parse(org.org_domains);
-    } catch (e) {
-      org.org_domains = [];
-    }
-  }
+
 
   return org;
 };

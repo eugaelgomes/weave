@@ -114,12 +114,7 @@ export function OrganizationOverview({
                     ? new Date(organization.created_at).toLocaleDateString()
                     : "-"}
                 </div>
-                {organization?.org_domains?.length > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <Globe className="h-3.5 w-3.5" />
-                    {organization.org_domains.length} domínios verificados
-                  </div>
-                )}
+
                 {organization?.address?.city && (
                   <div className="flex items-center gap-1.5">
                     <MapPin className="h-3.5 w-3.5" />

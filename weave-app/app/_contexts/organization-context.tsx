@@ -58,7 +58,6 @@ export interface OrganizationStats {
   totalAdmins: number;
   totalInvited: number;
   featuresEnabled: number;
-  activeDomains: number;
 }
 
 export interface OrganizationContextType {
@@ -697,7 +696,6 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     // Calcula stats baseados nos estados de members e invites
     const properties = organization.properties || {};
     const features = properties.features || {};
-    const domains = organization.org_domains || [];
     const featuresEnabled = Object.values(features).filter(Boolean).length;
 
     const adminsCount = members.filter(
@@ -710,7 +708,6 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       totalAdmins: adminsCount,
       totalInvited: invites.length,
       featuresEnabled,
-      activeDomains: domains.length,
     };
   }, [organization, members, invites]);
 

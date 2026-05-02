@@ -288,15 +288,10 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       }
 
       await this.domainRepository.deleteDomain(domain.id);
-      const orgDomains =
-        await this.organizationsRepository.refreshOrgDomainsCache(
-          organization.id
-        );
 
       res.status(200).json({
         status: "OK",
         message: "Domain removed successfully",
-        org_domains: orgDomains,
       });
     } catch (error) {
       console.error("Error deleting domain:", error);

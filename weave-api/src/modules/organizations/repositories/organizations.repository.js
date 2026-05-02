@@ -44,12 +44,11 @@ class OrganizationsRepository {
       o.default_timezone,
       o.default_locale,
       o.country,
-      o.org_domains,
       o.deleted,
       o.created_at,
       o.updated_at,
       o.settings,
-      o.plan AS plan_snapshot,
+      p.details AS plan_snapshot,
       o.deleted_at,
       o.deleted_by,
       o.plan_id,
@@ -99,12 +98,11 @@ class OrganizationsRepository {
       o.default_timezone,
       o.default_locale,
       o.country,
-      o.org_domains,
       o.deleted,
       o.created_at,
       o.updated_at,
       o.settings,
-      o.plan AS plan_snapshot,
+      p.details AS plan_snapshot,
       o.deleted_at,
       o.deleted_by,
       o.plan_id,
@@ -323,8 +321,7 @@ class OrganizationsRepository {
     default_timezone,
     default_locale,
     country,
-    settings,
-    org_domains
+    settings
   ) {
     const client = await getConnection();
     try {
@@ -376,11 +373,9 @@ class OrganizationsRepository {
         default_locale,
         country,
         settings,
-        org_domains,
-        plan_id,
-        plan
+        plan_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11::text[], $12, $13::jsonb)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11)
       RETURNING
         id,
         user_id,
@@ -393,9 +388,8 @@ class OrganizationsRepository {
         default_locale,
         country,
         settings,
-        org_domains,
         plan_id,
-        plan AS plan_snapshot,
+        NULL AS plan_snapshot,
         created_at,
         updated_at,
         deleted;
@@ -412,9 +406,7 @@ class OrganizationsRepository {
         default_locale,
         country,
         settings,
-        org_domains,
         defaultPlanId,
-        defaultPlanSnapshot,
       ]);
 
       const organization = orgResult.rows[0];
@@ -460,8 +452,7 @@ class OrganizationsRepository {
     banner_url,
     description,
     settings,
-    deleted,
-    org_domains
+    deleted
   ) {
     const query = `
       UPDATE organizations o
@@ -472,7 +463,6 @@ class OrganizationsRepository {
           description = $7,
           settings = $8::jsonb,
           deleted = $9,
-          org_domains = $10::text[],
           updated_at = NOW()
       WHERE o.id = $1
         AND (
@@ -495,7 +485,6 @@ class OrganizationsRepository {
         banner_url,
         description,
         settings,
-        org_domains,
         created_at,
         updated_at,
         deleted;
@@ -510,7 +499,6 @@ class OrganizationsRepository {
       description,
       settings,
       deleted,
-      org_domains,
     ]);
     return results[0];
   }
@@ -566,8 +554,7 @@ class OrganizationsRepository {
         default_locale,
         country,
         settings,
-        org_domains,
-        plan AS plan_snapshot,
+        NULL AS plan_snapshot,
         plan_id,
         branding_properties,
         integrations,
@@ -609,7 +596,6 @@ class OrganizationsRepository {
           branding_properties = $4::jsonb,
           integrations = $5::jsonb,
           plan_id = $6,
-          plan = $7::jsonb,
           updated_at = NOW()
       WHERE o.id = $1
         AND (
@@ -635,8 +621,7 @@ class OrganizationsRepository {
         default_locale,
         country,
         settings,
-        org_domains,
-        plan AS plan_snapshot,
+        NULL AS plan_snapshot,
         plan_id,
         branding_properties,
         integrations,
@@ -652,7 +637,6 @@ class OrganizationsRepository {
       branding_properties,
       integrations,
       plan_id,
-      plan_snapshot,
     ]);
     return results[0] || null;
   }
@@ -829,27 +813,6 @@ RETURNING *;
     return results;
   }
 
-  async refreshOrgDomainsCache(organizationId) {
-    const query = `
-      UPDATE organizations o
-      SET org_domains = (
-        SELECT COALESCE(
-          array_agg(od.domain_name ORDER BY od.domain_name),
-          '{}'::text[]
-        )
-        FROM organization_domains od
-        WHERE od.organization_id = $1
-          AND od.status = 'VERIFIED'
-          AND od.deleted = false
-      ),
-      updated_at = NOW()
-      WHERE o.id = $1
-      RETURNING org_domains;
-    `;
-
-    const results = await executeQuery(query, [organizationId]);
-    return results[0]?.org_domains || [];
-  }
 }
 
 module.exports = new OrganizationsRepository();

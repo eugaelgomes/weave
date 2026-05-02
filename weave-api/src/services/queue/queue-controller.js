@@ -5,6 +5,7 @@ const {
   getDomainVerifyQueueRedisKey,
   getEmailQueueRedisKey,
   getPlanUsageQueueRedisKey,
+  getNoteEmbeddingsQueueRedisKey,
 } = require("./queue-keys");
 
 /**
@@ -99,10 +100,25 @@ async function enqueueBackupExportJob({ jobId, userId }) {
   return { queued: true, success: true };
 }
 
+/**
+ * Enqueue note embedding job.
+ *
+ * @param {string} noteId
+ * @returns {Promise<{ success: true, queued: true }>}
+ */
+async function enqueueNoteEmbeddingJob(noteId) {
+  await enqueueRedisListJob(getNoteEmbeddingsQueueRedisKey(), {
+    noteId,
+    queuedAt: new Date().toISOString(),
+  });
+  return { queued: true, success: true };
+}
+
 module.exports = {
   enqueueBackupExportJob,
   enqueueDomainVerificationJob,
   enqueueEmailJob,
   enqueuePlanUsageJob,
   enqueueRedisListJob,
+  enqueueNoteEmbeddingJob,
 };

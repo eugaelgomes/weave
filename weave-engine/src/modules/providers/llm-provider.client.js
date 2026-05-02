@@ -190,18 +190,62 @@ async function callGeminiApi(prompt, systemMessage, config, options = {}, modelN
   }
 
   const model = getGeminiClient().getGenerativeModel(modelConfig);
-  const normalizedFiles = normalizeFiles(options.files);
-  const parts = [{ text: `${systemMessage}\n\n---\n\n${prompt}` }];
-  normalizedFiles.forEach((file) => {
-    parts.push({
-      inlineData: {
-        data: file.base64Data,
-        mimeType: file.mimeType,
-      },
-    });
-  });
+  const contents = [];
 
-  const result = await model.generateContent(parts);
+  if (systemMessage) {
+    contents.push({
+      role: "user",
+      parts: [{ text: `SYSTEM INSTRUCTIONS:\n${systemMessage}` }]
+    });
+    contents.push({
+      role: "model",
+      parts: [{ text: "Understood." }]
+    });
+  }
+
+  if (Array.isArray(options.messages)) {
+    for (const msg of options.messages) {
+      if (msg.role === "user") {
+        contents.push({ role: "user", parts: [{ text: msg.content }] });
+      } else if (msg.role === "assistant") {
+        if (msg.tool_calls && msg.tool_calls.length > 0) {
+          const fn = msg.tool_calls[0].function;
+          contents.push({
+            role: "model",
+            parts: [{ functionCall: { name: fn.name, args: JSON.parse(fn.arguments) } }]
+          });
+        } else {
+          contents.push({ role: "model", parts: [{ text: msg.content || "" }] });
+        }
+      } else if (msg.role === "tool") {
+        contents.push({
+          role: "user",
+          parts: [{ functionResponse: { name: msg.name, response: typeof msg.content === 'string' ? { result: msg.content } : msg.content } }]
+        });
+      }
+    }
+  }
+
+  if (prompt || options.files) {
+    const normalizedFiles = normalizeFiles(options.files);
+    const userParts = [];
+    if (prompt) {
+      userParts.push({ text: prompt });
+    }
+    normalizedFiles.forEach((file) => {
+      userParts.push({
+        inlineData: {
+          data: file.base64Data,
+          mimeType: file.mimeType,
+        },
+      });
+    });
+    if (userParts.length > 0) {
+      contents.push({ role: "user", parts: userParts });
+    }
+  }
+
+  const result = await model.generateContent({ contents });
   const response = await result.response;
 
   if (response.promptFeedback && response.promptFeedback.blockReason) {
@@ -259,6 +303,19 @@ async function callOpenAiApi(prompt, systemMessage, config, options = {}, modelN
       return;
     }
 
+    if (file.mimeType.startsWith("text/") || file.mimeType === "application/json") {
+      try {
+        const textContent = Buffer.from(file.base64Data, "base64").toString("utf-8");
+        userContent.push({
+          text: `\n\n--- FILE ATTACHED: ${file.name} ---\n${textContent}\n--- END OF FILE ---`,
+          type: "text",
+        });
+        return;
+      } catch (err) {
+        // Fallback to ignore
+      }
+    }
+
     ignoredFiles.push(`${file.name} (${file.mimeType})`);
   });
 
@@ -269,18 +326,27 @@ async function callOpenAiApi(prompt, systemMessage, config, options = {}, modelN
     });
   }
 
+  const messages = [
+    {
+      content: systemMessage,
+      role: "system",
+    },
+  ];
+
+  if (Array.isArray(options.messages)) {
+    messages.push(...options.messages);
+  }
+
+  if (prompt || userContent.length > 1) {
+    messages.push({
+      content: userContent,
+      role: "user",
+    });
+  }
+
   const payload = {
     max_tokens: config.maxTokens,
-    messages: [
-      {
-        content: systemMessage,
-        role: "system",
-      },
-      {
-        content: userContent,
-        role: "user",
-      },
-    ],
+    messages,
     model: modelName || config.model,
     temperature: config.temperature,
     top_p: config.topP,
