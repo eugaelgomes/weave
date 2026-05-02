@@ -96,7 +96,10 @@ jobs:
             [ -f "$HOME/.profile" ] && . "$HOME/.profile"
             export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH"
 
-            [ -f weave-engine/.env ] || { echo "weave-engine/.env not found on VM" >&2; exit 1; }
+            if [ ! -f .env ] && [ ! -f weave-engine/.env ]; then
+              echo "Need .env or weave-engine/.env on VM (DOPPLER_TOKEN / runtime secrets)." >&2
+              exit 1
+            fi
 
             # Clean stale build cache and dangling images before each deploy.
             docker builder prune -af || true
