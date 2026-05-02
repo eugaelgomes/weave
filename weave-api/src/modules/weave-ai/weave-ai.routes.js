@@ -189,4 +189,28 @@ router.post(
   bind(agentController, "shareAgent")
 );
 
+// Agent ↔ Project binding
+router.put(
+  "/agents/:id/project",
+  requireManageWeaveAi,
+  bind(agentController, "assignToProject")
+);
+router.delete(
+  "/agents/:id/project",
+  requireManageWeaveAi,
+  bind(agentController, "unassignFromProject")
+);
+
+// Agent lifecycle
+router.patch(
+  "/agents/:id/active",
+  requireManageWeaveAi,
+  bind(agentController, "toggleActive")
+);
+router.post(
+  "/agents/:id/duplicate",
+  requireManageWeaveAi,
+  bind(agentController, "duplicateAgent")
+);
+
 module.exports = router;

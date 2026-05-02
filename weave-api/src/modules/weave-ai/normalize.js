@@ -28,11 +28,13 @@ function ensureArrayField(value) {
 
 /**
  * Builds normalized personality payload used by ai_user_agent.
+ * Note: `name` and `description` are now first-class columns in the table,
+ * NOT stored inside personality. This only builds the JSONB personality blob.
  *
  * @param {object} input
  * @returns {object}
  */
-function normalizeAgentData(input = {}) {
+function normalizeAgentPersonality(input = {}) {
   const tools = ensureArrayField(input.tools);
   const tags = ensureArrayField(input.tags);
 
@@ -40,7 +42,7 @@ function normalizeAgentData(input = {}) {
     behavior: {
       system_instructions: {
         context: input.instructions || "",
-        rules: [],
+        rules: ensureArrayField(input.rules),
       },
     },
     capabilities: {
@@ -54,10 +56,8 @@ function normalizeAgentData(input = {}) {
     },
     metadata: {
       avatar_url: input.avatar_url || null,
-      description: input.description || "",
       model_name: input.model_name || "",
       model_provider: input.model_provider || "",
-      name: input.name || "",
       tags,
     },
     persona: {
@@ -70,14 +70,15 @@ function normalizeAgentData(input = {}) {
 
 /**
  * Merge partial updates into existing personality object.
+ * Only touches fields that belong inside the JSONB personality blob.
  *
  * @param {object} currentPersonality
  * @param {object} updates
  * @returns {object}
  */
-function mergeAgentUpdates(currentPersonality = {}, updates = {}) {
+function mergePersonalityUpdates(currentPersonality = {}, updates = {}) {
   const base = {
-    ...normalizeAgentData({}),
+    ...normalizeAgentPersonality({}),
     ...currentPersonality,
   };
 
@@ -106,11 +107,8 @@ function mergeAgentUpdates(currentPersonality = {}, updates = {}) {
   if (updates.instructions !== undefined) {
     next.behavior.system_instructions.context = updates.instructions || "";
   }
-  if (updates.name !== undefined) {
-    next.metadata.name = updates.name || "";
-  }
-  if (updates.description !== undefined) {
-    next.metadata.description = updates.description || "";
+  if (updates.rules !== undefined) {
+    next.behavior.system_instructions.rules = ensureArrayField(updates.rules);
   }
   if (updates.avatar_url !== undefined) {
     next.metadata.avatar_url = updates.avatar_url || null;
@@ -142,6 +140,8 @@ function mergeAgentUpdates(currentPersonality = {}, updates = {}) {
 
 /**
  * Serializes db row into API response shape.
+ * Surfaces first-class columns (name, description, project_id, is_active)
+ * alongside the personality JSONB blob.
  *
  * @param {object} rawAgent
  * @returns {object|null}
@@ -165,13 +165,18 @@ function formatAgentResponse(rawAgent) {
       : rawAgent.shared_with || [];
 
   return {
-    created_at: rawAgent.created_at,
     id: rawAgent.id,
-    knowledge_files: knowledgeFiles,
-    personality,
-    shared_with: sharedWith,
-    updated_at: rawAgent.updated_at,
     user_id: rawAgent.user_id,
+    name: rawAgent.name || personality?.metadata?.name || "Unnamed Agent",
+    description: rawAgent.description || personality?.metadata?.description || null,
+    project_id: rawAgent.project_id || null,
+    project_title: rawAgent.project_title || null,
+    is_active: rawAgent.is_active !== false,
+    personality,
+    knowledge_files: knowledgeFiles,
+    shared_with: sharedWith,
+    created_at: rawAgent.created_at,
+    updated_at: rawAgent.updated_at,
   };
 }
 
@@ -191,6 +196,6 @@ function safeJsonParse(value, fallback) {
 module.exports = {
   ensureArrayField,
   formatAgentResponse,
-  mergeAgentUpdates,
-  normalizeAgentData,
+  mergePersonalityUpdates,
+  normalizeAgentPersonality,
 };

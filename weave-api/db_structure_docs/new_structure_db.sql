@@ -637,6 +637,10 @@ CREATE INDEX idx_sessions_expire ON public.sessions (expire);
 CREATE TABLE public.ai_user_agent (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
+  name varchar(100) NOT NULL DEFAULT 'Unnamed Agent',
+  description text NULL,
+  project_id uuid NULL,
+  is_active bool NOT NULL DEFAULT true,
   personality jsonb NOT NULL DEFAULT '{}'::jsonb,
   knowledge_files jsonb NOT NULL DEFAULT '[]'::jsonb,
   shared_with jsonb NOT NULL DEFAULT '[]'::jsonb,
@@ -1062,6 +1066,10 @@ ALTER TABLE public.ai_user_agent
   ADD CONSTRAINT ai_user_agent_user_fk
   FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE RESTRICT;
 
+ALTER TABLE public.ai_user_agent
+  ADD CONSTRAINT ai_user_agent_project_fk
+  FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE SET NULL;
+
 ALTER TABLE public.ai_chat_sessions
   ADD CONSTRAINT ai_chat_sessions_user_fk
   FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE RESTRICT;
@@ -1232,6 +1240,8 @@ CREATE INDEX idx_notes_short_backups_user_created
 CREATE INDEX idx_jobs_user_created ON public.jobs(user_id, created_at DESC) WHERE deleted = false;
 CREATE INDEX idx_jobs_status_created ON public.jobs(status, created_at DESC) WHERE deleted = false;
 CREATE INDEX idx_ai_user_agent_user_id ON public.ai_user_agent(user_id) WHERE deleted = false;
+CREATE INDEX idx_ai_user_agent_project_id ON public.ai_user_agent(project_id) WHERE deleted = false;
+CREATE INDEX idx_ai_user_agent_active ON public.ai_user_agent(user_id, is_active) WHERE deleted = false;
 CREATE INDEX idx_ai_chat_sessions_user_updated ON public.ai_chat_sessions(user_id, updated_at DESC);
 CREATE INDEX idx_ai_chat_messages_session_created ON public.ai_chat_messages(session_id, created_at ASC);
 

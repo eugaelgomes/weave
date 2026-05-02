@@ -1,30 +1,30 @@
 /* eslint-disable sort-keys */
-const axios = require("axios");
 const agentRepository = require("@/modules/weave-ai/repositories/agents.repository");
 const {
-  normalizeAgentData,
+  normalizeAgentPersonality,
   formatAgentResponse,
-  mergeAgentUpdates,
+  mergePersonalityUpdates,
   ensureArrayField,
 } = require("@/modules/weave-ai/normalize");
 const { getProvidersWithModels } = require("@/modules/weave-ai/llm-catalog");
 const spacesService = require("@/services/storage");
 
 /**
- * Controller para gerenciamento User Agents no Weave AI.
- *
- * Criar, atualizar, deletar, compartilhar e buscar agentes.
- * Lida com upload de arquivos de conhecimento e integração com o serviço de armazenamento.
+ * Controller for User Agent management in Weave AI.
  *
  * Endpoints:
- * - POST /agents: Criar um novo agente
- * - PUT /agents/:id: Atualizar um agente existente
- * - DELETE /agents/:id: Deletar um agente
- * - POST /agents/:id/share: Compartilhar um agente com outros usuários
- * - GET /agents: Listar agentes do usuário
- * - GET /agents/:id: Obter detalhes de um agente específico
+ * - POST   /agents              → createUserAgent
+ * - GET    /agents              → getUserAgents
+ * - GET    /agents/:id          → getAgentById
+ * - PUT    /agents/:id          → updateAgent
+ * - DELETE /agents/:id          → deleteAgent
+ * - POST   /agents/:id/share    → shareAgent
+ * - PUT    /agents/:id/project  → assignToProject
+ * - DELETE /agents/:id/project  → unassignFromProject
+ * - PATCH  /agents/:id/active   → toggleActive
+ * - POST   /agents/:id/duplicate → duplicateAgent
  */
-class agentsController {
+class AgentsController {
   _validateAuthentication(req) {
     const userId = req.user?.userId;
     if (!userId) {
@@ -36,7 +36,7 @@ class agentsController {
   }
 
   /**
-   * Cria um novo agente para o usuário autenticado.
+   * Creates a new agent for the authenticated user.
    */
   async createUserAgent(req, res) {
     try {
@@ -53,25 +53,18 @@ class agentsController {
         model_provider,
         model_name,
         tools,
+        rules,
+        project_id,
       } = req.body;
 
-      if (
-        !name ||
-        !description ||
-        !instructions ||
-        !model_provider ||
-        !model_name
-      ) {
+      if (!name || !model_provider || !model_name) {
         return res.status(400).json({
           success: false,
-          error:
-            "name, description, instructions, model_provider e model_name são obrigatórios",
+          error: "name, model_provider e model_name são obrigatórios",
         });
       }
 
-      const agentData = normalizeAgentData({
-        name,
-        description,
+      const personality = normalizeAgentPersonality({
         instructions,
         role,
         tone,
@@ -84,50 +77,31 @@ class agentsController {
           ? typeof tools === "string"
             ? JSON.parse(tools)
             : tools
-          : [], // Handle tools if sent as JSON string or array
+          : [],
+        rules: rules
+          ? typeof rules === "string"
+            ? JSON.parse(rules)
+            : rules
+          : [],
       });
 
-      // Processar upload de arquivos de conhecimento se houver
+      // Process knowledge file uploads if present
       if (req.files && req.files.length > 0) {
-        const knowledgeFiles = [];
-
-        for (const file of req.files) {
-          const extension = file.originalname.split(".").pop();
-          const uniqueName = spacesService.generateUniqueFileName(extension);
-
-          // Caminho: agents/files/<agent_id_placeholder>/<filename>
-          // Como ainda não temos o ID do agente, usaremos uma pasta temporária ou estruturar diferente.
-          // Melhor abordagem: usar o userId como prefixo ou gerar uuid aqui.
-          // Mas o spacesService espera um caminho relativo à pasta raiz configurada.
-
-          // Vamos fazer upload para agents/files/temp_<timestamp>_<uuid> e depois moveremos ou idealmente
-          // o createAgent retornaria o ID e faríamos o upload depois, mas para simplificar:
-          // agents/files/<user_id>/<unique_name>
-
-          const path = `agents/files/${userId}/${uniqueName}`;
-
-          const fileUrl = await spacesService.uploadFile(
-            file.buffer,
-            path,
-            file.mimetype
-          );
-
-          knowledgeFiles.push({
-            original_name: file.originalname,
-            storage_path: path,
-            url: fileUrl,
-            mime_type: file.mimetype,
-            size: file.size,
-            uploaded_at: new Date().toISOString(),
-          });
-        }
-
-        // Adiciona à base de conhecimento do agente
-        agentData.capabilities.knowledge_base.enabled = true;
-        agentData.capabilities.knowledge_base.sources = knowledgeFiles;
+        const knowledgeFiles = await this._processKnowledgeFileUploads(
+          req.files,
+          userId
+        );
+        personality.capabilities.knowledge_base.enabled = true;
+        personality.capabilities.knowledge_base.sources = knowledgeFiles;
       }
 
-      const newAgent = await agentRepository.createAgent(userId, agentData);
+      const newAgent = await agentRepository.createAgent(userId, {
+        name,
+        description: description || null,
+        projectId: project_id || null,
+        isActive: true,
+        personality,
+      });
 
       res.json({
         success: true,
@@ -146,7 +120,7 @@ class agentsController {
   }
 
   /**
-   * Atualiza um agente existente do usuário.
+   * Updates an existing agent.
    */
   async updateAgent(req, res) {
     try {
@@ -162,106 +136,86 @@ class agentsController {
           .json({ success: false, error: "Agente não encontrado" });
       }
 
-      const parsedUpdates = {};
-      const scalarFields = [
-        "name",
-        "description",
+      // Build the column-level updates
+      const columnUpdates = {};
+
+      if (updates.name !== undefined) {
+        columnUpdates.name = updates.name;
+      }
+      if (updates.description !== undefined) {
+        columnUpdates.description = updates.description;
+      }
+      if (updates.project_id !== undefined) {
+        columnUpdates.project_id = updates.project_id || null;
+      }
+      if (updates.is_active !== undefined) {
+        columnUpdates.is_active = updates.is_active;
+      }
+
+      // Build the personality-level updates
+      const personalityFields = [
         "instructions",
+        "rules",
         "role",
         "tone",
         "language",
         "avatar_url",
         "model_provider",
         "model_name",
+        "tags",
+        "tools",
       ];
 
-      scalarFields.forEach((field) => {
+      const personalityUpdates = {};
+      personalityFields.forEach((field) => {
         if (updates[field] !== undefined) {
-          parsedUpdates[field] = updates[field];
+          personalityUpdates[field] = updates[field];
         }
       });
 
-      if (updates.tags !== undefined) {
-        parsedUpdates.tags = ensureArrayField(updates.tags);
+      // Merge personality if any personality-level updates exist
+      if (Object.keys(personalityUpdates).length > 0) {
+        columnUpdates.personality = mergePersonalityUpdates(
+          agent.personality,
+          personalityUpdates
+        );
       }
 
-      if (updates.tools !== undefined) {
-        parsedUpdates.tools = ensureArrayField(updates.tools);
-      }
-
-      let knowledgeFiles = agent.knowledge_files;
-      if (typeof knowledgeFiles === "string") {
-        try {
-          knowledgeFiles = JSON.parse(knowledgeFiles);
-        } catch (error) {
-          knowledgeFiles = [];
-        }
-      }
-
-      if (!Array.isArray(knowledgeFiles)) {
-        knowledgeFiles =
-          agent.personality?.capabilities?.knowledge_base?.sources || [];
-      }
-
-      if (!Array.isArray(knowledgeFiles)) {
-        knowledgeFiles = [];
-      }
+      // Process knowledge file uploads if present
+      let knowledgeFiles = this._parseKnowledgeFiles(agent);
 
       if (req.files && req.files.length > 0) {
-        for (const file of req.files) {
-          const extension = file.originalname.split(".").pop();
-          const uniqueName = spacesService.generateUniqueFileName(extension);
-          const path = `agents/files/${userId}/${uniqueName}`;
-
-          const fileUrl = await spacesService.uploadFile(
-            file.buffer,
-            path,
-            file.mimetype
-          );
-
-          knowledgeFiles.push({
-            original_name: file.originalname,
-            storage_path: path,
-            url: fileUrl,
-            mime_type: file.mimetype,
-            size: file.size,
-            uploaded_at: new Date().toISOString(),
-          });
-        }
+        const newFiles = await this._processKnowledgeFileUploads(
+          req.files,
+          userId
+        );
+        knowledgeFiles = [...knowledgeFiles, ...newFiles];
       }
 
-      const mergedPersonality = mergeAgentUpdates(
-        agent.personality,
-        parsedUpdates
-      );
-
-      if (Array.isArray(knowledgeFiles)) {
-        mergedPersonality.capabilities = mergedPersonality.capabilities || {};
-        mergedPersonality.capabilities.knowledge_base = mergedPersonality
-          .capabilities.knowledge_base || {
-          enabled: false,
-          sources: [],
-          strategy: "similarity",
-          rag_threshold: 0.7,
-        };
-
-        mergedPersonality.capabilities.knowledge_base.sources = knowledgeFiles;
-        mergedPersonality.capabilities.knowledge_base.enabled =
-          knowledgeFiles.length > 0;
+      if (knowledgeFiles.length > 0) {
+        const personality = columnUpdates.personality || agent.personality || {};
+        personality.capabilities = personality.capabilities || {};
+        personality.capabilities.knowledge_base =
+          personality.capabilities.knowledge_base || {
+            enabled: false,
+            sources: [],
+            strategy: "similarity",
+            rag_threshold: 0.7,
+          };
+        personality.capabilities.knowledge_base.sources = knowledgeFiles;
+        personality.capabilities.knowledge_base.enabled = true;
+        columnUpdates.personality = personality;
+        columnUpdates.knowledge_files = JSON.stringify(knowledgeFiles);
       }
 
-      const updatePayload = {
-        personality: mergedPersonality,
-      };
-
-      if (Array.isArray(knowledgeFiles)) {
-        updatePayload.knowledge_files = JSON.stringify(knowledgeFiles);
+      if (Object.keys(columnUpdates).length === 0) {
+        return res.json({ success: true, agent: formatAgentResponse(agent) });
       }
 
       const updatedAgent = await agentRepository.updateAgent(
         id,
         userId,
-        updatePayload
+        columnUpdates
       );
 
       res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
@@ -277,7 +231,7 @@ class agentsController {
   }
 
   /**
-   * Remove um agente do usuário.
+   * Deletes an agent.
    */
   async deleteAgent(req, res) {
     try {
@@ -296,13 +250,13 @@ class agentsController {
   }
 
   /**
-   * Compartilha um agente com outros usuários.
+   * Shares an agent with other users.
    */
   async shareAgent(req, res) {
     try {
       const userId = this._validateAuthentication(req);
       const { id } = req.params;
-      const { sharedWith } = req.body; // Array de { userId, permission }
+      const { sharedWith } = req.body;
 
       if (!Array.isArray(sharedWith)) {
         return res
@@ -336,13 +290,25 @@ class agentsController {
   }
 
   /**
-   * Lista os agentes do usuário autenticado.
+   * Lists agents for the authenticated user with optional filters.
+   * Query params: ?projectId=, ?isActive=, ?search=
    */
   async getUserAgents(req, res) {
     try {
       const userId = this._validateAuthentication(req);
-      const rawAgents = await agentRepository.getUserAgents(userId);
 
+      const filters = {};
+      if (req.query.projectId) {
+        filters.projectId = req.query.projectId;
+      }
+      if (req.query.isActive !== undefined) {
+        filters.isActive = req.query.isActive === "true";
+      }
+      if (req.query.search) {
+        filters.search = req.query.search;
+      }
+
+      const rawAgents = await agentRepository.getUserAgents(userId, filters);
       const agents = rawAgents.map((agent) => formatAgentResponse(agent));
 
       res.json({
@@ -362,7 +328,7 @@ class agentsController {
   }
 
   /**
-   * Obtém um agente específico do usuário.
+   * Gets a single agent by ID.
    */
   async getAgentById(req, res) {
     try {
@@ -389,12 +355,155 @@ class agentsController {
     }
   }
 
+  /**
+   * Assigns an agent to a project.
+   * PUT /agents/:id/project
+   * Body: { projectId: "uuid" }
+   */
+  async assignToProject(req, res) {
+    try {
+      const userId = this._validateAuthentication(req);
+      const { id } = req.params;
+      const { projectId } = req.body;
+
+      if (!projectId) {
+        return res
+          .status(400)
+          .json({ success: false, error: "projectId é obrigatório" });
+      }
+
+      const updatedAgent = await agentRepository.assignToProject(
+        id,
+        userId,
+        projectId
+      );
+
+      if (!updatedAgent) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Agente não encontrado" });
+      }
+
+      res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
+    } catch (error) {
+      if (error.statusCode === 401) {
+        return res.status(401).json({ success: false, error: error.message });
+      }
+      console.error("Erro ao vincular agente ao projeto:", error);
+      res
+        .status(500)
+        .json({ success: false, error: "Erro ao vincular agente ao projeto" });
+    }
+  }
+
+  /**
+   * Removes an agent from its project.
+   * DELETE /agents/:id/project
+   */
+  async unassignFromProject(req, res) {
+    try {
+      const userId = this._validateAuthentication(req);
+      const { id } = req.params;
+
+      const updatedAgent = await agentRepository.unassignFromProject(id, userId);
+
+      if (!updatedAgent) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Agente não encontrado" });
+      }
+
+      res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
+    } catch (error) {
+      if (error.statusCode === 401) {
+        return res.status(401).json({ success: false, error: error.message });
+      }
+      console.error("Erro ao desvincular agente do projeto:", error);
+      res.status(500).json({
+        success: false,
+        error: "Erro ao desvincular agente do projeto",
+      });
+    }
+  }
+
+  /**
+   * Toggles the active state of an agent.
+   * PATCH /agents/:id/active
+   * Body: { isActive: boolean }
+   */
+  async toggleActive(req, res) {
+    try {
+      const userId = this._validateAuthentication(req);
+      const { id } = req.params;
+      const { isActive } = req.body;
+
+      if (typeof isActive !== "boolean") {
+        return res
+          .status(400)
+          .json({ success: false, error: "isActive deve ser boolean" });
+      }
+
+      const updatedAgent = await agentRepository.toggleActive(
+        id,
+        userId,
+        isActive
+      );
+
+      if (!updatedAgent) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Agente não encontrado" });
+      }
+
+      res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
+    } catch (error) {
+      if (error.statusCode === 401) {
+        return res.status(401).json({ success: false, error: error.message });
+      }
+      console.error("Erro ao alternar estado do agente:", error);
+      res
+        .status(500)
+        .json({ success: false, error: "Erro ao alternar estado do agente" });
+    }
+  }
+
+  /**
+   * Duplicates an existing agent.
+   * POST /agents/:id/duplicate
+   */
+  async duplicateAgent(req, res) {
+    try {
+      const userId = this._validateAuthentication(req);
+      const { id } = req.params;
+
+      const duplicated = await agentRepository.duplicateAgent(id, userId);
+
+      if (!duplicated) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Agente não encontrado" });
+      }
+
+      res.json({ success: true, agent: formatAgentResponse(duplicated) });
+    } catch (error) {
+      if (error.statusCode === 401) {
+        return res.status(401).json({ success: false, error: error.message });
+      }
+      console.error("Erro ao duplicar agente:", error);
+      res
+        .status(500)
+        .json({ success: false, error: "Erro ao duplicar agente" });
+    }
+  }
+
+  /**
+   * Returns available LLM providers and models.
+   */
   async getProvidersAndModels(req, res) {
     this._validateAuthentication(req);
 
     try {
       const providers = getProvidersWithModels();
-
       res.json({ status: "OK", providers });
     } catch (error) {
       console.error("Erro ao obter provedores e modelos:", error);
@@ -404,6 +513,67 @@ class agentsController {
       });
     }
   }
+
+  // ── Private helpers ────────────────────────────────────────────────
+
+  /**
+   * Processes knowledge file uploads and returns metadata array.
+   *
+   * @param {Array} files - Multer files array
+   * @param {string} userId
+   * @returns {Promise<Array>}
+   */
+  async _processKnowledgeFileUploads(files, userId) {
+    const knowledgeFiles = [];
+
+    for (const file of files) {
+      const extension = file.originalname.split(".").pop();
+      const uniqueName = spacesService.generateUniqueFileName(extension);
+      const path = `agents/files/${userId}/${uniqueName}`;
+
+      const fileUrl = await spacesService.uploadFile(
+        file.buffer,
+        path,
+        file.mimetype
+      );
+
+      knowledgeFiles.push({
+        original_name: file.originalname,
+        storage_path: path,
+        url: fileUrl,
+        mime_type: file.mimetype,
+        size: file.size,
+        uploaded_at: new Date().toISOString(),
+      });
+    }
+
+    return knowledgeFiles;
+  }
+
+  /**
+   * Parses knowledge_files from an agent row.
+   *
+   * @param {object} agent
+   * @returns {Array}
+   */
+  _parseKnowledgeFiles(agent) {
+    let knowledgeFiles = agent.knowledge_files;
+
+    if (typeof knowledgeFiles === "string") {
+      try {
+        knowledgeFiles = JSON.parse(knowledgeFiles);
+      } catch {
+        knowledgeFiles = [];
+      }
+    }
+
+    if (!Array.isArray(knowledgeFiles)) {
+      knowledgeFiles =
+        agent.personality?.capabilities?.knowledge_base?.sources || [];
+    }
+
+    return Array.isArray(knowledgeFiles) ? knowledgeFiles : [];
+  }
 }
 
-module.exports = new agentsController();
+module.exports = new AgentsController();
