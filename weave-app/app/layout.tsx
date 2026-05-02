@@ -13,6 +13,24 @@ const siteOrigin = getSiteOrigin();
 const siteTitle = "Weave - Intelligent Workspace";
 const siteDescription = "Intelligent workspace for intelligent teams.";
 
+/** Open Graph assets in `public/` (1491×687). PNG first for crawler compatibility; WebP second. */
+const ogImages: NonNullable<Metadata["openGraph"]>["images"] = [
+  {
+    url: "/og-image.png",
+    width: 1491,
+    height: 687,
+    alt: siteTitle,
+    type: "image/png",
+  },
+  {
+    url: "/og-image.webp",
+    width: 1491,
+    height: 687,
+    alt: siteTitle,
+    type: "image/webp",
+  },
+];
+
 const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
@@ -97,20 +115,13 @@ export const metadata: Metadata = {
     title: siteTitle,
     description: siteDescription,
     siteName: siteTitle,
-    images: [
-      {
-        url: "/weave.png",
-        width: 1200,
-        height: 630,
-        alt: "Weave - Intelligent Workspace",
-      },
-    ],
+    images: ogImages,
   },
   twitter: {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
-    images: ["/weave.png"],
+    images: ["/og-image.png"],
   },
   icons: {
     icon: "/favicon.ico",
@@ -141,7 +152,7 @@ export default function RootLayout({
             <LanguageProvider>{children}</LanguageProvider>
           </AuthProviderClient>
           <InternetConnectionMonitor />
-          <Toaster position="top-right" expand={true} richColors closeButton />
+          <Toaster position="top-right" expand closeButton />
         </ThemeProvider>
       </body>
     </html>

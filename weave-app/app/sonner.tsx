@@ -28,15 +28,14 @@ const Toaster = ({ ...props }: ToasterProps) => {
           cancelButton:
             "rounded-md border border-neutral-200 bg-transparent px-3 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800",
           success:
-            "border-emerald-200/90 bg-emerald-50 text-emerald-950 dark:border-emerald-800/50 dark:bg-emerald-950/35 dark:text-emerald-100 [&_.description]:text-emerald-800/90 dark:[&_.description]:text-emerald-200/80",
+            "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950 border-l-[3px] border-l-emerald-500/80 text-neutral-900 dark:text-neutral-50 [&_.description]:text-neutral-600 dark:[&_.description]:text-neutral-400",
           error:
-            "border-red-200/90 bg-red-50 text-red-950 dark:border-red-900/50 dark:bg-red-950/35 dark:text-red-100 [&_.description]:text-red-800/90 dark:[&_.description]:text-red-200/80",
+            "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950 border-l-[3px] border-l-red-500/80 text-neutral-900 dark:text-neutral-50 [&_.description]:text-neutral-600 dark:[&_.description]:text-neutral-400",
           warning:
-            "border-amber-200/90 bg-amber-50 text-amber-950 dark:border-amber-800/50 dark:bg-amber-950/35 dark:text-amber-100 [&_.description]:text-amber-900/85 dark:[&_.description]:text-amber-200/80",
+            "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950 border-l-[3px] border-l-amber-500/80 text-neutral-900 dark:text-neutral-50 [&_.description]:text-neutral-600 dark:[&_.description]:text-neutral-400",
           info:
-            "border-sky-200/90 bg-sky-50 text-sky-950 dark:border-sky-800/50 dark:bg-sky-950/35 dark:text-sky-100 [&_.description]:text-sky-900/85 dark:[&_.description]:text-sky-200/80",
-          loading:
-            "border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/80",
+            "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950 border-l-[3px] border-l-sky-500/80 text-neutral-900 dark:text-neutral-50 [&_.description]:text-neutral-600 dark:[&_.description]:text-neutral-400",
+          loading: "border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/80",
         },
       }}
       {...props}

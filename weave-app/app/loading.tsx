@@ -1,9 +1,20 @@
 export default function Loading() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950">
-      <div className="text-center">
-        <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-neutral-800 border-t-yellow-500"></div>
-        <p className="text-neutral-400">Carregando...</p>
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-white">
+      <div
+        className="flex flex-col items-center gap-3"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+        aria-label="Loading"
+      >
+        <div
+          aria-hidden
+          className="border-t-brand-primary-500 size-9 shrink-0 rounded-full border-2 border-neutral-200 motion-safe:animate-spin"
+        />
+        <p className="text-xs font-medium tracking-wide text-neutral-400" aria-hidden>
+          Loading
+        </p>
       </div>
     </div>
   );
