@@ -18,15 +18,18 @@ class EmbeddingProcessor {
 
     while (this.isRunning) {
       try {
+        // logger.debug("Polling queue", { queue: this.queueName });
         const result = await redis.blpop(this.queueName, 5);
         if (!result) continue;
 
+        logger.info("Job received from queue", { queue: this.queueName, result });
         const [, payload] = result;
         const job = JSON.parse(payload);
         await this.processJob(job);
       } catch (error) {
         logger.error("Embedding processor loop failed", {
           error: error.message,
+          stack: error.stack,
         });
       }
     }

@@ -17,6 +17,7 @@ const {
  * @returns {Promise<number>} Length of the list after push.
  */
 async function enqueueRedisListJob(listKey, jobBody) {
+  console.log(`[QueueController] Enqueueing job to ${listKey}`, jobBody);
   return redis.lpush(listKey, JSON.stringify(jobBody));
 }
 

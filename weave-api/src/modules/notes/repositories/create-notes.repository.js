@@ -107,7 +107,10 @@ class CreateNotesRepository extends BaseRepository {
     ]);
     const createdNote = results[0];
 
+    console.log("[CreateNotesRepository] Note created", { noteId: createdNote?.note_id });
+
     if (createdNote) {
+      console.log("[CreateNotesRepository] Enqueueing embedding job for", createdNote.note_id);
       await enqueueNoteEmbeddingJob(createdNote.note_id).catch(err => {
         console.error("[CreateNotesRepository] Failed to enqueue embedding job", err);
       });
