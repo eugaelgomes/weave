@@ -24,7 +24,7 @@ services:
         required: false
     environment:
       - NODE_ENV=production
-      - DOPPLER_CONFIG=dev
+      - DOPPLER_CONFIG=prd
     networks:
       - app-network
 
@@ -38,7 +38,7 @@ services:
         required: false
     environment:
       - NODE_ENV=production
-      - DOPPLER_CONFIG=dev
+      - DOPPLER_CONFIG=prd
     networks:
       - app-network
 
@@ -52,7 +52,7 @@ services:
         required: false
     environment:
       - NODE_ENV=production
-      - DOPPLER_CONFIG=dev
+      - DOPPLER_CONFIG=prd
     networks:
       - app-network
 
