@@ -215,7 +215,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
           ? project.collaborators.filter((c) => !c.removed).length
           : 0,
         color: project.properties?.color ?? undefined,
-        icon: project.properties?.icon ?? undefined,
+        icon: typeof project.properties?.icon === 'string' ? project.properties.icon : undefined, // Corrige o tipo de 'icon' para garantir compatibilidade
         priority: project.properties?.priority ?? undefined,
         complexity: project.properties?.complexity ?? undefined,
         estimatedTime: project.properties?.estimated_time ?? undefined,

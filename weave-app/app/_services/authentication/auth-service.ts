@@ -86,9 +86,9 @@ const _mapBackendDataToUser = (data: BackendUserData): User => {
     email: profile.email,
     avatar_url: getStorageUrl(profile.avatar_url),
     created_at: profile.created_at,
-    updated_at: profile.updated_at,
-    birth_date: profile.birth_date,
-    phone_number: profile.phone_number,
+    updated_at: profile.updated_at ?? undefined, // Corrige 'null' para 'undefined'
+    birth_date: profile.birth_date ?? undefined,
+    phone_number: profile.phone_number ?? undefined,
 
     // Settings
     theme_mode: normalizeThemeMode(settings?.theme_mode),
@@ -170,11 +170,10 @@ const mapMeResponseToUser = (data: BackendMeResponse): User => {
     username: user.user_profile.username,
     email: user.user_profile.email,
     avatar_url: getStorageUrl(user.user_profile.avatar_url),
-    birth_date: user.user_profile.birth_date,
-    phone_number: user.user_profile.phone_number,
+    birth_date: user.user_profile.birth_date ?? undefined,
+    phone_number: user.user_profile.phone_number ?? undefined,
     created_at: user.user_profile.created_at,
-    updated_at: user.user_profile.updated_at,
-
+    updated_at: user.user_profile.updated_at ?? undefined, // Corrige 'null' para 'undefined'
     // Settings
     theme_mode: normalizeThemeMode(user.user_settings.theme_mode),
     private_profile: user.user_settings.private_profile,
@@ -368,10 +367,10 @@ export const updateUserData = async (
     username: data.user.user_profile.username,
     email: data.user.user_profile.email,
     avatar_url: getStorageUrl(data.user.user_profile.avatar_url),
-    birth_date: data.user.user_profile.birth_date,
-    phone_number: data.user.user_profile.phone_number,
+    birth_date: data.user.user_profile.birth_date ?? undefined,
+    phone_number: data.user.user_profile.phone_number ?? undefined,
     created_at: data.user.user_profile.created_at,
-    updated_at: data.user.user_profile.updated_at,
+    updated_at: data.user.user_profile.updated_at ?? undefined, // Corrige 'null' para 'undefined'
     theme_mode: normalizeThemeMode(data.user.user_settings.theme_mode),
     private_profile: data.user.user_settings.private_profile,
     auth_with_google: data.user.user_settings.auth_with_google,

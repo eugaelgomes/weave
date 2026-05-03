@@ -1,10 +1,10 @@
 // services/index.ts
 
-// Auth Services
+// Authentication Services
 export * from "./authentication/auth-service";
 export * from "./authentication/use-auth-provider";
 
-// API Tokens
+// API Tokens Service
 export * from "./api-tokens-service/api-tokens.service";
 
 // Notes Services
@@ -153,7 +153,7 @@ export {
   type AgentProviderResponse,
 } from "./ai-agent-service/agent-service";
 
-// API Client e Endpoints
+// API Client and Endpoints
 export {
   apiClient,
   ApiError,

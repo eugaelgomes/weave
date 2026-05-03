@@ -22,8 +22,7 @@ const siteOrigin = getSiteOrigin();
 const siteTitle = "Weave - Intelligent Workspace";
 const siteDescription = "Intelligent workspace for intelligent teams.";
 
-/** Open Graph assets in `public/` (1491×687). PNG first for crawler compatibility; WebP second. */
-const ogImages: Metadata["openGraph"] extends { images?: infer T } ? T : never = [
+const ogImages: Array<{ url: string; width: number; height: number; alt: string; type: string }> = [
   {
     url: "/og-image.png",
     width: 1491,
