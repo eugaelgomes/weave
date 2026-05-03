@@ -4,7 +4,9 @@ import React, { useState, useEffect } from "react";
 import { Bell, Type, Layout, Globe, Lock, Sparkles, Keyboard, Loader2 } from "lucide-react";
 import { useAuth } from "@/app/_contexts/auth-context";
 
-export const SettingsProfilePreferences: React.FC = () => {
+const predefinedColors = ["#0D0D11", "#0B0B0B", "#101516", "#000000"];
+
+export default function PreferencesPage() {
   const { user, updateUser } = useAuth();
 
   const [preferences, setPreferences] = useState<any>({});
@@ -42,6 +44,13 @@ export const SettingsProfilePreferences: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  const handleColorChange = (color: string) => {
+    setSelectedColor(color);
+    document.body.style.backgroundColor = color; // Aplica a cor de fundo
+  };
+
+  const [selectedColor, setSelectedColor] = useState<string>(predefinedColors[0]);
 
   // Configuração de Estilo Padronizada (Escala Sidebar)
   const categoryCardClass =
@@ -294,7 +303,27 @@ export const SettingsProfilePreferences: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* Cor de Fundo */}
+        <div className={categoryCardClass}>
+          <h4 className={labelClass}>Cor de Fundo</h4>
+          <div className="flex gap-2">
+            {predefinedColors.map((color) => (
+              <button
+                key={color}
+                onClick={() => handleColorChange(color)}
+                style={{
+                  backgroundColor: color,
+                  border: selectedColor === color ? "2px solid #fff" : "1px solid #ccc",
+                }}
+                className="h-10 w-10 rounded-full transition-all hover:scale-110"
+                aria-label={`Selecionar cor ${color}`}
+                title={color}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
-};
+}
