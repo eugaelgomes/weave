@@ -18,13 +18,10 @@ import {
   LayoutTemplate,
 } from "lucide-react";
 import { formatDate, formatRoleName } from "@/app/_utils/format";
-import { User } from "@/app/_services/authentication/auth-service";
+import { useAuth } from "@/app/_contexts/auth-context";
 
-interface SettingsOrgAndPlanProps {
-  user: User | null;
-}
-
-export const SettingsOrgAndPlan: React.FC<SettingsOrgAndPlanProps> = ({ user }) => {
+export default function OrganizationSettingsPage() {
+  const { user } = useAuth();
   const [showUsageModal, setShowUsageModal] = useState(false);
 
   const planDetails = user?.plan_details;

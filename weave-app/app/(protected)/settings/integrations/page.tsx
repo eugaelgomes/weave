@@ -175,3 +175,7 @@ export const IntegrationsSettings: React.FC<any> = () => {
     </div>
   );
 };
+
+export default function IntegrationsPage() {
+  return <IntegrationsSettings />;
+}

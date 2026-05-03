@@ -91,7 +91,7 @@ const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "sm" | "md" | "l
         />
       ) : (
         <CircleUserRound
-          className="h-full w-full text-neutral-400 dark:text-neutral-500"
+          className="h-full w-full text-neutral-600 dark:text-neutral-400"
           strokeWidth={1.5}
         />
       )}
@@ -106,7 +106,7 @@ const NotificationsLink = ({ ariaLabel, className }: { ariaLabel: string; classN
     <Link
       href="/notifications"
       className={cn(
-        "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white",
+        "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-neutral-900 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-100",
         className
       )}
       aria-label={ariaLabel}
@@ -132,7 +132,7 @@ interface UserMenuProps {
 
 const UserMenuContent = ({ user, theme, t, onClose, onToggleTheme, onLogout }: UserMenuProps) => (
   <nav aria-label="Menu do usuário" className="flex flex-col overflow-hidden">
-    <header className="flex items-center gap-3 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+    <header className="flex items-center gap-3 border-b border-neutral-200 px-4 py-3 dark:border-neutral-900">
       <UserAvatar user={user} size="md" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold text-neutral-900 dark:text-neutral-100">
@@ -149,7 +149,7 @@ const UserMenuContent = ({ user, theme, t, onClose, onToggleTheme, onLogout }: U
         <Link
           href="/settings"
           onClick={onClose}
-          className="block rounded-md px-4 py-2.5 text-xs font-medium text-neutral-700 hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/5"
+          className="block rounded-md px-4 py-2.5 text-xs font-medium text-neutral-900 hover:bg-black/5 dark:text-neutral-100 dark:hover:bg-white/5"
         >
           {t.navbar.accountSettings}
         </Link>
@@ -158,13 +158,13 @@ const UserMenuContent = ({ user, theme, t, onClose, onToggleTheme, onLogout }: U
       <li>
         <button
           onClick={onToggleTheme}
-          className="flex w-full items-center justify-between rounded-md px-4 py-2.5 text-left text-xs font-medium text-neutral-700 hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/5"
+          className="flex w-full items-center justify-between rounded-md px-4 py-2.5 text-left text-xs font-medium text-neutral-900 hover:bg-black/5 dark:text-neutral-100 dark:hover:bg-white/5"
         >
           <div className="flex items-center gap-2">
             {theme === "light" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
             <span>{t.navbar.theme}</span>
           </div>
-          <span className="rounded-md bg-black/5 px-2 py-0.5 text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:bg-white/10 dark:text-neutral-300">
+          <span className="rounded-md bg-black/5 px-2 py-0.5 text-[10px] font-bold tracking-wider text-neutral-600 uppercase dark:bg-white/10 dark:text-neutral-400">
             {theme === "light" ? t.navbar.light : t.navbar.dark}
           </span>
         </button>
@@ -176,13 +176,13 @@ const UserMenuContent = ({ user, theme, t, onClose, onToggleTheme, onLogout }: U
           target="_blank"
           rel="noopener noreferrer"
           onClick={onClose}
-          className="block rounded-md px-4 py-2.5 text-xs font-medium text-neutral-700 hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/5"
+          className="block rounded-md px-4 py-2.5 text-xs font-medium text-neutral-900 hover:bg-black/5 dark:text-neutral-100 dark:hover:bg-white/5"
         >
           {t.navbar.aboutSystem}
         </a>
       </li>
 
-      <hr className="my-1 border-t border-black/5 dark:border-white/5" />
+      <hr className="my-1 border-t border-neutral-200 dark:border-neutral-800" />
 
       <li>
         <button
@@ -250,7 +250,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               {authenticated && (
                 <button
                   onClick={onToggleSidebar}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 lg:hidden dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-neutral-900 transition-colors hover:bg-neutral-100 hover:text-neutral-900 lg:hidden dark:text-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
                   aria-label="Abrir menu lateral"
                 >
                   <Menu className="h-4 w-4" strokeWidth={2} />
@@ -288,7 +288,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                         className="object-contain"
                       />
                     </figure>
-                    <span className="max-w-[180px] truncate text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                    <span className="max-w-[180px] truncate text-xs font-medium text-neutral-900 dark:text-neutral-100">
                       {user.org_name}
                     </span>
                   </Link>
@@ -301,17 +301,17 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               <section className="hidden min-w-0 items-center justify-center gap-2 justify-self-center md:flex">
                 <button
                   onClick={() => setIsSearchOpen(true)}
-                  className="group flex w-full max-w-[360px] items-center gap-2.5 rounded-md border border-neutral-200 bg-neutral-100/50 px-2 py-0.5 transition-all hover:bg-neutral-100 hover:ring-2 hover:ring-yellow-500/20 dark:border-neutral-800 dark:bg-neutral-800/50 dark:hover:bg-neutral-800"
+                  className="group flex w-full max-w-[360px] items-center gap-2.5 rounded-md border border-neutral-200 bg-neutral-100/50 px-2 py-0.5 transition-all hover:bg-neutral-100 hover:ring-2 hover:ring-yellow-500/20 dark:border-neutral-900 dark:bg-neutral-800/50 dark:hover:bg-neutral-800"
                   aria-label="Pesquisar no sistema"
                 >
                   <Search
-                    className="group-hover:text-brand-primary-500 h-3.5 w-3.5 text-neutral-400"
+                    className="h-3.5 w-3.5 text-neutral-900 group-hover:text-brand-primary-500 dark:text-neutral-100"
                     strokeWidth={2}
                   />
-                  <span className="flex-1 text-left text-xs text-neutral-500 opacity-50 dark:text-neutral-500">
+                  <span className="flex-1 text-left text-xs text-neutral-900/50 dark:text-neutral-100/50">
                     {t.navbar.searchPlaceholder}
                   </span>
-                  <kbd className="flex items-center gap-1 px-1.5 font-sans text-[10px] font-medium text-neutral-400">
+                  <kbd className="flex items-center gap-1 px-1.5 font-sans text-[10px] font-medium text-neutral-600 dark:text-neutral-400">
                     <span>⌘</span>K
                   </kbd>
                 </button>
@@ -325,7 +325,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 <>
                   <button
                     onClick={() => setIsSearchOpen(true)}
-                    className="flex h-10 w-10 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 md:hidden dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
+                    className="flex h-10 w-10 items-center justify-center rounded-md text-neutral-900 transition-colors hover:bg-neutral-100 hover:text-neutral-900 md:hidden dark:text-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
                     aria-label="Abrir busca"
                   >
                     <Search className="h-4 w-4" strokeWidth={2} />
@@ -347,10 +347,10 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                       )}
                     >
                       <div className="hidden lg:flex lg:flex-col lg:items-end lg:pr-3">
-                        <span className="text-xs leading-none font-bold text-neutral-800 dark:text-neutral-200">
+                        <span className="text-xs leading-none font-bold text-neutral-900 dark:text-neutral-100">
                           {formatters.getDisplayName(user, t.common.user)}
                         </span>
-                        <span className="text-[10px] font-medium text-neutral-400">
+                        <span className="text-[10px] font-medium text-neutral-600 dark:text-neutral-400">
                           @{formatters.getUsername(user, t.common.username)}
                         </span>
                       </div>
@@ -359,7 +359,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
                     {isMenuOpen && (
                       <div className="absolute top-full right-0 z-50 mt-2 hidden w-72 origin-top-right sm:block">
-                        <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-2xl ring-1 ring-black/5 dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-neutral-950/50">
+                        <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-2xl ring-1 ring-black/5 dark:border-neutral-900 dark:bg-neutral-900 dark:shadow-neutral-950/50">
                           <UserMenuContent
                             user={user}
                             theme={theme}
@@ -395,7 +395,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
             <dialog
               ref={mobileMenuRef}
               open
-              className="relative z-[111] m-0 flex w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-900"
+              className="relative z-[111] m-0 flex w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:border-neutral-900 dark:bg-neutral-900"
             >
               <div className="max-h-[75vh] overflow-y-auto">
                 <UserMenuContent
@@ -408,10 +408,10 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 />
               </div>
 
-              <footer className="border-t border-neutral-100 bg-neutral-50/50 p-3 dark:border-neutral-800 dark:bg-neutral-900/50">
+              <footer className="border-t border-neutral-200 bg-neutral-50/50 p-3 dark:border-neutral-900 dark:bg-neutral-900/50">
                 <button
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-200/50 py-2.5 text-xs font-bold text-neutral-700 active:scale-95 dark:bg-neutral-800 dark:text-neutral-200"
+                  className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-200/50 py-2.5 text-xs font-bold text-neutral-900 active:scale-95 dark:bg-neutral-800 dark:text-neutral-100"
                 >
                   <X className="h-3.5 w-3.5" strokeWidth={2} />
                   {t.navbar.closeMenu}

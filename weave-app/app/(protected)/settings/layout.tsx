@@ -1,51 +1,59 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, User, Building2, Lock, Zap, Settings } from "lucide-react";
+import { Menu, X, User, Building2, Lock, Zap, Settings, type LucideIcon } from "lucide-react";
 import { SettingsHeader } from "../_components/ui/headers/settings-header";
+
+type SettingsNavItem = {
+  icon: LucideIcon;
+  label: string;
+  href: string;
+  matchPaths?: string[];
+};
+
+const SETTINGS_NAV: SettingsNavItem[] = [
+  {
+    icon: User,
+    label: "Perfil",
+    href: "/settings",
+    matchPaths: ["/settings/user-data", "/settings/danger-zone"],
+  },
+  { icon: Building2, label: "Organização", href: "/settings/organization" },
+  { icon: Lock, label: "Segurança", href: "/settings/security" },
+  {
+    icon: Zap,
+    label: "Integrações",
+    href: "/settings/integrations",
+    matchPaths: ["/settings/client-tokens"],
+  },
+  { icon: Settings, label: "Preferências", href: "/settings/preferences" },
+];
+
+function resolveActiveSettingsHref(pathname: string): string | null {
+  const matchers: { prefix: string; href: string }[] = [];
+  for (const item of SETTINGS_NAV) {
+    for (const prefix of [item.href, ...(item.matchPaths ?? [])]) {
+      matchers.push({ prefix, href: item.href });
+    }
+  }
+  matchers.sort((a, b) => b.prefix.length - a.prefix.length);
+  for (const { prefix, href } of matchers) {
+    if (pathname === prefix || pathname.startsWith(`${prefix}/`)) return href;
+  }
+  return null;
+}
 
 function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
+  const activeHref = useMemo(() => resolveActiveSettingsHref(pathname), [pathname]);
+
   React.useEffect(() => {
     setIsMobileSidebarOpen(false);
   }, [pathname]);
-
-  const settingsMenu = [
-    {
-      icon: User,
-      label: "Perfil",
-      href: "/settings",
-      isActive: pathname === "/settings",
-    },
-    {
-      icon: Building2,
-      label: "Organização",
-      href: "/settings/organization",
-      isActive: pathname === "/settings/organization",
-    },
-    {
-      icon: Lock,
-      label: "Segurança",
-      href: "/settings/security",
-      isActive: pathname === "/settings/security",
-    },
-    {
-      icon: Zap,
-      label: "Integrações",
-      href: "/settings/integrations",
-      isActive: pathname === "/settings/integrations",
-    },
-    {
-      icon: Settings,
-      label: "Preferências",
-      href: "/settings/preferences",
-      isActive: pathname === "/settings/preferences",
-    },
-  ];
 
   const sidebarContent = (
     <div className="p-2.5">
@@ -54,23 +62,33 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
       </h2>
 
       <ul className="space-y-0.5">
-        {settingsMenu.map((item) => {
+        {SETTINGS_NAV.map((item) => {
           const Icon = item.icon;
+          const isActive = activeHref === item.href;
           return (
             <li key={item.href}>
               <Link
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
                 onClick={() => setIsMobileSidebarOpen(false)}
-                className={`group flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs transition-all ${
-                  item.isActive
-                    ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
+                className={`group relative flex w-full items-center justify-between rounded-md py-1.5 pr-2 pl-2 text-xs transition-all ${
+                  isActive
+                    ? "bg-amber-50 font-semibold text-neutral-900 shadow-sm ring-1 ring-amber-200/80 dark:bg-neutral-800 dark:text-neutral-100 dark:ring-amber-900/40"
                     : "text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800/50"
                 }`}
               >
-                <div className="flex items-center gap-1.5">
+                {isActive ? (
+                  <span
+                    className="bg-brand-primary-500 absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full"
+                    aria-hidden
+                  />
+                ) : null}
+                <div className="flex items-center gap-1.5 pl-0.5">
                   <Icon
                     className={`h-3.5 w-3.5 flex-shrink-0 ${
-                      item.isActive ? "text-brand-primary-500" : "text-neutral-400"
+                      isActive
+                        ? "text-brand-primary-500"
+                        : "text-neutral-400 group-hover:text-neutral-500 dark:group-hover:text-neutral-300"
                     }`}
                   />
                   <span>{item.label}</span>

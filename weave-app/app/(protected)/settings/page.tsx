@@ -1,5 +1,3 @@
-
-// Importando componentes de UI refatorados
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -20,13 +18,13 @@ import {
 import { formatDate } from "@/app/_utils/format";
 import { User } from "@/app/_services/authentication/auth-service";
 import { useAuth } from "@/app/_contexts/auth-context";
-import { requestBackup, getBackupStatus } from "@/app/_services/backup-service/backup-service";
 
-interface FormData {
+export interface FormData {
   name: string;
   email: string;
   username: string;
   avatar_url: string;
+  profilePicture: File | null;
   birth_date: string;
   phone_number: string;
   theme_mode: string;
@@ -34,6 +32,8 @@ interface FormData {
   currentPassword?: string;
   newPassword?: string;
   confirmPassword?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  usage_preference: Record<string, any>;
 }
 
 interface SettingsProfileDataProps {
@@ -366,34 +366,11 @@ const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
   );
 };
 
-import { SettingsProfilePreferences } from "./_components/profile-preferences";
-import { SettingsOrgAndPlan } from "./_components/org-and-plans";
-import { SettingsApiTokens } from "./_components/api-tokens";
-import { SettingsDangerZone } from "./danger-zone/page";
-import { IntegrationsSettings } from "./_components/integrations";
-
-export interface FormData {
-  name: string;
-  email: string;
-  username: string;
-  avatar_url: string;
-  profilePicture: File | null;
-  birth_date: string;
-  phone_number: string;
-  theme_mode: string;
-  private_profile: boolean;
-  currentPassword?: string;
-  newPassword?: string;
-  confirmPassword?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  usage_preference: Record<string, any>;
-}
-
 const normalizeThemeMode = (themeMode?: string | null): "LIGHT" | "DARK" =>
   themeMode?.toUpperCase() === "DARK" ? "DARK" : "LIGHT";
 
 const SettingsPage = () => {
-  const { user, updateUser, deleteUserPermanently } = useAuth();
+  const { user, updateUser } = useAuth();
   const [userData, setUserData] = useState<User | null>(null);
 
   // Estados de UI
@@ -403,11 +380,6 @@ const SettingsPage = () => {
   // Feedback
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
-  // Feedback de Backup
-  const [backupMessage, setBackupMessage] = useState("");
-  const [backupError, setBackupError] = useState("");
-  const [backupLoading, setBackupLoading] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -576,101 +548,8 @@ const SettingsPage = () => {
     }
   };
 
-  const handleCreateBackup = async () => {
-    try {
-      setBackupLoading(true);
-      setBackupError("");
-      setBackupMessage("A solicitar cópia de segurança...");
-
-      const response = await requestBackup();
-      const jobId = response.job_id;
-
-      if (!jobId) {
-        throw new Error("Erro ao iniciar cópia de segurança");
-      }
-
-      const estimatedTime = response.estimated_time
-        ? ` Tempo estimado: ${response.estimated_time}.`
-        : "";
-      setBackupMessage(
-        `${response.message || "Cópia de segurança em processamento..."}${estimatedTime}`
-      );
-
-      let attempts = 0;
-      const maxAttempts = 60;
-
-      while (attempts < maxAttempts) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        const job = await getBackupStatus(jobId);
-
-        if (job.progress !== undefined) {
-          setBackupMessage(`A processar cópia de segurança: ${job.progress}%`);
-        }
-
-        if (job.status === "completed") {
-          const downloadUrl = job.downloadUrl || job.download_url;
-          if (downloadUrl) {
-            window.open(downloadUrl, "_blank");
-            setBackupMessage("Cópia de segurança concluída. Download iniciado.");
-          } else {
-            setBackupMessage("Cópia de segurança concluída. Verifique o seu email.");
-          }
-          break;
-        } else if (job.status === "failed") {
-          throw new Error(job.error || "Falha ao gerar cópia de segurança");
-        }
-
-        attempts++;
-      }
-
-      if (attempts >= maxAttempts) {
-        setBackupMessage(
-          "A cópia de segurança está a demorar mais que o esperado. Receberá um email quando estiver pronta."
-        );
-      }
-    } catch (err: unknown) {
-      setBackupError((err as Error)?.message || "Falha ao gerar cópia de segurança.");
-      console.error(err);
-    } finally {
-      setBackupLoading(false);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (
-      !window.confirm("ATENÇÃO: Esta ação é irreversível. Deseja realmente eliminar a sua conta?")
-    )
-      return;
-
-    try {
-      const result = await deleteUserPermanently();
-      if (result.success) {
-        window.location.href = "/";
-      } else {
-        setError(result.message || "Erro ao eliminar conta.");
-      }
-    } catch {
-      setError("Erro crítico ao tentar eliminar a conta.");
-    }
-  };
-
-  const handlePreferenceChange = (category: string, key: string, value: unknown) => {
-    setFormData((prev) => ({
-      ...prev,
-      usage_preference: {
-        ...prev.usage_preference,
-        [category]: {
-          ...(prev.usage_preference[category as keyof typeof prev.usage_preference] || {}),
-          [key]: value,
-        },
-      },
-    }));
-    setEditMode(true);
-  };
-
   return (
-    <div className="flex w-full flex-col gap-4 p-4">
+    <div className="flex w-full flex-col gap-4">
       {/* Mensagens de Feedback Globais */}
       {(error || successMessage) && (
         <div

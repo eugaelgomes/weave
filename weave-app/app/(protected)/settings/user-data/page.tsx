@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { formatDate } from "@/app/_utils/format";
 import { User } from "@/app/_services/authentication/auth-service";
+import ParentSettingsPage from "../page";
 
 interface FormData {
   name: string;
@@ -361,3 +362,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
     </div>
   );
 };
+
+export default function UserDataSettingsPage() {
+  return <ParentSettingsPage />;
+}

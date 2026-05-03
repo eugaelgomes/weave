@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { AlertTriangle, Download, Trash2, Loader2, X } from "lucide-react";
+import { useAuth } from "@/app/_contexts/auth-context";
+import { requestBackup, getBackupStatus } from "@/app/_services/backup-service/backup-service";
 
 // --- Sub-componente Interno de Modal (Ajustado para a nova escala) ---
 const ConfirmationModal = ({
@@ -140,3 +142,107 @@ export const SettingsDangerZone: React.FC<any> = ({
     </div>
   );
 };
+
+export default function DangerZonePage() {
+  const { deleteUserPermanently } = useAuth();
+  const [backupMessage, setBackupMessage] = useState("");
+  const [backupError, setBackupError] = useState("");
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleCreateBackup = async () => {
+    try {
+      setBackupLoading(true);
+      setBackupError("");
+      setBackupMessage("A solicitar cópia de segurança...");
+
+      const response = await requestBackup();
+      const jobId = response.job_id;
+
+      if (!jobId) {
+        throw new Error("Erro ao iniciar cópia de segurança");
+      }
+
+      const estimatedTime = response.estimated_time
+        ? ` Tempo estimado: ${response.estimated_time}.`
+        : "";
+      setBackupMessage(
+        `${response.message || "Cópia de segurança em processamento..."}${estimatedTime}`
+      );
+
+      let attempts = 0;
+      const maxAttempts = 60;
+
+      while (attempts < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        const job = await getBackupStatus(jobId);
+
+        if (job.progress !== undefined) {
+          setBackupMessage(`A processar cópia de segurança: ${job.progress}%`);
+        }
+
+        if (job.status === "completed") {
+          const downloadUrl = job.downloadUrl || job.download_url;
+          if (downloadUrl) {
+            window.open(downloadUrl, "_blank");
+            setBackupMessage("Cópia de segurança concluída. Download iniciado.");
+          } else {
+            setBackupMessage("Cópia de segurança concluída. Verifique o seu email.");
+          }
+          break;
+        } else if (job.status === "failed") {
+          throw new Error(job.error || "Falha ao gerar cópia de segurança");
+        }
+
+        attempts++;
+      }
+
+      if (attempts >= maxAttempts) {
+        setBackupMessage(
+          "A cópia de segurança está a demorar mais que o esperado. Receberá um email quando estiver pronta."
+        );
+      }
+    } catch (err: unknown) {
+      setBackupError((err as Error)?.message || "Falha ao gerar cópia de segurança.");
+      console.error(err);
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (
+      !window.confirm("ATENÇÃO: Esta ação é irreversível. Deseja realmente eliminar a sua conta?")
+    )
+      return;
+
+    try {
+      const result = await deleteUserPermanently();
+      if (result.success) {
+        window.location.href = "/";
+      } else {
+        setError(result.message || "Erro ao eliminar conta.");
+      }
+    } catch {
+      setError("Erro crítico ao tentar eliminar a conta.");
+    }
+  };
+
+  return (
+    <div className="flex w-full flex-col gap-4 p-4">
+      {error ? (
+        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400">
+          {error}
+        </div>
+      ) : null}
+      <SettingsDangerZone
+        handleCreateBackup={handleCreateBackup}
+        backupLoading={backupLoading}
+        backupMessage={backupMessage}
+        backupError={backupError}
+        handleDeleteAccount={handleDeleteAccount}
+      />
+    </div>
+  );
+}
