@@ -136,6 +136,28 @@ const findBlockById = (
   return null;
 };
 
+const mergeBlockInTree = (
+  blocks: (Block & { children?: Block[] })[],
+  blockId: string,
+  patch: Partial<Block>
+): (Block & { children?: Block[] })[] => {
+  return blocks.map((block) => {
+    if (block.id === blockId) {
+      return {
+        ...block,
+        ...patch,
+      };
+    }
+    if (Array.isArray(block.children) && block.children.length > 0) {
+      return {
+        ...block,
+        children: mergeBlockInTree(block.children, blockId, patch),
+      };
+    }
+    return block;
+  });
+};
+
 export function NotesProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
@@ -534,16 +556,18 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       if (!user?.id) return null;
 
       try {
-        await updateNoteBlock(noteId, blockId, blockData);
-        const tree = await fetchNoteBlocks(noteId);
-        applyLocalBlocksUpdate(noteId, tree);
-        return findBlockById(tree as (Block & { children?: Block[] })[], blockId);
+        const updated = await updateNoteBlock(noteId, blockId, blockData);
+        const currentNote = notes.find((storedNote) => storedNote.id === noteId);
+        if (currentNote?.blocks) {
+          applyLocalBlocksUpdate(noteId, mergeBlockInTree(currentNote.blocks, blockId, updated));
+        }
+        return updated;
       } catch (err: unknown) {
         console.error("Erro ao atualizar bloco:", err);
         throw err;
       }
     },
-    [applyLocalBlocksUpdate, user?.id]
+    [applyLocalBlocksUpdate, notes, user?.id]
   );
 
   const deleteBlock = useCallback(

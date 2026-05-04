@@ -74,12 +74,17 @@ import {
 import { getTagColor } from "@/app/_utils/tag-colors";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { NoteBlockEditor } from "@/app/(protected)/notes/[id]/_components/note-block-editor";
+import { NoteTiptapEditor } from "@/app/(protected)/notes/[id]/_components/note-tiptap-editor";
+import { putNoteBlocksSync } from "@/app/_services/notes-service/notes-service";
+import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema";
 
 // =================== BLOCO SORTABLE (Markdown / tipos) ===================
 interface SortableBlockProps {
   block: Block & { children?: Block[] };
   noteId: string;
   onUpdate: (blockId: string, data: Partial<Block>) => Promise<void>;
+  onFlushRequest?: (blockId: string) => void;
+  coalescedTextSave?: boolean;
   onPasteLines?: (blockId: string, lines: string[]) => Promise<void>;
   onAddBlockAfter: (afterBlockId: string) => void;
   onBackspaceEmpty?: (blockId: string) => void;
@@ -92,6 +97,8 @@ const SortableBlockComponent: React.FC<SortableBlockProps> = ({
   block,
   noteId,
   onUpdate,
+  onFlushRequest,
+  coalescedTextSave = true,
   onPasteLines,
   onAddBlockAfter,
   onBackspaceEmpty,
@@ -120,6 +127,8 @@ const SortableBlockComponent: React.FC<SortableBlockProps> = ({
         block={block}
         noteId={noteId}
         onUpdate={onUpdate}
+        onFlushRequest={onFlushRequest}
+        coalescedTextSave={coalescedTextSave}
         onPasteLines={onPasteLines}
         onAddBlockAfter={onAddBlockAfter}
         onBackspaceEmpty={onBackspaceEmpty}
@@ -219,6 +228,15 @@ const NoteDetail = () => {
     description: string;
     title: string;
   } | null>(null);
+  const textAutosaveTimersRef = React.useRef<Map<string, number>>(new Map());
+  const textAutosaveQueuedRef = React.useRef<Map<string, string>>(new Map());
+  const textAutosaveInFlightRef = React.useRef<Set<string>>(new Set());
+  const textAutosaveDelayMs = 3500;
+  const blockAutosaveV2Enabled =
+    String(process.env.NEXT_PUBLIC_ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true").toLowerCase() !==
+    "false";
+  const useTiptapEditor =
+    String(process.env.NEXT_PUBLIC_USE_TIPTAP_EDITOR || "true").toLowerCase() !== "false";
 
   // Estados para modais e funcionalidades
   const [showShareModal, setShowShareModal] = useState(false);
@@ -789,40 +807,97 @@ const NoteDetail = () => {
   const activeBlock = activeId ? blocks.find((block) => block.id === activeId) : null;
 
   // =================== FUNÇÕES PARA BLOCOS ===================
+  const updateLocalBlock = React.useCallback((blockId: string, data: Partial<Block>) => {
+    setBlocks((prevBlocks) => {
+      const updateBlockRecursive = (
+        blockList: (Block & { children?: Block[] })[]
+      ): (Block & { children?: Block[] })[] => {
+        return blockList.map((block) => {
+          if (block.id === blockId) {
+            return { ...block, ...data };
+          }
+          if (block.children && block.children.length > 0) {
+            return {
+              ...block,
+              children: updateBlockRecursive(block.children as (Block & { children?: Block[] })[]),
+            };
+          }
+          return block;
+        });
+      };
+      return updateBlockRecursive(prevBlocks);
+    });
+  }, []);
+
+  const flushBlockTextSave = React.useCallback(
+    async (blockId: string) => {
+      if (!note) return;
+      const queuedText = textAutosaveQueuedRef.current.get(blockId);
+      if (queuedText === undefined) return;
+      if (textAutosaveInFlightRef.current.has(blockId)) return;
+
+      textAutosaveQueuedRef.current.delete(blockId);
+      textAutosaveInFlightRef.current.add(blockId);
+      try {
+        await updateBlockService(note.id, blockId, { text: queuedText });
+      } catch (error) {
+        console.error("Erro ao salvar texto do bloco:", error);
+      } finally {
+        textAutosaveInFlightRef.current.delete(blockId);
+        if (textAutosaveQueuedRef.current.has(blockId)) {
+          void flushBlockTextSave(blockId);
+        }
+      }
+    },
+    [note, updateBlockService]
+  );
+
+  const scheduleBlockTextSave = React.useCallback(
+    (blockId: string, text: string) => {
+      textAutosaveQueuedRef.current.set(blockId, text);
+      const existingTimer = textAutosaveTimersRef.current.get(blockId);
+      if (existingTimer) {
+        window.clearTimeout(existingTimer);
+      }
+      const nextTimer = window.setTimeout(() => {
+        textAutosaveTimersRef.current.delete(blockId);
+        void flushBlockTextSave(blockId);
+      }, textAutosaveDelayMs);
+      textAutosaveTimersRef.current.set(blockId, nextTimer);
+    },
+    [flushBlockTextSave]
+  );
+
+  const flushAllBlockTextSaves = React.useCallback(async () => {
+    const entries = Array.from(textAutosaveTimersRef.current.entries());
+    for (const [blockId, timer] of entries) {
+      window.clearTimeout(timer);
+      textAutosaveTimersRef.current.delete(blockId);
+    }
+    await Promise.all(
+      Array.from(textAutosaveQueuedRef.current.keys()).map((blockId) => flushBlockTextSave(blockId))
+    );
+  }, [flushBlockTextSave]);
+
   const handleUpdateBlock = async (blockId: string, data: Partial<Block>) => {
     if (!note) return;
 
     const isTextOnlyUpdate =
       Object.keys(data).length === 1 && Object.prototype.hasOwnProperty.call(data, "text");
 
+    if (blockAutosaveV2Enabled && isTextOnlyUpdate && typeof data.text === "string") {
+      updateLocalBlock(blockId, data);
+      scheduleBlockTextSave(blockId, data.text);
+      return;
+    }
+
     try {
       if (!isTextOnlyUpdate) {
         setIsSaving(true);
       }
+      await flushBlockTextSave(blockId);
       await updateBlockService(note.id, blockId, data);
-
-      // Atualizar estado local
-      setBlocks((prevBlocks) => {
-        const updateBlockRecursive = (
-          blockList: (Block & { children?: Block[] })[]
-        ): (Block & { children?: Block[] })[] => {
-          return blockList.map((block) => {
-            if (block.id === blockId) {
-              return { ...block, ...data };
-            }
-            if (block.children && block.children.length > 0) {
-              return {
-                ...block,
-                children: updateBlockRecursive(
-                  block.children as (Block & { children?: Block[] })[]
-                ),
-              };
-            }
-            return block;
-          });
-        };
-        return updateBlockRecursive(prevBlocks);
-      });
+      updateLocalBlock(blockId, data);
     } catch (error) {
       console.error("Erro ao atualizar bloco:", error);
     } finally {
@@ -941,6 +1016,20 @@ const NoteDetail = () => {
       console.error("Erro ao deletar bloco:", error);
     }
   };
+
+  const handleTiptapSave = React.useCallback(
+    async (blocksData: CreateBlockData[]) => {
+      if (!note) return;
+      try {
+        const savedBlocks = await putNoteBlocksSync(note.id, blocksData);
+        setBlocks(savedBlocks as (Block & { children?: Block[] })[]);
+      } catch (error) {
+        console.error("Erro ao salvar blocos via TipTap:", error);
+        throw error;
+      }
+    },
+    [note]
+  );
 
   const handleDelete = async () => {
     if (!note) return;
@@ -1103,6 +1192,7 @@ const NoteDetail = () => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         if (note) {
+          await flushAllBlockTextSaves();
           if (metadataDebounceRef.current) {
             clearTimeout(metadataDebounceRef.current);
             metadataDebounceRef.current = null;
@@ -1117,7 +1207,28 @@ const NoteDetail = () => {
 
     document.addEventListener("keydown", handleDocumentKeyDown);
     return () => document.removeEventListener("keydown", handleDocumentKeyDown);
-  }, [editingDescription, editingTitle, flushMetadataSave, note]);
+  }, [editingDescription, editingTitle, flushAllBlockTextSaves, flushMetadataSave, note]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      void flushAllBlockTextSaves();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [flushAllBlockTextSaves]);
+
+  useEffect(() => {
+    return () => {
+      const timersRef = textAutosaveTimersRef.current;
+      const timers = Array.from(timersRef.values());
+      for (const timer of timers) {
+        window.clearTimeout(timer);
+      }
+      timersRef.clear();
+    };
+  }, []);
 
   if (initialLoading || !note) {
     return <NoteDetailSkeleton />;
@@ -2084,76 +2195,91 @@ const NoteDetail = () => {
                   </div>
 
                   {/* =================== EDITOR =================== */}
-                  <div className="w-full space-y-0">
-                    {blocks.length > 0 ? (
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                      >
-                        <SortableContext
-                          items={blocks.map((b) => b.id)}
-                          strategy={verticalListSortingStrategy}
-                        >
-                          {blocks.map((block) => (
-                            <SortableBlockComponent
-                              key={block.id}
-                              block={block}
-                              noteId={note.id}
-                              onUpdate={handleUpdateBlock}
-                              onPasteLines={handlePasteLines}
-                              onAddBlockAfter={handleAddBlockAfter}
-                              onBackspaceEmpty={handleBackspaceEmpty}
-                              focusBlockId={focusBlockId}
-                              onFocused={() => setFocusBlockId(null)}
-                              canEdit={Boolean(note.access?.canEdit)}
-                            />
-                          ))}
-                        </SortableContext>
-
-                        {/* Overlay para mostrar o item sendo arrastado */}
-                        <DragOverlay>
-                          {activeBlock ? (
-                            <div className="rounded-md border border-yellow-500/30 bg-white px-3 py-2 shadow-xl dark:border-yellow-500/50 dark:bg-neutral-900">
-                              <NoteBlockEditor
-                                block={activeBlock}
-                                noteId={note.id}
-                                onUpdate={async () => {}}
-                                onPasteLines={async () => {}}
-                                onAddBlockAfter={() => {}}
-                                isDragging={true}
-                                canEdit={false}
-                              />
-                            </div>
-                          ) : null}
-                        </DragOverlay>
-                      </DndContext>
+                  <div className="w-full space-y-0 pt-4">
+                    {useTiptapEditor ? (
+                      <NoteTiptapEditor
+                        initialBlocks={blocks}
+                        noteId={note.id}
+                        canEdit={Boolean(note.access?.canEdit)}
+                        onSave={handleTiptapSave}
+                      />
                     ) : (
-                      <div className="flex min-h-[80px] flex-col items-center justify-center rounded-md px-4 py-4">
-                        <div className="flex items-center gap-2 text-sm text-neutral-400 dark:text-neutral-500">
-                          <Loader2 size={14} className="animate-spin" />
-                          <span>Criando bloco...</span>
-                        </div>
-                      </div>
-                    )}
+                      <>
+                        {blocks.length > 0 ? (
+                          <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
+                          >
+                            <SortableContext
+                              items={blocks.map((b) => b.id)}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              {blocks.map((block) => (
+                                <SortableBlockComponent
+                                  key={block.id}
+                                  block={block}
+                                  noteId={note.id}
+                                  onUpdate={handleUpdateBlock}
+                                  onFlushRequest={(blockId) => {
+                                    void flushBlockTextSave(blockId);
+                                  }}
+                                  coalescedTextSave={blockAutosaveV2Enabled}
+                                  onPasteLines={handlePasteLines}
+                                  onAddBlockAfter={handleAddBlockAfter}
+                                  onBackspaceEmpty={handleBackspaceEmpty}
+                                  focusBlockId={focusBlockId}
+                                  onFocused={() => setFocusBlockId(null)}
+                                  canEdit={Boolean(note.access?.canEdit)}
+                                />
+                              ))}
+                            </SortableContext>
 
-                    {/* Botão para adicionar novo bloco */}
-                    {note.access?.canEdit && (
-                      <div className="pt-4">
-                        <button
-                          onClick={() => handleAddBlock("paragraph")}
-                          className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-400 transition-all hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-700 dark:text-neutral-500 dark:hover:border-yellow-500/50"
-                        >
-                          <Plus size={14} />
-                          Nova linha
-                        </button>
-                      </div>
+                            <DragOverlay>
+                              {activeBlock ? (
+                                <div className="rounded-md border border-yellow-500/30 bg-white px-3 py-2 shadow-xl dark:border-yellow-500/50 dark:bg-neutral-900">
+                                  <NoteBlockEditor
+                                    block={activeBlock}
+                                    noteId={note.id}
+                                    onUpdate={async () => {}}
+                                    onFlushRequest={() => {}}
+                                    coalescedTextSave={blockAutosaveV2Enabled}
+                                    onPasteLines={async () => {}}
+                                    onAddBlockAfter={() => {}}
+                                    isDragging={true}
+                                    canEdit={false}
+                                  />
+                                </div>
+                              ) : null}
+                            </DragOverlay>
+                          </DndContext>
+                        ) : (
+                          <div className="flex min-h-[80px] flex-col items-center justify-center rounded-md px-4 py-4">
+                            <div className="flex items-center gap-2 text-sm text-neutral-400 dark:text-neutral-500">
+                              <Loader2 size={14} className="animate-spin" />
+                              <span>Criando bloco...</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {note.access?.canEdit && (
+                          <div className="pt-4">
+                            <button
+                              onClick={() => handleAddBlock("paragraph")}
+                              className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-400 transition-all hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-700 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                            >
+                              <Plus size={14} />
+                              Nova linha
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
 
                   {/* Atalhos de teclado - visível apenas em desktop */}
-                  {note.access?.canEdit && (
+                  {note.access?.canEdit && !useTiptapEditor && (
                     <div className="mt-10 hidden border-t border-neutral-100 pt-4 sm:block dark:border-neutral-800">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-400 dark:text-neutral-500">
                         <Save size={12} />

@@ -112,6 +112,56 @@ class NotesBaseController {
   }
 
   /**
+   * Variante otimizada para caminhos de alta frequência (edição de blocos).
+   * Evita carregar payload completo da nota quando só precisamos validar acesso.
+   * @param {string} noteId
+   * @param {string} userId
+   * @returns {Promise<{ note: Object, isOwner: boolean, isCollaborator: boolean, hasOrgProjectAccess: boolean }>}
+   */
+  async _validateNoteAccessLightweight(noteId, userId) {
+    if (!noteId) {
+      throw new Error("ID da nota é obrigatório");
+    }
+
+    const note = await this.notesRepository.getNoteAccessSummary(noteId);
+    if (!note) {
+      throw new Error("Nota não encontrada");
+    }
+
+    const isOwner = note.user_id === userId;
+    if (isOwner) {
+      return {
+        hasOrgProjectAccess: false,
+        isCollaborator: false,
+        isOwner: true,
+        note,
+      };
+    }
+
+    const isCollaborator = await this.notesRepository.isCollaborator(noteId, userId);
+    if (isCollaborator) {
+      return {
+        hasOrgProjectAccess: false,
+        isCollaborator: true,
+        isOwner: false,
+        note,
+      };
+    }
+
+    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(note, userId);
+    if (hasOrgProjectAccess) {
+      return {
+        hasOrgProjectAccess: true,
+        isCollaborator: false,
+        isOwner: false,
+        note,
+      };
+    }
+
+    throw new Error("Acesso negado");
+  }
+
+  /**
    * Valida e verifica propriedade da nota
    * @param {string} noteId
    * @param {string} userId

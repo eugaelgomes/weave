@@ -398,6 +398,26 @@ class ReadNotesRepository extends BaseRepository {
     return null;
   }
 
+  /**
+   * Versão enxuta para validação de acesso em caminhos quentes de escrita.
+   * @param {string} noteId
+   * @returns {Promise<{ id: string, user_id: string, project_id: string | null } | null>}
+   */
+  async getNoteAccessSummary(noteId) {
+    const query = `
+      SELECT
+        n.id::text,
+        n.user_id::text,
+        n.project_id::text
+      FROM notes n
+      WHERE n.id = $1::uuid
+        AND n.deleted = false
+      LIMIT 1;
+    `;
+    const rows = await this.executeQuery(query, [noteId]);
+    return rows[0] || null;
+  }
+
   async getAllNotesStats(userId, orgWideOrganizationId = null) {
     const query = `
     WITH user_scope_notes AS (

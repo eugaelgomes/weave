@@ -14,6 +14,8 @@ export interface NoteBlockEditorProps {
   block: Block & { children?: Block[] };
   noteId: string;
   onUpdate: (blockId: string, data: Partial<Block>) => Promise<void>;
+  onFlushRequest?: (blockId: string) => void;
+  coalescedTextSave?: boolean;
   onPasteLines?: (blockId: string, lines: string[]) => Promise<void>;
   onAddBlockAfter: (afterBlockId: string) => void;
   onBackspaceEmpty?: (blockId: string) => void;
@@ -132,6 +134,8 @@ function DragHandle({ dragHandleProps }: { dragHandleProps?: Record<string, unkn
 export function NoteBlockEditor({
   block,
   onUpdate,
+  onFlushRequest,
+  coalescedTextSave = true,
   onPasteLines,
   onAddBlockAfter,
   onBackspaceEmpty,
@@ -167,12 +171,13 @@ export function NoteBlockEditor({
   }, [focusBlockId, block.id, onFocused, textareaRef, canEdit]);
 
   useEffect(() => {
+    if (coalescedTextSave) return;
     if (localText === plainSource) return;
     const timeoutId = window.setTimeout(() => {
       void onUpdate(block.id, { text: localText });
     }, 1800);
     return () => clearTimeout(timeoutId);
-  }, [localText, block.id, plainSource, onUpdate]);
+  }, [coalescedTextSave, localText, plainSource, onUpdate, block.id]);
 
   const wrapSelection = useCallback(
     (before: string, after: string) => {
@@ -214,6 +219,7 @@ export function NoteBlockEditor({
 
     if (e.key === "Enter" && !e.shiftKey && breakOnEnter) {
       e.preventDefault();
+      onFlushRequest?.(block.id);
       onAddBlockAfter(block.id);
     }
 
@@ -256,8 +262,17 @@ export function NoteBlockEditor({
     <textarea
       ref={textareaRef}
       value={localText}
-      onChange={(e) => setLocalText(e.target.value)}
-      onBlur={() => setIsFocused(false)}
+      onChange={(e) => {
+        const nextText = e.target.value;
+        setLocalText(nextText);
+        if (coalescedTextSave) {
+          void onUpdate(block.id, { text: nextText });
+        }
+      }}
+      onBlur={() => {
+        setIsFocused(false);
+        onFlushRequest?.(block.id);
+      }}
       onFocus={() => setIsFocused(true)}
       onKeyDown={handleKeyDown}
       onPaste={handlePaste}
@@ -295,6 +310,8 @@ export function NoteBlockEditor({
       <button
         type="button"
         className="w-full rounded-md px-1.5 py-1 text-left transition-colors hover:bg-neutral-100/60 dark:hover:bg-neutral-800/50"
+        aria-label="Editar bloco"
+        title="Editar bloco"
         onClick={() => {
           setIsFocused(true);
           requestAnimationFrame(() => textareaRef.current?.focus());
@@ -389,7 +406,6 @@ export function NoteBlockEditor({
 
   if (block.type === "list") {
     const ordered = attrs.ordered === true;
-    const ListTag = ordered ? "ol" : "ul";
     const listClass = ordered ? "list-decimal" : "list-disc";
 
     return (
@@ -402,23 +418,47 @@ export function NoteBlockEditor({
             </div>
           ) : null}
           {block.children && block.children.length > 0 ? (
-            <ListTag className={clsx("space-y-1 pl-6", listClass)}>
-              {block.children.map((child: Block & { children?: Block[] }) => (
-                <li key={child.id} className="leading-7">
-                  <NoteBlockEditor
-                    block={child}
-                    noteId=""
-                    onUpdate={onUpdate}
-                    onPasteLines={onPasteLines}
-                    onAddBlockAfter={onAddBlockAfter}
-                    onBackspaceEmpty={onBackspaceEmpty}
-                    focusBlockId={focusBlockId}
-                    onFocused={onFocused}
-                    canEdit={canEdit}
-                  />
-                </li>
-              ))}
-            </ListTag>
+            ordered ? (
+              <ol className={clsx("space-y-1 pl-6", listClass)}>
+                {block.children.map((child: Block & { children?: Block[] }) => (
+                  <li key={child.id} className="leading-7">
+                    <NoteBlockEditor
+                      block={child}
+                      noteId=""
+                      onUpdate={onUpdate}
+                      onFlushRequest={onFlushRequest}
+                      coalescedTextSave={coalescedTextSave}
+                      onPasteLines={onPasteLines}
+                      onAddBlockAfter={onAddBlockAfter}
+                      onBackspaceEmpty={onBackspaceEmpty}
+                      focusBlockId={focusBlockId}
+                      onFocused={onFocused}
+                      canEdit={canEdit}
+                    />
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <ul className={clsx("space-y-1 pl-6", listClass)}>
+                {block.children.map((child: Block & { children?: Block[] }) => (
+                  <li key={child.id} className="leading-7">
+                    <NoteBlockEditor
+                      block={child}
+                      noteId=""
+                      onUpdate={onUpdate}
+                      onFlushRequest={onFlushRequest}
+                      coalescedTextSave={coalescedTextSave}
+                      onPasteLines={onPasteLines}
+                      onAddBlockAfter={onAddBlockAfter}
+                      onBackspaceEmpty={onBackspaceEmpty}
+                      focusBlockId={focusBlockId}
+                      onFocused={onFocused}
+                      canEdit={canEdit}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )
           ) : null}
         </div>
       </div>
@@ -474,6 +514,8 @@ export function NoteBlockEditor({
               block={child}
               noteId=""
               onUpdate={onUpdate}
+              onFlushRequest={onFlushRequest}
+              coalescedTextSave={coalescedTextSave}
               onPasteLines={onPasteLines}
               onAddBlockAfter={onAddBlockAfter}
               onBackspaceEmpty={onBackspaceEmpty}

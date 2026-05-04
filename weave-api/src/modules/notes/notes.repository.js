@@ -16,6 +16,8 @@ module.exports = {
   getAllNotesWithPagination: (...args) =>
     readNotesRepository.getAllNotesWithPagination(...args),
   getNoteById: (...args) => readNotesRepository.getNoteById(...args),
+  getNoteAccessSummary: (...args) =>
+    readNotesRepository.getNoteAccessSummary(...args),
   findNotesForDueDateEveReminder: (...args) =>
     readNotesRepository.findNotesForDueDateEveReminder(...args),
   getAllNotesStats: (...args) => readNotesRepository.getAllNotesStats(...args),

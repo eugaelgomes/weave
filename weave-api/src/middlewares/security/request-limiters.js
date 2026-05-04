@@ -26,6 +26,28 @@ const standardTrafficLimiter = rateLimit({
   message: { error: "Too many failed attempts. Please try again later." },
 });
 
+const notesBlockWriteWindowMs = Number(process.env.NOTES_BLOCKS_WRITE_WINDOW_MS || 5 * 60 * 1000);
+const notesBlockWriteMax = Number(process.env.NOTES_BLOCKS_WRITE_MAX || 300);
+
+const notesBlockWriteLimiter = rateLimit({
+  windowMs: Number.isFinite(notesBlockWriteWindowMs) ? notesBlockWriteWindowMs : 5 * 60 * 1000,
+  max: Number.isFinite(notesBlockWriteMax) ? notesBlockWriteMax : 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.userId || req.ip,
+  message: { error: "Too many block edit requests. Please try again later." },
+  handler: (req, res) => {
+    console.warn("[notes.blocks.rate_limit]", {
+      ip: req.ip,
+      method: req.method,
+      noteId: req.params?.noteId,
+      path: req.originalUrl,
+      userId: req.user?.userId || null,
+    });
+    res.status(429).json({ error: "Too many block edit requests. Please try again later." });
+  },
+});
+
 /**
  * Operações Estruturais: Criar Organização, Alterar Planos, Configurações de Perfil
  * 30 requisições a cada 30 minutos
@@ -70,6 +92,7 @@ module.exports = {
   structuralLimiter,
   heavyOperationLimiter,
   authSecurityLimiter,
+  notesBlockWriteLimiter,
   apiLimiter: highTrafficLimiter,
   strictLimiter: heavyOperationLimiter,
   authLimiter: authSecurityLimiter,

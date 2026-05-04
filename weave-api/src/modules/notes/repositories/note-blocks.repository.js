@@ -211,51 +211,84 @@ class NoteBlocksRepository extends BaseRepository {
         ? null
         : String(data.parent_id);
 
-    let position = data.position;
-    if (position === undefined || position === null) {
-      const maxRow = await this.executeQuery(
+    const client = await getConnection();
+    try {
+      await client.query("BEGIN");
+
+      let position = data.position;
+      if (position === undefined || position === null) {
+        const maxRow = await client.query(
+          `
+          SELECT COALESCE(MAX(position), -1) + 1 AS next_pos
+          FROM note_blocks
+          WHERE note_id = $1 AND deleted = false
+            AND (
+              ($2::uuid IS NULL AND parent_id IS NULL)
+              OR (parent_id = $2::uuid)
+            )
+        `,
+          [noteId, parentId]
+        );
+        position = Number(maxRow.rows[0]?.next_pos ?? 0);
+      } else {
+        position = Math.max(0, Number(position));
+      }
+
+      await client.query(
         `
-        SELECT COALESCE(MAX(position), -1) + 1 AS next_pos
-        FROM note_blocks
-        WHERE note_id = $1 AND deleted = false
+        UPDATE note_blocks
+        SET position = position + 1,
+            version = version + 1,
+            updated_at = NOW()
+        WHERE note_id = $1::uuid
+          AND deleted = false
           AND (
             ($2::uuid IS NULL AND parent_id IS NULL)
             OR (parent_id = $2::uuid)
           )
+          AND position >= $3
       `,
-        [noteId, parentId]
+        [noteId, parentId, Number(position)]
       );
-      position = Number(maxRow[0]?.next_pos ?? 0);
-    }
 
-    const query = `
-      INSERT INTO note_blocks (
-        id, note_id, parent_id, type, properties, position, version, created_by
-      )
-      VALUES ($1::uuid, $2::uuid, $3::uuid, $4, $5::jsonb, $6, 1, $7::uuid)
-      RETURNING
-        id::text,
-        note_id::text,
-        parent_id::text,
-        type,
-        properties,
-        position,
-        version,
-        created_by::text,
-        created_at,
-        updated_at
-    `;
-    const rows = await this.executeQuery(query, [
-      validated.id,
-      noteId,
-      parentId,
-      validated.type,
-      JSON.stringify(validated.properties || {}),
-      Number(position),
-      userId,
-    ]);
-    const row = rows[0];
-    return this._rowToApiBlock(row);
+      const inserted = await client.query(
+        `
+        INSERT INTO note_blocks (
+          id, note_id, parent_id, type, properties, position, version, created_by
+        )
+        VALUES ($1::uuid, $2::uuid, $3::uuid, $4, $5::jsonb, $6, 1, $7::uuid)
+        RETURNING
+          id::text,
+          note_id::text,
+          parent_id::text,
+          type,
+          properties,
+          position,
+          version,
+          created_by::text,
+          created_at,
+          updated_at
+      `,
+        [
+          validated.id,
+          noteId,
+          parentId,
+          validated.type,
+          JSON.stringify(validated.properties || {}),
+          Number(position),
+          userId,
+        ]
+      );
+
+      await client.query("COMMIT");
+      const row = inserted.rows[0];
+      return this._rowToApiBlock(row);
+    } catch (e) {
+      await client.query("ROLLBACK");
+      throw e;
+    } finally {
+      client.release();
+    }
   }
 
   /**

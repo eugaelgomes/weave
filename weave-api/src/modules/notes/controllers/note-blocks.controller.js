@@ -34,7 +34,7 @@ class NoteBlocksController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      await this._validateNoteAccess(noteId, userId);
+      await this._validateNoteAccessLightweight(noteId, userId);
 
       const block = await this.notesRepository.insertNoteBlock(
         noteId,
@@ -58,12 +58,13 @@ class NoteBlocksController extends NotesBaseController {
    * PATCH /api/notes/:noteId/blocks/:blockId
    */
   async update(req, res, next) {
+    const startedAt = Date.now();
     try {
       const { noteId, blockId } = req.params;
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      await this._validateNoteAccess(noteId, userId);
+      await this._validateNoteAccessLightweight(noteId, userId);
 
       const existing = await this.notesRepository.findNoteBlockById(blockId);
       if (!existing || String(existing.note_id) !== String(noteId)) {
@@ -80,8 +81,23 @@ class NoteBlocksController extends NotesBaseController {
       if (!updated) {
         return res.status(404).json({ error: "Bloco não encontrado" });
       }
+      if (String(process.env.ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true").toLowerCase() !== "false") {
+        console.info("[notes.blocks.patch]", {
+          blockId,
+          latency_ms: Date.now() - startedAt,
+          noteId,
+          rateLimitRemaining: req.rateLimit?.remaining ?? null,
+          userId,
+        });
+      }
       return res.status(200).json(updated);
     } catch (error) {
+      console.error("[notes.blocks.patch.error]", {
+        blockId: req.params?.blockId,
+        latency_ms: Date.now() - startedAt,
+        noteId: req.params?.noteId,
+        userId: req.user?.userId,
+      });
       this._handleError(error, res, next);
     }
   }
@@ -95,7 +111,7 @@ class NoteBlocksController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      await this._validateNoteAccess(noteId, userId);
+      await this._validateNoteAccessLightweight(noteId, userId);
 
       const existing = await this.notesRepository.findNoteBlockById(blockId);
       if (!existing || String(existing.note_id) !== String(noteId)) {
@@ -122,7 +138,7 @@ class NoteBlocksController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      await this._validateNoteAccess(noteId, userId);
+      await this._validateNoteAccessLightweight(noteId, userId);
 
       const parentRaw = req.body?.parent_id ?? req.body?.parentId;
       const parentId =
