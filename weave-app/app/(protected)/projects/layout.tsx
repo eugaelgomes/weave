@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { ProjectsHeader } from "../_components/ui/headers/projects-header";
+import GlobalLoading from "@/app/_components/ui/global-loading";
 
 export default function ProjectsLayout({ children }: { children: React.ReactNode }) {
   const { authenticated, loading: authLoading } = useAuth();
@@ -36,11 +37,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
   };
 
   if (authLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-yellow-500"></div>
-      </div>
-    );
+    return <GlobalLoading fullScreen={false} />;
   }
 
   if (!authenticated) {

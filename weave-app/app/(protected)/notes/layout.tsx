@@ -11,6 +11,7 @@ import {
   NoteCommentsPanelProvider,
   useNoteCommentsPanel,
 } from "../../_contexts/note-comments-panel-context";
+import GlobalLoading from "@/app/_components/ui/global-loading";
 
 function NotesLayoutContent({ children }: { children: React.ReactNode }) {
   const { loading: notesLoading, getRecentNotes } = useNotes();
@@ -182,11 +183,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
   const { authenticated, loading: authLoading } = useAuth();
 
   if (authLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-yellow-500"></div>
-      </div>
-    );
+    return <GlobalLoading fullScreen={false} />;
   }
 
   if (!authenticated) {

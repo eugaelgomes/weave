@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import ProtectedLayout from "@/app/_components/protected-layout";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { AuthenticatedProviders } from "@/app/_contexts/authenticated-providers";
+import GlobalLoading from "@/app/_components/ui/global-loading";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { authenticated, loading } = useAuth();
@@ -22,13 +23,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }, [authenticated, loading, pathname, router]);
 
   if (loading || !authenticated) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"></div>
-        </div>
-      </div>
-    );
+    return <GlobalLoading className="h-screen min-h-screen" />;
   }
 
   return (
