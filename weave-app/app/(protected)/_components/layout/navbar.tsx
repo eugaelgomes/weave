@@ -215,7 +215,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
   const [mounted, setMounted] = useState(false);
 
   const desktopMenuRef = useRef<HTMLDivElement>(null);
-  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => setMounted(true), []);
 

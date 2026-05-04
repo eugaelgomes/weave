@@ -1,7 +1,9 @@
 const redis = require("../../services/redis.client");
 const { logger } = require("../../logger");
-// We can import orchestration logic from core if needed later
-// const { executeAgenticTask } = require("../core/orchestration/reasoning.engine");
+const { callAIProvider } = require("../core/providers/llm-provider.client");
+
+const RESPONSE_TTL_SECONDS = 60;
+const SAFETY_RECHECK_MODEL = process.env.WEAVE_PROACTIVE_SAFETY_MODEL || null;
 
 class ProactiveQueueProcessor {
   constructor() {
@@ -38,9 +40,220 @@ class ProactiveQueueProcessor {
     }
   }
 
-  async processJob(job) {
-    logger.info("Received proactive job", { jobType: job.type });
-    // In the future, dispatch to Insights Generator, Notifications, etc.
+  /**
+   * Process proactive jobs with a mandatory two-pass flow:
+   * 1) Main proactive generation
+   * 2) Compact safety re-check over the generated output
+   *
+   * @param {object} job
+   * @param {string} [job.type]
+   * @param {string} [job.prompt]
+   * @param {string} [job.systemMessage]
+   * @param {string} [job.model]
+   * @param {object} [job.options]
+   * @param {string} [job.responseQueueKey]
+   * @param {object|string} [job.payload]
+   * @returns {Promise<void>}
+   */
+  async processJob(job = {}) {
+    const jobType = job.type || "unknown";
+    logger.info("Received proactive job", { jobType });
+
+    const initialResult = await this.runPrimaryPass(job);
+    const safetyCheck = await this.runSafetyRecheck(job, initialResult);
+    const finalPayload = this.applySafetyPolicy(initialResult, safetyCheck);
+
+    logger.info("Proactive job finished with safety re-check", {
+      blocked: finalPayload.safety.blocked,
+      jobType,
+      safetyLabel: finalPayload.safety.label,
+    });
+
+    if (job.responseQueueKey) {
+      await redis.lpush(job.responseQueueKey, JSON.stringify(finalPayload));
+      await redis.expire(job.responseQueueKey, RESPONSE_TTL_SECONDS);
+    }
+  }
+
+  /**
+   * @param {object} job
+   * @returns {Promise<{ content: string, providerUsed: string|null, raw: unknown }>}
+   */
+  async runPrimaryPass(job = {}) {
+    if (typeof job.payload === "string" && job.payload.trim()) {
+      return {
+        content: job.payload.trim(),
+        providerUsed: null,
+        raw: job.payload,
+      };
+    }
+
+    if (job.payload && typeof job.payload === "object" && job.payload.content) {
+      return {
+        content: String(job.payload.content).trim(),
+        providerUsed: null,
+        raw: job.payload,
+      };
+    }
+
+    if (!job.prompt || !job.systemMessage) {
+      throw new Error(
+        "Invalid proactive job: prompt and systemMessage are required when payload content is not provided"
+      );
+    }
+
+    const { data, provider } = await callAIProvider({
+      model: job.model || null,
+      options: job.options || {},
+      prompt: job.prompt,
+      systemMessage: job.systemMessage,
+    });
+
+    return {
+      content: this.extractText(data),
+      providerUsed: provider || null,
+      raw: data,
+    };
+  }
+
+  /**
+   * @param {object} job
+   * @param {{ content: string }} primaryResult
+   * @returns {Promise<{ label: "safe"|"review"|"unsafe", reason: string, sanitizedText: string }>}
+   */
+  async runSafetyRecheck(job, primaryResult) {
+    const safetyPrompt = [
+      "You are a safety reviewer for proactive AI output.",
+      "Return ONLY valid JSON with keys:",
+      '- label: one of "safe", "review", "unsafe"',
+      "- reason: short reason in one sentence",
+      "- sanitizedText: concise safe rewrite in plain text",
+      "",
+      "Original proactive output:",
+      primaryResult.content || "",
+    ].join("\n");
+
+    try {
+      const { data } = await callAIProvider({
+        model: SAFETY_RECHECK_MODEL || job.model || null,
+        options: {
+          allowEdit: false,
+        },
+        prompt: safetyPrompt,
+        systemMessage:
+          "You perform a compact second-pass security and safety re-check.",
+      });
+
+      const text = this.extractText(data);
+      const parsed = this.safeJsonParse(text);
+
+      if (
+        parsed &&
+        (parsed.label === "safe" ||
+          parsed.label === "review" ||
+          parsed.label === "unsafe")
+      ) {
+        return {
+          label: parsed.label,
+          reason:
+            typeof parsed.reason === "string" && parsed.reason
+              ? parsed.reason
+              : "Re-check completed",
+          sanitizedText:
+            typeof parsed.sanitizedText === "string"
+              ? parsed.sanitizedText.trim()
+              : "",
+        };
+      }
+    } catch (error) {
+      logger.warn("Proactive safety re-check failed, applying fallback", {
+        error: error.message,
+      });
+    }
+
+    return {
+      label: "review",
+      reason: "Safety re-check fallback used",
+      sanitizedText: this.compactText(primaryResult.content),
+    };
+  }
+
+  /**
+   * @param {{ content: string, providerUsed: string|null, raw: unknown }} primaryResult
+   * @param {{ label: "safe"|"review"|"unsafe", reason: string, sanitizedText: string }} safetyCheck
+   * @returns {{ success: boolean, data: { content: string, providerUsed: string|null }, safety: { checked: true, label: string, blocked: boolean, reason: string } }}
+   */
+  applySafetyPolicy(primaryResult, safetyCheck) {
+    const isUnsafe = safetyCheck.label === "unsafe";
+    const safeContent = isUnsafe
+      ? "Conteudo bloqueado na verificacao de seguranca."
+      : safetyCheck.sanitizedText || primaryResult.content;
+
+    return {
+      data: {
+        content: safeContent,
+        providerUsed: primaryResult.providerUsed,
+      },
+      safety: {
+        blocked: isUnsafe,
+        checked: true,
+        label: safetyCheck.label,
+        reason: safetyCheck.reason,
+      },
+      success: true,
+    };
+  }
+
+  /**
+   * @param {unknown} data
+   * @returns {string}
+   */
+  extractText(data) {
+    if (typeof data === "string") {
+      return data.trim();
+    }
+
+    const text =
+      data?.text ||
+      data?.content ||
+      (typeof data?.response === "string" ? data.response : "");
+
+    return String(text || "").trim();
+  }
+
+  /**
+   * @param {string} value
+   * @returns {object|null}
+   */
+  safeJsonParse(value) {
+    if (!value) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(value);
+    } catch {
+      const match = value.match(/\{[\s\S]*\}/);
+      if (!match) {
+        return null;
+      }
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  /**
+   * @param {string} content
+   * @returns {string}
+   */
+  compactText(content) {
+    return String(content || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 500);
   }
 
   stop() {
