@@ -20,6 +20,21 @@ interface NoteTiptapEditorProps {
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+function createBlocksSnapshot(blocks: CreateBlockData[]): string {
+  const normalized = blocks.map((block) => ({
+    done: block.done ?? null,
+    parentId: block.parentId ?? null,
+    position: block.position ?? null,
+    properties: block.properties ?? null,
+    text: block.text ?? "",
+    type: block.type,
+    children: Array.isArray((block as { children?: unknown[] }).children)
+      ? (block as { children?: unknown[] }).children
+      : [],
+  }));
+  return JSON.stringify(normalized);
+}
+
 export function NoteTiptapEditor({
   initialBlocks,
   noteId,
@@ -40,8 +55,8 @@ export function NoteTiptapEditor({
         return;
       }
 
-      const currentJson = JSON.stringify(blocks);
-      if (currentJson === lastSavedJsonRef.current) {
+      const currentSnapshot = createBlocksSnapshot(blocks);
+      if (currentSnapshot === lastSavedJsonRef.current) {
         return;
       }
 
@@ -50,7 +65,7 @@ export function NoteTiptapEditor({
 
       try {
         await onSave(blocks);
-        lastSavedJsonRef.current = currentJson;
+        lastSavedJsonRef.current = currentSnapshot;
         setSaveStatus("saved");
 
         setTimeout(() => {
@@ -160,7 +175,7 @@ export function NoteTiptapEditor({
 
       if (currentJson !== newJson && !saveInFlightRef.current) {
         editor.commands.setContent(newContent);
-        lastSavedJsonRef.current = JSON.stringify(tiptapDocToBlocks(newContent));
+        lastSavedJsonRef.current = createBlocksSnapshot(tiptapDocToBlocks(newContent));
       }
     }
   }, [initialBlocks, editor]);
