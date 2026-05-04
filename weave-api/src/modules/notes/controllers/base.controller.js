@@ -5,9 +5,6 @@ const {
   orgRoleHasPermission,
   ORG_PERMISSIONS,
 } = require("@/modules/organizations/organization-role-policy");
-const { cloneDefaultNoteDocumentState } = require("../document-normalizer");
-const { documentToBlocks } = require("../document-blocks-adapter");
-
 /**
  * Base dos controllers de notas: autenticação, acesso e formatação.
  */
@@ -156,13 +153,11 @@ class NotesBaseController {
   _formatNoteResponse(note, blocks = [], options = {}) {
     const { includeBlocks = true } = options;
     const projectId = note.project_id ? String(note.project_id) : null;
-    const normalizedDocument = note.document || cloneDefaultNoteDocumentState();
     return {
       id: note.id.toString(),
       title: note.title,
       description: note.description,
       properties: note.properties || {},
-      document: normalizedDocument,
       tags: note.tags || [],
       status: note.status,
       due_date: note.due_date ?? null,
@@ -181,11 +176,7 @@ class NotesBaseController {
             stage_name: note.project_stage_name || null,
           }
         : null,
-      blocks: includeBlocks
-        ? Array.isArray(blocks) && blocks.length > 0
-          ? blocks
-          : documentToBlocks(normalizedDocument, note.id.toString())
-        : [],
+      blocks: includeBlocks && Array.isArray(blocks) ? blocks : [],
     };
   }
 

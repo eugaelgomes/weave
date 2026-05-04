@@ -1,6 +1,6 @@
 import { apiClient, handleResponse } from "../api-methods";
 import { API_ENDPOINTS } from "../api-methods";
-import type { NoteStatus } from "@/app/_utils/db-enums";
+import { NOTE_STATUS } from "@/app/_utils/db-enums";
 import { z } from "zod";
 
 import {
@@ -11,14 +11,13 @@ import {
   SearchUsersResponseSchema,
   CollaboratorsResponseSchema,
   NotesUserSchema,
+  BlockSchema,
   type Collaborator,
   type NoteProperties,
   type Tag,
   type TaskPriority,
   type Note,
   type Block,
-  type NoteDocumentNode,
-  type NoteDocumentState,
   type FetchNotesParams,
   type NotesResponse,
   type CreateNoteData,
@@ -36,8 +35,6 @@ export type {
   TaskPriority,
   Note,
   Block,
-  NoteDocumentNode,
-  NoteDocumentState,
   FetchNotesParams,
   NotesResponse,
   CreateNoteData,
@@ -47,6 +44,10 @@ export type {
   User,
   NotesStatsResponse,
 };
+
+const NoteBlocksListSchema = z.object({
+  blocks: z.array(BlockSchema),
+});
 
 // =================== NOTES API ===================
 
@@ -111,6 +112,8 @@ export async function createNote(noteData: CreateNoteData): Promise<Note> {
     title: noteData.title,
     description: noteData.description,
     tags: noteData.tags || [],
+    status: NOTE_STATUS.VISIBLE,
+    ...(noteData.blocks !== undefined ? { blocks: noteData.blocks } : {}),
   });
 
   const rawData = await handleResponse<unknown>(response);
@@ -135,8 +138,6 @@ export async function updateNote(noteId: string, noteData: UpdateNoteData): Prom
     if (noteData.due_date !== undefined) formData.append("due_date", noteData.due_date ?? "");
     if (noteData.properties !== undefined)
       formData.append("properties", JSON.stringify(noteData.properties));
-    if (noteData.document !== undefined)
-      formData.append("document", JSON.stringify(noteData.document));
 
     if (noteData.icon) formData.append("icon", noteData.icon);
     if (noteData.banner) formData.append("banner", noteData.banner);
@@ -159,7 +160,6 @@ export async function updateNote(noteId: string, noteData: UpdateNoteData): Prom
     priority_id: noteData.priority_id,
     due_date: noteData.due_date,
     properties: noteData.properties,
-    document: noteData.document,
   });
 
   const rawData = await handleResponse<unknown>(response);
@@ -178,6 +178,75 @@ export async function deleteNotes(noteIds: string[]): Promise<boolean> {
   });
   await handleResponse<void>(response);
   return true;
+}
+
+// --- Note blocks (note_blocks / CRUD) ---
+
+export async function fetchNoteBlocks(noteId: string): Promise<Block[]> {
+  const response = await apiClient.get(API_ENDPOINTS.NOTES_BLOCKS(noteId));
+  const raw = await handleResponse<unknown>(response);
+  return NoteBlocksListSchema.parse(raw).blocks;
+}
+
+export async function createNoteBlock(noteId: string, data: CreateBlockData): Promise<Block> {
+  const body: Record<string, unknown> = {
+    type: data.type,
+    text: data.text,
+    position: data.position,
+    done: data.done,
+    properties: data.properties,
+  };
+  if (data.parentId) {
+    body.parent_id = data.parentId;
+  }
+  const response = await apiClient.post(API_ENDPOINTS.NOTES_BLOCKS(noteId), body);
+  return BlockSchema.parse(await handleResponse(response));
+}
+
+export async function updateNoteBlock(
+  noteId: string,
+  blockId: string,
+  patch: Partial<Block> & { properties?: Record<string, unknown> }
+): Promise<Block> {
+  const body: Record<string, unknown> = {};
+  if (patch.type !== undefined) body.type = patch.type;
+  if (patch.text !== undefined) body.text = patch.text;
+  if (patch.position !== undefined) body.position = patch.position;
+  if (patch.done !== undefined) body.done = patch.done;
+  if (patch.properties !== undefined) body.properties = patch.properties;
+
+  const response = await apiClient.patch(
+    API_ENDPOINTS.NOTES_BLOCK_BY_ID(noteId, blockId),
+    body
+  );
+  return BlockSchema.parse(await handleResponse(response));
+}
+
+export async function deleteNoteBlock(noteId: string, blockId: string): Promise<boolean> {
+  const response = await apiClient.delete(API_ENDPOINTS.NOTES_BLOCK_BY_ID(noteId, blockId));
+  await handleResponse(response);
+  return true;
+}
+
+export async function reorderNoteBlocks(
+  noteId: string,
+  blockPositions: Array<{ id: string; position: number }>,
+  parentId: string | null = null
+): Promise<boolean> {
+  const ordered = [...blockPositions].sort((a, b) => a.position - b.position);
+  const ordered_ids = ordered.map((x) => x.id);
+  const response = await apiClient.post(API_ENDPOINTS.NOTES_BLOCKS_REORDER(noteId), {
+    parent_id: parentId,
+    ordered_ids,
+  });
+  await handleResponse(response);
+  return true;
+}
+
+export async function putNoteBlocksSync(noteId: string, blocks: unknown[]): Promise<Block[]> {
+  const response = await apiClient.put(API_ENDPOINTS.NOTES_BLOCKS(noteId), { blocks });
+  const raw = await handleResponse<unknown>(response);
+  return NoteBlocksListSchema.parse(raw).blocks;
 }
 
 //

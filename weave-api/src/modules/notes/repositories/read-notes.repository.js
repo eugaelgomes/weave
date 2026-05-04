@@ -17,7 +17,6 @@ class ReadNotesRepository extends BaseRepository {
       n.created_at,
       n.updated_at,
       n.properties,
-      n.document,
       n.due_date,
 
       -- criador da nota
@@ -102,7 +101,6 @@ class ReadNotesRepository extends BaseRepository {
         n.updated_at,
         n.deleted,
         n.properties,
-        n.document,
         n.due_date,
 
         -- criador da nota
@@ -233,7 +231,6 @@ class ReadNotesRepository extends BaseRepository {
         n.description,
         n.status,
         n.properties,
-        n.document,
         n.tags,
         n.created_at,
         n.updated_at,
@@ -330,7 +327,6 @@ class ReadNotesRepository extends BaseRepository {
         n.description,
         n.status,
         n.properties,
-        n.document,
         n.tags,
         n.created_at,
         n.updated_at,
@@ -383,7 +379,7 @@ class ReadNotesRepository extends BaseRepository {
     LEFT JOIN note_collaborators nc ON n.id = nc.note_id
     LEFT JOIN users c ON nc.user_id = c.user_id
     LEFT JOIN organizations o ON p.organization_id = o.id AND o.deleted = false
-    WHERE n.id = $1 AND n.deleted = false AND n.deleted = false
+    WHERE n.id = $1 AND n.deleted = false
     GROUP BY 
         n.id, 
         u.user_id, 
@@ -508,7 +504,6 @@ class ReadNotesRepository extends BaseRepository {
         n.title,
         n.due_date,
         n.properties,
-        n.document,
         n.user_id::text,
         u.email AS owner_email,
         u.name AS owner_name

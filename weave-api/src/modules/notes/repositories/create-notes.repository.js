@@ -1,6 +1,5 @@
 const BaseRepository = require("./base.repository");
 const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
-const { cloneDefaultNoteDocumentState } = require("../document-normalizer");
 const { enqueueNoteEmbeddingJob } = require("../../../services/queue/queue-controller");
 
 const DEFAULT_NOTE_PROPERTIES = {
@@ -24,14 +23,11 @@ class CreateNotesRepository extends BaseRepository {
     status = NOTE_STATUS.VISIBLE,
     projectId = null,
     priorityId = null,
-    assignedTo = null,
-    noteDocument = null
+    assignedTo = null
   ) {
-    const persistedDocument = noteDocument || cloneDefaultNoteDocumentState();
-
     const query = `
-      INSERT INTO notes (user_id, title, description, tags, status, project_id, properties, priority_id, document)
-      VALUES ($1, $2, $3, $4::uuid[], $5, $6, $7, $8, $9)
+      INSERT INTO notes (user_id, title, description, tags, status, project_id, properties, priority_id)
+      VALUES ($1, $2, $3, $4::uuid[], $5, $6, $7, $8)
       RETURNING *; 
     `;
     const results = await this.executeQuery(query, [
@@ -43,12 +39,11 @@ class CreateNotesRepository extends BaseRepository {
       projectId,
       JSON.stringify(DEFAULT_NOTE_PROPERTIES),
       priorityId,
-      JSON.stringify(persistedDocument),
     ]);
     const createdNote = results[0];
-    
+
     if (createdNote) {
-      await enqueueNoteEmbeddingJob(createdNote.id).catch(err => {
+      await enqueueNoteEmbeddingJob(createdNote.id).catch((err) => {
         console.error("[CreateNotesRepository] Failed to enqueue embedding job", err);
       });
     }
@@ -63,15 +58,12 @@ class CreateNotesRepository extends BaseRepository {
     tags = [],
     initialBlockContent = "",
     status = NOTE_STATUS.VISIBLE,
-    projectId = null,
-    noteDocument = null
+    projectId = null
   ) {
-    const persistedDocument = noteDocument || cloneDefaultNoteDocumentState();
-
     const query = `
       WITH new_note AS (
-        INSERT INTO notes (user_id, title, description, tags, status, project_id, properties, document)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO notes (user_id, title, description, tags, status, project_id, properties)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
       )
       SELECT 
@@ -80,7 +72,6 @@ class CreateNotesRepository extends BaseRepository {
         new_note.title,
         new_note.description,
         new_note.properties,
-        new_note.document,
         new_note.tags,
         new_note.status,
         new_note.created_at AS note_created_at,
@@ -103,7 +94,6 @@ class CreateNotesRepository extends BaseRepository {
       status,
       projectId,
       JSON.stringify(DEFAULT_NOTE_PROPERTIES),
-      JSON.stringify(persistedDocument),
     ]);
     const createdNote = results[0];
 

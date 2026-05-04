@@ -4,12 +4,12 @@ const chatRepository = require("@/modules/weave-ai/repositories/chat.repository"
 const agentsRepository = require("@/modules/weave-ai/repositories/agents.repository");
 const { getProvidersWithModels } = require("@/modules/weave-ai/llm-catalog");
 const notesRepository = require("@/modules/notes/notes.repository");
-const { blocksToDocument } = require("@/modules/notes/document-blocks-adapter");
 const {
-  ALLOWED_NOTE_DOCUMENT_MARKS,
-  ALLOWED_NOTE_DOCUMENT_NODES,
-  normalizeNoteDocumentPayload,
-} = require("@/modules/notes/document-normalizer");
+  ALLOWED_BLOCK_TYPES,
+  normalizeBlocksTree,
+  newBlockId,
+} = require("@/modules/notes/block-normalizer");
+const { enqueueNoteEmbeddingJob } = require("@/services/queue/queue-controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
 const projectsUpdateRepository = require("@/modules/projects/repositories/projects-update.repository");
 const { resolveAuthorizedFunctions } = require("@/modules/weave-ai/authorized-functions");
@@ -433,16 +433,45 @@ class ChatController {
   }
 
   /**
-   * Builds note document contract shared with the engine prompt.
+   * Contrato de blocos para o engine (substitui o documento ProseMirror monolítico).
    *
-   * @returns {{ allowedNodeTypes: string[], allowedMarkTypes: string[], version: number }}
+   * @returns {{ allowedBlockTypes: string[], version: number }}
    */
-  _buildNoteDocumentContract() {
+  _buildNoteBlocksContract() {
     return {
-      allowedMarkTypes: [...ALLOWED_NOTE_DOCUMENT_MARKS],
-      allowedNodeTypes: [...ALLOWED_NOTE_DOCUMENT_NODES],
+      allowedBlockTypes: [...ALLOWED_BLOCK_TYPES],
       version: 1,
     };
+  }
+
+  /**
+   * Verifica se há texto não vazio em algum bloco da árvore.
+   *
+   * @param {unknown[]} blocksTree
+   * @returns {boolean}
+   */
+  _blocksTreeHasMeaningfulText(blocksTree) {
+    if (!Array.isArray(blocksTree)) return false;
+    const stack = [...blocksTree];
+    while (stack.length > 0) {
+      const node = stack.pop();
+      if (!node || typeof node !== "object") continue;
+      const props =
+        node.properties && typeof node.properties === "object"
+          ? node.properties
+          : {};
+      const t =
+        typeof node.text === "string"
+          ? node.text
+          : typeof props.text === "string"
+            ? props.text
+            : "";
+      if (t.trim().length > 0) return true;
+      if (Array.isArray(node.children) && node.children.length > 0) {
+        stack.push(...node.children);
+      }
+    }
+    return false;
   }
 
   /**
@@ -540,69 +569,6 @@ class ChatController {
   }
 
   /**
-   * Accepts multiple document payload shapes and normalizes to the
-   * canonical note document state before validation.
-   *
-   * @param {unknown} rawDocument
-   * @returns {{ document: object, version: number }|null}
-   */
-  _coerceDocumentPayload(rawDocument) {
-    if (!rawDocument) {
-      return null;
-    }
-
-    let value = rawDocument;
-    if (typeof value === "string") {
-      try {
-        value = JSON.parse(value);
-      } catch {
-        return null;
-      }
-    }
-
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
-      return null;
-    }
-
-    // Canonical shape already: { document: {...}, version }
-    if (value.document && typeof value.document === "object") {
-      return value;
-    }
-
-    // LLM may send root doc node directly: { type: "doc", content: [...] }
-    if (value.type === "doc" && Array.isArray(value.content)) {
-      return {
-        document: value,
-        version: 1,
-      };
-    }
-
-    return null;
-  }
-
-  /**
-   * Checks if document has meaningful text content.
-   *
-   * @param {unknown} node
-   * @returns {boolean}
-   */
-  _hasMeaningfulText(node) {
-    if (!node || typeof node !== "object") {
-      return false;
-    }
-
-    if (node.type === "text" && typeof node.text === "string") {
-      return node.text.trim().length > 0;
-    }
-
-    if (!Array.isArray(node.content)) {
-      return false;
-    }
-
-    return node.content.some((child) => this._hasMeaningfulText(child));
-  }
-
-  /**
    * Execute a single authorized tool/function call.
    *
    * @param {string} userId
@@ -657,6 +623,26 @@ class ChatController {
           await notesRepository.updateNoteById(noteId, updateData);
         }
 
+        if (Array.isArray(args.blocks) && args.blocks.length > 0) {
+          const tree = normalizeBlocksTree(args.blocks);
+          await notesRepository.bulkInsertNoteBlocks(noteId, userId, tree);
+        } else if (typeof args.content === "string" && args.content.trim().length > 0) {
+          await notesRepository.bulkInsertNoteBlocks(
+            noteId,
+            userId,
+            normalizeBlocksTree([
+              {
+                id: newBlockId(),
+                type: "paragraph",
+                properties: { text: args.content },
+              },
+            ])
+          );
+        } else {
+          await notesRepository.insertDefaultNoteBlock(noteId, userId);
+        }
+        await enqueueNoteEmbeddingJob(noteId).catch(() => {});
+
         if (Array.isArray(args.collaboratorIds) && args.collaboratorIds.length > 0) {
           for (const collabId of args.collaboratorIds) {
             if (collabId && typeof collabId === "string") {
@@ -674,40 +660,49 @@ class ChatController {
         return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_content": {
-        let nextDocument = null;
-
-        const coercedDocument = this._coerceDocumentPayload(args.document);
-        if (coercedDocument) {
-          nextDocument = normalizeNoteDocumentPayload(coercedDocument);
-        } else if (Array.isArray(args.blocks)) {
-          nextDocument = normalizeNoteDocumentPayload(blocksToDocument(args.blocks));
-        } else {
-          const content = typeof args.content === "string" ? args.content : "";
-          nextDocument = normalizeNoteDocumentPayload(
-            blocksToDocument([
-              {
-                children: [],
-                properties: {},
-                text: content,
-                type: "paragraph",
-              },
-            ])
-          );
+        const noteId = String(args.noteId || "");
+        if (!noteId) {
+          throw new Error("update_note_content requer noteId");
         }
 
-        if (!this._hasMeaningfulText(nextDocument?.document)) {
+        let tree;
+        if (Array.isArray(args.blocks) && args.blocks.length > 0) {
+          tree = normalizeBlocksTree(args.blocks);
+        } else if (typeof args.content === "string" && args.content.trim().length > 0) {
+          tree = [
+            {
+              id: newBlockId(),
+              type: "paragraph",
+              properties: { text: args.content },
+            },
+          ];
+        } else {
           const error = new Error(
-            "update_note_content requer conteúdo textual não vazio no document/blocks/content"
+            "update_note_content requer content (string) ou blocks (array) não vazio"
           );
           error.code = "CHAT_FUNCTION_INVALID_CONTENT";
           error.statusCode = 400;
           throw error;
         }
 
-        const result = await notesRepository.updateNoteById(args.noteId, {
-          document: nextDocument,
-        });
-        return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
+        if (!this._blocksTreeHasMeaningfulText(tree)) {
+          const error = new Error(
+            "update_note_content requer conteúdo textual não vazio"
+          );
+          error.code = "CHAT_FUNCTION_INVALID_CONTENT";
+          error.statusCode = 400;
+          throw error;
+        }
+
+        await notesRepository.deleteAllNoteBlocks(noteId);
+        await notesRepository.bulkInsertNoteBlocks(noteId, userId, tree);
+        await enqueueNoteEmbeddingJob(noteId).catch(() => {});
+
+        return {
+          name,
+          result: { noteId, updated: true },
+          success: true,
+        };
       }
       case "update_note_stage": {
         const result = await notesRepository.updateNoteById(args.noteId, {
@@ -904,7 +899,8 @@ class ChatController {
         allowWebSearch: payload.allowWebSearch,
         context: {
           capabilityRules,
-          noteDocumentContract: this._buildNoteDocumentContract(),
+          noteBlocksContract: this._buildNoteBlocksContract(),
+          noteDocumentContract: this._buildNoteBlocksContract(),
           organizationId,
           resourceAccess,
           userLanguage,

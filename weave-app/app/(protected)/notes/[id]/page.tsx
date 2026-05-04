@@ -11,7 +11,6 @@ import {
   Loader2,
   Plus,
   X,
-  GripVertical,
   Save,
   Clock,
   Calendar,
@@ -74,9 +73,10 @@ import {
 } from "@/app/_utils/collaborators";
 import { getTagColor } from "@/app/_utils/tag-colors";
 import getStorageUrl from "@/app/_utils/get-storage-url";
+import { NoteBlockEditor } from "@/app/(protected)/notes/[id]/_components/note-block-editor";
 
-// =================== COMPONENTE DE BLOCO SORTABLE ===================
-interface BlockComponentProps {
+// =================== BLOCO SORTABLE (Markdown / tipos) ===================
+interface SortableBlockProps {
   block: Block & { children?: Block[] };
   noteId: string;
   onUpdate: (blockId: string, data: Partial<Block>) => Promise<void>;
@@ -85,10 +85,10 @@ interface BlockComponentProps {
   onBackspaceEmpty?: (blockId: string) => void;
   focusBlockId?: string | null;
   onFocused?: () => void;
-  isDragging?: boolean;
+  canEdit?: boolean;
 }
 
-const SortableBlockComponent: React.FC<BlockComponentProps> = ({
+const SortableBlockComponent: React.FC<SortableBlockProps> = ({
   block,
   noteId,
   onUpdate,
@@ -97,6 +97,7 @@ const SortableBlockComponent: React.FC<BlockComponentProps> = ({
   onBackspaceEmpty,
   focusBlockId,
   onFocused,
+  canEdit = true,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
@@ -110,13 +111,12 @@ const SortableBlockComponent: React.FC<BlockComponentProps> = ({
     <div
       ref={setNodeRef}
       className={`transition-transform ${isDragging ? "opacity-50" : "opacity-100"}`}
-      // Inline styles são necessários para o dnd-kit funcionar
       style={{
         transform: transformStyle,
         transition,
       }}
     >
-      <BlockComponent
+      <NoteBlockEditor
         block={block}
         noteId={noteId}
         onUpdate={onUpdate}
@@ -127,202 +127,8 @@ const SortableBlockComponent: React.FC<BlockComponentProps> = ({
         onFocused={onFocused}
         isDragging={isDragging}
         dragHandleProps={{ ...attributes, ...listeners }}
+        canEdit={canEdit}
       />
-    </div>
-  );
-};
-
-// =================== COMPONENTE DE BLOCO ===================
-interface BlockInnerProps {
-  block: Block & { children?: Block[] };
-  noteId: string;
-  onUpdate: (blockId: string, data: Partial<Block>) => Promise<void>;
-  onPasteLines?: (blockId: string, lines: string[]) => Promise<void>;
-  onAddBlockAfter: (afterBlockId: string) => void;
-  onBackspaceEmpty?: (blockId: string) => void;
-  focusBlockId?: string | null;
-  onFocused?: () => void;
-  isDragging?: boolean;
-  dragHandleProps?: Record<string, unknown>;
-}
-
-const useAutoResize = (text: string) => {
-  const ref = React.useRef<HTMLTextAreaElement>(null);
-
-  React.useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  }, [text]);
-
-  return ref;
-};
-
-const BlockComponent: React.FC<BlockInnerProps> = ({
-  block,
-  noteId,
-  onUpdate,
-  onPasteLines,
-  onAddBlockAfter,
-  onBackspaceEmpty,
-  focusBlockId,
-  onFocused,
-  isDragging,
-  dragHandleProps,
-}) => {
-  const [localText, setLocalText] = useState(block.text || "");
-  const [isHovered, setIsHovered] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const textareaRef = useAutoResize(localText);
-
-  // Auto-focus quando este bloco é o focusBlockId
-  useEffect(() => {
-    if (focusBlockId === block.id && textareaRef.current) {
-      textareaRef.current.focus();
-      setIsEditing(true);
-      onFocused?.();
-    }
-  }, [focusBlockId, block.id, onFocused, textareaRef]);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      onAddBlockAfter(block.id);
-    }
-
-    if (e.key === "Backspace" && localText === "" && onBackspaceEmpty) {
-      e.preventDefault();
-      onBackspaceEmpty(block.id);
-    }
-  };
-
-  // Sincroniza apenas quando block.text muda externamente (ex: do servidor)
-  const prevBlockText = React.useRef(block.text);
-  useEffect(() => {
-    if (block.text !== prevBlockText.current) {
-      prevBlockText.current = block.text;
-      setLocalText(block.text || "");
-    }
-  }, [block.text]);
-
-  const handleBlur = () => {
-    setIsEditing(false);
-  };
-
-  const handleFocus = () => {
-    setIsEditing(true);
-  };
-
-  // Foca no textarea quando entra em modo de edição
-  useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [isEditing, textareaRef]);
-
-  // Auto-save com debounce mais conservador para evitar travar a digitação
-  useEffect(() => {
-    if (localText === block.text) return;
-
-    const timeoutId = setTimeout(() => {
-      onUpdate(block.id, { text: localText });
-    }, 1800);
-
-    return () => clearTimeout(timeoutId);
-  }, [localText, block.id, block.text, onUpdate]);
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    if (!onPasteLines) return;
-
-    const pastedText = e.clipboardData.getData("text");
-    if (!pastedText || !pastedText.includes("\n")) return;
-
-    e.preventDefault();
-
-    const textarea = e.currentTarget;
-    const selectionStart = textarea.selectionStart ?? localText.length;
-    const selectionEnd = textarea.selectionEnd ?? localText.length;
-    const beforeSelection = localText.slice(0, selectionStart);
-    const afterSelection = localText.slice(selectionEnd);
-    const merged = `${beforeSelection}${pastedText.replace(/\r\n/g, "\n")}${afterSelection}`;
-    const [firstLine = "", ...nextLines] = merged.split("\n");
-
-    setLocalText(firstLine);
-    void onUpdate(block.id, { text: firstLine });
-
-    if (nextLines.length > 0) {
-      void onPasteLines(block.id, nextLines);
-    }
-  };
-
-  const renderBlockContent = () => {
-    return (
-      <textarea
-        ref={textareaRef}
-        value={localText}
-        onChange={(e) => setLocalText(e.target.value)}
-        onBlur={handleBlur}
-        onFocus={handleFocus}
-        onKeyDown={handleKeyDown}
-        onPaste={handlePaste}
-        className="w-full resize-none overflow-hidden bg-transparent text-[16px] leading-7 text-neutral-800 placeholder-neutral-400 outline-none dark:text-neutral-200 dark:placeholder-neutral-500"
-        placeholder="Digite seu texto..."
-        rows={1}
-      />
-    );
-  };
-
-  return (
-    <div
-      className={`group relative ${isDragging ? "z-50" : ""}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Handle de arrastar */}
-      <div
-        className={`absolute top-1.5 -left-7 flex flex-col gap-1 transition-opacity ${
-          isHovered ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <button
-          {...dragHandleProps}
-          className="hover:text-brand-primary-500 dark:hover:text-brand-primary-500 cursor-grab rounded p-0.5 text-neutral-300 hover:bg-neutral-100/80 active:cursor-grabbing dark:text-neutral-600 dark:hover:bg-neutral-800/70"
-          title="Arrastar para reordenar"
-        >
-          <GripVertical size={14} />
-        </button>
-      </div>
-
-      {/* Conteúdo do bloco */}
-      <div
-        className={`rounded-md px-1.5 py-0 ${
-          isDragging
-            ? "bg-neutral-100 shadow-lg ring-2 ring-yellow-500/20 dark:bg-neutral-800 dark:ring-yellow-500/40"
-            : ""
-        }`}
-      >
-        {renderBlockContent()}
-      </div>
-
-      {/* Blocos filhos (recursivo) */}
-      {block.children && block.children.length > 0 && (
-        <div className="mt-0.5 ml-6 border-l-2 border-neutral-200 pl-4 dark:border-neutral-800">
-          {block.children.map((child: Block & { children?: Block[] }) => (
-            <BlockComponent
-              key={child.id}
-              block={child}
-              noteId={noteId}
-              onUpdate={onUpdate}
-              onPasteLines={onPasteLines}
-              onAddBlockAfter={onAddBlockAfter}
-              onBackspaceEmpty={onBackspaceEmpty}
-              focusBlockId={focusBlockId}
-              onFocused={onFocused}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 };
@@ -2301,6 +2107,7 @@ const NoteDetail = () => {
                               onBackspaceEmpty={handleBackspaceEmpty}
                               focusBlockId={focusBlockId}
                               onFocused={() => setFocusBlockId(null)}
+                              canEdit={Boolean(note.access?.canEdit)}
                             />
                           ))}
                         </SortableContext>
@@ -2309,13 +2116,14 @@ const NoteDetail = () => {
                         <DragOverlay>
                           {activeBlock ? (
                             <div className="rounded-md border border-yellow-500/30 bg-white px-3 py-2 shadow-xl dark:border-yellow-500/50 dark:bg-neutral-900">
-                              <BlockComponent
+                              <NoteBlockEditor
                                 block={activeBlock}
                                 noteId={note.id}
-                                onUpdate={handleUpdateBlock}
+                                onUpdate={async () => {}}
                                 onPasteLines={async () => {}}
                                 onAddBlockAfter={() => {}}
                                 isDragging={true}
+                                canEdit={false}
                               />
                             </div>
                           ) : null}
@@ -2347,7 +2155,7 @@ const NoteDetail = () => {
                   {/* Atalhos de teclado - visível apenas em desktop */}
                   {note.access?.canEdit && (
                     <div className="mt-10 hidden border-t border-neutral-100 pt-4 sm:block dark:border-neutral-800">
-                      <div className="flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-400 dark:text-neutral-500">
                         <Save size={12} />
                         <span>
                           <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
@@ -2355,19 +2163,19 @@ const NoteDetail = () => {
                           </kbd>
                           <span className="ml-1.5">novo bloco</span>
                           <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
-                          <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-                            Espaço
-                          </kbd>
-                          <span className="ml-1.5">ou</span>
-                          <kbd className="ml-1.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-                            /
-                          </kbd>
-                          <span className="ml-1.5">em linha vazia para tipo de bloco</span>
+                          <span className="text-neutral-500 dark:text-neutral-400">
+                            Markdown: **negrito**, *itálico*, listas, tabelas, imagens
+                          </span>
                           <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
                           <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-                            Shift+Enter
+                            Ctrl+B
                           </kbd>
-                          <span className="ml-1.5">nova linha</span>
+                          <span className="ml-1.5">/</span>
+                          <kbd className="ml-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                            Ctrl+I
+                          </kbd>
+                          <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
+                          <span>Blocos de código / tabela: Enter quebra linha no texto</span>
                         </span>
                       </div>
                     </div>

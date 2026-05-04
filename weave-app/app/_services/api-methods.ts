@@ -57,6 +57,10 @@ export const API_ENDPOINTS = {
     `/notes/${noteId}/comments/${commentId}`,
   NOTES_SEARCH: "/notes/search",
   NOTES_EXPORT: "/notes/export",
+  NOTES_BLOCKS: (noteId: string) => `/notes/${noteId}/blocks`,
+  NOTES_BLOCK_BY_ID: (noteId: string, blockId: string) =>
+    `/notes/${noteId}/blocks/${blockId}`,
+  NOTES_BLOCKS_REORDER: (noteId: string) => `/notes/${noteId}/blocks/reorder`,
 
   // Projects
   PROJECTS: "/projects",

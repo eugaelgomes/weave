@@ -69,7 +69,7 @@ class NoteCollaboratorsRepository extends BaseRepository {
     WHERE note_id = $1
       AND user_id = $2
       AND removed = false
-      AND user_id <> (SELECT user_id FROM notes WHERE note_id = $1);
+      AND user_id <> (SELECT user_id FROM notes WHERE id = $1);
   `;
     const count = await this.rowCount(query, [noteId, userId]);
     return { rowCount: count };

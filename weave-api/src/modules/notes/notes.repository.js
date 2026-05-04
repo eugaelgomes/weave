@@ -2,6 +2,7 @@ const readNotesRepository = require("./repositories/read-notes.repository");
 const createNotesRepository = require("./repositories/create-notes.repository");
 const mutateNotesRepository = require("./repositories/mutate-notes.repository");
 const noteCollaboratorsRepository = require("./repositories/note-collaborators.repository");
+const noteBlocksRepository = require("./repositories/note-blocks.repository");
 
 /**
  * Fachada do módulo de notas: mesma API pública que o repositório monolítico,
@@ -38,4 +39,21 @@ module.exports = {
     noteCollaboratorsRepository.isCollaborator(...args),
   getActiveCollaboratorEmails: (...args) =>
     noteCollaboratorsRepository.getActiveCollaboratorEmails(...args),
+
+  findNoteBlockRowsByNoteId: (...args) =>
+    noteBlocksRepository.findRowsByNoteId(...args),
+  findNoteBlocksTreeByNoteId: (...args) =>
+    noteBlocksRepository.findTreeByNoteId(...args),
+  findNoteBlockById: (...args) => noteBlocksRepository.findById(...args),
+  insertDefaultNoteBlock: (...args) =>
+    noteBlocksRepository.insertDefaultParagraph(...args),
+  bulkInsertNoteBlocks: (...args) =>
+    noteBlocksRepository.bulkInsert(...args),
+  insertNoteBlock: (...args) => noteBlocksRepository.insert(...args),
+  updateNoteBlock: (...args) => noteBlocksRepository.update(...args),
+  softDeleteNoteBlocks: (...args) =>
+    noteBlocksRepository.softDelete(...args),
+  reorderNoteBlocks: (...args) => noteBlocksRepository.reorder(...args),
+  deleteAllNoteBlocks: (...args) =>
+    noteBlocksRepository.deleteAllByNoteId(...args),
 };

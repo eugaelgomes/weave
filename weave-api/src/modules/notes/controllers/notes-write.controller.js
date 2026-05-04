@@ -7,102 +7,29 @@ const {
   normalizeNoteStatus,
 } = require("@/utils/patterns/product-patterns");
 const spacesService = require("@/services/storage");
-const {
-  cloneDefaultNoteDocumentState,
-  normalizeNoteDocumentPayload,
-} = require("../document-normalizer");
-const { documentToBlocks } = require("../document-blocks-adapter");
+const { normalizeBlocksTree } = require("../block-normalizer");
 
 /**
  * Criação, atualização e exclusão de notas.
  */
 class NotesWriteController extends NotesBaseController {
-  _injectUploadedDocumentImages(documentState, uploadedImages = []) {
-    if (!documentState?.document || uploadedImages.length === 0) {
-      return documentState;
-    }
-
-    const nextDocument = structuredClone(documentState);
-    const byOriginalName = new Map(
-      uploadedImages.map((item) => [item.originalName, item])
-    );
-    const byIndex = new Map(
-      uploadedImages.map((item, index) => [String(index), item])
-    );
-    let cursor = 0;
-
-    const resolveUpload = (token) => {
-      if (!token) {
-        const next = uploadedImages[cursor];
-        cursor += 1;
-        return next || null;
-      }
-
-      if (byIndex.has(token)) {
-        return byIndex.get(token);
-      }
-
-      if (byOriginalName.has(token)) {
-        return byOriginalName.get(token);
-      }
-
-      return null;
-    };
-
-    const walk = (node, path = "document.document") => {
-      if (!node || typeof node !== "object") return;
-
-      if (node.type === "image" && node.attrs?.src?.startsWith?.("upload://")) {
-        const token = String(node.attrs.src).replace("upload://", "").trim();
-        const upload = resolveUpload(token);
-        if (!upload) {
-          throw new Error(
-            `${path}: placeholder '${node.attrs.src}' sem arquivo correspondente em documentImages`
-          );
-        }
-        node.attrs.src = upload.path;
-      }
-
-      if (Array.isArray(node.content)) {
-        node.content.forEach((child, index) =>
-          walk(child, `${path}.content[${index}]`)
-        );
-      }
-    };
-
-    walk(nextDocument.document);
-    return nextDocument;
-  }
-
-  _assertNoDocumentUploadPlaceholders(documentState) {
-    const walk = (node, path = "document.document") => {
-      if (!node || typeof node !== "object") return;
-
-      if (node.type === "image" && node.attrs?.src?.startsWith?.("upload://")) {
-        throw new Error(
-          `${path}: placeholder de upload pendente em image.attrs.src`
-        );
-      }
-
-      if (Array.isArray(node.content)) {
-        node.content.forEach((child, index) =>
-          walk(child, `${path}.content[${index}]`)
-        );
-      }
-    };
-
-    walk(documentState?.document);
-  }
-
   async createNote(req, res, next) {
     try {
+      let blocksPayload = req.body.blocks;
+      if (typeof blocksPayload === "string") {
+        try {
+          blocksPayload = JSON.parse(blocksPayload);
+        } catch {
+          return res.status(400).json({ error: "blocks deve ser JSON válido" });
+        }
+      }
+
       const {
         title,
         description,
         tags = [],
         status,
         project_id,
-        document,
       } = req.body;
 
       // 1. Validação de autenticação
@@ -153,15 +80,16 @@ class NotesWriteController extends NotesBaseController {
         });
       }
 
-      let normalizedDocument;
-      try {
-        normalizedDocument =
-          document === undefined
-            ? cloneDefaultNoteDocumentState()
-            : normalizeNoteDocumentPayload(document);
-        this._assertNoDocumentUploadPlaceholders(normalizedDocument);
-      } catch (error) {
-        return res.status(400).json({ error: error.message });
+      let normalizedBlocks = null;
+      if (blocksPayload !== undefined && blocksPayload !== null) {
+        try {
+          if (!Array.isArray(blocksPayload)) {
+            return res.status(400).json({ error: "blocks deve ser array" });
+          }
+          normalizedBlocks = normalizeBlocksTree(blocksPayload);
+        } catch (error) {
+          return res.status(400).json({ error: error.message });
+        }
       }
 
       // 6. Criação da nota no banco
@@ -173,15 +101,27 @@ class NotesWriteController extends NotesBaseController {
         noteStatus,
         project_id,
         null,
-        null,
-        normalizedDocument
+        null
       );
+
+      if (normalizedBlocks?.length) {
+        await this.notesRepository.bulkInsertNoteBlocks(
+          newNote.id,
+          userId,
+          normalizedBlocks
+        );
+      } else {
+        await this.notesRepository.insertDefaultNoteBlock(newNote.id, userId);
+      }
 
       // 7. INCREMENTAR O USO
       await PlanUsageManager.consumeNoteCreation(usageRecord.id);
 
       // 8. Formata e retorna a nota criada
-      const formattedNote = this._formatNoteResponse(newNote);
+      const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
+        String(newNote.id)
+      );
+      const formattedNote = this._formatNoteResponse(newNote, blocks);
       res.status(201).json(formattedNote);
     } catch (error) {
       this._handleError(error, res, next);
@@ -190,6 +130,15 @@ class NotesWriteController extends NotesBaseController {
 
   async createCompleteNote(req, res, next) {
     try {
+      let blocksPayload = req.body.blocks;
+      if (typeof blocksPayload === "string") {
+        try {
+          blocksPayload = JSON.parse(blocksPayload);
+        } catch {
+          return res.status(400).json({ error: "blocks deve ser JSON válido" });
+        }
+      }
+
       const {
         title,
         description,
@@ -197,7 +146,6 @@ class NotesWriteController extends NotesBaseController {
         initialBlockContent = "",
         status,
         project_id,
-        document,
       } = req.body;
 
       // Validação de autenticação
@@ -246,18 +194,19 @@ class NotesWriteController extends NotesBaseController {
         });
       }
 
-      let normalizedDocument;
-      try {
-        normalizedDocument =
-          document === undefined
-            ? cloneDefaultNoteDocumentState()
-            : normalizeNoteDocumentPayload(document);
-        this._assertNoDocumentUploadPlaceholders(normalizedDocument);
-      } catch (error) {
-        return res.status(400).json({ error: error.message });
+      let normalizedBlocks = null;
+      if (blocksPayload !== undefined && blocksPayload !== null) {
+        try {
+          if (!Array.isArray(blocksPayload)) {
+            return res.status(400).json({ error: "blocks deve ser array" });
+          }
+          normalizedBlocks = normalizeBlocksTree(blocksPayload);
+        } catch (error) {
+          return res.status(400).json({ error: error.message });
+        }
       }
 
-      // Criação da nota completa (nota + bloco inicial) em uma única transação
+      // Criação da nota + utilizador (sem document jsonb)
       const result = await this.notesRepository.createCompleteNote(
         userId,
         title,
@@ -265,12 +214,28 @@ class NotesWriteController extends NotesBaseController {
         tags,
         initialBlockContent,
         noteStatus,
-        project_id,
-        normalizedDocument
+        project_id
       );
+
+      if (normalizedBlocks?.length) {
+        await this.notesRepository.bulkInsertNoteBlocks(
+          result.note_id,
+          userId,
+          normalizedBlocks
+        );
+      } else {
+        await this.notesRepository.insertDefaultNoteBlock(
+          result.note_id,
+          userId
+        );
+      }
 
       // Incrementar o uso de notas
       await PlanUsageManager.consumeNoteCreation(usageRecord.id);
+
+      const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
+        String(result.note_id)
+      );
 
       // Montar estrutura completa da nota com todos os dados das tabelas relacionadas
       const completeNote = {
@@ -280,7 +245,6 @@ class NotesWriteController extends NotesBaseController {
         title: result.title,
         description: result.description,
         properties: result.properties || {},
-        document: result.document || cloneDefaultNoteDocumentState(),
         tags: result.tags || [],
         status: result.status,
         created_at: result.note_created_at,
@@ -292,10 +256,7 @@ class NotesWriteController extends NotesBaseController {
           email: result.user_email,
           avatar_url: result.user_avatar_url,
         },
-        blocks: documentToBlocks(
-          result.document || cloneDefaultNoteDocumentState(),
-          result.note_id
-        ),
+        blocks,
       };
 
       // Retorna a nota completíssima criada
@@ -319,7 +280,6 @@ class NotesWriteController extends NotesBaseController {
         deleted,
         project_id,
         properties,
-        document,
         priority_id,
         due_date,
       } = req.body;
@@ -576,7 +536,7 @@ class NotesWriteController extends NotesBaseController {
       }
 
       if (req.files?.documentImages?.length > 0) {
-        const uploaded = await Promise.all(
+        await Promise.all(
           req.files.documentImages.map(async (file) => {
             const result = await spacesService.uploadNoteDocumentImage(
               file.buffer,
@@ -585,15 +545,15 @@ class NotesWriteController extends NotesBaseController {
               userId,
               file.originalname
             );
-            return {
+            uploadedDocumentImages.push({
               id: result.fileName,
               originalName: file.originalname,
               path: result.key || result.path || "",
               type: file.mimetype,
-            };
+            });
+            return result;
           })
         );
-        uploadedDocumentImages.push(...uploaded);
       }
 
       // Remover arquivos do storage ao remover icon, banner ou files
@@ -634,64 +594,42 @@ class NotesWriteController extends NotesBaseController {
         );
       }
 
-      if (document !== undefined) {
-        let normalizedDocument;
-        try {
-          normalizedDocument = normalizeNoteDocumentPayload(document);
-          if (uploadedDocumentImages.length > 0) {
-            normalizedDocument = this._injectUploadedDocumentImages(
-              normalizedDocument,
-              uploadedDocumentImages
-            );
-          }
-          this._assertNoDocumentUploadPlaceholders(normalizedDocument);
-        } catch (error) {
-          return res.status(400).json({ error: error.message });
-        }
-        updateData.document = normalizedDocument;
-      } else if (uploadedDocumentImages.length > 0) {
-        return res.status(400).json({
-          error:
-            "documentImages exige envio do campo document com placeholders 'upload://<nome-do-arquivo>'",
-        });
-      }
+      // Imagem do corpo: faça PATCH em /notes/:noteId/blocks/:blockId após upload (uploadDocumentImages).
 
       // Se há properties para atualizar
       if (Object.keys(propertiesUpdate).length > 0) {
         updateData.properties = propertiesUpdate;
       }
 
-      // Verifica se há algo para atualizar
-      if (Object.keys(updateData).length === 0) {
+      const hadOtherUpdates = Object.keys(updateData).length > 0;
+      const hadFilesWithoutDbRow =
+        !hadOtherUpdates && allUploadedFiles.length > 0;
+
+      if (!hadOtherUpdates && !hadFilesWithoutDbRow) {
         return res.status(400).json({
           error: "Nenhum campo fornecido para atualização",
         });
       }
 
-      const updatedFields = Object.keys(updateData);
-      const isDocumentOnlyUpdate =
-        updatedFields.length === 1 && updatedFields[0] === "document";
-
-      // Atualização da nota
-      const updatedNote = await this.notesRepository.updateNoteById(
-        id,
-        updateData
-      );
-
-      if (!updatedNote) {
-        return res.status(400).json({
-          error: "Nenhuma atualização foi realizada",
-        });
+      let updatedNote = null;
+      if (hadOtherUpdates) {
+        updatedNote = await this.notesRepository.updateNoteById(id, updateData);
+        if (!updatedNote) {
+          return res.status(400).json({
+            error: "Nenhuma atualização foi realizada",
+          });
+        }
       }
 
-      let formattedNote;
-      if (isDocumentOnlyUpdate) {
-        formattedNote = this._formatNoteResponse(updatedNote, [], {
-          includeBlocks: false,
-        });
-      } else {
-        const refreshed = await this.notesRepository.getNoteById(id);
-        formattedNote = this._formatNoteResponse(refreshed || updatedNote);
+      const refreshed = await this.notesRepository.getNoteById(id);
+      const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(id);
+      let formattedNote = this._formatNoteResponse(
+        refreshed || updatedNote || note,
+        blocks
+      );
+
+      if (uploadedDocumentImages.length > 0) {
+        formattedNote.uploaded_document_images = uploadedDocumentImages;
       }
 
       formattedNote.access = {

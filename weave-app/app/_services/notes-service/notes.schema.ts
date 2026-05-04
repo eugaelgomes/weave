@@ -69,30 +69,7 @@ export const TaskPrioritySchema = z.object({
   deleted_by: z.string().optional(),
 });
 
-// --- Document Nodes & States (ProseMirror like) ---
-// Since it is recursive, we use z.lazy
-export const NoteDocumentNodeSchema: z.ZodType<any> = z.lazy(() => z.object({
-  id: z.union([z.string(), z.number()]).optional(),
-  order: z.number().optional(),
-  type: z.string(),
-  attrs: z.record(z.string(), z.unknown()).optional(),
-  content: z.array(NoteDocumentNodeSchema).optional(),
-  text: z.string().optional(),
-  marks: z.array(z.object({
-    type: z.string(),
-    attrs: z.record(z.string(), z.unknown()).optional()
-  })).optional(),
-}));
-
-export const NoteDocumentStateSchema = z.object({
-  version: z.number(),
-  document: z.object({
-    type: z.literal("doc"),
-    content: z.array(NoteDocumentNodeSchema),
-  }),
-});
-
-// --- Blocks ---
+// --- Blocks (API note_blocks + árvore em memória) ---
 export const BlockSchema: z.ZodType<any> = z.lazy(() => z.object({
   id: z.string(),
   type: z.string(),
@@ -103,6 +80,7 @@ export const BlockSchema: z.ZodType<any> = z.lazy(() => z.object({
   parent_id: z.string().nullable().optional(),
   position: z.number().nullable().optional(),
   note_id: z.string().nullable().optional(),
+  version: z.number().nullable().optional(),
   level: z.number().nullable().optional(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
@@ -181,7 +159,6 @@ export const NoteSchema = z.object({
   // Computed / Unified properties
   owner_name: z.string().nullable().optional(),
   owner_avatar_url: z.string().nullable().optional(),
-  document: NoteDocumentStateSchema.nullable().optional(),
 });
 
 // --- API Responses ---
@@ -226,6 +203,8 @@ export const CreateNoteDataSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
   tags: z.array(z.string()).optional(),
+  /** Árvore opcional de blocos (API salva em note_blocks) */
+  blocks: z.array(z.unknown()).optional(),
 });
 
 export const UpdateNoteDataSchema = z.object({
@@ -237,7 +216,6 @@ export const UpdateNoteDataSchema = z.object({
   priority_id: z.string().nullable().optional(),
   due_date: z.string().nullable().optional(),
   properties: NotePropertiesSchema.optional(), // Since it's partial in TS, making it optional is enough as properties are optional inside too
-  document: NoteDocumentStateSchema.optional(),
   icon: z.any().optional(), // File is hard to validate cleanly without custom logic
   banner: z.any().optional(),
   files: z.array(z.any()).optional(),
@@ -261,8 +239,6 @@ export type Collaborator = z.infer<typeof CollaboratorSchema>;
 export type NoteProperties = z.infer<typeof NotePropertiesSchema>;
 export type Tag = z.infer<typeof TagSchema>;
 export type TaskPriority = z.infer<typeof TaskPrioritySchema>;
-export type NoteDocumentNode = z.infer<typeof NoteDocumentNodeSchema>;
-export type NoteDocumentState = z.infer<typeof NoteDocumentStateSchema>;
 export type Block = z.infer<typeof BlockSchema>;
 export type Note = z.infer<typeof NoteSchema>;
 export type NotesResponse = z.infer<typeof NotesResponseSchema>;

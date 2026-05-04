@@ -1,6 +1,4 @@
 const NotesBaseController = require("./base.controller");
-const { documentToBlocks } = require("../document-blocks-adapter");
-const { cloneDefaultNoteDocumentState } = require("../document-normalizer");
 
 /**
  * Leitura: lista, detalhe e estatísticas.
@@ -60,13 +58,7 @@ class NotesReadController extends NotesBaseController {
       }
 
       const notesWithBlocks = result.notes.map((note) => ({
-        ...(function () {
-          const noteDocument = note.document || cloneDefaultNoteDocumentState();
-          return {
-            blocks: documentToBlocks(noteDocument, String(note.id)),
-            document: noteDocument,
-          };
-        })(),
+        blocks: [],
         id: note.id,
         title: note.title,
         description: note.description || null,
@@ -131,7 +123,9 @@ class NotesReadController extends NotesBaseController {
       const { note, isOwner, isCollaborator, hasOrgProjectAccess } =
         await this._validateNoteAccess(id, userId);
 
-      const noteDocument = note.document || cloneDefaultNoteDocumentState();
+      const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
+        String(note.id)
+      );
 
       // Montar estrutura completa da nota
       const completeNote = {
@@ -139,7 +133,6 @@ class NotesReadController extends NotesBaseController {
         title: note.title,
         description: note.description || null,
         properties: note.properties || {},
-        document: noteDocument,
         tags: note.tags || [] || null,
         status: note.status || null,
         due_date: note.due_date ?? null,
@@ -173,7 +166,7 @@ class NotesReadController extends NotesBaseController {
           avatar_url: note.user_avatar_url,
         },
         collaborators: note.collaborators || [],
-        blocks: documentToBlocks(noteDocument, String(note.id)),
+        blocks,
         access: {
           isOwner,
           isCollaborator,

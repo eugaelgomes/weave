@@ -14,6 +14,7 @@ const NotesWriteController = require("@/modules/notes/controllers/notes-write.co
 const NotesCollaboratorsController = require("@/modules/notes/controllers/notes-collaborators.controller");
 const NotesExportController = require("@/modules/notes/controllers/notes-export.controller");
 const NotesCommentsController = require("@/modules/notes/controllers/notes-comments.controllers");
+const NoteBlocksController = require("@/modules/notes/controllers/note-blocks.controller");
 
 const router = express.Router();
 
@@ -31,12 +32,36 @@ router.post("/complete", standardTrafficLimiter, (req, res, next) => {
   NotesWriteController.createCompleteNote(req, res, next);
 });
 
-router.get("/:id", (req, res, next) => {
-  NotesReadController.getNoteById(req, res, next);
-});
-
 router.get("/:noteId/export/pdf", (req, res, next) => {
   NotesExportController.exportNoteAsPDF(req, res, next);
+});
+
+router.get("/:noteId/blocks", standardTrafficLimiter, (req, res, next) => {
+  NoteBlocksController.list(req, res, next);
+});
+
+router.post("/:noteId/blocks/reorder", standardTrafficLimiter, (req, res, next) => {
+  NoteBlocksController.reorder(req, res, next);
+});
+
+router.put("/:noteId/blocks", standardTrafficLimiter, (req, res, next) => {
+  NoteBlocksController.putSync(req, res, next);
+});
+
+router.post("/:noteId/blocks", standardTrafficLimiter, (req, res, next) => {
+  NoteBlocksController.create(req, res, next);
+});
+
+router.patch("/:noteId/blocks/:blockId", standardTrafficLimiter, (req, res, next) => {
+  NoteBlocksController.update(req, res, next);
+});
+
+router.delete("/:noteId/blocks/:blockId", (req, res, next) => {
+  NoteBlocksController.softDelete(req, res, next);
+});
+
+router.get("/:id", (req, res, next) => {
+  NotesReadController.getNoteById(req, res, next);
 });
 
 router.post(

@@ -18,7 +18,6 @@ class MutateNotesRepository extends BaseRepository {
       "project_id",
       "project_stage_id",
       "properties",
-      "document",
     ];
 
     const updates = [];
@@ -27,15 +26,10 @@ class MutateNotesRepository extends BaseRepository {
 
     allowedFields.forEach((field) => {
       if (updateData[field] !== undefined) {
-        if (field === "properties" || field === "document") {
-          // Merge parcial: atualiza apenas as chaves enviadas dentro de properties
-          if (field === "properties") {
-            updates.push(
-              `properties = COALESCE(properties, '{}'::jsonb) || $${paramIndex}::jsonb`
-            );
-          } else {
-            updates.push(`document = $${paramIndex}::jsonb`);
-          }
+        if (field === "properties") {
+          updates.push(
+            `properties = COALESCE(properties, '{}'::jsonb) || $${paramIndex}::jsonb`
+          );
           values.push(JSON.stringify(updateData[field]));
         } else {
           updates.push(`${field} = $${paramIndex}`);
@@ -63,9 +57,8 @@ class MutateNotesRepository extends BaseRepository {
     const results = await this.executeQuery(query, values);
     const updatedNote = results[0];
 
-    console.log("[MutateNotesRepository] Note updated", { 
-      noteId: updatedNote?.id, 
-      hasDocument: !!updatedNote?.document 
+    console.log("[MutateNotesRepository] Note updated", {
+      noteId: updatedNote?.id,
     });
 
     if (updatedNote) {

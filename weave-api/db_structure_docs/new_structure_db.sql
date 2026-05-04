@@ -39,6 +39,7 @@ DROP TABLE IF EXISTS public.notifications CASCADE;
 DROP TABLE IF EXISTS public.note_collaborators CASCADE;
 DROP TABLE IF EXISTS public.notes_short_backups CASCADE;
 DROP TABLE IF EXISTS public.notes_comments CASCADE;
+DROP TABLE IF EXISTS public.note_blocks CASCADE;
 DROP TABLE IF EXISTS public.notes CASCADE;
 DROP TABLE IF EXISTS public.project_stages CASCADE;
 DROP TABLE IF EXISTS public.project_members CASCADE;
@@ -574,7 +575,6 @@ CREATE TABLE public.notes (
   priority_id uuid NULL,
   title text NOT NULL DEFAULT 'Set note title',
   description text NULL DEFAULT 'Write note description here',
-  document jsonb NOT NULL DEFAULT '{"type":"doc","content":[{"type":"paragraph"}]}'::jsonb,
   properties jsonb NULL DEFAULT '{}'::jsonb,
   tags uuid[] NOT NULL DEFAULT '{}'::uuid[],
   status public.notes_status NULL DEFAULT 'VISIBLE',
@@ -586,6 +586,30 @@ CREATE TABLE public.notes (
   updated_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT notes_public_id_format_check
     CHECK (public_id ~ '^[a-z0-9]{25}$')
+);
+
+CREATE TABLE public.note_blocks (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  note_id uuid NOT NULL
+    REFERENCES public.notes(id) ON DELETE CASCADE,
+  parent_id uuid NULL
+    REFERENCES public.note_blocks(id) ON DELETE CASCADE,
+  type text NOT NULL,
+  properties jsonb NOT NULL DEFAULT '{}'::jsonb,
+  position int NOT NULL DEFAULT 0,
+  version int NOT NULL DEFAULT 1,
+  created_by uuid NOT NULL
+    REFERENCES public.users(user_id) ON DELETE RESTRICT,
+  deleted bool NOT NULL DEFAULT false,
+  deleted_at timestamptz NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT note_blocks_type_check CHECK (type IN (
+    'paragraph', 'heading', 'quote', 'code', 'divider',
+    'image', 'list', 'todo', 'table', 'page'
+  )),
+  CONSTRAINT note_blocks_properties_is_object_check
+    CHECK (jsonb_typeof(properties) = 'object')
 );
 
 CREATE TABLE public.notes_short_backups (
@@ -1236,6 +1260,19 @@ CREATE INDEX idx_notes_due_date
   WHERE deleted = false AND due_date IS NOT NULL;
 CREATE INDEX idx_notes_tags_uuids ON public.notes USING gin(tags);
 
+CREATE INDEX idx_note_blocks_note ON public.note_blocks(note_id) WHERE deleted = false;
+CREATE INDEX idx_note_blocks_parent ON public.note_blocks(parent_id) WHERE deleted = false;
+CREATE INDEX idx_note_blocks_order
+  ON public.note_blocks(note_id, parent_id, position)
+  WHERE deleted = false;
+CREATE UNIQUE INDEX uq_note_blocks_position
+  ON public.note_blocks(
+    note_id,
+    COALESCE(parent_id, '00000000-0000-0000-0000-000000000000'::uuid),
+    position
+  )
+  WHERE deleted = false;
+
 CREATE INDEX idx_notes_short_backups_note_created
   ON public.notes_short_backups(note_id, created_at DESC);
 CREATE INDEX idx_notes_short_backups_user_created
@@ -1403,6 +1440,16 @@ EXECUTE FUNCTION public.set_row_updated_at();
 
 CREATE TRIGGER trg_notes_set_deleted_at
 BEFORE UPDATE ON public.notes
+FOR EACH ROW
+EXECUTE FUNCTION public.set_row_deleted_at();
+
+CREATE TRIGGER trg_note_blocks_set_updated_at
+BEFORE UPDATE ON public.note_blocks
+FOR EACH ROW
+EXECUTE FUNCTION public.set_row_updated_at();
+
+CREATE TRIGGER trg_note_blocks_set_deleted_at
+BEFORE UPDATE ON public.note_blocks
 FOR EACH ROW
 EXECUTE FUNCTION public.set_row_deleted_at();
 
