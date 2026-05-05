@@ -17,6 +17,7 @@ const {
 } = require("@/modules/projects/project-role-policy");
 const reportConfigRepository = require("@/modules/projects/repositories/report-config.repository");
 const sprintsRepository = require("@/modules/projects/repositories/sprints.repository");
+const reasoningsRepository = require("@/modules/projects/repositories/reasonings.repository");
 
 class ProjectsUpdateController extends ProjectsCoreController {
   /**
@@ -1228,6 +1229,109 @@ class ProjectsUpdateController extends ProjectsCoreController {
     }
 
     return null;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // Reasonings (Write)
+  // ══════════════════════════════════════════════════════════════════════
+
+  /**
+   * POST /api/projects/:id/reasonings
+   * Creates a new reasoning (used by the engine via API or internal calls).
+   */
+  async createReasoning(req, res, next) {
+    try {
+      const { id: projectId } = req.params;
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const {
+        sprintId,
+        reasoningType,
+        title,
+        content,
+        options,
+      } = req.body;
+
+      if (!sprintId || !reasoningType || !title) {
+        return res.status(400).json({
+          error: "sprintId, reasoningType e title são obrigatórios",
+        });
+      }
+
+      const reasoning = await reasoningsRepository.create({
+        projectId,
+        sprintId,
+        triggeredBy: userId,
+        reasoningType,
+        title,
+        content: content || {},
+        options: options || {},
+      });
+
+      res.status(201).json({ reasoning });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  /**
+   * PATCH /api/projects/:id/reasonings/:reasoningId/interaction
+   * Updates the current user's interaction with a reasoning (read, dismiss, pin, feedback).
+   */
+  async updateReasoningInteraction(req, res, next) {
+    try {
+      const { id: projectId, reasoningId } = req.params;
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const { isRead, isDismissed, isPinned, feedback } = req.body;
+
+      const interaction = await reasoningsRepository.upsertInteraction(
+        reasoningId,
+        userId,
+        { isRead, isDismissed, isPinned, feedback }
+      );
+
+      res.status(200).json({ interaction });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  /**
+   * PATCH /api/projects/:id/reasonings/:reasoningId/action-items/:itemId
+   * Updates an action item (complete, assign, change priority).
+   */
+  async updateReasoningActionItem(req, res, next) {
+    try {
+      const { id: projectId, itemId } = req.params;
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const { isCompleted, assignedTo, priority } = req.body;
+
+      const actionItem = await reasoningsRepository.updateActionItem(itemId, {
+        isCompleted,
+        completedBy: isCompleted ? userId : null,
+        assignedTo,
+        priority,
+      });
+
+      if (!actionItem) {
+        return res.status(404).json({ error: "Action item não encontrado" });
+      }
+
+      res.status(200).json({ actionItem });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
   }
 }
 

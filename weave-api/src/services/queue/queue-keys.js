@@ -11,6 +11,8 @@ const DEFAULT_PLAN_USAGE_QUEUE_KEY = "weave:plans:usage:queue";
 const DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY = "weave:engine:llm:requests";
 const DEFAULT_ENGINE_LLM_RESPONSE_PREFIX = "weave:engine:llm:responses";
 const DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY = "queue:note-embeddings";
+const DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY = "weave:ai-reports:delivery";
+const DEFAULT_REASONING_TRIGGER_QUEUE_KEY = "queue:reasoning:triggers";
 
 /**
  * List key for email jobs consumed by the worker email processor.
@@ -81,6 +83,22 @@ function getNoteEmbeddingsQueueRedisKey() {
 }
 
 /**
+ * List key for AI report delivery jobs consumed by worker.
+ * @returns {string}
+ */
+function getAiReportDeliveryQueueRedisKey() {
+  return process.env.REDIS_AI_REPORT_DELIVERY_QUEUE_KEY || DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY;
+}
+
+/**
+ * List key for reasoning triggers sent by worker to API.
+ * @returns {string}
+ */
+function getReasoningTriggerQueueRedisKey() {
+  return process.env.REDIS_REASONING_TRIGGER_QUEUE_KEY || DEFAULT_REASONING_TRIGGER_QUEUE_KEY;
+}
+
+/**
  * Resolved queue list keys (env-aware).
  * @readonly
  */
@@ -106,6 +124,12 @@ const REDIS_QUEUE_KEYS = Object.freeze({
   get PLAN_USAGE() {
     return getPlanUsageQueueRedisKey();
   },
+  get AI_REPORT_DELIVERY() {
+    return getAiReportDeliveryQueueRedisKey();
+  },
+  get REASONING_TRIGGER() {
+    return getReasoningTriggerQueueRedisKey();
+  },
 });
 
 module.exports = {
@@ -116,6 +140,8 @@ module.exports = {
   DEFAULT_ENGINE_LLM_RESPONSE_PREFIX,
   DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY,
   DEFAULT_PLAN_USAGE_QUEUE_KEY,
+  DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY,
+  DEFAULT_REASONING_TRIGGER_QUEUE_KEY,
   getBackupExportQueueRedisKey,
   getDomainVerifyQueueRedisKey,
   getEmailQueueRedisKey,
@@ -123,5 +149,7 @@ module.exports = {
   getEngineLlmResponsePrefixRedisKey,
   getNoteEmbeddingsQueueRedisKey,
   getPlanUsageQueueRedisKey,
+  getAiReportDeliveryQueueRedisKey,
+  getReasoningTriggerQueueRedisKey,
   REDIS_QUEUE_KEYS,
 };

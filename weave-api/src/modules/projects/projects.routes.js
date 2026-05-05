@@ -176,4 +176,39 @@ router.patch(
   ProjectsUpdateController.completeSprint.bind(ProjectsUpdateController)
 );
 
+// Reasonings
+router.get(
+  "/:id/reasonings",
+  ProjectsReadController.getReasonings.bind(ProjectsReadController)
+);
+router.get(
+  "/:id/reasonings/:reasoningId",
+  ProjectsReadController.getReasoningById.bind(ProjectsReadController)
+);
+router.get(
+  "/:id/reasonings/:reasoningId/action-items",
+  ProjectsReadController.getReasoningActionItems.bind(ProjectsReadController)
+);
+router.post(
+  "/:id/reasonings",
+  standardTrafficLimiter,
+  requireManageProjects,
+  ProjectsUpdateController.createReasoning.bind(ProjectsUpdateController)
+);
+router.patch(
+  "/:id/reasonings/:reasoningId/interaction",
+  standardTrafficLimiter,
+  ProjectsUpdateController.updateReasoningInteraction.bind(
+    ProjectsUpdateController
+  )
+);
+router.patch(
+  "/:id/reasonings/:reasoningId/action-items/:itemId",
+  standardTrafficLimiter,
+  ProjectsUpdateController.updateReasoningActionItem.bind(
+    ProjectsUpdateController
+  )
+);
+
 module.exports = router;
+

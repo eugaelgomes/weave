@@ -45,6 +45,8 @@ class ProactiveQueueProcessor {
    * 1) Main proactive generation
    * 2) Compact safety re-check over the generated output
    *
+   * The result includes full reasoning metadata for API persistence.
+   *
    * @param {object} job
    * @param {string} [job.type]
    * @param {string} [job.prompt]
@@ -53,21 +55,114 @@ class ProactiveQueueProcessor {
    * @param {object} [job.options]
    * @param {string} [job.responseQueueKey]
    * @param {object|string} [job.payload]
+   * @param {string} [job.projectId]
+   * @param {string} [job.sprintId]
+   * @param {string} [job.reasoningType]
+   * @param {string} [job.title]
+   * @param {string} [job.reportConfigId]
+   * @param {string} [job.organizationId]
+   * @param {string} [job.triggeredBy]
+   * @param {string} [job.recipientScope]
+   * @param {string[]} [job.customRecipients]
+   * @param {string} [job.expiresAt]
    * @returns {Promise<void>}
    */
   async processJob(job = {}) {
-    const jobType = job.type || "unknown";
+    const jobType = job.type || job.reasoningType || "unknown";
+    const startTime = Date.now();
     logger.info("Received proactive job", { jobType });
 
-    const initialResult = await this.runPrimaryPass(job);
-    const safetyCheck = await this.runSafetyRecheck(job, initialResult);
-    const finalPayload = this.applySafetyPolicy(initialResult, safetyCheck);
+    let finalPayload;
 
-    logger.info("Proactive job finished with safety re-check", {
-      blocked: finalPayload.safety.blocked,
-      jobType,
-      safetyLabel: finalPayload.safety.label,
-    });
+    try {
+      const initialResult = await this.runPrimaryPass(job);
+      const safetyCheck = await this.runSafetyRecheck(job, initialResult);
+      const safePolicyResult = this.applySafetyPolicy(
+        initialResult,
+        safetyCheck
+      );
+
+      const processingTimeMs = Date.now() - startTime;
+
+      finalPayload = {
+        ...safePolicyResult,
+        reasoning: {
+          projectId: job.projectId || null,
+          sprintId: job.sprintId || null,
+          reportConfigId: job.reportConfigId || null,
+          organizationId: job.organizationId || null,
+          triggeredBy: job.triggeredBy || null,
+          reasoningType: job.reasoningType || jobType,
+          title: job.title || `${jobType} reasoning`,
+          recipientScope: job.recipientScope || "all_members",
+          customRecipients: job.customRecipients || [],
+          expiresAt: job.expiresAt || null,
+          processingTimeMs,
+          providerUsed: initialResult.providerUsed,
+          modelUsed: job.model || null,
+        },
+        content: {
+          outputMarkdown: safePolicyResult.data.content,
+          outputRaw: initialResult.raw,
+          outputMetadata: {},
+          inputContext: job.inputContext || {},
+          inputPrompt: job.prompt || null,
+          inputSystemMessage: job.systemMessage || null,
+          actionItems: [],
+        },
+      };
+
+      logger.info("Proactive job finished with safety re-check", {
+        blocked: finalPayload.safety.blocked,
+        jobType,
+        safetyLabel: finalPayload.safety.label,
+        processingTimeMs,
+      });
+    } catch (error) {
+      const processingTimeMs = Date.now() - startTime;
+      logger.error("Proactive job failed", {
+        error: error.message,
+        jobType,
+        processingTimeMs,
+      });
+
+      finalPayload = {
+        success: false,
+        data: { content: null, providerUsed: null },
+        safety: {
+          checked: false,
+          label: "review",
+          blocked: false,
+          reason: "Job failed",
+        },
+        reasoning: {
+          projectId: job.projectId || null,
+          sprintId: job.sprintId || null,
+          reportConfigId: job.reportConfigId || null,
+          organizationId: job.organizationId || null,
+          triggeredBy: job.triggeredBy || null,
+          reasoningType: job.reasoningType || jobType,
+          title: job.title || `${jobType} reasoning`,
+          recipientScope: job.recipientScope || "all_members",
+          customRecipients: job.customRecipients || [],
+          expiresAt: job.expiresAt || null,
+          processingTimeMs,
+          providerUsed: null,
+          modelUsed: job.model || null,
+          status: "failed",
+          errorMessage: error.message,
+        },
+        content: {
+          outputMarkdown: "",
+          outputRaw: null,
+          outputMetadata: {},
+          inputContext: job.inputContext || {},
+          inputPrompt: job.prompt || null,
+          inputSystemMessage: job.systemMessage || null,
+          actionItems: [],
+        },
+      };
+    }
 
     if (job.responseQueueKey) {
       await redis.lpush(job.responseQueueKey, JSON.stringify(finalPayload));

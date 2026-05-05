@@ -3,6 +3,7 @@ const organizationsRepository = require("@/modules/organizations/repositories/or
 const { normalizeProjectStatus } = require("@/utils/patterns/product-patterns");
 const reportConfigRepository = require("@/modules/projects/repositories/report-config.repository");
 const sprintsRepository = require("@/modules/projects/repositories/sprints.repository");
+const reasoningsRepository = require("@/modules/projects/repositories/reasonings.repository");
 
 class ProjectsReadController extends ProjectsCoreController {
   /**
@@ -436,6 +437,95 @@ class ProjectsReadController extends ProjectsCoreController {
       const sprint = await sprintsRepository.getActiveByProject(projectId);
 
       res.status(200).json({ sprint: sprint || null });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // Reasonings (Read)
+  // ══════════════════════════════════════════════════════════════════════
+
+  /**
+   * GET /api/projects/:id/reasonings
+   * Lists reasonings for a project, scoped by member access.
+   * Query params: sprintId, reasoningType, limit
+   */
+  async getReasonings(req, res, next) {
+    try {
+      const { id: projectId } = req.params;
+
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const options = {
+        sprintId: req.query.sprintId || null,
+        reasoningType: req.query.reasoningType || null,
+        limit: req.query.limit || 20,
+      };
+
+      const reasonings = await reasoningsRepository.getByProjectSprint(
+        projectId,
+        userId,
+        options
+      );
+
+      res.status(200).json({ reasonings });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  /**
+   * GET /api/projects/:id/reasonings/:reasoningId
+   * Returns the full content of a reasoning (heavy payload).
+   * Also marks the reasoning as read for the current user.
+   */
+  async getReasoningById(req, res, next) {
+    try {
+      const { id: projectId, reasoningId } = req.params;
+
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const content = await reasoningsRepository.getContentById(reasoningId);
+
+      if (!content) {
+        return res.status(404).json({ error: "Raciocínio não encontrado" });
+      }
+
+      // Mark as read (fire-and-forget)
+      reasoningsRepository
+        .upsertInteraction(reasoningId, userId, { isRead: true })
+        .catch(() => {});
+
+      res.status(200).json({ reasoning: content });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  /**
+   * GET /api/projects/:id/reasonings/:reasoningId/action-items
+   * Returns action items for a reasoning.
+   */
+  async getReasoningActionItems(req, res, next) {
+    try {
+      const { id: projectId, reasoningId } = req.params;
+
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const actionItems =
+        await reasoningsRepository.getActionItemsByReasoning(reasoningId);
+
+      res.status(200).json({ actionItems });
     } catch (error) {
       this._handleError(error, res, next);
     }
