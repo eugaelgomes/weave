@@ -28,7 +28,6 @@
  * @property {boolean} showLineNumbers
  * @property {boolean} showWordCount
  * @property {boolean} compactMode
- * @property {string} appBackgroundColor
  */
 
 /**
@@ -119,7 +118,6 @@ const defaultAppPreferences = {
     showLineNumbers: false,
     showWordCount: true,
     compactMode: false,
-    appBackgroundColor: "#191919",
   },
   language: {
     interface: "pt-BR",

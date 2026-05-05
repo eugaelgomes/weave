@@ -77,7 +77,7 @@ const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "sm" | "md" | "l
     <figure
       className={cn(
         sizeClasses[size],
-        "relative flex-shrink-0 overflow-hidden rounded-md border border-neutral-100 bg-neutral-100 transition-all duration-300 dark:border-neutral-700 dark:bg-neutral-800"
+        "relative flex-shrink-0 overflow-hidden rounded-md border border-gray-100 bg-gray-100 transition-all duration-300 dark:border-gray-700 dark:bg-gray-800"
       )}
       aria-label={`Avatar de ${user?.user_name || "Usuário"}`}
     >
@@ -91,7 +91,7 @@ const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "sm" | "md" | "l
         />
       ) : (
         <CircleUserRound
-          className="h-full w-full text-neutral-600 dark:text-neutral-400"
+          className="h-full w-full text-gray-600 dark:text-gray-400"
           strokeWidth={1.5}
         />
       )}
@@ -106,14 +106,14 @@ const NotificationsLink = ({ ariaLabel, className }: { ariaLabel: string; classN
     <Link
       href="/notifications"
       className={cn(
-        "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-neutral-900 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-100",
+        "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-gray-500 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200",
         className
       )}
       aria-label={ariaLabel}
     >
       <MessageSquare className="h-4 w-4" />
       {unreadCount > 0 && (
-        <span className="bg-brand-primary-500 absolute top-1 right-1 flex h-3.5 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-white">
+        <span className="bg-brand-primary-500 absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full border-2 border-white px-1 text-[8px] font-bold text-white dark:border-gray-950">
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}
@@ -132,13 +132,13 @@ interface UserMenuProps {
 
 const UserMenuContent = ({ user, theme, t, onClose, onToggleTheme, onLogout }: UserMenuProps) => (
   <nav aria-label="Menu do usuário" className="flex flex-col overflow-hidden">
-    <header className="flex items-center gap-3 border-b border-neutral-200 px-4 py-3 dark:border-neutral-900">
+    <header className="flex items-center gap-3 border-b border-gray-200 bg-brand-yellow/5 px-4 py-3 dark:border-gray-900 dark:bg-gray-950">
       <UserAvatar user={user} size="md" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-bold text-neutral-900 dark:text-neutral-100">
+        <p className="truncate text-sm font-bold text-gray-900 dark:text-brand-yellow">
           {user?.user_name || t.common.user}
         </p>
-        <p className="truncate text-[8px] text-neutral-500 dark:text-neutral-400">
+        <p className="truncate text-[9px] font-medium text-gray-500 dark:text-gray-400">
           @{formatters.getUsername(user, t.common.username)}
         </p>
       </div>
@@ -149,7 +149,7 @@ const UserMenuContent = ({ user, theme, t, onClose, onToggleTheme, onLogout }: U
         <Link
           href="/settings"
           onClick={onClose}
-          className="block rounded-md px-4 py-2.5 text-xs font-medium text-neutral-900 hover:bg-black/5 dark:text-neutral-100 dark:hover:bg-white/5"
+          className="block rounded-md px-4 py-2.5 text-xs font-medium text-gray-900 hover:bg-black/5 dark:text-gray-100 dark:hover:bg-white/5"
         >
           {t.navbar.accountSettings}
         </Link>
@@ -158,13 +158,13 @@ const UserMenuContent = ({ user, theme, t, onClose, onToggleTheme, onLogout }: U
       <li>
         <button
           onClick={onToggleTheme}
-          className="flex w-full items-center justify-between rounded-md px-4 py-2.5 text-left text-xs font-medium text-neutral-900 hover:bg-black/5 dark:text-neutral-100 dark:hover:bg-white/5"
+          className="flex w-full items-center justify-between rounded-md px-4 py-2.5 text-left text-xs font-medium text-gray-900 hover:bg-black/5 dark:text-gray-100 dark:hover:bg-white/5"
         >
           <div className="flex items-center gap-2">
             {theme === "light" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
             <span>{t.navbar.theme}</span>
           </div>
-          <span className="rounded-md bg-black/5 px-2 py-0.5 text-[10px] font-bold tracking-wider text-neutral-600 uppercase dark:bg-white/10 dark:text-neutral-400">
+          <span className="rounded-md bg-black/5 px-2 py-0.5 text-[10px] font-bold tracking-wider text-gray-600 uppercase dark:bg-white/10 dark:text-gray-400">
             {theme === "light" ? t.navbar.light : t.navbar.dark}
           </span>
         </button>
@@ -176,13 +176,13 @@ const UserMenuContent = ({ user, theme, t, onClose, onToggleTheme, onLogout }: U
           target="_blank"
           rel="noopener noreferrer"
           onClick={onClose}
-          className="block rounded-md px-4 py-2.5 text-xs font-medium text-neutral-900 hover:bg-black/5 dark:text-neutral-100 dark:hover:bg-white/5"
+          className="block rounded-md px-4 py-2.5 text-xs font-medium text-gray-900 hover:bg-black/5 dark:text-gray-100 dark:hover:bg-white/5"
         >
           {t.navbar.aboutSystem}
         </a>
       </li>
 
-      <hr className="my-1 border-t border-neutral-200 dark:border-neutral-800" />
+      <hr className="my-1 border-t border-gray-200 dark:border-gray-800" />
 
       <li>
         <button
@@ -242,7 +242,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full backdrop-blur-md print:hidden">
+      <header className="sticky top-0 z-40 w-full border-t-1 border-brand-yellow bg-white/80 backdrop-blur-md print:hidden dark:bg-gray-950/80">
         <nav className="mx-auto w-full max-w-[1920px] px-2" aria-label="Navegação principal">
           <div className="flex h-10 items-center justify-between gap-2 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center md:justify-normal md:gap-4">
             {/* Bloco Esquerdo: Logo e Organização */}
@@ -250,7 +250,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               {authenticated && (
                 <button
                   onClick={onToggleSidebar}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-neutral-900 transition-colors hover:bg-neutral-100 hover:text-neutral-900 lg:hidden dark:text-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-gray-500 transition-all hover:bg-gray-100 hover:text-gray-900 lg:hidden dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200"
                   aria-label="Abrir menu lateral"
                 >
                   <Menu className="h-4 w-4" strokeWidth={2} />
@@ -264,7 +264,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               >
                 <span
                   className={cn(
-                    "text-brand-primary-500 truncate text-sm font-bold sm:text-base",
+                    "truncate text-sm font-bold text-brand-yellow sm:text-base",
                     fredoka.className
                   )}
                 >
@@ -288,7 +288,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                         className="object-contain"
                       />
                     </figure>
-                    <span className="max-w-[180px] truncate text-xs font-medium text-neutral-900 dark:text-neutral-100">
+                    <span className="max-w-[180px] truncate text-xs font-medium text-gray-900 dark:text-gray-100">
                       {user.org_name}
                     </span>
                   </Link>
@@ -301,17 +301,17 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               <section className="hidden min-w-0 items-center justify-center gap-2 justify-self-center md:flex">
                 <button
                   onClick={() => setIsSearchOpen(true)}
-                  className="group flex w-full max-w-[360px] items-center gap-2.5 rounded-md border border-neutral-200 bg-neutral-100/50 px-2 py-0.5 transition-all hover:bg-neutral-100 hover:ring-2 hover:ring-yellow-500/20 dark:border-neutral-900 dark:bg-neutral-800/50 dark:hover:bg-neutral-800"
+                  className="group flex w-full max-w-[480px] items-center gap-2.5 rounded-full border border-gray-200/60 bg-brand-beige/40 px-3 py-1 transition-all hover:bg-brand-beige/60 hover:ring-4 hover:ring-brand-yellow/10 dark:border-gray-800/60 dark:bg-gray-900/40 dark:hover:bg-gray-800/60"
                   aria-label="Pesquisar no sistema"
                 >
                   <Search
-                    className="h-3.5 w-3.5 text-neutral-900 group-hover:text-brand-primary-500 dark:text-neutral-100"
+                    className="h-3.5 w-3.5 text-gray-500 transition-colors group-hover:text-brand-yellow dark:text-gray-500"
                     strokeWidth={2}
                   />
-                  <span className="flex-1 text-left text-xs text-neutral-900/50 dark:text-neutral-100/50">
+                  <span className="flex-1 text-left text-[11px] text-gray-500 dark:text-gray-400">
                     {t.navbar.searchPlaceholder}
                   </span>
-                  <kbd className="flex items-center gap-1 px-1.5 font-sans text-[10px] font-medium text-neutral-600 dark:text-neutral-400">
+                  <kbd className="flex items-bottom gap-1  px-1.5 font-sans text-[10px] font-medium text-gray-500 dark:border-gray-700/60  dark:text-gray-500">
                     <span>⌘</span>K
                   </kbd>
                 </button>
@@ -325,7 +325,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 <>
                   <button
                     onClick={() => setIsSearchOpen(true)}
-                    className="flex h-10 w-10 items-center justify-center rounded-md text-neutral-900 transition-colors hover:bg-neutral-100 hover:text-neutral-900 md:hidden dark:text-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                    className="flex h-10 w-10 items-center justify-center rounded-md text-gray-900 transition-colors hover:bg-gray-100 hover:text-gray-900 md:hidden dark:text-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-100"
                     aria-label="Abrir busca"
                   >
                     <Search className="h-4 w-4" strokeWidth={2} />
@@ -340,17 +340,17 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                       aria-haspopup="menu"
                       aria-label="Abrir menu do usuário"
                       className={cn(
-                        "flex items-center rounded-md transition-all duration-200",
+                        "flex items-center gap-2 rounded-md p-1 transition-all duration-200",
                         isMenuOpen
-                          ? "bg-neutral-100 dark:bg-neutral-800"
-                          : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50"
+                          ? "bg-gray-100 dark:bg-gray-800"
+                          : "hover:bg-gray-100/60 dark:hover:bg-gray-800/40"
                       )}
                     >
                       <div className="hidden lg:flex lg:flex-col lg:items-end lg:pr-3">
-                        <span className="text-xs leading-none font-bold text-neutral-900 dark:text-neutral-100">
+                        <span className="text-xs leading-none font-bold text-gray-900 dark:text-gray-100">
                           {formatters.getDisplayName(user, t.common.user)}
                         </span>
-                        <span className="text-[10px] font-medium text-neutral-600 dark:text-neutral-400">
+                        <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">
                           @{formatters.getUsername(user, t.common.username)}
                         </span>
                       </div>
@@ -359,7 +359,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
                     {isMenuOpen && (
                       <div className="absolute top-full right-0 z-50 mt-2 hidden w-72 origin-top-right sm:block">
-                        <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-2xl ring-1 ring-black/5 dark:border-neutral-900 dark:bg-neutral-900 dark:shadow-neutral-950/50">
+                        <div className="overflow-hidden rounded-md border border-gray-200/60 bg-white shadow-2xl ring-1 ring-black/5 dark:border-gray-800/60 dark:bg-gray-950">
                           <UserMenuContent
                             user={user}
                             theme={theme}

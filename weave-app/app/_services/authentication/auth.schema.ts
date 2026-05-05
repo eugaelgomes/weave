@@ -3,7 +3,6 @@ import { z } from "zod";
 // Zod schema for UserPreferences
 export const UserPreferencesSchema = z.object({
   Display: z.object({
-    appBackgroundColor: z.string().optional(),
   }).passthrough().optional(),
   language: z.object({
     interface: z.string().optional(),

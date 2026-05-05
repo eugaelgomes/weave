@@ -163,18 +163,18 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   ];
 
   return (
-    <div className="mx-2 mb-2 flex min-h-0 flex-1 flex-col rounded-md border border-neutral-200 bg-neutral-100 text-neutral-900 shadow-md dark:border-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+    <div className="mx-2 mb-2 flex min-h-0 flex-1 flex-col rounded-md border border-gray-800 bg-gray-900 text-gray-100 shadow-sm transition-colors duration-300 dark:border-gray-800/50 dark:bg-gray-950/50 dark:text-gray-400">
       {/* Header mobile */}
-      <div className="flex items-center justify-between border-b border-neutral-200 p-3 lg:hidden dark:border-neutral-800">
+      <div className="flex items-center justify-between border-b border-neutral-200/60 p-3 lg:hidden dark:border-neutral-800/60">
         <div className="flex items-center gap-2">
-          <Book className="text-brand-primary-500 h-3.5 w-3.5" />
-          <h2 className="text-[11px] font-bold tracking-wider text-neutral-700 dark:text-neutral-200">
+          <Book className="h-3.5 w-3.5 text-brand-primary-500" />
+          <h2 className="text-[10px] font-bold tracking-widest text-neutral-400 uppercase dark:text-neutral-500">
             Menu
           </h2>
         </div>
         <button
           onClick={handleLinkClick}
-          className="rounded p-1 text-neutral-600 hover:bg-black/5 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/5 dark:hover:text-neutral-100"
+          className="rounded-md p-1.5 text-gray-400 hover:bg-white/10 hover:text-white dark:text-gray-500 dark:hover:bg-gray-800/50 dark:hover:text-gray-300"
           aria-label="Fechar menu"
         >
           <X size={16} />
@@ -183,14 +183,14 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
 
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Toggle collapse desktop only */}
-        <div className={`flex items-center py-1.5 ${isCollapsed ? "justify-center" : "px-2"}`}>
+        <div className={`flex items-center py-2 ${isCollapsed ? "justify-center" : "px-3"}`}>
           {!isCollapsed && (
-            <h2 className="text-brand-primary-500 text-[10px] font-bold tracking-wider">Menu</h2>
+            <h2 className="text-[9px] font-bold tracking-widest text-gray-400/80 uppercase dark:text-gray-500">Menu</h2>
           )}
           {toggleCollapse && (
             <button
               onClick={toggleCollapse}
-              className={`text-brand-primary-500 hidden rounded-md p-1 hover:bg-neutral-100 lg:block dark:hover:bg-neutral-800 ${
+              className={`hidden rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 lg:block dark:text-neutral-500 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-300 ${
                 isCollapsed ? "" : "ml-auto"
               }`}
               title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
@@ -200,7 +200,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent">
+        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-200 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-800 [&::-webkit-scrollbar-track]:bg-transparent">
           <ul className="space-y-1 px-1 pt-1 pb-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
@@ -217,15 +217,15 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
                       handleLinkClick();
                     }}
                     title={isCollapsed ? item.label : undefined}
-                    className={`flex items-center rounded-md py-1.5 text-xs font-medium transition duration-200 ${
+                    className={`group flex items-center rounded-md py-2 text-[13px] font-medium transition-all duration-200 ${
                       active
-                        ? "bg-brand-primary-500/10 dark:text-brand-primary-500 text-yellow-600"
-                        : "text-neutral-900 hover:bg-black/5 hover:text-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
-                    } ${isCollapsed ? "justify-center px-0" : "px-2"}`}
+                        ? "bg-brand-primary-500/10 text-brand-primary-500"
+                        : "text-gray-300 hover:bg-white/5 hover:text-white dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200"
+                    } ${isCollapsed ? "justify-center px-0" : "px-2.5"}`}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                       <Icon
-                        className={`h-4 w-4 ${active ? "text-brand-primary-500" : "text-neutral-900 dark:text-neutral-100"}`}
+                        className={`h-4 w-4 transition-colors ${active ? "text-brand-primary-500" : "text-gray-400 group-hover:text-white dark:text-gray-500 dark:group-hover:text-gray-300"}`}
                       />
                       {!isCollapsed && <span className="truncate">{item.label}</span>}
                       {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
@@ -240,8 +240,8 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
 
                     {!isCollapsed && hasSubItems && (
                       <ChevronRight
-                        className={`ml-auto size-3 text-current transition-transform ${
-                          isExpanded ? "rotate-90" : ""
+                        className={`ml-auto size-3.5 transition-transform duration-200 ${
+                          isExpanded ? "rotate-90 text-brand-primary-500" : "text-neutral-300 dark:text-neutral-600"
                         }`}
                       />
                     )}
@@ -266,21 +266,21 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
                               onClick={() => {
                                 handleLinkClick();
                               }}
-                              className={`flex items-center rounded-md px-2 py-1 text-xs font-medium transition duration-200 ${
+                              className={`group flex items-center rounded-md px-2.5 py-1.5 text-[12px] font-medium transition-all duration-200 ${
                                 isSubActive && !hasSubSubItems
-                                  ? "bg-brand-primary-500/10 dark:text-brand-primary-500 text-yellow-600"
-                                  : "text-neutral-900 hover:bg-black/5 hover:text-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                                  ? "bg-brand-primary-500/5 text-brand-primary-500"
+                                  : "text-gray-300 hover:bg-white/5 hover:text-white dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200"
                               }`}
                             >
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2.5">
                                 <SubIcon
-                                  className={`size-2.5 ${
+                                  className={`size-3 transition-colors ${
                                     isSubActive && !hasSubSubItems
                                       ? "text-brand-primary-500"
-                                      : "text-neutral-900 opacity-90 dark:text-neutral-100"
+                                      : "text-gray-400 group-hover:text-white dark:text-gray-500 dark:group-hover:text-gray-300"
                                   }`}
                                 />
-                                <span className="truncate text-xs">{subItem.label}</span>
+                                <span className="truncate">{subItem.label}</span>
                               </div>
 
                               {!isCollapsed && hasSubSubItems && (
@@ -305,17 +305,17 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
                                       <Link
                                         href={subSubItem.path}
                                         onClick={handleLinkClick}
-                                        className={`flex items-center gap-2 rounded-md px-2 py-1 text-[11px] font-medium transition duration-200 ${
+                                        className={`group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-all duration-200 ${
                                           isSubSubActive
-                                            ? "bg-brand-primary-500/10 dark:text-brand-primary-500 text-yellow-600"
-                                            : "text-neutral-900 hover:bg-black/5 hover:text-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                                            ? "bg-brand-primary-500/5 text-brand-primary-500"
+                                            : "text-gray-300 hover:bg-white/5 hover:text-white dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200"
                                         }`}
                                       >
                                         <SubSubIcon
-                                          className={`size-2.5 ${
+                                          className={`size-2.5 transition-colors ${
                                             isSubSubActive
                                               ? "text-brand-primary-500"
-                                              : "text-neutral-900 opacity-90 dark:text-neutral-100"
+                                              : "text-gray-400 group-hover:text-white dark:text-gray-500 dark:group-hover:text-gray-300"
                                           }`}
                                         />
                                         <span className="truncate">{subSubItem.label}</span>
@@ -337,10 +337,8 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
 
           {!isCollapsed && (
             <>
-              <div className="my-2 h-px w-full bg-neutral-200 dark:bg-neutral-800" />
-
-              <div>
-                <h2 className="text-brand-primary-500 mb-1.5 px-2 text-[10px] font-bold tracking-wider">
+              <div className="mt-4">
+                <h2 className="mb-2 px-3 text-[9px] font-bold tracking-widest text-gray-400/80 uppercase dark:text-gray-500">
                   {t.nav.recentAccess}
                 </h2>
 
@@ -362,20 +360,20 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
                             href={path}
                             onClick={handleLinkClick}
                             title={item.title}
-                            className={`group flex items-center gap-2 rounded-md px-2 py-1.5 transition duration-200 ${
+                            className={`group flex items-center gap-2.5 rounded-md px-3 py-2 transition-all duration-200 ${
                               isItemActive
-                                ? "bg-brand-primary-500/10 dark:bg-brand-primary-500/10 dark:text-brand-primary-500 text-yellow-600"
-                                : "text-neutral-900 hover:bg-black/5 hover:text-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                                ? "bg-brand-primary-500/10 text-brand-primary-500"
+                                : "text-gray-300 hover:bg-white/5 hover:text-white dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200"
                             }`}
                           >
                             <ItemIcon
-                              className={`h-3 w-3 shrink-0 ${
+                              className={`h-3.5 w-3.5 shrink-0 transition-colors ${
                                 isItemActive
                                   ? "text-brand-primary-500"
-                                  : "text-neutral-900 dark:text-neutral-100"
+                                  : "text-gray-400 group-hover:text-white dark:text-gray-500 dark:group-hover:text-gray-300"
                               }`}
                             />
-                            <span className="truncate text-[11px]">{item.title}</span>
+                            <span className="truncate text-[12px]">{item.title}</span>
                           </Link>
                         </li>
                       );
