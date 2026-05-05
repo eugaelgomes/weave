@@ -45,21 +45,21 @@ export function NoteDetailHeader({
   showColorPicker,
 }: NoteDetailHeaderProps) {
   return (
-    <div className="flex-shrink-0 border-b border-neutral-200 bg-neutral-50 px-2 dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="flex-shrink-0 border-b border-neutral-200 bg-neutral-50 px-1.5 dark:border-neutral-800 dark:bg-neutral-950">
       <div className="mx-auto flex w-full items-center justify-between">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-neutral-600 transition-all hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+          className="flex items-center gap-1.5 rounded-md px-1.5 py-1.5 text-sm font-medium text-neutral-600 transition-all hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
           title="Go back to notes list"
         >
           <ArrowLeft size={16} />
         </button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {isSaving ? (
             <>
-              <div className="flex items-center gap-3">
-                <div className="bg-brand-primary-500/10 flex animate-pulse items-center gap-1.5 rounded-full border border-yellow-500/20 px-3 py-1">
+              <div className="flex items-center gap-2">
+                <div className="bg-brand-primary-500/10 flex animate-pulse items-center gap-1.5 rounded-full border border-yellow-500/20 px-2.5 py-1">
                   <Loader2
                     size={13}
                     className="dark:text-brand-primary-500 animate-spin text-yellow-600"
@@ -69,7 +69,7 @@ export function NoteDetailHeader({
                   </span>
                 </div>
               </div>
-              <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
+              <div className="mx-0.5 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
             </>
           ) : null}
 
@@ -95,7 +95,7 @@ export function NoteDetailHeader({
             ) : null}
           </div>
 
-          <div className="mx-1 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
+          <div className="mx-0.5 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
 
           <div className="relative flex">
             <button

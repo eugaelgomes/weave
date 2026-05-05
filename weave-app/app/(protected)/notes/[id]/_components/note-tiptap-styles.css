@@ -1,12 +1,13 @@
 .tiptap-editor-wrapper {
   width: 100%;
   min-height: 200px;
+  position: relative;
 }
 
 .tiptap-editor {
   outline: none;
-  font-size: 16px;
-  line-height: 1.75;
+  font-size: 0.875rem;
+  line-height: 1.65;
   color: var(--color-neutral-800, #262626);
 }
 
@@ -59,7 +60,7 @@
 
 /* Headings */
 .tiptap-editor h1 {
-  font-size: 2em;
+  font-size: 1.75em;
   font-weight: 700;
   line-height: 1.25;
   margin: 1em 0 0.5em;
@@ -67,7 +68,7 @@
 }
 
 .tiptap-editor h2 {
-  font-size: 1.5em;
+  font-size: 1.35em;
   font-weight: 600;
   line-height: 1.3;
   margin: 0.875em 0 0.5em;
@@ -75,14 +76,14 @@
 }
 
 .tiptap-editor h3 {
-  font-size: 1.25em;
+  font-size: 1.15em;
   font-weight: 600;
   line-height: 1.4;
   margin: 0.75em 0 0.5em;
 }
 
 .tiptap-editor h4 {
-  font-size: 1.125em;
+  font-size: 1.05em;
   font-weight: 600;
   line-height: 1.5;
   margin: 0.625em 0 0.5em;
@@ -281,11 +282,10 @@
   background-color: #1e3a5f;
 }
 
-/* Focus state for nodes */
+/* Selected node — clean, no outline/ring */
 .tiptap-editor .ProseMirror-selectednode {
-  outline: 2px solid #FACC15;
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline: none;
+  opacity: 0.5;
 }
 
 /* Gapcursor */
@@ -317,4 +317,146 @@
 
 .tiptap-editor .ProseMirror-focused .ProseMirror-gapcursor {
   display: block;
+}
+
+/* ===== Drag Handle ===== */
+.tiptap-drag-handle {
+  position: absolute;
+  left: -26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  cursor: grab;
+  color: #d4d4d4;
+  transition: opacity 120ms ease, color 120ms ease, background-color 120ms ease;
+  z-index: 50;
+  user-select: none;
+  padding-top: 2px;
+}
+
+.tiptap-drag-handle:hover {
+  color: #a3a3a3;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.tiptap-drag-handle:active {
+  cursor: grabbing;
+  color: #737373;
+}
+
+.dark .tiptap-drag-handle {
+  color: #404040;
+}
+
+.dark .tiptap-drag-handle:hover {
+  color: #737373;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.dark .tiptap-drag-handle:active {
+  color: #a3a3a3;
+}
+
+/* ===== Slash Command Menu ===== */
+.slash-menu {
+  max-height: 320px;
+  width: 200px;
+  overflow-y: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.dark .slash-menu {
+  border-color: #333;
+  background: #1c1c1c;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.slash-menu-empty {
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+  color: #a3a3a3;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.dark .slash-menu-empty {
+  border-color: #333;
+  background: #1c1c1c;
+  color: #525252;
+}
+
+.slash-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 80ms ease;
+  font-family: inherit;
+}
+
+.slash-menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+.slash-menu-item--active {
+  background-color: #f5f5f5;
+}
+
+.dark .slash-menu-item:hover {
+  background-color: #262626;
+}
+
+.dark .slash-menu-item--active {
+  background-color: #262626;
+}
+
+.slash-menu-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: #737373;
+}
+
+.dark .slash-menu-item__icon {
+  color: #a3a3a3;
+}
+
+.slash-menu-item__title {
+  font-size: 0.8125rem;
+  font-weight: 450;
+  line-height: 1;
+  color: #404040;
+}
+
+.dark .slash-menu-item__title {
+  color: #d4d4d4;
+}
+
+/* Tippy reset — remove default arrow / bg */
+.tippy-box[data-theme] {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.tippy-box[data-theme] > .tippy-content {
+  padding: 0;
 }

@@ -9,6 +9,7 @@ import type { Block, CreateBlockData } from "@/app/_services/notes-service/notes
 import { createTiptapExtensions } from "./note-tiptap-extensions";
 import { blocksToTiptapDoc, tiptapDocToBlocks, isDocumentEmpty } from "./note-tiptap-serializer";
 import { NoteTiptapBubbleMenu } from "./note-tiptap-menu";
+import { TiptapDragHandle } from "./note-tiptap-drag-handle";
 import "./note-tiptap-styles.css";
 
 interface NoteTiptapEditorProps {
@@ -191,6 +192,7 @@ export function NoteTiptapEditor({
   return (
     <div className="tiptap-editor-wrapper relative">
       {canEdit && editor && <NoteTiptapBubbleMenu editor={editor} />}
+      {canEdit && editor && <TiptapDragHandle editor={editor} />}
 
       <EditorContent editor={editor} />
 

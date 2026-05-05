@@ -144,12 +144,12 @@ const SortableBlockComponent: React.FC<SortableBlockProps> = ({
 
 // =================== SKELETON ===================
 const NoteDetailSkeleton = () => (
-  <div className="flex min-h-0 flex-1 flex-col">
+  <div className="flex min-h-0 flex-1 flex-col text-[13px]">
     {/* Header skeleton */}
-    <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="border-b border-neutral-200 bg-neutral-50 px-1.5 py-2.5 dark:border-neutral-800 dark:bg-neutral-950">
       <div className="mx-auto flex max-w-4xl items-center justify-between">
         <div className="h-8 w-8 animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800" />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="h-4 w-28 animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800" />
           <div className="flex gap-1.5">
             <div className="h-8 w-8 animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800" />
@@ -160,11 +160,11 @@ const NoteDetailSkeleton = () => (
     </div>
 
     {/* Content skeleton */}
-    <div className="mx-auto w-full max-w-4xl px-4 py-8">
+    <div className="mx-auto w-full max-w-4xl px-3 py-8">
       <div className="mb-8">
         <div className="mb-2 h-9 w-2/3 animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800" />
       </div>
-      <div className="mb-6 flex gap-3 border-b border-neutral-100 pb-5 dark:border-neutral-800">
+      <div className="mb-6 flex gap-2 border-b border-neutral-100 pb-5 dark:border-neutral-800">
         <div className="h-6 w-16 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-800" />
         <div className="h-6 w-20 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-800" />
       </div>
@@ -1263,7 +1263,7 @@ const NoteDetail = () => {
   const hasNoteHero = Boolean(note.properties?.banner?.path || note.properties?.color);
 
   const IconPropsToolbar = () => (
-    <div className="group/props mb-3 flex items-center gap-3">
+    <div className="group/props mb-3 flex flex-wrap items-center gap-2">
       {note.properties?.icon?.path ? (
         <div className="group relative">
           <div className="h-14 w-14 overflow-hidden rounded-md border-2 border-white bg-white shadow-md dark:border-neutral-900 dark:bg-neutral-900">
@@ -1297,7 +1297,7 @@ const NoteDetail = () => {
       ) : null}
       {note.access?.canEdit && (
         <div
-          className={`flex items-center gap-1 transition-opacity ${
+          className={`flex flex-wrap items-center gap-1 transition-opacity ${
             note.properties?.icon?.path && note.properties?.banner?.path
               ? "opacity-0 group-hover/props:opacity-100"
               : ""
@@ -1305,7 +1305,7 @@ const NoteDetail = () => {
         >
           <button
             onClick={() => filesInputRef.current?.click()}
-            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
             title="Adicionar arquivos"
           >
             <FileText size={12} />
@@ -1314,7 +1314,7 @@ const NoteDetail = () => {
           {!note.properties?.icon?.path && (
             <button
               onClick={() => iconInputRef.current?.click()}
-              className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+              className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
               title="Adicionar ícone"
             >
               <ImagePlus size={12} />
@@ -1324,7 +1324,7 @@ const NoteDetail = () => {
           {!note.properties?.banner?.path && (
             <button
               onClick={() => bannerInputRef.current?.click()}
-              className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+              className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
               title="Adicionar banner"
             >
               <ImagePlus size={12} />
@@ -1333,7 +1333,7 @@ const NoteDetail = () => {
           )}
           <button
             onClick={() => setShowTagModal(true)}
-            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
             title="Gerenciar tags"
           >
             <Tag size={12} />
@@ -1341,7 +1341,7 @@ const NoteDetail = () => {
           </button>
           <button
             onClick={() => setShowRelationModal(true)}
-            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
             title="Gerenciar relações"
           >
             <Link size={12} />
@@ -1354,7 +1354,7 @@ const NoteDetail = () => {
 
   return (
     <NoteCommentsProvider noteId={note.id}>
-      <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-neutral-50 shadow-sm dark:bg-neutral-950">
+      <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-neutral-50 text-[13px] shadow-sm dark:bg-neutral-950">
         <NoteDetailHeader
           isExporting={isExporting}
           isSaving={isSaving}
@@ -1424,7 +1424,7 @@ const NoteDetail = () => {
                     )}
                   </div>
                   {/* top-full = base do banner (só h-52); -translate-y-7 = metade do ícone h-14 sobre o banner */}
-                  <div className="pointer-events-none absolute inset-x-0 top-full z-30 flex -translate-y-7 justify-start px-4 sm:px-6">
+                  <div className="pointer-events-none absolute inset-x-0 top-full z-30 flex -translate-y-7 justify-start px-3 sm:px-4">
                     <div className="pointer-events-auto min-w-0">
                       <IconPropsToolbar />
                     </div>
@@ -1438,7 +1438,7 @@ const NoteDetail = () => {
                     className="relative z-0 h-28 w-full"
                     style={{ backgroundColor: note.properties.color }}
                   />
-                  <div className="pointer-events-none absolute inset-x-0 top-full z-30 flex -translate-y-7 justify-start px-4 sm:px-6">
+                  <div className="pointer-events-none absolute inset-x-0 top-full z-30 flex -translate-y-7 justify-start px-3 sm:px-4">
                     <div className="pointer-events-auto min-w-0">
                       <IconPropsToolbar />
                     </div>
@@ -1450,13 +1450,13 @@ const NoteDetail = () => {
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
               <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 {!hasNoteHero ? (
-                  <div className="shrink-0 px-4 pt-6 sm:px-6">
+                  <div className="shrink-0 px-3 pt-6 sm:px-4">
                     <IconPropsToolbar />
                   </div>
                 ) : null}
 
                 <div
-                  className={`no-scrollbar min-h-0 flex-1 overflow-y-auto px-4 pb-6 sm:px-6 ${
+                  className={`no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-6 sm:px-4 ${
                     hasNoteHero ? "pt-2 sm:pt-4" : ""
                   }`}
                 >
@@ -1481,7 +1481,7 @@ const NoteDetail = () => {
                           }}
                           placeholder="Título da tarefa..."
                           rows={1}
-                          className="w-full resize-none overflow-hidden bg-transparent text-xl font-bold text-neutral-900 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-100 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
+                          className="w-full resize-none overflow-hidden bg-transparent text-lg font-bold text-neutral-900 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-100 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
                         />
                         <textarea
                           ref={(el) => {
@@ -1499,7 +1499,7 @@ const NoteDetail = () => {
                           }}
                           placeholder="Adicionar descrição..."
                           rows={1}
-                          className="w-full resize-none overflow-hidden bg-transparent text-sm text-neutral-600 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-400 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
+                          className="w-full resize-none overflow-hidden bg-transparent text-xs text-neutral-600 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-400 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
                         />
                       </div>
                       {canUseNoteComments ? (
@@ -1514,12 +1514,12 @@ const NoteDetail = () => {
                   </div>
 
                   {/* Meta informações — conteúdo até 2/3; linhas divisórias em largura total */}
-                  <div className="mb-3 flex w-full flex-col gap-4 pb-1">
+                  <div className="mb-3 flex w-full flex-col gap-3 pb-1">
                     <div className="w-full max-w-[66.666667%]">
-                      <div className="grid grid-cols-1 gap-x-6 gap-y-4 lg:grid-cols-2 lg:items-center">
+                      <div className="grid grid-cols-1 gap-x-4 gap-y-3 lg:grid-cols-2 lg:items-center">
                         {(note.access?.canEdit || note.associated_project) && (
                           <>
-                            <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                            <div className="flex min-w-0 flex-row items-center gap-1.5 sm:gap-2">
                               <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                                 <FolderKanban
                                   className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
@@ -1549,7 +1549,7 @@ const NoteDetail = () => {
                                 ) : null}
                               </div>
                             </div>
-                            <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                            <div className="flex min-w-0 flex-row items-center gap-1.5 sm:gap-2">
                               <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                                 <Kanban
                                   className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
@@ -1656,7 +1656,7 @@ const NoteDetail = () => {
                           note.priority_id ||
                           note.priority_name) && (
                           <>
-                            <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                            <div className="flex min-w-0 flex-row items-center gap-1.5 sm:gap-2">
                               <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                                 <Calendar
                                   className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
@@ -1697,7 +1697,7 @@ const NoteDetail = () => {
                                 )}
                               </div>
                             </div>
-                            <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                            <div className="flex min-w-0 flex-row items-center gap-1.5 sm:gap-2">
                               <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                                 <Flag
                                   className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
@@ -1775,7 +1775,7 @@ const NoteDetail = () => {
                           </>
                         )}
 
-                        <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                        <div className="flex min-w-0 flex-row items-center gap-1.5 sm:gap-2">
                           <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                             <Users
                               className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
@@ -1851,7 +1851,7 @@ const NoteDetail = () => {
                         </div>
 
                         {/* Relações */}
-                        <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                        <div className="flex min-w-0 flex-row items-center gap-1.5 sm:gap-2">
                           <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                             <Link
                               className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
@@ -1918,7 +1918,7 @@ const NoteDetail = () => {
                         </div>
 
                         {/* Tags */}
-                        <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                        <div className="flex min-w-0 flex-row items-center gap-1.5 sm:gap-2">
                           <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                             <Tag
                               className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
@@ -1976,7 +1976,7 @@ const NoteDetail = () => {
                         </div>
 
                         {/* URLs */}
-                        <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3">
+                        <div className="flex min-w-0 flex-row items-center gap-1.5 sm:gap-2">
                           <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                             <Link2
                               className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"
@@ -2086,7 +2086,7 @@ const NoteDetail = () => {
                         </div>
 
                         {/* Arquivos */}
-                        <div className="flex min-w-0 flex-row items-center gap-2 sm:gap-3 lg:col-span-2">
+                        <div className="flex min-w-0 flex-row items-center gap-1.5 sm:gap-2 lg:col-span-2">
                           <div className="flex shrink-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                             <FileText
                               className="dark:text-brand-primary-500 flex-shrink-0 text-yellow-400"

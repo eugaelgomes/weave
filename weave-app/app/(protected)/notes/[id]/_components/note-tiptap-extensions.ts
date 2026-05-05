@@ -20,7 +20,7 @@ export function createTiptapExtensions(placeholder = "Digite / para comandos ou 
       },
       codeBlock: false,
       dropcursor: {
-        color: "#FACC15",
+        color: "#d4d4d4",
         width: 2,
       },
     }),

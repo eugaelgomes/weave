@@ -22,7 +22,6 @@ import {
 
 interface CommandItem {
   title: string;
-  description: string;
   icon: React.ReactNode;
   command: (props: { editor: Editor; range: Range }) => void;
 }
@@ -30,88 +29,77 @@ interface CommandItem {
 const COMMANDS: CommandItem[] = [
   {
     title: "Texto",
-    description: "Parágrafo de texto simples",
-    icon: <Type size={18} />,
+    icon: <Type size={18} strokeWidth={1.7} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setParagraph().run();
     },
   },
   {
     title: "Título 1",
-    description: "Título grande",
-    icon: <Heading1 size={18} />,
+    icon: <Heading1 size={18} strokeWidth={1.7} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run();
     },
   },
   {
     title: "Título 2",
-    description: "Título médio",
-    icon: <Heading2 size={18} />,
+    icon: <Heading2 size={18} strokeWidth={1.7} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run();
     },
   },
   {
     title: "Título 3",
-    description: "Título pequeno",
-    icon: <Heading3 size={18} />,
+    icon: <Heading3 size={18} strokeWidth={1.7} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run();
     },
   },
   {
     title: "Lista",
-    description: "Lista com marcadores",
-    icon: <List size={18} />,
+    icon: <List size={18} strokeWidth={1.7} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleBulletList().run();
     },
   },
   {
     title: "Lista numerada",
-    description: "Lista com números",
-    icon: <ListOrdered size={18} />,
+    icon: <ListOrdered size={18} strokeWidth={1.7} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleOrderedList().run();
     },
   },
   {
     title: "Tarefas",
-    description: "Lista de tarefas com checkbox",
-    icon: <CheckSquare size={18} />,
+    icon: <CheckSquare size={18} strokeWidth={1.7} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleTaskList().run();
     },
   },
   {
     title: "Citação",
-    description: "Bloco de citação",
-    icon: <Quote size={18} />,
+    icon: <Quote size={18} strokeWidth={1.7} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleBlockquote().run();
     },
   },
   {
     title: "Código",
-    description: "Bloco de código",
-    icon: <Code size={18} />,
+    icon: <Code size={18} strokeWidth={1.7} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleCodeBlock().run();
     },
   },
   {
     title: "Divisor",
-    description: "Linha horizontal",
-    icon: <Minus size={18} />,
+    icon: <Minus size={18} strokeWidth={1.7} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHorizontalRule().run();
     },
   },
   {
     title: "Imagem",
-    description: "Inserir imagem por URL",
-    icon: <ImageIcon size={18} />,
+    icon: <ImageIcon size={18} strokeWidth={1.7} />,
     command: ({ editor, range }) => {
       const url = window.prompt("URL da imagem:");
       if (url) {
@@ -136,9 +124,7 @@ const CommandList = React.forwardRef<
   const selectItem = useCallback(
     (index: number) => {
       const item = items[index];
-      if (item) {
-        command(item);
-      }
+      if (item) command(item);
     },
     [items, command]
   );
@@ -150,9 +136,7 @@ const CommandList = React.forwardRef<
   useEffect(() => {
     if (containerRef.current) {
       const selectedEl = containerRef.current.querySelector(`[data-index="${selectedIndex}"]`);
-      if (selectedEl) {
-        selectedEl.scrollIntoView({ block: "nearest" });
-      }
+      if (selectedEl) selectedEl.scrollIntoView({ block: "nearest" });
     }
   }, [selectedIndex]);
 
@@ -175,52 +159,20 @@ const CommandList = React.forwardRef<
   }));
 
   if (items.length === 0) {
-    return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-3 text-sm text-neutral-500 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-        Nenhum comando encontrado
-      </div>
-    );
+    return <div className="slash-menu-empty">Nenhum resultado</div>;
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="max-h-[300px] w-[280px] overflow-y-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-800"
-    >
+    <div ref={containerRef} className="slash-menu">
       {items.map((item, index) => (
         <button
           key={item.title}
           data-index={index}
           onClick={() => selectItem(index)}
-          className={`flex w-full items-center gap-3 px-3 py-2 text-left transition-colors ${
-            index === selectedIndex
-              ? "bg-yellow-50 dark:bg-yellow-500/10"
-              : "hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
-          }`}
+          className={`slash-menu-item ${index === selectedIndex ? "slash-menu-item--active" : ""}`}
         >
-          <div
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${
-              index === selectedIndex
-                ? "border-yellow-500 bg-yellow-100 text-yellow-700 dark:border-yellow-500/50 dark:bg-yellow-500/20 dark:text-yellow-400"
-                : "border-neutral-200 bg-neutral-50 text-neutral-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-400"
-            }`}
-          >
-            {item.icon}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div
-              className={`text-sm font-medium ${
-                index === selectedIndex
-                  ? "text-yellow-700 dark:text-yellow-400"
-                  : "text-neutral-800 dark:text-neutral-200"
-              }`}
-            >
-              {item.title}
-            </div>
-            <div className="truncate text-xs text-neutral-500 dark:text-neutral-400">
-              {item.description}
-            </div>
-          </div>
+          <span className="slash-menu-item__icon">{item.icon}</span>
+          <span className="slash-menu-item__title">{item.title}</span>
         </button>
       ))}
     </div>
@@ -232,16 +184,11 @@ CommandList.displayName = "CommandList";
 function getSuggestion(): Omit<SuggestionOptions, "editor"> {
   return {
     items: ({ query }: { query: string }) => {
-      const normalizedQuery = query.toLowerCase().trim();
-      if (!normalizedQuery) return COMMANDS;
-      return COMMANDS.filter(
-        (item) =>
-          item.title.toLowerCase().includes(normalizedQuery) ||
-          item.description.toLowerCase().includes(normalizedQuery)
-      );
+      const q = query.toLowerCase().trim();
+      if (!q) return COMMANDS;
+      return COMMANDS.filter((item) => item.title.toLowerCase().includes(q));
     },
     char: "/",
-    startOfLine: true,
     render: () => {
       let component: ReactRenderer | null = null;
       let popup: TippyInstance[] | null = null;
@@ -263,6 +210,8 @@ function getSuggestion(): Omit<SuggestionOptions, "editor"> {
             interactive: true,
             trigger: "manual",
             placement: "bottom-start",
+            offset: [0, 4],
+            animation: false,
           });
         },
         onUpdate: (props: SuggestionProps) => {
