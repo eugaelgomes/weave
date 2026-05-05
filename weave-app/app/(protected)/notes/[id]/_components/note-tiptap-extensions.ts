@@ -12,7 +12,7 @@ import { SlashCommands } from "./note-tiptap-slash-commands";
 
 const lowlight = createLowlight(common);
 
-export function createTiptapExtensions(placeholder = "Digite / para comandos ou comece a escrever...") {
+export function createTiptapExtensions(placeholder = "Comece a escrever...") {
   return [
     StarterKit.configure({
       heading: {

@@ -360,94 +360,74 @@
   color: #a3a3a3;
 }
 
-/* ===== Slash Command Menu ===== */
-.slash-menu {
-  max-height: 320px;
-  width: 200px;
-  overflow-y: auto;
-  border-radius: 8px;
-  border: 1px solid #e5e5e5;
-  background: #fff;
-  padding: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.dark .slash-menu {
-  border-color: #333;
-  background: #1c1c1c;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.slash-menu-empty {
-  border-radius: 8px;
-  border: 1px solid #e5e5e5;
-  background: #fff;
-  padding: 8px 12px;
-  font-size: 0.8125rem;
-  color: #a3a3a3;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.dark .slash-menu-empty {
-  border-color: #333;
-  background: #1c1c1c;
-  color: #525252;
-}
-
-.slash-menu-item {
+/* ===== Slash Toolbar (horizontal, matches BubbleMenu) ===== */
+.slash-toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 5px 8px;
-  border: none;
-  border-radius: 5px;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  transition: background-color 80ms ease;
-  font-family: inherit;
+  gap: 2px;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  padding: 4px 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.slash-menu-item:hover {
-  background-color: #f5f5f5;
+.dark .slash-toolbar {
+  border-color: #333;
+  background: #262626;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
-.slash-menu-item--active {
-  background-color: #f5f5f5;
-}
-
-.dark .slash-menu-item:hover {
-  background-color: #262626;
-}
-
-.dark .slash-menu-item--active {
-  background-color: #262626;
-}
-
-.slash-menu-item__icon {
+.slash-toolbar__btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
   color: #737373;
+  cursor: pointer;
+  transition: background-color 80ms ease, color 80ms ease;
+  flex-shrink: 0;
 }
 
-.dark .slash-menu-item__icon {
+.slash-toolbar__btn:hover {
+  background-color: #f0f0f0;
+  color: #262626;
+}
+
+.slash-toolbar__btn--active {
+  background-color: #e5e5e5;
+  color: #171717;
+}
+
+.dark .slash-toolbar__btn {
   color: #a3a3a3;
 }
 
-.slash-menu-item__title {
-  font-size: 0.8125rem;
-  font-weight: 450;
-  line-height: 1;
-  color: #404040;
+.dark .slash-toolbar__btn:hover {
+  background-color: #333;
+  color: #e5e5e5;
 }
 
-.dark .slash-menu-item__title {
-  color: #d4d4d4;
+.dark .slash-toolbar__btn--active {
+  background-color: #404040;
+  color: #fff;
+}
+
+.slash-toolbar__divider {
+  display: block;
+  width: 1px;
+  height: 20px;
+  background-color: #e0e0e0;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.dark .slash-toolbar__divider {
+  background-color: #404040;
 }
 
 /* Tippy reset — remove default arrow / bg */

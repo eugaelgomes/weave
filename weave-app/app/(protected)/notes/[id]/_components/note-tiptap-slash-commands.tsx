@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Extension } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
 import { Suggestion, type SuggestionOptions, type SuggestionProps } from "@tiptap/suggestion";
@@ -17,89 +17,84 @@ import {
   Code,
   Minus,
   Image as ImageIcon,
-  Type,
 } from "lucide-react";
 
 interface CommandItem {
   title: string;
   icon: React.ReactNode;
+  dividerAfter?: boolean;
   command: (props: { editor: Editor; range: Range }) => void;
 }
 
 const COMMANDS: CommandItem[] = [
   {
-    title: "Texto",
-    icon: <Type size={18} strokeWidth={1.7} />,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).setParagraph().run();
-    },
-  },
-  {
     title: "Título 1",
-    icon: <Heading1 size={18} strokeWidth={1.7} />,
+    icon: <Heading1 size={16} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run();
     },
   },
   {
     title: "Título 2",
-    icon: <Heading2 size={18} strokeWidth={1.7} />,
+    icon: <Heading2 size={16} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run();
     },
   },
   {
     title: "Título 3",
-    icon: <Heading3 size={18} strokeWidth={1.7} />,
+    icon: <Heading3 size={16} />,
+    dividerAfter: true,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run();
     },
   },
   {
     title: "Lista",
-    icon: <List size={18} strokeWidth={1.7} />,
+    icon: <List size={16} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleBulletList().run();
     },
   },
   {
     title: "Lista numerada",
-    icon: <ListOrdered size={18} strokeWidth={1.7} />,
+    icon: <ListOrdered size={16} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleOrderedList().run();
     },
   },
   {
     title: "Tarefas",
-    icon: <CheckSquare size={18} strokeWidth={1.7} />,
+    icon: <CheckSquare size={16} />,
+    dividerAfter: true,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleTaskList().run();
     },
   },
   {
     title: "Citação",
-    icon: <Quote size={18} strokeWidth={1.7} />,
+    icon: <Quote size={16} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleBlockquote().run();
     },
   },
   {
     title: "Código",
-    icon: <Code size={18} strokeWidth={1.7} />,
+    icon: <Code size={16} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleCodeBlock().run();
     },
   },
   {
     title: "Divisor",
-    icon: <Minus size={18} strokeWidth={1.7} />,
+    icon: <Minus size={16} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHorizontalRule().run();
     },
   },
   {
     title: "Imagem",
-    icon: <ImageIcon size={18} strokeWidth={1.7} />,
+    icon: <ImageIcon size={16} />,
     command: ({ editor, range }) => {
       const url = window.prompt("URL da imagem:");
       if (url) {
@@ -119,7 +114,6 @@ const CommandList = React.forwardRef<
   CommandListProps
 >(({ items, command }, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const selectItem = useCallback(
     (index: number) => {
@@ -133,20 +127,13 @@ const CommandList = React.forwardRef<
     setSelectedIndex(0);
   }, [items]);
 
-  useEffect(() => {
-    if (containerRef.current) {
-      const selectedEl = containerRef.current.querySelector(`[data-index="${selectedIndex}"]`);
-      if (selectedEl) selectedEl.scrollIntoView({ block: "nearest" });
-    }
-  }, [selectedIndex]);
-
   React.useImperativeHandle(ref, () => ({
     onKeyDown: ({ event }: { event: KeyboardEvent }) => {
-      if (event.key === "ArrowUp") {
+      if (event.key === "ArrowLeft") {
         setSelectedIndex((prev) => (prev <= 0 ? items.length - 1 : prev - 1));
         return true;
       }
-      if (event.key === "ArrowDown") {
+      if (event.key === "ArrowRight") {
         setSelectedIndex((prev) => (prev >= items.length - 1 ? 0 : prev + 1));
         return true;
       }
@@ -158,22 +145,26 @@ const CommandList = React.forwardRef<
     },
   }));
 
-  if (items.length === 0) {
-    return <div className="slash-menu-empty">Nenhum resultado</div>;
-  }
+  if (items.length === 0) return null;
 
   return (
-    <div ref={containerRef} className="slash-menu">
+    <div className="slash-toolbar" onMouseDown={(e) => e.preventDefault()}>
       {items.map((item, index) => (
-        <button
-          key={item.title}
-          data-index={index}
-          onClick={() => selectItem(index)}
-          className={`slash-menu-item ${index === selectedIndex ? "slash-menu-item--active" : ""}`}
-        >
-          <span className="slash-menu-item__icon">{item.icon}</span>
-          <span className="slash-menu-item__title">{item.title}</span>
-        </button>
+        <React.Fragment key={item.title}>
+          <button
+            type="button"
+            data-index={index}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              selectItem(index);
+            }}
+            className={`slash-toolbar__btn ${index === selectedIndex ? "slash-toolbar__btn--active" : ""}`}
+            title={item.title}
+          >
+            {item.icon}
+          </button>
+          {item.dividerAfter && <span className="slash-toolbar__divider" />}
+        </React.Fragment>
       ))}
     </div>
   );
@@ -209,8 +200,8 @@ function getSuggestion(): Omit<SuggestionOptions, "editor"> {
             showOnCreate: true,
             interactive: true,
             trigger: "manual",
-            placement: "bottom-start",
-            offset: [0, 4],
+            placement: "top-start",
+            offset: [0, 8],
             animation: false,
           });
         },
