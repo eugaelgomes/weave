@@ -7,3 +7,4 @@ export * from "./calendar-header";
 export * from "./weave-ai-header";
 export * from "./organization-header";
 export * from "./notifications-header";
+export * from "./animated-greeting";

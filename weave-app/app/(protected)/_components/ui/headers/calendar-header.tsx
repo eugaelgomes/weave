@@ -3,6 +3,7 @@
 import React, { ReactNode } from "react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { BaseHeader } from "./base-header";
+import { AnimatedGreeting } from "./animated-greeting";
 
 interface CalendarHeaderProps {
   rightContent?: ReactNode;
@@ -10,9 +11,11 @@ interface CalendarHeaderProps {
 }
 
 export function CalendarHeader({ rightContent, className }: CalendarHeaderProps) {
-  const { t } = useLanguage();
-
   return (
-    <BaseHeader className={className} leftContent={t.nav.calendar} rightContent={rightContent} />
+    <BaseHeader
+      className={className}
+      leftContent={<AnimatedGreeting type="calendar" />}
+      rightContent={rightContent}
+    />
   );
 }

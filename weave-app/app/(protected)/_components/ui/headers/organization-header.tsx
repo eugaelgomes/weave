@@ -3,9 +3,10 @@
 import React from "react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { BaseHeader } from "./base-header";
+import { AnimatedGreeting } from "./animated-greeting";
 
 export function OrganizationHeader() {
-  const { t } = useLanguage();
-
-  return <BaseHeader leftContent={t.nav.organization} />;
+  return (
+    <BaseHeader leftContent={<AnimatedGreeting type="organization" />} />
+  );
 }

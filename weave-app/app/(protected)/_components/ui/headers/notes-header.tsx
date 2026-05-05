@@ -3,13 +3,8 @@
 import React from "react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { BaseHeader } from "./base-header";
+import { AnimatedGreeting } from "./animated-greeting";
 
-interface NotesHeaderProps {
-  className?: string;
-}
-
-export function NotesHeader({ className }: NotesHeaderProps) {
-  const { t } = useLanguage();
-
-  return <BaseHeader className={className} leftContent={t.nav.notes} />;
+export function NotesHeader() {
+  return <BaseHeader leftContent={<AnimatedGreeting type="notes" />} />;
 }

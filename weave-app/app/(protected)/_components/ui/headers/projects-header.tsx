@@ -3,13 +3,17 @@
 import React from "react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { BaseHeader } from "./base-header";
+import { AnimatedGreeting } from "./animated-greeting";
 
 interface ProjectsHeaderProps {
   className?: string;
 }
 
 export function ProjectsHeader({ className }: ProjectsHeaderProps) {
-  const { t } = useLanguage();
-
-  return <BaseHeader className={className} leftContent={t.nav.projects} />;
+  return (
+    <BaseHeader
+      className={className}
+      leftContent={<AnimatedGreeting type="projects" />}
+    />
+  );
 }

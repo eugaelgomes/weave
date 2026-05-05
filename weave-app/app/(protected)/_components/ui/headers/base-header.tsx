@@ -23,7 +23,7 @@ export function BaseHeader({ className, leftContent, rightContent }: BaseHeaderP
     >
       {/* Lado Esquerdo */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center text-xs font-medium tracking-tight text-gray-900 sm:text-sm dark:text-gray-100">
+        <div className="flex items-center text-xs font-medium tracking-tight text-gray-900 dark:text-gray-100">
           {leftContent}
         </div>
       </div>

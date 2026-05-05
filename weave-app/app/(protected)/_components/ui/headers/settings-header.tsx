@@ -3,13 +3,17 @@
 import React from "react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { BaseHeader } from "./base-header";
+import { AnimatedGreeting } from "./animated-greeting";
 
 interface SettingsHeaderProps {
   className?: string;
 }
 
 export function SettingsHeader({ className }: SettingsHeaderProps) {
-  const { t } = useLanguage();
-
-  return <BaseHeader className={className} leftContent={t.nav.settings} />;
+  return (
+    <BaseHeader
+      className={className}
+      leftContent={<AnimatedGreeting type="settings" />}
+    />
+  );
 }

@@ -10,18 +10,11 @@ interface WeaveAIHeaderProps {
   titleSuffix?: ReactNode;
 }
 
-export function WeaveAIHeader({ className, rightContent, titleSuffix }: WeaveAIHeaderProps) {
-  const { t } = useLanguage();
-
+export function WeaveAIHeader({ className, rightContent }: WeaveAIHeaderProps) {
   return (
     <BaseHeader
       className={className}
-      leftContent={
-        <>
-          {t.nav.weaveAi}
-          {titleSuffix}
-        </>
-      }
+      leftContent={<AnimatedGreeting type="weave-ai" />}
       rightContent={rightContent}
     />
   );
