@@ -20,7 +20,7 @@ const getFirstAndLastUserName = (fullName: string): string => {
 };
 
 interface AnimatedGreetingProps {
-  type?: "home" | "projects" | "notes" | "settings" | "calendar" | "notifications" | "weave-ai" | "organization";
+  type?: "home" | "projects" | "notes" | "settings" | "calendar" | "notifications" | "weave-ai" | "workspace" | "plans" | "security" | "integrations" | "preferences";
 }
 
 export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
@@ -49,9 +49,17 @@ export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
       case "notifications":
         return <span className="text-brand-primary-500 font-semibold">{t.nav.notifications}</span>;
       case "settings":
-        return <span className="text-brand-primary-500 font-semibold">{t.nav.settings}</span>;
-      case "organization":
-        return <span className="text-brand-primary-500 font-semibold">{t.nav.organization}</span>;
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.settings || "Dados e Preferências"}</span>;
+      case "workspace":
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.workspace || "Workspace"}</span>;
+      case "plans":
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.plans || "Plano e Consumo"}</span>;
+      case "security":
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.security || "Tokens e APIs"}</span>;
+      case "integrations":
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.integrations || "Integrações"}</span>;
+      case "preferences":
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.preferences || "Preferências"}</span>;
       case "weave-ai":
         return <span className="bg-linear-to-r from-brand-primary-500 to-purple-600 bg-clip-text text-transparent font-bold">Weave AI</span>;
       default:
@@ -72,9 +80,17 @@ export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
       case "notifications":
         return "— stay updated.";
       case "settings":
-        return "— manage your account.";
-      case "organization":
+        return "— manage your profile and app experience.";
+      case "workspace":
         return "— collaborate with your team.";
+      case "plans":
+        return "— monitor your subscription and usage metrics.";
+      case "security":
+        return "— manage your API keys and tokens.";
+      case "integrations":
+        return "— connect your tools.";
+      case "preferences":
+        return "— customize your experience.";
       case "weave-ai":
         return "— your intelligent assistant.";
       default:

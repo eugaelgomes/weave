@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, User, Building2, Lock, Zap, Settings, type LucideIcon } from "lucide-react";
+import { Menu, X, User, Building2, Lock, Zap, CreditCard, type LucideIcon } from "lucide-react";
 import { SettingsHeader } from "../_components/ui/headers/settings-header";
 
 type SettingsNavItem = {
@@ -11,45 +11,63 @@ type SettingsNavItem = {
   label: string;
   href: string;
   matchPaths?: string[];
+  type: "settings" | "workspace" | "plans" | "security" | "integrations" | "preferences";
 };
 
 const SETTINGS_NAV: SettingsNavItem[] = [
   {
     icon: User,
-    label: "Perfil",
+    label: "Meus dados e preferências",
     href: "/settings",
-    matchPaths: ["/settings/user-data", "/settings/danger-zone"],
+    matchPaths: ["/settings/user-data", "/settings/danger-zone", "/settings/preferences"],
+    type: "settings",
   },
-  { icon: Building2, label: "Organização", href: "/settings/organization" },
-  { icon: Lock, label: "Segurança", href: "/settings/security" },
+  {
+    icon: CreditCard,
+    label: "Plano e consumo",
+    href: "/settings/plans",
+    type: "plans",
+  },
+  {
+    icon: Lock,
+    label: "Tokens e APIs",
+    href: "/settings/security",
+    matchPaths: ["/settings/client-tokens"],
+    type: "security",
+  },
+  {
+    icon: Building2,
+    label: "Workspace",
+    href: "/settings/workspace",
+    type: "workspace",
+  },
   {
     icon: Zap,
     label: "Integrações",
     href: "/settings/integrations",
-    matchPaths: ["/settings/client-tokens"],
+    type: "integrations",
   },
-  { icon: Settings, label: "Preferências", href: "/settings/preferences" },
 ];
-
-function resolveActiveSettingsHref(pathname: string): string | null {
-  const matchers: { prefix: string; href: string }[] = [];
-  for (const item of SETTINGS_NAV) {
-    for (const prefix of [item.href, ...(item.matchPaths ?? [])]) {
-      matchers.push({ prefix, href: item.href });
-    }
-  }
-  matchers.sort((a, b) => b.prefix.length - a.prefix.length);
-  for (const { prefix, href } of matchers) {
-    if (pathname === prefix || pathname.startsWith(`${prefix}/`)) return href;
-  }
-  return null;
-}
 
 function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  const activeHref = useMemo(() => resolveActiveSettingsHref(pathname), [pathname]);
+  const activeItem = useMemo(() => {
+    const matchers: { prefix: string; item: SettingsNavItem }[] = [];
+    for (const item of SETTINGS_NAV) {
+      for (const prefix of [item.href, ...(item.matchPaths ?? [])]) {
+        matchers.push({ prefix, item });
+      }
+    }
+    matchers.sort((a, b) => b.prefix.length - a.prefix.length);
+    for (const { prefix, item } of matchers) {
+      if (pathname === prefix || pathname.startsWith(`${prefix}/`)) return item;
+    }
+    return SETTINGS_NAV[0];
+  }, [pathname]);
+
+  const activeHref = activeItem.href;
 
   React.useEffect(() => {
     setIsMobileSidebarOpen(false);
@@ -103,7 +121,7 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col gap-2 md:px-0">
-      <SettingsHeader />
+      <SettingsHeader type={activeItem.type} />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-neutral-800 dark:bg-neutral-950">

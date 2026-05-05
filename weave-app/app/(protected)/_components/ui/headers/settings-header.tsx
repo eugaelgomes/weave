@@ -7,13 +7,14 @@ import { AnimatedGreeting } from "./animated-greeting";
 
 interface SettingsHeaderProps {
   className?: string;
+  type?: "settings" | "workspace" | "plans" | "security" | "integrations" | "preferences";
 }
 
-export function SettingsHeader({ className }: SettingsHeaderProps) {
+export function SettingsHeader({ className, type = "settings" }: SettingsHeaderProps) {
   return (
     <BaseHeader
       className={className}
-      leftContent={<AnimatedGreeting type="settings" />}
+      leftContent={<AnimatedGreeting type={type} />}
     />
   );
 }

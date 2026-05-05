@@ -16,8 +16,8 @@ import { Input } from "./ui-elements";
 import { X } from "lucide-react";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 
-export function OrganizationOverview({
-  organization,
+export function WorkspaceOverview({
+  workspace,
   stats,
   userIsOwner,
   setEditingImage,
@@ -33,9 +33,9 @@ export function OrganizationOverview({
       <div className="group relative overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
         {/* Banner */}
         <div className="relative h-48 w-full bg-zinc-100 dark:bg-zinc-900">
-          {organization?.banner_url ? (
+          {workspace?.banner_url ? (
             <img
-              src={getStorageUrl(organization.banner_url)}
+              src={getStorageUrl(workspace.banner_url)}
               alt="Banner"
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
@@ -57,9 +57,9 @@ export function OrganizationOverview({
           <div className="relative -mt-12 mb-4 flex items-end justify-between">
             <div className="relative">
               <div className="h-24 w-24 overflow-hidden rounded-md border-4 border-white bg-zinc-50 shadow-md dark:border-zinc-950 dark:bg-zinc-900">
-                {organization?.logo_url ? (
+                {workspace?.logo_url ? (
                   <img
-                    src={getStorageUrl(organization.logo_url)}
+                    src={getStorageUrl(workspace.logo_url)}
                     alt="Logo"
                     className="h-full w-full object-cover"
                   />
@@ -95,43 +95,43 @@ export function OrganizationOverview({
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h1 className="flex items-center gap-2 text-xl font-bold text-zinc-900 dark:text-white">
-                {organization?.org_name}
-                {organization?.unique_name && (
+                {workspace?.org_name}
+                {workspace?.unique_name && (
                   <span className="text-sm font-normal text-zinc-400">
-                    @{organization.unique_name}
+                    @{workspace.unique_name}
                   </span>
                 )}
               </h1>
               <p className="mt-1 max-w-2xl text-xs text-zinc-500 dark:text-zinc-400">
-                {organization?.description || "Sem descrição definida."}
+                {workspace?.description || "Sem descrição definida."}
               </p>
 
               <div className="mt-4 flex flex-wrap gap-4 text-xs text-zinc-500 dark:text-zinc-500">
                 <div className="flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5" />
                   Criado em{" "}
-                  {organization?.created_at
-                    ? new Date(organization.created_at).toLocaleDateString()
+                  {workspace?.created_at
+                    ? new Date(workspace.created_at).toLocaleDateString()
                     : "-"}
                 </div>
 
-                {organization?.address?.city && (
+                {workspace?.address?.city && (
                   <div className="flex items-center gap-1.5">
                     <MapPin className="h-3.5 w-3.5" />
-                    {organization.address.city}, {organization.address.state}
+                    {workspace.address.city}, {workspace.address.state}
                   </div>
                 )}
               </div>
             </div>
 
             {/* Owner Mini-Card */}
-            {organization?.owner && (
+            {workspace?.owner && (
               <div className="flex items-center gap-3 rounded-md border border-zinc-100 bg-zinc-50/50 px-4 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
                 <div className="h-8 w-8 overflow-hidden rounded-full bg-zinc-200">
-                  {organization.owner.avatar_url ? (
+                  {workspace.owner.avatar_url ? (
                     <img
-                      src={getStorageUrl(organization.owner.avatar_url)}
-                      alt={organization.owner.name}
+                      src={getStorageUrl(workspace.owner.avatar_url)}
+                      alt={workspace.owner.name}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -145,7 +145,7 @@ export function OrganizationOverview({
                     Proprietário
                   </span>
                   <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                    {organization.owner.name}
+                    {workspace.owner.name}
                   </span>
                 </div>
               </div>
@@ -188,7 +188,7 @@ export function OrganizationOverview({
             <CreditCard className="h-3.5 w-3.5" /> Plano
           </div>
           <span className="truncate text-xl font-bold text-zinc-900 dark:text-zinc-100">
-            {organization.plan_name || "Free"}
+            {workspace.plan_name || "Free"}
           </span>
         </div>
       </div>
@@ -209,7 +209,7 @@ export function OrganizationOverview({
 
             <form onSubmit={handleUpdateInfo} className="space-y-4">
               <Input
-                label="Nome da Organização"
+                label="Nome do Workspace"
                 value={formData.org_name}
                 onChange={(v) => setFormData({ ...formData, org_name: v })}
                 placeholder="Ex: Acme Corp"
@@ -229,7 +229,7 @@ export function OrganizationOverview({
                   rows={4}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Uma breve descrição sobre a organização..."
+                  placeholder="Uma breve descrição sobre o workspace..."
                 />
               </div>
 

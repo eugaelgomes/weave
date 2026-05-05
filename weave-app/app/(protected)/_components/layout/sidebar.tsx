@@ -137,7 +137,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
           {
             path: "/organization",
             icon: Users,
-            label: t.nav.organization,
+            label: t.nav.workspace,
             subItems: [
               { path: "/organization/settings", icon: Settings, label: t.nav.settings },
               {

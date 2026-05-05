@@ -12,10 +12,10 @@ import { useRouter } from "next/navigation";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { ImageEditModal } from "./_components/ui-elements";
 import { SettingsForm } from "./_components/settings-form";
-import { OrganizationOverview } from "./_components/header";
-import { OrganizationHeader } from "../../_components/ui/headers/organization-header";
+import { WorkspaceOverview } from "./_components/header";
+import { WorkspaceHeader } from "../../_components/ui/headers/workspace-header";
 
-const OrganizationPage = () => {
+const WorkspacePage = () => {
   const { user } = useAuth();
   const {
     organization,
@@ -157,14 +157,14 @@ const OrganizationPage = () => {
     try {
       const success = await deleteOrganization();
       if (success) {
-        toast.success("Organização deletada");
+        toast.success("Workspace deletado");
         // Redirect or show deleted state
         router.refresh();
       } else {
-        toast.error("Falha ao deletar organização");
+        toast.error("Falha ao deletar workspace");
       }
     } catch (error) {
-      toast.error("Erro ao deletar organização");
+      toast.error("Erro ao deletar workspace");
     } finally {
       setIsDeleting(false);
     }
@@ -173,9 +173,9 @@ const OrganizationPage = () => {
   const handleRestoreOrganization = async () => {
     try {
       await restoreOrganization();
-      toast.success("Organização restaurada com sucesso!");
+      toast.success("Workspace restaurado com sucesso!");
     } catch (error) {
-      toast.error("Erro ao restaurar organização");
+      toast.error("Erro ao restaurar workspace");
     }
   };
 
@@ -191,7 +191,7 @@ const OrganizationPage = () => {
             Bem-vindo ao Weave
           </h1>
           <p className="mx-auto mt-3 max-w-sm text-zinc-500">
-            Crie sua primeira organização para começar a gerenciar projetos e colaborar com sua
+            Crie seu primeiro workspace para começar a gerenciar projetos e colaborar com sua
             equipe.
           </p>
           <button
@@ -204,7 +204,7 @@ const OrganizationPage = () => {
             ) : (
               <Plus className="h-4 w-4" />
             )}
-            Criar Organização
+            Criar Workspace
           </button>
         </div>
       </div>
@@ -218,15 +218,15 @@ const OrganizationPage = () => {
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-md bg-red-100 dark:bg-red-900/20">
           <Trash2 className="h-10 w-10 text-red-600 dark:text-red-400" />
         </div>
-        <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Organização Deletada</h1>
+        <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Workspace Deletado</h1>
         <p className="mt-2 text-zinc-500">
-          Esta organização está marcada para exclusão definitiva em 30 dias.
+          Este workspace está marcado para exclusão definitiva em 30 dias.
         </p>
         <button
           onClick={handleRestoreOrganization}
           className="mt-6 flex items-center gap-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900"
         >
-          <RefreshCw className="h-4 w-4" /> Restaurar Organização
+          <RefreshCw className="h-4 w-4" /> Restaurar Workspace
         </button>
       </div>
     );
@@ -234,11 +234,11 @@ const OrganizationPage = () => {
 
   return (
     <div className="flex min-h-screen w-full flex-col space-y-2">
-      <OrganizationHeader />
+      <WorkspaceHeader />
 
       <div className="fade-in animate-in space-y-2 duration-500">
-        <OrganizationOverview
-          organization={organization}
+        <WorkspaceOverview
+          workspace={organization}
           stats={stats}
           userIsOwner={userIsOwner}
           setEditingImage={setEditingImage}
@@ -279,4 +279,4 @@ const OrganizationPage = () => {
   );
 };
 
-export default OrganizationPage;
+export default WorkspacePage;
