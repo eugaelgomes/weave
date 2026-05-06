@@ -46,14 +46,14 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-white dark:bg-[#050505]">
+    <div className="flex h-screen flex-col bg-[#131314]">
       <Navbar onToggleSidebar={toggleSidebar} />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="relative flex min-h-0 flex-1 overflow-hidden">
           <div
             className={`hidden min-h-0 flex-col ${
-              isCollapsed ? "lg:w-[70px]" : "lg:w-[170px]"
+              isCollapsed ? "lg:w-[60px]" : "lg:w-[170px]"
             } transition-all duration-300 lg:flex`}
           >
             <Sidebar
@@ -83,8 +83,8 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
           )}
 
           {/* Main column only (sidebar is a sibling): panel + footer aligned to main width */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:mr-2 md:mb-2">
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md border border-gray-200 bg-neutral-200 p-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_2px_8px_rgba(0,0,0,0.04)] dark:border-gray-800 dark:bg-gray-900/40 dark:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.2),inset_0_2px_10px_rgba(0,0,0,0.3)]">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden gap-1 md:mr-1.5 md:mb-1">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md  bg-white/20 p-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_2px_8px_rgba(0,0,0,0.04)] dark:border-gray-800 dark:bg-gray-900/40 dark:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.2),inset_0_2px_10px_rgba(0,0,0,0.3)]">
               <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
                   {children}

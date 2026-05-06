@@ -17,7 +17,7 @@ export function BaseHeader({ className, leftContent, rightContent }: BaseHeaderP
   return (
     <div
       className={cn(
-        "flex flex-row items-center justify-between gap-3 rounded-md border border-gray-200 border-l-4 border-l-brand-primary-500 bg-gray-50/50 p-2 shadow-sm backdrop-blur-sm sm:gap-4 sm:px-3 sm:py-1.5 dark:border-gray-800 dark:bg-gray-900/50",
+        "flex flex-row items-center justify-between gap-3 rounded-md border border-gray-200 border-l-4 border-l-brand-primary-500 bg-white p-2 shadow-sm backdrop-blur-sm sm:gap-4 sm:px-3 sm:py-1.5 dark:border-gray-800 dark:bg-gray-900/50",
         className
       )}
     >

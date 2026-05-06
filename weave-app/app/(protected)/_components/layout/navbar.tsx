@@ -243,7 +243,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-t-1 border-brand-yellow backdrop-blur-md print:hidden">
-        <nav className="mx-auto w-full max-w-[1920px] px-2" aria-label="Navegação principal">
+        <nav className="mx-auto w-full max-w-[1920px] px-1" aria-label="Navegação principal">
           <div className="flex h-10 items-center justify-between gap-2 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center md:justify-normal md:gap-4">
             {/* Bloco Esquerdo: Logo e Organização */}
             <section className="flex min-w-0 items-center gap-2 justify-self-start">
@@ -259,7 +259,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
               <Link
                 href={authenticated ? "/home" : "/"}
-                className="flex min-w-0 items-center bg-slate-100 dark:bg-slate-900 rounded-md px-0.5 shadow-sm"
+                className="flex min-w-0 items-center"
                 aria-label={t.nav.backToHome}
               >
                 <span

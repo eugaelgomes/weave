@@ -10,12 +10,12 @@ const PagesFooter = () => {
   const currentYear = new Date().getFullYear();
 
   const linkClass =
-    "text-brand-navy/85 underline-offset-2 hover:text-brand-yellow hover:underline dark:text-brand-beige/90 dark:hover:text-brand-yellow";
+    "text-brand-navy/85 underline-offset-2 hover:text-brand-yellow hover:underline  dark:hover:text-brand-yellow";
 
   return (
-    <div className="flex flex-col items-center justify-between gap-4 rounded-md border border-brand-yellow/45 bg-brand-beige px-4 py-1 shadow-sm sm:flex-row dark:border-brand-yellow/50 dark:bg-brand-gray">
+    <div className="flex flex-col items-center justify-between gap-4 rounded-md bg-white/20 px-4 py-1 shadow-sm sm:flex-row">
       {/* Copyright & Brand — yellow is primary brand accent */}
-      <div className="text-[9px] font-medium text-brand-gray dark:text-brand-beige">
+      <div className="text-[9px] font-medium text-white dark:text-brand-beige">
         &copy; {currentYear}{" "}
         <a
           href={blogUrl}
@@ -27,7 +27,7 @@ const PagesFooter = () => {
         </a>
       </div>
 
-      <div className="flex items-center gap-4 text-[9px] font-medium text-brand-gray dark:text-brand-beige">
+      <div className="flex items-center gap-4 text-[9px] font-medium text-white">
         <a
           href={`${blogUrl}/privacy`}
           target="_blank"
