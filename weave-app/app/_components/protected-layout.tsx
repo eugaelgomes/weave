@@ -46,7 +46,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-[#131314]">
+    <div className="flex h-screen flex-col bg-white dark:bg-[#1d1d1b]">
       <Navbar onToggleSidebar={toggleSidebar} />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -72,7 +72,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
                 onClick={closeSidebar}
               />
 
-              <div className="relative z-[101] flex h-[85vh] min-h-0 w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-gray-800 bg-gray-900 shadow-2xl dark:border-gray-800 dark:bg-gray-950/80">
+              <div className="relative z-[101] flex h-[85vh] min-h-0 w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-[#1d1d1b]">
                 <Sidebar
                   onLinkClick={closeSidebar}
                   isCollapsed={false}
@@ -84,7 +84,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
 
           {/* Main column only (sidebar is a sibling): panel + footer aligned to main width */}
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden gap-1 md:mr-1.5 md:mb-1">
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md  bg-white/20 p-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_2px_8px_rgba(0,0,0,0.04)] dark:border-gray-800 dark:bg-gray-900/40 dark:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.2),inset_0_2px_10px_rgba(0,0,0,0.3)]">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md bg-white p-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.8),inset_0_-1px_0_rgba(0,0,0,0.06),inset_0_6px_14px_rgba(0,0,0,0.05)] dark:border-gray-800 dark:bg-[#1d1d1b] dark:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.05),inset_0_-1px_0_rgba(0,0,0,0.5),inset_0_6px_14px_rgba(0,0,0,0.35)]">
               <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
                   {children}

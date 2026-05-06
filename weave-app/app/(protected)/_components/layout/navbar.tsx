@@ -242,7 +242,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-t-1 border-brand-yellow backdrop-blur-md print:hidden">
+      <header className="sticky top-0 z-40 w-full bg-white backdrop-blur-md print:hidden dark:bg-[#1d1d1b]">
         <nav className="mx-auto w-full max-w-[1920px] px-1" aria-label="Navegação principal">
           <div className="flex h-10 items-center justify-between gap-2 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center md:justify-normal md:gap-4">
             {/* Bloco Esquerdo: Logo e Organização */}
@@ -359,7 +359,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
                     {isMenuOpen && (
                       <div className="absolute top-full right-0 z-50 mt-2 hidden w-72 origin-top-right sm:block">
-                        <div className="overflow-hidden rounded-md border border-gray-200/60 bg-white shadow-2xl ring-1 ring-black/5 dark:border-gray-800/60 dark:bg-gray-950">
+                        <div className="overflow-hidden rounded-md border border-gray-200/60 bg-white shadow-2xl ring-1 ring-black/5 dark:border-gray-800/60 dark:bg-[#1d1d1b]">
                           <UserMenuContent
                             user={user}
                             theme={theme}
@@ -395,7 +395,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
             <dialog
               ref={mobileMenuRef}
               open
-              className="relative z-[111] m-0 flex w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:border-neutral-900 dark:bg-neutral-900"
+              className="relative z-[111] m-0 flex w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:border-neutral-900 dark:bg-[#1d1d1b]"
             >
               <div className="max-h-[75vh] overflow-y-auto">
                 <UserMenuContent
@@ -408,7 +408,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 />
               </div>
 
-              <footer className="border-t border-neutral-200 bg-neutral-50/50 p-3 dark:border-neutral-900 dark:bg-neutral-900/50">
+              <footer className="border-t border-neutral-200 bg-white p-3 dark:border-neutral-900 dark:bg-[#1d1d1b]">
                 <button
                   onClick={() => setIsMenuOpen(false)}
                   className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-200/50 py-2.5 text-xs font-bold text-neutral-900 active:scale-95 dark:bg-neutral-800 dark:text-neutral-100"
