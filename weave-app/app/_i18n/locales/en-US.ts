@@ -38,6 +38,8 @@ const enUS: TranslationKeys = {
     plans: "Plan and Usage",
     settings: "My Data and Preferences",
     security: "Tokens and APIs",
+    integrations: "Integrations",
+    preferences: "Preferences",
     members: "Members",
     invites: "Invites",
     list: "List",

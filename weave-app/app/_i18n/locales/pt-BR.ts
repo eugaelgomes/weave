@@ -36,6 +36,8 @@ const ptBR = {
     plans: "Plano e consumo",
     settings: "Meus dados e preferências",
     security: "Tokens e APIs",
+    integrations: "Integrações",
+    preferences: "Preferências",
     members: "Membros",
     invites: "Convites",
     list: "Lista",

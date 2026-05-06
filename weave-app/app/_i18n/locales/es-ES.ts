@@ -38,6 +38,8 @@ const esES: TranslationKeys = {
     plans: "Plan y Consumo",
     settings: "Mis Datos y Preferencias",
     security: "Tokens y APIs",
+    integrations: "Integraciones",
+    preferences: "Preferencias",
     members: "Miembros",
     invites: "Invitaciones",
     list: "Lista",
