@@ -1,15 +1,22 @@
+# syntax=docker/dockerfile:1
+#
+# Pair with `weave-worker/.dockerignore` for a smaller build context.
+
 FROM node:24-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache curl gnupg \
-  && (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh
+RUN apk add --no-cache ca-certificates curl gnupg \
+  && curl -fsSL --tlsv1.2 --proto '=https' --retry 3 https://cli.doppler.com/install.sh | sh \
+  && apk del curl gnupg \
+  && rm -rf /var/cache/apk/*
 
 ENV DOPPLER_CONFIG_DIR=/tmp/.doppler
 ENV DOPPLER_CONFIG=prd
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev --no-audit --no-fund
 
 COPY . .
 

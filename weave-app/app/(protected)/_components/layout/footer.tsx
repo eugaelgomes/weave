@@ -9,24 +9,25 @@ const PagesFooter = () => {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://weavenotes.app";
   const currentYear = new Date().getFullYear();
 
-  const linkClass = "hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors";
+  const linkClass =
+    "text-brand-navy/85 underline-offset-2 hover:text-brand-yellow hover:underline dark:text-brand-beige/90 dark:hover:text-brand-yellow";
 
   return (
-    <div className="flex flex-col items-center justify-between gap-4 rounded-md border border-gray-200/60 bg-white/50 px-4 py-2 shadow-sm backdrop-blur-sm sm:flex-row dark:border-gray-800/60 dark:bg-gray-950/50">
-      {/* Copyright & Brand */}
-      <div className="text-[8px] font-medium text-neutral-400 dark:text-neutral-500">
+    <div className="flex flex-col items-center justify-between gap-4 rounded-md border border-brand-yellow/45 bg-brand-beige px-4 py-1 shadow-sm sm:flex-row dark:border-brand-yellow/50 dark:bg-brand-gray">
+      {/* Copyright & Brand — yellow is primary brand accent */}
+      <div className="text-[9px] font-medium text-brand-gray dark:text-brand-beige">
         &copy; {currentYear}{" "}
         <a
           href={blogUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-brand-primary-500 hover:text-brand-primary-500 dark:text-brand-primary-500/40 dark:hover:text-brand-primary-500 font-bold transition-colors"
+          className="font-bold text-brand-yellow drop-shadow-[0_0.5px_0_rgba(8,61,119,0.35)] transition-colors hover:text-brand-orange dark:drop-shadow-none dark:text-brand-yellow dark:hover:text-brand-orange"
         >
           Weave Notes
         </a>
       </div>
-      
-      <div className="flex items-center gap-4 text-[8px] font-medium text-neutral-400 dark:text-neutral-500">
+
+      <div className="flex items-center gap-4 text-[9px] font-medium text-brand-gray dark:text-brand-beige">
         <a
           href={`${blogUrl}/privacy`}
           target="_blank"

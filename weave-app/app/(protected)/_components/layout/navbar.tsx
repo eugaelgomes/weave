@@ -259,7 +259,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
               <Link
                 href={authenticated ? "/home" : "/"}
-                className="flex min-w-0 items-center"
+                className="flex min-w-0 items-center bg-slate-100 dark:bg-slate-900 rounded-md px-0.5 shadow-sm"
                 aria-label={t.nav.backToHome}
               >
                 <span

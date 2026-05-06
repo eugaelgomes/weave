@@ -17,6 +17,11 @@ const config: Config = {
         "brand-red": "#F95738",
         "brand-gray": "#292929",
         "brand-light": "#FFFFFF",
+        /** Foreground tokens for contrast on brand surfaces (WCAG-oriented) */
+        "brand-fg-on-beige": "#292929",
+        "brand-fg-on-navy": "#FFFFFF",
+        "brand-fg-muted-on-beige": "#083D77",
+        "brand-fg-muted-on-dark": "#EBEBD3",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {

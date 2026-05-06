@@ -1,3 +1,8 @@
+# syntax=docker/dockerfile:1
+#
+# BuildKit cache mounts speed up repeated `npm ci` / builds.
+# Pair with `weave-api/.dockerignore` to keep the build context small.
+
 # ============================
 # STAGE 1: Build
 # ============================
@@ -8,7 +13,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --no-audit --no-fund
 
 COPY . .
 RUN npm run build
@@ -20,13 +26,14 @@ FROM node:24-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache curl gnupg \
-  && (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh
+RUN apk add --no-cache ca-certificates curl gnupg \
+  && curl -fsSL --tlsv1.2 --proto '=https' --retry 3 https://cli.doppler.com/install.sh | sh \
+  && apk del curl gnupg \
+  && rm -rf /var/cache/apk/*
 
 ENV DOPPLER_CONFIG_DIR=/tmp/.doppler
 ENV DOPPLER_CONFIG=prd
 
-# Copia apenas o necessário
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
