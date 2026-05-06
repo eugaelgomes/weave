@@ -135,6 +135,7 @@ router.delete(
 router.post(
   "/",
   structuralLimiter,
+  // Keep POST /organizations aligned with step-1 onboarding contract.
   organizationCreationStepsController.saveStepOne.bind(
     organizationCreationStepsController
   )

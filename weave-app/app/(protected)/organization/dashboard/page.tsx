@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { OrganizationHeader } from "@/app/(protected)/_components/ui/headers/organization-header";
+import { WorkspaceHeader } from "@/app/(protected)/_components/ui/headers/workspace-header";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { Project } from "@/app/_services/projects-service/projects-service";
 import { Layers, Search, Plus, Folder, Clock, Flag, Activity, ArrowRight } from "lucide-react";
@@ -46,7 +46,7 @@ const ProjectsPage = () => {
 
   return (
     <div className="animate-in fade-in flex h-full flex-col duration-300">
-      <OrganizationHeader />
+      <WorkspaceHeader />
 
       {/* Page Header */}
       <div className="border-b border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-950">

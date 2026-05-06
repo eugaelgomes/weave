@@ -210,13 +210,14 @@ export interface CreateOrganizationData {
 }
 
 export type OrganizationBusinessRole =
-  | "SOLO_ENTREPRENEUR"
-  | "STARTUP"
-  | "SMALL_BUSINESS"
-  | "AGENCY"
-  | "EDUCATIONAL_INSTITUTION"
-  | "NON_PROFIT"
-  | "ENTERPRISE"
+  | "TECHNOLOGY"
+  | "MARKETING"
+  | "BUSINESS"
+  | "FINANCE"
+  | "HEALTHCARE"
+  | "EDUCATION"
+  | "RETAIL"
+  | "INDUSTRY"
   | "OTHER";
 
 export interface OrganizationStepOneData {
@@ -390,15 +391,24 @@ export const createOrganization = async (
   const payload = { ...organizationData, userId };
 
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS, payload);
-  const data = await handleResponse<{ success?: boolean; data?: Organization; error?: string }>(
-    response
-  );
+  const data = await handleResponse<{
+    status?: string;
+    success?: boolean;
+    data?: Organization | { organization?: Organization };
+    error?: string;
+  }>(response);
 
-  if (!data.success || !data.data) {
+  const isSuccess = data.status === "OK" || data.success === true;
+  const organizationPayload =
+    data.data && typeof data.data === "object" && "organization" in data.data
+      ? data.data.organization
+      : data.data;
+
+  if (!isSuccess || !organizationPayload) {
     throw new Error(data.error || "Erro ao criar organização");
   }
 
-  return transformBackendOrganization(data.data);
+  return transformBackendOrganization(organizationPayload);
 };
 
 export const fetchOrganizationCreationStepOne = async (): Promise<OrganizationStepOneResponse> => {

@@ -13,6 +13,8 @@ import {
   FaSearch,
   FaEye,
   FaKey,
+  FaPlay,
+  FaFlag,
 } from "react-icons/fa";
 import Image from "next/image";
 import { useAuth } from "@/app/_contexts/auth-context";
@@ -86,6 +88,7 @@ export default function ProjectDetailsPage() {
     getTaskPriorities,
     updateProject,
     deleteProject,
+    deleteProjectStage,
     createProjectTag,
     updateProjectTag,
     deleteProjectTag,
@@ -95,6 +98,18 @@ export default function ProjectDetailsPage() {
     addCollaborator,
     updateCollaboratorPermission,
     removeCollaborator,
+    getAiReportConfig,
+    updateAiReportConfig,
+    getSprints,
+    getActiveSprint,
+    createSprint,
+    completeSprint,
+    getReasonings,
+    getReasoningById,
+    getReasoningActionItems,
+    createReasoning,
+    updateReasoningInteraction,
+    updateReasoningActionItem,
   } = useProjects();
 
   const { searchUsers } = useNotes();
@@ -133,6 +148,28 @@ export default function ProjectDetailsPage() {
   const [searchingUsers, setSearchingUsers] = useState(false);
   const [addingCollab, setAddingCollab] = useState<string | null>(null);
 
+  // Sprint state
+  const [sprints, setSprints] = useState<any[]>([]);
+  const [activeSprint, setActiveSprint] = useState<any>(null);
+  const [showCreateSprint, setShowCreateSprint] = useState(false);
+  const [sprintForm, setSprintForm] = useState({ title: "", goal: "", start_date: "", end_date: "", activate: true });
+  const [creatingSprint, setCreatingSprint] = useState(false);
+
+  // AI Report Config state
+  const [reportConfig, setReportConfig] = useState<any>(null);
+  const [reportConfigLoaded, setReportConfigLoaded] = useState(false);
+  const [editingReport, setEditingReport] = useState(false);
+  const [reportForm, setReportForm] = useState<any>(null);
+  const [savingReport, setSavingReport] = useState(false);
+
+  // Reasoning state
+  const [reasonings, setReasonings] = useState<any[]>([]);
+  const [selectedReasoning, setSelectedReasoning] = useState<any>(null);
+  const [reasoningActionItems, setReasoningActionItems] = useState<any[]>([]);
+  const [showCreateReasoning, setShowCreateReasoning] = useState(false);
+  const [reasoningForm, setReasoningForm] = useState({ title: "", reasoningType: "general", content: "" });
+  const [creatingReasoning, setCreatingReasoning] = useState(false);
+
   const loadAllData = useCallback(async () => {
     if (!projectId) return;
     setLoading(true);
@@ -152,6 +189,20 @@ export default function ProjectDetailsPage() {
       setStages(stagesData);
       setProjectTags(tagsData);
       setTaskPriorities(prioritiesData);
+
+      // Load sprints, report config, and reasonings in parallel (non-blocking)
+      Promise.all([
+        getSprints(projectId).catch(() => []),
+        getActiveSprint(projectId).catch(() => null),
+        getAiReportConfig(projectId).catch(() => null),
+        getReasonings(projectId).catch(() => []),
+      ]).then(([sprintsData, activeSprintData, configData, reasoningsData]) => {
+        setSprints(sprintsData);
+        setActiveSprint(activeSprintData);
+        setReportConfig(configData);
+        setReportConfigLoaded(true);
+        setReasonings(reasoningsData);
+      });
     } catch (error) {
       console.error("Erro ao carregar detalhes do projeto:", error);
     } finally {
@@ -164,6 +215,10 @@ export default function ProjectDetailsPage() {
     getProjectStages,
     getProjectTags,
     getTaskPriorities,
+    getSprints,
+    getActiveSprint,
+    getAiReportConfig,
+    getReasonings,
   ]);
 
   useEffect(() => {
@@ -454,6 +509,147 @@ export default function ProjectDetailsPage() {
       setCollaborators((prev) => prev.filter((c) => c.user_id !== userId));
     } catch (error) {
       console.error("Erro ao remover colaborador:", error);
+    }
+  };
+
+  // --- Stage delete ---
+  const handleDeleteStage = async (stageId: string) => {
+    if (!window.confirm("Eliminar etapa? As notas associadas perderão o estágio.")) return;
+    try {
+      await deleteProjectStage(projectId, stageId);
+      setStages((prev) => prev.filter((s) => s.id !== stageId));
+    } catch (error) {
+      console.error("Erro ao eliminar etapa:", error);
+    }
+  };
+
+  // --- Sprint handlers ---
+  const handleCreateSprint = async () => {
+    if (!sprintForm.start_date || !sprintForm.end_date) return;
+    setCreatingSprint(true);
+    try {
+      const sprint = await createSprint(projectId, {
+        title: sprintForm.title || undefined,
+        goal: sprintForm.goal || undefined,
+        start_date: sprintForm.start_date,
+        end_date: sprintForm.end_date,
+        activate: sprintForm.activate,
+      });
+      if (sprint) {
+        setSprints((prev) => [sprint, ...prev]);
+        if (sprintForm.activate) setActiveSprint(sprint);
+        setShowCreateSprint(false);
+        setSprintForm({ title: "", goal: "", start_date: "", end_date: "", activate: true });
+      }
+    } catch (error) {
+      console.error("Erro ao criar sprint:", error);
+    } finally {
+      setCreatingSprint(false);
+    }
+  };
+
+  const handleCompleteSprint = async (sprintId: string) => {
+    if (!window.confirm("Concluir esta sprint?")) return;
+    try {
+      const result = await completeSprint(projectId, sprintId);
+      if (result) {
+        setSprints((prev) =>
+          prev.map((s) => (s.id === sprintId ? { ...s, status: "completed", completed_at: new Date().toISOString() } : s))
+        );
+        if (result.next_sprint) {
+          setSprints((prev) => [result.next_sprint!, ...prev]);
+          setActiveSprint(result.next_sprint);
+        } else {
+          setActiveSprint(null);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao concluir sprint:", error);
+    }
+  };
+
+  // --- AI Report Config handlers ---
+  const handleEditReport = () => {
+    setReportForm(reportConfig ? { ...reportConfig } : {
+      enabled: true,
+      report_time_utc: "09:00",
+      channels: ["in_app"],
+      recipient_scope: "all_members",
+      default_sprint_duration_days: 14,
+      default_workable_days: [1, 2, 3, 4, 5],
+      auto_create_next_sprint: false,
+      enable_sprint_kickoff: true,
+      enable_daily_standup: false,
+      enable_sprint_review: true,
+    });
+    setEditingReport(true);
+  };
+
+  const handleSaveReport = async () => {
+    if (!reportForm) return;
+    setSavingReport(true);
+    try {
+      await updateAiReportConfig(projectId, reportForm);
+      setReportConfig(reportForm);
+      setEditingReport(false);
+    } catch (error) {
+      console.error("Erro ao salvar config de relatório:", error);
+    } finally {
+      setSavingReport(false);
+    }
+  };
+
+  // --- Reasoning handlers ---
+  const handleCreateReasoning = async () => {
+    if (!reasoningForm.title.trim()) return;
+    setCreatingReasoning(true);
+    try {
+      const reasoning = await createReasoning(projectId, {
+        title: reasoningForm.title,
+        reasoningType: reasoningForm.reasoningType || undefined,
+        content: reasoningForm.content || undefined,
+        sprintId: activeSprint?.id,
+      });
+      if (reasoning) {
+        setReasonings((prev) => [reasoning, ...prev]);
+        setShowCreateReasoning(false);
+        setReasoningForm({ title: "", reasoningType: "general", content: "" });
+      }
+    } catch (error) {
+      console.error("Erro ao criar reasoning:", error);
+    } finally {
+      setCreatingReasoning(false);
+    }
+  };
+
+  const handleSelectReasoning = async (reasoningId: string) => {
+    try {
+      const [reasoning, items] = await Promise.all([
+        getReasoningById(projectId, reasoningId),
+        getReasoningActionItems(projectId, reasoningId).catch(() => []),
+      ]);
+      setSelectedReasoning(reasoning);
+      setReasoningActionItems(items);
+      if (reasoning && !reasoning.is_read) {
+        updateReasoningInteraction(projectId, reasoningId, { isRead: true }).catch(() => {});
+      }
+    } catch (error) {
+      console.error("Erro ao carregar reasoning:", error);
+    }
+  };
+
+  const handleToggleActionItem = async (reasoningId: string, itemId: string, currentCompleted: boolean) => {
+    try {
+      const updated = await updateReasoningActionItem(projectId, reasoningId, itemId, {
+        isCompleted: !currentCompleted,
+      });
+      if (updated) {
+        setReasoningActionItems((prev) =>
+          prev.map((item) => (item.id === itemId ? updated : item))
+        );
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar action item:", error);
     }
   };
 
@@ -914,7 +1110,19 @@ export default function ProjectDetailsPage() {
                       {stage.name}
                     </p>
                   </div>
-                  <span className="text-[9px] text-neutral-400">Pos {stage.position}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] text-neutral-400">Pos {stage.position}</span>
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteStage(stage.id)}
+                        className="text-neutral-400 hover:text-red-500"
+                        title="Eliminar etapa"
+                      >
+                        <FaTrash className="size-2" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
           </div>
@@ -1034,6 +1242,437 @@ export default function ProjectDetailsPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Seção: Sprints */}
+        <div className="bg-white p-3 dark:bg-neutral-900">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+              Sprints ({sprints.length})
+            </h2>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => setShowCreateSprint(!showCreateSprint)}
+                className={btnPrimaryCls}
+              >
+                <FaPlus className="size-2" /> Nova Sprint
+              </button>
+            )}
+          </div>
+
+          {activeSprint && (
+            <div className="mb-2 rounded-md border border-green-200 bg-green-50 p-2 dark:border-green-900/50 dark:bg-green-900/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <FaPlay className="size-2 text-green-600 dark:text-green-400" />
+                  <span className="text-[11px] font-semibold text-green-700 dark:text-green-300">
+                    Sprint ativa: {activeSprint.title || `Sprint ${activeSprint.sprint_number}`}
+                  </span>
+                </div>
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => handleCompleteSprint(activeSprint.id)}
+                    className="rounded border border-green-300 bg-white px-1.5 py-0.5 text-[9px] font-medium text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50"
+                  >
+                    <FaFlag className="mr-1 inline size-2" />
+                    Concluir
+                  </button>
+                )}
+              </div>
+              <div className="mt-1 flex gap-3 text-[10px] text-green-600 dark:text-green-400">
+                <span>Início: {new Date(activeSprint.start_date).toLocaleDateString("pt-BR")}</span>
+                <span>Fim: {new Date(activeSprint.end_date).toLocaleDateString("pt-BR")}</span>
+              </div>
+              {activeSprint.goal && (
+                <p className="mt-1 text-[10px] text-green-600 dark:text-green-400/80">{activeSprint.goal}</p>
+              )}
+            </div>
+          )}
+
+          {showCreateSprint && canEdit && (
+            <div className="mb-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-950/50">
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                <label>
+                  <span className="mb-0.5 block text-[10px] text-neutral-500">Título</span>
+                  <input
+                    value={sprintForm.title}
+                    onChange={(e) => setSprintForm((f) => ({ ...f, title: e.target.value }))}
+                    placeholder="Sprint X"
+                    className={inputCls}
+                  />
+                </label>
+                <label>
+                  <span className="mb-0.5 block text-[10px] text-neutral-500">Objetivo</span>
+                  <input
+                    value={sprintForm.goal}
+                    onChange={(e) => setSprintForm((f) => ({ ...f, goal: e.target.value }))}
+                    placeholder="Opcional"
+                    className={inputCls}
+                  />
+                </label>
+                <label>
+                  <span className="mb-0.5 block text-[10px] text-neutral-500">Data início *</span>
+                  <input
+                    type="date"
+                    value={sprintForm.start_date}
+                    onChange={(e) => setSprintForm((f) => ({ ...f, start_date: e.target.value }))}
+                    className={inputCls}
+                  />
+                </label>
+                <label>
+                  <span className="mb-0.5 block text-[10px] text-neutral-500">Data fim *</span>
+                  <input
+                    type="date"
+                    value={sprintForm.end_date}
+                    onChange={(e) => setSprintForm((f) => ({ ...f, end_date: e.target.value }))}
+                    className={inputCls}
+                  />
+                </label>
+              </div>
+              <div className="mt-2 flex items-center justify-between">
+                <label className="flex items-center gap-1.5 text-[10px] text-neutral-600 dark:text-neutral-300">
+                  <input
+                    type="checkbox"
+                    checked={sprintForm.activate}
+                    onChange={(e) => setSprintForm((f) => ({ ...f, activate: e.target.checked }))}
+                    className="rounded border-neutral-300"
+                  />
+                  Ativar imediatamente
+                </label>
+                <div className="flex gap-1.5">
+                  <button type="button" onClick={() => setShowCreateSprint(false)} className={btnSecondaryCls}>
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateSprint}
+                    disabled={creatingSprint || !sprintForm.start_date || !sprintForm.end_date}
+                    className={btnPrimaryCls}
+                  >
+                    {creatingSprint ? <FaSpinner className="size-2.5 animate-spin" /> : "Criar"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {sprints.length === 0 ? (
+            <p className="text-[10px] text-neutral-400">Nenhuma sprint criada.</p>
+          ) : (
+            <div className="grid gap-1.5">
+              {sprints
+                .filter((s) => s.id !== activeSprint?.id)
+                .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .map((sprint: any) => (
+                  <div
+                    key={sprint.id}
+                    className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-neutral-800 dark:bg-neutral-900/50"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className={`size-2 rounded-full ${sprint.status === "completed" ? "bg-green-500" : sprint.status === "active" ? "bg-blue-500" : "bg-neutral-400"}`} />
+                      <span className="text-[11px] font-medium text-neutral-700 dark:text-neutral-200">
+                        {sprint.title || `Sprint ${sprint.sprint_number}`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] text-neutral-400">
+                        {new Date(sprint.start_date).toLocaleDateString("pt-BR")} - {new Date(sprint.end_date).toLocaleDateString("pt-BR")}
+                      </span>
+                      <span className={`rounded px-1 py-0.5 text-[8px] font-semibold ${sprint.status === "completed" ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400" : sprint.status === "active" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400" : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"}`}>
+                        {sprint.status === "completed" ? "Concluída" : sprint.status === "active" ? "Ativa" : "Planeada"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+
+        {/* Seção: AI Report Config */}
+        <div className="bg-white p-3 dark:bg-neutral-900">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+              Relatórios & IA
+            </h2>
+            {canEdit && !editingReport && (
+              <button type="button" onClick={handleEditReport} className={btnSecondaryCls}>
+                <FaPen className="size-2" /> {reportConfig ? "Editar" : "Configurar"}
+              </button>
+            )}
+          </div>
+
+          {!reportConfigLoaded ? (
+            <div className="flex items-center gap-1 text-[10px] text-neutral-400">
+              <FaSpinner className="size-2.5 animate-spin" /> A carregar...
+            </div>
+          ) : editingReport && reportForm ? (
+            <div className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-950/50">
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                <label>
+                  <span className="mb-0.5 block text-[10px] text-neutral-500">Hora (UTC)</span>
+                  <input
+                    type="text"
+                    value={reportForm.report_time_utc ?? "09:00"}
+                    onChange={(e) => setReportForm((f: any) => ({ ...f, report_time_utc: e.target.value }))}
+                    placeholder="HH:mm"
+                    className={inputCls}
+                  />
+                </label>
+                <label>
+                  <span className="mb-0.5 block text-[10px] text-neutral-500">Duração sprint (dias)</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={90}
+                    value={reportForm.default_sprint_duration_days ?? 14}
+                    onChange={(e) => setReportForm((f: any) => ({ ...f, default_sprint_duration_days: Number(e.target.value) || 14 }))}
+                    className={inputCls}
+                  />
+                </label>
+                <div>
+                  <span className="mb-0.5 block text-[10px] text-neutral-500">Canais</span>
+                  <div className="flex gap-3">
+                    {(["in_app", "email"] as const).map((ch) => (
+                      <label key={ch} className="flex items-center gap-1 text-[10px] text-neutral-600 dark:text-neutral-300">
+                        <input
+                          type="checkbox"
+                          checked={(reportForm.channels ?? []).includes(ch)}
+                          onChange={(e) => {
+                            const cur = new Set(reportForm.channels ?? []);
+                            if (e.target.checked) cur.add(ch);
+                            else cur.delete(ch);
+                            setReportForm((f: any) => ({ ...f, channels: Array.from(cur) }));
+                          }}
+                          className="rounded border-neutral-300"
+                        />
+                        {ch === "in_app" ? "Na app" : "Email"}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <label>
+                  <span className="mb-0.5 block text-[10px] text-neutral-500">Destinatários</span>
+                  <select
+                    value={reportForm.recipient_scope ?? "all_members"}
+                    onChange={(e) => setReportForm((f: any) => ({ ...f, recipient_scope: e.target.value }))}
+                    className={selectCls}
+                  >
+                    <option value="owner_only">Apenas dono</option>
+                    <option value="all_members">Todos os membros</option>
+                    <option value="custom">Personalizado</option>
+                  </select>
+                </label>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {([
+                  ["enable_sprint_kickoff", "Kickoff de sprint"],
+                  ["enable_daily_standup", "Daily standup"],
+                  ["enable_sprint_review", "Review de sprint"],
+                  ["auto_create_next_sprint", "Criar próxima sprint automaticamente"],
+                ] as const).map(([key, label]) => (
+                  <label key={key} className="flex items-center gap-1 text-[10px] text-neutral-600 dark:text-neutral-300">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(reportForm[key])}
+                      onChange={(e) => setReportForm((f: any) => ({ ...f, [key]: e.target.checked }))}
+                      className="rounded border-neutral-300"
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+              <div className="flex items-center justify-between border-t border-neutral-200 pt-2 dark:border-neutral-800">
+                <label className="flex items-center gap-1.5 text-[10px] text-neutral-600 dark:text-neutral-300">
+                  <input
+                    type="checkbox"
+                    checked={reportForm.enabled ?? true}
+                    onChange={(e) => setReportForm((f: any) => ({ ...f, enabled: e.target.checked }))}
+                    className="rounded border-neutral-300"
+                  />
+                  Relatórios ativos
+                </label>
+                <div className="flex gap-1.5">
+                  <button type="button" onClick={() => setEditingReport(false)} className={btnSecondaryCls}>
+                    Cancelar
+                  </button>
+                  <button type="button" onClick={handleSaveReport} disabled={savingReport} className={btnPrimaryCls}>
+                    {savingReport ? <FaSpinner className="size-2.5 animate-spin" /> : <FaCheck className="size-2" />}
+                    Guardar
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : reportConfig ? (
+            <div className="space-y-1 text-[10px] text-neutral-600 dark:text-neutral-400">
+              <div className="flex items-center gap-2">
+                <span className={`size-2 rounded-full ${reportConfig.enabled ? "bg-green-500" : "bg-neutral-400"}`} />
+                <span>{reportConfig.enabled ? "Relatórios ativos" : "Relatórios desativados"}</span>
+              </div>
+              <p>Hora UTC: {reportConfig.report_time_utc || "09:00"} | Sprint: {reportConfig.default_sprint_duration_days || 14} dias</p>
+              <p>Canais: {(reportConfig.channels || []).map((c: string) => c === "in_app" ? "Na app" : "Email").join(", ") || "Nenhum"}</p>
+              <p>Destinatários: {reportConfig.recipient_scope === "owner_only" ? "Apenas dono" : reportConfig.recipient_scope === "all_members" ? "Todos os membros" : "Personalizado"}</p>
+            </div>
+          ) : (
+            <p className="text-[10px] text-neutral-400">Nenhuma configuração de relatório. Clique em Configurar para ativar.</p>
+          )}
+        </div>
+
+        {/* Seção: AI Reasonings */}
+        <div className="bg-white p-3 dark:bg-neutral-900">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+              Análises IA ({reasonings.length})
+            </h2>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => setShowCreateReasoning(!showCreateReasoning)}
+                className={btnPrimaryCls}
+              >
+                <FaPlus className="size-2" /> Solicitar análise
+              </button>
+            )}
+          </div>
+
+          {showCreateReasoning && canEdit && (
+            <div className="mb-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-950/50">
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                <label>
+                  <span className="mb-0.5 block text-[10px] text-neutral-500">Título *</span>
+                  <input
+                    value={reasoningForm.title}
+                    onChange={(e) => setReasoningForm((f) => ({ ...f, title: e.target.value }))}
+                    placeholder="Ex: Análise de velocidade do time"
+                    className={inputCls}
+                  />
+                </label>
+                <label>
+                  <span className="mb-0.5 block text-[10px] text-neutral-500">Tipo</span>
+                  <select
+                    value={reasoningForm.reasoningType}
+                    onChange={(e) => setReasoningForm((f) => ({ ...f, reasoningType: e.target.value }))}
+                    className={selectCls}
+                  >
+                    <option value="general">Geral</option>
+                    <option value="sprint_review">Review de Sprint</option>
+                    <option value="daily_standup">Daily Standup</option>
+                    <option value="sprint_kickoff">Kickoff</option>
+                    <option value="retrospective">Retrospetiva</option>
+                  </select>
+                </label>
+                <label className="sm:col-span-2">
+                  <span className="mb-0.5 block text-[10px] text-neutral-500">Conteúdo / contexto adicional</span>
+                  <textarea
+                    value={reasoningForm.content}
+                    onChange={(e) => setReasoningForm((f) => ({ ...f, content: e.target.value }))}
+                    placeholder="Opcional: descreva o que deseja analisar..."
+                    rows={2}
+                    className={`${inputCls} resize-none`}
+                  />
+                </label>
+              </div>
+              <div className="mt-2 flex justify-end gap-1.5">
+                <button type="button" onClick={() => setShowCreateReasoning(false)} className={btnSecondaryCls}>
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateReasoning}
+                  disabled={creatingReasoning || !reasoningForm.title.trim()}
+                  className={btnPrimaryCls}
+                >
+                  {creatingReasoning ? <FaSpinner className="size-2.5 animate-spin" /> : "Criar"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {selectedReasoning && (
+            <div className="mb-2 rounded-md border border-indigo-200 bg-indigo-50 p-2 dark:border-indigo-900/50 dark:bg-indigo-900/10">
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-indigo-700 dark:text-indigo-300">
+                  {selectedReasoning.title}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => { setSelectedReasoning(null); setReasoningActionItems([]); }}
+                  className="text-indigo-400 hover:text-indigo-600"
+                >
+                  <FaTimes className="size-2.5" />
+                </button>
+              </div>
+              {selectedReasoning.content && (
+                <p className="mb-2 whitespace-pre-wrap text-[10px] leading-relaxed text-indigo-600 dark:text-indigo-300/80">
+                  {selectedReasoning.content}
+                </p>
+              )}
+              {reasoningActionItems.length > 0 && (
+                <div className="space-y-1 border-t border-indigo-200 pt-1.5 dark:border-indigo-800">
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-indigo-500">Itens de ação</span>
+                  {reasoningActionItems.map((item: any) => (
+                    <label
+                      key={item.id}
+                      className="flex cursor-pointer items-start gap-1.5 rounded px-1 py-0.5 text-[10px] text-indigo-700 transition-colors hover:bg-indigo-100 dark:text-indigo-300 dark:hover:bg-indigo-900/20"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={item.is_completed}
+                        onChange={() => handleToggleActionItem(selectedReasoning.id, item.id, item.is_completed)}
+                        className="mt-0.5 rounded border-indigo-300"
+                      />
+                      <span className={item.is_completed ? "line-through opacity-60" : ""}>
+                        {item.description || item.id}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              <div className="mt-1.5 text-[9px] text-indigo-400">
+                {selectedReasoning.reasoning_type && <span className="mr-2">Tipo: {selectedReasoning.reasoning_type}</span>}
+                Criado em: {new Date(selectedReasoning.created_at).toLocaleDateString("pt-BR")}
+              </div>
+            </div>
+          )}
+
+          {reasonings.length === 0 ? (
+            <p className="text-[10px] text-neutral-400">Nenhuma análise IA disponível.</p>
+          ) : (
+            <div className="grid gap-1.5">
+              {reasonings.map((reasoning: any) => (
+                <button
+                  key={reasoning.id}
+                  type="button"
+                  onClick={() => handleSelectReasoning(reasoning.id)}
+                  className={`flex items-center justify-between rounded-md border px-2 py-1.5 text-left transition-colors ${
+                    selectedReasoning?.id === reasoning.id
+                      ? "border-indigo-300 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/20"
+                      : "border-neutral-100 bg-neutral-50 hover:border-neutral-200 dark:border-neutral-800 dark:bg-neutral-900/50 dark:hover:border-neutral-700"
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    {!reasoning.is_read && (
+                      <span className="size-1.5 rounded-full bg-indigo-500" />
+                    )}
+                    <span className="text-[11px] font-medium text-neutral-700 dark:text-neutral-200">
+                      {reasoning.title}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {reasoning.reasoning_type && (
+                      <span className="rounded bg-neutral-100 px-1 py-0.5 text-[8px] text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+                        {reasoning.reasoning_type}
+                      </span>
+                    )}
+                    <span className="text-[9px] text-neutral-400">
+                      {new Date(reasoning.created_at).toLocaleDateString("pt-BR")}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import {
   createProject as createProjectService,
   updateProject as updateProjectService,
   deleteProject as deleteProjectService,
+  deleteProjectStage as deleteProjectStageService,
   fetchProjectCollaborators as fetchProjectCollaboratorsService,
   manageCollaborator as manageCollaboratorService,
   fetchProjectNotes as fetchProjectNotesService,
@@ -15,6 +16,18 @@ import {
   fetchProjectStages as fetchProjectStagesService,
   updateProjectNoteStage as updateProjectNoteStageService,
   fetchProjectsStats as fetchProjectsStatsService,
+  fetchAiReportConfig as fetchAiReportConfigService,
+  putProjectAiReportConfig as putProjectAiReportConfigService,
+  fetchSprints as fetchSprintsService,
+  fetchActiveSprint as fetchActiveSprintService,
+  createSprint as createSprintService,
+  completeSprint as completeSprintService,
+  fetchReasonings as fetchReasoningsService,
+  fetchReasoningById as fetchReasoningByIdService,
+  fetchReasoningActionItems as fetchReasoningActionItemsService,
+  createReasoning as createReasoningService,
+  updateReasoningInteraction as updateReasoningInteractionService,
+  updateReasoningActionItem as updateReasoningActionItemService,
   type Project,
   type SubProject,
   type CreateProjectData,
@@ -26,6 +39,16 @@ import {
   type ManageNoteData,
   type ProjectDashboardStats,
   type ProjectStatsFilters,
+  type AiReportConfig,
+  type AiReportConfigUpsertPayload,
+  type Sprint,
+  type CreateSprintPayload,
+  type CompleteSprintPayload,
+  type Reasoning,
+  type ReasoningActionItem,
+  type CreateReasoningPayload,
+  type UpdateReasoningInteractionPayload,
+  type UpdateReasoningActionItemPayload,
 } from "../_services/projects-service/projects-service";
 import {
   fetchProjectTags as fetchProjectTagsService,
@@ -49,6 +72,18 @@ import { PROJECT_STATUS } from "@/app/_utils/db-enums";
 // Tipos específicos do contexto / Overview
 export type { Project, ProjectStage } from "../_services/projects-service/projects-service";
 export type { ProjectDashboardStats, ProjectStatsFilters };
+export type {
+  AiReportConfig,
+  AiReportConfigUpsertPayload,
+  Sprint,
+  CreateSprintPayload,
+  CompleteSprintPayload,
+  Reasoning,
+  ReasoningActionItem,
+  CreateReasoningPayload,
+  UpdateReasoningInteractionPayload,
+  UpdateReasoningActionItemPayload,
+};
 export type {
   ProjectTag,
   TaskPriority,
@@ -166,6 +201,27 @@ export interface ProjectsContextType {
   syncProjectNote: (projectId: string, noteId: string) => Promise<boolean>;
   removeNoteFromProject: (projectId: string, noteId: string) => Promise<boolean>;
   updateProjectNoteStage: (projectId: string, noteId: string, stageId: string) => Promise<void>;
+
+  // Stage delete
+  deleteProjectStage: (projectId: string, stageId: string) => Promise<boolean>;
+
+  // AI Report Config
+  getAiReportConfig: (projectId: string) => Promise<AiReportConfig | null>;
+  updateAiReportConfig: (projectId: string, payload: AiReportConfigUpsertPayload) => Promise<boolean>;
+
+  // Sprints
+  getSprints: (projectId: string, limit?: number) => Promise<Sprint[]>;
+  getActiveSprint: (projectId: string) => Promise<Sprint | null>;
+  createSprint: (projectId: string, payload: CreateSprintPayload) => Promise<Sprint | null>;
+  completeSprint: (projectId: string, sprintId: string, payload?: CompleteSprintPayload) => Promise<{ completed_sprint: Sprint; next_sprint?: Sprint | null } | null>;
+
+  // Reasonings
+  getReasonings: (projectId: string, params?: { sprintId?: string; reasoningType?: string; limit?: number }) => Promise<Reasoning[]>;
+  getReasoningById: (projectId: string, reasoningId: string) => Promise<Reasoning | null>;
+  getReasoningActionItems: (projectId: string, reasoningId: string) => Promise<ReasoningActionItem[]>;
+  createReasoning: (projectId: string, payload: CreateReasoningPayload) => Promise<Reasoning | null>;
+  updateReasoningInteraction: (projectId: string, reasoningId: string, payload: UpdateReasoningInteractionPayload) => Promise<boolean>;
+  updateReasoningActionItem: (projectId: string, reasoningId: string, itemId: string, payload: UpdateReasoningActionItemPayload) => Promise<ReasoningActionItem | null>;
 }
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -753,6 +809,182 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     [user?.id]
   );
 
+  // --- STAGE DELETE ---
+  const deleteProjectStage = useCallback(
+    async (projectId: string, stageId: string): Promise<boolean> => {
+      if (!user?.id) return false;
+      try {
+        await deleteProjectStageService(projectId, stageId);
+        return true;
+      } catch (err: unknown) {
+        console.error("Erro ao remover estágio do projeto:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  // --- AI REPORT CONFIG ---
+  const getAiReportConfig = useCallback(
+    async (projectId: string): Promise<AiReportConfig | null> => {
+      if (!user?.id) return null;
+      try {
+        return await fetchAiReportConfigService(projectId);
+      } catch (err: unknown) {
+        console.error("Erro ao buscar config de relatório AI:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const updateAiReportConfig = useCallback(
+    async (projectId: string, payload: AiReportConfigUpsertPayload): Promise<boolean> => {
+      if (!user?.id) return false;
+      try {
+        await putProjectAiReportConfigService(projectId, payload);
+        return true;
+      } catch (err: unknown) {
+        console.error("Erro ao atualizar config de relatório AI:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  // --- SPRINTS ---
+  const getSprints = useCallback(
+    async (projectId: string, limit?: number): Promise<Sprint[]> => {
+      if (!user?.id) return [];
+      try {
+        return await fetchSprintsService(projectId, limit);
+      } catch (err: unknown) {
+        console.error("Erro ao buscar sprints:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const getActiveSprint = useCallback(
+    async (projectId: string): Promise<Sprint | null> => {
+      if (!user?.id) return null;
+      try {
+        return await fetchActiveSprintService(projectId);
+      } catch (err: unknown) {
+        console.error("Erro ao buscar sprint ativa:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const createSprintFn = useCallback(
+    async (projectId: string, payload: CreateSprintPayload): Promise<Sprint | null> => {
+      if (!user?.id) return null;
+      try {
+        return await createSprintService(projectId, payload);
+      } catch (err: unknown) {
+        console.error("Erro ao criar sprint:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const completeSprintFn = useCallback(
+    async (projectId: string, sprintId: string, payload?: CompleteSprintPayload): Promise<{ completed_sprint: Sprint; next_sprint?: Sprint | null } | null> => {
+      if (!user?.id) return null;
+      try {
+        return await completeSprintService(projectId, sprintId, payload);
+      } catch (err: unknown) {
+        console.error("Erro ao completar sprint:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  // --- REASONINGS ---
+  const getReasonings = useCallback(
+    async (projectId: string, params?: { sprintId?: string; reasoningType?: string; limit?: number }): Promise<Reasoning[]> => {
+      if (!user?.id) return [];
+      try {
+        return await fetchReasoningsService(projectId, params);
+      } catch (err: unknown) {
+        console.error("Erro ao buscar reasonings:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const getReasoningById = useCallback(
+    async (projectId: string, reasoningId: string): Promise<Reasoning | null> => {
+      if (!user?.id) return null;
+      try {
+        return await fetchReasoningByIdService(projectId, reasoningId);
+      } catch (err: unknown) {
+        console.error("Erro ao buscar reasoning:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const getReasoningActionItems = useCallback(
+    async (projectId: string, reasoningId: string): Promise<ReasoningActionItem[]> => {
+      if (!user?.id) return [];
+      try {
+        return await fetchReasoningActionItemsService(projectId, reasoningId);
+      } catch (err: unknown) {
+        console.error("Erro ao buscar action items:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const createReasoningFn = useCallback(
+    async (projectId: string, payload: CreateReasoningPayload): Promise<Reasoning | null> => {
+      if (!user?.id) return null;
+      try {
+        return await createReasoningService(projectId, payload);
+      } catch (err: unknown) {
+        console.error("Erro ao criar reasoning:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const updateReasoningInteractionFn = useCallback(
+    async (projectId: string, reasoningId: string, payload: UpdateReasoningInteractionPayload): Promise<boolean> => {
+      if (!user?.id) return false;
+      try {
+        await updateReasoningInteractionService(projectId, reasoningId, payload);
+        return true;
+      } catch (err: unknown) {
+        console.error("Erro ao atualizar interação:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const updateReasoningActionItemFn = useCallback(
+    async (projectId: string, reasoningId: string, itemId: string, payload: UpdateReasoningActionItemPayload): Promise<ReasoningActionItem | null> => {
+      if (!user?.id) return null;
+      try {
+        return await updateReasoningActionItemService(projectId, reasoningId, itemId, payload);
+      } catch (err: unknown) {
+        console.error("Erro ao atualizar action item:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
   useEffect(() => {
     if (!user?.id) return;
 
@@ -807,6 +1039,19 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     syncProjectNote,
     removeNoteFromProject,
     updateProjectNoteStage,
+    deleteProjectStage,
+    getAiReportConfig,
+    updateAiReportConfig,
+    getSprints,
+    getActiveSprint,
+    createSprint: createSprintFn,
+    completeSprint: completeSprintFn,
+    getReasonings,
+    getReasoningById,
+    getReasoningActionItems,
+    createReasoning: createReasoningFn,
+    updateReasoningInteraction: updateReasoningInteractionFn,
+    updateReasoningActionItem: updateReasoningActionItemFn,
   };
 
   return <ProjectsContext.Provider value={value}>{children}</ProjectsContext.Provider>;

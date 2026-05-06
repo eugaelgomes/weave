@@ -18,7 +18,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
-import { OrganizationHeader } from "@/app/(protected)/_components/ui/headers/organization-header";
+import { WorkspaceHeader } from "@/app/(protected)/_components/ui/headers/workspace-header";
 import {
   useOrganization,
   type OrganizationArea,
@@ -467,7 +467,7 @@ export default function AreasPage() {
 
   return (
     <div className="mx-auto flex h-[calc(100vh-4rem)] w-full flex-col gap-2">
-      <OrganizationHeader />
+      <WorkspaceHeader />
 
       {/* Cabeçalho Minimalista e Responsivo */}
       <div className="flex shrink-0 flex-col gap-4 rounded-md border-1 border-neutral-100 bg-white px-4 py-2 shadow-sm md:flex-row md:items-center md:justify-between dark:border-neutral-800 dark:bg-neutral-950">

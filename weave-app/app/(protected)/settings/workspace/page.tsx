@@ -97,7 +97,7 @@ export default function WorkspaceSettingsPage() {
                     Você não faz parte de nenhum Workspace ativo.
                   </p>
                   <Link
-                    href="/organization/settings"
+                    href="/organization/create"
                     className="rounded-md bg-amber-500 px-4 py-1.5 text-[11px] font-bold text-neutral-950 shadow-sm transition-all hover:bg-amber-400 active:scale-95"
                   >
                     Criar Workspace

@@ -6,7 +6,7 @@ import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import type { OrganizationArea } from "@/app/_services/organization";
 import { Plus, X, Mail, ChevronDown, User, Layers3 } from "lucide-react";
-import { OrganizationHeader } from "@/app/(protected)/_components/ui/headers/organization-header";
+import { WorkspaceHeader } from "@/app/(protected)/_components/ui/headers/workspace-header";
 
 // --- UI Components ---
 
@@ -318,7 +318,7 @@ export default function InvitesPage() {
 
   return (
     <div className="mx-auto w-full space-y-2">
-      <OrganizationHeader />
+      <WorkspaceHeader />
 
       <div className="flex flex-col gap-4 rounded-md border border-neutral-200 bg-white px-4 py-2 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800 dark:bg-neutral-900">
         <div>

@@ -82,6 +82,23 @@ export const API_ENDPOINTS = {
     `/projects/${projectId}/task-priorities/${priorityId}`,
   ORGANIZATIONS_TASK_PRIORITIES: (orgId: string) => `/organizations/${orgId}/task-priorities`,
 
+  // Sprints
+  PROJECTS_SPRINTS: (projectId: string) => `/projects/${projectId}/sprints`,
+  PROJECTS_SPRINT_ACTIVE: (projectId: string) => `/projects/${projectId}/sprints/active`,
+  PROJECTS_SPRINT_COMPLETE: (projectId: string, sprintId: string) =>
+    `/projects/${projectId}/sprints/${sprintId}/complete`,
+
+  // Reasonings
+  PROJECTS_REASONINGS: (projectId: string) => `/projects/${projectId}/reasonings`,
+  PROJECTS_REASONING_BY_ID: (projectId: string, reasoningId: string) =>
+    `/projects/${projectId}/reasonings/${reasoningId}`,
+  PROJECTS_REASONING_ACTION_ITEMS: (projectId: string, reasoningId: string) =>
+    `/projects/${projectId}/reasonings/${reasoningId}/action-items`,
+  PROJECTS_REASONING_INTERACTION: (projectId: string, reasoningId: string) =>
+    `/projects/${projectId}/reasonings/${reasoningId}/interaction`,
+  PROJECTS_REASONING_ACTION_ITEM: (projectId: string, reasoningId: string, itemId: string) =>
+    `/projects/${projectId}/reasonings/${reasoningId}/action-items/${itemId}`,
+
   // Backup
   BACKUP_REQUEST: "/backup/request",
   BACKUP_STATUS: (jobId: string) => `/backup/status/${jobId}`,

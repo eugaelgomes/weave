@@ -226,7 +226,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       setLoading(true);
       setError(null);
       try {
-        const newOrg = await createOrganizationService(organizationData);
+        const newOrg = await createOrganizationService(organizationData, user.id);
         setOrganization(newOrg);
         // Ao criar, o criador é o único membro/dono
         await fetchOrganizationData(); // Recarrega tudo para garantir consistência

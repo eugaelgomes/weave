@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { OrganizationHeader } from "@/app/(protected)/_components/ui/headers/organization-header";
+import { WorkspaceHeader } from "@/app/(protected)/_components/ui/headers/workspace-header";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { Project } from "@/app/_services/projects-service/projects-service";
 import {
@@ -77,7 +77,7 @@ const ProjectsManagementPage = () => {
 
   return (
     <div className="animate-in fade-in flex h-full flex-col bg-neutral-50 duration-200 dark:bg-neutral-950">
-      <OrganizationHeader />
+      <WorkspaceHeader />
 
       {/* Header Analítico - Compacto */}
       <div className="border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">

@@ -28,8 +28,8 @@ class ProjectsCreateRepository {
           $2::uuid, 
           $3, 
           $4, 
-          $5::project_methodology, 
-          $6::project_view_type, 
+          $5::project_methodology_enum, 
+          $6::project_view_enum, 
           $7::project_status, 
           $8::jsonb,
           $10::uuid

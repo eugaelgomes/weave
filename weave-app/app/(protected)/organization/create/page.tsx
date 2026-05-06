@@ -10,20 +10,33 @@ import {
   OrganizationBusinessRole,
   saveOrganizationCreationStepOne,
 } from "@/app/_services/organization";
-import { OrganizationHeader } from "@/app/(protected)/_components/ui/headers/organization-header";
+import { WorkspaceHeader } from "@/app/(protected)/_components/ui/headers/workspace-header";
 import { useOrganization } from "@/app/_contexts/organization-context";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 
 const ROLE_LABELS: Record<OrganizationBusinessRole, string> = {
-  SOLO_ENTREPRENEUR: "Solo entrepreneur",
-  STARTUP: "Startup",
-  SMALL_BUSINESS: "Small business",
-  AGENCY: "Agency",
-  EDUCATIONAL_INSTITUTION: "Educational institution",
-  NON_PROFIT: "Non profit",
-  ENTERPRISE: "Enterprise",
+  TECHNOLOGY: "Technology",
+  MARKETING: "Marketing",
+  BUSINESS: "Business",
+  FINANCE: "Finance",
+  HEALTHCARE: "Healthcare",
+  EDUCATION: "Education",
+  RETAIL: "Retail",
+  INDUSTRY: "Industry",
   OTHER: "Other",
 };
+
+const FALLBACK_ROLE_OPTIONS: OrganizationBusinessRole[] = [
+  "TECHNOLOGY",
+  "MARKETING",
+  "BUSINESS",
+  "FINANCE",
+  "HEALTHCARE",
+  "EDUCATION",
+  "RETAIL",
+  "INDUSTRY",
+  "OTHER",
+];
 
 type StepOneForm = {
   org_name: string;
@@ -38,7 +51,7 @@ type StepOneForm = {
 const DEFAULT_FORM: StepOneForm = {
   org_name: "",
   unique_name: "",
-  organization_role: "STARTUP",
+  organization_role: "TECHNOLOGY",
   description: "",
   default_locale: "en-US",
   country: "",
@@ -91,7 +104,7 @@ export default function OrganizationCreatePage() {
   const [saving, setSaving] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
-  const [roleOptions, setRoleOptions] = useState<OrganizationBusinessRole[]>([]);
+  const [roleOptions, setRoleOptions] = useState<OrganizationBusinessRole[]>(FALLBACK_ROLE_OPTIONS);
   const [form, setForm] = useState<StepOneForm>(DEFAULT_FORM);
   const [stepOneCompleted, setStepOneCompleted] = useState(false);
 
@@ -113,20 +126,36 @@ export default function OrganizationCreatePage() {
       try {
         const response = await fetchOrganizationCreationStepOne();
         const organization = response.organization;
-        setRoleOptions(response.role_options || response.available_roles || []);
+        const availableRoles = (response.role_options || response.available_roles || []).filter(
+          (role): role is OrganizationBusinessRole => FALLBACK_ROLE_OPTIONS.includes(role)
+        );
+        const resolvedRoleOptions = availableRoles.length
+          ? availableRoles
+          : FALLBACK_ROLE_OPTIONS;
+
+        setRoleOptions(resolvedRoleOptions);
         const completedSteps = organization?.settings?.creation_steps?.completed_steps || [];
         setStepOneCompleted(Array.isArray(completedSteps) && completedSteps.includes("step_1"));
         if (organization) {
+          const roleFromSettings = organization.settings?.organization_role;
+          const resolvedRole = FALLBACK_ROLE_OPTIONS.includes(roleFromSettings)
+            ? roleFromSettings
+            : resolvedRoleOptions[0];
+
           setForm((prev) => ({
             ...prev,
             org_name: organization.org_name || "",
             unique_name: organization.unique_name || "",
             description: organization.description || "",
-            organization_role: (organization.settings?.organization_role ||
-              prev.organization_role) as OrganizationBusinessRole,
+            organization_role: resolvedRole || prev.organization_role,
             default_locale: organization.default_locale || prev.default_locale,
             country: organization.country || "",
             language: organization.settings?.language || prev.language,
+          }));
+        } else {
+          setForm((prev) => ({
+            ...prev,
+            organization_role: resolvedRoleOptions[0] || prev.organization_role,
           }));
         }
       } catch (error) {
@@ -228,7 +257,7 @@ export default function OrganizationCreatePage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full flex-col gap-2">
-      <OrganizationHeader />
+      <WorkspaceHeader />
       <div className="grid w-full gap-2 lg:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="rounded-md border border-zinc-200 bg-white p-2 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-zinc-800 dark:text-zinc-100">
@@ -363,9 +392,9 @@ export default function OrganizationCreatePage() {
                 onChange={handleFieldChange("organization_role")}
                 required
               >
-                {(roleOptions.length ? roleOptions : Object.keys(ROLE_LABELS)).map((role) => (
+                {roleOptions.map((role) => (
                   <option key={role} value={role}>
-                    {ROLE_LABELS[role as OrganizationBusinessRole] || role}
+                    {ROLE_LABELS[role] || role}
                   </option>
                 ))}
               </select>

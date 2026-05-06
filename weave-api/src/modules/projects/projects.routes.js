@@ -40,7 +40,6 @@ router.get(
 router.post(
   "/",
   standardTrafficLimiter,
-  requireManageProjects,
   ProjectsCreateController.createProject.bind(ProjectsCreateController)
 );
 router.patch(

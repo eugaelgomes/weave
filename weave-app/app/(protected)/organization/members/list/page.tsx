@@ -28,7 +28,7 @@ import {
   Ban,
   Filter,
 } from "lucide-react";
-import { OrganizationHeader } from "@/app/(protected)/_components/ui/headers/organization-header";
+import { WorkspaceHeader } from "@/app/(protected)/_components/ui/headers/workspace-header";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 
 // --- UI Components ---
@@ -572,7 +572,7 @@ export default function MembersPage() {
 
   return (
     <div className="mx-auto w-full space-y-2">
-      <OrganizationHeader />
+      <WorkspaceHeader />
 
       <div className="flex flex-col gap-4 rounded-md border border-neutral-200 bg-white px-4 py-2 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800 dark:bg-neutral-900">
         <div>

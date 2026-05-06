@@ -625,7 +625,7 @@ class ProjectsReadRepository {
     }
 
     if (methodology) {
-      conditions.push(`p.methodology = $${paramIndex}::project_methodology`);
+      conditions.push(`p.methodology = $${paramIndex}::project_methodology_enum`);
       params.push(String(methodology).toUpperCase());
       paramIndex++;
     }
@@ -744,7 +744,7 @@ class ProjectsReadRepository {
     }
 
     if (methodology) {
-      conditions.push(`p.methodology = $${paramIndex}::project_methodology`);
+      conditions.push(`p.methodology = $${paramIndex}::project_methodology_enum`);
       params.push(String(methodology).toUpperCase());
       paramIndex++;
     }
