@@ -2,7 +2,7 @@
 
 // Authentication Services
 export * from "./authentication/auth-service";
-export * from "./authentication/use-auth-provider";
+export { useAuth, AuthProvider } from "@/app/_contexts/auth-context";
 
 // API Tokens Service
 export * from "./api-tokens-service/api-tokens.service";
@@ -158,6 +158,7 @@ export {
   apiClient,
   ApiError,
   handleResponse,
+  type HandleResponseOptions,
   API_BASE_URL,
   API_CONFIG,
   API_ENDPOINTS,

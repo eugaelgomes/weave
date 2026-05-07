@@ -71,6 +71,21 @@ export const UsageDetailsSchema = z.object({
   }).optional(),
 }).optional();
 
+/** Matches `mapDefaultAreaInfo` in weave-api `user-data.controller.js` / auth controllers. */
+export const BackendOrgDefaultAreaFieldsSchema = z.object({
+  id: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
+  member_since: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  properties: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const BackendOrgDefaultAreaSchema = BackendOrgDefaultAreaFieldsSchema.nullable().optional();
+
+export type OrgDefaultArea = z.infer<typeof BackendOrgDefaultAreaFieldsSchema>;
+
 export const UserSchema = z.object({
   id: z.string().optional(),
   username: z.string().optional(),
@@ -109,6 +124,8 @@ export const UserSchema = z.object({
   usage_period_start: z.string().optional(),
   usage_period_end: z.string().optional(),
   usage_details: UsageDetailsSchema,
+
+  org_default_area: BackendOrgDefaultAreaFieldsSchema.nullable().optional(),
 });
 
 export const BackendProfileSchema = z.object({
@@ -160,13 +177,18 @@ export const BackendAuthResponseSchema = z.object({
       theme_mode: z.string().optional(),
       private_profile: z.boolean().optional(),
     }),
-    user_organization: z.object({
-      id: z.string().nullable().optional(),
-      unique_name: z.string().nullable().optional(),
-      name: z.string().nullable().optional(),
-      role: z.union([z.string(), z.array(z.string())]).nullable().optional(),
-      logo_url: z.string().nullable().optional(),
-    }).optional().nullable(),
+    user_organization: z
+      .object({
+        id: z.string().nullable().optional(),
+        unique_name: z.string().nullable().optional(),
+        name: z.string().nullable().optional(),
+        role: z.union([z.string(), z.array(z.string())]).nullable().optional(),
+        logo_url: z.string().nullable().optional(),
+        member_since: z.string().nullable().optional(),
+        default_area: BackendOrgDefaultAreaSchema,
+      })
+      .optional()
+      .nullable(),
     user_subscription: z.object({
       plan_id: z.string(),
       plan_name: z.string(),
@@ -175,7 +197,7 @@ export const BackendAuthResponseSchema = z.object({
   auth: z.object({
     token: z.string(),
     expires_in: z.number(),
-    login_time: z.string(),
+    login_time: z.union([z.string(), z.number()]).optional(),
   }),
 });
 
@@ -184,14 +206,18 @@ export const BackendMeResponseSchema = z.object({
   user: z.object({
     user_profile: BackendProfileSchema,
     user_settings: BackendSettingsSchema,
-    user_organization: z.object({
-      id: z.string().nullable().optional(),
-      unique_name: z.string().nullable().optional(),
-      name: z.string().nullable().optional(),
-      logo_url: z.string().nullable().optional(),
-      member_role: z.union([z.string(), z.array(z.string())]).nullable().optional(),
-      member_since: z.string().nullable().optional(),
-    }).optional().nullable(),
+    user_organization: z
+      .object({
+        id: z.string().nullable().optional(),
+        unique_name: z.string().nullable().optional(),
+        name: z.string().nullable().optional(),
+        logo_url: z.string().nullable().optional(),
+        member_role: z.union([z.string(), z.array(z.string())]).nullable().optional(),
+        member_since: z.string().nullable().optional(),
+        default_area: BackendOrgDefaultAreaSchema,
+      })
+      .optional()
+      .nullable(),
     current_plan: z.object({
       id: z.string(),
       plan_name: z.string(),

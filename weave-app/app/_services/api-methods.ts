@@ -3,6 +3,7 @@ import {
   clearInternalChallengeCache,
   getInternalChallengeHeaders,
 } from "./internal-challenge";
+import { notifyUnauthorized } from "./session-invalidation";
 
 export { ApiError };
 
@@ -296,10 +297,21 @@ class ApiClient {
   }
 }
 
-export async function handleResponse<T = unknown>(response: Response): Promise<T> {
+export type HandleResponseOptions = {
+  /** When true, 401 does not run the global session invalidation handler (e.g. failed login). */
+  skipSessionInvalidationOn401?: boolean;
+};
+
+export async function handleResponse<T = unknown>(
+  response: Response,
+  options?: HandleResponseOptions
+): Promise<T> {
   const contentType = response.headers.get("content-type");
 
   if (!response.ok) {
+    if (response.status === 401 && !options?.skipSessionInvalidationOn401) {
+      notifyUnauthorized();
+    }
     let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
     let errorData: unknown;
 

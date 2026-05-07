@@ -19,7 +19,9 @@ export async function checkHealth(): Promise<HealthStatus> {
     const endTime = performance.now();
     const responseTime = Math.round(endTime - startTime);
 
-    const raw = await handleResponse<unknown>(response);
+    const raw = await handleResponse<unknown>(response, {
+      skipSessionInvalidationOn401: true,
+    });
     const data = HealthPayloadSchema.parse(raw);
     return {
       ...data,

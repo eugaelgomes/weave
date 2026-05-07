@@ -118,6 +118,7 @@ export interface OrganizationContextType {
 
   // Dados Derivados
   getStats: () => OrganizationStats;
+  getMemberRole: (userId: string) => string | null;
   isOwner: (userId: string) => boolean;
   isAdmin: (userId: string) => boolean;
   isMember: (userId: string) => boolean;
@@ -809,6 +810,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     updateAreaMember,
     removeAreaMember,
     getStats,
+    getMemberRole,
     isOwner,
     isAdmin,
     isMember,

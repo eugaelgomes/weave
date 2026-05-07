@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import {
   login as loginService,
   logout as logoutService,
@@ -18,7 +18,10 @@ import {
   type User,
   type CreateUserData,
   type ActivateAccountPayload,
+  type LoginResponse,
 } from "../_services/authentication/auth-service";
+import { setUnauthorizedHandler } from "../_services/session-invalidation";
+import { ApiError } from "../_services/api-error";
 import { useTheme } from "./theme-context";
 
 /** Consumer-facing user model — import from this module in UI; do not import auth-service types directly. */
@@ -32,16 +35,23 @@ const toUiThemeMode = (themeMode?: string | null): "light" | "dark" | null => {
   return null;
 };
 
+type LoginResult =
+  | { success: true; data: LoginResponse }
+  | { success: false; message: string; data?: unknown };
+
 type AuthContextType = {
   user: User | null;
   loading: boolean;
   authenticated: boolean;
 
+  /** Reload profile from `GET /users/me` (e.g. after org or role changes). */
+  refreshUser: () => Promise<User | null>;
+
   // Auth Functions
   login: (
     usernameOrPayload: string | { login: string; password: string },
     password?: string
-  ) => Promise<{ success: boolean; message?: string; data?: any }>;
+  ) => Promise<LoginResult>;
   loginWithGoogle: () => void;
   loginWithGithub: () => void;
   loginWithMicrosoft: () => void;
@@ -73,6 +83,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const authenticated = !!user;
 
+  const refreshUser = useCallback(async (): Promise<User | null> => {
+    try {
+      const profileData = await getUserDataService();
+      setUser(profileData);
+      const profileThemeMode = toUiThemeMode(profileData.theme_mode);
+      if (profileThemeMode) {
+        setTheme(profileThemeMode);
+      }
+      return profileData;
+    } catch {
+      setUser(null);
+      return null;
+    }
+  }, [setTheme]);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setUser(null);
+      setTheme("light");
+      if (typeof window === "undefined") return;
+      const path = window.location.pathname;
+      const isPublic = path.startsWith("/auth") || path.startsWith("/activate");
+      if (isPublic) return;
+      window.location.href = "/auth/";
+    });
+    return () => setUnauthorizedHandler(null);
+  }, [setTheme]);
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -86,7 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (profileThemeMode) {
           setTheme(profileThemeMode);
         }
-      } catch (error) {
+      } catch {
         // Se falhar (401/403), o usuário não está logado - ignora o erro silenciosamente
         setUser(null);
       } finally {
@@ -107,7 +145,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [setTheme]);
 
-  type LoginPayload = { login: string; password: string; remember?: boolean };
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const auth = params.get("auth");
+    const err = params.get("error");
+    if (auth !== "success" && !err) return;
+    params.delete("auth");
+    params.delete("error");
+    const qs = params.toString();
+    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    window.history.replaceState({}, document.title, next);
+  }, []);
 
   const login = async (
     usernameOrPayload: string | { login: string; password: string },
@@ -146,13 +195,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
-        return { success: true, data: response };
+        return { success: true as const, data: response };
       }
       throw new Error("Resposta de login inválida");
-    } catch (err: any) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro de conexão";
-      const errorData = err?.data ? err.data : null;
-      return { success: false, message, data: errorData };
+      const errorData = err instanceof ApiError ? err.data : undefined;
+      return { success: false as const, message, data: errorData };
     } finally {
       setLoading(false);
     }
@@ -267,6 +316,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         loading,
         authenticated,
+        refreshUser,
         login,
         loginWithGoogle,
         loginWithGithub,

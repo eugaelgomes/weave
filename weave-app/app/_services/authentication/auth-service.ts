@@ -1,6 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import { API_ENDPOINTS } from "../api-methods";
 import { apiClient, handleResponse } from "../api-methods";
+import { notifyUnauthorized } from "../session-invalidation";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import {
   type UserPreferences,
@@ -15,6 +16,7 @@ import {
   type LoginCredentials,
   type CreateUserData,
   type ActivateAccountPayload,
+  type OrgDefaultArea,
   BackendAuthResponseSchema,
   BackendMeResponseSchema,
   CreateUserDataSchema,
@@ -29,7 +31,8 @@ export type {
   User,
   LoginCredentials,
   CreateUserData,
-  ActivateAccountPayload
+  ActivateAccountPayload,
+  OrgDefaultArea,
 };
 
 // Interface unificada dos dados que vêm dentro de 'user_data' (deprecated func support)
@@ -58,6 +61,21 @@ const normalizeThemeMode = (value?: string): "LIGHT" | "DARK" | undefined => {
   if (normalized === "DARK") return "DARK";
   if (normalized === "LIGHT") return "LIGHT";
   return undefined;
+};
+
+const mapOrgDefaultAreaToUser = (
+  area: OrgDefaultArea | null | undefined
+): User["org_default_area"] => {
+  if (area == null) return undefined;
+  return {
+    id: area.id ?? undefined,
+    name: area.name ?? undefined,
+    slug: area.slug ?? undefined,
+    role: area.role ?? undefined,
+    member_since: area.member_since ?? undefined,
+    description: area.description ?? undefined,
+    properties: area.properties ?? {},
+  };
 };
 
 // --- 3. Helpers & Mappers (Adapter Pattern) ---
@@ -147,6 +165,8 @@ const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
     org_unique_name: organization?.unique_name,
     org_logo_url: normalizeStorageUrl(organization?.logo_url),
     org_member_role: organization?.role,
+    org_member_since: organization?.member_since ?? undefined,
+    org_default_area: mapOrgDefaultAreaToUser(organization?.default_area ?? undefined),
 
     // Plan
     plan_id: user.user_subscription.plan_id,
@@ -186,6 +206,7 @@ const mapMeResponseToUser = (data: BackendMeResponse): User => {
     org_logo_url: normalizeStorageUrl(organization?.logo_url),
     org_member_role: organization?.member_role,
     org_member_since: organization?.member_since,
+    org_default_area: mapOrgDefaultAreaToUser(organization?.default_area ?? undefined),
 
     // Plan
     plan_id: currentPlan?.id,
@@ -212,8 +233,10 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
   // Valida o input
   const validCredentials = LoginCredentialsSchema.parse(credentials);
   const response = await apiClient.post(API_ENDPOINTS.SIGNIN, validCredentials);
-  const rawData = await handleResponse<unknown>(response);
-  
+  const rawData = await handleResponse<unknown>(response, {
+    skipSessionInvalidationOn401: true,
+  });
+
   // Valida o output da API
   const data = BackendAuthResponseSchema.parse(rawData);
 
@@ -231,7 +254,10 @@ export const getUserData = async (): Promise<User> => {
   const response = await apiClient.get(API_ENDPOINTS.ME);
 
   if (!response.ok) {
-    if (response.status === 401) throw new Error("Unauthorized");
+    if (response.status === 401) {
+      notifyUnauthorized();
+      throw new Error("Unauthorized");
+    }
     if (response.status === 404) throw new Error("Usuário não encontrado");
     throw new Error("Erro ao buscar dados do usuário");
   }
@@ -291,7 +317,9 @@ export const activateAccountService = async (
 ): Promise<{ message: string }> => {
   const validPayload = ActivateAccountPayloadSchema.parse(payload);
   const response = await apiClient.post(API_ENDPOINTS.ACTIVATE_ACCOUNT, validPayload);
-  const data = await handleResponse<{ message?: string }>(response);
+  const data = await handleResponse<{ message?: string }>(response, {
+    skipSessionInvalidationOn401: true,
+  });
 
   return {
     message: data?.message || "Conta ativada com sucesso",
@@ -300,7 +328,7 @@ export const activateAccountService = async (
 
 export const logout = async (): Promise<void> => {
   const response = await apiClient.post(API_ENDPOINTS.LOGOUT);
-  return await handleResponse<void>(response);
+  return await handleResponse<void>(response, { skipSessionInvalidationOn401: true });
 };
 
 export const initiateGoogleLogin = (): void => {
@@ -401,7 +429,9 @@ export const getUsers = async (): Promise<User[]> => {
 
 export const requestPasswordRecovery = async (email: string): Promise<{ message: string }> => {
   const response = await apiClient.post(API_ENDPOINTS.FORGOT_PASSWORD, { email });
-  return await handleResponse<{ message: string }>(response);
+  return await handleResponse<{ message: string }>(response, {
+    skipSessionInvalidationOn401: true,
+  });
 };
 
 export const resetPassword = async (
@@ -412,5 +442,7 @@ export const resetPassword = async (
     token,
     password,
   });
-  return await handleResponse<{ message: string }>(response);
+  return await handleResponse<{ message: string }>(response, {
+    skipSessionInvalidationOn401: true,
+  });
 };

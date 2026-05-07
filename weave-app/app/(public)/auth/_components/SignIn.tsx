@@ -88,8 +88,9 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
     const result = await login(username, password);
 
     if (!result.success) {
-      if (result.data?.error_code === "EMAIL_NOT_VERIFIED") {
-        onNavigate("confirm", { email: result.data.email, password });
+      const errBody = result.data as { error_code?: string; email?: string } | undefined;
+      if (errBody?.error_code === "EMAIL_NOT_VERIFIED") {
+        onNavigate("confirm", { email: errBody.email, password });
       } else {
         // Mascara o erro real por segurança e UX
         setError(t.signIn.invalidCredentials);
