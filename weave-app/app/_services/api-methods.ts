@@ -4,6 +4,7 @@ import {
   getInternalChallengeHeaders,
 } from "./internal-challenge";
 import { notifyUnauthorized } from "./session-invalidation";
+import { notifyPlanLimitExceededSync } from "./plan-limit-sync";
 
 export { ApiError };
 
@@ -36,6 +37,9 @@ export const API_ENDPOINTS = {
   DELETE_ACCOUNT: "/users/delete-my-account",
   CREATE_ACCOUNT: "/users/create-account",
   USERS: "/auth/users",
+
+  /** Lean plan + usage + gates for the authenticated web session */
+  PLANS_ME: "/plans/me",
 
   // Password Recovery
   FORGOT_PASSWORD: "/password/forgot-password",
@@ -320,9 +324,16 @@ export async function handleResponse<T = unknown>(
         errorData = await response.json();
         if (typeof errorData === "object" && errorData !== null) {
           const obj = errorData as {
+            code?: unknown;
             message?: unknown;
             error?: unknown;
           };
+          if (
+            response.status === 403 &&
+            obj.code === "PLAN_LIMIT_EXCEEDED"
+          ) {
+            notifyPlanLimitExceededSync();
+          }
           if (typeof obj.message === "string") {
             errorMessage = obj.message;
           } else if (typeof obj.error === "string") {

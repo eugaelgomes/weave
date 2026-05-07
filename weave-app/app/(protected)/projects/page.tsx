@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/_contexts/auth-context";
+import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { useNotes } from "@/app/_contexts/notes-context";
 import {
@@ -17,6 +18,7 @@ import {
   Folder,
   ChevronRight,
 } from "lucide-react";
+import { toast } from "sonner";
 import { PROJECT_STATUS } from "@/app/_utils/db-enums";
 
 const statusLabels: Record<string, string> = {
@@ -153,7 +155,8 @@ function buildProjectStats(
 const ProjectsPage = () => {
   const router = useRouter();
   const { user } = useAuth();
-  const { projects, loading, createProject } = useProjects();
+  const { canCreateProject } = usePlanUsage();
+  const { projects, loading } = useProjects();
   const { notes } = useNotes();
 
   const notesById = useMemo(() => {
@@ -198,6 +201,17 @@ const ProjectsPage = () => {
   }, [projectStats]);
 
   const handleCreateProject = () => {
+    if (!canCreateProject) {
+      toast.error("Limite do Plano Atingido", {
+        description: "Você atingiu o limite de projetos do seu plano.",
+        duration: 6000,
+        action: {
+          label: "Ver Planos",
+          onClick: () => router.push("/settings?tab=plan"),
+        },
+      });
+      return;
+    }
     router.push("/projects/new");
   };
 
@@ -226,7 +240,10 @@ const ProjectsPage = () => {
         <button
           type="button"
           onClick={handleCreateProject}
-          className="bg-brand-primary-500 inline-flex h-7 items-center gap-1 rounded px-2.5 text-[11px] font-semibold text-neutral-950 transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+          title={!canCreateProject ? "Limite de projetos do plano atingido" : undefined}
+          className={`bg-brand-primary-500 inline-flex h-7 items-center gap-1 rounded px-2.5 text-[11px] font-semibold text-neutral-950 transition hover:brightness-95 ${
+            !canCreateProject ? "cursor-not-allowed opacity-60" : ""
+          }`}
         >
           <Plus className="h-3.5 w-3.5" />
           {"Criar projeto"}

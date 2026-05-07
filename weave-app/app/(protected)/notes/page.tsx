@@ -9,6 +9,8 @@ import { toast } from "sonner";
 
 import { useNotes } from "../../_contexts/notes-context";
 import { useProjects } from "../../_contexts/projects-context";
+import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
+import { ApiError } from "@/app/_services/api-error";
 import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/_utils/collaborators";
 import { getTagColor } from "@/app/_utils/tag-colors";
 import Pagination from "../_components/ui/notes/pagination";
@@ -163,6 +165,8 @@ const NotesWithPagination = () => {
     refreshNotes,
     deleteNotes,
   } = useNotes();
+
+  const { canCreateNote } = usePlanUsage();
 
   const { projects, refreshProjects, getProjectStages, getTaskPriorities } = useProjects();
 
@@ -467,6 +471,17 @@ const NotesWithPagination = () => {
   };
 
   const handleCreateNote = async () => {
+    if (!canCreateNote) {
+      toast.error("Limite do Plano Atingido", {
+        description: "Você atingiu o limite de tarefas do seu plano.",
+        duration: 6000,
+        action: {
+          label: "Ver Planos",
+          onClick: () => router.push("/settings?tab=plan"),
+        },
+      });
+      return;
+    }
     try {
       const newNote = await createNote({
         title: "Nova Tarefa",
@@ -474,13 +489,24 @@ const NotesWithPagination = () => {
         tags: [],
       });
       if (newNote) router.push(`/notes/${newNote.id}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro:", error);
 
-      // Verifica se é um erro de limite de plano
-      if (error?.message?.includes("permite apenas") || error?.message?.includes("plano")) {
+      const isPlanLimit =
+        error instanceof ApiError &&
+        error.status === 403 &&
+        error.data &&
+        typeof error.data === "object" &&
+        "code" in error.data &&
+        (error.data as { code?: string }).code === "PLAN_LIMIT_EXCEEDED";
+
+      if (
+        isPlanLimit ||
+        (error instanceof Error &&
+          (error.message.includes("permite apenas") || error.message.includes("plano")))
+      ) {
         toast.error("Limite do Plano Atingido", {
-          description: error.message,
+          description: error instanceof Error ? error.message : "Limite do plano atingido.",
           duration: 6000,
           action: {
             label: "Ver Planos",
@@ -489,7 +515,10 @@ const NotesWithPagination = () => {
         });
       } else {
         toast.error("Erro ao criar tarefa", {
-          description: error?.message || "Ocorreu um erro ao criar a tarefa. Tente novamente.",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Ocorreu um erro ao criar a tarefa. Tente novamente.",
         });
       }
     }
@@ -676,7 +705,10 @@ const NotesWithPagination = () => {
               <button
                 type="button"
                 onClick={handleCreateNote}
-                className={`flex py-0.5 px-2 items-center gap-1 rounded text-[11px] ${toolbarTextBtn} bg-brand-primary-500 dark:bg-brand-primary-500 border-neutral-900 font-semibold text-white shadow-sm hover:bg-neutral-800 active:scale-[0.98] dark:border-neutral-200 dark:text-neutral-950 dark:hover:bg-neutral-200`}
+                title={!canCreateNote ? "Limite de tarefas do plano atingido" : undefined}
+                className={`flex py-0.5 px-2 items-center gap-1 rounded text-[11px] ${toolbarTextBtn} bg-brand-primary-500 dark:bg-brand-primary-500 border-neutral-900 font-semibold text-white shadow-sm hover:bg-neutral-800 active:scale-[0.98] dark:border-neutral-200 dark:text-neutral-950 dark:hover:bg-neutral-200 ${
+                  !canCreateNote ? "cursor-not-allowed opacity-50" : ""
+                }`}
               >
                 <Plus size={11} className="shrink-0" />
                 <span className="hidden sm:inline">Criar</span>

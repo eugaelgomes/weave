@@ -8,6 +8,8 @@ const {
 } = require("@/utils/patterns/product-patterns");
 const spacesService = require("@/services/storage");
 const { normalizeBlocksTree } = require("../block-normalizer");
+const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
+const { PLAN_PATHS } = require("@/services/plans/plan-paths");
 
 /**
  * Criação, atualização e exclusão de notas.
@@ -60,7 +62,9 @@ class NotesWriteController extends NotesBaseController {
       );
 
       if (!canCreate) {
-        return res.status(403).json({
+        return sendPlanLimitExceeded(res, {
+          resource: "notes",
+          limit_key: PLAN_PATHS.LIMITS.MAX_NOTES,
           error: "Limite de notas atingido",
           message: `Seu plano (${planDetails.name}) permite apenas ${planDetails.details.limits.max_notes} notas.`,
         });
@@ -176,7 +180,9 @@ class NotesWriteController extends NotesBaseController {
       );
 
       if (!canCreate) {
-        return res.status(403).json({
+        return sendPlanLimitExceeded(res, {
+          resource: "notes",
+          limit_key: PLAN_PATHS.LIMITS.MAX_NOTES,
           error: "Limite de notas atingido",
           message: `Seu plano (${planDetails.name}) permite apenas ${planDetails.details.limits.max_notes} notas.`,
         });
@@ -459,7 +465,9 @@ class NotesWriteController extends NotesBaseController {
             ) || 0;
 
           if (currentUsageMb + totalUploadSizeMb > totalMonthlyUploadMb) {
-            return res.status(403).json({
+            return sendPlanLimitExceeded(res, {
+              resource: "storage",
+              limit_key: PLAN_PATHS.LIMITS.STORAGE.TOTAL_MONTHLY_UPLOAD,
               error: "Limite de armazenamento mensal atingido",
               message: `Seu plano (${planDetails.name}) permite ${totalMonthlyUploadMb} MB de upload por mês. Uso atual: ${currentUsageMb.toFixed(2)} MB.`,
             });
@@ -701,7 +709,9 @@ class NotesWriteController extends NotesBaseController {
           ) || 0;
 
         if (currentUsageMb + totalUploadSizeMb > totalMonthlyUploadMb) {
-          return res.status(403).json({
+          return sendPlanLimitExceeded(res, {
+            resource: "storage",
+            limit_key: PLAN_PATHS.LIMITS.STORAGE.TOTAL_MONTHLY_UPLOAD,
             error: "Limite de armazenamento mensal atingido",
             message: `Seu plano (${planDetails.name}) permite ${totalMonthlyUploadMb} MB de upload por mês. Uso atual: ${currentUsageMb.toFixed(2)} MB.`,
           });

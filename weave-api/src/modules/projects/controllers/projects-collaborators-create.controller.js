@@ -5,6 +5,7 @@ const {
   ASSIGNABLE_PROJECT_ROLES,
 } = require("@/modules/projects/project-role-policy");
 const projectsCollaboratorsRepository = require("@/modules/projects/repositories/projects-collaborators.repository");
+const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
 
 class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
   constructor() {
@@ -46,7 +47,9 @@ class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
         planDetails.details?.limits?.max_collaborators_per_project;
 
       if (maxCollaborators && currentCollaborators.length >= maxCollaborators) {
-        return res.status(403).json({
+        return sendPlanLimitExceeded(res, {
+          resource: "project_collaborators",
+          limit_key: "limits.max_collaborators_per_project",
           error: "Limite de colaboradores atingido",
           message: `Seu plano (${planDetails.name}) permite apenas ${maxCollaborators} colaboradores por projeto.`,
         });

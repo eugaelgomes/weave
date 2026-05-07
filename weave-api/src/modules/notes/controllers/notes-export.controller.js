@@ -1,6 +1,8 @@
 const NotesBaseController = require("./base.controller");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
+const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
+const { PLAN_PATHS } = require("@/services/plans/plan-paths");
 const { PDFService } = require("@/modules/notes/services/pdf.service");
 
 /**
@@ -38,7 +40,9 @@ class NotesExportController extends NotesBaseController {
       );
 
       if (!canExport) {
-        return res.status(403).json({
+        return sendPlanLimitExceeded(res, {
+          resource: "exports",
+          limit_key: PLAN_PATHS.LIMITS.EXPORTS.NOTES_MONTHLY,
           error: "Limite de exportações atingido",
           message: `Seu plano (${planDetails.name}) permite apenas ${planDetails.details.limits.exports.notes_monthly} exportações de notas por mês.`,
         });

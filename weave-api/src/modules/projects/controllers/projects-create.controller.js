@@ -6,6 +6,7 @@ const {
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
 const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
+const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
 const { normalizeNewProject } = require("../normalizer");
 const {
   ASSIGNABLE_PROJECT_ROLES,
@@ -75,7 +76,9 @@ class ProjectsCreateController extends ProjectsCoreController {
       );
 
       if (!canCreate) {
-        return res.status(403).json({
+        return sendPlanLimitExceeded(res, {
+          resource: "projects",
+          limit_key: PLAN_PATHS.LIMITS.MAX_PROJECTS,
           error: "Limite de projetos atingido",
           message: `Seu plano (${planDetails.name}) permite apenas ${maxProjects} projetos.`,
         });
@@ -185,7 +188,9 @@ class ProjectsCreateController extends ProjectsCoreController {
         planDetails.details?.limits?.max_collaborators_per_project;
 
       if (maxCollaborators && currentCollaborators.length >= maxCollaborators) {
-        return res.status(403).json({
+        return sendPlanLimitExceeded(res, {
+          resource: "project_collaborators",
+          limit_key: "limits.max_collaborators_per_project",
           error: "Limite de colaboradores atingido",
           message: `Seu plano (${planDetails.name}) permite apenas ${maxCollaborators} colaboradores por projeto.`,
         });

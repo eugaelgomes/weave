@@ -18,6 +18,7 @@ const {
 const reportConfigRepository = require("@/modules/projects/repositories/report-config.repository");
 const sprintsRepository = require("@/modules/projects/repositories/sprints.repository");
 const reasoningsRepository = require("@/modules/projects/repositories/reasonings.repository");
+const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
 
 class ProjectsUpdateController extends ProjectsCoreController {
   /**
@@ -229,7 +230,9 @@ class ProjectsUpdateController extends ProjectsCoreController {
           maxCollaborators &&
           currentCollaborators.length >= maxCollaborators
         ) {
-          return res.status(403).json({
+          return sendPlanLimitExceeded(res, {
+            resource: "project_collaborators",
+            limit_key: "limits.max_collaborators_per_project",
             error: "Limite de colaboradores atingido",
             message: `Seu plano (${planDetails.name}) permite apenas ${maxCollaborators} colaboradores por projeto.`,
           });

@@ -22,6 +22,7 @@ import {
 } from "../_services/authentication/auth-service";
 import { setUnauthorizedHandler } from "../_services/session-invalidation";
 import { ApiError } from "../_services/api-error";
+import { mergeUsageDetails } from "../_services/plans-service/plan-usage-service";
 import { useTheme } from "./theme-context";
 
 /** Consumer-facing user model — import from this module in UI; do not import auth-service types directly. */
@@ -46,6 +47,9 @@ type AuthContextType = {
 
   /** Reload profile from `GET /users/me` (e.g. after org or role changes). */
   refreshUser: () => Promise<User | null>;
+
+  /** Deep-merge plan/usage fields (e.g. from `GET /plans/me`) without refetching full profile. */
+  mergeUser: (patch: Partial<User> | ((prev: User) => Partial<User>)) => void;
 
   // Auth Functions
   login: (
@@ -97,6 +101,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return null;
     }
   }, [setTheme]);
+
+  const mergeUser = useCallback((patch: Partial<User> | ((prev: User) => Partial<User>)) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const resolved = typeof patch === "function" ? patch(prev) : patch;
+      const { usage_details: usagePatch, ...rest } = resolved;
+      const next: User = { ...prev, ...rest };
+      if (usagePatch) {
+        next.usage_details = prev.usage_details
+          ? mergeUsageDetails(prev.usage_details, usagePatch)
+          : usagePatch;
+      }
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
@@ -317,6 +336,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         authenticated,
         refreshUser,
+        mergeUser,
         login,
         loginWithGoogle,
         loginWithGithub,

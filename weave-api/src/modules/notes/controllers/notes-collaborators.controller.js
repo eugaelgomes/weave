@@ -6,6 +6,7 @@ const PlansRepository = require("@/modules/plans/plans.repository");
 const {
   collabMail,
 } = require("@/services/email/templates/note-collab-notification");
+const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
 
 /**
  * Colaboradores em notas.
@@ -42,7 +43,9 @@ class NotesCollaboratorsController extends NotesBaseController {
         planDetails.details?.limits?.max_collaborators_per_note;
 
       if (maxCollaborators && currentCollaborators.length >= maxCollaborators) {
-        return res.status(403).json({
+        return sendPlanLimitExceeded(res, {
+          resource: "note_collaborators",
+          limit_key: "limits.max_collaborators_per_note",
           error: "Limite de colaboradores atingido",
           message: `Seu plano (${planDetails.name}) permite apenas ${maxCollaborators} colaboradores por nota.`,
         });
