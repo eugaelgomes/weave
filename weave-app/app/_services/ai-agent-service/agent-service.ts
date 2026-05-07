@@ -1,5 +1,17 @@
+import { z } from "zod";
 import { apiClient, handleResponse } from "../api-methods";
 import { API_ENDPOINTS } from "../api-methods";
+import {
+  AgentEnvelopeSchema,
+  AgentProvidersResponseSchema,
+  AgentsListSchema,
+  ChatHistoryMessagesSchema,
+  ChatHistorySessionsSchema,
+  ChatPostResultSchema,
+  RawChatMessageSchema,
+  RawChatSessionSchema,
+  RawModelsResponseSchema,
+} from "./ai-agent.schema";
 
 export interface AIModel {
   id: string;
@@ -174,7 +186,8 @@ function normalizeChatSession(session: RawChatSession): ChatSession {
 
 export async function fetchAvailableModels(): Promise<AIModel[]> {
   const response = await apiClient.get(API_ENDPOINTS.AI_MODELS);
-  const data = await handleResponse<RawModelsResponse>(response);
+  const raw = await handleResponse<unknown>(response);
+  const data = RawModelsResponseSchema.parse(raw) as RawModelsResponse;
   const providers = Array.isArray(data.providers) ? data.providers : [];
 
   const models: AIModel[] = [];
@@ -260,18 +273,8 @@ export async function sendChatMessage(data: SendMessageData): Promise<SendMessag
     data.files.forEach((file) => formData.append("files", file));
 
     const response = await apiClient.post(API_ENDPOINTS.AI_CHAT, formData);
-    const result = await handleResponse<{
-      sessionId: string;
-      response: {
-        role: "assistant";
-        content: string;
-        citations?: unknown[];
-        functions?: Array<{ name: string; arguments?: Record<string, unknown> }>;
-        functionExecution?: Array<{ name: string; success: boolean; result?: unknown }>;
-        model?: ChatModelSelection;
-        provider?: string;
-      };
-    }>(response);
+    const raw = await handleResponse<unknown>(response);
+    const result = ChatPostResultSchema.parse(raw);
 
     const assistantMessage: ChatMessage = {
       id: `${result.sessionId}-assistant-${Date.now()}`,
@@ -303,18 +306,8 @@ export async function sendChatMessage(data: SendMessageData): Promise<SendMessag
   }
 
   const response = await apiClient.post(API_ENDPOINTS.AI_CHAT, payload);
-  const result = await handleResponse<{
-    sessionId: string;
-    response: {
-      role: "assistant";
-      content: string;
-      citations?: unknown[];
-      functions?: Array<{ name: string; arguments?: Record<string, unknown> }>;
-      functionExecution?: Array<{ name: string; success: boolean; result?: unknown }>;
-      model?: ChatModelSelection;
-      provider?: string;
-    };
-  }>(response);
+  const raw = await handleResponse<unknown>(response);
+  const result = ChatPostResultSchema.parse(raw);
 
   const assistantMessage: ChatMessage = {
     id: `${result.sessionId}-assistant-${Date.now()}`,
@@ -353,24 +346,29 @@ export async function fetchChatHistory(sessionId?: string): Promise<ChatMessage[
   const response = await apiClient.get(endpoint);
 
   if (sessionId) {
-    // Retorna mensagens de uma sessão específica
-    const data = await handleResponse<{ messages: RawChatMessage[] }>(response);
-    return data.messages.map(normalizeChatMessage);
-  } else {
-    // Retorna lista de sessões
-    const data = await handleResponse<{ sessions: RawChatSession[] }>(response);
-    return data.sessions.map(normalizeChatSession);
+    const raw = await handleResponse<unknown>(response);
+    const data = ChatHistoryMessagesSchema.parse(raw);
+    return data.messages.map((m: z.infer<typeof RawChatMessageSchema>) =>
+      normalizeChatMessage(m as RawChatMessage)
+    );
   }
+  const raw = await handleResponse<unknown>(response);
+  const data = ChatHistorySessionsSchema.parse(raw);
+  return data.sessions.map((s: z.infer<typeof RawChatSessionSchema>) =>
+    normalizeChatSession(s as RawChatSession)
+  );
 }
 
 export async function deleteChatSession(sessionId: string): Promise<void> {
   const response = await apiClient.delete(API_ENDPOINTS.AI_CHAT_BY_ID(sessionId));
-  await handleResponse(response);
+  const raw = await handleResponse<unknown>(response);
+  z.record(z.string(), z.unknown()).parse(raw ?? {});
 }
 
 export async function generateContent(data: GenerateContentData): Promise<any> {
   const response = await apiClient.post(API_ENDPOINTS.AI_GENERATE, data);
-  return await handleResponse(response);
+  const raw = await handleResponse<unknown>(response);
+  return z.unknown().parse(raw);
 }
 
 export async function analyzeNote(noteId: string, analysisType?: string): Promise<any> {
@@ -378,7 +376,8 @@ export async function analyzeNote(noteId: string, analysisType?: string): Promis
     noteId,
     analysisType,
   });
-  return await handleResponse(response);
+  const raw = await handleResponse<unknown>(response);
+  return z.unknown().parse(raw);
 }
 
 export async function analyzeProject(projectId: string, analysisType?: string): Promise<any> {
@@ -386,7 +385,8 @@ export async function analyzeProject(projectId: string, analysisType?: string): 
     projectId,
     analysisType,
   });
-  return await handleResponse(response);
+  const raw = await handleResponse<unknown>(response);
+  return z.unknown().parse(raw);
 }
 
 export async function research(query: string, recencyFilter?: string): Promise<any> {
@@ -394,7 +394,8 @@ export async function research(query: string, recencyFilter?: string): Promise<a
     query,
     recencyFilter,
   });
-  return await handleResponse(response);
+  const raw = await handleResponse<unknown>(response);
+  return z.unknown().parse(raw);
 }
 
 export interface AgentProviderResponse {
@@ -404,14 +405,16 @@ export interface AgentProviderResponse {
 
 export async function fetchAgentProviders(): Promise<AgentProviderResponse[]> {
   const response = await apiClient.get(API_ENDPOINTS.AGENTS_PROVIDERS);
-  const data = await handleResponse<{ providers: AgentProviderResponse[] }>(response);
-  return data.providers;
+  const raw = await handleResponse<unknown>(response);
+  const data = AgentProvidersResponseSchema.parse(raw);
+  return data.providers as AgentProviderResponse[];
 }
 
 export async function listAgents(): Promise<Agent[]> {
   const response = await apiClient.get(API_ENDPOINTS.AGENTS);
-  const data = await handleResponse<{ agents: Agent[] }>(response);
-  return data.agents;
+  const raw = await handleResponse<unknown>(response);
+  const data = AgentsListSchema.parse(raw);
+  return data.agents as Agent[];
 }
 
 export async function createAgent(agentData: CreateAgentData): Promise<Agent> {
@@ -434,8 +437,9 @@ export async function createAgent(agentData: CreateAgentData): Promise<Agent> {
   });
 
   const response = await apiClient.post(API_ENDPOINTS.AGENTS, formData);
-  const data = await handleResponse<{ agent: Agent }>(response);
-  return data.agent;
+  const raw = await handleResponse<unknown>(response);
+  const data = AgentEnvelopeSchema.parse(raw);
+  return data.agent as Agent;
 }
 
 export async function updateAgent(id: string, agentData: Partial<CreateAgentData>): Promise<Agent> {
@@ -451,13 +455,15 @@ export async function updateAgent(id: string, agentData: Partial<CreateAgentData
   });
 
   const response = await apiClient.put(API_ENDPOINTS.AGENT_BY_ID(id), formData);
-  const data = await handleResponse<{ agent: Agent }>(response);
-  return data.agent;
+  const raw = await handleResponse<unknown>(response);
+  const data = AgentEnvelopeSchema.parse(raw);
+  return data.agent as Agent;
 }
 
 export async function deleteAgent(id: string): Promise<void> {
   const response = await apiClient.delete(API_ENDPOINTS.AGENT_BY_ID(id));
-  await handleResponse(response);
+  const raw = await handleResponse<unknown>(response);
+  z.record(z.string(), z.unknown()).parse(raw ?? {});
 }
 
 export async function shareAgent(
@@ -465,24 +471,28 @@ export async function shareAgent(
   sharedWith: { userId: string; permission: string }[]
 ): Promise<Agent> {
   const response = await apiClient.post(API_ENDPOINTS.AGENT_SHARE(id), { sharedWith });
-  const data = await handleResponse<{ agent: Agent }>(response);
-  return data.agent;
+  const raw = await handleResponse<unknown>(response);
+  const data = AgentEnvelopeSchema.parse(raw);
+  return data.agent as Agent;
 }
 
 export async function getAgentById(id: string): Promise<Agent> {
   const response = await apiClient.get(API_ENDPOINTS.AGENT_BY_ID(id));
-  const data = await handleResponse<{ agent: Agent }>(response);
-  return data.agent;
+  const raw = await handleResponse<unknown>(response);
+  const data = AgentEnvelopeSchema.parse(raw);
+  return data.agent as Agent;
 }
 
 export async function toggleAgentActive(id: string, is_active: boolean): Promise<Agent> {
   const response = await apiClient.patch(`${API_ENDPOINTS.AGENTS}/${id}/active`, { is_active });
-  const data = await handleResponse<{ agent: Agent }>(response);
-  return data.agent;
+  const raw = await handleResponse<unknown>(response);
+  const data = AgentEnvelopeSchema.parse(raw);
+  return data.agent as Agent;
 }
 
 export async function duplicateAgent(id: string): Promise<Agent> {
   const response = await apiClient.post(`${API_ENDPOINTS.AGENTS}/${id}/duplicate`, {});
-  const data = await handleResponse<{ agent: Agent }>(response);
-  return data.agent;
+  const raw = await handleResponse<unknown>(response);
+  const data = AgentEnvelopeSchema.parse(raw);
+  return data.agent as Agent;
 }

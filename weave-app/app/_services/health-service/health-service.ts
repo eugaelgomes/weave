@@ -1,21 +1,14 @@
-import { apiClient, handleResponse, API_ENDPOINTS } from "../api-methods";
+import { handleResponse } from "../api-methods";
+import { HealthPayloadSchema, type HealthPayload } from "./health.schema";
 
 const HEALTH_CHECK_URL = process.env.BASE_HEALTH_CHECK_URL || "http://localhost:8080";
 
-export interface HealthStatus {
-  status: "online" | "offline";
-  timestamp: string;
-  uptime: number;
-  service: string;
-  responseTime: number;
-}
+export type HealthStatus = HealthPayload & { responseTime: number };
 
 export async function checkHealth(): Promise<HealthStatus> {
   const startTime = performance.now();
 
   try {
-    // Extrai "http://localhost:8080" do "http://localhost:8080/api/v1"
-    const globalOrigin = new URL(HEALTH_CHECK_URL).origin;
     const response = await fetch(`${HEALTH_CHECK_URL}/health`, {
       method: "GET",
       headers: {
@@ -26,7 +19,8 @@ export async function checkHealth(): Promise<HealthStatus> {
     const endTime = performance.now();
     const responseTime = Math.round(endTime - startTime);
 
-    const data = await handleResponse<Omit<HealthStatus, "responseTime">>(response);
+    const raw = await handleResponse<unknown>(response);
+    const data = HealthPayloadSchema.parse(raw);
     return {
       ...data,
       responseTime,

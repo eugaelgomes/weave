@@ -1,15 +1,87 @@
 ---
-description: Front-end standards with server contract alignment for chat
+description: Front-end standards with weave-app structure, typing, imports, and server contract alignment
 alwaysApply: true
 ---
 # Role & Behavior
 You are a Senior Front-end Engineer focused on modern SaaS UI, reusable components, accessibility, and data-contract consistency.
 
+# Weave App Structure (`weave-app/`)
+The Next.js app lives under `weave-app/`. Use this layout when adding or locating code.
+
+**Route groups**
+- `app/(public)/` — Landing, auth, activation; no authenticated shell.
+- `app/(protected)/` — Logged-in area; root layout renders **AppShell** (`app/_components/app-shell.tsx`).
+
+**Cross-cutting folders under `app/`**
+- `_services/` — HTTP client, `API_ENDPOINTS`, domain services and exported API types (`index.ts` barrel).
+- `_contexts/` — React providers and domain hooks (`useAuth`, `useNotes`, `useChat`, etc.).
+- `_components/` — Lightweight shell pieces (app shell, loading, connection monitor).
+- `_i18n/locales/` — Global locale strings.
+- `_utils/` — Shared helpers.
+
+**Protected UI shell**
+- `app/(protected)/_components/` — Navbar, sidebar, area headers, shared widgets (e.g. weave-ai chat widget).
+- `app/(protected)/_hooks/` — Hooks shared only inside the protected tree (e.g. authenticated data).
+
+**Feature colocation**
+- Route-local UI: `_components` next to the route (e.g. `weave-ai/chat/_components`, `notes/[id]/_components`).
+- Route-local hooks: `_hooks` next to the route (e.g. `notes/[id]/_hooks`).
+
+**Services tree (reference)**
+```
+app/_services/
+├── index.ts
+├── api-methods.ts          # apiClient, API_ENDPOINTS, API_BASE_URL
+├── api-error.ts
+├── internal-challenge.ts
+├── authentication/
+├── notes-service/
+├── notes-comments-service/
+├── projects-service/
+├── organization/
+├── notifications/
+├── ai-agent-service/       # chat, models, agents
+├── calendar-service/
+├── api-tokens-service/
+├── backup-service/
+└── health-service/
+```
+
+**Path aliases:** `tsconfig` defines `@/*`, `@/lib/*`, `@/components/*`, `@/hooks/*`. There is **no** root `hooks/` folder in use today—prefer hooks from `_contexts/` or colocated `_hooks/` instead of introducing a parallel hooks tree without reason.
+
+# Tech Stack
+- **Framework:** Next.js (App Router), React 19, TypeScript (`strict` in `tsconfig`).
+- **Styling:** Tailwind CSS v4.
+- **API base:** `NEXT_PUBLIC_API_BASE_URL`, consumed via `app/_services/api-methods.ts` (`API_BASE_URL`, `API_ENDPOINTS`, `apiClient`).
+
+# Typing (TypeScript)
+- Treat **`strict`** as the baseline: type props, API results, and state explicitly; avoid `any`. Prefer `unknown` plus narrowing when shapes are uncertain.
+- **API contracts:** Align request/response types with the corresponding functions under `app/_services/**`. Where the codebase uses **Zod** (`*.schema.ts` in auth, notes, calendar, etc.), keep validation at those boundaries consistent with service functions.
+- **Avoid duplicate DTOs:** If a type exists on a service export (`Note`, `SendMessageData`, …), import it from `@/app/_services` or the service module instead of re-defining ad hoc types in components.
+- For loose metadata from the API, prefer explicit shapes or `unknown` over spreading `any`; do not add new `any` unless matching unavoidable legacy.
+
+# Imports & Hooks
+**Imports**
+- Prefer **`@/app/...`** for everything under `app/` (e.g. `@/app/_contexts/auth-context`).
+- Prefer **`@/lib/...`** for `lib/` utilities.
+- Avoid long `../../../` chains when an alias covers the path.
+- Use **`@/components/*`** and **`@/hooks/*`** only if a real file exists at that path; otherwise place UI under `app/(protected)/_components` or feature `_components`, and hooks under `_contexts` or colocated `_hooks` per scope.
+- Respect **Server vs Client Components:** use `"use client"` where hooks/state/events are needed; do not pull client hooks into modules that must stay server components without a justified split.
+
+**Hooks**
+- **Domain/global:** Hooks exported from `app/_contexts/*.tsx` — use only under the provider tree (see `authenticated-providers`, root `layout`).
+- **Protected-only shared:** `app/(protected)/_hooks/` for cross-route hooks that assume an authenticated shell.
+- **Feature/route-specific:** Colocate under `_hooks` beside the route (e.g. `notes/[id]/_hooks`).
+- **Naming:** `use` prefix + domain name (`useCalendarPageView`, `useAgent`).
+- **Remote state:** Call `app/_services` functions from contexts, effects, or event handlers; do not duplicate URL strings outside `API_ENDPOINTS`.
+
 # Back-end Contract First
 Before creating or editing any front-end flow:
-- Inspect the relevant server endpoint request/response contract first.
+- Inspect the relevant **server** endpoint and the matching **`app/_services`** implementation.
+- Read **`weave-app/app/_services/api-methods.ts`** for `API_ENDPOINTS` and client behavior.
+- For AI/chat, **`weave-app/app/_services/ai-agent-service/agent-service.ts`** (`SendMessageData`, `sendChatMessage`) is the **canonical client contract** alongside the server — optional/extra fields must match what the server actually accepts.
 - Match front-end payload and response handling to the server contract exactly.
-- Keep front-end -> server -> engine flow aligned (front-end never calls engine directly).
+- Keep front-end → server → engine flow aligned (front-end never calls engine directly).
 
 # Chat Contract and UX Rules
 - Remove legacy use-case presets in chat UI (no static contexts like "Programação" or "Boa escrita").
@@ -20,7 +92,8 @@ Before creating or editing any front-end flow:
   - Index context (`notes/projects`) for contextual IDs.
 
 # Chat Request Shape (Server-aligned)
-When sending a chat message, the front-end must align to the server endpoint contract:
+When sending a chat message, align the payload with the server and with **`SendMessageData`** in `agent-service.ts`. The checklist below is the UX-oriented baseline; additional fields (e.g. web search flags) only apply if present on the client type **and** accepted by the server.
+
 - `message` (required string)
 - `model` (string expected by current server)
 - `allowEdit` (boolean, default `true`)

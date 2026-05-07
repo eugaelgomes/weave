@@ -1,6 +1,33 @@
 import { apiClient, handleResponse } from "../api-methods";
 import { API_ENDPOINTS } from "../api-methods";
 import type { ProjectStatus } from "@/app/_utils/db-enums";
+import {
+  AckSchema,
+  ActiveSprintEnvelopeSchema,
+  AiReportConfigEnvelopeSchema,
+  CollaboratorsListSchema,
+  CompleteSprintResponseSchema,
+  CreateSprintEnvelopeSchema,
+  InteractionEnvelopeSchema,
+  ManageCollaboratorsResponseSchema,
+  ManageNotesResponseSchema,
+  MessageOnlySchema,
+  NoteStageUpdateResponseSchema,
+  PatchStageEnvelopeSchema,
+  PostCollaboratorResponseSchema,
+  ProjectDashboardStatsSchema,
+  ProjectNotesListSchema,
+  ProjectSchema,
+  ProjectsResponseSchema,
+  ProjectStagesListSchema,
+  PutAiReportConfigResponseSchema,
+  ReasoningActionItemEnvelopeSchema,
+  ReasoningActionItemsListSchema,
+  ReasoningEnvelopeSchema,
+  ReasoningsListSchema,
+  SprintsListSchema,
+  UpdateProjectEnvelopeSchema,
+} from "./projects.schema";
 
 export interface ProjectProperties {
   // UI & Design
@@ -184,20 +211,23 @@ const parseProjectProperties = (project: Project): Project => {
 
 export const fetchProjects = async (): Promise<Project[]> => {
   const response = await apiClient.get(API_ENDPOINTS.PROJECTS);
-  const data = await handleResponse<ProjectsResponse>(response);
-  return data.projects.map(parseProjectProperties);
+  const raw = await handleResponse<unknown>(response);
+  const data = ProjectsResponseSchema.parse(raw);
+  return data.projects.map((p) => parseProjectProperties(p as Project));
 };
 
 export const fetchProjectById = async (projectId: string): Promise<Project> => {
   const response = await apiClient.get(API_ENDPOINTS.PROJECTS_BY_ID(projectId));
-  const project = await handleResponse<Project>(response);
-  return parseProjectProperties(project);
+  const raw = await handleResponse<unknown>(response);
+  const project = ProjectSchema.parse(raw);
+  return parseProjectProperties(project as Project);
 };
 
 export const createProject = async (projectData: CreateProjectData): Promise<Project> => {
   const response = await apiClient.post(API_ENDPOINTS.PROJECTS, projectData);
-  const project = await handleResponse<Project>(response);
-  return parseProjectProperties(project);
+  const raw = await handleResponse<unknown>(response);
+  const project = ProjectSchema.parse(raw);
+  return parseProjectProperties(project as Project);
 };
 
 export const updateProject = async (
@@ -205,14 +235,41 @@ export const updateProject = async (
   projectData: UpdateProjectData | FormData
 ): Promise<Project> => {
   const response = await apiClient.put(API_ENDPOINTS.PROJECTS_BY_ID(projectId), projectData);
-  const data = await handleResponse<{ message: string; project: Project }>(response);
-  return parseProjectProperties(data.project);
+  const raw = await handleResponse<unknown>(response);
+  const data = UpdateProjectEnvelopeSchema.parse(raw);
+  return parseProjectProperties(data.project as Project);
 };
 
 export const deleteProject = async (projectId: string): Promise<void> => {
   const response = await apiClient.delete(API_ENDPOINTS.PROJECTS_BY_ID(projectId));
-  await handleResponse<{ message: string }>(response);
+  const raw = await handleResponse<unknown>(response);
+  AckSchema.parse(raw ?? {});
 };
+
+const DEFAULT_PROJECT_STAGE_PROPERTIES: ProjectStageProperties = {
+  is_done: false,
+  wip_limit: null,
+  description: null,
+  auto_assign_to_creator: false,
+};
+
+/**
+ * API may return stage.properties as JSON string or object; normalize for {@link ProjectStage}.
+ */
+function parseProjectStagePropertiesFromApi(
+  raw: string | ProjectStageProperties,
+  stageId: string
+): ProjectStageProperties {
+  if (typeof raw !== "string") {
+    return raw;
+  }
+  try {
+    return JSON.parse(raw) as ProjectStageProperties;
+  } catch {
+    console.warn(`Failed to parse properties for stage ${stageId}`);
+    return DEFAULT_PROJECT_STAGE_PROPERTIES;
+  }
+}
 
 /**
  * Busca as etapas (colunas do Board) de um projeto específico
@@ -233,16 +290,12 @@ export const patchProjectStage = async (
     API_ENDPOINTS.PROJECTS_STAGE_BY_ID(projectId, stageId),
     updates
   );
-  const data = await handleResponse<{ message: string; stage: ProjectStage }>(response);
-  const stage = data.stage;
-  if (typeof stage.properties === "string") {
-    try {
-      stage.properties = JSON.parse(stage.properties) as ProjectStage["properties"];
-    } catch {
-      console.warn(`Failed to parse properties for stage ${stage.id}`);
-    }
-  }
-  return stage;
+  const raw = await handleResponse<unknown>(response);
+  const data = PatchStageEnvelopeSchema.parse(raw);
+  return {
+    ...data.stage,
+    properties: parseProjectStagePropertiesFromApi(data.stage.properties, data.stage.id),
+  };
 };
 
 export interface PostProjectCollaboratorPayload {
@@ -255,7 +308,8 @@ export const postProjectCollaborator = async (
   body: PostProjectCollaboratorPayload
 ): Promise<{ message?: string; collaborators?: unknown[] }> => {
   const response = await apiClient.post(API_ENDPOINTS.PROJECTS_COLLABORATORS(projectId), body);
-  return handleResponse<{ message?: string; collaborators?: unknown[] }>(response);
+  const raw = await handleResponse<unknown>(response);
+  return PostCollaboratorResponseSchema.parse(raw);
 };
 
 export interface AiReportConfigUpsertPayload {
@@ -280,26 +334,23 @@ export const putProjectAiReportConfig = async (
     API_ENDPOINTS.PROJECTS_AI_REPORT_CONFIG(projectId),
     body
   );
-  return handleResponse<{ message?: string; config?: unknown }>(response);
+  const raw = await handleResponse<unknown>(response);
+  return PutAiReportConfigResponseSchema.parse(raw);
 };
 
 export const fetchProjectStages = async (projectId: string): Promise<ProjectStage[]> => {
-  // Caso a rota já exista no seu API_ENDPOINTS use-a, caso contrário usamos template literal
   const endpoint = `${API_ENDPOINTS.PROJECTS_BY_ID(projectId)}/stages`;
   const response = await apiClient.get(endpoint);
 
-  const data = await handleResponse<{ stages: ProjectStage[] }>(response);
+  const raw = await handleResponse<unknown>(response);
+  const data = ProjectStagesListSchema.parse(raw);
 
-  return data.stages.map((stage) => {
-    if (typeof stage.properties === "string") {
-      try {
-        stage.properties = JSON.parse(stage.properties);
-      } catch {
-        console.warn(`Failed to parse properties for stage ${stage.id}`);
-      }
-    }
-    return stage;
-  });
+  return data.stages.map(
+    (stage): ProjectStage => ({
+      ...stage,
+      properties: parseProjectStagePropertiesFromApi(stage.properties, stage.id),
+    })
+  );
 };
 
 // --- COLABORADORES ---
@@ -308,8 +359,9 @@ export const fetchProjectCollaborators = async (
   projectId: string
 ): Promise<ProjectCollaborator[]> => {
   const response = await apiClient.get(API_ENDPOINTS.PROJECTS_COLLABORATORS(projectId));
-  const data = await handleResponse<{ collaborators: ProjectCollaborator[] }>(response);
-  return data.collaborators;
+  const raw = await handleResponse<unknown>(response);
+  const data = CollaboratorsListSchema.parse(raw);
+  return data.collaborators as ProjectCollaborator[];
 };
 
 export const manageCollaborator = async (
@@ -320,19 +372,18 @@ export const manageCollaborator = async (
     API_ENDPOINTS.PROJECTS_COLLABORATORS(projectId),
     collaboratorData
   );
-  const data = await handleResponse<{
-    message: string;
-    collaborators?: ProjectCollaborator[];
-  }>(response);
-  return data.collaborators || [];
+  const raw = await handleResponse<unknown>(response);
+  const data = ManageCollaboratorsResponseSchema.parse(raw);
+  return (data.collaborators as ProjectCollaborator[]) || [];
 };
 
 // --- NOTAS (CARDS) ---
 
 export const fetchProjectNotes = async (projectId: string): Promise<ProjectNote[]> => {
   const response = await apiClient.get(API_ENDPOINTS.PROJECTS_NOTES(projectId));
-  const data = await handleResponse<{ notes: ProjectNote[] }>(response);
-  return data.notes;
+  const raw = await handleResponse<unknown>(response);
+  const data = ProjectNotesListSchema.parse(raw);
+  return data.notes as ProjectNote[];
 };
 
 export const manageProjectNote = async (
@@ -340,8 +391,9 @@ export const manageProjectNote = async (
   noteData: ManageNoteData
 ): Promise<ProjectNote[]> => {
   const response = await apiClient.put(API_ENDPOINTS.PROJECTS_NOTES(projectId), noteData);
-  const data = await handleResponse<{ message: string; notes?: ProjectNote[] }>(response);
-  return data.notes || [];
+  const raw = await handleResponse<unknown>(response);
+  const data = ManageNotesResponseSchema.parse(raw);
+  return (data.notes as ProjectNote[]) || [];
 };
 
 export const updateProjectNoteStage = async (
@@ -352,7 +404,8 @@ export const updateProjectNoteStage = async (
   const response = await apiClient.put(API_ENDPOINTS.PROJECTS_NOTE_STAGE(projectId, noteId), {
     stageId,
   });
-  return handleResponse<{ message: string; noteId: string; newStageId: string }>(response);
+  const raw = await handleResponse<unknown>(response);
+  return NoteStageUpdateResponseSchema.parse(raw);
 };
 
 // --- STAGE DELETE ---
@@ -364,7 +417,8 @@ export const deleteProjectStage = async (
   const response = await apiClient.delete(
     API_ENDPOINTS.PROJECTS_STAGE_BY_ID(projectId, stageId)
   );
-  return handleResponse<{ message: string }>(response);
+  const raw = await handleResponse<unknown>(response);
+  return MessageOnlySchema.parse(raw);
 };
 
 // --- AI REPORT CONFIG READ ---
@@ -391,8 +445,9 @@ export const fetchAiReportConfig = async (
   projectId: string
 ): Promise<AiReportConfig | null> => {
   const response = await apiClient.get(API_ENDPOINTS.PROJECTS_AI_REPORT_CONFIG(projectId));
-  const data = await handleResponse<{ config: AiReportConfig | null }>(response);
-  return data.config;
+  const raw = await handleResponse<unknown>(response);
+  const data = AiReportConfigEnvelopeSchema.parse(raw);
+  return data.config as AiReportConfig | null;
 };
 
 // --- SPRINTS ---
@@ -434,16 +489,18 @@ export const fetchSprints = async (
 ): Promise<Sprint[]> => {
   const endpoint = `${API_ENDPOINTS.PROJECTS_SPRINTS(projectId)}?limit=${limit}`;
   const response = await apiClient.get(endpoint);
-  const data = await handleResponse<{ sprints: Sprint[] }>(response);
-  return data.sprints;
+  const raw = await handleResponse<unknown>(response);
+  const data = SprintsListSchema.parse(raw);
+  return data.sprints as Sprint[];
 };
 
 export const fetchActiveSprint = async (
   projectId: string
 ): Promise<Sprint | null> => {
   const response = await apiClient.get(API_ENDPOINTS.PROJECTS_SPRINT_ACTIVE(projectId));
-  const data = await handleResponse<{ sprint: Sprint | null }>(response);
-  return data.sprint;
+  const raw = await handleResponse<unknown>(response);
+  const data = ActiveSprintEnvelopeSchema.parse(raw);
+  return data.sprint as Sprint | null;
 };
 
 export const createSprint = async (
@@ -451,8 +508,9 @@ export const createSprint = async (
   payload: CreateSprintPayload
 ): Promise<Sprint> => {
   const response = await apiClient.post(API_ENDPOINTS.PROJECTS_SPRINTS(projectId), payload);
-  const data = await handleResponse<{ message: string; sprint: Sprint }>(response);
-  return data.sprint;
+  const raw = await handleResponse<unknown>(response);
+  const data = CreateSprintEnvelopeSchema.parse(raw);
+  return data.sprint as Sprint;
 };
 
 export const completeSprint = async (
@@ -464,7 +522,12 @@ export const completeSprint = async (
     API_ENDPOINTS.PROJECTS_SPRINT_COMPLETE(projectId, sprintId),
     payload
   );
-  return handleResponse<{ message: string; completed_sprint: Sprint; next_sprint?: Sprint | null }>(response);
+  const raw = await handleResponse<unknown>(response);
+  const data = CompleteSprintResponseSchema.parse(raw);
+  return {
+    completed_sprint: data.completed_sprint as Sprint,
+    next_sprint: (data.next_sprint ?? null) as Sprint | null,
+  };
 };
 
 // --- REASONINGS ---
@@ -530,8 +593,9 @@ export const fetchReasonings = async (
     ? `${API_ENDPOINTS.PROJECTS_REASONINGS(projectId)}?${query}`
     : API_ENDPOINTS.PROJECTS_REASONINGS(projectId);
   const response = await apiClient.get(endpoint);
-  const data = await handleResponse<{ reasonings: Reasoning[] }>(response);
-  return data.reasonings;
+  const raw = await handleResponse<unknown>(response);
+  const data = ReasoningsListSchema.parse(raw);
+  return data.reasonings as Reasoning[];
 };
 
 export const fetchReasoningById = async (
@@ -541,8 +605,9 @@ export const fetchReasoningById = async (
   const response = await apiClient.get(
     API_ENDPOINTS.PROJECTS_REASONING_BY_ID(projectId, reasoningId)
   );
-  const data = await handleResponse<{ reasoning: Reasoning }>(response);
-  return data.reasoning;
+  const raw = await handleResponse<unknown>(response);
+  const data = ReasoningEnvelopeSchema.parse(raw);
+  return data.reasoning as Reasoning;
 };
 
 export const fetchReasoningActionItems = async (
@@ -552,8 +617,9 @@ export const fetchReasoningActionItems = async (
   const response = await apiClient.get(
     API_ENDPOINTS.PROJECTS_REASONING_ACTION_ITEMS(projectId, reasoningId)
   );
-  const data = await handleResponse<{ actionItems: ReasoningActionItem[] }>(response);
-  return data.actionItems;
+  const raw = await handleResponse<unknown>(response);
+  const data = ReasoningActionItemsListSchema.parse(raw);
+  return data.actionItems as ReasoningActionItem[];
 };
 
 export const createReasoning = async (
@@ -564,8 +630,9 @@ export const createReasoning = async (
     API_ENDPOINTS.PROJECTS_REASONINGS(projectId),
     payload
   );
-  const data = await handleResponse<{ reasoning: Reasoning }>(response);
-  return data.reasoning;
+  const raw = await handleResponse<unknown>(response);
+  const data = ReasoningEnvelopeSchema.parse(raw);
+  return data.reasoning as Reasoning;
 };
 
 export const updateReasoningInteraction = async (
@@ -577,7 +644,8 @@ export const updateReasoningInteraction = async (
     API_ENDPOINTS.PROJECTS_REASONING_INTERACTION(projectId, reasoningId),
     payload
   );
-  const data = await handleResponse<{ interaction: unknown }>(response);
+  const raw = await handleResponse<unknown>(response);
+  const data = InteractionEnvelopeSchema.parse(raw);
   return data.interaction;
 };
 
@@ -591,8 +659,9 @@ export const updateReasoningActionItem = async (
     API_ENDPOINTS.PROJECTS_REASONING_ACTION_ITEM(projectId, reasoningId, itemId),
     payload
   );
-  const data = await handleResponse<{ actionItem: ReasoningActionItem }>(response);
-  return data.actionItem;
+  const raw = await handleResponse<unknown>(response);
+  const data = ReasoningActionItemEnvelopeSchema.parse(raw);
+  return data.actionItem as ReasoningActionItem;
 };
 
 // --- STATS ---
@@ -667,5 +736,6 @@ export const fetchProjectsStats = async (
     : API_ENDPOINTS.PROJECTS_STATS;
 
   const response = await apiClient.get(endpoint);
-  return handleResponse<ProjectDashboardStats>(response);
+  const raw = await handleResponse<unknown>(response);
+  return ProjectDashboardStatsSchema.parse(raw) as ProjectDashboardStats;
 };

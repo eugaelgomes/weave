@@ -1,33 +1,8 @@
+import { z } from "zod";
 import { apiClient, handleResponse, API_ENDPOINTS } from "../api-methods";
+import { ProjectTagSchema, TaskPrioritySchema, type ProjectTag, type TaskPriority } from "./project-taxonomy.schema";
 
-export interface ProjectTag {
-  id: string;
-  project_id?: string | null;
-  org_id?: string | null;
-  name: string;
-  color_hex: string | null;
-  user_id?: string;
-  created_at: string;
-  updated_at: string;
-  deleted?: boolean;
-  deleted_at?: string | null;
-  deleted_by?: string | null;
-}
-
-export interface TaskPriority {
-  id: string;
-  project_id?: string | null;
-  org_id?: string | null;
-  name: string;
-  color_hex: string | null;
-  sort_order: number;
-  user_id?: string;
-  created_at: string;
-  updated_at: string;
-  deleted?: boolean;
-  deleted_at?: string | null;
-  deleted_by?: string | null;
-}
+export type { ProjectTag, TaskPriority };
 
 export interface CreateProjectTagData {
   name: string;
@@ -51,9 +26,12 @@ export interface UpdateTaskPriorityData {
   level?: number;
 }
 
+const tagsOrArray = (raw: unknown) => z.array(ProjectTagSchema).parse(raw);
+
 export const fetchProjectTags = async (projectId: string): Promise<ProjectTag[]> => {
   const response = await apiClient.get(API_ENDPOINTS.PROJECTS_TAGS(projectId));
-  return handleResponse<ProjectTag[]>(response);
+  const raw = await handleResponse<unknown>(response);
+  return tagsOrArray(raw);
 };
 
 export const createProjectTag = async (
@@ -61,7 +39,8 @@ export const createProjectTag = async (
   tagData: CreateProjectTagData
 ): Promise<ProjectTag> => {
   const response = await apiClient.post(API_ENDPOINTS.PROJECTS_TAGS(projectId), tagData);
-  return handleResponse<ProjectTag>(response);
+  const raw = await handleResponse<unknown>(response);
+  return ProjectTagSchema.parse(raw);
 };
 
 export const updateProjectTag = async (
@@ -73,22 +52,27 @@ export const updateProjectTag = async (
     API_ENDPOINTS.PROJECTS_TAG_BY_ID(projectId, tagId),
     tagData
   );
-  return handleResponse<ProjectTag>(response);
+  const raw = await handleResponse<unknown>(response);
+  return ProjectTagSchema.parse(raw);
 };
 
 export const deleteProjectTag = async (projectId: string, tagId: string): Promise<void> => {
   const response = await apiClient.delete(API_ENDPOINTS.PROJECTS_TAG_BY_ID(projectId, tagId));
-  await handleResponse<{ message: string }>(response);
+  await handleResponse<unknown>(response);
 };
+
+const prioritiesOrArray = (raw: unknown) => z.array(TaskPrioritySchema).parse(raw);
 
 export const fetchTaskPriorities = async (projectId: string): Promise<TaskPriority[]> => {
   const response = await apiClient.get(API_ENDPOINTS.PROJECTS_TASK_PRIORITIES(projectId));
-  return handleResponse<TaskPriority[]>(response);
+  const raw = await handleResponse<unknown>(response);
+  return prioritiesOrArray(raw);
 };
 
 export const fetchOrgTaskPriorities = async (orgId: string): Promise<TaskPriority[]> => {
   const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_TASK_PRIORITIES(orgId));
-  return handleResponse<TaskPriority[]>(response);
+  const raw = await handleResponse<unknown>(response);
+  return prioritiesOrArray(raw);
 };
 
 export const createTaskPriority = async (
@@ -99,7 +83,8 @@ export const createTaskPriority = async (
     API_ENDPOINTS.PROJECTS_TASK_PRIORITIES(projectId),
     priorityData
   );
-  return handleResponse<TaskPriority>(response);
+  const raw = await handleResponse<unknown>(response);
+  return TaskPrioritySchema.parse(raw);
 };
 
 export const updateTaskPriority = async (
@@ -111,12 +96,13 @@ export const updateTaskPriority = async (
     API_ENDPOINTS.PROJECTS_TASK_PRIORITY_BY_ID(projectId, priorityId),
     priorityData
   );
-  return handleResponse<TaskPriority>(response);
+  const raw = await handleResponse<unknown>(response);
+  return TaskPrioritySchema.parse(raw);
 };
 
 export const deleteTaskPriority = async (projectId: string, priorityId: string): Promise<void> => {
   const response = await apiClient.delete(
     API_ENDPOINTS.PROJECTS_TASK_PRIORITY_BY_ID(projectId, priorityId)
   );
-  await handleResponse<{ message: string }>(response);
+  await handleResponse<unknown>(response);
 };

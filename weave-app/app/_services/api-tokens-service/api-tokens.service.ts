@@ -1,38 +1,26 @@
+import { z } from "zod";
 import { apiClient, handleResponse, API_ENDPOINTS } from "../api-methods";
+import {
+  ApiScopeSchema,
+  ApiTokenCreateResponseSchema,
+  ApiTokenSchema,
+  type ApiToken,
+  type ApiTokenCreateResponse,
+  type ApiScope,
+} from "./api-tokens.schema";
 
-export interface ApiToken {
-  id: string;
-  name: string;
-  key_prefix: string;
-  organization_id?: string | null;
-  scopes: string[];
-  expires_at: string | null;
-  revoked_at: string | null;
-  created_at: string;
-  updated_at?: string;
-  token?: string; // Solo presente na criação
-}
-
-export interface ApiTokenCreateResponse {
-  message: string;
-  token: string;
-  record: ApiToken;
-}
-
-export interface ApiScope {
-  value: string;
-  label: string;
-  description: string;
-}
+export type { ApiToken, ApiTokenCreateResponse, ApiScope };
 
 export const fetchApiTokensScopes = async (): Promise<ApiScope[]> => {
   const response = await apiClient.get(API_ENDPOINTS.API_TOKENS_SCOPES);
-  return handleResponse<ApiScope[]>(response);
+  const raw = await handleResponse<unknown>(response);
+  return z.array(ApiScopeSchema).parse(raw);
 };
 
 export const fetchApiTokens = async (): Promise<ApiToken[]> => {
   const response = await apiClient.get(API_ENDPOINTS.API_TOKENS_LIST);
-  return handleResponse<ApiToken[]>(response);
+  const raw = await handleResponse<unknown>(response);
+  return z.array(ApiTokenSchema).parse(raw);
 };
 
 export const createApiToken = async (data: {
@@ -42,15 +30,16 @@ export const createApiToken = async (data: {
   organizationId?: string | null;
 }): Promise<ApiTokenCreateResponse> => {
   const response = await apiClient.post(API_ENDPOINTS.API_TOKENS_CREATE, data);
-  return handleResponse<ApiTokenCreateResponse>(response);
+  const raw = await handleResponse<unknown>(response);
+  return ApiTokenCreateResponseSchema.parse(raw);
 };
 
 export const revokeApiToken = async (id: string): Promise<void> => {
   const response = await apiClient.post(API_ENDPOINTS.API_TOKENS_REVOKE(id), {});
-  return handleResponse<void>(response);
+  await handleResponse<unknown>(response);
 };
 
 export const deleteApiToken = async (id: string): Promise<void> => {
   const response = await apiClient.delete(API_ENDPOINTS.API_TOKENS_DELETE(id));
-  return handleResponse<void>(response);
+  await handleResponse<unknown>(response);
 };

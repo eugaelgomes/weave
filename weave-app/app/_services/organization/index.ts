@@ -1,5 +1,24 @@
 import { apiClient, handleResponse } from "../api-methods";
 import { API_ENDPOINTS } from "../api-methods";
+import { OrgJsonSchema } from "./organization.schema";
+
+function orgApiErrorMessage(data: Record<string, unknown>, fallback: string): string {
+  const err = data.error;
+  return typeof err === "string" ? err : fallback;
+}
+
+/**
+ * API envelopes are validated as generic JSON objects; cast to domain types after success checks.
+ */
+function asUnknown<T>(value: unknown): T {
+  return value as T;
+}
+
+function recordNumbers(value: unknown): Record<string, number> {
+  return value != null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, number>)
+    : {};
+}
 
 // --- Interfaces ---
 
@@ -279,13 +298,23 @@ export interface OrganizationInvitePreview {
   area_member_role?: string | null;
 }
 
+/** Payload in `data` from POST invites/accept (matches API members.controller acceptInvite). */
+export interface AcceptInviteResponse {
+  organization: {
+    id: string;
+    name: string;
+  };
+  role: string;
+  area_id: string | null;
+}
+
 // --- Helpers de Transformação ---
 
 const transformBackendOrganization = (data: any): Organization => {
   if (!data) return data;
 
   if (data.identity) {
-    let org = {
+    const org = {
       ...data.identity,
       properties: data.properties,
       deleted: data.deleted,
@@ -359,15 +388,10 @@ export const fetchOrganization = async (userId?: string): Promise<Organization |
       : API_ENDPOINTS.ORGANIZATIONS;
 
     const response = await apiClient.get(url);
-    const data = await handleResponse<{
-      status?: string;
-      success?: boolean;
-      organization_data?: any;
-      error?: string;
-    }>(response);
+    const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
     if ((data.status === "OK" || data.success) && data.organization_data) {
-      return transformBackendOrganization(data.organization_data);
+      return transformBackendOrganization(asUnknown(data.organization_data));
     }
 
     return null;
@@ -391,12 +415,7 @@ export const createOrganization = async (
   const payload = { ...organizationData, userId };
 
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS, payload);
-  const data = await handleResponse<{
-    status?: string;
-    success?: boolean;
-    data?: Organization | { organization?: Organization };
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   const isSuccess = data.status === "OK" || data.success === true;
   const organizationPayload =
@@ -405,76 +424,64 @@ export const createOrganization = async (
       : data.data;
 
   if (!isSuccess || !organizationPayload) {
-    throw new Error(data.error || "Erro ao criar organização");
+    throw new Error(orgApiErrorMessage(data, "Erro ao criar organização"));
   }
 
-  return transformBackendOrganization(organizationPayload);
+  return transformBackendOrganization(asUnknown(organizationPayload));
 };
 
 export const fetchOrganizationCreationStepOne = async (): Promise<OrganizationStepOneResponse> => {
   const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_CREATION_STEP_ONE);
-  const data = await handleResponse<{
-    status?: string;
-    success?: boolean;
-    data?: OrganizationStepOneResponse;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if ((data.status === "OK" || data.success) && data.data) {
+    const body = asUnknown<
+      Omit<OrganizationStepOneResponse, "organization"> & { organization?: unknown }
+    >(data.data);
     return {
-      ...data.data,
-      organization: data.data.organization
-        ? transformBackendOrganization(data.data.organization)
-        : null,
+      ...body,
+      organization: body.organization ? transformBackendOrganization(body.organization) : null,
     };
   }
 
-  throw new Error(data.error || "Erro ao carregar etapa 1 de criação da organização");
+  throw new Error(orgApiErrorMessage(data, "Erro ao carregar etapa 1 de criação da organização"));
 };
 
 export const saveOrganizationCreationStepOne = async (
   payload: OrganizationStepOneData
 ): Promise<OrganizationStepOneResponse> => {
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_CREATION_STEP_ONE, payload);
-  const data = await handleResponse<{
-    status?: string;
-    success?: boolean;
-    data?: OrganizationStepOneResponse;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if ((data.status === "OK" || data.success) && data.data) {
+    const body = asUnknown<
+      Omit<OrganizationStepOneResponse, "organization"> & { organization?: unknown }
+    >(data.data);
     return {
-      ...data.data,
-      organization: data.data.organization
-        ? transformBackendOrganization(data.data.organization)
-        : null,
+      ...body,
+      organization: body.organization ? transformBackendOrganization(body.organization) : null,
     };
   }
 
-  throw new Error(data.error || "Erro ao salvar etapa 1 de criação da organização");
+  throw new Error(orgApiErrorMessage(data, "Erro ao salvar etapa 1 de criação da organização"));
 };
 
 export const completeOrganizationCreationStepOne =
   async (): Promise<OrganizationStepOneResponse> => {
     const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_CREATION_STEP_ONE_COMPLETE, {});
-    const data = await handleResponse<{
-      status?: string;
-      success?: boolean;
-      data?: OrganizationStepOneResponse;
-      error?: string;
-    }>(response);
+    const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
     if ((data.status === "OK" || data.success) && data.data) {
+      const body = asUnknown<
+        Omit<OrganizationStepOneResponse, "organization"> & { organization?: unknown }
+      >(data.data);
       return {
-        ...data.data,
-        organization: data.data.organization
-          ? transformBackendOrganization(data.data.organization)
-          : null,
+        ...body,
+        organization: body.organization ? transformBackendOrganization(body.organization) : null,
       };
     }
 
-    throw new Error(data.error || "Erro ao concluir etapa 1 de criação da organização");
+    throw new Error(orgApiErrorMessage(data, "Erro ao concluir etapa 1 de criação da organização"));
   };
 
 /**
@@ -488,15 +495,13 @@ export const updateOrganization = async (
   const payload = { ...organizationData, userId };
 
   const response = await apiClient.put(API_ENDPOINTS.ORGANIZATIONS, payload);
-  const data = await handleResponse<{ success?: boolean; data?: Organization; error?: string }>(
-    response
-  );
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if (!data.success || !data.data) {
-    throw new Error(data.error || "Erro ao atualizar organização");
+    throw new Error(orgApiErrorMessage(data, "Erro ao atualizar organização"));
   }
 
-  return transformBackendOrganization(data.data);
+  return transformBackendOrganization(asUnknown(data.data));
 };
 
 /**
@@ -510,15 +515,13 @@ export const updateOrganizationProperties = async (
   const payload = { properties, userId };
 
   const response = await apiClient.patch(API_ENDPOINTS.ORGANIZATIONS_PROPERTIES, payload);
-  const data = await handleResponse<{ success?: boolean; data?: Organization; error?: string }>(
-    response
-  );
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if (!data.success || !data.data) {
-    throw new Error(data.error || "Erro ao atualizar propriedades");
+    throw new Error(orgApiErrorMessage(data, "Erro ao atualizar propriedades"));
   }
 
-  return transformBackendOrganization(data.data);
+  return transformBackendOrganization(asUnknown(data.data));
 };
 
 /**
@@ -532,7 +535,7 @@ export const deleteOrganization = async (userId?: string): Promise<boolean> => {
     : API_ENDPOINTS.ORGANIZATIONS;
 
   const response = await apiClient.delete(url);
-  const data = await handleResponse<{ success?: boolean }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
   return data.success === true;
 };
 
@@ -542,15 +545,13 @@ export const deleteOrganization = async (userId?: string): Promise<boolean> => {
 export const restoreOrganization = async (userId?: string): Promise<Organization> => {
   const payload = { userId };
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_RESTORE, payload);
-  const data = await handleResponse<{ success?: boolean; data?: Organization; error?: string }>(
-    response
-  );
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if (!data.success || !data.data) {
-    throw new Error(data.error || "Erro ao restaurar organização");
+    throw new Error(orgApiErrorMessage(data, "Erro ao restaurar organização"));
   }
 
-  return transformBackendOrganization(data.data);
+  return transformBackendOrganization(asUnknown(data.data));
 };
 
 // --- Áreas ---
@@ -558,15 +559,10 @@ export const restoreOrganization = async (userId?: string): Promise<Organization
 export const fetchOrganizationAreas = async (): Promise<OrganizationArea[]> => {
   try {
     const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_AREAS);
-    const data = await handleResponse<{
-      status?: string;
-      success?: boolean;
-      data?: any[];
-      error?: string;
-    }>(response);
+    const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
     if ((data.status === "OK" || data.success) && Array.isArray(data.data)) {
-      return data.data.map(transformBackendArea);
+      return data.data.map((raw: unknown) => transformBackendArea(raw));
     }
 
     return [];
@@ -581,12 +577,7 @@ export const fetchOrganizationAreas = async (): Promise<OrganizationArea[]> => {
 export const fetchAreaMembers = async (areaId: string): Promise<OrganizationAreaMember[]> => {
   try {
     const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_AREA_MEMBERS(areaId));
-    const data = await handleResponse<{
-      status?: string;
-      success?: boolean;
-      members?: any[];
-      error?: string;
-    }>(response);
+    const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
     if ((data.status === "OK" || data.success) && Array.isArray(data.members)) {
       return data.members as OrganizationAreaMember[];
@@ -605,34 +596,24 @@ export const createOrganizationArea = async (
   payload: CreateOrganizationAreaInput
 ): Promise<OrganizationArea> => {
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_AREAS, payload);
-  const data = await handleResponse<{
-    status?: string;
-    success?: boolean;
-    data?: any;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if ((data.status === "OK" || data.success) && data.data) {
-    return transformBackendArea(data.data);
+    return transformBackendArea(asUnknown(data.data));
   }
 
-  throw new Error(data.error || "Erro ao criar área");
+  throw new Error(orgApiErrorMessage(data, "Erro ao criar área"));
 };
 
 export const getOrganizationArea = async (areaId: string): Promise<OrganizationArea> => {
   const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_AREA_BY_ID(areaId));
-  const data = await handleResponse<{
-    status?: string;
-    success?: boolean;
-    data?: any;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if ((data.status === "OK" || data.success) && data.data) {
-    return transformBackendArea(data.data);
+    return transformBackendArea(asUnknown(data.data));
   }
 
-  throw new Error(data.error || "Erro ao buscar área");
+  throw new Error(orgApiErrorMessage(data, "Erro ao buscar área"));
 };
 
 export const updateOrganizationArea = async (
@@ -640,34 +621,24 @@ export const updateOrganizationArea = async (
   payload: UpdateOrganizationAreaInput
 ): Promise<OrganizationArea> => {
   const response = await apiClient.put(API_ENDPOINTS.ORGANIZATIONS_AREA_BY_ID(areaId), payload);
-  const data = await handleResponse<{
-    status?: string;
-    success?: boolean;
-    data?: any;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if ((data.status === "OK" || data.success) && data.data) {
-    return transformBackendArea(data.data);
+    return transformBackendArea(asUnknown(data.data));
   }
 
-  throw new Error(data.error || "Erro ao atualizar área");
+  throw new Error(orgApiErrorMessage(data, "Erro ao atualizar área"));
 };
 
 export const deleteOrganizationArea = async (areaId: string): Promise<OrganizationArea> => {
   const response = await apiClient.delete(API_ENDPOINTS.ORGANIZATIONS_AREA_BY_ID(areaId));
-  const data = await handleResponse<{
-    status?: string;
-    success?: boolean;
-    data?: any;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if ((data.status === "OK" || data.success) && data.data) {
-    return transformBackendArea(data.data);
+    return transformBackendArea(asUnknown(data.data));
   }
 
-  throw new Error(data.error || "Erro ao remover área");
+  throw new Error(orgApiErrorMessage(data, "Erro ao remover área"));
 };
 
 export const addAreaMember = async (
@@ -675,18 +646,13 @@ export const addAreaMember = async (
   payload: AddAreaMemberInput
 ): Promise<OrganizationAreaMember> => {
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_AREA_MEMBERS(areaId), payload);
-  const data = await handleResponse<{
-    status?: string;
-    success?: boolean;
-    data?: OrganizationAreaMember;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if ((data.status === "OK" || data.success) && data.data) {
-    return data.data;
+    return asUnknown<OrganizationAreaMember>(data.data);
   }
 
-  throw new Error(data.error || "Erro ao adicionar membro na área");
+  throw new Error(orgApiErrorMessage(data, "Erro ao adicionar membro na área"));
 };
 
 export const updateAreaMember = async (
@@ -698,18 +664,13 @@ export const updateAreaMember = async (
     API_ENDPOINTS.ORGANIZATIONS_AREA_MEMBER(areaId, memberId),
     payload
   );
-  const data = await handleResponse<{
-    status?: string;
-    success?: boolean;
-    data?: OrganizationAreaMember;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if ((data.status === "OK" || data.success) && data.data) {
-    return data.data;
+    return asUnknown<OrganizationAreaMember>(data.data);
   }
 
-  throw new Error(data.error || "Erro ao atualizar membro da área");
+  throw new Error(orgApiErrorMessage(data, "Erro ao atualizar membro da área"));
 };
 
 export const removeAreaMember = async (
@@ -719,24 +680,19 @@ export const removeAreaMember = async (
   const response = await apiClient.delete(
     API_ENDPOINTS.ORGANIZATIONS_AREA_MEMBER(areaId, memberId)
   );
-  const data = await handleResponse<{
-    status?: string;
-    success?: boolean;
-    data?: OrganizationAreaMember;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if ((data.status === "OK" || data.success) && data.data) {
-    return data.data;
+    return asUnknown<OrganizationAreaMember>(data.data);
   }
 
-  throw new Error(data.error || "Erro ao remover membro da área");
+  throw new Error(orgApiErrorMessage(data, "Erro ao remover membro da área"));
 };
 
 // --- Membros e Convites ---
 
 /** Respostas da API usam `status: "OK"` ou `success: true` */
-function isApiSuccess(data: { status?: string; success?: boolean }): boolean {
+function isApiSuccess(data: Record<string, unknown>): boolean {
   return data.status === "OK" || data.success === true;
 }
 
@@ -757,22 +713,24 @@ export const fetchOrganizationMembers = async (
       : API_ENDPOINTS.ORGANIZATIONS_MEMBERS;
 
     const response = await apiClient.get(url);
-    const data = await handleResponse<{
-      status?: string;
-      count?: number;
-      count_by_role?: Record<string, number>;
-      count_by_status?: Record<string, number>;
-      count_by_suspended?: Record<string, number>;
-      list_org_members?: Array<{ member_data: OrganizationMember }>;
-    }>(response);
+    const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
     if (data.status === "OK" && data.list_org_members) {
+      const countRaw = data.count;
+      const count =
+        typeof countRaw === "number"
+          ? countRaw
+          : typeof countRaw === "string"
+            ? Number(countRaw) || 0
+            : 0;
       return {
-        count: data.count || 0,
-        count_by_role: data.count_by_role || {},
-        count_by_status: data.count_by_status || {},
-        count_by_suspended: data.count_by_suspended || {},
-        list_org_members: data.list_org_members.map((item) => item.member_data),
+        count,
+        count_by_role: recordNumbers(data.count_by_role),
+        count_by_status: recordNumbers(data.count_by_status),
+        count_by_suspended: recordNumbers(data.count_by_suspended),
+        list_org_members: (
+          data.list_org_members as Array<{ member_data: OrganizationMember }>
+        ).map((item) => item.member_data),
       };
     }
     return null;
@@ -789,16 +747,12 @@ export const addMemberDirectly = async (
 ): Promise<OrganizationMember> => {
   const payload = { memberId, role, userId };
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_MEMBERS, payload);
-  const data = await handleResponse<{
-    success?: boolean;
-    data?: OrganizationMember;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if (!data.success || !data.data) {
-    throw new Error(data.error || "Erro ao adicionar membro");
+    throw new Error(orgApiErrorMessage(data, "Erro ao adicionar membro"));
   }
-  return data.data;
+  return asUnknown<OrganizationMember>(data.data);
 };
 
 export const inviteMember = async (
@@ -807,17 +761,15 @@ export const inviteMember = async (
 ): Promise<{ message: string }> => {
   const payload = { ...inviteData, userId };
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_INVITES, payload);
-  const data = await handleResponse<{
-    status?: string;
-    success?: boolean;
-    message?: string;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if (!isApiSuccess(data)) {
-    throw new Error(data.error || "Erro ao enviar convite");
+    throw new Error(orgApiErrorMessage(data, "Erro ao enviar convite"));
   }
-  return { message: data.message || "Convite enviado com sucesso" };
+  const msg = data.message;
+  return {
+    message: typeof msg === "string" ? msg : "Convite enviado com sucesso",
+  };
 };
 
 export const fetchPendingInvites = async (userId?: string): Promise<OrganizationInvite[]> => {
@@ -827,14 +779,10 @@ export const fetchPendingInvites = async (userId?: string): Promise<Organization
       : API_ENDPOINTS.ORGANIZATIONS_INVITES;
 
     const response = await apiClient.get(url);
-    const data = await handleResponse<{
-      status?: string;
-      success?: boolean;
-      data?: OrganizationInvite[];
-    }>(response);
+    const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
     if (isApiSuccess(data) && Array.isArray(data.data)) {
-      return data.data;
+      return asUnknown<OrganizationInvite[]>(data.data);
     }
     return [];
   } catch (error) {
@@ -849,12 +797,10 @@ export const cancelInvite = async (inviteId: string, userId?: string): Promise<v
     : `${API_ENDPOINTS.ORGANIZATIONS_INVITES}/${inviteId}`;
 
   const response = await apiClient.delete(url);
-  const data = await handleResponse<{ status?: string; success?: boolean; error?: string }>(
-    response
-  );
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if (!isApiSuccess(data)) {
-    throw new Error(data.error || "Erro ao cancelar convite");
+    throw new Error(orgApiErrorMessage(data, "Erro ao cancelar convite"));
   }
 };
 
@@ -864,29 +810,28 @@ export const previewOrganizationInvite = async (
   const response = await apiClient.get(
     `${API_ENDPOINTS.ORGANIZATIONS_INVITES}/preview?token=${encodeURIComponent(token)}`
   );
-  const data = await handleResponse<{ status?: string; data?: OrganizationInvitePreview }>(
-    response
-  );
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
   if (!data.data) {
     throw new Error("Resposta inválida do servidor");
   }
-  return data.data;
+  return asUnknown<OrganizationInvitePreview>(data.data);
 };
 
-export const acceptInvite = async (acceptData: AcceptInviteData, userId?: string): Promise<any> => {
+export const acceptInvite = async (
+  acceptData: AcceptInviteData,
+  userId?: string
+): Promise<AcceptInviteResponse> => {
   const payload = { ...acceptData, userId };
   const response = await apiClient.post(`${API_ENDPOINTS.ORGANIZATIONS_INVITES}/accept`, payload);
-  const data = await handleResponse<{
-    success?: boolean;
-    status?: string;
-    data?: any;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if (data.status !== "OK" && data.success !== true) {
-    throw new Error(data.error || "Erro ao aceitar convite");
+    throw new Error(orgApiErrorMessage(data, "Erro ao aceitar convite"));
   }
-  return data.data;
+  if (data.data == null || typeof data.data !== "object") {
+    throw new Error(orgApiErrorMessage(data, "Erro ao aceitar convite"));
+  }
+  return asUnknown<AcceptInviteResponse>(data.data);
 };
 
 export const removeMember = async (
@@ -898,16 +843,12 @@ export const removeMember = async (
     : API_ENDPOINTS.ORGANIZATIONS_MEMBER(memberId);
 
   const response = await apiClient.delete(url);
-  const data = await handleResponse<{
-    success?: boolean;
-    data?: OrganizationMember;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if (!data.success || !data.data) {
-    throw new Error(data.error || "Erro ao remover membro");
+    throw new Error(orgApiErrorMessage(data, "Erro ao remover membro"));
   }
-  return data.data;
+  return asUnknown<OrganizationMember>(data.data);
 };
 
 export const updateMemberRole = async (
@@ -920,18 +861,13 @@ export const updateMemberRole = async (
     : API_ENDPOINTS.ORGANIZATIONS_MEMBER(memberId);
 
   const response = await apiClient.patch(url, { role, userId });
-  const data = await handleResponse<{
-    success?: boolean;
-    status?: string;
-    data?: OrganizationMember;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if ((data.status !== "OK" && !data.success) || !data.data) {
-    throw new Error(data.error || "Erro ao atualizar função do membro");
+    throw new Error(orgApiErrorMessage(data, "Erro ao atualizar função do membro"));
   }
 
-  return data.data;
+  return asUnknown<OrganizationMember>(data.data);
 };
 
 // --- Uploads ---
@@ -953,17 +889,14 @@ export const uploadOrganizationLogo = async (
     // handled implicitly
   });
 
-  const data = await handleResponse<{
-    success?: boolean;
-    data?: { organization: Organization };
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
+  const logoBody = asUnknown<{ organization?: unknown } | null | undefined>(data.data);
 
-  if (!data.success || !data.data?.organization) {
-    throw new Error(data.error || "Erro ao fazer upload do logo");
+  if (!data.success || !logoBody?.organization) {
+    throw new Error(orgApiErrorMessage(data, "Erro ao fazer upload do logo"));
   }
 
-  return transformBackendOrganization(data.data.organization);
+  return transformBackendOrganization(logoBody.organization);
 };
 
 /**
@@ -983,17 +916,14 @@ export const uploadOrganizationBanner = async (
     // "Content-Type": "multipart/form-data" handled automatically when passing FormData
   });
 
-  const data = await handleResponse<{
-    success?: boolean;
-    data?: { organization: Organization };
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
+  const bannerBody = asUnknown<{ organization?: unknown } | null | undefined>(data.data);
 
-  if (!data.success || !data.data?.organization) {
-    throw new Error(data.error || "Erro ao fazer upload do banner");
+  if (!data.success || !bannerBody?.organization) {
+    throw new Error(orgApiErrorMessage(data, "Erro ao fazer upload do banner"));
   }
 
-  return transformBackendOrganization(data.data.organization);
+  return transformBackendOrganization(bannerBody.organization);
 };
 
 // --- Domínios ---
@@ -1005,13 +935,10 @@ export const fetchDomains = async (userId?: string): Promise<OrganizationDomain[
       : API_ENDPOINTS.ORGANIZATIONS_DOMAINS;
 
     const response = await apiClient.get(url);
-    const data = await handleResponse<{
-      status: string;
-      domains: OrganizationDomain[];
-    }>(response);
+    const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
     if (data.status === "OK" && data.domains) {
-      return data.domains;
+      return asUnknown<OrganizationDomain[]>(data.domains);
     }
     return [];
   } catch (error) {
@@ -1030,19 +957,16 @@ export const createDomain = async (
 
   const payload = { domain_name };
   const response = await apiClient.post(url, payload);
-  const data = await handleResponse<{
-    status: string;
-    message: string;
-    data: OrganizationDomain;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if (data.status !== "OK" || !data.data) {
     throw new Error(
-      data.data && typeof data.data === "string" ? data.data : data.error || "Erro ao criar domínio"
+      data.data && typeof data.data === "string"
+        ? data.data
+        : orgApiErrorMessage(data, "Erro ao criar domínio")
     );
   }
-  return data.data;
+  return asUnknown<OrganizationDomain>(data.data);
 };
 
 export const verifyDomain = async (
@@ -1053,19 +977,16 @@ export const verifyDomain = async (
   const url = userId ? `${endpoint}?userId=${userId}` : endpoint;
 
   const response = await apiClient.post(url, {});
-  const data = await handleResponse<{
-    status: string;
-    message: string;
-    data: OrganizationDomain;
-    dns_checks?: any;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if (data.status !== "OK" || !data.data) {
-    throw new Error(data.error || "Erro ao verificar domínio");
+    throw new Error(orgApiErrorMessage(data, "Erro ao verificar domínio"));
   }
 
-  return { domain: data.data, dns_checks: data.dns_checks };
+  return {
+    domain: asUnknown<OrganizationDomain>(data.data),
+    dns_checks: data.dns_checks,
+  };
 };
 
 export const deleteDomain = async (domainId: string, userId?: string): Promise<void> => {
@@ -1073,13 +994,9 @@ export const deleteDomain = async (domainId: string, userId?: string): Promise<v
   const url = userId ? `${endpoint}?userId=${userId}` : endpoint;
 
   const response = await apiClient.delete(url);
-  const data = await handleResponse<{
-    status: string;
-    message: string;
-    error?: string;
-  }>(response);
+  const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if (data.status !== "OK") {
-    throw new Error(data.error || "Erro ao deletar domínio");
+    throw new Error(orgApiErrorMessage(data, "Erro ao deletar domínio"));
   }
 };

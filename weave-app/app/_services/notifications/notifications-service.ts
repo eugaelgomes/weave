@@ -1,20 +1,23 @@
 import { apiClient, handleResponse, API_ENDPOINTS } from "../api-methods";
+import {
+  MarkAllReadResponseSchema,
+  NotificationEnvelopeSchema,
+  NotificationsResponseSchema,
+  type NotificationActor,
+  type NotificationEntityType,
+  type NotificationRow,
+  type NotificationStatusFilter,
+  type NotificationType,
+  type PaginationMeta,
+} from "./notifications.schema";
 
-export type NotificationType =
-  | "system_alert"
-  | "system_update"
-  | "organization_invite"
-  | "organization_action"
-  | "project_invite"
-  | "project_action"
-  | "note_shared"
-  | "note_action"
-  | "ai_action"
-  | "job_action";
-
-export type NotificationEntityType = "organization" | "project" | "note" | "job" | "weave-ai";
-
-export type NotificationStatusFilter = "all" | "unread" | "read" | "trash";
+export type {
+  NotificationActor,
+  NotificationType,
+  NotificationEntityType,
+  NotificationStatusFilter,
+  PaginationMeta,
+};
 
 export type NotificationContent = Record<string, unknown> & {
   message?: string;
@@ -26,14 +29,6 @@ export type NotificationContent = Record<string, unknown> & {
   description?: string;
   url?: string;
 };
-
-export interface NotificationActor {
-  id: string;
-  name?: string | null;
-  username?: string | null;
-  email?: string | null;
-  avatar_url?: string | null;
-}
 
 export interface Notification {
   id: string;
@@ -53,13 +48,6 @@ export interface Notification {
   updated_at: string;
 }
 
-export interface PaginationMeta {
-  page: number;
-  limit: number;
-  total: number;
-  total_pages: number;
-}
-
 export interface NotificationsResponse {
   notifications: Notification[];
   pagination: PaginationMeta;
@@ -75,20 +63,27 @@ export interface FetchNotificationsParams {
   order?: "asc" | "desc";
 }
 
-const normalizeNotification = (notification: Notification): Notification => {
-  if (notification && typeof notification.content === "string") {
+const normalizeNotification = (row: NotificationRow): Notification => {
+  let content: NotificationContent = {};
+
+  if (typeof row.content === "string") {
     try {
-      notification.content = JSON.parse(notification.content);
+      const parsed: unknown = JSON.parse(row.content);
+      content =
+        parsed && typeof parsed === "object" && !Array.isArray(parsed)
+          ? (parsed as NotificationContent)
+          : {};
     } catch {
-      notification.content = {} as NotificationContent;
+      content = {};
     }
+  } else if (row.content && typeof row.content === "object") {
+    content = row.content as NotificationContent;
   }
 
-  if (!notification.content || typeof notification.content !== "object") {
-    notification.content = {} as NotificationContent;
-  }
-
-  return notification;
+  return {
+    ...row,
+    content,
+  };
 };
 
 export const fetchNotifications = async (
@@ -113,7 +108,8 @@ export const fetchNotifications = async (
     : API_ENDPOINTS.NOTIFICATIONS;
 
   const response = await apiClient.get(endpoint);
-  const data = await handleResponse<NotificationsResponse>(response);
+  const raw = await handleResponse<unknown>(response);
+  const data = NotificationsResponseSchema.parse(raw);
 
   return {
     notifications: data.notifications.map(normalizeNotification),
@@ -129,13 +125,15 @@ export const markNotificationAsRead = async (
     is_read: isRead,
   });
 
-  const data = await handleResponse<{ notification: Notification }>(response);
+  const raw = await handleResponse<unknown>(response);
+  const data = NotificationEnvelopeSchema.parse(raw);
   return normalizeNotification(data.notification);
 };
 
 export const markAllNotificationsRead = async (): Promise<{ updated: number }> => {
   const response = await apiClient.patch(API_ENDPOINTS.NOTIFICATIONS_MARK_ALL_READ);
-  return handleResponse<{ updated: number }>(response);
+  const raw = await handleResponse<unknown>(response);
+  return MarkAllReadResponseSchema.parse(raw);
 };
 
 export const toggleNotificationTrash = async (
@@ -146,11 +144,12 @@ export const toggleNotificationTrash = async (
     in_trash: inTrash,
   });
 
-  const data = await handleResponse<{ notification: Notification }>(response);
+  const raw = await handleResponse<unknown>(response);
+  const data = NotificationEnvelopeSchema.parse(raw);
   return normalizeNotification(data.notification);
 };
 
 export const deleteNotification = async (notificationId: string): Promise<void> => {
   const response = await apiClient.delete(API_ENDPOINTS.NOTIFICATION_BY_ID(notificationId));
-  await handleResponse<{ success: boolean }>(response);
+  await handleResponse<unknown>(response);
 };
