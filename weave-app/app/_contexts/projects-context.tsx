@@ -74,7 +74,11 @@ import {
 import { PROJECT_STATUS } from "@/app/_utils/db-enums";
 
 // Tipos específicos do contexto / Overview
-export type { Project, ProjectStage } from "../_services/projects-service/projects-service";
+export type {
+  Project,
+  ProjectStage,
+  CreateProjectData,
+} from "../_services/projects-service/projects-service";
 export type { ProjectDashboardStats, ProjectStatsFilters };
 export type {
   AiReportConfig,

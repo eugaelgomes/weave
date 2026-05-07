@@ -163,14 +163,14 @@ export default function DangerZonePage() {
       setBackupMessage("A solicitar cópia de segurança...");
 
       const response = await requestBackup();
-      const jobId = response.job_id;
+      const jobId = response.jobId;
 
       if (!jobId) {
         throw new Error("Erro ao iniciar cópia de segurança");
       }
 
-      const estimatedTime = response.estimated_time
-        ? ` Tempo estimado: ${response.estimated_time}.`
+      const estimatedTime = response.estimatedTime
+        ? ` Tempo estimado: ${response.estimatedTime}.`
         : "";
       setBackupMessage(
         `${response.message || "Cópia de segurança em processamento..."}${estimatedTime}`

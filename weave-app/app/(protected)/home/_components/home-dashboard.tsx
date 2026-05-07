@@ -128,9 +128,7 @@ export default function HighDensityDashboard() {
   ) => {
     try {
       const current = actionItemsByReasoningId.get(reasoningId) || [];
-      const next = current.map((it: { id: string; is_completed?: boolean | null }) =>
-        it.id === itemId ? { ...it, is_completed: nextCompleted } : it
-      );
+      const next = current.map((it) => (it.id === itemId ? { ...it, is_completed: nextCompleted } : it));
       setActionItemsLocal(reasoningId, next);
       await toggleActionItemCompleted(projectId, reasoningId, itemId, nextCompleted);
     } catch (err: unknown) {

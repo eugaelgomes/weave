@@ -1,6 +1,7 @@
 import { apiClient, API_ENDPOINTS, handleResponse } from "@/app/_services/api-methods";
 import {
   ReasoningActionItemEnvelopeSchema,
+  ReasoningActionItemsEnvelopeSchema,
   ReasoningContentEnvelopeSchema,
   ReasoningCreateEnvelopeSchema,
   ReasoningInteractionEnvelopeSchema,
@@ -79,7 +80,7 @@ export async function fetchReasoningActionItems(
     API_ENDPOINTS.PROJECTS_REASONING_ACTION_ITEMS(projectId, reasoningId)
   );
   const raw = await handleResponse<unknown>(response);
-  const data = ReasoningActionItemEnvelopeSchema.parse(raw);
+  const data = ReasoningActionItemsEnvelopeSchema.parse(raw);
   return data.actionItems as ReasoningActionItem[];
 }
 

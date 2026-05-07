@@ -6,11 +6,16 @@ import {
   getBackupStatus as getBackupStatusService,
   requestBackup as requestBackupService,
   type BackupOptions,
+  type BackupJob,
 } from "@/app/_services/backup-service/backup-service";
 
 type BackupContextValue = {
-  requestBackup: (options?: BackupOptions) => Promise<{ jobId: string; message?: string }>;
-  getBackupStatus: (jobId: string) => Promise<unknown>;
+  requestBackup: (options?: BackupOptions) => Promise<{
+    jobId: string;
+    message?: string;
+    estimatedTime?: string;
+  }>;
+  getBackupStatus: (jobId: string) => Promise<BackupJob>;
 };
 
 const BackupContext = createContext<BackupContextValue | undefined>(undefined);
@@ -23,7 +28,11 @@ export function BackupProvider({ children }: { children: React.ReactNode }) {
       throw new Error("Unauthorized");
     }
     const res = await requestBackupService(options);
-    return { jobId: res.jobId, message: res.message };
+    return {
+      jobId: res.job_id,
+      message: res.message,
+      estimatedTime: res.estimated_time,
+    };
   }, [authenticated]);
 
   const getBackupStatus = useCallback(async (jobId: string) => {
