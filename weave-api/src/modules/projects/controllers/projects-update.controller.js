@@ -19,6 +19,9 @@ const reportConfigRepository = require("@/modules/projects/repositories/report-c
 const sprintsRepository = require("@/modules/projects/repositories/sprints.repository");
 const reasoningsRepository = require("@/modules/projects/repositories/reasonings.repository");
 const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
+const {
+  respondIfWorkspaceShareDenied,
+} = require("@/utils/workspace-share-guard");
 
 class ProjectsUpdateController extends ProjectsCoreController {
   /**
@@ -260,6 +263,12 @@ class ProjectsUpdateController extends ProjectsCoreController {
             throw new Error(
               "Você não pode adicionar a si mesmo como colaborador"
             );
+          }
+
+          if (
+            await respondIfWorkspaceShareDenied(res, userId, collaboratorId)
+          ) {
+            return;
           }
 
           // Verificar se o usuário está suspenso

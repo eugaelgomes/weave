@@ -7,6 +7,9 @@ const {
   collabMail,
 } = require("@/services/email/templates/note-collab-notification");
 const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
+const {
+  respondIfWorkspaceShareDenied,
+} = require("@/utils/workspace-share-guard");
 
 /**
  * Colaboradores em notas.
@@ -62,6 +65,12 @@ class NotesCollaboratorsController extends NotesBaseController {
       // Verificar se o usuário não está tentando adicionar a si mesmo
       if (collaboratorId === userId) {
         throw new Error("Você não pode adicionar a si mesmo como colaborador");
+      }
+
+      if (
+        await respondIfWorkspaceShareDenied(res, userId, collaboratorId)
+      ) {
+        return;
       }
 
       // Verificar se o colaborador já está ativo

@@ -6,6 +6,9 @@ const {
 } = require("@/modules/projects/project-role-policy");
 const projectsCollaboratorsRepository = require("@/modules/projects/repositories/projects-collaborators.repository");
 const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
+const {
+  respondIfWorkspaceShareDenied,
+} = require("@/utils/workspace-share-guard");
 
 class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
   constructor() {
@@ -67,6 +70,12 @@ class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
 
       if (collaboratorId === userId) {
         throw new Error("Você não pode adicionar a si mesmo como colaborador");
+      }
+
+      if (
+        await respondIfWorkspaceShareDenied(res, userId, collaboratorId)
+      ) {
+        return;
       }
 
       const isSuspended = await this.projectsRepository.isSuspendedCollaborator(

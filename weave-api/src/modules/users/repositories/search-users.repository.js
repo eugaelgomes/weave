@@ -132,28 +132,64 @@ class SearchUsersRepository extends BaseRepository {
 
   /**
    * @param {string} searchTerm Trecho para `LIKE` em username ou email.
+   * @param {string} searcherUserId Utilizador autenticado (isolamento por workspace).
    * @returns {Promise<import('pg').QueryResultRow[]>}
    */
-  async searchUsers(searchTerm) {
+  async searchUsers(searchTerm, searcherUserId) {
     const query = `
-      SELECT 
-        user_id, 
-        username, 
-        name, 
-        email, 
-        avatar_url 
-      FROM 
-        users 
-      WHERE 
-        (LOWER(username) LIKE LOWER($1) 
-        OR LOWER(email) LIKE LOWER($1))
-        AND deleted = false
-        AND private_profile = false
-      ORDER BY 
-        name ASC
+      WITH searcher_orgs AS (
+        SELECT DISTINCT organization_id
+        FROM organization_members
+        WHERE user_id = $2::uuid
+          AND deleted = false
+          AND status = 'ACTIVE'::public.organization_member_status_enum
+          AND suspended = false
+      ),
+      searcher_has_orgs AS (
+        SELECT EXISTS (SELECT 1 FROM searcher_orgs) AS has_any
+      )
+      SELECT
+        u.user_id,
+        u.username,
+        u.name,
+        u.email,
+        u.avatar_url
+      FROM users u
+      CROSS JOIN searcher_has_orgs sho
+      WHERE
+        (LOWER(u.username) LIKE LOWER($1)
+        OR LOWER(u.email) LIKE LOWER($1))
+        AND u.deleted = false
+        AND u.private_profile = false
+        AND (
+          (
+            NOT sho.has_any
+            AND NOT EXISTS (
+              SELECT 1
+              FROM organization_members om
+              WHERE om.user_id = u.user_id
+                AND om.deleted = false
+                AND om.status = 'ACTIVE'::public.organization_member_status_enum
+                AND om.suspended = false
+            )
+          )
+          OR (
+            sho.has_any
+            AND EXISTS (
+              SELECT 1
+              FROM organization_members om
+              INNER JOIN searcher_orgs so ON om.organization_id = so.organization_id
+              WHERE om.user_id = u.user_id
+                AND om.deleted = false
+                AND om.status = 'ACTIVE'::public.organization_member_status_enum
+                AND om.suspended = false
+            )
+          )
+        )
+      ORDER BY u.name ASC
       LIMIT 15;
     `;
-    const results = await executeQuery(query, [`%${searchTerm}%`]);
+    const results = await executeQuery(query, [`%${searchTerm}%`, searcherUserId]);
     return results;
   }
 

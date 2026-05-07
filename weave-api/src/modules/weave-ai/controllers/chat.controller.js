@@ -19,6 +19,8 @@ const {
   getEngineLlmResponsePrefixRedisKey,
 } = require("@/services/queue/queue-keys");
 const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
+const workspaceUserScopeRepository = require("@/modules/users/repositories/workspace-user-scope.repository");
+const { WORKSPACE_SHARE_DENIED } = require("@/utils/workspace-share-guard");
 
 const ENGINE_CHAT_TIMEOUT_SECONDS = Number.parseInt(
   process.env.WEAVE_ENGINE_CHAT_TIMEOUT_SECONDS || "45",
@@ -646,6 +648,16 @@ class ChatController {
         if (Array.isArray(args.collaboratorIds) && args.collaboratorIds.length > 0) {
           for (const collabId of args.collaboratorIds) {
             if (collabId && typeof collabId === "string") {
+              const mayShare = await workspaceUserScopeRepository.usersMayInteract(
+                userId,
+                collabId
+              );
+              if (!mayShare) {
+                const err = new Error(WORKSPACE_SHARE_DENIED.message);
+                err.statusCode = 403;
+                err.code = "WORKSPACE_SHARE_DENIED";
+                throw err;
+              }
               await notesRepository.addCollaborator(noteId, collabId);
             }
           }
@@ -731,9 +743,25 @@ class ChatController {
         return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_collaborator_add": {
+        const collabUid = String(args.collaboratorUserId || "");
+        if (!collabUid) {
+          const error = new Error("update_note_collaborator_add requer collaboratorUserId");
+          error.statusCode = 400;
+          throw error;
+        }
+        const mayShare = await workspaceUserScopeRepository.usersMayInteract(
+          userId,
+          collabUid
+        );
+        if (!mayShare) {
+          const err = new Error(WORKSPACE_SHARE_DENIED.message);
+          err.statusCode = 403;
+          err.code = "WORKSPACE_SHARE_DENIED";
+          throw err;
+        }
         const result = await notesRepository.addCollaborator(
           args.noteId,
-          args.collaboratorUserId
+          collabUid
         );
         return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
       }

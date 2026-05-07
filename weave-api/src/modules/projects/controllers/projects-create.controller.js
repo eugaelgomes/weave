@@ -7,6 +7,9 @@ const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
 const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
 const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
+const {
+  respondIfWorkspaceShareDenied,
+} = require("@/utils/workspace-share-guard");
 const { normalizeNewProject } = require("../normalizer");
 const {
   ASSIGNABLE_PROJECT_ROLES,
@@ -211,6 +214,12 @@ class ProjectsCreateController extends ProjectsCoreController {
       // Verificar se o usuário não está tentando adicionar a si mesmo
       if (collaboratorId === userId) {
         throw new Error("Você não pode adicionar a si mesmo como colaborador");
+      }
+
+      if (
+        await respondIfWorkspaceShareDenied(res, userId, collaboratorId)
+      ) {
+        return;
       }
 
       // Verificar se o colaborador já está ativo
