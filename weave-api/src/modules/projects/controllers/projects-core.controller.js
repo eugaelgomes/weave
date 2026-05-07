@@ -109,10 +109,10 @@ class ProjectsCoreController extends ProjectsBaseController {
             validated[key] = value;
           } else if (typeof value === "object" && value.path !== undefined) {
             validated[key] = {
-              name: value.name != null ? String(value.name) : "",
+              name: value.name !== null && value.name !== undefined ? String(value.name) : "",
               path: String(value.path),
-              type: value.type != null ? String(value.type) : "",
-              size: value.size != null ? String(value.size) : "",
+              size: value.size !== null && value.size !== undefined ? String(value.size) : "",
+              type: value.type !== null && value.type !== undefined ? String(value.type) : "",
             };
           } else {
             throw new Error(
@@ -196,17 +196,6 @@ class ProjectsCoreController extends ProjectsBaseController {
     const membership =
       await organizationsRepository.getActiveOrganizationWithMembership(userId);
 
-    if (process.env.DEBUG_PROJECT_ACCESS === "true") {
-      // eslint-disable-next-line no-console -- debug-only flag
-      console.log("[ProjectsAccess] validate", {
-        projectId,
-        userId,
-        memberRole: membership?.member_role,
-        hasOrgWideAccess: this._canAccessAllOrganizationProjects(membership),
-        organizationId: membership?.id,
-      });
-    }
-
     if (this._canAccessAllOrganizationProjects(membership)) {
       const rows = await this.projectsRepository.getProjectByIdWithOrgScope(
         projectId,
@@ -263,21 +252,21 @@ class ProjectsCoreController extends ProjectsBaseController {
    */
   _formatProjectResponse(project) {
     return {
+      active: project.active ?? true,
+      created_at: project.created_at,
+      default_view: project.default_view,
+      deleted: project.deleted,
+      description: project.description,
       id: project.id,
-      user_id: project.user_id,
+      methodology: project.methodology,
       org_id: project.organization_id ?? project.org_id ?? null,
       parent_project_id: project.parent_project_id ?? null,
-      title: project.title,
-      description: project.description,
-      properties: project.properties || {},
       projects_files: project.projects_files || [],
+      properties: project.properties || {},
       status: project.status,
-      methodology: project.methodology,
-      default_view: project.default_view,
-      created_at: project.created_at,
+      title: project.title,
       updated_at: project.updated_at,
-      deleted: project.deleted,
-      active: project.active ?? true,
+      user_id: project.user_id,
     };
   }
 

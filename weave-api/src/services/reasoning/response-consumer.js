@@ -1,4 +1,4 @@
-const redis = require("@/services/queue/connection");
+const redis = require("@/services/queue/consumer-connection");
 const reasoningsRepository = require("@/modules/projects/repositories/reasonings.repository");
 const { getAiReportDeliveryQueueRedisKey } = require("@/services/queue/queue-keys");
 

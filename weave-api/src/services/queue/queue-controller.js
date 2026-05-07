@@ -17,15 +17,14 @@ const {
  * @returns {Promise<number>} Length of the list after push.
  */
 async function enqueueRedisListJob(listKey, jobBody) {
-  console.log(`[QueueController] Enqueueing job to ${listKey}`, jobBody);
   try {
     return await redis.lpush(listKey, JSON.stringify(jobBody));
   } catch (err) {
     // Don't block core API flows if Redis/worker is down.
     // eslint-disable-next-line no-console -- queue infra failure diagnostics
     console.error("[QueueController] Failed to enqueue job:", {
-      listKey,
       err: err?.message || String(err),
+      listKey,
     });
     return 0;
   }
@@ -129,7 +128,7 @@ module.exports = {
   enqueueBackupExportJob,
   enqueueDomainVerificationJob,
   enqueueEmailJob,
+  enqueueNoteEmbeddingJob,
   enqueuePlanUsageJob,
   enqueueRedisListJob,
-  enqueueNoteEmbeddingJob,
 };

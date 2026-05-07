@@ -1,4 +1,4 @@
-const redis = require("@/services/queue/connection");
+const redis = require("@/services/queue/consumer-connection");
 const { getReasoningTriggerQueueRedisKey } = require("@/services/queue/queue-keys");
 const sprintContextBuilder = require("./sprint-context-builder");
 
