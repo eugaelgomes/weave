@@ -14,6 +14,7 @@ const { normalizeNewProject } = require("../normalizer");
 const {
   ASSIGNABLE_PROJECT_ROLES,
 } = require("@/modules/projects/project-role-policy");
+const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 
 class ProjectsCreateController extends ProjectsCoreController {
   /**
@@ -116,7 +117,13 @@ class ProjectsCreateController extends ProjectsCoreController {
       const { projectData, stagesData } = normalizeNewProject(
         payload,
         userId,
-        org_id,
+        org_id ||
+          (
+            await organizationsRepository.getActiveOrganizationWithMembership(
+              userId
+            )
+          )?.id ||
+          null,
         userValidatedProps // Injetamos as props do usuário para mesclar com as props de negócio
       );
 

@@ -115,8 +115,14 @@ export const ProjectSchema = z
     description: z.string().nullable().optional(),
     properties: z.union([z.string(), ProjectPropertiesSchema]).optional(),
     status: projectStatus,
-    methodology: z.enum(["scrum", "kanban", "waterfall", "custom"]),
-    default_view: z.enum(["board", "list", "calendar", "timeline", "gantt"]),
+    methodology: z
+      .string()
+      .transform((v: string) => v.toLowerCase())
+      .pipe(z.enum(["scrum", "kanban", "waterfall", "custom"])),
+    default_view: z
+      .string()
+      .transform((v: string) => v.toLowerCase())
+      .pipe(z.enum(["board", "list", "calendar", "timeline", "gantt"])),
     created_at: z.string(),
     updated_at: z.string(),
     deleted: z.boolean(),

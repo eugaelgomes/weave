@@ -11,17 +11,22 @@ class ProjectsDeleteController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const ctx = await this._getProjectOwnershipContext(id, userId);
-      const usageRecord = await PlanUsageManager.managePlanUsage(
-        ctx.project.user_id
-      );
+      const membership =
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+      const orgWide = this._canAccessAllOrganizationProjects(membership);
 
-      const result = ctx.orgWide
-        ? await this.projectsRepository.deleteProjectInOrganization(
-            id,
-            ctx.membership.id
-          )
-        : await this.projectsRepository.deleteProject(id, userId);
+      // Ensure project exists and user has access (middleware should already enforce permission).
+      const project = await this._validateProjectAccess(id, userId);
+
+      const usageRecord = await PlanUsageManager.managePlanUsage(project.user_id);
+
+      const result =
+        orgWide && membership?.id
+          ? await this.projectsRepository.deleteProjectInOrganization(
+              id,
+              membership.id
+            )
+          : await this.projectsRepository.deleteProject(id, userId);
 
       if (!result || result.length === 0) {
         throw new Error("Falha ao deletar projeto");

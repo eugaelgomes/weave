@@ -55,6 +55,7 @@ class ProjectsCreateRepository {
         np.id::text,
         np.user_id::text,
         np.organization_id::text,
+        np.parent_project_id::text,
         np.title,
         np.description,
         np.methodology,
@@ -64,14 +65,18 @@ class ProjectsCreateRepository {
         np.created_at,
         np.updated_at,
         np.deleted,
+        np.active,
         (
           SELECT jsonb_agg(
             jsonb_build_object(
               'id', st.id::text,
+              'project_id', st.project_id::text,
               'name', st.name,
               'position', st.position,
               'color', st.color,
-              'properties', st.properties
+              'properties', st.properties,
+              'created_at', st.created_at,
+              'updated_at', st.updated_at
             ) ORDER BY st.position ASC
           ) FROM inserted_stages st
         ) AS stages

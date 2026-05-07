@@ -39,8 +39,15 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const ctx = await this._getProjectOwnershipContext(id, userId);
-      const currentProject = ctx.project;
+      await this._validateProjectAccess(id, userId);
+      const canWrite = await this._ensureProjectWriteAccess(id, userId);
+      if (!canWrite) {
+        throw new Error(
+          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
+        );
+      }
+
+      const currentProject = await this._validateProjectAccess(id, userId);
 
       if (status !== undefined) {
         const normalized = normalizeProjectStatus(status);

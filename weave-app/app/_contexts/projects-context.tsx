@@ -9,8 +9,10 @@ import {
   updateProject as updateProjectService,
   deleteProject as deleteProjectService,
   deleteProjectStage as deleteProjectStageService,
+  patchProjectStage as patchProjectStageService,
   fetchProjectCollaborators as fetchProjectCollaboratorsService,
   manageCollaborator as manageCollaboratorService,
+  postProjectCollaborator as postProjectCollaboratorService,
   fetchProjectNotes as fetchProjectNotesService,
   manageProjectNote as manageProjectNoteService,
   fetchProjectStages as fetchProjectStagesService,
@@ -35,12 +37,14 @@ import {
   type ProjectCollaborator,
   type ProjectNote,
   type ProjectStage,
+  type PatchProjectStagePayload,
   type ManageCollaboratorData,
   type ManageNoteData,
   type ProjectDashboardStats,
   type ProjectStatsFilters,
   type AiReportConfig,
   type AiReportConfigUpsertPayload,
+  type PostProjectCollaboratorPayload,
   type Sprint,
   type CreateSprintPayload,
   type CompleteSprintPayload,
@@ -158,6 +162,11 @@ export interface ProjectsContextType {
 
   // tages
   getProjectStages: (projectId: string) => Promise<ProjectStage[]>;
+  patchProjectStage: (
+    projectId: string,
+    stageId: string,
+    updates: PatchProjectStagePayload
+  ) => Promise<ProjectStage | null>;
 
   // Taxonomia de projeto (tags e prioridades)
   getProjectTags: (projectId: string) => Promise<ProjectTag[]>;
@@ -183,6 +192,10 @@ export interface ProjectsContextType {
 
   // Funções de colaboradores
   getCollaborators: (projectId: string) => Promise<ProjectCollaborator[]>;
+  postProjectCollaborator: (
+    projectId: string,
+    payload: PostProjectCollaboratorPayload
+  ) => Promise<boolean>;
   addCollaborator: (
     projectId: string,
     userId: string,
@@ -497,6 +510,23 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     [user?.id]
   );
 
+  const patchProjectStage = useCallback(
+    async (
+      projectId: string,
+      stageId: string,
+      updates: PatchProjectStagePayload
+    ): Promise<ProjectStage | null> => {
+      if (!user?.id) return null;
+      try {
+        return await patchProjectStageService(projectId, stageId, updates);
+      } catch (err: unknown) {
+        console.error("Erro ao atualizar etapa do projeto:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
   // --- TAGS DE PROJETO ---
   const getProjectTags = useCallback(
     async (projectId: string): Promise<ProjectTag[]> => {
@@ -646,6 +676,20 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         return collaborators;
       } catch (err: unknown) {
         console.error("Erro ao buscar colaboradores:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const postProjectCollaborator = useCallback(
+    async (projectId: string, payload: PostProjectCollaboratorPayload): Promise<boolean> => {
+      if (!user?.id) return false;
+      try {
+        await postProjectCollaboratorService(projectId, payload);
+        return true;
+      } catch (err: unknown) {
+        console.error("Erro ao convidar colaborador por role:", err);
         throw err;
       }
     },
@@ -1021,6 +1065,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     getProjectsStats,
     fetchProjectsStats,
     getProjectStages,
+    patchProjectStage,
     getProjectTags,
     createProjectTag,
     updateProjectTag,
@@ -1031,6 +1076,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     updateTaskPriority,
     deleteTaskPriority,
     getCollaborators,
+    postProjectCollaborator,
     addCollaborator,
     updateCollaboratorPermission,
     removeCollaborator,

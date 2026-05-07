@@ -28,38 +28,30 @@ class ProjectsReadController extends ProjectsCoreController {
             )
           : await this.projectsRepository.getAllProjects(userId);
 
-      // Formatar projetos com todos os dados
-      const formattedProjects = projects.map((project) => ({
-        id: project.id,
-        user_id: project.user_id,
-        parent_project_id: project.parent_project_id || null,
-        title: project.title,
-        description: project.description,
-        properties: project.properties || {},
-        projects_files: project.projects_files || [],
-        status: project.status,
-        created_at: project.created_at,
-        updated_at: project.updated_at,
-        deleted: project.deleted,
-        owner: {
-          id: project.user_id,
-          username: project.owner_username,
-          email: project.owner_email,
-          name: project.owner_name,
-          avatar_url: project.owner_avatar_url,
-        },
-        organization: project.organization_id
-          ? {
-              id: project.organization_id,
-              name: project.organization_name,
-              unique_name: project.organization_unique_name,
-              logo_url: project.organization_logo_url,
-            }
-          : null,
-        collaborators: project.collaborators || [],
-        notes: project.associated_notes || [],
-        subprojects: project.subprojects || [],
-      }));
+      const formattedProjects = projects.map((project) => {
+        const formatted = this._formatProjectResponse(project);
+        return {
+          ...formatted,
+          owner: {
+            id: project.user_id,
+            username: project.owner_username,
+            email: project.owner_email,
+            name: project.owner_name,
+            avatar_url: project.owner_avatar_url,
+          },
+          organization: project.organization_id
+            ? {
+                id: project.organization_id,
+                name: project.organization_name,
+                unique_name: project.organization_unique_name,
+                logo_url: project.organization_logo_url,
+              }
+            : null,
+          collaborators: project.collaborators || [],
+          notes: project.associated_notes || [],
+          subprojects: project.subprojects || [],
+        };
+      });
 
       res.status(200).json({ projects: formattedProjects });
     } catch (error) {
@@ -81,18 +73,9 @@ class ProjectsReadController extends ProjectsCoreController {
       // Validação de acesso ao projeto (dono ou colaborador)
       const project = await this._validateProjectAccess(id, userId);
 
-      // Formatar e retornar o projeto com dados completos
+      const formatted = this._formatProjectResponse(project);
       const formattedProject = {
-        id: project.id,
-        user_id: project.user_id,
-        title: project.title,
-        description: project.description,
-        properties: project.properties || {},
-        projects_files: project.projects_files || [],
-        status: project.status,
-        created_at: project.created_at,
-        updated_at: project.updated_at,
-        deleted: project.deleted,
+        ...formatted,
         owner: {
           id: project.user_id,
           username: project.owner_username,

@@ -9,12 +9,15 @@ class ProjectsReadRepository {
         p.parent_project_id::text,
         p.title,
         p.description,
+        p.methodology,
+        p.default_view,
         p.properties,
         p.projects_files,
         p.status,
         p.created_at,
         p.updated_at,
         p.deleted,
+        p.active,
         u.username AS owner_username,
         u.email AS owner_email,
         u.name AS owner_name,
@@ -82,11 +85,11 @@ class ProjectsReadRepository {
       WHERE p.deleted = false
         AND p.parent_project_id IS NULL
         AND (
-          p.user_id = $1::uuid
+          p.user_id::text = $1::text
           OR EXISTS (
             SELECT 1 FROM project_members pm2
             WHERE pm2.project_id = p.id
-              AND pm2.user_id = $1::uuid
+              AND pm2.user_id::text = $1::text
               AND pm2.deleted = false
               AND pm2.suspended = false
           )
@@ -124,14 +127,18 @@ class ProjectsReadRepository {
       SELECT 
         p.id::text,
         p.user_id::text,
+        p.parent_project_id::text,
         p.title,
         p.description,
+        p.methodology,
+        p.default_view,
         p.properties,
         p.projects_files,
         p.status,
         p.created_at,
         p.updated_at,
         p.deleted,
+        p.active,
         u.username AS owner_username,
         u.email AS owner_email,
         u.name AS owner_name,
@@ -184,11 +191,11 @@ class ProjectsReadRepository {
       WHERE p.id = $1::uuid
         AND p.deleted = false
         AND (
-          p.user_id = $2::uuid
+          p.user_id::text = $2::text
           OR EXISTS (
             SELECT 1 FROM project_members pm2
             WHERE pm2.project_id = p.id
-              AND pm2.user_id = $2::uuid
+              AND pm2.user_id::text = $2::text
               AND pm2.deleted = false
               AND pm2.suspended = false
           )
@@ -208,12 +215,15 @@ class ProjectsReadRepository {
         p.parent_project_id::text,
         p.title,
         p.description,
+        p.methodology,
+        p.default_view,
         p.properties,
         p.projects_files,
         p.status,
         p.created_at,
         p.updated_at,
         p.deleted,
+        p.active,
         u.username AS owner_username,
         u.email AS owner_email,
         u.name AS owner_name,
@@ -293,14 +303,18 @@ class ProjectsReadRepository {
       SELECT 
         p.id::text,
         p.user_id::text,
+        p.parent_project_id::text,
         p.title,
         p.description,
+        p.methodology,
+        p.default_view,
         p.properties,
         p.projects_files,
         p.status,
         p.created_at,
         p.updated_at,
         p.deleted,
+        p.active,
         u.username AS owner_username,
         u.email AS owner_email,
         u.name AS owner_name,
@@ -425,11 +439,11 @@ class ProjectsReadRepository {
       WHERE p.id = $1::uuid
         AND p.deleted = false
         AND (
-          p.user_id = $2::uuid
+          p.user_id::text = $2::text
           OR EXISTS (
             SELECT 1 FROM project_members pm2
             WHERE pm2.project_id = p.id
-              AND pm2.user_id = $2::uuid
+              AND pm2.user_id::text = $2::text
               AND pm2.deleted = false
               AND pm2.suspended = false
           )
@@ -478,7 +492,7 @@ class ProjectsReadRepository {
         SELECT 1
         FROM project_members pm
         WHERE pm.project_id = $1::uuid
-          AND pm.user_id = $2::uuid
+          AND pm.user_id::text = $2::text
           AND pm.deleted = false
           AND pm.suspended = false
       ) AS is_collaborator;
@@ -493,7 +507,7 @@ class ProjectsReadRepository {
       SELECT pm.role
       FROM project_members pm
       WHERE pm.project_id = $1::uuid
-        AND pm.user_id = $2::uuid
+        AND pm.user_id::text = $2::text
         AND pm.deleted = false
         AND pm.suspended = false
       LIMIT 1;
@@ -508,7 +522,7 @@ class ProjectsReadRepository {
         SELECT 1
         FROM project_members pm
         WHERE pm.project_id = $1::uuid
-          AND pm.user_id = $2::uuid
+          AND pm.user_id::text = $2::text
           AND pm.deleted = false
           AND pm.suspended = true
       ) AS is_suspended;
@@ -524,7 +538,7 @@ class ProjectsReadRepository {
         SELECT 1
         FROM project_members pm
         WHERE pm.project_id = $1::uuid
-          AND pm.user_id = $2::uuid
+          AND pm.user_id::text = $2::text
           AND pm.deleted = false
       ) AS is_collaborator;
     `;
@@ -582,11 +596,11 @@ class ProjectsReadRepository {
           WHERE p.id = $1::uuid
             AND p.deleted = false
             AND (
-              p.user_id = $2::uuid
+              p.user_id::text = $2::text
               OR EXISTS (
                 SELECT 1 FROM project_members pm
                 WHERE pm.project_id = $1::uuid
-                  AND pm.user_id = $2::uuid
+                  AND pm.user_id::text = $2::text
                   AND pm.deleted = false
                   AND pm.suspended = false
               )

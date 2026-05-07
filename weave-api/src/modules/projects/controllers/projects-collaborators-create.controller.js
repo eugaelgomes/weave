@@ -9,6 +9,7 @@ const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
 const {
   respondIfWorkspaceShareDenied,
 } = require("@/utils/workspace-share-guard");
+const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 
 class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
   constructor() {
@@ -37,14 +38,20 @@ class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
         });
       }
 
-      const ctx = await this._getProjectOwnershipContext(projectId, userId);
+      const membership =
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+      const orgWide = this._canAccessAllOrganizationProjects(membership);
 
-      const collaborators = ctx.orgWide
-        ? await this.projectsRepository.getCollaboratorsWithOrgScope(
-            projectId,
-            ctx.membership.id
-          )
-        : await this.projectsRepository.getCollaborators(projectId, userId);
+      // Ensure user has access (permission is enforced by route middleware).
+      await this._validateProjectAccess(projectId, userId);
+
+      const collaborators =
+        orgWide && membership?.id
+          ? await this.projectsRepository.getCollaboratorsWithOrgScope(
+              projectId,
+              membership.id
+            )
+          : await this.projectsRepository.getCollaborators(projectId, userId);
       const currentCollaborators = collaborators[0]?.collaborators || [];
       const maxCollaborators =
         planDetails.details?.limits?.max_collaborators_per_project;
@@ -97,20 +104,21 @@ class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
         throw new Error("Usuário já é colaborador deste projeto");
       }
 
-      const result = ctx.orgWide
-        ? await this.projectsRepository.addCollaboratorWithOrgManagement(
-            projectId,
-            ctx.membership.id,
-            userId,
-            collaboratorId,
-            role
-          )
-        : await this.projectsRepository.addCollaborator(
-            projectId,
-            userId,
-            collaboratorId,
-            role
-          );
+      const result =
+        orgWide && membership?.id
+          ? await this.projectsRepository.addCollaboratorWithOrgManagement(
+              projectId,
+              membership.id,
+              userId,
+              collaboratorId,
+              role
+            )
+          : await this.projectsRepository.addCollaborator(
+              projectId,
+              userId,
+              collaboratorId,
+              role
+            );
 
       if (!result || result.length === 0) {
         throw new Error("Falha ao adicionar colaborador");

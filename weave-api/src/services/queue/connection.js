@@ -5,8 +5,17 @@ const Redis = require("ioredis");
  * @type {import("ioredis").default}
  */
 const redis = new Redis(process.env.REDIS_URL, {
-  enableReadyCheck: false,
-  maxRetriesPerRequest: null,
+  // Fail fast when Redis is unavailable: API requests must not hang.
+  enableReadyCheck: true,
+  enableOfflineQueue: false,
+  maxRetriesPerRequest: 1,
+  connectTimeout: 2000,
+  commandTimeout: 2000,
+  retryStrategy: (times) => {
+    // 1st reconnect attempt after 200ms, then stop retrying.
+    if (times <= 1) return 200;
+    return null;
+  },
 });
 
 redis.on("error", (error) => {

@@ -196,6 +196,17 @@ class ProjectsCoreController extends ProjectsBaseController {
     const membership =
       await organizationsRepository.getActiveOrganizationWithMembership(userId);
 
+    if (process.env.DEBUG_PROJECT_ACCESS === "true") {
+      // eslint-disable-next-line no-console -- debug-only flag
+      console.log("[ProjectsAccess] validate", {
+        projectId,
+        userId,
+        memberRole: membership?.member_role,
+        hasOrgWideAccess: this._canAccessAllOrganizationProjects(membership),
+        organizationId: membership?.id,
+      });
+    }
+
     if (this._canAccessAllOrganizationProjects(membership)) {
       const rows = await this.projectsRepository.getProjectByIdWithOrgScope(
         projectId,
@@ -227,7 +238,7 @@ class ProjectsCoreController extends ProjectsBaseController {
    */
   async _ensureProjectWriteAccess(projectId, userId) {
     const project = await this._validateProjectAccess(projectId, userId);
-    if (project.user_id === userId) return true;
+    if (String(project.user_id) === String(userId)) return true;
 
     const membership =
       await organizationsRepository.getActiveOrganizationWithMembership(userId);
@@ -254,14 +265,19 @@ class ProjectsCoreController extends ProjectsBaseController {
     return {
       id: project.id,
       user_id: project.user_id,
+      org_id: project.organization_id ?? project.org_id ?? null,
+      parent_project_id: project.parent_project_id ?? null,
       title: project.title,
       description: project.description,
       properties: project.properties || {},
       projects_files: project.projects_files || [],
       status: project.status,
+      methodology: project.methodology,
+      default_view: project.default_view,
       created_at: project.created_at,
       updated_at: project.updated_at,
       deleted: project.deleted,
+      active: project.active ?? true,
     };
   }
 

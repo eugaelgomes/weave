@@ -3,6 +3,7 @@ const {
   ASSIGNABLE_PROJECT_ROLES,
 } = require("@/modules/projects/project-role-policy");
 const projectsCollaboratorsRepository = require("@/modules/projects/repositories/projects-collaborators.repository");
+const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 
 class ProjectsCollaboratorsUpdateController extends ProjectsCoreController {
   constructor() {
@@ -22,7 +23,12 @@ class ProjectsCollaboratorsUpdateController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const ctx = await this._getProjectOwnershipContext(projectId, userId);
+      const membership =
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+      const orgWide = this._canAccessAllOrganizationProjects(membership);
+
+      // Ensure user has access (permission is enforced by route middleware).
+      await this._validateProjectAccess(projectId, userId);
 
       if (!ASSIGNABLE_PROJECT_ROLES.includes(role)) {
         throw new Error(
@@ -38,10 +44,10 @@ class ProjectsCollaboratorsUpdateController extends ProjectsCoreController {
         throw new Error("Usuário não é colaborador deste projeto");
       }
 
-      const result = ctx.orgWide
+      const result = orgWide && membership?.id
         ? await this.projectsRepository.updateCollaboratorPermissionWithOrgManagement(
             projectId,
-            ctx.membership.id,
+            membership.id,
             collaboratorId,
             role
           )

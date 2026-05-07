@@ -7,11 +7,9 @@ const ProjectsCollaboratorsCreateController = require("@/modules/projects/contro
 const ProjectsCollaboratorsUpdateController = require("@/modules/projects/controllers/projects-collaborators-update.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const {
-  requireOrgPermission,
-} = require("@/middlewares/auth/require-org-permission");
-const {
-  ORG_PERMISSIONS,
-} = require("@/modules/organizations/organization-role-policy");
+  requireProjectPermission,
+  PROJECT_PERMISSIONS,
+} = require("@/middlewares/auth/require-project-permission");
 const { projectUpdateUpload } = require("@/utils/data/project-upload");
 const {
   highTrafficLimiter,
@@ -19,10 +17,6 @@ const {
 } = require("@/middlewares/security/request-limiters");
 
 const router = express.Router();
-
-const requireManageProjects = requireOrgPermission(
-  ORG_PERMISSIONS.MANAGE_PROJECTS
-);
 
 router.use(verifyToken);
 
@@ -43,37 +37,27 @@ router.post(
   ProjectsCreateController.createProject.bind(ProjectsCreateController)
 );
 router.patch(
-  "/:projectId",
+  "/:id",
   standardTrafficLimiter,
-  requireManageProjects,
+  requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
   ProjectsUpdateController.updateProject.bind(ProjectsUpdateController)
 );
 router.delete(
-  "/:projectId",
-  standardTrafficLimiter,
-  requireManageProjects,
-  ProjectsDeleteController.deleteProject.bind(ProjectsDeleteController)
-);
-
-router.get(
   "/:id",
-  ProjectsReadController.getProjectById.bind(ProjectsReadController)
+  standardTrafficLimiter,
+  requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
+  ProjectsDeleteController.deleteProject.bind(ProjectsDeleteController)
 );
 
 router.put(
   "/:id",
-  requireManageProjects,
+  standardTrafficLimiter,
+  requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
   projectUpdateUpload.fields([
     { maxCount: 1, name: "icon" },
     { maxCount: 10, name: "files" },
   ]),
   ProjectsUpdateController.updateProject.bind(ProjectsUpdateController)
-);
-
-router.delete(
-  "/:id",
-  requireManageProjects,
-  ProjectsDeleteController.deleteProject.bind(ProjectsDeleteController)
 );
 
 router.get(
@@ -89,13 +73,13 @@ router.get(
 router.patch(
   "/:id/stages/:stageId",
   standardTrafficLimiter,
-  requireManageProjects,
+  requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
   ProjectsUpdateController.updateProjectStage.bind(ProjectsUpdateController)
 );
 router.delete(
   "/:id/stages/:stageId",
   standardTrafficLimiter,
-  requireManageProjects,
+  requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
   ProjectsDeleteController.deleteProjectStage.bind(ProjectsDeleteController)
 );
 
@@ -104,7 +88,7 @@ router
   .get(ProjectsReadController.getCollaborators.bind(ProjectsReadController))
   .post(
     standardTrafficLimiter,
-    requireManageProjects,
+    requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_MEMBERS),
     ProjectsCollaboratorsCreateController.addCollaborator.bind(
       ProjectsCollaboratorsCreateController
     )
@@ -113,7 +97,7 @@ router
 router.patch(
   "/:projectId/collaborators/:collaboratorId",
   standardTrafficLimiter,
-  requireManageProjects,
+  requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_MEMBERS),
   ProjectsCollaboratorsUpdateController.updateCollaboratorPermission.bind(
     ProjectsCollaboratorsUpdateController
   )
@@ -122,7 +106,7 @@ router.patch(
 router.put(
   "/:projectId/collaborators/:collaboratorId",
   standardTrafficLimiter,
-  requireManageProjects,
+  requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_MEMBERS),
   ProjectsCollaboratorsUpdateController.updateCollaboratorPermission.bind(
     ProjectsCollaboratorsUpdateController
   )
@@ -132,13 +116,13 @@ router
   .route("/:projectId/notes")
   .get(ProjectsReadController.getAssociatedNotes.bind(ProjectsReadController))
   .put(
-    requireManageProjects,
+    requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
     ProjectsUpdateController.manageNotes.bind(ProjectsUpdateController)
   );
 
 router.put(
   "/:projectId/notes/:noteId/stage",
-  requireManageProjects,
+  requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
   ProjectsUpdateController.updateNoteStage.bind(ProjectsUpdateController)
 );
 
@@ -149,7 +133,7 @@ router.get(
 );
 router.put(
   "/:id/ai-report-config",
-  requireManageProjects,
+  requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
   ProjectsUpdateController.updateAiReportConfig.bind(ProjectsUpdateController)
 );
 
@@ -165,13 +149,13 @@ router.get(
 router.post(
   "/:id/sprints",
   standardTrafficLimiter,
-  requireManageProjects,
+  requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
   ProjectsUpdateController.createSprint.bind(ProjectsUpdateController)
 );
 router.patch(
   "/:id/sprints/:sprintId/complete",
   standardTrafficLimiter,
-  requireManageProjects,
+  requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
   ProjectsUpdateController.completeSprint.bind(ProjectsUpdateController)
 );
 
@@ -191,7 +175,7 @@ router.get(
 router.post(
   "/:id/reasonings",
   standardTrafficLimiter,
-  requireManageProjects,
+  requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
   ProjectsUpdateController.createReasoning.bind(ProjectsUpdateController)
 );
 router.patch(
