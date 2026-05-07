@@ -6,8 +6,9 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useCalendar } from "@/app/_contexts/calendar-context";
+import { useNotes } from "@/app/_contexts/notes-context";
 import type { FreeBusyResponse } from "@/app/_services/calendar-service/calendar-service";
-import { searchUsers, type User as SearchUser } from "@/app/_services/notes-service/notes-service";
+import type { User as SearchUser } from "@/app/_services/notes-service/notes-service";
 import type { UserPreferences } from "@/types/user-preferences";
 import { calendarUtils } from "@/app/_utils/calendar";
 import { useCalendarPageView } from "../_contexts/calendar-page-view-context";
@@ -46,6 +47,7 @@ function MicroCalendarPeopleFreeBusy({
   currentDate: Date;
 }) {
   const { googleConnected, checkGoogleFreeBusy, connectGoogleCalendar } = useCalendar();
+  const { searchUsers } = useNotes();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchUser[]>([]);
   const [searching, setSearching] = useState(false);
@@ -89,7 +91,7 @@ function MicroCalendarPeopleFreeBusy({
     }, 300);
 
     return () => clearTimeout(t);
-  }, [query]);
+  }, [query, searchUsers]);
 
   const loadFreeBusy = useCallback(async () => {
     if (!googleConnected || !pickedEmail) {

@@ -14,14 +14,8 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { ORG_PERMISSIONS, orgRoleHasPermission } from "@/app/_utils/org-permissions";
-import { useHomeWeaveEngine } from "@/app/(protected)/home/_hooks/use-home-weave-engine";
-import {
-  createReasoning,
-  updateReasoningActionItem,
-  updateReasoningInteraction,
-} from "@/app/_services/projects-service/reasonings-service";
-import { fetchActiveSprint } from "@/app/_services/projects-service/projects-service";
 import { ApiError } from "@/app/_services/api-error";
+import { useWeaveEngine } from "@/app/_contexts/weave-engine-context";
 
 export default function HighDensityDashboard() {
   const { user } = useAuth();
@@ -39,15 +33,20 @@ export default function HighDensityDashboard() {
     loading,
     error,
     projects,
-    reasonings,
-    ensureActionItems,
-    setActionItems,
     actionItemsByReasoningId,
-    ensureContent,
     contentByReasoningId,
-    refresh,
+    feed: reasonings,
+    ensureActionItems,
+    ensureContent,
+    setActionItemsLocal,
+    refreshFeed: refresh,
     refreshing,
-  } = useHomeWeaveEngine({ projectsLimit: 4, perProjectLimit: 6 });
+    togglePinned,
+    dismiss,
+    createReasoningFromMarkdown,
+    markRead,
+    toggleActionItemCompleted,
+  } = useWeaveEngine();
 
   const [expandedReasoningId, setExpandedReasoningId] = useState<string | null>(null);
   const [detailReasoningId, setDetailReasoningId] = useState<string | null>(null);
@@ -56,17 +55,20 @@ export default function HighDensityDashboard() {
   const detail = detailReasoningId ? contentByReasoningId.get(detailReasoningId) : undefined;
 
   const visibleReasonings = useMemo(
-    () => reasonings.filter((r) => !r.is_dismissed),
+    () => reasonings.filter((r: { is_dismissed?: boolean | null }) => !r.is_dismissed),
     [reasonings]
   );
 
   const pinned = useMemo(
-    () => visibleReasonings.filter((r) => r.is_pinned),
+    () => visibleReasonings.filter((r: { is_pinned?: boolean | null }) => r.is_pinned),
     [visibleReasonings]
   );
 
   const recent = useMemo(
-    () => visibleReasonings.filter((r) => !r.is_pinned).slice(0, 12),
+    () =>
+      visibleReasonings
+        .filter((r: { is_pinned?: boolean | null }) => !r.is_pinned)
+        .slice(0, 12),
     [visibleReasonings]
   );
 
@@ -76,9 +78,7 @@ export default function HighDensityDashboard() {
     try {
       setDetailReasoningId(reasoningId);
       await ensureContent(projectId, reasoningId);
-      // ensure it's marked read
-      await updateReasoningInteraction(projectId, reasoningId, { isRead: true }).catch(() => {});
-      await refresh();
+      await markRead(projectId, reasoningId).catch(() => {});
     } catch (err: unknown) {
       toast.error("Falha ao carregar detalhe do reasoning", {
         description: err instanceof Error ? err.message : "Erro inesperado",
@@ -102,8 +102,7 @@ export default function HighDensityDashboard() {
 
   const onTogglePinned = async (projectId: string, reasoningId: string, nextPinned: boolean) => {
     try {
-      await updateReasoningInteraction(projectId, reasoningId, { isPinned: nextPinned });
-      await refresh();
+      await togglePinned(projectId, reasoningId, nextPinned);
     } catch (err: unknown) {
       toast.error("Não foi possível atualizar", {
         description: err instanceof Error ? err.message : "Erro inesperado",
@@ -113,8 +112,7 @@ export default function HighDensityDashboard() {
 
   const onDismiss = async (projectId: string, reasoningId: string) => {
     try {
-      await updateReasoningInteraction(projectId, reasoningId, { isDismissed: true });
-      await refresh();
+      await dismiss(projectId, reasoningId);
     } catch (err: unknown) {
       toast.error("Não foi possível dispensar", {
         description: err instanceof Error ? err.message : "Erro inesperado",
@@ -129,12 +127,12 @@ export default function HighDensityDashboard() {
     nextCompleted: boolean
   ) => {
     try {
-      await updateReasoningActionItem(projectId, reasoningId, itemId, { isCompleted: nextCompleted });
       const current = actionItemsByReasoningId.get(reasoningId) || [];
-      const next = current.map((it) =>
+      const next = current.map((it: { id: string; is_completed?: boolean | null }) =>
         it.id === itemId ? { ...it, is_completed: nextCompleted } : it
       );
-      setActionItems(reasoningId, next);
+      setActionItemsLocal(reasoningId, next);
+      await toggleActionItemCompleted(projectId, reasoningId, itemId, nextCompleted);
     } catch (err: unknown) {
       toast.error("Não foi possível atualizar action item", {
         description: err instanceof Error ? err.message : "Erro inesperado",
@@ -149,22 +147,9 @@ export default function HighDensityDashboard() {
 
   const submitCreateReasoning = async (projectId: string, payload: { reasoningType: string; title: string; outputMarkdown: string }) => {
     try {
-      const sprint = await fetchActiveSprint(projectId);
-      if (!sprint?.id) {
-        toast.error("Sem sprint ativo", {
-          description: "Crie/ative um sprint no projeto para gerar reasonings.",
-        });
-        return;
-      }
-      await createReasoning(projectId, {
-        sprintId: sprint.id,
-        reasoningType: payload.reasoningType,
-        title: payload.title,
-        content: { outputMarkdown: payload.outputMarkdown },
-      });
+      await createReasoningFromMarkdown(projectId, payload);
       setCreatingForProjectId(null);
       toast.success("Reasoning criado");
-      await refresh();
     } catch (err: unknown) {
       const isForbidden =
         err instanceof ApiError && err.status === 403;
@@ -360,7 +345,7 @@ export default function HighDensityDashboard() {
                               type="checkbox"
                               className="mt-0.5"
                               checked={Boolean(it.is_completed)}
-                              onChange={(e) =>
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                                 void onToggleActionItemCompleted(r.projectId, r.id, it.id, e.target.checked)
                               }
                             />
@@ -480,7 +465,7 @@ function CreateReasoningModal({
             <div className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">Tipo</div>
             <input
               value={reasoningType}
-              onChange={(e) => setReasoningType(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReasoningType(e.target.value)}
               className="mt-1 w-full rounded border border-neutral-200 bg-white px-2 py-1 text-[12px] text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100"
               placeholder="ex.: sprint_review, daily_standup, general"
             />
@@ -490,7 +475,7 @@ function CreateReasoningModal({
             <div className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">Título</div>
             <input
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
               className="mt-1 w-full rounded border border-neutral-200 bg-white px-2 py-1 text-[12px] text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100"
               placeholder="Resumo curto do reasoning"
             />
@@ -500,7 +485,7 @@ function CreateReasoningModal({
             <div className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">Output (Markdown)</div>
             <textarea
               value={outputMarkdown}
-              onChange={(e) => setOutputMarkdown(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setOutputMarkdown(e.target.value)}
               className="mt-1 h-40 w-full resize-none rounded border border-neutral-200 bg-white px-2 py-1 text-[12px] text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100"
               placeholder="Cole o conteúdo em markdown aqui (output_markdown)"
             />

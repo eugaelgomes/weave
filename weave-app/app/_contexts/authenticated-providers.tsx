@@ -11,6 +11,8 @@ import { CalendarProvider } from "./calendar-context";
 import { ApiTokensProvider } from "./api-tokens-context";
 import { TagsProvider } from "./tags-context";
 import { TaskPrioritiesProvider } from "./task-priorities-context";
+import { WeaveEngineProvider } from "./weave-engine-context";
+import { BackupProvider } from "./backup-context";
 
 // Exemplo (opcional, apenas para melhorar a leitura do código)
 const composeProviders = (...providers: React.ElementType[]) =>
@@ -32,8 +34,10 @@ const AppProviders = composeProviders(
   NotificationProvider,
   CalendarProvider,
   ApiTokensProvider,
+  BackupProvider,
   TagsProvider,
   TaskPrioritiesProvider,
+  WeaveEngineProvider,
   ChatProvider,
   AgentProvider
 );

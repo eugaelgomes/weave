@@ -75,7 +75,6 @@ import { getTagColor } from "@/app/_utils/tag-colors";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { NoteBlockEditor } from "@/app/(protected)/notes/[id]/_components/note-block-editor";
 import { NoteTiptapEditor } from "@/app/(protected)/notes/[id]/_components/note-tiptap-editor";
-import { putNoteBlocksSync } from "@/app/_services/notes-service/notes-service";
 import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema";
 
 // =================== BLOCO SORTABLE (Markdown / tipos) ===================
@@ -199,6 +198,7 @@ const NoteDetail = () => {
     updateBlock: updateBlockService,
     deleteBlock: deleteBlockService,
     reorderBlocks: reorderBlocksService,
+    putNoteBlocksSync: putNoteBlocksSyncCtx,
   } = useNotes();
 
   const {
@@ -1021,14 +1021,14 @@ const NoteDetail = () => {
     async (blocksData: CreateBlockData[]) => {
       if (!note) return;
       try {
-        const savedBlocks = await putNoteBlocksSync(note.id, blocksData);
+        const savedBlocks = await putNoteBlocksSyncCtx(note.id, blocksData);
         setBlocks(savedBlocks as (Block & { children?: Block[] })[]);
       } catch (error) {
         console.error("Erro ao salvar blocos via TipTap:", error);
         throw error;
       }
     },
-    [note]
+    [note, putNoteBlocksSyncCtx]
   );
 
   const handleDelete = async () => {

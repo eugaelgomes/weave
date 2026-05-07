@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { AlertTriangle, Download, Trash2, Loader2, X } from "lucide-react";
 import { useAuth } from "@/app/_contexts/auth-context";
-import { requestBackup, getBackupStatus } from "@/app/_services/backup-service/backup-service";
+import { useBackup } from "@/app/_contexts/backup-context";
 
 // --- Sub-componente Interno de Modal (Ajustado para a nova escala) ---
 const ConfirmationModal = ({
@@ -24,7 +24,12 @@ const ConfirmationModal = ({
           <span className="text-[10px] font-bold tracking-widest text-neutral-400">
             Verificação
           </span>
-          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600">
+          <button
+            onClick={onClose}
+            title="Fechar"
+            aria-label="Fechar"
+            className="text-neutral-400 hover:text-neutral-600"
+          >
             <X size={14} />
           </button>
         </div>
@@ -145,6 +150,7 @@ export const SettingsDangerZone: React.FC<any> = ({
 
 export default function DangerZonePage() {
   const { deleteUserPermanently } = useAuth();
+  const { requestBackup, getBackupStatus } = useBackup();
   const [backupMessage, setBackupMessage] = useState("");
   const [backupError, setBackupError] = useState("");
   const [backupLoading, setBackupLoading] = useState(false);

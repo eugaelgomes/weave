@@ -18,6 +18,7 @@ import {
   recuseCollaboration as recuseCollaborationService,
   fetchNotesStats as fetchNotesStatsService,
   fetchNoteBlocks,
+  putNoteBlocksSync,
   createNoteBlock,
   updateNoteBlock,
   deleteNoteBlock,
@@ -103,6 +104,7 @@ export interface NotesContextType {
     blockPositions: Array<{ id: string; position: number }>,
     parentId?: string | null
   ) => Promise<boolean>;
+  putNoteBlocksSync: (noteId: string, blocks: unknown[]) => Promise<Block[]>;
 
   // Funções de colaboração
   shareNote: (noteId: string, collaboratorData: ShareNoteData) => Promise<unknown>;
@@ -608,6 +610,22 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     [applyLocalBlocksUpdate, user?.id]
   );
 
+  const putNoteBlocksSyncCtx = useCallback(
+    async (noteId: string, blocks: unknown[]): Promise<Block[]> => {
+      if (!user?.id) return [];
+      try {
+        const saved = await putNoteBlocksSync(noteId, blocks);
+        // refresh local tree to keep UI consistent
+        applyLocalBlocksUpdate(noteId, saved as (Block & { children?: Block[] })[]);
+        return saved;
+      } catch (err: unknown) {
+        console.error("Erro ao sincronizar blocos:", err);
+        throw err;
+      }
+    },
+    [applyLocalBlocksUpdate, user?.id]
+  );
+
   // --- FUNÇÕES DE COLABORAÇÃO ---
 
   const shareNote = useCallback(
@@ -735,6 +753,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     updateBlock,
     deleteBlock,
     reorderBlocks,
+    putNoteBlocksSync: putNoteBlocksSyncCtx,
     shareNote,
     searchUsers,
     getCollaborators,
