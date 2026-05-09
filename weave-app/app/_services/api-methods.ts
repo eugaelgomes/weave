@@ -71,6 +71,7 @@ export const API_ENDPOINTS = {
   PROJECTS: "/projects",
   PROJECTS_STATS: "/projects/stats",
   PROJECTS_BY_ID: (id: string) => `/projects/${id}`,
+  PROJECTS_MY_VIEW_PREF: (id: string) => `/projects/${id}/my-view-preference`,
   PROJECTS_STAGES: (projectId: string) => `/projects/${projectId}/stages`,
   PROJECTS_STAGE_BY_ID: (projectId: string, stageId: string) =>
     `/projects/${projectId}/stages/${stageId}`,

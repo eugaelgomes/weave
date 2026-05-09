@@ -21,6 +21,8 @@ export default function ProjectViewPage() {
 
   const {
     getProjectById,
+    getMyProjectView,
+    setMyProjectView,
     getCollaborators,
     getProjectNotes,
     getProjectStages,
@@ -40,9 +42,7 @@ export default function ProjectViewPage() {
 
   // Estados de UI
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<
-    "board" | "list" | "calendar" | "timeline" | "gantt"
-  >("board");
+  const [activeView, setActiveView] = useState<"board" | "list">("board");
   const [showAddCollaborator, setShowAddCollaborator] = useState(false);
   const [showAddNote, setShowAddNote] = useState(false);
 
@@ -52,19 +52,27 @@ export default function ProjectViewPage() {
     const fetchProjectData = async () => {
       setLoading(true);
       try {
-        const [projectData, collabData, notesData, stagesData, tagsData, prioritiesData] =
-          await Promise.all([
+        const [
+          projectData,
+          collabData,
+          notesData,
+          stagesData,
+          tagsData,
+          prioritiesData,
+          viewPref,
+        ] = await Promise.all([
           getProjectById(projectId),
           getCollaborators(projectId),
           getProjectNotes(projectId),
           getProjectStages(projectId).catch(() => []),
           getProjectTags(projectId).catch(() => []),
           getTaskPriorities(projectId).catch(() => []),
+          getMyProjectView(projectId),
         ]);
 
         if (projectData) {
           setProject(projectData);
-          setActiveView(projectData.default_view || "board");
+          setActiveView(viewPref);
         }
         setCollaborators(collabData);
         setProjectNotes(notesData);
@@ -101,7 +109,10 @@ export default function ProjectViewPage() {
         project={project}
         stagesCount={stages.length}
         activeView={activeView}
-        setActiveView={setActiveView}
+        setActiveView={(v) => {
+          setActiveView(v);
+          void setMyProjectView(projectId, v);
+        }}
         onViewDetails={() => router.push(`/projects/${projectId}/details`)}
         onBack={() => router.push("/projects")}
       />
@@ -125,7 +136,15 @@ export default function ProjectViewPage() {
                 }}
               />
             )}
-            {/* Outras visualizações (List, Timeline) entrariam aqui */}
+            {activeView === "list" && (
+              <div className="flex min-h-[200px] flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                <p className="font-medium text-neutral-700 dark:text-neutral-200">Vista em lista</p>
+                <p className="max-w-sm">
+                  A vista em lista está em construção. Use o quadro (Board) para gerir tarefas por
+                  coluna.
+                </p>
+              </div>
+            )}
           </div>
         </main>
       </div>

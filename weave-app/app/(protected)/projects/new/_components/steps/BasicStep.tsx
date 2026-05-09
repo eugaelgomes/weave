@@ -31,26 +31,6 @@ const METHODOLOGY_OPTIONS: Array<{
   },
 ];
 
-const VIEW_OPTIONS: Array<{
-  id: CreateProjectData["default_view"];
-  name: string;
-  icon: React.ReactNode;
-  description: string;
-}> = [
-  {
-    id: "board",
-    name: "Board",
-    icon: <Trello className="h-4 w-4" />,
-    description: "Visualização kanban em cartões por coluna.",
-  },
-  {
-    id: "list",
-    name: "Lista",
-    icon: <LayoutGrid className="h-4 w-4" />,
-    description: "Visualização linear de todas as tarefas.",
-  },
-];
-
 /** #RGB or #RRGGBB (same rules as API hex validation). */
 function normalizeProjectColorHex(raw: string): string | null {
   const t = raw.trim();
@@ -132,7 +112,6 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
         description: state.draft.basic.description.trim() || undefined,
         status: PROJECT_STATUS.OPEN,
         methodology: state.draft.basic.methodology,
-        default_view: state.draft.basic.default_view,
         properties: {
           color: colorHex,
         },
@@ -239,41 +218,6 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
                 <div>
                   <div className="text-sm font-semibold">{m.name}</div>
                   <div className="mt-0.5 text-xs text-neutral-500">{m.description}</div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-md border border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-950/30">
-          <h3 className="mb-1 text-xs font-bold uppercase tracking-wider text-neutral-400">Visualização padrão</h3>
-          <p className="mb-2 text-xs text-neutral-500 dark:text-neutral-500">
-            Como as tarefas serão exibidas ao abrir o projeto.
-          </p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {VIEW_OPTIONS.map((v) => (
-              <button
-                key={v.id}
-                type="button"
-                onClick={() => actions.setBasicDraft("default_view", v.id!)}
-                className={`flex items-start gap-2 rounded-md border p-2 text-left transition ${
-                  state.draft.basic.default_view === v.id
-                    ? "border-brand-primary-500 bg-brand-primary-500/5 ring-1 ring-brand-primary-500"
-                    : "border-neutral-200 hover:border-neutral-300 dark:border-neutral-700 dark:hover:border-neutral-600"
-                }`}
-              >
-                <span
-                  className={`mt-0.5 rounded-md p-1.5 ${
-                    state.draft.basic.default_view === v.id
-                      ? "bg-brand-primary-500 text-neutral-950"
-                      : "bg-neutral-100 dark:bg-neutral-800"
-                  }`}
-                >
-                  {v.icon}
-                </span>
-                <div>
-                  <div className="text-sm font-semibold">{v.name}</div>
-                  <div className="mt-0.5 text-xs text-neutral-500">{v.description}</div>
                 </div>
               </button>
             ))}

@@ -254,7 +254,6 @@ class ProjectsCoreController extends ProjectsBaseController {
     return {
       active: project.active ?? true,
       created_at: project.created_at,
-      default_view: project.default_view,
       deleted: project.deleted,
       description: project.description,
       id: project.id,

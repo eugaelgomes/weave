@@ -43,12 +43,37 @@ function requireProjectPermission(permission) {
         });
       }
 
-      // Owner access.
-      const accessRows = await projectsRepository.getProjectByIdWithAccess(
+      let project = null;
+      let resolvedViaOrgWide = false;
+
+      const memberRows = await projectsRepository.getProjectByIdWithAccess(
         projectId,
         userId
       );
-      if (!accessRows?.length) {
+      if (memberRows?.length) {
+        project = memberRows[0];
+      } else {
+        const membership =
+          await organizationsRepository.getActiveOrganizationWithMembership(userId);
+        if (
+          membership?.id &&
+          orgRoleHasPermission(
+            membership.member_role,
+            ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS
+          )
+        ) {
+          const orgRows = await projectsRepository.getProjectByIdWithOrgScope(
+            projectId,
+            membership.id
+          );
+          if (orgRows?.length) {
+            project = orgRows[0];
+            resolvedViaOrgWide = true;
+          }
+        }
+      }
+
+      if (!project) {
         return res.status(404).json({
           code: "PROJECT_NOT_FOUND",
           error: "Projeto não encontrado ou você não tem acesso",
@@ -56,12 +81,14 @@ function requireProjectPermission(permission) {
         });
       }
 
-      const project = accessRows[0];
-      if (project.user_id === userId) {
+      if (String(project.user_id) === String(userId)) {
         return next();
       }
 
-      // Org-wide access.
+      if (resolvedViaOrgWide) {
+        return next();
+      }
+
       const membership =
         await organizationsRepository.getActiveOrganizationWithMembership(userId);
       if (
@@ -71,10 +98,15 @@ function requireProjectPermission(permission) {
           ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS
         )
       ) {
-        return next();
+        const orgRows = await projectsRepository.getProjectByIdWithOrgScope(
+          projectId,
+          membership.id
+        );
+        if (orgRows?.length) {
+          return next();
+        }
       }
 
-      // Project role permission.
       const projectRole = await projectsRepository.getProjectMemberRole(
         projectId,
         userId

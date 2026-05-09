@@ -5,6 +5,8 @@ import { useAuth } from "./auth-context";
 import {
   fetchProjects as fetchProjectsService,
   fetchProjectById as fetchProjectByIdService,
+  getMyProjectView as getMyProjectViewService,
+  setMyProjectView as setMyProjectViewService,
   createProject as createProjectService,
   updateProject as updateProjectService,
   deleteProject as deleteProjectService,
@@ -107,7 +109,6 @@ export interface ProjectOverview {
   description?: string;
   status: string;
   methodology: string;
-  default_view: string;
   progress: number;
   notesCount: number;
   collaboratorsCount: number;
@@ -151,6 +152,8 @@ export interface ProjectsContextType {
   fetchProjects: () => Promise<void>;
   refreshProjects: () => Promise<void>;
   getProjectById: (projectId: string) => Promise<Project | null>;
+  getMyProjectView: (projectId: string) => Promise<"board" | "list">;
+  setMyProjectView: (projectId: string, view: "board" | "list") => Promise<"board" | "list">;
   createProject: (projectData: CreateProjectData) => Promise<Project | null>;
   updateProject: (
     projectId: string,
@@ -281,7 +284,6 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         description: project.description,
         status: project.status || PROJECT_STATUS.OPEN,
         methodology: project.methodology || "kanban",
-        default_view: project.default_view || "board",
         progress: project.properties?.progress || 0,
         notesCount: Array.isArray(project.notes) ? project.notes.length : 0,
         collaboratorsCount: Array.isArray(project.collaborators)
@@ -321,6 +323,32 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
       } catch (err: unknown) {
         console.error("Erro ao buscar projeto:", err);
         throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const getMyProjectView = useCallback(
+    async (projectId: string): Promise<"board" | "list"> => {
+      if (!user?.id || !projectId) return "board";
+      try {
+        return await getMyProjectViewService(projectId);
+      } catch (err: unknown) {
+        console.error("Erro ao buscar preferência de vista:", err);
+        return "board";
+      }
+    },
+    [user?.id]
+  );
+
+  const setMyProjectView = useCallback(
+    async (projectId: string, view: "board" | "list"): Promise<"board" | "list"> => {
+      if (!user?.id || !projectId) return view;
+      try {
+        return await setMyProjectViewService(projectId, view);
+      } catch (err: unknown) {
+        console.error("Erro ao gravar preferência de vista:", err);
+        return view;
       }
     },
     [user?.id]
@@ -1061,6 +1089,8 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     fetchProjects,
     refreshProjects,
     getProjectById,
+    getMyProjectView,
+    setMyProjectView,
     createProject,
     updateProject,
     deleteProject,

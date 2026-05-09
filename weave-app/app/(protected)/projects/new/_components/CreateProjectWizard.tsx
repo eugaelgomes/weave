@@ -23,7 +23,6 @@ const DEFAULT_BASIC: BasicDraft = {
   title: "",
   description: "",
   methodology: "kanban",
-  default_view: "board",
   color: "#eab308",
 };
 

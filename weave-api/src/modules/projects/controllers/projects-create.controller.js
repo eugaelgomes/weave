@@ -29,7 +29,6 @@ class ProjectsCreateController extends ProjectsCoreController {
         status,
         properties,
         methodology,
-        default_view,
         org_id,
         parent_project_id,
       } = req.body;
@@ -106,11 +105,21 @@ class ProjectsCreateController extends ProjectsCoreController {
 
       // 🟢 3. CHAMADA AO NORMALIZER
       // Passamos os dados da requisição + as propriedades validadas pelo usuário
+      const allowedMethodologies = ["kanban", "scrum"];
+      if (
+        methodology !== undefined &&
+        methodology !== null &&
+        !allowedMethodologies.includes(String(methodology).toLowerCase())
+      ) {
+        return res.status(422).json({
+          error: "Metodologia inválida. Permitidas: kanban, scrum.",
+        });
+      }
+
       const payload = {
         title,
         description,
         methodology,
-        default_view,
         status: projectStatus,
         parent_project_id,
       };

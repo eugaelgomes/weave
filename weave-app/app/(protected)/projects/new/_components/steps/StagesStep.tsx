@@ -21,17 +21,6 @@ const METHODOLOGY_STAGE_DEFAULTS: Record<string, Array<StageDraft>> = {
     { name: "Review / QA", color: "#fef08a" },
     { name: "Done", color: "#bbf7d0" },
   ],
-  waterfall: [
-    { name: "Planeado", color: "#94a3b8" },
-    { name: "Em curso", color: "#bfdbfe" },
-    { name: "Concluído", color: "#bbf7d0" },
-  ],
-  custom: [
-    { name: "Backlog", color: "#94a3b8" },
-    { name: "To Do", color: "#e2e8f0" },
-    { name: "Doing", color: "#bfdbfe" },
-    { name: "Done", color: "#bbf7d0" },
-  ],
 };
 
 function stageDefaultsFor(methodology: string): StageDraft[] {

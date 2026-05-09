@@ -3,6 +3,7 @@ const ProjectsReadController = require("@/modules/projects/controllers/projects-
 const ProjectsCreateController = require("@/modules/projects/controllers/projects-create.controller");
 const ProjectsUpdateController = require("@/modules/projects/controllers/projects-update.controller");
 const ProjectsDeleteController = require("@/modules/projects/controllers/projects-delete.controller");
+const UserViewPrefsController = require("@/modules/projects/controllers/user-view-prefs.controller");
 const ProjectsCollaboratorsCreateController = require("@/modules/projects/controllers/projects-collaborators-create.controller");
 const ProjectsCollaboratorsUpdateController = require("@/modules/projects/controllers/projects-collaborators-update.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
@@ -15,6 +16,19 @@ const {
   highTrafficLimiter,
   standardTrafficLimiter,
 } = require("@/middlewares/security/request-limiters");
+const {
+  validateGetProjects,
+  validateGetProjectById,
+  validateGetProjectStages,
+  validateGetProjectNotes,
+  validateGetProjectCollaborators,
+  validateGetProjectSprints,
+  validateGetProjectReasonings,
+  validateProjectIdParam,
+  validateReasoningParams,
+  validateGetMyViewPref,
+  validateSetMyViewPref,
+} = require("@/modules/projects/projects.validators");
 
 const router = express.Router();
 
@@ -23,6 +37,7 @@ router.use(verifyToken);
 router.get(
   "/",
   highTrafficLimiter,
+  validateGetProjects,
   ProjectsReadController.getAllProjects.bind(ProjectsReadController)
 );
 router.get(
@@ -61,12 +76,33 @@ router.put(
 );
 
 router.get(
+  "/:id/my-view-preference",
+  highTrafficLimiter,
+  validateGetMyViewPref,
+  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
+  UserViewPrefsController.getMyView.bind(UserViewPrefsController)
+);
+router.put(
+  "/:id/my-view-preference",
+  standardTrafficLimiter,
+  validateSetMyViewPref,
+  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
+  UserViewPrefsController.setMyView.bind(UserViewPrefsController)
+);
+
+router.get(
   "/:id",
+  highTrafficLimiter,
+  validateGetProjectById,
+  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
   ProjectsReadController.getProjectById.bind(ProjectsReadController)
 );
 
 router.get(
   "/:id/stages",
+  highTrafficLimiter,
+  validateGetProjectStages,
+  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
   ProjectsReadController.getProjectStages.bind(ProjectsReadController)
 );
 
@@ -85,7 +121,12 @@ router.delete(
 
 router
   .route("/:projectId/collaborators")
-  .get(ProjectsReadController.getCollaborators.bind(ProjectsReadController))
+  .get(
+    highTrafficLimiter,
+    validateGetProjectCollaborators,
+    requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
+    ProjectsReadController.getCollaborators.bind(ProjectsReadController)
+  )
   .post(
     standardTrafficLimiter,
     requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_MEMBERS),
@@ -114,7 +155,12 @@ router.put(
 
 router
   .route("/:projectId/notes")
-  .get(ProjectsReadController.getAssociatedNotes.bind(ProjectsReadController))
+  .get(
+    highTrafficLimiter,
+    validateGetProjectNotes,
+    requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
+    ProjectsReadController.getAssociatedNotes.bind(ProjectsReadController)
+  )
   .put(
     requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
     ProjectsUpdateController.manageNotes.bind(ProjectsUpdateController)
@@ -126,9 +172,11 @@ router.put(
   ProjectsUpdateController.updateNoteStage.bind(ProjectsUpdateController)
 );
 
-// AI Report Config
 router.get(
   "/:id/ai-report-config",
+  highTrafficLimiter,
+  validateProjectIdParam,
+  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
   ProjectsReadController.getAiReportConfig.bind(ProjectsReadController)
 );
 router.put(
@@ -137,15 +185,22 @@ router.put(
   ProjectsUpdateController.updateAiReportConfig.bind(ProjectsUpdateController)
 );
 
-// Sprints
-router.get(
-  "/:id/sprints",
-  ProjectsReadController.getProjectSprints.bind(ProjectsReadController)
-);
 router.get(
   "/:id/sprints/active",
+  highTrafficLimiter,
+  validateProjectIdParam,
+  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
   ProjectsReadController.getActiveSprint.bind(ProjectsReadController)
 );
+
+router.get(
+  "/:id/sprints",
+  highTrafficLimiter,
+  validateGetProjectSprints,
+  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
+  ProjectsReadController.getProjectSprints.bind(ProjectsReadController)
+);
+
 router.post(
   "/:id/sprints",
   standardTrafficLimiter,
@@ -159,17 +214,25 @@ router.patch(
   ProjectsUpdateController.completeSprint.bind(ProjectsUpdateController)
 );
 
-// Reasonings
 router.get(
   "/:id/reasonings",
+  highTrafficLimiter,
+  validateGetProjectReasonings,
+  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
   ProjectsReadController.getReasonings.bind(ProjectsReadController)
 );
 router.get(
   "/:id/reasonings/:reasoningId",
+  highTrafficLimiter,
+  validateReasoningParams,
+  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
   ProjectsReadController.getReasoningById.bind(ProjectsReadController)
 );
 router.get(
   "/:id/reasonings/:reasoningId/action-items",
+  highTrafficLimiter,
+  validateReasoningParams,
+  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
   ProjectsReadController.getReasoningActionItems.bind(ProjectsReadController)
 );
 router.post(
@@ -194,4 +257,3 @@ router.patch(
 );
 
 module.exports = router;
-

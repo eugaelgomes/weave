@@ -147,6 +147,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
         });
       }
 
+      const ctx = await this._getProjectOwnershipContext(id, userId);
       const result = ctx.orgWide
         ? await this.projectsRepository.updateProjectInOrganization(
             id,

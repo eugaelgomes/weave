@@ -4,15 +4,68 @@ const { normalizeProjectStatus } = require("@/utils/patterns/product-patterns");
 const reportConfigRepository = require("@/modules/projects/repositories/report-config.repository");
 const sprintsRepository = require("@/modules/projects/repositories/sprints.repository");
 const reasoningsRepository = require("@/modules/projects/repositories/reasonings.repository");
+const {
+  buildListEnvelope,
+  hasAnyQueryKey,
+} = require("@/utils/http/list-query");
+const {
+  PROJECTS_LIST_TRIGGER_KEYS,
+  PROJECT_STAGES_LIST_TRIGGER_KEYS,
+  PROJECT_NOTES_LIST_TRIGGER_KEYS,
+  PROJECT_COLLABORATORS_LIST_TRIGGER_KEYS,
+  PROJECT_SPRINTS_LIST_TRIGGER_KEYS,
+  PROJECT_REASONINGS_LIST_TRIGGER_KEYS,
+} = require("@/modules/projects/projects.validators");
 
 class ProjectsReadController extends ProjectsCoreController {
   /**
-   * GET /api/projects - Buscar todos os projetos do usuário
-   * Lista todos os projetos pertencentes ao usuário autenticado com dados completos
+   * @param {Record<string, unknown>} filters
+   * @returns {Record<string, unknown>}
+   */
+  _echoFilters(filters) {
+    const out = { ...filters };
+    for (const key of Object.keys(out)) {
+      const v = out[key];
+      if (v instanceof Date) {
+        out[key] = v.toISOString();
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Loads project row with aggregates (owner, org, collaborators, notes) for read handlers.
+   *
+   * @param {string} projectId
+   * @param {string} userId
+   * @returns {Promise<object>}
+   */
+  async _loadProjectForRead(projectId, userId) {
+    const membership =
+      await organizationsRepository.getActiveOrganizationWithMembership(userId);
+
+    if (this._canAccessAllOrganizationProjects(membership) && membership.id) {
+      const rows = await this.projectsRepository.getProjectByIdWithOrgScope(
+        projectId,
+        membership.id
+      );
+      if (!rows?.length) {
+        throw new Error("Projeto não encontrado ou você não tem acesso");
+      }
+      return rows[0];
+    }
+
+    return this._validateProjectAccess(projectId, userId);
+  }
+
+  /**
+   * GET /api/projects — list root projects (optional filters + pagination envelope).
+   *
+   * @example Legacy: GET /api/v1/projects → `{ projects: [...] }`
+   * @example Filtered: GET /api/v1/projects?page=1&limit=20&sort=updated_at:desc → envelope + `projects` alias
    */
   async getAllProjects(req, res, next) {
     try {
-      // Validação de autenticação
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
@@ -20,6 +73,80 @@ class ProjectsReadController extends ProjectsCoreController {
         await organizationsRepository.getActiveOrganizationWithMembership(
           userId
         );
+
+      const wantsEnvelope = hasAnyQueryKey(req.query, PROJECTS_LIST_TRIGGER_KEYS);
+
+      if (wantsEnvelope) {
+        const { pagination, sort, include: includeArr, filters } =
+          req.parsedQuery;
+
+        const filtersForRepo = { ...filters };
+        if (!this._canAccessAllOrganizationProjects(membership)) {
+          filtersForRepo.organization_id = null;
+        }
+
+        const include = {
+          collaborators: includeArr.includes("collaborators"),
+          notes: includeArr.includes("notes"),
+          subprojects: includeArr.includes("subprojects"),
+        };
+
+        const orgWide =
+          this._canAccessAllOrganizationProjects(membership) && membership.id;
+        const scope = orgWide
+          ? { mode: "organization", organizationId: membership.id }
+          : { mode: "user", userId };
+
+        const { rows, total } =
+          await this.projectsRepository.getAllProjectsFiltered(
+            scope,
+            filtersForRepo,
+            pagination,
+            sort,
+            include,
+            userId
+          );
+
+        const formattedProjects = rows.map((project) => {
+          const formatted = this._formatProjectResponse(project);
+          return {
+            ...formatted,
+            owner: {
+              id: project.user_id,
+              username: project.owner_username,
+              email: project.owner_email,
+              name: project.owner_name,
+              avatar_url: project.owner_avatar_url,
+            },
+            organization: project.organization_id
+              ? {
+                  id: project.organization_id,
+                  name: project.organization_name,
+                  unique_name: project.organization_unique_name,
+                  logo_url: project.organization_logo_url,
+                }
+              : null,
+            collaborators: project.collaborators || [],
+            notes: project.associated_notes || [],
+            subprojects: project.subprojects || [],
+          };
+        });
+
+        return res.status(200).json(
+          buildListEnvelope({
+            data: formattedProjects,
+            page: pagination.page,
+            limit: pagination.limit,
+            total,
+            sort,
+            filters: this._echoFilters({
+              ...filtersForRepo,
+              include: includeArr,
+            }),
+            legacyKey: "projects",
+          })
+        );
+      }
 
       const projects =
         this._canAccessAllOrganizationProjects(membership) && membership.id
@@ -58,22 +185,27 @@ class ProjectsReadController extends ProjectsCoreController {
       this._handleError(error, res, next);
     }
   }
+
   /**
-   * GET /api/projects/:id - Buscar um projeto específico
-   * Retorna os detalhes de um projeto específico se o usuário tiver acesso (dono ou colaborador)
+   * GET /api/projects/:id — project detail; `?include=` controls payload shape.
+   *
+   * @example GET /api/v1/projects/:id?include=collaborators,notes,subprojects,stages
    */
   async getProjectById(req, res, next) {
     try {
       const { id } = req.params;
 
-      // Validação de autenticação
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      // Validação de acesso ao projeto (dono ou colaborador)
-      const project = await this._validateProjectAccess(id, userId);
+      const project = await this._loadProjectForRead(id, userId);
+      const include = req.parsedQuery?.include || [
+        "collaborators",
+        "notes",
+      ];
 
       const formatted = this._formatProjectResponse(project);
+      /** @type {Record<string, unknown>} */
       const formattedProject = {
         ...formatted,
         owner: {
@@ -91,26 +223,46 @@ class ProjectsReadController extends ProjectsCoreController {
               logo_url: project.organization_logo_url,
             }
           : null,
-        collaborators: project.collaborators || [],
-        notes: project.associated_notes || [],
       };
+
+      if (include.includes("collaborators")) {
+        formattedProject.collaborators = project.collaborators || [];
+      } else {
+        formattedProject.collaborators = [];
+      }
+
+      if (include.includes("notes")) {
+        formattedProject.notes = project.associated_notes || [];
+      } else {
+        formattedProject.notes = [];
+      }
+
+      if (include.includes("subprojects")) {
+        formattedProject.subprojects =
+          await this.projectsRepository.getSubprojectsLight(id);
+      }
+
+      if (include.includes("stages")) {
+        const stages = await this.projectsRepository.getProjectStages(id);
+        formattedProject.stages = (stages || []).map((s) =>
+          this._formatProjectStage(s)
+        );
+      }
 
       res.status(200).json(formattedProject);
     } catch (error) {
       this._handleError(error, res, next);
     }
   }
+
   /**
-   * GET /api/projects/with-user - Buscar projetos com informações do usuário
-   * Lista todos os projetos com dados completos do proprietário
+   * GET /api/projects/with-user — legacy helper (unchanged contract).
    */
   async getProjectsWithUserInfo(req, res, next) {
     try {
-      // Validação de autenticação
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      // Buscar projetos com informações do usuário
       const projects =
         await this.projectsRepository.getProjectsWithUserInfo(userId);
 
@@ -118,7 +270,6 @@ class ProjectsReadController extends ProjectsCoreController {
         return res.status(200).json({ projects: [] });
       }
 
-      // Formatar projetos com informações do proprietário
       const formattedProjects = projects.map((project) => ({
         id: project.id,
         title: project.title,
@@ -139,23 +290,44 @@ class ProjectsReadController extends ProjectsCoreController {
       this._handleError(error, res, next);
     }
   }
+
   /**
-   * GET /api/projects/:id/stages - Buscar as etapas (colunas) de um projeto
-   * Retorna os stages de um projeto se o utilizador tiver acesso (dono ou colaborador)
+   * GET /api/projects/:id/stages
    */
   async getProjectStages(req, res, next) {
     try {
       const { id } = req.params;
 
-      // Validação de autenticação
-      const userId = this._requireAuthenticatedUser(req, res);
-      if (!userId) return;
+      if (!this._requireAuthenticatedUser(req, res)) return;
 
-      // Validação de segurança: O utilizador tem acesso ao projeto?
-      // Se não tiver, este método lança um erro automaticamente e vai para o catch
-      await this._validateProjectAccess(id, userId);
+      const wantsEnvelope = hasAnyQueryKey(
+        req.query,
+        PROJECT_STAGES_LIST_TRIGGER_KEYS
+      );
 
-      // Busca as etapas na base de dados
+      if (wantsEnvelope) {
+        const { pagination, sort, filters } = req.parsedQuery;
+        const { rows, total } =
+          await this.projectsRepository.getProjectStagesFiltered(
+            id,
+            filters,
+            pagination,
+            sort
+          );
+        const formatted = rows.map((s) => this._formatProjectStage(s));
+        return res.status(200).json(
+          buildListEnvelope({
+            data: formatted,
+            page: pagination.page,
+            limit: pagination.limit,
+            total,
+            sort,
+            filters: this._echoFilters(filters),
+            legacyKey: "stages",
+          })
+        );
+      }
+
       const stages = await this.projectsRepository.getProjectStages(id);
       const formatted = (stages || []).map((s) => this._formatProjectStage(s));
 
@@ -166,85 +338,139 @@ class ProjectsReadController extends ProjectsCoreController {
       this._handleError(error, res, next);
     }
   }
+
   /**
-   * GET /api/projects/:projectId/collaborators - Listar colaboradores
-   * Lista todos os colaboradores de um projeto (acesso para donos e colaboradores)
+   * GET /api/projects/:projectId/collaborators
    */
   async getCollaborators(req, res, next) {
     try {
       const { projectId } = req.params;
 
-      // Validação de autenticação
-      const userId = this._requireAuthenticatedUser(req, res);
-      if (!userId) return;
+      if (!this._requireAuthenticatedUser(req, res)) return;
 
-      const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(
-          userId
-        );
+      const wantsEnvelope = hasAnyQueryKey(
+        req.query,
+        PROJECT_COLLABORATORS_LIST_TRIGGER_KEYS
+      );
 
-      let project;
-      if (this._canAccessAllOrganizationProjects(membership) && membership.id) {
-        const rows = await this.projectsRepository.getProjectByIdWithOrgScope(
+      const { pagination, sort, filters } = req.parsedQuery;
+      const effectivePagination = wantsEnvelope
+        ? pagination
+        : { page: 1, limit: 500, offset: 0 };
+
+      const { rows, total } =
+        await this.projectsRepository.listProjectCollaboratorsFiltered(
           projectId,
-          membership.id
+          filters,
+          effectivePagination,
+          sort
         );
-        if (!rows?.length) {
-          throw new Error("Projeto não encontrado ou você não tem acesso");
-        }
-        project = rows[0];
-      } else {
-        project = await this._validateProjectAccess(projectId, userId);
+
+      const collaborators = rows.map((r) => ({
+        user_id: r.user_id,
+        name: r.name,
+        username: r.username,
+        email: r.email,
+        avatar_url: r.avatar_url,
+        role: r.role,
+        added_at: r.added_at,
+        added_by: r.added_by,
+        suspended: r.suspended,
+      }));
+
+      if (wantsEnvelope) {
+        return res.status(200).json(
+          buildListEnvelope({
+            data: collaborators,
+            page: effectivePagination.page,
+            limit: effectivePagination.limit,
+            total,
+            sort,
+            filters: this._echoFilters(filters),
+            legacyKey: "collaborators",
+          })
+        );
       }
 
-      const collaborators = project.collaborators || [];
-
       res.status(200).json({
-        collaborators: collaborators,
+        collaborators,
       });
     } catch (error) {
       this._handleError(error, res, next);
     }
   }
+
   /**
-   * GET /api/projects/:projectId/notes - Listar notas do projeto
-   * Lista todas as notas associadas ao projeto (acesso para donos e colaboradores)
+   * GET /api/projects/:projectId/notes
    */
   async getAssociatedNotes(req, res, next) {
     try {
       const { projectId } = req.params;
 
-      // Validação de autenticação
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
-
-      await this._validateProjectAccess(projectId, userId);
 
       const membership =
         await organizationsRepository.getActiveOrganizationWithMembership(
           userId
         );
-      const notes =
-        this._canAccessAllOrganizationProjects(membership) && membership.id
-          ? await this.projectsRepository.getAssociatedNotesWithOrgScope(
-              projectId,
-              membership.id
-            )
-          : await this.projectsRepository.getAssociatedNotes(projectId, userId);
+
+      const wantsEnvelope = hasAnyQueryKey(
+        req.query,
+        PROJECT_NOTES_LIST_TRIGGER_KEYS
+      );
+
+      const orgWide =
+        this._canAccessAllOrganizationProjects(membership) && membership.id;
+      const scope = orgWide
+        ? { type: "organization", organizationId: membership.id }
+        : { type: "member", userId };
+
+      if (wantsEnvelope) {
+        const { pagination, sort, filters } = req.parsedQuery;
+        const { rows, total } =
+          await this.projectsRepository.getAssociatedNotesFiltered(
+            projectId,
+            scope,
+            filters,
+            pagination,
+            sort
+          );
+
+        return res.status(200).json(
+          buildListEnvelope({
+            data: rows,
+            page: pagination.page,
+            limit: pagination.limit,
+            total,
+            sort,
+            filters: this._echoFilters(filters),
+            legacyKey: "notes",
+          })
+        );
+      }
+
+      const notes = orgWide
+        ? await this.projectsRepository.getAssociatedNotesWithOrgScope(
+            projectId,
+            membership.id
+          )
+        : await this.projectsRepository.getAssociatedNotes(projectId, userId);
 
       res.status(200).json({
-        notes: notes,
+        notes,
       });
     } catch (error) {
       this._handleError(error, res, next);
     }
   }
+
   async getProjectStats(req, res, next) {
     try {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const VALID_METHODOLOGIES = ["kanban", "scrum", "waterfall", "custom"];
+      const VALID_METHODOLOGIES = ["kanban", "scrum"];
 
       const filters = {};
 
@@ -326,8 +552,6 @@ class ProjectsReadController extends ProjectsCoreController {
         methodology: {
           kanban: parseInt(row.methodology.kanban) || 0,
           scrum: parseInt(row.methodology.scrum) || 0,
-          waterfall: parseInt(row.methodology.waterfall) || 0,
-          custom: parseInt(row.methodology.custom) || 0,
         },
         progress: formattedProgress,
         notes: formattedNotes,
@@ -353,22 +577,14 @@ class ProjectsReadController extends ProjectsCoreController {
     }
   }
 
-  // ══════════════════════════════════════════════════════════════════════
-  // AI Report Config & Sprints (Read)
-  // ══════════════════════════════════════════════════════════════════════
-
   /**
    * GET /api/projects/:id/ai-report-config
-   * Returns the AI report configuration for a project.
    */
   async getAiReportConfig(req, res, next) {
     try {
       const { id: projectId } = req.params;
 
-      const userId = this._requireAuthenticatedUser(req, res);
-      if (!userId) return;
-
-      await this._validateProjectAccess(projectId, userId);
+      if (!this._requireAuthenticatedUser(req, res)) return;
 
       const config = await reportConfigRepository.getByProjectId(projectId);
 
@@ -384,18 +600,40 @@ class ProjectsReadController extends ProjectsCoreController {
 
   /**
    * GET /api/projects/:id/sprints
-   * Returns sprint history for a project.
    */
   async getProjectSprints(req, res, next) {
     try {
       const { id: projectId } = req.params;
 
-      const userId = this._requireAuthenticatedUser(req, res);
-      if (!userId) return;
+      if (!this._requireAuthenticatedUser(req, res)) return;
 
-      await this._validateProjectAccess(projectId, userId);
+      const wantsEnvelope = hasAnyQueryKey(
+        req.query,
+        PROJECT_SPRINTS_LIST_TRIGGER_KEYS
+      );
 
-      const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+      if (wantsEnvelope) {
+        const { pagination, sort, filters } = req.parsedQuery;
+        const { rows, total } = await sprintsRepository.getFilteredByProject(
+          projectId,
+          filters,
+          pagination,
+          sort
+        );
+        return res.status(200).json(
+          buildListEnvelope({
+            data: rows,
+            page: pagination.page,
+            limit: pagination.limit,
+            total,
+            sort,
+            filters: this._echoFilters(filters),
+            legacyKey: "sprints",
+          })
+        );
+      }
+
+      const limit = Math.min(parseInt(req.query.limit, 10) || 20, 50);
       const sprints = await sprintsRepository.getAllByProject(projectId, limit);
 
       res.status(200).json({ sprints });
@@ -406,16 +644,12 @@ class ProjectsReadController extends ProjectsCoreController {
 
   /**
    * GET /api/projects/:id/sprints/active
-   * Returns the currently active sprint for a project.
    */
   async getActiveSprint(req, res, next) {
     try {
       const { id: projectId } = req.params;
 
-      const userId = this._requireAuthenticatedUser(req, res);
-      if (!userId) return;
-
-      await this._validateProjectAccess(projectId, userId);
+      if (!this._requireAuthenticatedUser(req, res)) return;
 
       const sprint = await sprintsRepository.getActiveByProject(projectId);
 
@@ -425,14 +659,8 @@ class ProjectsReadController extends ProjectsCoreController {
     }
   }
 
-  // ══════════════════════════════════════════════════════════════════════
-  // Reasonings (Read)
-  // ══════════════════════════════════════════════════════════════════════
-
   /**
    * GET /api/projects/:id/reasonings
-   * Lists reasonings for a project, scoped by member access.
-   * Query params: sprintId, reasoningType, limit
    */
   async getReasonings(req, res, next) {
     try {
@@ -441,21 +669,48 @@ class ProjectsReadController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      await this._validateProjectAccess(projectId, userId);
-
-      const options = {
-        sprintId: req.query.sprintId || null,
-        reasoningType: req.query.reasoningType || null,
-        limit: req.query.limit || 20,
-      };
-
-      const reasonings = await reasoningsRepository.getByProjectSprint(
-        projectId,
-        userId,
-        options
+      const wantsEnvelope = hasAnyQueryKey(
+        req.query,
+        PROJECT_REASONINGS_LIST_TRIGGER_KEYS
       );
 
-      res.status(200).json({ reasonings });
+      if (!wantsEnvelope) {
+        const options = {
+          sprintId: req.query.sprintId || null,
+          reasoningType: req.query.reasoningType || null,
+          limit: req.query.limit || 20,
+        };
+
+        const reasonings = await reasoningsRepository.getByProjectSprint(
+          projectId,
+          userId,
+          options
+        );
+
+        return res.status(200).json({ reasonings });
+      }
+
+      const { pagination, sort, filters } = req.parsedQuery;
+      const { rows, total } =
+        await reasoningsRepository.listByProjectForMember(
+          projectId,
+          userId,
+          filters,
+          pagination,
+          sort
+        );
+
+      return res.status(200).json(
+        buildListEnvelope({
+          data: rows,
+          page: pagination.page,
+          limit: pagination.limit,
+          total,
+          sort,
+          filters: this._echoFilters(filters),
+          legacyKey: "reasonings",
+        })
+      );
     } catch (error) {
       this._handleError(error, res, next);
     }
@@ -463,17 +718,13 @@ class ProjectsReadController extends ProjectsCoreController {
 
   /**
    * GET /api/projects/:id/reasonings/:reasoningId
-   * Returns the full content of a reasoning (heavy payload).
-   * Also marks the reasoning as read for the current user.
    */
   async getReasoningById(req, res, next) {
     try {
-      const { id: projectId, reasoningId } = req.params;
+      const { reasoningId } = req.params;
 
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
-
-      await this._validateProjectAccess(projectId, userId);
 
       const content = await reasoningsRepository.getContentById(reasoningId);
 
@@ -481,7 +732,6 @@ class ProjectsReadController extends ProjectsCoreController {
         return res.status(404).json({ error: "Raciocínio não encontrado" });
       }
 
-      // Mark as read (fire-and-forget)
       reasoningsRepository
         .upsertInteraction(reasoningId, userId, { isRead: true })
         .catch(() => {});
@@ -494,16 +744,13 @@ class ProjectsReadController extends ProjectsCoreController {
 
   /**
    * GET /api/projects/:id/reasonings/:reasoningId/action-items
-   * Returns action items for a reasoning.
    */
   async getReasoningActionItems(req, res, next) {
     try {
-      const { id: projectId, reasoningId } = req.params;
+      const { reasoningId } = req.params;
 
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
-
-      await this._validateProjectAccess(projectId, userId);
 
       const actionItems =
         await reasoningsRepository.getActionItemsByReasoning(reasoningId);

@@ -18,7 +18,6 @@ class ProjectsCreateRepository {
           title, 
           description, 
           methodology, 
-          default_view, 
           status, 
           properties,
           parent_project_id
@@ -29,10 +28,9 @@ class ProjectsCreateRepository {
           $3, 
           $4, 
           $5::project_methodology_enum, 
-          $6::project_view_enum, 
-          $7::project_status, 
-          $8::jsonb,
-          $10::uuid
+          $6::project_status, 
+          $7::jsonb,
+          $9::uuid
         )
         RETURNING *
       ),
@@ -47,7 +45,7 @@ class ProjectsCreateRepository {
           s.color, 
           s.properties::jsonb
         FROM new_project p
-        CROSS JOIN jsonb_to_recordset($9::jsonb) AS s(name text, position integer, color text, properties jsonb)
+        CROSS JOIN jsonb_to_recordset($8::jsonb) AS s(name text, position integer, color text, properties jsonb)
         RETURNING *
       )
       -- 3. Retornamos o projeto montado já com o array de stages embutido
@@ -59,7 +57,6 @@ class ProjectsCreateRepository {
         np.title,
         np.description,
         np.methodology,
-        np.default_view,
         np.properties,
         np.status,
         np.created_at,
@@ -89,7 +86,6 @@ class ProjectsCreateRepository {
       projectData.title,
       projectData.description || null,
       projectData.methodology,
-      projectData.default_view,
       projectData.status,
       projectData.properties,
       JSON.stringify(stagesData),

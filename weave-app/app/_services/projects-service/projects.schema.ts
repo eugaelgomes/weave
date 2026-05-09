@@ -118,11 +118,7 @@ export const ProjectSchema = z
     methodology: z
       .string()
       .transform((v: string) => v.toLowerCase())
-      .pipe(z.enum(["scrum", "kanban", "waterfall", "custom"])),
-    default_view: z
-      .string()
-      .transform((v: string) => v.toLowerCase())
-      .pipe(z.enum(["board", "list", "calendar", "timeline", "gantt"])),
+      .pipe(z.enum(["scrum", "kanban"])),
     created_at: z.string(),
     updated_at: z.string(),
     deleted: z.boolean(),
@@ -292,6 +288,10 @@ export const InteractionEnvelopeSchema = z.object({
   interaction: z.unknown(),
 });
 
+export const ProjectViewPreferenceSchema = z.object({
+  view: z.enum(["board", "list"]),
+});
+
 export const ProjectDashboardStatsSchema = z
   .object({
     overview: z.object({
@@ -310,8 +310,6 @@ export const ProjectDashboardStatsSchema = z
     methodology: z.object({
       kanban: z.number(),
       scrum: z.number(),
-      waterfall: z.number(),
-      custom: z.number(),
     }),
     progress: z.object({
       average: z.number(),

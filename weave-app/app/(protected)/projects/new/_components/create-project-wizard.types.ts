@@ -20,7 +20,6 @@ export type BasicDraft = {
   title: string;
   description: string;
   methodology: NonNullable<CreateProjectData["methodology"]>;
-  default_view: NonNullable<CreateProjectData["default_view"]>;
   color: string;
 };
 

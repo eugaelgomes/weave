@@ -31,6 +31,8 @@ export {
 export {
   fetchProjects,
   fetchProjectById,
+  getMyProjectView,
+  setMyProjectView,
   createProject,
   updateProject,
   deleteProject,

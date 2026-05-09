@@ -225,3 +225,36 @@ DESATUALIZADO
 | [docs/user_and_password.md](docs/user_and_password.md)           | Usuários e recuperação de senha          |
 | [db_docs/readme.md](db_docs/readme.md)                           | Schema completo do banco de dados        |
 | [db_docs/structure.sql](db_docs/structure.sql)                   | DDL do banco                             |
+
+---
+
+## Projects — GET list filters (internal API)
+
+Base path: `/api/v1/projects` (requires auth via `verifyToken`). Invalid UUIDs in path params return **400**; invalid query shapes return **422**.
+
+### List envelope (when filters/pagination are used)
+
+Responses include `data`, the legacy key (`projects`, `notes`, `stages`, …), `pagination` (`page`, `limit`, `total`, `total_pages`, `has_next`, `next_cursor` reserved as `null`), `sort`, and `filters_applied`.
+
+### Endpoints (query highlights)
+
+| Method | Path | Notes |
+| ------ | ---- | ----- |
+| GET | `/projects` | Filters: `search`, `status`, `methodology` (CSV: `KANBAN`, `SCRUM` only), `visibility`, `ownership`, `owner_user_id`, `collaborator_user_id`, `organization_id` (org-wide roles only), `parent_only`, `has_parent`, date ranges (`created_*`, `updated_*`, `start_*`, `target_end_*`), `progress_min`/`max`, `priority`, `tags`, `active`. `include=collaborators,notes,subprojects`. `sort=field:asc\|desc`. |
+| GET | `/projects/:id` | `include=collaborators,notes,subprojects,stages` (default: collaborators + notes). |
+| GET | `/projects/:id/my-view-preference` | `{ view: "board" \| "list" }` for the authenticated user (`READ_PROJECT_CONTENT`). |
+| PUT | `/projects/:id/my-view-preference` | Body `{ view: "board" \| "list" }`. Persists UI layout preference per user per project. |
+| GET | `/projects/:id/stages` | `include_done`, `search`, pagination, `sort`. |
+| GET | `/projects/:projectId/notes` | `status`, `priority_id`, `tags` (note tag UUIDs), `stage_id`, `created_by`, `due_from`/`to`, timestamps, `search`. |
+| GET | `/projects/:projectId/collaborators` | `role`, `suspended`, `search`, `added_from`/`to`. Requires `READ_PROJECT_CONTENT`. |
+| GET | `/projects/:id/sprints` | `status`, date ranges on `start_*` / `end_*`, pagination; legacy `limit` without `page` still supported. |
+| GET | `/projects/:id/reasonings` | Extends `sprintId`, `reasoningType`, `from`/`to`, `is_read`, `is_pinned`, `is_dismissed`, `created_by`, pagination. |
+
+### Indexes (optional)
+
+See [db_structure_docs/migrations/2026-05-07_projects_filters_indexes.sql](db_structure_docs/migrations/2026-05-07_projects_filters_indexes.sql).
+
+### View preference vs methodology
+
+- **Methodology** (`projects.methodology`): process template (`KANBAN` \| `SCRUM`); drives default stages and related properties.
+- **View preference**: stored in `user_project_prefs.prefs` (not on `projects`); currently supports `prefs.view` with `board` \| `list`. Migration: [db_structure_docs/migrations/2026-05-08_split_view_pref_and_shrink_methodology.sql](db_structure_docs/migrations/2026-05-08_split_view_pref_and_shrink_methodology.sql).

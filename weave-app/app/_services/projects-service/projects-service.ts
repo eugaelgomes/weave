@@ -16,6 +16,7 @@ import {
   PatchStageEnvelopeSchema,
   PostCollaboratorResponseSchema,
   ProjectDashboardStatsSchema,
+  ProjectViewPreferenceSchema,
   ProjectNotesListSchema,
   ProjectSchema,
   ProjectsResponseSchema,
@@ -126,8 +127,7 @@ export interface Project {
   description?: string;
   properties?: ProjectProperties;
   status: ProjectStatus;
-  methodology: "scrum" | "kanban" | "waterfall" | "custom";
-  default_view: "board" | "list" | "calendar" | "timeline" | "gantt";
+  methodology: "scrum" | "kanban";
   created_at: string;
   updated_at: string;
   deleted: boolean;
@@ -149,8 +149,7 @@ export interface CreateProjectData {
   title: string;
   description?: string;
   status?: ProjectStatus;
-  methodology?: "scrum" | "kanban" | "waterfall" | "custom";
-  default_view?: "board" | "list" | "calendar" | "timeline" | "gantt";
+  methodology?: "scrum" | "kanban";
   properties?: Omit<ProjectProperties, "progress">;
   org_id?: string;
   parent_project_id?: string;
@@ -160,8 +159,7 @@ export interface UpdateProjectData {
   title?: string;
   description?: string;
   status?: ProjectStatus;
-  methodology?: "scrum" | "kanban" | "waterfall" | "custom";
-  default_view?: "board" | "list" | "calendar" | "timeline" | "gantt";
+  methodology?: "scrum" | "kanban";
   properties?: Omit<ProjectProperties, "progress">;
   active?: boolean;
 }
@@ -221,6 +219,27 @@ export const fetchProjectById = async (projectId: string): Promise<Project> => {
   const raw = await handleResponse<unknown>(response);
   const project = ProjectSchema.parse(raw);
   return parseProjectProperties(project as Project);
+};
+
+export const getMyProjectView = async (
+  projectId: string
+): Promise<"board" | "list"> => {
+  const response = await apiClient.get(API_ENDPOINTS.PROJECTS_MY_VIEW_PREF(projectId));
+  const raw = await handleResponse<unknown>(response);
+  const data = ProjectViewPreferenceSchema.parse(raw);
+  return data.view;
+};
+
+export const setMyProjectView = async (
+  projectId: string,
+  view: "board" | "list"
+): Promise<"board" | "list"> => {
+  const response = await apiClient.put(API_ENDPOINTS.PROJECTS_MY_VIEW_PREF(projectId), {
+    view,
+  });
+  const raw = await handleResponse<unknown>(response);
+  const data = ProjectViewPreferenceSchema.parse(raw);
+  return data.view;
 };
 
 export const createProject = async (projectData: CreateProjectData): Promise<Project> => {
@@ -683,8 +702,6 @@ export interface ProjectDashboardStats {
   methodology: {
     kanban: number;
     scrum: number;
-    waterfall: number;
-    custom: number;
   };
   progress: {
     average: number;

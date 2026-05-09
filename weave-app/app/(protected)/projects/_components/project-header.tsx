@@ -1,12 +1,12 @@
 import React from "react";
 import { FaArrowLeft } from "react-icons/fa";
-import { Activity, Columns3, List, Timer, ChevronRight } from "lucide-react";
+import { Activity, Columns3, List, ChevronRight } from "lucide-react";
 
 interface ProjectHeaderProps {
   project: any;
   stagesCount: number;
-  activeView: string;
-  setActiveView: (view: any) => void;
+  activeView: "board" | "list";
+  setActiveView: (view: "board" | "list") => void;
   onViewDetails: () => void;
   onBack: () => void;
 }
@@ -57,9 +57,8 @@ export default function ProjectHeader({
         {/* View Selectors - Ultra Compact Segmented Control */}
         <div className="flex items-center rounded-md bg-neutral-100 p-0.5 dark:bg-neutral-900">
           {[
-            { id: "board", icon: <Columns3 className="size-3" />, label: "Board" },
-            { id: "list", icon: <List className="size-3" />, label: "List" },
-            { id: "timeline", icon: <Timer className="size-3" />, label: "Time" },
+            { id: "board" as const, icon: <Columns3 className="size-3" />, label: "Board" },
+            { id: "list" as const, icon: <List className="size-3" />, label: "List" },
           ].map((view) => (
             <button
               key={view.id}

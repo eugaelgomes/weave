@@ -1,5 +1,4 @@
 const DEFAULT_METHODOLOGY = "kanban";
-const DEFAULT_VIEW = "board";
 
 const BASE_PROJECT_PROPERTIES = {
   // UI & Design
@@ -112,12 +111,20 @@ const normalizeNewProject = (payload, userId, orgId, userProps = {}) => {
   const title = payload.title?.trim() || "The new project";
   const description = payload.description?.trim() || null;
 
-  const methodology =
-    payload.methodology && METHODOLOGY_CONFIGS[payload.methodology]
-      ? payload.methodology
-      : DEFAULT_METHODOLOGY;
-
-  const default_view = payload.default_view || DEFAULT_VIEW;
+  const methodologyRaw = payload.methodology;
+  const methodologyKey = String(
+    methodologyRaw === undefined ||
+      methodologyRaw === null ||
+      methodologyRaw === ""
+      ? DEFAULT_METHODOLOGY
+      : methodologyRaw
+  ).toLowerCase();
+  if (!METHODOLOGY_CONFIGS[methodologyKey]) {
+    throw new Error(
+      "Metodologia inválida. Use 'kanban' ou 'scrum'."
+    );
+  }
+  const methodology = methodologyKey;
 
   const config = METHODOLOGY_CONFIGS[methodology];
 
@@ -141,7 +148,6 @@ const normalizeNewProject = (payload, userId, orgId, userProps = {}) => {
     title,
     description,
     methodology: methodology.toUpperCase(),
-    default_view: String(default_view).toUpperCase(),
     status: String(payload.status || "OPEN").toUpperCase(),
     properties: JSON.stringify(mergedProjectProperties),
     parent_project_id: payload.parent_project_id || null,

@@ -69,7 +69,6 @@ DROP TYPE IF EXISTS public.notification_entity_type_enum CASCADE;
 DROP TYPE IF EXISTS public.notification_type_enum CASCADE;
 DROP TYPE IF EXISTS public.project_methodology_enum CASCADE;
 DROP TYPE IF EXISTS public.project_status CASCADE;
-DROP TYPE IF EXISTS public.project_view_enum CASCADE;
 DROP TYPE IF EXISTS public.notes_status CASCADE;
 DROP TYPE IF EXISTS public.theme_mode_pattern CASCADE;
 DROP TYPE IF EXISTS public.token_type_enum CASCADE;
@@ -182,9 +181,7 @@ CREATE TYPE public.notification_type_enum AS ENUM (
 
 CREATE TYPE public.project_methodology_enum AS ENUM (
   'KANBAN',
-  'SCRUM',
-  'WATERFALL',
-  'CUSTOM'
+  'SCRUM'
 );
 
 CREATE TYPE public.project_status AS ENUM (
@@ -193,14 +190,6 @@ CREATE TYPE public.project_status AS ENUM (
   'PAUSED',
   'COMPLETED',
   'ARCHIVED'
-);
-
-CREATE TYPE public.project_view_enum AS ENUM (
-  'BOARD',
-  'LIST',
-  'CALENDAR',
-  'TIMELINE',
-  'GANTT'
 );
 
 CREATE TYPE public.sync_status AS ENUM (
@@ -460,7 +449,6 @@ CREATE TABLE public.projects (
   title text NOT NULL DEFAULT 'The new project',
   description text NULL DEFAULT 'Type description here...',
   methodology public.project_methodology_enum NOT NULL DEFAULT 'KANBAN',
-  default_view public.project_view_enum NOT NULL DEFAULT 'BOARD',
   status public.project_status NOT NULL DEFAULT 'OPEN',
   visibility public.project_visibility_enum NOT NULL DEFAULT 'PRIVATE',
   active bool NOT NULL DEFAULT true,
@@ -498,6 +486,16 @@ CREATE TABLE public.projects (
   CONSTRAINT projects_user_fk
     FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE RESTRICT
 );
+
+CREATE TABLE public.user_project_prefs (
+  user_id uuid NOT NULL REFERENCES public.users (user_id) ON DELETE CASCADE,
+  project_id uuid NOT NULL REFERENCES public.projects (id) ON DELETE CASCADE,
+  prefs jsonb NOT NULL DEFAULT '{}'::jsonb,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT user_project_prefs_pkey PRIMARY KEY (user_id, project_id)
+);
+
+CREATE INDEX idx_user_project_prefs_project ON public.user_project_prefs (project_id);
 
 -- public.project_members definition
 CREATE TABLE public.project_members (

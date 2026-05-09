@@ -58,7 +58,7 @@ export function ReviewStep({ state, actions }: CreateProjectWizardStepProps) {
             </div>
           ) : null}
           <div className="mt-2 text-xs text-neutral-500">
-            {state.draft.basic.methodology} · {state.draft.basic.default_view} · {state.draft.basic.color}
+            {state.draft.basic.methodology} · {state.draft.basic.color}
           </div>
         </div>
 

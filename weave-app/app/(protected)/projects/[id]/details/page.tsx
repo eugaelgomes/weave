@@ -30,8 +30,7 @@ const STATUS_OPTIONS: ProjectStatus[] = [
   PROJECT_STATUS.COMPLETED,
   PROJECT_STATUS.ARCHIVED,
 ];
-const METHODOLOGY_OPTIONS = ["kanban", "scrum", "waterfall", "custom"] as const;
-const VIEW_OPTIONS = ["board", "list", "calendar", "timeline", "gantt"] as const;
+const METHODOLOGY_OPTIONS = ["kanban", "scrum"] as const;
 const LEVEL_OPTIONS = ["alta", "media", "baixa"] as const;
 
 const STATUS_LABELS: Record<string, string> = {
@@ -45,16 +44,6 @@ const STATUS_LABELS: Record<string, string> = {
 const METHODOLOGY_LABELS: Record<string, string> = {
   kanban: "Kanban",
   scrum: "Scrum",
-  waterfall: "Waterfall",
-  custom: "Personalizado",
-};
-
-const VIEW_LABELS: Record<string, string> = {
-  board: "Board",
-  list: "Lista",
-  calendar: "Calendário",
-  timeline: "Timeline",
-  gantt: "Gantt",
 };
 
 const LEVEL_LABELS: Record<string, string> = {
@@ -234,7 +223,6 @@ export default function ProjectDetailsPage() {
       description: project.description || "",
       status: project.status || PROJECT_STATUS.OPEN,
       methodology: project.methodology || "kanban",
-      default_view: project.default_view || "board",
       active: project.active ?? true,
       color: project.properties?.color || "#eab308",
       priority: project.properties?.priority || "media",
@@ -302,7 +290,6 @@ export default function ProjectDetailsPage() {
         description: formData.description || undefined,
         status: formData.status as ProjectStatus,
         methodology: formData.methodology as (typeof METHODOLOGY_OPTIONS)[number],
-        default_view: formData.default_view as (typeof VIEW_OPTIONS)[number],
         active: formData.active,
         properties: properties,
       };
@@ -723,22 +710,6 @@ export default function ProjectDetailsPage() {
                 {METHODOLOGY_OPTIONS.map((m) => (
                   <option key={m} value={m}>
                     {METHODOLOGY_LABELS[m]}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              <span className="mb-1 block text-[10px] text-neutral-500">Visualização</span>
-              <select
-                value={formData.default_view}
-                onChange={(e) => handleChange("default_view", e.target.value)}
-                className={selectCls}
-                disabled={!canEdit}
-              >
-                {VIEW_OPTIONS.map((v) => (
-                  <option key={v} value={v}>
-                    {VIEW_LABELS[v]}
                   </option>
                 ))}
               </select>
