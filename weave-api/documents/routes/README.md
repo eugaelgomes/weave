@@ -21,6 +21,7 @@ Simple and direct documentation for route composition and route modules in `weav
 - `src/modules/notifications/notifications.routes.js` -> `notifications-routes.md`
 - `src/modules/calendar-events/calendar-events.routes.js` -> `calendar-events-routes.md`
 - `src/modules/webhooks/webhooks.routes.js` -> `webhooks-routes.md`
+- Slack setup -> `slack-integration.md`
 - `src/modules/api-tokens/api-tokens.routes.js` -> `api-tokens-routes.md`
 - `src/modules/tags/tags.routes.js` -> `tags-routes.md`
 - `src/modules/task_priorities/task_priorities.routes.js` -> `task-priorities-routes.md`

@@ -6,12 +6,24 @@ const { getClientIp } = require("./ip-address");
 const { sessionMiddleware } = require("./session");
 const { makeCorsOptions } = require("./cors");
 
+/**
+ * Captures the raw request body for Slack signature verification (`req.rawBody`).
+ * @param {import('express').Request} req
+ * @param {import('express').Response} _res
+ * @param {Buffer} buf
+ */
+function captureRawBody(req, _res, buf) {
+  req.rawBody = buf;
+}
+
 function configureGlobalMiddlewares(app) {
   app.use(cookieParser());
   app.use(sessionMiddleware);
 
-  app.use(express.urlencoded({ extended: true }));
-  app.use(express.json());
+  app.use(
+    express.urlencoded({ extended: true, verify: captureRawBody })
+  );
+  app.use(express.json({ verify: captureRawBody }));
 
   app.set("trust proxy", 1);
   app.use(getClientIp);
@@ -24,6 +36,12 @@ function configureGlobalMiddlewares(app) {
     if (
       req.method === "POST" &&
       req.path === "/api/v1/webhooks/google/calendar"
+    ) {
+      return next();
+    }
+    if (
+      req.method === "POST" &&
+      req.path.startsWith("/api/v1/webhooks/slack")
     ) {
       return next();
     }

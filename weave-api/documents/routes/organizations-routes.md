@@ -18,6 +18,7 @@ Handles organization profile lifecycle, members, invites, domains/SSO settings, 
 - Areas: CRUD + member management
 - Assets: upload logo/banner
 - Organization projects listing
+- Slack integration (active organization): status, default channel, disconnect (`/integrations/slack/*`)
 
 ## Middleware and security notes
 
