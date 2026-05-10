@@ -144,16 +144,17 @@ class GoogleCalendarController extends WebhooksBaseController {
    * @param {import('express').Response} res
    */
   async getCalendarEvents(req, res) {
+    let tokensLinked = false;
     try {
       const userId = this._requireAuthenticatedUser(req, res);
       if (userId == null) return;
 
       const tokens = await GoogleOauthTokensRepository.getGoogleTokens(userId);
       if (!tokens) {
-        return res
-          .status(404)
-          .json({ connected: false, error: "Google Calendar não conectado" });
+        return res.status(200).json({ connected: false, events: [] });
       }
+
+      tokensLinked = true;
 
       const { timeMin, timeMax } = req.query;
       const now = new Date();
@@ -245,15 +246,24 @@ class GoogleCalendarController extends WebhooksBaseController {
 
       res.json({ connected: true, events });
     } catch (error) {
-      if (error.code === 401 || error.status === 401) {
-        return res.status(401).json({
+      const httpStatus = error?.response?.status ?? error?.status;
+      const isUnauthorized =
+        error?.code === 401 ||
+        httpStatus === 401 ||
+        String(error?.code) === "401";
+      if (isUnauthorized) {
+        return res.status(200).json({
           connected: false,
+          events: [],
           error: "Token expirado, reconecte o Google Calendar",
         });
       }
-      res
-        .status(500)
-        .json({ error: "Falha ao buscar eventos do Google Calendar" });
+      console.error("[Google Calendar] getCalendarEvents:", error?.message);
+      return res.status(200).json({
+        connected: tokensLinked,
+        events: [],
+        error: "Falha ao buscar eventos do Google Calendar",
+      });
     }
   }
 

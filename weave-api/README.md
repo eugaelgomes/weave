@@ -97,7 +97,14 @@ docker compose up server --build
 | `DO_SPACES_BUCKET_NAME` / `DO_SPACES_REGION`    | Bucket e região                                               |
 | `GEMINI_API_KEY`                                | Chave Google Gemini AI                                        |
 | `FRONTEND_URL`                                  | URL do frontend (usada em redirect OAuth e emails)            |
+| `INTERNAL_WEB_CHALLENGE_SECRET`                 | JWT curto para rotas `/api/v1/*` (browser); ver secção API interna |
+| `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET`       | OAuth Slack (integração workspace)                             |
+| `SLACK_SIGNING_SECRET`                          | Assinatura `X-Slack-Signature` em `/webhooks/slack/events` e interactivity |
+| `SLACK_REDIRECT_URI`                            | Opcional; callback OAuth Slack (ver `src/services/slack/slack.client.js`)   |
+| `SLACK_BOT_SCOPES`                              | Opcional; scopes do bot (CSV); default no cliente Slack        |
 | `TOKEN_IP`                                      | Token ipinfo.io para geolocalização (opcional)                |
+
+Integração Slack (migration, `psql`, paths da API, checklist): [documents/routes/slack-integration.md](documents/routes/slack-integration.md). Rotas de configuração usam a **organização ativa** do utilizador — não há `:orgId` em `/organizations/integrations/slack`.
 
 ---
 
