@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import Navbar from "@/app/(protected)/_components/layout/navbar";
 import Sidebar from "@/app/(protected)/_components/layout/sidebar";
 import PagesFooter from "@/app/(protected)/_components/layout/footer";
 import WeaveAi from "@/app/(protected)/_components/layout/WeaveAi";
-import { useAuth } from "@/app/_contexts/auth-context";
+import { cn } from "@/lib/utils";
+
+const LG_MEDIA = "(min-width: 1024px)";
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -14,8 +16,16 @@ interface ProtectedLayoutProps {
 const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const { user } = useAuth();
-
+  const [isLg, setIsLg] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia(LG_MEDIA).matches : false
+  );
+  useLayoutEffect(() => {
+    const mq = window.matchMedia(LG_MEDIA);
+    const sync = () => setIsLg(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   useEffect(() => {
     const savedState = localStorage.getItem("sidebar-collapsed");
@@ -46,14 +56,19 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-white dark:bg-[#1d1d1b]">
-      <Navbar onToggleSidebar={toggleSidebar} />
+    <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-white dark:bg-[#1d1d1b]">
+      {/* Desktop: full-width navbar above sidebar + main so sidebar height respects the bar. */}
+      {isLg ? (
+        <div className="shrink-0">
+          <Navbar onToggleSidebar={toggleSidebar} />
+        </div>
+      ) : null}
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="relative flex min-h-0 flex-1 overflow-hidden">
           <div
             className={`hidden min-h-0 flex-col ${
-              isCollapsed ? "lg:w-20" : "lg:w-[170px]"
+              isCollapsed ? "lg:w-16" : "lg:w-[170px]"
             } transition-all duration-300 lg:flex`}
           >
             <Sidebar
@@ -82,18 +97,37 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
             </div>
           )}
 
-          {/* Main column only (sidebar is a sibling): panel + footer aligned to main width */}
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden gap-1 md:mr-1.5 md:mb-1">
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md bg-white p-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.8),inset_0_-1px_0_rgba(0,0,0,0.06),inset_0_6px_14px_rgba(0,0,0,0.05)] dark:border-gray-800 dark:bg-[#1d1d1b] dark:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.05),inset_0_-1px_0_rgba(0,0,0,0.5),inset_0_6px_14px_rgba(0,0,0,0.35)]">
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-                <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                  {children}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
+              {/* Mobile: navbar scrolls with main + footer; desktop: already rendered above. */}
+              {!isLg ? <Navbar onToggleSidebar={toggleSidebar} /> : null}
+
+              <div
+                className={cn(
+                  "flex w-full min-w-0 flex-col overflow-hidden rounded-md bg-white p-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.8),inset_0_-1px_0_rgba(0,0,0,0.06),inset_0_6px_14px_rgba(0,0,0,0.05)] dark:border-gray-800 dark:bg-[#1d1d1b] dark:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.05),inset_0_-1px_0_rgba(0,0,0,0.5),inset_0_6px_14px_rgba(0,0,0,0.35)]",
+                  isLg ? "min-h-0 flex-1" : "shrink-0"
+                )}
+              >
+                <div
+                  className={cn(
+                    "flex min-h-0 min-w-0 w-full flex-col overflow-hidden",
+                    isLg ? "flex-1" : "max-lg:flex-none"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "flex min-h-0 min-w-0 w-full flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500",
+                      isLg ? "flex-1" : "max-lg:min-h-[calc(100dvh-9rem)] max-lg:flex-none"
+                    )}
+                  >
+                    {children}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="mt-px shrink-0">
-              <PagesFooter />
+              <div className="shrink-0 pt-2">
+                <PagesFooter />
+              </div>
             </div>
           </div>
         </div>

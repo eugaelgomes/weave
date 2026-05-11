@@ -11,8 +11,6 @@ import {
   FolderOpen,
   LayoutDashboard,
   ChevronDown,
-  Menu,
-  X,
 } from "lucide-react";
 import { ProjectsHeader } from "../_components/ui/headers/projects-header";
 import GlobalLoading from "@/app/_components/ui/global-loading";
@@ -22,11 +20,6 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
   const { getRecentProjects, loading: projectsLoading } = useProjects();
   const pathname = usePathname();
   const [expandedProjects, setExpandedProjects] = useState<string[]>([]);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-
-  React.useEffect(() => {
-    setIsMobileSidebarOpen(false);
-  }, [pathname]);
 
   const toggleProject = (e: React.MouseEvent, projectId: string) => {
     e.preventDefault();
@@ -188,31 +181,6 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
       <ProjectsHeader />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {/* Cabeçalho mobile */}
-        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-neutral-800 dark:bg-neutral-950">
-          <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
-            Navegação
-          </span>
-          <button
-            type="button"
-            aria-expanded={isMobileSidebarOpen}
-            onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
-            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
-          >
-            {isMobileSidebarOpen ? (
-              <>
-                <X className="h-3.5 w-3.5" />
-                Fechar menu
-              </>
-            ) : (
-              <>
-                <Menu className="h-3.5 w-3.5" />
-                Abrir menu
-              </>
-            )}
-          </button>
-        </div>
-
         {/* Layout Flexbox com Gap (Desktop) */}
         <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
           {/* SIDEBAR LATERAL — Altura dinâmica da Viewport + Sticky + Overflow interno */}
@@ -226,36 +194,6 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
           </div>
         </div>
       </div>
-
-      {isMobileSidebarOpen && (
-        <div className="fixed inset-0 z-40 flex md:hidden">
-          <button
-            aria-label="Fechar menu de navegação"
-            type="button"
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setIsMobileSidebarOpen(false)}
-          ></button>
-
-          <div className="ml-auto flex h-full w-[80%] max-w-xs flex-col border-l border-neutral-200 bg-white shadow-xl dark:border-neutral-800 dark:bg-neutral-950">
-            <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 dark:border-neutral-800">
-              <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
-                Menu de Projetos
-              </span>
-              <button
-                type="button"
-                aria-label="Fechar"
-                onClick={() => setIsMobileSidebarOpen(false)}
-                className="rounded-md p-1 text-neutral-500 transition hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-900"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto bg-neutral-50 dark:bg-neutral-900/40">
-              {sidebarContent}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

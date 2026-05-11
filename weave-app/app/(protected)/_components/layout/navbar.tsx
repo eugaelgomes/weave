@@ -20,6 +20,14 @@ const fredoka = Fredoka({
   weight: ["700"],
 });
 
+/** Mobile navbar icons — same language as collapsed sidebar rows (rounded-md, soft hover). */
+const navIconMobileShellClass =
+  "flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-700 transition-colors hover:bg-black/5 active:bg-black/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50 dark:text-white dark:hover:bg-white/10 dark:active:bg-white/[0.14] [&>svg]:shrink-0";
+
+/** Desktop icon next to search — neutral toolbar. */
+const navIconDesktopClass =
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200 [&>svg]:shrink-0";
+
 // --- Custom Hooks
 
 const useKeyboardShortcut = (key: string, callback: () => void) => {
@@ -99,19 +107,29 @@ const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "sm" | "md" | "l
   );
 };
 
-const NotificationsLink = ({ ariaLabel, className }: { ariaLabel: string; className?: string }) => {
+const NotificationsLink = ({
+  ariaLabel,
+  className,
+  surface = "mobile",
+}: {
+  ariaLabel: string;
+  className?: string;
+  /** `mobile` = sidebar-like; `desktop` = gray toolbar next to search. */
+  surface?: "mobile" | "desktop";
+}) => {
   const { unreadCount } = useNotification();
 
   return (
     <Link
       href="/notifications"
       className={cn(
-        "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-gray-500 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200",
+        surface === "desktop" ? navIconDesktopClass : navIconMobileShellClass,
+        "relative",
         className
       )}
       aria-label={ariaLabel}
     >
-      <MessageSquare className="h-4 w-4" />
+      <MessageSquare className="h-4 w-4" strokeWidth={1.75} />
       {unreadCount > 0 && (
         <span className="bg-brand-primary-500 absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full border-2 border-white px-1 text-[8px] font-bold text-white dark:border-gray-950">
           {unreadCount > 99 ? "99+" : unreadCount}
@@ -242,18 +260,28 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-white backdrop-blur-md print:hidden dark:bg-[#1d1d1b]">
-        <nav className="mx-auto w-full max-w-[1920px] px-1" aria-label="Navegação principal">
-          <div className="flex h-10 items-center justify-between gap-2 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center md:justify-normal md:gap-4">
+      <header className="relative z-40 w-full shrink-0 print:hidden">
+        <nav
+          className="mx-auto w-full max-w-[1920px] px-1.5 pt-1 pb-0.5 sm:px-2 lg:px-4 lg:py-0 lg:pb-0"
+          aria-label="Navegação principal"
+        >
+          <div
+            className={cn(
+              "grid min-h-10 grid-cols-[auto_1fr_auto] items-center gap-x-2 px-2 py-1",
+              "md:min-h-10 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-x-4",
+              "lg:min-h-10 lg:px-0 lg:py-0"
+            )}
+          >
             {/* Bloco Esquerdo: Logo e Organização */}
-            <section className="flex min-w-0 items-center gap-2 justify-self-start">
+            <section className="flex min-w-0 items-center gap-1.5 justify-self-start md:gap-2">
               {authenticated && (
                 <button
+                  type="button"
                   onClick={onToggleSidebar}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-gray-500 transition-all hover:bg-gray-100 hover:text-gray-900 lg:hidden dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200"
+                  className={cn(navIconMobileShellClass, "lg:hidden")}
                   aria-label="Abrir menu lateral"
                 >
-                  <Menu className="h-4 w-4" strokeWidth={2} />
+                  <Menu className="h-4 w-4" strokeWidth={1.75} />
                 </button>
               )}
 
@@ -262,7 +290,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 className="flex min-w-0 items-center"
                 aria-label={t.nav.backToHome}
               >
-                <span
+                {/* <span
                   className={cn(
                     "truncate text-sm font-bold text-brand-yellow sm:text-base",
                     fredoka.className
@@ -270,6 +298,14 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 >
                   Weave Notes
                 </span>
+                */}
+                <Image
+                  src="/weave-notes-nobg.png"
+                  alt="Weave Notes"
+                  width={24}
+                  height={24}
+                  className="object-contain"
+                />
               </Link>
 
               {user?.org_id && (
@@ -296,54 +332,64 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               )}
             </section>
 
-            {/* Bloco Central: Busca (Desktop) */}
-            {authenticated && user && (
-              <section className="hidden min-w-0 items-center justify-center gap-2 justify-self-center md:flex">
-                <button
-                  onClick={() => setIsSearchOpen(true)}
-                  className="group flex w-full max-w-[480px] items-center gap-2.5 rounded-full border border-gray-200/60 bg-brand-beige/40 px-3 py-1 transition-all hover:bg-brand-beige/60 hover:ring-4 hover:ring-brand-yellow/10 dark:border-gray-800/60 dark:bg-gray-900/40 dark:hover:bg-gray-800/60"
-                  aria-label="Pesquisar no sistema"
-                >
-                  <Search
-                    className="h-3.5 w-3.5 text-gray-500 transition-colors group-hover:text-brand-yellow dark:text-gray-500"
-                    strokeWidth={2}
-                  />
-                  <span className="flex-1 text-left text-[11px] text-gray-500 dark:text-gray-400">
-                    {t.navbar.searchPlaceholder}
-                  </span>
-                  <kbd className="flex items-bottom gap-1  px-1.5 font-sans text-[10px] font-medium text-gray-500 dark:border-gray-700/60  dark:text-gray-500">
-                    <span>⌘</span>K
-                  </kbd>
-                </button>
-                <NotificationsLink ariaLabel={t.nav.notifications} />
+            {/* Centro: respiro no mobile (1fr); busca + notificações no desktop */}
+            {authenticated && user ? (
+              <section className="flex min-h-0 min-w-0 items-center justify-center justify-self-stretch">
+                <div className="hidden w-full max-w-[480px] items-center justify-center gap-2 md:flex">
+                  <button
+                    type="button"
+                    onClick={() => setIsSearchOpen(true)}
+                    className="group flex w-full max-w-[480px] items-center gap-2.5 rounded-full border border-gray-200/60 bg-brand-beige/40 px-3 py-1 transition-all hover:bg-brand-beige/60 hover:ring-4 hover:ring-brand-yellow/10 dark:border-gray-800/60 dark:bg-gray-900/40 dark:hover:bg-gray-800/60"
+                    aria-label="Pesquisar no sistema"
+                  >
+                    <Search
+                      className="h-3.5 w-3.5 text-gray-500 transition-colors group-hover:text-brand-yellow dark:text-gray-500"
+                      strokeWidth={1.75}
+                    />
+                    <span className="flex-1 text-left text-[11px] text-gray-500 dark:text-gray-400">
+                      {t.navbar.searchPlaceholder}
+                    </span>
+                    <kbd className="flex items-bottom gap-1 px-1.5 font-sans text-[10px] font-medium text-gray-500 dark:border-gray-700/60 dark:text-gray-500">
+                      <span>⌘</span>K
+                    </kbd>
+                  </button>
+                  <NotificationsLink ariaLabel={t.nav.notifications} surface="desktop" />
+                </div>
               </section>
+            ) : (
+              <div className="min-w-0" aria-hidden />
             )}
 
             {/* Right */}
-            <section className="flex shrink-0 items-center justify-end gap-1 justify-self-end md:gap-2">
+            <section className="flex shrink-0 items-center justify-end gap-0.5 justify-self-end md:gap-2">
               {authenticated && user && (
                 <>
                   <button
+                    type="button"
                     onClick={() => setIsSearchOpen(true)}
-                    className="flex h-10 w-10 items-center justify-center rounded-md text-gray-900 transition-colors hover:bg-gray-100 hover:text-gray-900 md:hidden dark:text-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    className={cn(navIconMobileShellClass, "md:hidden")}
                     aria-label="Abrir busca"
                   >
-                    <Search className="h-4 w-4" strokeWidth={2} />
+                    <Search className="h-4 w-4" strokeWidth={1.75} />
                   </button>
 
-                  <NotificationsLink ariaLabel={t.nav.notifications} className="md:hidden" />
+                  <NotificationsLink ariaLabel={t.nav.notifications} className="md:hidden" surface="mobile" />
 
                   <div className="relative" ref={desktopMenuRef}>
                     <button
+                      type="button"
                       onClick={() => setIsMenuOpen((prev) => !prev)}
                       aria-expanded={isMenuOpen}
                       aria-haspopup="menu"
                       aria-label="Abrir menu do usuário"
                       className={cn(
-                        "flex items-center gap-2 rounded-md p-1 transition-all duration-200",
+                        "flex shrink-0 items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50",
+                        "h-8 w-8 rounded-md p-0.5 text-gray-700 hover:bg-black/5 dark:text-white dark:hover:bg-white/10",
+                        "max-lg:active:bg-black/10 dark:max-lg:active:bg-white/[0.14]",
+                        "md:h-auto md:w-auto md:rounded-md md:p-1 md:hover:bg-gray-100/60 dark:md:hover:bg-gray-800/40",
                         isMenuOpen
-                          ? "bg-gray-100 dark:bg-gray-800"
-                          : "hover:bg-gray-100/60 dark:hover:bg-gray-800/40"
+                          ? "bg-black/10 dark:bg-white/15 md:bg-gray-100 dark:md:bg-gray-800"
+                          : ""
                       )}
                     >
                       <div className="hidden lg:flex lg:flex-col lg:items-end lg:pr-3">

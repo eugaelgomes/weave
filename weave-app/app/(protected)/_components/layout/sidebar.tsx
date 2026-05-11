@@ -166,9 +166,9 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   ];
 
   return (
-    <div className="mx-1.5 mb-1 flex min-h-0 flex-1 flex-col rounded-md border border-black/5 bg-white/70 text-gray-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] backdrop-blur-sm transition-colors duration-300 dark:border-white/10 dark:bg-[#242422] dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+    <div className="flex min-h-0 flex-1 flex-col text-gray-700 transition-colors duration-300 dark:text-white">
       {/* Header mobile */}
-      <div className="flex items-center justify-between border-b border-black/10 p-3 lg:hidden dark:border-white/10">
+      <div className="flex items-center justify-between p-3 lg:hidden">
         <div className="flex items-center gap-2">
           <Book className="h-3.5 w-3.5 text-brand-yellow" />
           <h2 className="text-[10px] font-bold tracking-widest text-gray-700 uppercase dark:text-white">
@@ -414,7 +414,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
           )}
         </div>
 
-        <div className="shrink-0 border-t border-black/10 px-1 pt-2 pb-2 dark:border-white/10">
+        <div className="shrink-0 px-1 pt-2 pb-2">
           <div className={`flex ${isCollapsed ? "justify-center" : "px-1"}`}>
             <a
               href={SUPPORT_URL}
