@@ -16,7 +16,7 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex h-48 items-center justify-center">
+      <div className="flex h-48 items-center justify-center bg-white dark:bg-[#1d1d1b]">
         <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-yellow-500"></div>
       </div>
     );
@@ -32,7 +32,7 @@ export default function HomePage() {
   const recentProjects = getRecentProjects();
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-white dark:bg-[#1d1d1b]">
       <div className="flex-1 space-y-3 overflow-y-auto">
         <HomeHeader />
 

@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 /** Shell aligned with home carousels (notes / projects). */
 const weaveReasoningsShellClass =
-  "flex h-full flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2 shadow-md sm:p-3 dark:border-neutral-800 dark:bg-neutral-950";
+  "flex h-full flex-col rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:p-3 dark:border-neutral-800 dark:bg-[#1d1d1b]";
 
 const primaryCtaClass =
   "inline-flex items-center justify-center gap-1 rounded-md bg-brand-primary-500 px-2 py-1 text-[11px] font-semibold text-neutral-950 shadow-sm transition-colors hover:bg-yellow-600 sm:px-2.5";

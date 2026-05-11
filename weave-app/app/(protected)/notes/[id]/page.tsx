@@ -151,9 +151,9 @@ const SortableBlockComponent: React.FC<SortableBlockProps> = ({
 
 // =================== SKELETON ===================
 const NoteDetailSkeleton = () => (
-  <div className="flex min-h-0 flex-1 flex-col text-[13px]">
+  <div className="flex min-h-0 flex-1 flex-col bg-white text-[13px] dark:bg-[#1d1d1b]">
     {/* Header skeleton */}
-    <div className="border-b border-neutral-200 bg-neutral-50 px-1.5 py-2.5 dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="border-b border-neutral-200 bg-white px-1.5 py-2.5 dark:border-neutral-800 dark:bg-[#1d1d1b]">
       <div className="mx-auto flex max-w-4xl items-center justify-between">
         <div className="h-8 w-8 animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800" />
         <div className="flex items-center gap-2">
@@ -1494,7 +1494,7 @@ const NoteDetail = () => {
 
   if (error) {
     return (
-      <div className="flex min-h-[50vh] flex-1 items-center justify-center p-6">
+      <div className="flex min-h-[50vh] flex-1 items-center justify-center bg-white p-6 dark:bg-[#1d1d1b]">
         <div className="max-w-md rounded-md border border-neutral-200 bg-white p-8 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/10">
             <span className="text-xl">⚠️</span>
@@ -1625,7 +1625,7 @@ const NoteDetail = () => {
 
   return (
     <NoteCommentsProvider noteId={note.id}>
-      <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-neutral-50 text-[13px] shadow-sm dark:bg-neutral-950">
+      <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-white text-[13px] shadow-sm dark:bg-[#1d1d1b]">
         <NoteDetailHeader
           isExporting={isExporting}
           isSaving={isSaving}
@@ -2613,7 +2613,7 @@ const NoteDetail = () => {
               </div>
 
               {commentsSidebarOpen && canUseNoteComments ? (
-                <div className="flex w-full shrink-0 flex-col border-t border-neutral-200 bg-white md:h-full md:w-[380px] md:max-w-[42%] md:flex-shrink-0 md:border-t-0 dark:border-neutral-800 dark:bg-neutral-950">
+                <div className="flex w-full shrink-0 flex-col border-t border-neutral-200 bg-white md:h-full md:w-[380px] md:max-w-[42%] md:flex-shrink-0 md:border-t-0 dark:border-neutral-800 dark:bg-[#1d1d1b]">
                   <div className="flex h-[min(22rem,52dvh)] max-h-[480px] min-h-[260px] w-full flex-col overflow-hidden md:h-full md:max-h-none md:min-h-0 md:flex-1">
                     <NoteCommentsSidebar
                       canComment={canUseNoteComments}

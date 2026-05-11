@@ -45,7 +45,7 @@ export function NoteDetailHeader({
   showColorPicker,
 }: NoteDetailHeaderProps) {
   return (
-    <div className="flex-shrink-0 border-b border-neutral-200 bg-neutral-50 px-1.5 dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="flex-shrink-0 border-b border-neutral-200 bg-white px-1.5 dark:border-neutral-800 dark:bg-[#1d1d1b]">
       <div className="mx-auto flex w-full items-center justify-between">
         <button
           onClick={onBack}
