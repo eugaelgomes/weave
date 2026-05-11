@@ -53,7 +53,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
         <div className="relative flex min-h-0 flex-1 overflow-hidden">
           <div
             className={`hidden min-h-0 flex-col ${
-              isCollapsed ? "lg:w-[60px]" : "lg:w-[170px]"
+              isCollapsed ? "lg:w-20" : "lg:w-[170px]"
             } transition-all duration-300 lg:flex`}
           >
             <Sidebar

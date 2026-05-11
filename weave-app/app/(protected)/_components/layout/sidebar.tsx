@@ -24,8 +24,11 @@ import {
   Settings,
   Sparkles,
   Workflow,
+  CircleHelp,
   type LucideIcon,
 } from "lucide-react";
+
+const SUPPORT_URL = `${process.env.NEXT_PUBLIC_APP_URL || "https://weavenotes.app"}/support/`;
 
 interface SidebarProps {
   onLinkClick?: () => void;
@@ -173,34 +176,38 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
           </h2>
         </div>
         <button
+          type="button"
           onClick={handleLinkClick}
           className="rounded-md p-1.5 text-gray-700 hover:bg-black/5 dark:text-white dark:hover:bg-white/10"
           aria-label="Fechar menu"
+          title="Fechar menu"
         >
           <X size={16} />
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {/* Toggle collapse desktop only */}
-        <div className={`flex items-center py-2 ${isCollapsed ? "justify-center" : "px-3"}`}>
+        <div className={`flex shrink-0 items-center py-2 ${isCollapsed ? "justify-center" : "px-3"}`}>
           {!isCollapsed && (
             <h2 className="text-[9px] font-bold tracking-widest text-gray-600 uppercase dark:text-white">Menu</h2>
           )}
           {toggleCollapse && (
             <button
+              type="button"
               onClick={toggleCollapse}
-              className={`hidden rounded-md p-1.5 text-gray-700 transition-colors hover:bg-black/5 dark:text-white dark:hover:bg-white/10 lg:block ${
+              className={`hidden rounded-md p-1.5 text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:ring-brand-yellow/50 focus-visible:outline-none dark:text-white dark:hover:bg-white/10 lg:block ${
                 isCollapsed ? "" : "ml-auto"
               }`}
               title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
+              aria-label={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
             >
               {isCollapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
             </button>
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-black/15 dark:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent">
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-black/15 dark:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent">
           <ul className="space-y-1 px-1 pt-1 pb-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
@@ -217,33 +224,55 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
                       handleLinkClick();
                     }}
                     title={isCollapsed ? item.label : undefined}
-                    className={`group flex items-center rounded-md py-2 text-[13px] font-medium transition-all duration-200 ${
+                    className={`group flex rounded-md text-[13px] font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-brand-yellow/50 focus-visible:outline-none ${
                       active
                         ? "bg-brand-yellow/10 text-brand-yellow"
                         : "text-gray-700 hover:bg-black/5 dark:text-white dark:hover:bg-white/10"
-                    } ${isCollapsed ? "justify-center px-0" : "px-2.5"}`}
+                    } ${
+                      isCollapsed
+                        ? "flex-col items-center justify-center gap-1 px-0.5 py-2"
+                        : "w-full min-w-0 items-center px-2.5 py-2"
+                    }`}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <Icon
-                        className={`h-4 w-4 transition-colors ${active ? "text-brand-yellow" : "text-gray-600 dark:text-white"}`}
-                      />
-                      {!isCollapsed && <span className="truncate">{item.label}</span>}
-                      {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
-                        <span className="bg-brand-yellow ml-auto flex h-3.5 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-white">
-                          {item.badge > 99 ? "99+" : item.badge}
+                    {isCollapsed ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="relative inline-flex shrink-0">
+                          <Icon
+                            className={`h-4 w-4 transition-colors ${active ? "text-brand-yellow" : "text-gray-600 dark:text-white"}`}
+                          />
+                          {item.badge !== undefined && item.badge > 0 && (
+                            <span className="bg-brand-yellow absolute -top-0.5 -right-0.5 size-1.5 rounded-full ring-2 ring-white dark:ring-[#242422]" />
+                          )}
                         </span>
-                      )}
-                      {isCollapsed && item.badge !== undefined && item.badge > 0 && (
-                        <span className="bg-brand-yellow ml-1 flex h-1.5 w-1.5 rounded-full" />
-                      )}
-                    </div>
-
-                    {!isCollapsed && hasSubItems && (
-                      <ChevronRight
-                        className={`ml-auto size-3.5 transition-transform duration-200 ${
-                          isExpanded ? "rotate-90 text-brand-yellow" : "text-gray-500 dark:text-white"
-                        }`}
-                      />
+                        <span
+                          className={`line-clamp-2 w-full max-w-[4.5rem] text-center text-[8px] font-semibold leading-[1.15] tracking-tight ${
+                            active ? "text-brand-yellow" : "text-gray-600 dark:text-white"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                          <Icon
+                            className={`h-4 w-4 shrink-0 transition-colors ${active ? "text-brand-yellow" : "text-gray-600 dark:text-white"}`}
+                          />
+                          <span className="truncate">{item.label}</span>
+                          {item.badge !== undefined && item.badge > 0 && (
+                            <span className="bg-brand-yellow ml-auto flex h-3.5 min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[9px] font-bold text-white">
+                              {item.badge > 99 ? "99+" : item.badge}
+                            </span>
+                          )}
+                        </div>
+                        {hasSubItems && (
+                          <ChevronRight
+                            className={`ml-auto size-3.5 shrink-0 transition-transform duration-200 ${
+                              isExpanded ? "rotate-90 text-brand-yellow" : "text-gray-500 dark:text-white"
+                            }`}
+                          />
+                        )}
+                      </>
                     )}
                   </Link>
 
@@ -383,6 +412,34 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
               </div>
             </>
           )}
+        </div>
+
+        <div className="shrink-0 border-t border-black/10 px-1 pt-2 pb-2 dark:border-white/10">
+          <div className={`flex ${isCollapsed ? "justify-center" : "px-1"}`}>
+            <a
+              href={SUPPORT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={t.footer.help}
+              aria-label={t.footer.help}
+              className={`text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:ring-brand-yellow/50 focus-visible:outline-none dark:text-white dark:hover:bg-white/10 ${
+                isCollapsed
+                  ? "flex flex-col items-center justify-center gap-1 rounded-md px-0.5 py-2"
+                  : "inline-flex w-full items-center justify-start gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium"
+              }`}
+            >
+              <CircleHelp
+                className={`shrink-0 text-gray-600 dark:text-white ${isCollapsed ? "size-[18px]" : "size-4"}`}
+              />
+              {isCollapsed ? (
+                <span className="line-clamp-2 max-w-[4.5rem] text-center text-[8px] font-semibold leading-[1.15] tracking-tight text-gray-600 dark:text-white">
+                  {t.footer.help}
+                </span>
+              ) : (
+                <span className="truncate">{t.footer.help}</span>
+              )}
+            </a>
+          </div>
         </div>
       </div>
     </div>

@@ -56,6 +56,17 @@ export interface NoteOverview {
   updated_at: string;
   owner_name?: string;
   owner_avatar_url?: string;
+  /** ISO due date (top-level API); fallback: properties.due_date when present. */
+  due_date?: string | null;
+  priority_id?: string | null;
+  priority_name?: string | null;
+  priority_color?: string | null;
+  project_id?: string | null;
+  project_name?: string | null;
+  stage_id?: string | null;
+  stage_name?: string | null;
+  /** Task-level done flag when API sends it (list may omit). */
+  done?: boolean;
 }
 
 export interface NotesStats {
@@ -185,23 +196,40 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     return cleanContent.length > 150 ? cleanContent.substring(0, 150) + "..." : cleanContent;
   };
 
+  /**
+   * Mirrors list payload from GET notes:
+   * `weave-api/src/modules/notes/controllers/notes-read.controller.js` (due_date, priority_*, associated_project.stage_*).
+   */
   const toOverview = useCallback(
-    (note: Note): NoteOverview => ({
-      id: note.id,
-      title: note.title || "Tarefa sem título",
-      properties: note.properties || {},
-      tags: note.tags || [],
-      lastModified: note.updated_at || note.created_at,
-      preview: extractPreview(note.description || undefined),
-      status: note.status || "sem_status",
-      collaboratorsCount: Array.isArray(note.collaborators) ? note.collaborators.length : 0,
-      collaborators: Array.isArray(note.collaborators) ? note.collaborators : [],
-      created_at: note.created_at,
-      updated_at: note.updated_at,
-      owner_name:
-        note.author?.name || note.author?.username || note.author?.email || note.name || note.email || undefined,
-      owner_avatar_url: getStorageUrl(note.author?.avatar_url || note.avatar_url || ""),
-    }),
+    (note: Note): NoteOverview => {
+      const assoc = note.associated_project;
+      const props = (note.properties ?? {}) as NoteProperties;
+      return {
+        id: note.id,
+        title: note.title || "Tarefa sem título",
+        properties: props,
+        tags: note.tags || [],
+        lastModified: note.updated_at || note.created_at,
+        preview: extractPreview(note.description || undefined),
+        status: note.status || "sem_status",
+        collaboratorsCount: Array.isArray(note.collaborators) ? note.collaborators.length : 0,
+        collaborators: Array.isArray(note.collaborators) ? note.collaborators : [],
+        created_at: note.created_at,
+        updated_at: note.updated_at,
+        owner_name:
+          note.author?.name || note.author?.username || note.author?.email || note.name || note.email || undefined,
+        owner_avatar_url: getStorageUrl(note.author?.avatar_url || note.avatar_url || ""),
+        due_date: note.due_date ?? props.due_date ?? null,
+        priority_id: note.priority_id ?? null,
+        priority_name: note.priority_name ?? null,
+        priority_color: note.priority_color ?? null,
+        project_id: assoc?.id ?? note.project_id ?? null,
+        project_name: assoc?.name ?? note.project_name ?? null,
+        stage_id: assoc?.stage_id ?? null,
+        stage_name: assoc?.stage_name ?? null,
+        done: note.done === true,
+      };
+    },
     []
   );
 

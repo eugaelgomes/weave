@@ -74,6 +74,7 @@ import {
   type UpdateTaskPriorityData,
 } from "../_services/projects-service/project-taxonomy-service";
 import { PROJECT_STATUS } from "@/app/_utils/db-enums";
+import getStorageUrl from "@/app/_utils/get-storage-url";
 
 // Tipos específicos do contexto / Overview
 export type {
@@ -120,6 +121,11 @@ export interface ProjectOverview {
   tags?: string[];
   lastModified: string;
   subprojects?: SubProject[];
+  owner_name?: string;
+  owner_avatar_url?: string;
+  /** Present when list/detail includes `stages`; root list often omits stages. */
+  stagesCount?: number;
+  subprojectsCount?: number;
 }
 
 export interface ProjectsStats {
@@ -278,6 +284,10 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
 
       setProjects(projectsData);
 
+      /**
+       * Root list: `weave-api` GET /projects returns owner, notes, subprojects (not stages).
+       * @see weave-api/src/modules/projects/controllers/projects-read.controller.js getAllProjects
+       */
       const overview: ProjectOverview[] = projectsData.map((project: Project) => ({
         id: project.id,
         title: project.title || "Projeto sem título",
@@ -297,6 +307,10 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         tags: project.properties?.tags ?? undefined,
         lastModified: project.updated_at || project.created_at,
         subprojects: project.subprojects ?? [],
+        owner_name: project.owner?.name || project.owner?.username,
+        owner_avatar_url: getStorageUrl(project.owner?.avatar_url || ""),
+        stagesCount: Array.isArray(project.stages) ? project.stages.length : 0,
+        subprojectsCount: Array.isArray(project.subprojects) ? project.subprojects.length : 0,
       }));
 
       setProjectsOverview(overview);
