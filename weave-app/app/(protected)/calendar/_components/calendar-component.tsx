@@ -401,9 +401,9 @@ export function CalendarPreview({
     const gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
 
     return (
-      <div className="flex flex-1 flex-col gap-1 overflow-hidden border-t border-neutral-200 bg-neutral-100 p-1 dark:border-neutral-800 dark:bg-neutral-800">
+      <div className="flex flex-1 flex-col gap-1 overflow-hidden border-t border-neutral-200 bg-neutral-100 p-1 dark:border-surface-dark-border dark:bg-neutral-800">
         <div
-          className="grid rounded-md bg-white dark:bg-neutral-950"
+          className="grid rounded-md bg-white dark:bg-[#1d1d1b]"
           style={{ gridTemplateColumns }}
         >
           {WEEK_DAYS.slice(0, cols).map((day) => (
@@ -433,7 +433,7 @@ export function CalendarPreview({
                   setSelectedDate(cellDate);
                   setIsCreateModalOpen(true);
                 }}
-                className={`flex min-h-[70px] cursor-pointer flex-col gap-1 rounded-md bg-white p-1 transition-colors sm:min-h-[100px] sm:p-1.5 dark:bg-neutral-950 ${
+                className={`flex min-h-[70px] cursor-pointer flex-col gap-1 rounded-md bg-white p-1 transition-colors sm:min-h-[100px] sm:p-1.5 dark:bg-[#1d1d1b] ${
                   !isCurrentMonth && view === "month" ? "opacity-50" : ""
                 } ${isToday ? "bg-yellow-50/30 dark:bg-yellow-900/5" : "hover:scale-[1.02] hover:bg-neutral-50 hover:shadow-md dark:hover:bg-neutral-900"}`}
               >
@@ -519,11 +519,11 @@ export function CalendarPreview({
     return (
       <div
         ref={scrollContainerRef}
-        className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 flex flex-1 flex-col overflow-x-hidden overflow-y-auto border-t border-neutral-200 bg-white [scrollbar-gutter:stable] dark:border-neutral-800 dark:bg-neutral-950 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
+        className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 flex flex-1 flex-col overflow-x-hidden overflow-y-auto border-t border-neutral-200 bg-white [scrollbar-gutter:stable] dark:border-surface-dark-border dark:bg-[#1d1d1b] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
       >
         {/* CABEÇALHO DA SEMANA (Diminuído altura e largura) */}
-        <div className="sticky top-0 z-20 grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 border-b border-neutral-200 [--label-w:40px] sm:[--label-w:56px] dark:divide-neutral-800 dark:border-neutral-800">
-          <div className="bg-neutral-50 px-1 py-1 text-right text-[10px] font-medium text-neutral-500 dark:bg-neutral-900/50 dark:text-neutral-400">
+        <div className="sticky top-0 z-20 grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 border-b border-neutral-200 [--label-w:40px] sm:[--label-w:56px] dark:divide-surface-dark-border dark:border-surface-dark-border">
+          <div className="bg-neutral-50 px-1 py-1 text-right text-[10px] font-medium text-neutral-500 dark:bg-[#1d1d1b]/50 dark:text-neutral-400">
             {texts.allDay}
           </div>
           {weekEvents.map(({ date, allDayEvents }, dayIndex) => {
@@ -540,7 +540,7 @@ export function CalendarPreview({
                 className={`cursor-pointer px-1 py-1 text-center transition-colors ${
                   isToday
                     ? "bg-yellow-50/40 dark:bg-yellow-900/10"
-                    : "bg-white hover:bg-neutral-50 dark:bg-neutral-950 dark:hover:bg-neutral-900"
+                    : "bg-white hover:bg-neutral-50 dark:bg-[#1d1d1b] dark:hover:bg-neutral-900"
                 }`}
               >
                 <div className="truncate text-[9px] font-semibold text-neutral-500 sm:text-[10px] dark:text-neutral-400">
@@ -589,7 +589,7 @@ export function CalendarPreview({
 
         {/* CORPO DA SEMANA (Diminuído largura) */}
         <div
-          className="relative grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 [--label-w:40px] sm:[--label-w:56px] dark:divide-neutral-800"
+          className="relative grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 [--label-w:40px] sm:[--label-w:56px] dark:divide-surface-dark-border"
           style={{ height: `${TOTAL_GRID_HEIGHT}px` }}
         >
           {/* ... resto do grid (linhas, marcações, horas) mantém igual ... */}
@@ -597,7 +597,7 @@ export function CalendarPreview({
             {hours.map((hour) => (
               <div
                 key={`week-hour-line-${hour}`}
-                className="absolute right-0 left-0 border-b border-neutral-200 dark:border-neutral-800"
+                className="absolute right-0 left-0 border-b border-neutral-200 dark:border-surface-dark-border"
                 style={{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }}
               />
             ))}
@@ -791,10 +791,10 @@ export function CalendarPreview({
     return (
       <div
         ref={scrollContainerRef}
-        className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 flex-1 overflow-y-auto bg-white dark:bg-neutral-950 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
+        className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 flex-1 overflow-y-auto bg-white dark:bg-[#1d1d1b] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
       >
         {allDayEvents.length > 0 && (
-          <div className="border-b border-neutral-200 bg-neutral-50 px-1 py-1 dark:border-neutral-800 dark:bg-neutral-900/50">
+          <div className="border-b border-neutral-200 bg-neutral-50 px-1 py-1 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
             <div className="flex items-center gap-2 pl-10 sm:pl-14">
               <span className="text-[10px] font-medium text-neutral-500 sm:text-xs">
                 {texts.allDay}
@@ -843,7 +843,7 @@ export function CalendarPreview({
                     setSelectedDate(selected);
                     setIsCreateModalOpen(true);
                   }}
-                  className={`absolute right-0 left-0 cursor-pointer border-b border-neutral-200 dark:border-neutral-800 ${
+                  className={`absolute right-0 left-0 cursor-pointer border-b border-neutral-200 dark:border-surface-dark-border ${
                     isCurrentHour
                       ? "bg-yellow-50/30 hover:bg-yellow-50/40 dark:bg-yellow-900/5 dark:hover:bg-yellow-900/10"
                       : "hover:bg-neutral-50 dark:hover:bg-neutral-900/20"
@@ -958,7 +958,7 @@ export function CalendarPreview({
                 setCurrentDate(new Date(year, month, 1));
                 setView("month");
               }}
-              className="group flex flex-col items-center justify-center bg-white p-2 hover:bg-neutral-50 sm:p-2 dark:bg-neutral-950 dark:hover:bg-neutral-900"
+              className="group flex flex-col items-center justify-center bg-white p-2 hover:bg-neutral-50 sm:p-2 dark:bg-[#1d1d1b] dark:hover:bg-neutral-900"
             >
               <h4 className="group-hover:text-brand-primary-500 text-xs font-semibold text-neutral-700 sm:text-sm dark:text-neutral-300">
                 {MONTH_NAMES[month]}
@@ -1016,11 +1016,11 @@ export function CalendarPreview({
         onClick={() => setViewEventModal(null)}
       >
         <div
-          className="relative w-full max-w-[420px] overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-900"
+          className="relative w-full max-w-[420px] overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header Actions */}
-          <div className="flex items-center justify-end gap-1 bg-white px-4 pt-3 pb-0 dark:bg-neutral-900">
+          <div className="flex items-center justify-end gap-1 bg-white px-4 pt-3 pb-0 dark:bg-[#1d1d1b]">
             <button
               onClick={() => {
                 setEventToEdit(event);
@@ -1142,12 +1142,12 @@ export function CalendarPreview({
     <>
       {renderViewEventModal()}
       <div
-        className={`flex overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-950 ${className}`}
+        className={`flex overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] ${className}`}
       >
         {/* Main Content Area */}
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Header & Controls */}
-          <div className="flex items-center gap-2 overflow-x-auto border-b border-neutral-200 bg-white p-1.5 sm:p-2 dark:border-neutral-800 dark:bg-neutral-950 [&::-webkit-scrollbar]:hidden">
+          <div className="flex items-center gap-2 overflow-x-auto border-b border-neutral-200 bg-white p-1.5 sm:p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b] [&::-webkit-scrollbar]:hidden">
             {/* Esquerda: Navegação e Data */}
             <div className="flex shrink-0 items-center gap-1">
               <button
@@ -1174,7 +1174,7 @@ export function CalendarPreview({
             </div>
 
             {/* Centro: Visualização (Views) */}
-            <div className="flex shrink-0 rounded bg-neutral-100/80 p-0.5 dark:bg-neutral-900/80">
+            <div className="flex shrink-0 rounded bg-neutral-100/80 p-0.5 dark:bg-[#1d1d1b]/80">
               {(["day", "week", "month", "semester", "year"] as ViewType[]).map((v) => {
                 const viewLabels: Record<ViewType, string> = {
                   day: texts.day,
@@ -1205,7 +1205,7 @@ export function CalendarPreview({
             <div className="ml-auto flex shrink-0 items-center gap-1.5">
               <button
                 onClick={goToToday}
-                className="rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700 dark:border-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                className="rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700 dark:border-surface-dark-border dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
                 type="button"
               >
                 {texts.today}
@@ -1216,7 +1216,7 @@ export function CalendarPreview({
                   onClick={() => {
                     refreshEventsForYear(currentDate.getFullYear()).catch(() => {});
                   }}
-                  className="flex items-center justify-center gap-1 rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] font-bold text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-800 dark:border-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
+                  className="flex items-center justify-center gap-1 rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] font-bold text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-800 dark:border-surface-dark-border dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
                   title={locale.startsWith("pt") ? "Atualizar" : "Refresh"}
                   type="button"
                 >

@@ -184,7 +184,7 @@ const WorkspacePage = () => {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
         <div className="text-center">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-md bg-zinc-50 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-md bg-zinc-50 shadow-sm ring-1 ring-zinc-200 dark:bg-[#1d1d1b] dark:ring-zinc-800">
             <Building2 className="h-10 w-10 text-zinc-400" />
           </div>
           <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">

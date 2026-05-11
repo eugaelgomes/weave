@@ -44,7 +44,7 @@ const getNotificationIcon = (type: NotificationType) => {
 export function NotificationList({ notifications }: NotificationListProps) {
   if (notifications.length === 0) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-2 rounded-md border border-neutral-200 bg-white p-8 text-neutral-500 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="flex h-64 flex-col items-center justify-center gap-2 rounded-md border border-neutral-200 bg-white p-8 text-neutral-500 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <Inbox className="h-8 w-8 opacity-50" />
         <p className="text-sm">No notifications found.</p>
       </div>
@@ -69,7 +69,7 @@ export function NotificationList({ notifications }: NotificationListProps) {
             className={cn(
               "group flex items-start gap-3 rounded-md border p-3 transition-all hover:shadow-sm",
               notification.is_read
-                ? "border-neutral-200 bg-white text-neutral-600 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400"
+                ? "border-neutral-200 bg-white text-neutral-600 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400"
                 : "border-blue-100 bg-blue-50/50 text-neutral-900 dark:border-blue-900/30 dark:bg-blue-900/10 dark:text-neutral-100"
             )}
           >

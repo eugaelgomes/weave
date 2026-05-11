@@ -153,7 +153,7 @@ const SortableBlockComponent: React.FC<SortableBlockProps> = ({
 const NoteDetailSkeleton = () => (
   <div className="flex min-h-0 flex-1 flex-col bg-white text-[13px] dark:bg-[#1d1d1b]">
     {/* Header skeleton */}
-    <div className="border-b border-neutral-200 bg-white px-1.5 py-2.5 dark:border-neutral-800 dark:bg-[#1d1d1b]">
+    <div className="border-b border-neutral-200 bg-white px-1.5 py-2.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
       <div className="mx-auto flex max-w-4xl items-center justify-between">
         <div className="h-8 w-8 animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800" />
         <div className="flex items-center gap-2">
@@ -171,7 +171,7 @@ const NoteDetailSkeleton = () => (
       <div className="mb-8">
         <div className="mb-2 h-9 w-2/3 animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800" />
       </div>
-      <div className="mb-6 flex gap-2 border-b border-neutral-100 pb-5 dark:border-neutral-800">
+      <div className="mb-6 flex gap-2 border-b border-neutral-100 pb-5 dark:border-surface-dark-border">
         <div className="h-6 w-16 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-800" />
         <div className="h-6 w-20 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-800" />
       </div>
@@ -1495,7 +1495,7 @@ const NoteDetail = () => {
   if (error) {
     return (
       <div className="flex min-h-[50vh] flex-1 items-center justify-center bg-white p-6 dark:bg-[#1d1d1b]">
-        <div className="max-w-md rounded-md border border-neutral-200 bg-white p-8 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="max-w-md rounded-md border border-neutral-200 bg-white p-8 text-center shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/10">
             <span className="text-xl">⚠️</span>
           </div>
@@ -1537,7 +1537,7 @@ const NoteDetail = () => {
     <div className="group/props mb-3 flex flex-wrap items-center gap-2">
       {note.properties?.icon?.path ? (
         <div className="group relative">
-          <div className="h-14 w-14 overflow-hidden rounded-md border-2 border-white bg-white shadow-md dark:border-neutral-900 dark:bg-neutral-900">
+          <div className="h-14 w-14 overflow-hidden rounded-md border-2 border-white bg-white shadow-md dark:shadow-surface-dark-md dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
             <Image
               src={getStorageUrl(note.properties.icon.path)}
               alt="Ícone"
@@ -1576,7 +1576,7 @@ const NoteDetail = () => {
         >
           <button
             onClick={() => filesInputRef.current?.click()}
-            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-surface-dark-border-muted dark:text-neutral-500 dark:hover:border-yellow-500/50"
             title="Adicionar arquivos"
           >
             <FileText size={12} />
@@ -1585,7 +1585,7 @@ const NoteDetail = () => {
           {!note.properties?.icon?.path && (
             <button
               onClick={() => iconInputRef.current?.click()}
-              className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+              className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-surface-dark-border-muted dark:text-neutral-500 dark:hover:border-yellow-500/50"
               title="Adicionar ícone"
             >
               <ImagePlus size={12} />
@@ -1595,7 +1595,7 @@ const NoteDetail = () => {
           {!note.properties?.banner?.path && (
             <button
               onClick={() => bannerInputRef.current?.click()}
-              className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+              className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-surface-dark-border-muted dark:text-neutral-500 dark:hover:border-yellow-500/50"
               title="Adicionar banner"
             >
               <ImagePlus size={12} />
@@ -1604,7 +1604,7 @@ const NoteDetail = () => {
           )}
           <button
             onClick={() => setShowTagModal(true)}
-            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-surface-dark-border-muted dark:text-neutral-500 dark:hover:border-yellow-500/50"
             title="Gerenciar tags"
           >
             <Tag size={12} />
@@ -1612,7 +1612,7 @@ const NoteDetail = () => {
           </button>
           <button
             onClick={() => setShowRelationModal(true)}
-            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+            className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-surface-dark-border-muted dark:text-neutral-500 dark:hover:border-yellow-500/50"
             title="Gerenciar relações"
           >
             <Link size={12} />
@@ -1625,7 +1625,7 @@ const NoteDetail = () => {
 
   return (
     <NoteCommentsProvider noteId={note.id}>
-      <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-white text-[13px] shadow-sm dark:bg-[#1d1d1b]">
+      <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-white text-[13px] shadow-sm dark:shadow-surface-dark-sm dark:bg-[#1d1d1b]">
         <NoteDetailHeader
           isExporting={isExporting}
           isSaving={isSaving}
@@ -2099,7 +2099,7 @@ const NoteDetail = () => {
                                     return (
                                       <div
                                         key={index}
-                                        className="group relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-200 ring-0 transition-all hover:z-10 hover:ring-2 hover:ring-yellow-500/30 dark:border-neutral-900 dark:bg-neutral-700"
+                                        className="group relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-200 ring-0 transition-all hover:z-10 hover:ring-2 hover:ring-yellow-500/30 dark:border-surface-dark-border-strong dark:bg-neutral-700"
                                         title={displayName}
                                       >
                                         {avatarUrl ? (
@@ -2133,7 +2133,7 @@ const NoteDetail = () => {
                                   <button
                                     type="button"
                                     onClick={() => setShowAllCollabs(!showAllCollabs)}
-                                    className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                    className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                                   >
                                     {showAllCollabs ? "Ver menos" : "Ver mais"}
                                   </button>
@@ -2143,7 +2143,7 @@ const NoteDetail = () => {
                             {note.access?.canShare && (
                               <button
                                 onClick={() => setShowShareModal(true)}
-                                className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                                className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-surface-dark-border-muted dark:text-neutral-500 dark:hover:border-yellow-500/50"
                                 title="Adicionar colaborador"
                               >
                                 <Plus size={10} />
@@ -2168,7 +2168,7 @@ const NoteDetail = () => {
                             ).map((relNote) => (
                               <span
                                 key={relNote!.id}
-                                className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
+                                className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
                               >
                                 <button
                                   onClick={() => router.push(`/notes/${relNote!.id}`)}
@@ -2202,7 +2202,7 @@ const NoteDetail = () => {
                               <button
                                 type="button"
                                 onClick={() => setShowAllRelations(!showAllRelations)}
-                                className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                               >
                                 {showAllRelations ? "Ver menos" : "Ver mais"}
                               </button>
@@ -2210,7 +2210,7 @@ const NoteDetail = () => {
                             {note.access?.canEdit && (
                               <button
                                 onClick={() => setShowRelationModal(true)}
-                                className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                                className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-surface-dark-border-muted dark:text-neutral-500 dark:hover:border-yellow-500/50"
                                 title="Adicionar relação"
                               >
                                 <Plus size={10} />
@@ -2258,7 +2258,7 @@ const NoteDetail = () => {
                                   <button
                                     type="button"
                                     onClick={() => setShowAllTags(!showAllTags)}
-                                    className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                    className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                                   >
                                     {showAllTags ? "Ver menos" : "Ver mais"}
                                   </button>
@@ -2268,7 +2268,7 @@ const NoteDetail = () => {
                             {note.access?.canEdit && (
                               <button
                                 onClick={() => setShowTagModal(true)}
-                                className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                                className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-surface-dark-border-muted dark:text-neutral-500 dark:hover:border-yellow-500/50"
                                 title="Adicionar tag"
                               >
                                 <Plus size={10} />
@@ -2298,7 +2298,7 @@ const NoteDetail = () => {
                                     {visibleUrls.map((url, index) => (
                                       <span
                                         key={index}
-                                        className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
+                                        className="group flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
                                       >
                                         <a
                                           href={url}
@@ -2325,7 +2325,7 @@ const NoteDetail = () => {
                                       <button
                                         type="button"
                                         onClick={() => setShowAllUrls(!showAllUrls)}
-                                        className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                        className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                                       >
                                         {showAllUrls ? "Ver menos" : "Ver mais"}
                                       </button>
@@ -2352,7 +2352,7 @@ const NoteDetail = () => {
                                         }
                                       }}
                                       placeholder="https://..."
-                                      className="w-40 rounded-md border border-neutral-200 bg-transparent px-2 py-0.5 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                                      className="w-40 rounded-md border border-neutral-200 bg-transparent px-2 py-0.5 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-surface-dark-border-strong dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
                                       autoFocus
                                     />
                                     <button
@@ -2376,7 +2376,7 @@ const NoteDetail = () => {
                                 ) : (
                                   <button
                                     onClick={() => setShowUrlInput(true)}
-                                    className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                                    className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-surface-dark-border-muted dark:text-neutral-500 dark:hover:border-yellow-500/50"
                                     title="Adicionar URL"
                                   >
                                     <Plus size={10} />
@@ -2441,7 +2441,7 @@ const NoteDetail = () => {
                                     {filteredFiles.length > 3 && (
                                       <button
                                         onClick={() => setShowAllFiles(!showAllFiles)}
-                                        className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
+                                        className="dark:hover:text-brand-primary-500 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-500 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-yellow-500/50"
                                       >
                                         {showAllFiles
                                           ? "Ver menos"
@@ -2454,7 +2454,7 @@ const NoteDetail = () => {
                             {note.access?.canEdit && (
                               <button
                                 onClick={() => filesInputRef.current?.click()}
-                                className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-neutral-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                                className="dark:hover:text-brand-primary-500 rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:border-surface-dark-border-muted dark:text-neutral-500 dark:hover:border-yellow-500/50"
                                 title="Adicionar arquivo"
                               >
                                 <Plus size={10} />
@@ -2469,7 +2469,7 @@ const NoteDetail = () => {
                     {(note.created_at || note.updated_at) && (
                       <div className="flex w-full flex-col">
                         <div
-                          className="w-full border-t border-neutral-100 dark:border-neutral-800"
+                          className="w-full border-t border-neutral-100 dark:border-surface-dark-border"
                           aria-hidden
                         />
                         <div className="flex w-full max-w-[66.666667%] items-start gap-1.5 pt-3 text-xs text-neutral-500 dark:text-neutral-400">
@@ -2491,7 +2491,7 @@ const NoteDetail = () => {
 
                     {/* Linha inferior entre metadados e blocos — largura total */}
                     <div
-                      className="w-full border-b border-neutral-100 dark:border-neutral-800"
+                      className="w-full border-b border-neutral-100 dark:border-surface-dark-border"
                       aria-hidden
                     />
                   </div>
@@ -2540,7 +2540,7 @@ const NoteDetail = () => {
 
                             <DragOverlay>
                               {activeBlock ? (
-                                <div className="rounded-md border border-yellow-500/30 bg-white px-3 py-2 shadow-xl dark:border-yellow-500/50 dark:bg-neutral-900">
+                                <div className="rounded-md border border-yellow-500/30 bg-white px-3 py-2 shadow-xl dark:border-yellow-500/50 dark:bg-[#1d1d1b]">
                                   <NoteBlockEditor
                                     block={activeBlock}
                                     noteId={note.id}
@@ -2569,7 +2569,7 @@ const NoteDetail = () => {
                           <div className="pt-4">
                             <button
                               onClick={() => handleAddBlock("paragraph")}
-                              className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-400 transition-all hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-neutral-700 dark:text-neutral-500 dark:hover:border-yellow-500/50"
+                              className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-400 transition-all hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-surface-dark-border-strong dark:text-neutral-500 dark:hover:border-yellow-500/50"
                             >
                               <Plus size={14} />
                               Nova linha
@@ -2582,11 +2582,11 @@ const NoteDetail = () => {
 
                   {/* Atalhos de teclado - visível apenas em desktop */}
                   {note.access?.canEdit && !useTiptapEditor && (
-                    <div className="mt-10 hidden border-t border-neutral-100 pt-4 sm:block dark:border-neutral-800">
+                    <div className="mt-10 hidden border-t border-neutral-100 pt-4 sm:block dark:border-surface-dark-border">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-400 dark:text-neutral-500">
                         <Save size={12} />
                         <span>
-                          <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                          <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-400">
                             Enter
                           </kbd>
                           <span className="ml-1.5">novo bloco</span>
@@ -2595,11 +2595,11 @@ const NoteDetail = () => {
                             Markdown: **negrito**, *itálico*, listas, tabelas, imagens
                           </span>
                           <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
-                          <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                          <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-400">
                             Ctrl+B
                           </kbd>
                           <span className="ml-1.5">/</span>
-                          <kbd className="ml-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                          <kbd className="ml-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-500 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-400">
                             Ctrl+I
                           </kbd>
                           <span className="mx-2 text-neutral-300 dark:text-neutral-600">|</span>
@@ -2613,7 +2613,7 @@ const NoteDetail = () => {
               </div>
 
               {commentsSidebarOpen && canUseNoteComments ? (
-                <div className="flex w-full shrink-0 flex-col border-t border-neutral-200 bg-white md:h-full md:w-[380px] md:max-w-[42%] md:flex-shrink-0 md:border-t-0 dark:border-neutral-800 dark:bg-[#1d1d1b]">
+                <div className="flex w-full shrink-0 flex-col border-t border-neutral-200 bg-white md:h-full md:w-[380px] md:max-w-[42%] md:flex-shrink-0 md:border-t-0 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
                   <div className="flex h-[min(22rem,52dvh)] max-h-[480px] min-h-[260px] w-full flex-col overflow-hidden md:h-full md:max-h-none md:min-h-0 md:flex-1">
                     <NoteCommentsSidebar
                       canComment={canUseNoteComments}

@@ -25,7 +25,7 @@ export function NoteFormatToolbar({ actions, className }: NoteFormatToolbarProps
   return (
     <div
       className={clsx(
-        "mb-1 flex flex-wrap items-center gap-0.5 rounded-lg border border-neutral-200/80 bg-neutral-50/90 px-1 py-0.5 dark:border-neutral-700 dark:bg-neutral-900/60",
+        "mb-1 flex flex-wrap items-center gap-0.5 rounded-lg border border-neutral-200/80 bg-neutral-50/90 px-1 py-0.5 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/60",
         className
       )}
       onMouseDown={(e) => e.preventDefault()}

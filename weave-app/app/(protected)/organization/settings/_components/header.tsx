@@ -30,9 +30,9 @@ export function WorkspaceOverview({
   return (
     <div className="space-y-6">
       {/* 1. Header & Identity */}
-      <div className="group relative overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="group relative overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         {/* Banner */}
-        <div className="relative h-48 w-full bg-zinc-100 dark:bg-zinc-900">
+        <div className="relative h-48 w-full bg-zinc-100 dark:bg-[#1d1d1b]">
           {workspace?.banner_url ? (
             <img
               src={getStorageUrl(workspace.banner_url)}
@@ -56,7 +56,7 @@ export function WorkspaceOverview({
         <div className="px-6 pb-6">
           <div className="relative -mt-12 mb-4 flex items-end justify-between">
             <div className="relative">
-              <div className="h-24 w-24 overflow-hidden rounded-md border-4 border-white bg-zinc-50 shadow-md dark:border-zinc-950 dark:bg-zinc-900">
+              <div className="h-24 w-24 overflow-hidden rounded-md border-4 border-white bg-zinc-50 shadow-md dark:shadow-surface-dark-md dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
                 {workspace?.logo_url ? (
                   <img
                     src={getStorageUrl(workspace.logo_url)}
@@ -83,7 +83,7 @@ export function WorkspaceOverview({
               {userIsOwner && (
                 <button
                   onClick={() => setIsEditingInfo(true)}
-                  className="flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  className="flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-zinc-300 dark:hover:bg-zinc-800"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
                   Editar Detalhes
@@ -126,7 +126,7 @@ export function WorkspaceOverview({
 
             {/* Owner Mini-Card */}
             {workspace?.owner && (
-              <div className="flex items-center gap-3 rounded-md border border-zinc-100 bg-zinc-50/50 px-4 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
+              <div className="flex items-center gap-3 rounded-md border border-zinc-100 bg-zinc-50/50 px-4 py-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
                 <div className="h-8 w-8 overflow-hidden rounded-full bg-zinc-200">
                   {workspace.owner.avatar_url ? (
                     <img
@@ -156,7 +156,7 @@ export function WorkspaceOverview({
 
       {/* Stats Bar */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="flex flex-col rounded-md border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="flex flex-col rounded-md border border-zinc-200 bg-white p-4 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center gap-2 text-xs font-medium tracking-wider text-zinc-500 uppercase">
             <Users className="h-3.5 w-3.5" /> Membros
           </div>
@@ -165,7 +165,7 @@ export function WorkspaceOverview({
           </span>
         </div>
 
-        <div className="flex flex-col rounded-md border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="flex flex-col rounded-md border border-zinc-200 bg-white p-4 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center gap-2 text-xs font-medium tracking-wider text-zinc-500 uppercase">
             <FolderOpen className="h-3.5 w-3.5" /> Projetos
           </div>
@@ -174,7 +174,7 @@ export function WorkspaceOverview({
           </span>
         </div>
 
-        <div className="flex flex-col rounded-md border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="flex flex-col rounded-md border border-zinc-200 bg-white p-4 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center gap-2 text-xs font-medium tracking-wider text-zinc-500 uppercase">
             <ShieldCheck className="h-3.5 w-3.5" /> Admins
           </div>
@@ -183,7 +183,7 @@ export function WorkspaceOverview({
           </span>
         </div>
 
-        <div className="flex flex-col rounded-md border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="flex flex-col rounded-md border border-zinc-200 bg-white p-4 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center gap-2 text-xs font-medium tracking-wider text-zinc-500 uppercase">
             <CreditCard className="h-3.5 w-3.5" /> Plano
           </div>
@@ -196,12 +196,12 @@ export function WorkspaceOverview({
       {/* Edit Modal */}
       {isEditingInfo && (
         <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-md border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="w-full max-w-md rounded-md border border-zinc-200 bg-white p-6 shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-base font-bold">Editar Informações</h2>
               <button
                 onClick={() => setIsEditingInfo(false)}
-                className="rounded-full p-1 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                className="rounded-full p-1 hover:bg-zinc-100 dark:hover:bg-neutral-800"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -225,7 +225,7 @@ export function WorkspaceOverview({
                   Descrição
                 </label>
                 <textarea
-                  className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-700 focus:dark:ring-zinc-800"
+                  className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-zinc-100 dark:focus:border-zinc-700 focus:dark:ring-zinc-800"
                   rows={4}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}

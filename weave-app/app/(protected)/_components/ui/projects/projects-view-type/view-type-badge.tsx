@@ -28,7 +28,7 @@ export default function ViewTypeBadge({
 
   return (
     <span
-      className={`inline-flex items-center rounded-md border border-neutral-200 bg-neutral-100 font-medium text-neutral-700 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 ${sizeClass} ${className}`}
+      className={`inline-flex items-center rounded-md border border-neutral-200 bg-neutral-100 font-medium text-neutral-700 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-300 ${sizeClass} ${className}`}
       title={option.description}
     >
       <ViewTypeIcon type={type} size={size === "lg" ? "md" : "sm"} />

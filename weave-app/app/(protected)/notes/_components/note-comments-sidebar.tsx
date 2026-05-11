@@ -299,7 +299,7 @@ function CommentComposerTextarea({
       {showMenu &&
         (atItems.length > 0 || needsOrgHint || remoteMentionLoading || showEmptyHint) && (
           <div
-            className="absolute right-0 bottom-full z-20 mb-1 max-h-52 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white py-1 text-left text-xs shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
+            className="absolute right-0 bottom-full z-20 mb-1 max-h-52 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white py-1 text-left text-xs shadow-lg dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
             role="listbox"
           >
             {remoteMentionLoading && (
@@ -308,7 +308,7 @@ function CommentComposerTextarea({
               </div>
             )}
             {needsOrgHint && (
-              <p className="border-b border-neutral-100 px-2 py-1.5 text-[11px] text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+              <p className="border-b border-neutral-100 px-2 py-1.5 text-[11px] text-neutral-500 dark:border-surface-dark-border dark:text-neutral-400">
                 Digite pelo menos 3 caracteres após @ para buscar pessoas na organização.
               </p>
             )}
@@ -657,7 +657,7 @@ export function NoteCommentsSidebar({
             : ""
         }
       >
-        <div className="rounded-lg border border-neutral-200 bg-neutral-50/90 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-900/50">
+        <div className="rounded-lg border border-neutral-200 bg-neutral-50/90 px-3 py-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
           <div className="flex items-start gap-2.5">
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-xs text-neutral-600 dark:bg-neutral-700 dark:text-neutral-200">
               {c.user_avatar_url ? (
@@ -699,7 +699,7 @@ export function NoteCommentsSidebar({
                     textareaRef={editTextareaRef}
                     rows={3}
                     aria-label="Editar texto do comentário"
-                    className="w-full resize-y rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+                    className="w-full resize-y rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-sm dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
                   />
                   <input
                     ref={editFileInputRef}
@@ -713,7 +713,7 @@ export function NoteCommentsSidebar({
                       {editFiles.map((f) => (
                         <li
                           key={f.id}
-                          className="flex items-center gap-1 rounded border border-neutral-200 px-1.5 py-0.5 dark:border-neutral-700"
+                          className="flex items-center gap-1 rounded border border-neutral-200 px-1.5 py-0.5 dark:border-surface-dark-border-strong"
                         >
                           <span className="max-w-[120px] truncate">{f.name}</span>
                           <button
@@ -732,7 +732,7 @@ export function NoteCommentsSidebar({
                       type="button"
                       onClick={() => editFileInputRef.current?.click()}
                       disabled={editSubmitting || editFiles.length >= 10}
-                      className="inline-flex items-center gap-1 rounded border border-neutral-200 px-2 py-1 text-[11px] dark:border-neutral-700"
+                      className="inline-flex items-center gap-1 rounded border border-neutral-200 px-2 py-1 text-[11px] dark:border-surface-dark-border-strong"
                     >
                       <Paperclip size={12} /> Anexo
                     </button>
@@ -772,7 +772,7 @@ export function NoteCommentsSidebar({
                             href={getStorageUrl(f.path)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="dark:hover:text-brand-primary-500 inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-600 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300"
+                            className="dark:hover:text-brand-primary-500 inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-600 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-300"
                           >
                             <span className="max-w-[120px] truncate">{f.name}</span>
                             <Download size={10} />
@@ -835,8 +835,8 @@ export function NoteCommentsSidebar({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950">
-      <div className="flex flex-shrink-0 items-center justify-between gap-2 rounded-md border border-neutral-200 px-3 py-1 dark:border-neutral-800">
+    <div className="flex h-full min-h-0 flex-col bg-white dark:bg-[#1d1d1b]">
+      <div className="flex flex-shrink-0 items-center justify-between gap-2 rounded-md border border-neutral-200 px-3 py-1 dark:border-surface-dark-border">
         <div className="flex min-w-0 items-center gap-2">
           <MessageCircle
             size={16}
@@ -886,7 +886,7 @@ export function NoteCommentsSidebar({
       </div>
 
       {canComment && (
-        <div className="flex-shrink-0 border-t border-neutral-200 bg-neutral-50/80 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-900/30">
+        <div className="flex-shrink-0 border-t border-neutral-200 bg-neutral-50/80 px-3 py-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30">
           {replyingTo && (
             <div className="dark:border-brand-primary-700/40 dark:bg-brand-primary-500/10 mb-2 flex items-center justify-between gap-2 rounded-md border border-yellow-500/30 bg-yellow-50/80 px-2 py-1.5 text-[11px]">
               <span className="truncate text-neutral-700 dark:text-neutral-200">
@@ -925,7 +925,7 @@ export function NoteCommentsSidebar({
                   : "Escreva um comentário… (@ para mencionar ou anexar arquivo da tarefa)"
               }
               rows={3}
-              className="w-full resize-y rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+              className="w-full resize-y rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
             />
             <input
               ref={fileInputRef}
@@ -939,7 +939,7 @@ export function NoteCommentsSidebar({
                 {pendingFiles.map((f, i) => (
                   <li
                     key={`${f.name}-${i}`}
-                    className="flex items-center gap-1 rounded border border-neutral-200 px-1.5 py-0.5 dark:border-neutral-700"
+                    className="flex items-center gap-1 rounded border border-neutral-200 px-1.5 py-0.5 dark:border-surface-dark-border-strong"
                   >
                     <span className="max-w-[120px] truncate">{f.name}</span>
                     <button
@@ -958,7 +958,7 @@ export function NoteCommentsSidebar({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={submitting || pendingFiles.length >= 10}
-                className="inline-flex items-center gap-1 rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs dark:border-neutral-700"
+                className="inline-flex items-center gap-1 rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs dark:border-surface-dark-border-strong"
               >
                 <Paperclip size={14} /> Anexar
               </button>

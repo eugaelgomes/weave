@@ -120,11 +120,11 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
           {/* Same shell as /notes: sticky sidebar + scrollable main */}
-          <div className="hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-md md:sticky md:block md:h-[calc(100vh-auto)] md:w-[180px] dark:border-neutral-800 dark:bg-neutral-900/50">
+          <div className="hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-md md:sticky md:block md:h-[calc(100vh-auto)] md:w-[180px] dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
             {sidebarContent}
           </div>
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:bg-neutral-950 md:dark:border-neutral-800">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:shadow-surface-dark-sm dark:bg-[#1d1d1b] md:dark:border-surface-dark-border">
             {children}
           </div>
         </div>

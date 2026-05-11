@@ -203,9 +203,9 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
       />
 
       {/* Modal Container */}
-      <div className="relative z-10 w-full max-w-2xl transform overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 transition-all dark:bg-neutral-900 dark:ring-white/10">
+      <div className="relative z-10 w-full max-w-2xl transform overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 transition-all dark:bg-[#1d1d1b] dark:ring-white/10">
         {/* Search Input Header */}
-        <div className="flex items-center border-b border-neutral-200 px-4 dark:border-neutral-800">
+        <div className="flex items-center border-b border-neutral-200 px-4 dark:border-surface-dark-border">
           <Search className="text-brand-primary-500 h-5 w-5" />
           <input
             ref={inputRef}
@@ -267,22 +267,22 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer shortcuts */}
-        <div className="flex items-center justify-between border-t border-neutral-100 bg-neutral-50/50 px-4 py-2 text-[10px] text-neutral-400 dark:border-neutral-800 dark:bg-neutral-900/50">
+        <div className="flex items-center justify-between border-t border-neutral-100 bg-neutral-50/50 px-4 py-2 text-[10px] text-neutral-400 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
           <div className="flex gap-4">
             <span className="flex items-center gap-1">
-              <kbd className="rounded border border-neutral-200 bg-white px-1 dark:border-neutral-700 dark:bg-neutral-800">
+              <kbd className="rounded border border-neutral-200 bg-white px-1 dark:border-surface-dark-border-strong dark:bg-neutral-800">
                 ESC
               </kbd>{" "}
               {searchT.escToClose}
             </span>
             <span className="flex hidden items-center gap-1 sm:flex">
-              <kbd className="rounded border border-neutral-200 bg-white px-1 dark:border-neutral-700 dark:bg-neutral-800">
+              <kbd className="rounded border border-neutral-200 bg-white px-1 dark:border-surface-dark-border-strong dark:bg-neutral-800">
                 ↑↓
               </kbd>{" "}
               {searchT.arrowsToNavigate}
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="rounded border border-neutral-200 bg-white px-1 dark:border-neutral-700 dark:bg-neutral-800">
+              <kbd className="rounded border border-neutral-200 bg-white px-1 dark:border-surface-dark-border-strong dark:bg-neutral-800">
                 ↵
               </kbd>{" "}
               {searchT.enterToOpen}

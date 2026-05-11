@@ -35,7 +35,7 @@ function NotificationSidebar({ className, onLinkClick }: SidebarProps) {
 
   return (
     <div className={cn("flex flex-col", className)}>
-      <div className="flex h-12 shrink-0 items-center justify-between border-b border-neutral-100 px-4 dark:border-neutral-800/60">
+      <div className="flex h-12 shrink-0 items-center justify-between border-b border-neutral-100 px-4 dark:border-surface-dark-border">
         <div className="flex items-center gap-2 text-[11px] font-bold tracking-[0.1em] text-neutral-800 uppercase dark:text-neutral-200">
           <Bell className="h-3.5 w-3.5 text-amber-500" />
           Notificações
@@ -90,17 +90,17 @@ export default function NotificationsLayout({ children }: { children: React.Reac
 
   return (
     <div className="flex h-[calc(100vh-5rem)] flex-col gap-2">
-      <NotificationsHeader className="border-b border-neutral-200/90 pb-2 dark:border-neutral-800" />
+      <NotificationsHeader className="border-b border-neutral-200/90 pb-2 dark:border-surface-dark-border" />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
             Navegação
           </span>
           <button
             type="button"
             onClick={() => setIsSidebarOpen((prev) => !prev)}
-            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
+            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:text-neutral-300 dark:hover:bg-neutral-900"
           >
             {isSidebarOpen ? (
               <>
@@ -128,13 +128,13 @@ export default function NotificationsLayout({ children }: { children: React.Reac
                 onClick={() => setIsSidebarOpen(false)}
               />
               <NotificationSidebar
-                className="relative z-10 ml-auto flex h-full w-[80%] max-w-xs flex-col bg-white shadow-xl dark:bg-neutral-950"
+                className="relative z-10 ml-auto flex h-full w-[80%] max-w-xs flex-col bg-white shadow-xl dark:bg-[#1d1d1b]"
                 onLinkClick={() => setIsSidebarOpen(false)}
               />
             </div>
           )}
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-50 md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:bg-neutral-950 dark:md:border-neutral-800">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-50 md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:shadow-surface-dark-sm dark:bg-[#1d1d1b] dark:md:border-neutral-800">
             <div className="custom-scrollbar mx-auto flex h-full w-full max-w-5xl flex-col overflow-y-auto">
               {children}
             </div>

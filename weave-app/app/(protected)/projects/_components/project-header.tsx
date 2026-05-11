@@ -55,7 +55,7 @@ export default function ProjectHeader({
 
       <div className="flex items-center gap-3">
         {/* View Selectors - Ultra Compact Segmented Control */}
-        <div className="flex items-center rounded-md bg-neutral-100 p-0.5 dark:bg-neutral-900">
+        <div className="flex items-center rounded-md bg-neutral-100 p-0.5 dark:bg-[#1d1d1b]">
           {[
             { id: "board" as const, icon: <Columns3 className="size-3" />, label: "Board" },
             { id: "list" as const, icon: <List className="size-3" />, label: "List" },
@@ -75,11 +75,11 @@ export default function ProjectHeader({
           ))}
         </div>
 
-        <div className="flex items-center gap-1 border-l border-neutral-200 pl-3 dark:border-neutral-800">
+        <div className="flex items-center gap-1 border-l border-neutral-200 pl-3 dark:border-surface-dark-border">
           <button
             type="button"
             onClick={onViewDetails}
-            className="ml-1 flex items-center gap-1 rounded border border-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+            className="ml-1 flex items-center gap-1 rounded border border-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:border-surface-dark-border-strong dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
           >
             Ver detalhes
             <ChevronRight className="size-3" />

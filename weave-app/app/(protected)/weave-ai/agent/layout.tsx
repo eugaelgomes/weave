@@ -31,7 +31,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
       <button
         type="button"
         onClick={() => router.push("/weave-ai/agent/new")}
-        className="mb-4 flex w-full items-center justify-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-900 px-2 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 dark:border-neutral-800 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200"
+        className="mb-4 flex w-full items-center justify-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-900 px-2 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 dark:border-surface-dark-border dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200"
       >
         <Plus className="h-3.5 w-3.5" />
         Novo agente
@@ -89,7 +89,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
       <WeaveAIHeader />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
             Navegação
           </span>
@@ -97,7 +97,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
             type="button"
             aria-expanded={isMobileSidebarOpen}
             onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
-            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
+            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:text-neutral-300 dark:hover:bg-neutral-900"
           >
             {isMobileSidebarOpen ? (
               <>
@@ -114,11 +114,11 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
-          <div className="hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-sm md:sticky md:block md:h-[calc(100vh-auto)] md:w-[180px] dark:border-neutral-800 dark:bg-neutral-900/50">
+          <div className="hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-sm md:sticky md:block md:h-[calc(100vh-auto)] md:w-[180px] dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
             {sidebarContent}
           </div>
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:bg-neutral-950 md:dark:border-neutral-800">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:shadow-surface-dark-sm dark:bg-[#1d1d1b] md:dark:border-surface-dark-border">
             {children}
           </div>
         </div>
@@ -133,8 +133,8 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
             onClick={() => setIsMobileSidebarOpen(false)}
           />
 
-          <div className="ml-auto flex h-full w-[80%] max-w-xs flex-col border-l border-neutral-200 bg-white shadow-xl dark:border-neutral-800 dark:bg-neutral-950">
-            <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 dark:border-neutral-800">
+          <div className="ml-auto flex h-full w-[80%] max-w-xs flex-col border-l border-neutral-200 bg-white shadow-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+            <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 dark:border-surface-dark-border">
               <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
                 Menu de Agentes
               </span>
@@ -147,7 +147,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto bg-neutral-50 dark:bg-neutral-900/40">
+            <div className="flex-1 overflow-y-auto bg-neutral-50 dark:bg-[#1d1d1b]/40">
               {sidebarContent}
             </div>
           </div>

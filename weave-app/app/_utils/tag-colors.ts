@@ -121,21 +121,21 @@ const TAG_COLORS: TagColorScheme[] = [
   },
   // S - Slate (neutral)
   {
-    bg: "bg-slate-100 dark:bg-slate-900/30",
+    bg: "bg-slate-100 dark:bg-[#1d1d1b]/30",
     text: "text-slate-700 dark:text-slate-300",
-    border: "border-slate-200 dark:border-slate-800",
+    border: "border-slate-200 dark:border-surface-dark-border",
   },
   // T - Stone
   {
-    bg: "bg-stone-100 dark:bg-stone-900/30",
+    bg: "bg-stone-100 dark:bg-[#1d1d1b]/30",
     text: "text-stone-700 dark:text-stone-300",
-    border: "border-stone-200 dark:border-stone-800",
+    border: "border-stone-200 dark:border-surface-dark-border",
   },
   // U - Zinc
   {
-    bg: "bg-zinc-100 dark:bg-zinc-900/30",
+    bg: "bg-zinc-100 dark:bg-[#1d1d1b]/30",
     text: "text-zinc-700 dark:text-zinc-300",
-    border: "border-zinc-200 dark:border-zinc-800",
+    border: "border-zinc-200 dark:border-surface-dark-border",
   },
   // V - Violet (repetindo)
   {
@@ -178,9 +178,9 @@ export function getTagColor(tag: string): TagColorScheme {
   if (!tag || tag.length === 0) {
     // Cor padrão para tags vazias
     return {
-      bg: "bg-neutral-100 dark:bg-neutral-900/30",
+      bg: "bg-neutral-100 dark:bg-[#1d1d1b]/30",
       text: "text-neutral-700 dark:text-neutral-300",
-      border: "border-neutral-200 dark:border-neutral-800",
+      border: "border-neutral-200 dark:border-surface-dark-border",
     };
   }
 
@@ -202,9 +202,9 @@ export function getTagColor(tag: string): TagColorScheme {
 
   // Para caracteres especiais, usa a cor padrão
   return {
-    bg: "bg-neutral-100 dark:bg-neutral-900/30",
+    bg: "bg-neutral-100 dark:bg-[#1d1d1b]/30",
     text: "text-neutral-700 dark:text-neutral-300",
-    border: "border-neutral-200 dark:border-neutral-800",
+    border: "border-neutral-200 dark:border-surface-dark-border",
   };
 }
 

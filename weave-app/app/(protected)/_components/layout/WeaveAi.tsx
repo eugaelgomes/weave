@@ -74,9 +74,9 @@ export default function WeaveAi() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="weave-ai-modal-title"
-              className="fixed right-4 bottom-24 z-[105] flex w-[min(28rem,calc(100vw-2rem))] max-h-[min(75vh,600px)] min-h-[min(42vh,360px)] flex-col overflow-hidden rounded-t-2xl border border-neutral-200 bg-white shadow-2xl sm:bottom-28 sm:right-6 sm:rounded-xl md:right-8 dark:border-neutral-800 dark:bg-neutral-950 max-sm:left-4 max-sm:right-4 max-sm:w-auto"
+              className="fixed right-4 bottom-24 z-[105] flex w-[min(28rem,calc(100vw-2rem))] max-h-[min(75vh,600px)] min-h-[min(42vh,360px)] flex-col overflow-hidden rounded-t-2xl border border-neutral-200 bg-white shadow-2xl sm:bottom-28 sm:right-6 sm:rounded-xl md:right-8 dark:border-surface-dark-border dark:bg-[#1d1d1b] max-sm:left-4 max-sm:right-4 max-sm:w-auto"
             >
-              <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-neutral-200 px-3 dark:border-neutral-800">
+              <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-neutral-200 px-3 dark:border-surface-dark-border">
                 <h2
                   id="weave-ai-modal-title"
                   className="truncate text-xs font-semibold text-neutral-800 dark:text-neutral-100"

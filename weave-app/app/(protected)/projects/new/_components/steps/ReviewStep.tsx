@@ -44,10 +44,10 @@ export function ReviewStep({ state, actions }: CreateProjectWizardStepProps) {
   }, [state.setup.errorByStep, state.setup.statusByStep]);
 
   return (
-    <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900/50">
+    <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
       <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Revisão</h2>
       <div className="space-y-2 text-sm text-neutral-700 dark:text-neutral-200">
-        <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-950/30">
+        <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30">
           <div className="text-xs font-bold uppercase tracking-wider text-neutral-400">Resumo</div>
           <div className="mt-1 font-semibold text-neutral-900 dark:text-neutral-100">
             {state.draft.basic.title.trim() || "Sem título"}
@@ -67,7 +67,7 @@ export function ReviewStep({ state, actions }: CreateProjectWizardStepProps) {
             Você ainda não criou o projeto. Volte ao passo “Básico”.
           </div>
         ) : (
-          <div className="rounded-md border border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-950/30">
+          <div className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30">
             <div className="text-xs font-bold uppercase tracking-wider text-neutral-400">
               Setup (status)
             </div>
@@ -91,7 +91,7 @@ export function ReviewStep({ state, actions }: CreateProjectWizardStepProps) {
         )}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-neutral-200 pt-2 dark:border-neutral-800">
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-neutral-200 pt-2 dark:border-surface-dark-border">
         <button
           type="button"
           onClick={actions.resetAll}

@@ -33,7 +33,7 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
   const { getProjectStages, patchProjectStage } = useProjects();
   if (!state.created.projectId) {
     return (
-      <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900/50">
+      <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
         <div className="flex items-start gap-2 text-sm text-neutral-700 dark:text-neutral-200">
           <AlertCircle className="mt-0.5 h-4 w-4 text-neutral-400" aria-hidden />
           Crie o projeto no passo “Básico” para configurar etapas.
@@ -137,7 +137,7 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
   };
 
   return (
-    <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900/50">
+    <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
       <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Etapas do quadro</h2>
       <p className="text-xs text-neutral-500 dark:text-neutral-500">
         Por omissão usamos as colunas da metodologia. Se quiser, personalize nomes e cores.
@@ -150,7 +150,7 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
       ) : null}
 
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <label className="flex cursor-pointer items-center gap-2 self-start rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-xs font-medium text-neutral-700 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+        <label className="flex cursor-pointer items-center gap-2 self-start rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-xs font-medium text-neutral-700 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-200">
           <input
             type="checkbox"
             checked={state.draft.customizeStages}
@@ -174,7 +174,7 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
       </div>
 
       {!state.draft.customizeStages ? (
-        <ul className="mt-3 divide-y divide-neutral-100 rounded-md border border-neutral-100 dark:divide-neutral-800 dark:border-neutral-800">
+        <ul className="mt-3 divide-y divide-neutral-100 rounded-md border border-neutral-100 dark:divide-surface-dark-border dark:border-surface-dark-border">
           {defaults.map((s, i) => (
             <li key={i} className="flex items-center gap-2 px-2 py-2 text-sm">
               <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
@@ -187,7 +187,7 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
           {(state.draft.stageDrafts.length ? state.draft.stageDrafts : defaults).map((row, i) => (
             <div
               key={i}
-              className="flex flex-col gap-2 rounded-md border border-neutral-100 bg-neutral-50/80 p-2 sm:flex-row sm:items-center dark:border-neutral-800 dark:bg-neutral-950/40"
+              className="flex flex-col gap-2 rounded-md border border-neutral-100 bg-neutral-50/80 p-2 sm:flex-row sm:items-center dark:border-surface-dark-border dark:bg-[#1d1d1b]/40"
             >
               <div className="flex items-center gap-1 sm:shrink-0">
                 <button
@@ -221,7 +221,7 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
                     return base;
                   })
                 }
-                className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+                className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2 py-2 text-sm dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
                 placeholder="Nome da coluna"
               />
               <input
@@ -234,7 +234,7 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
                     return base;
                   })
                 }
-                className="w-full rounded-md border border-neutral-200 bg-white px-2 py-2 font-mono text-xs sm:w-28 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+                className="w-full rounded-md border border-neutral-200 bg-white px-2 py-2 font-mono text-xs sm:w-28 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
                 placeholder="#hex"
               />
             </div>

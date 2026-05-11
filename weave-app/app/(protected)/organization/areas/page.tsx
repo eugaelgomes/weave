@@ -452,7 +452,7 @@ export default function AreasPage() {
   if (!hasOrganization) {
     return (
       <div className="mx-auto flex h-[calc(100vh-4rem)] w-full max-w-2xl flex-col items-center justify-center gap-4 p-4 text-center">
-        <div className="flex flex-col items-center gap-4 rounded-md border border-neutral-200 bg-white p-8 dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="flex flex-col items-center gap-4 rounded-md border border-neutral-200 bg-white p-8 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <Layers3 className="h-10 w-10 text-neutral-300 dark:text-neutral-700" />
           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
             Estrutura não encontrada
@@ -470,7 +470,7 @@ export default function AreasPage() {
       <WorkspaceHeader />
 
       {/* Cabeçalho Minimalista e Responsivo */}
-      <div className="flex shrink-0 flex-col gap-4 rounded-md border-1 border-neutral-100 bg-white px-4 py-2 shadow-sm md:flex-row md:items-center md:justify-between dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="flex shrink-0 flex-col gap-4 rounded-md border-1 border-neutral-100 bg-white px-4 py-2 shadow-sm md:flex-row md:items-center md:justify-between dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-2">
             <h1 className="text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
@@ -492,7 +492,7 @@ export default function AreasPage() {
             className={clsx(
               "inline-flex items-center gap-2 rounded-md border border-neutral-200 px-3 py-1.5 text-xs font-medium transition-all",
               "bg-white text-neutral-700 hover:bg-neutral-50 active:scale-[0.98]",
-              "dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300 dark:hover:bg-neutral-900",
+              "dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-900",
               areasLoading && "cursor-not-allowed opacity-50"
             )}
           >
@@ -509,7 +509,7 @@ export default function AreasPage() {
       )}
 
       {areasLoading ? (
-        <div className="flex flex-1 items-center justify-center rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="flex flex-1 items-center justify-center rounded-md border border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <div className="flex flex-col items-center gap-2 text-neutral-500 dark:text-neutral-400">
             <Loader2 className="h-5 w-5 animate-spin" />
             <p className="text-xs font-medium">A mapear hierarquia...</p>
@@ -524,7 +524,7 @@ export default function AreasPage() {
         <section className="grid min-h-0 flex-1 items-stretch gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
           {/* MAPA TOPOLÓGICO COM DRAG AND DROP */}
           <div
-            className="h-full overflow-auto rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-950"
+            className="h-full overflow-auto rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               // Permite arrastar para o fundo da lista para transformar numa área "raiz"
@@ -680,7 +680,7 @@ const TreeNodeView = ({
         {hasChildren ? (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 text-neutral-500 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800"
+            className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 text-neutral-500 transition-colors hover:bg-neutral-100 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-neutral-800"
           >
             {isExpanded ? (
               <ChevronDown className="h-3 w-3" />
@@ -704,7 +704,7 @@ const TreeNodeView = ({
             "group/card relative flex w-[240px] cursor-grab flex-col gap-1 rounded-md border p-2 text-left transition-all active:cursor-grabbing",
             isSelected
               ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500 dark:border-blue-500 dark:bg-blue-900/30"
-              : "border-neutral-200 bg-neutral-50 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 hover:dark:border-neutral-700",
+              : "border-neutral-200 bg-neutral-50 hover:border-neutral-300 dark:border-surface-dark-border dark:bg-[#1d1d1b] hover:dark:border-surface-dark-border-strong",
             isDragOver && "border-dashed border-blue-500 bg-blue-100/50 dark:bg-blue-900/20"
           )}
         >
@@ -738,7 +738,7 @@ const TreeNodeView = ({
               onCreateSub(node.area.id);
               setIsExpanded(true); // Garante que a árvore abra para mostrar o novo filho
             }}
-            className="absolute top-1/2 right-[-26px] flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-500 opacity-0 shadow-sm transition-all group-hover/card:opacity-100 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-blue-800 dark:hover:bg-blue-900/50 dark:hover:text-blue-400"
+            className="absolute top-1/2 right-[-26px] flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-500 opacity-0 shadow-sm transition-all group-hover/card:opacity-100 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-blue-800 dark:hover:bg-blue-900/50 dark:hover:text-blue-400"
             title="Criar subárea"
           >
             <Plus className="h-3 w-3" />
@@ -819,7 +819,7 @@ const DetailPanel = ({
 }: DetailPanelProps) => {
   if (!area) {
     return (
-      <aside className="h-full rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+      <aside className="h-full rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
           Selecione uma área no mapa para detalhes.
         </p>
@@ -836,7 +836,7 @@ const DetailPanel = ({
       : null;
 
   return (
-    <aside className="flex h-full flex-col gap-4 overflow-y-auto rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-950 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-800">
+    <aside className="flex h-full flex-col gap-4 overflow-y-auto rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-800">
       <div className="space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -872,7 +872,7 @@ const DetailPanel = ({
           <button
             type="button"
             onClick={onEditArea}
-            className="inline-flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-0.5 font-semibold text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-100 dark:hover:border-neutral-600 dark:hover:bg-neutral-900"
+            className="inline-flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-0.5 font-semibold text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:text-neutral-100 dark:hover:border-neutral-600 dark:hover:bg-neutral-900"
           >
             <Pencil className="h-3 w-3" /> Editar área
           </button>
@@ -888,13 +888,13 @@ const DetailPanel = ({
 
       {headcount !== null && (
         <div className="grid grid-cols-2 gap-2 text-center">
-          <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
             <p className="text-[9px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
               Headcount
             </p>
             <p className="text-lg font-semibold text-neutral-900 dark:text-white">{headcount}</p>
           </div>
-          <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
             <p className="text-[9px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
               Ativo
             </p>
@@ -914,7 +914,7 @@ const DetailPanel = ({
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-medium text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
+                className="rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-medium text-neutral-600 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-300"
               >
                 {tag}
               </span>
@@ -923,7 +923,7 @@ const DetailPanel = ({
         </div>
       )}
 
-      <div className="space-y-3 border-t border-neutral-100 pt-3 dark:border-neutral-800/50">
+      <div className="space-y-3 border-t border-neutral-100 pt-3 dark:border-surface-dark-border-muted">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100">
             <Users className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400" />
@@ -936,7 +936,7 @@ const DetailPanel = ({
             className={clsx(
               "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-semibold transition",
               showAddMemberForm
-                ? "border-neutral-300 text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200"
+                ? "border-neutral-300 text-neutral-600 hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:text-neutral-200"
                 : "border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-900/40 dark:text-blue-300",
               !availableMembers.length && !showAddMemberForm && "cursor-not-allowed opacity-50"
             )}
@@ -946,7 +946,7 @@ const DetailPanel = ({
         </div>
 
         {showAddMemberForm && (
-          <div className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 text-[10px] dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 text-[10px] dark:border-surface-dark-border dark:bg-[#1d1d1b]">
             {availableMembers.length ? (
               <>
                 <div className="space-y-1">
@@ -956,7 +956,7 @@ const DetailPanel = ({
                   <select
                     value={addMemberForm.userId}
                     onChange={(event) => onAddMemberFieldChange("userId", event.target.value)}
-                    className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-neutral-800 focus:border-blue-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                    className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-neutral-800 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
                   >
                     <option value="">Selecione um membro</option>
                     {availableMembers.map((member) => (
@@ -973,7 +973,7 @@ const DetailPanel = ({
                   <select
                     value={addMemberForm.role}
                     onChange={(event) => onAddMemberFieldChange("role", event.target.value)}
-                    className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-neutral-800 focus:border-blue-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                    className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-neutral-800 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
                   >
                     {MEMBER_ROLE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -986,7 +986,7 @@ const DetailPanel = ({
                   <button
                     type="button"
                     onClick={onCloseAddMemberForm}
-                    className="rounded-md border border-neutral-200 px-2 py-1 font-semibold text-neutral-600 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                    className="rounded-md border border-neutral-200 px-2 py-1 font-semibold text-neutral-600 hover:bg-neutral-100 dark:border-surface-dark-border-strong dark:text-neutral-200 dark:hover:bg-neutral-800"
                   >
                     Cancelar
                   </button>
@@ -1065,7 +1065,7 @@ const DetailPanel = ({
                       )
                     }
                     disabled={actionState === "updating"}
-                    className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-[10px] text-neutral-700 focus:border-blue-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                    className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-[10px] text-neutral-700 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
                   >
                     {!roleExists && memberRoleValue && (
                       <option value={memberRoleValue}>{memberRoleValue}</option>
@@ -1110,7 +1110,7 @@ type EmptyAreasStateProps = {
 };
 
 const EmptyAreasState = ({ onRefresh, onCreate }: EmptyAreasStateProps) => (
-  <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-md border border-neutral-200 bg-white py-10 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+  <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-md border border-neutral-200 bg-white py-10 text-center shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
     <GitMerge className="h-6 w-6 text-neutral-400 dark:text-neutral-500" />
     <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">Nenhuma hierarquia</h3>
     <p className="max-w-xs text-[10px] text-neutral-500 dark:text-neutral-400">
@@ -1156,7 +1156,7 @@ const Modal = ({ open, title, description, onClose, children }: ModalProps) => {
       <div
         role="dialog"
         aria-modal="true"
-        className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-t-4 border-neutral-200 border-t-yellow-500 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-950" // Detalhe de destaque superior
+        className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-t-4 border-neutral-200 border-t-yellow-500 bg-white shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]" // Detalhe de destaque superior
         onClick={(event) => event.stopPropagation()}
       >
         {/* Botão Fechar com foco em amarelo */}
@@ -1236,7 +1236,7 @@ const AreaFormModal = ({
             type="text"
             value={form.area_name}
             onChange={(event) => onChange("area_name", event.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
             placeholder="Squad Apollo"
             required
           />
@@ -1249,7 +1249,7 @@ const AreaFormModal = ({
           <select
             value={form.parent_area_id || ""}
             onChange={(event) => onChange("parent_area_id", event.target.value || null)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
           >
             <option value="">Sem vínculo (nível raiz)</option>
             {areas
@@ -1270,7 +1270,7 @@ const AreaFormModal = ({
             type="text"
             value={form.slug}
             onChange={(event) => onChange("slug", event.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
             placeholder="squad-apollo"
           />
         </div>
@@ -1283,7 +1283,7 @@ const AreaFormModal = ({
             value={form.description}
             onChange={(event) => onChange("description", event.target.value)}
             rows={3}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
             placeholder="Responsável pelo discovery de integrações..."
           />
         </div>
@@ -1296,7 +1296,7 @@ const AreaFormModal = ({
             <select
               value={form.status}
               onChange={(event) => onChange("status", event.target.value)}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -1314,7 +1314,7 @@ const AreaFormModal = ({
               min={0}
               value={form.headcount}
               onChange={(event) => onChange("headcount", event.target.value)}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
               placeholder="12"
             />
           </div>
@@ -1328,7 +1328,7 @@ const AreaFormModal = ({
             type="text"
             value={form.tags}
             onChange={(event) => onChange("tags", event.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
             placeholder="mobile, discovery"
           />
         </div>
@@ -1348,7 +1348,7 @@ const AreaFormModal = ({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="rounded-md border border-neutral-200 px-3 py-2 font-semibold text-neutral-600 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-70 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+            className="rounded-md border border-neutral-200 px-3 py-2 font-semibold text-neutral-600 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-70 dark:border-surface-dark-border-strong dark:text-neutral-200 dark:hover:bg-neutral-800"
           >
             Cancelar
           </button>
@@ -1397,7 +1397,7 @@ const ConfirmDialog = ({
         type="button"
         onClick={onCancel}
         disabled={loading}
-        className="rounded-md border border-neutral-200 px-3 py-2 font-semibold text-neutral-600 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-70 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+        className="rounded-md border border-neutral-200 px-3 py-2 font-semibold text-neutral-600 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-70 dark:border-surface-dark-border-strong dark:text-neutral-200 dark:hover:bg-neutral-800"
       >
         {cancelLabel}
       </button>

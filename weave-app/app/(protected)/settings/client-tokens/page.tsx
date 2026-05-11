@@ -35,14 +35,14 @@ const TokenActionModal = ({
   if (!isOpen) return null;
   return (
     <div className="animate-in fade-in fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm duration-200">
-      <div className="w-full max-w-[320px] overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="w-full max-w-[320px] overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <div className="space-y-2 p-4">
           <h3 className="text-[13px] font-bold text-neutral-900 dark:text-neutral-100">{title}</h3>
           <p className="text-[11px] leading-tight text-neutral-500 dark:text-neutral-400">
             {description}
           </p>
         </div>
-        <div className="flex items-center justify-end gap-2 border-t border-neutral-100 bg-neutral-50 px-3 py-2.5 dark:border-neutral-800 dark:bg-neutral-900/50">
+        <div className="flex items-center justify-end gap-2 border-t border-neutral-100 bg-neutral-50 px-3 py-2.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
           <button
             onClick={onClose}
             className="px-3 py-1 text-[11px] font-medium text-neutral-500 transition-colors hover:text-neutral-700"
@@ -104,7 +104,7 @@ const PasswordConfirmModal = ({ isOpen, onClose, onConfirm }: any) => {
 
   return (
     <div className="animate-in fade-in fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm duration-200">
-      <div className="w-full max-w-[360px] overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="w-full max-w-[360px] overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 p-5">
             <div className="space-y-1">
@@ -122,13 +122,13 @@ const PasswordConfirmModal = ({ isOpen, onClose, onConfirm }: any) => {
                 placeholder="Sua senha..."
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-[12px] outline-none placeholder:text-neutral-400 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-800 dark:bg-neutral-950 dark:placeholder:text-neutral-600"
+                className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-[12px] outline-none placeholder:text-neutral-400 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:placeholder:text-neutral-600"
                 autoFocus
               />
               {error && <p className="text-[10px] font-bold text-red-500">{error}</p>}
             </div>
           </div>
-          <div className="flex items-center justify-end gap-2 border-t border-neutral-100 bg-neutral-50 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-900/50">
+          <div className="flex items-center justify-end gap-2 border-t border-neutral-100 bg-neutral-50 px-3 py-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
             <button
               type="button"
               onClick={onClose}
@@ -231,9 +231,9 @@ export function SettingsApiTokens() {
   };
 
   return (
-    <div className="overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm dark:border-neutral-800/60 dark:bg-neutral-950">
+    <div className="overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-neutral-100/60 px-4 py-2 dark:border-neutral-800/60">
+      <div className="flex items-center justify-between border-b border-neutral-100/60 px-4 py-2 dark:border-surface-dark-border">
         <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] text-neutral-500 dark:text-neutral-400">
           <KeyRound className="text-brand-primary-500 h-3.5 w-3.5" />
           API Tokens
@@ -282,7 +282,7 @@ export function SettingsApiTokens() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <code className="flex-1 overflow-x-auto rounded border border-yellow-200 bg-white px-3 py-2 font-mono text-[10px] text-neutral-800 dark:border-yellow-800 dark:bg-neutral-900 dark:text-yellow-400">
+                      <code className="flex-1 overflow-x-auto rounded border border-yellow-200 bg-white px-3 py-2 font-mono text-[10px] text-neutral-800 dark:border-yellow-800 dark:bg-[#1d1d1b] dark:text-yellow-400">
                         {generatedToken}
                       </code>
                       <button
@@ -309,7 +309,7 @@ export function SettingsApiTokens() {
             <div className="animate-in slide-in-from-top-2 mb-6 duration-200">
               <form
                 onSubmit={handleNextStep}
-                className="space-y-6 rounded-md border border-neutral-100 bg-neutral-50/50 p-4 dark:border-neutral-800 dark:bg-neutral-900/30"
+                className="space-y-6 rounded-md border border-neutral-100 bg-neutral-50/50 p-4 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30"
               >
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="space-y-1.5">
@@ -321,7 +321,7 @@ export function SettingsApiTokens() {
                       placeholder="Ex: Integração GitHub Actions"
                       value={newTokenName}
                       onChange={(e) => setNewTokenName(e.target.value)}
-                      className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-[12px] outline-none placeholder:text-neutral-400 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-800 dark:bg-neutral-950 dark:placeholder:text-neutral-600"
+                      className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-[12px] outline-none placeholder:text-neutral-400 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:placeholder:text-neutral-600"
                       required
                     />
                   </div>
@@ -332,7 +332,7 @@ export function SettingsApiTokens() {
                     <select
                       value={expiresAt}
                       onChange={(e) => setExpiresAt(e.target.value)}
-                      className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-[12px] outline-none focus:ring-1 focus:ring-yellow-500 dark:border-neutral-800 dark:bg-neutral-950"
+                      className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-[12px] outline-none focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border dark:bg-[#1d1d1b]"
                       required
                     >
                       <option value="">Selecione a validade...</option>
@@ -353,7 +353,7 @@ export function SettingsApiTokens() {
                       </span>
                     </div>
 
-                    <div className="scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-neutral-800 max-h-[280px] overflow-y-auto rounded-lg border border-neutral-200 bg-white p-2 shadow-inner dark:border-neutral-800 dark:bg-neutral-950">
+                    <div className="scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-neutral-800 max-h-[280px] overflow-y-auto rounded-lg border border-neutral-200 bg-white p-2 shadow-inner dark:border-surface-dark-border dark:bg-[#1d1d1b]">
                       <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
                         {scopesInfo?.map((scope) => {
                           const isSelected = selectedScopes.includes(scope.value);
@@ -363,7 +363,7 @@ export function SettingsApiTokens() {
                               className={`group relative flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-all duration-200 ${
                                 isSelected
                                   ? "dark:bg-brand-primary-500/5 border-yellow-500/50 bg-yellow-50/30 ring-1 ring-yellow-500/10 dark:border-yellow-500/40"
-                                  : "border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:bg-neutral-900"
+                                  : "border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:bg-neutral-900"
                               }`}
                             >
                               <div className="relative mt-0.5 flex items-center">
@@ -406,7 +406,7 @@ export function SettingsApiTokens() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-neutral-200/40 pt-4 dark:border-neutral-800/40">
+                <div className="flex items-center justify-between border-t border-neutral-200/40 pt-4 dark:border-surface-dark-border-muted">
                   <div className="flex flex-col">
                     <span className="text-[9px] font-medium text-neutral-400 italic">
                       * Todos os campos são de preenchimento obrigatório.
@@ -449,7 +449,7 @@ export function SettingsApiTokens() {
           ) : apiTokens.length > 0 ? (
             <>
               {/* Resumo Ocultável */}
-              <div className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900/30">
+              <div className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-4 py-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30">
                 <div className="flex items-center gap-4 text-[11px] font-bold">
                   <span className="flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
                     <span className="bg-brand-primary-500 h-2 w-2 rounded-full"></span>
@@ -477,7 +477,7 @@ export function SettingsApiTokens() {
                       key={token.id}
                       className={`group flex items-center justify-between rounded-md border p-3 transition-all ${
                         token.revoked_at
-                          ? "border-neutral-100 bg-neutral-50/40 opacity-70 dark:border-neutral-900/50 dark:bg-neutral-900/10"
+                          ? "border-neutral-100 bg-neutral-50/40 opacity-70 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/10"
                           : "dark:bg-brand-primary-500/5 border-yellow-500/10 bg-yellow-50/5 hover:border-yellow-500/30 dark:border-yellow-500/5 dark:hover:border-yellow-500/20"
                       }`}
                     >
@@ -567,7 +567,7 @@ export function SettingsApiTokens() {
               )}
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-neutral-200 py-6 text-center dark:border-neutral-800">
+            <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-neutral-200 py-6 text-center dark:border-surface-dark-border">
               <KeyRound size={24} className="mb-2 text-neutral-200 dark:text-neutral-800" />
               <p className="text-[11px] font-bold tracking-widest text-neutral-400">
                 Nenhum token encontrado

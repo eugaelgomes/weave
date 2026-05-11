@@ -13,8 +13,8 @@ export function ProjectFilters() {
   const { notes } = useNotes();
 
   return (
-    <div className="flex flex-none flex-wrap items-center gap-2 border-b border-neutral-200 bg-white/40 px-3 py-1.5 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-950/40">
-      <div className="flex items-center gap-1.5 border-r border-neutral-200 pr-2 dark:border-neutral-800">
+    <div className="flex flex-none flex-wrap items-center gap-2 border-b border-neutral-200 bg-white/40 px-3 py-1.5 backdrop-blur-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]/40">
+      <div className="flex items-center gap-1.5 border-r border-neutral-200 pr-2 dark:border-surface-dark-border">
         <Filter className="h-3 w-3 text-neutral-400" />
         <span className="text-[9px] font-medium tracking-wider text-neutral-500 uppercase">
           Filtros
@@ -27,12 +27,12 @@ export function ProjectFilters() {
         <input
           type="text"
           placeholder="Buscar tarefas..."
-          className="w-32 rounded-md border border-neutral-200 bg-white py-1 pr-2 pl-6 text-[10px] focus:border-purple-500 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900"
+          className="w-32 rounded-md border border-neutral-200 bg-white py-1 pr-2 pl-6 text-[10px] focus:border-purple-500 focus:outline-none dark:border-surface-dark-border dark:bg-[#1d1d1b]"
         />
       </div>
 
       {/* Tempo */}
-      <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white p-0.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <Clock className="ml-1.5 h-2.5 w-2.5 text-neutral-400" />
         <select
           className="bg-transparent py-0.5 pr-4 pl-1 text-[10px] text-neutral-600 focus:outline-none dark:text-neutral-300"
@@ -47,7 +47,7 @@ export function ProjectFilters() {
       </div>
 
       {/* Pessoas */}
-      <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white p-0.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <Users className="ml-1.5 h-2.5 w-2.5 text-neutral-400" />
         <select className="bg-transparent py-0.5 pr-4 pl-1 text-[10px] text-neutral-600 focus:outline-none dark:text-neutral-300">
           <option value="all">Pessoas</option>
@@ -56,7 +56,7 @@ export function ProjectFilters() {
       </div>
 
       {/* Prioridades */}
-      <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white p-0.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <Flag className="ml-1.5 h-2.5 w-2.5 text-neutral-400" />
         <select
           className="bg-transparent py-0.5 pr-4 pl-1 text-[10px] text-neutral-600 focus:outline-none dark:text-neutral-300"
@@ -71,7 +71,7 @@ export function ProjectFilters() {
       </div>
 
       {/* Tags */}
-      <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white p-0.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <Tags className="ml-1.5 h-2.5 w-2.5 text-neutral-400" />
         <select className="bg-transparent py-0.5 pr-4 pl-1 text-[10px] text-neutral-600 focus:outline-none dark:text-neutral-300">
           <option value="all">Tags</option>

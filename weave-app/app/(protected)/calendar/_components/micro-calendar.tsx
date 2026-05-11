@@ -151,7 +151,7 @@ function MicroCalendarPeopleFreeBusy({
 
   return (
     <div className="relative mt-2">
-      <div className="flex w-full items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2 py-1.5 dark:border-neutral-700 dark:bg-neutral-900/60">
+      <div className="flex w-full items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2 py-1.5 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/60">
         <Users className="h-3.5 w-3.5 shrink-0 text-neutral-500 dark:text-neutral-400" />
         <input
           type="search"
@@ -168,7 +168,7 @@ function MicroCalendarPeopleFreeBusy({
       </div>
 
       {query.trim().length >= 3 && results.length > 0 ? (
-        <ul className="absolute right-0 left-0 z-30 mt-0.5 max-h-32 overflow-y-auto rounded-md border border-neutral-200 bg-white py-0.5 shadow-md dark:border-neutral-700 dark:bg-neutral-900">
+        <ul className="absolute right-0 left-0 z-30 mt-0.5 max-h-32 overflow-y-auto rounded-md border border-neutral-200 bg-white py-0.5 shadow-md dark:shadow-surface-dark-md dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
           {results.map((u) => (
             <li key={u.id}>
               <button
@@ -188,7 +188,7 @@ function MicroCalendarPeopleFreeBusy({
       ) : null}
 
       {pickedEmail && pickedName ? (
-        <div className="mt-2 space-y-1.5 rounded-md border border-neutral-200 bg-white/90 p-2 dark:border-neutral-700 dark:bg-neutral-900/70">
+        <div className="mt-2 space-y-1.5 rounded-md border border-neutral-200 bg-white/90 p-2 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/70">
           <div className="flex items-start justify-between gap-1">
             <div className="min-w-0 flex-1">
               <p className="truncate text-[10px] font-semibold text-neutral-800 dark:text-neutral-100">
@@ -302,7 +302,7 @@ export function MicroCalendar() {
   };
 
   return (
-    <div className="rounded-md border border-neutral-200 bg-neutral-100/80 p-2 dark:border-neutral-800 dark:bg-neutral-950/80">
+    <div className="rounded-md border border-neutral-200 bg-neutral-100/80 p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/80">
       <div className="mb-1.5 flex items-center justify-between gap-1">
         <span className="truncate text-[11px] font-medium text-neutral-800 dark:text-neutral-100">
           {headerLabel}

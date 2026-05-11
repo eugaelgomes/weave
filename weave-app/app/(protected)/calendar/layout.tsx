@@ -19,7 +19,7 @@ export default function CalendarLayout({ children }: { children: React.ReactNode
         <CalendarHeader />
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row md:gap-2">
-          <div className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 w-full max-w-[180px] flex-shrink-0 overflow-y-auto border-b border-neutral-200 bg-neutral-50 md:w-[220px] md:rounded-md md:border md:bg-white md:shadow-sm dark:border-neutral-800 dark:bg-neutral-900/30 dark:md:border-neutral-800 dark:md:bg-neutral-900/50 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+          <div className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 w-full max-w-[180px] flex-shrink-0 overflow-y-auto border-b border-neutral-200 bg-neutral-50 md:w-[220px] md:rounded-md md:border md:bg-white md:shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]/30 dark:md:border-neutral-800 dark:md:bg-neutral-900/50 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
             <div className="space-y-4 p-2">
               <div>
                 <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
@@ -57,7 +57,7 @@ export default function CalendarLayout({ children }: { children: React.ReactNode
                   Legenda
                 </h2>
 
-                <div className="space-y-1.5 rounded-md border border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-950/50">
+                <div className="space-y-1.5 rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
                   <div className="flex items-center gap-2 text-[11px] text-neutral-600 dark:text-neutral-300">
                     <span className="h-2 w-2 rounded-full bg-blue-400" />
                     <span>Google Calendar</span>
@@ -78,7 +78,7 @@ export default function CalendarLayout({ children }: { children: React.ReactNode
                   Dicas
                 </h2>
 
-                <div className="space-y-1 rounded-md border border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-950/50">
+                <div className="space-y-1 rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
                   <p className="flex items-center gap-1.5 text-[11px] text-neutral-500 dark:text-neutral-400">
                     <Clock3 className="h-3 w-3 flex-shrink-0" />
                     Use o topo para alternar dia, semana, mês e ano.
@@ -92,7 +92,7 @@ export default function CalendarLayout({ children }: { children: React.ReactNode
             </div>
           </div>
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:bg-neutral-950 md:dark:border-neutral-800">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:shadow-surface-dark-sm dark:bg-[#1d1d1b] md:dark:border-surface-dark-border">
             {children}
           </div>
         </div>

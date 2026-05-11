@@ -92,13 +92,13 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
 
   // Estilo dinâmico: Ativo vs Leitura
   const inputStateClass = editMode
-    ? "border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200"
-    : "border border-neutral-100 bg-neutral-50/80 px-3 text-neutral-500 cursor-default dark:border-neutral-800/80 dark:bg-neutral-900/50 dark:text-neutral-400";
+    ? "border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200"
+    : "border border-neutral-100 bg-neutral-50/80 px-3 text-neutral-500 cursor-default dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/50 dark:text-neutral-400";
 
   return (
-    <div className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800/60 dark:bg-neutral-950">
+    <div className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5 dark:border-neutral-800/60">
+      <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5 dark:border-surface-dark-border">
         <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
           <UserIcon size={14} className="text-amber-500" />
           Perfil e Identidade
@@ -106,7 +106,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
         {!editMode && (
           <button
             onClick={() => setEditMode(true)}
-            className="rounded-md border border-neutral-200 bg-white px-3 py-1 text-[10px] font-bold text-neutral-700 shadow-sm transition-all hover:bg-neutral-50 active:scale-95 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300"
+            className="rounded-md border border-neutral-200 bg-white px-3 py-1 text-[10px] font-bold text-neutral-700 shadow-sm transition-all hover:bg-neutral-50 active:scale-95 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300"
           >
             Editar Dados
           </button>
@@ -118,7 +118,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
           {/* Coluna Esquerda: Avatar e Meta */}
           <div className="flex flex-col items-center gap-4 lg:col-span-3 lg:items-start">
             <div
-              className={`group relative h-28 w-28 shrink-0 overflow-hidden rounded-md border-2 transition-all ${editMode ? "border-amber-500 shadow-lg" : "border-neutral-100 dark:border-neutral-800"}`}
+              className={`group relative h-28 w-28 shrink-0 overflow-hidden rounded-md border-2 transition-all ${editMode ? "border-amber-500 shadow-lg" : "border-neutral-100 dark:border-surface-dark-border"}`}
             >
               <Image
                 src={formData.avatar_url || "/default-avatar.png"}
@@ -140,7 +140,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
                 </label>
               )}
             </div>
-            <div className="flex items-center gap-1.5 rounded bg-neutral-100 px-2 py-1 text-[9px] font-bold text-neutral-500 uppercase dark:bg-neutral-900 dark:text-neutral-400">
+            <div className="flex items-center gap-1.5 rounded bg-neutral-100 px-2 py-1 text-[9px] font-bold text-neutral-500 uppercase dark:bg-[#1d1d1b] dark:text-neutral-400">
               <Calendar size={11} />
               Membro: {formatDate(user?.created_at || "")}
             </div>
@@ -268,7 +268,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
                   <label className={labelClass}>Credenciais de Acesso</label>
 
                   {!isChangingPassword ? (
-                    <div className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50/50 p-2 pl-3 transition-all dark:border-neutral-800/50 dark:bg-neutral-900/30">
+                    <div className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50/50 p-2 pl-3 transition-all dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/30">
                       <div className="flex items-center gap-2">
                         <Lock size={12} className="text-neutral-400" />
                         <span className="mt-1 text-[12px] font-medium tracking-[0.2em] text-neutral-500 dark:text-neutral-400">
@@ -279,7 +279,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
                         <button
                           type="button"
                           onClick={() => setIsChangingPassword(true)}
-                          className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-3 py-1 text-[10px] font-bold text-neutral-600 shadow-sm transition-all hover:bg-neutral-50 active:scale-95 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700/50"
+                          className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-3 py-1 text-[10px] font-bold text-neutral-600 shadow-sm transition-all hover:bg-neutral-50 active:scale-95 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700/50"
                         >
                           <KeyRound size={12} /> Alterar Senha
                         </button>
@@ -305,7 +305,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
                           name="currentPassword"
                           placeholder="Senha Atual"
                           value={formData.currentPassword}
-                          className={`${inputBaseClass} border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 sm:col-span-2 dark:border-neutral-800 dark:bg-neutral-950`}
+                          className={`${inputBaseClass} border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 sm:col-span-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]`}
                           onChange={handleInputChange}
                           disabled={isLoading}
                         />
@@ -314,7 +314,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
                           name="newPassword"
                           placeholder="Nova Senha"
                           value={formData.newPassword}
-                          className={`${inputBaseClass} border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-neutral-800 dark:bg-neutral-950`}
+                          className={`${inputBaseClass} border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-surface-dark-border dark:bg-[#1d1d1b]`}
                           onChange={handleInputChange}
                           disabled={isLoading}
                         />
@@ -323,7 +323,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
                           name="confirmPassword"
                           placeholder="Confirmar Nova Senha"
                           value={formData.confirmPassword}
-                          className={`${inputBaseClass} border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-neutral-800 dark:bg-neutral-950`}
+                          className={`${inputBaseClass} border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-surface-dark-border dark:bg-[#1d1d1b]`}
                           onChange={handleInputChange}
                           disabled={isLoading}
                         />
@@ -336,7 +336,7 @@ export const SettingsProfileData: React.FC<SettingsProfileDataProps> = ({
 
             {/* Rodapé Único de Ações */}
             {editMode && (
-              <div className="flex items-center justify-end gap-3 border-t border-neutral-100 pt-6 dark:border-neutral-800">
+              <div className="flex items-center justify-end gap-3 border-t border-neutral-100 pt-6 dark:border-surface-dark-border">
                 <button
                   type="button"
                   onClick={handleCancelEdit}

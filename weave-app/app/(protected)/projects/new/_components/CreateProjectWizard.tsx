@@ -310,7 +310,7 @@ export function CreateProjectWizard() {
           </p>
         </div>
 
-        <div className="mb-3 rounded-md border border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900/50">
+        <div className="mb-3 rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
           <nav aria-label="Etapas" className="flex flex-wrap gap-1.5">
             {CREATE_PROJECT_WIZARD_STEPS.map((s, i) => {
               const active = state.activeStep === s;
@@ -328,7 +328,7 @@ export function CreateProjectWizard() {
                       ? "bg-brand-primary-500 text-neutral-950"
                       : enabled
                         ? "bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
-                        : "bg-neutral-50 text-neutral-300 dark:bg-neutral-900 dark:text-neutral-600",
+                        : "bg-neutral-50 text-neutral-300 dark:bg-[#1d1d1b] dark:text-neutral-600",
                   ].join(" ")}
                 >
                   {i + 1}. {stepLabel(s)}
@@ -346,7 +346,7 @@ export function CreateProjectWizard() {
           {state.activeStep === "review" && <ReviewStep state={state} actions={actions} />}
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-2 border-t border-neutral-200 pt-2 dark:border-neutral-800">
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-neutral-200 pt-2 dark:border-surface-dark-border">
           <button
             type="button"
             onClick={actions.back}

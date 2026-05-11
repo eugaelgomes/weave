@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 /** Shell aligned with home carousels (notes / projects). */
 const weaveReasoningsShellClass =
-  "flex h-full flex-col rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:p-3 dark:border-neutral-800 dark:bg-[#1d1d1b]";
+  "flex h-full flex-col rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md";
 
 const primaryCtaClass =
   "inline-flex items-center justify-center gap-1 rounded-md bg-brand-primary-500 px-2 py-1 text-[11px] font-semibold text-neutral-950 shadow-sm transition-colors hover:bg-yellow-600 sm:px-2.5";
@@ -29,31 +29,31 @@ const primaryCtaMdClass =
   "inline-flex items-center justify-center rounded-md bg-brand-primary-500 px-3 py-1.5 text-[12px] font-semibold text-neutral-950 shadow-sm transition-colors hover:bg-yellow-600";
 
 const secondaryOutlineButtonClass =
-  "inline-flex items-center justify-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] font-medium text-neutral-700 shadow-sm transition-colors hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:border-neutral-700 dark:hover:bg-neutral-800/80";
+  "inline-flex items-center justify-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] font-medium text-neutral-700 shadow-sm transition-colors hover:border-neutral-300 hover:bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-200 dark:shadow-surface-dark-sm dark:hover:border-surface-dark-border-strong dark:hover:bg-neutral-800/80";
 
 const secondaryOutlineButtonMdClass =
-  "inline-flex items-center justify-center rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-[12px] font-medium text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800/80";
+  "inline-flex items-center justify-center rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-[12px] font-medium text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-200 dark:hover:bg-neutral-800/80";
 
 const ghostIconButtonClass =
-  "rounded-md border border-neutral-200 bg-white p-1 text-neutral-600 shadow-sm transition-colors hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300 dark:hover:border-neutral-700 dark:hover:bg-neutral-900 dark:hover:text-white";
+  "rounded-md border border-neutral-200 bg-white p-1 text-neutral-600 shadow-sm transition-colors hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-900 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:border-surface-dark-border-strong dark:hover:bg-neutral-900 dark:hover:text-white";
 
 const insetNoticeClass =
-  "rounded-lg border border-neutral-200 bg-white p-3 text-[11px] text-neutral-600 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300";
+  "rounded-lg border border-neutral-200 bg-white p-3 text-[11px] text-neutral-600 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300";
 
 const feedCardClass =
-  "rounded-lg border border-neutral-200 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-900";
+  "rounded-lg border border-neutral-200 bg-white p-3 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]";
 
 const actionItemsPanelClass =
-  "mt-3 rounded-md border border-neutral-200 bg-muted p-2 dark:border-neutral-800 dark:bg-neutral-900/90";
+  "mt-3 rounded-md border border-neutral-200 bg-muted p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/90";
 
 const modalOverlayClass =
   "fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm";
 
 const modalPanelClass =
-  "flex max-h-[min(85vh,100dvh)] w-full flex-col overflow-y-auto rounded-lg border border-neutral-200 bg-white p-4 shadow-xl dark:border-neutral-800 dark:bg-neutral-950 sm:p-6";
+  "flex max-h-[min(85vh,100dvh)] w-full flex-col overflow-y-auto rounded-lg border border-neutral-200 bg-white p-4 shadow-xl dark:border-surface-dark-border dark:bg-[#1d1d1b] sm:p-6";
 
 const formControlClass =
-  "mt-1 w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-[12px] text-neutral-900 transition-colors focus-visible:border-brand-primary-500 focus-visible:ring-1 focus-visible:ring-brand-primary-500/30 focus-visible:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100";
+  "mt-1 w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-[12px] text-neutral-900 transition-colors focus-visible:border-brand-primary-500 focus-visible:ring-1 focus-visible:ring-brand-primary-500/30 focus-visible:outline-none dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-100";
 
 export default function HighDensityDashboard() {
   const { user } = useAuth();
@@ -218,7 +218,7 @@ export default function HighDensityDashboard() {
       </header>
 
       <section className="flex-1">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 pb-1.5 dark:border-neutral-800">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 pb-1.5 dark:border-surface-dark-border">
           <div className="flex min-w-0 items-center gap-2">
             <FolderKanban className="h-3.5 w-3.5 shrink-0 text-neutral-600 dark:text-neutral-400" />
             <h2 className="text-xs font-semibold tracking-wide text-neutral-700 dark:text-neutral-300">
@@ -241,7 +241,7 @@ export default function HighDensityDashboard() {
         {loading && <div className={insetNoticeClass}>Carregando reasonings…</div>}
 
         {!loading && error && (
-          <div className="rounded-lg border border-red-200 bg-white p-3 text-[11px] text-red-700 shadow-sm dark:border-red-900/50 dark:bg-neutral-900 dark:text-red-300">
+          <div className="rounded-lg border border-red-200 bg-white p-3 text-[11px] text-red-700 shadow-sm dark:border-red-900/50 dark:bg-[#1d1d1b] dark:text-red-300">
             {error}
           </div>
         )}
@@ -432,7 +432,7 @@ export default function HighDensityDashboard() {
                   <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{detail.title}</h3>
                 ) : null}
 
-                <pre className="whitespace-pre-wrap rounded-md border border-neutral-200 bg-neutral-50 p-3 text-[11px] text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/90 dark:text-neutral-200">
+                <pre className="whitespace-pre-wrap rounded-md border border-neutral-200 bg-neutral-50 p-3 text-[11px] text-neutral-800 dark:border-surface-dark-border dark:bg-[#1d1d1b]/90 dark:text-neutral-200">
                   {detail.output_markdown || "(sem output_markdown)"}
                 </pre>
               </div>

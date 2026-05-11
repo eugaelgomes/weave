@@ -85,7 +85,7 @@ const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "sm" | "md" | "l
     <figure
       className={cn(
         sizeClasses[size],
-        "relative flex-shrink-0 overflow-hidden rounded-md border border-gray-100 bg-gray-100 transition-all duration-300 dark:border-gray-700 dark:bg-gray-800"
+        "relative flex-shrink-0 overflow-hidden rounded-md border border-gray-100 bg-gray-100 transition-all duration-300 dark:border-surface-dark-border-strong dark:bg-gray-800"
       )}
       aria-label={`Avatar de ${user?.user_name || "Usuário"}`}
     >
@@ -131,7 +131,7 @@ const NotificationsLink = ({
     >
       <MessageSquare className="h-4 w-4" strokeWidth={1.75} />
       {unreadCount > 0 && (
-        <span className="bg-brand-primary-500 absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full border-2 border-white px-1 text-[8px] font-bold text-white dark:border-gray-950">
+        <span className="bg-brand-primary-500 absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full border-2 border-white px-1 text-[8px] font-bold text-white dark:border-surface-dark-border-strong">
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}
@@ -150,7 +150,7 @@ interface UserMenuProps {
 
 const UserMenuContent = ({ user, theme, t, onClose, onToggleTheme, onLogout }: UserMenuProps) => (
   <nav aria-label="Menu do usuário" className="flex flex-col overflow-hidden">
-    <header className="flex items-center gap-3 border-b border-gray-200 bg-brand-yellow/5 px-4 py-3 dark:border-gray-900 dark:bg-gray-950">
+    <header className="flex items-center gap-3 border-b border-gray-200 bg-brand-yellow/5 px-4 py-3 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
       <UserAvatar user={user} size="md" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold text-gray-900 dark:text-brand-yellow">
@@ -200,7 +200,7 @@ const UserMenuContent = ({ user, theme, t, onClose, onToggleTheme, onLogout }: U
         </a>
       </li>
 
-      <hr className="my-1 border-t border-gray-200 dark:border-gray-800" />
+      <hr className="my-1 border-t border-gray-200 dark:border-surface-dark-border" />
 
       <li>
         <button
@@ -260,7 +260,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
   return (
     <>
-      <header className="relative z-40 w-full shrink-0 print:hidden">
+      <header className="relative z-40 w-full shrink-0 bg-neutral-100 print:hidden dark:bg-[#1d1d1b]">
         <nav
           className="mx-auto w-full max-w-[1920px] px-1.5 pt-1 pb-0.5 sm:px-2 lg:px-4 lg:py-0 lg:pb-0"
           aria-label="Navegação principal"
@@ -339,7 +339,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                   <button
                     type="button"
                     onClick={() => setIsSearchOpen(true)}
-                    className="group flex w-full max-w-[480px] items-center gap-2.5 rounded-full border border-gray-200/60 bg-brand-beige/40 px-3 py-1 transition-all hover:bg-brand-beige/60 hover:ring-4 hover:ring-brand-yellow/10 dark:border-gray-800/60 dark:bg-gray-900/40 dark:hover:bg-gray-800/60"
+                    className="group flex w-full max-w-[480px] items-center gap-2.5 rounded-full border border-gray-200/60 bg-brand-beige/40 px-3 py-1 transition-all hover:bg-brand-beige/60 hover:ring-4 hover:ring-brand-yellow/10 dark:border-surface-dark-border dark:bg-[#1d1d1b]/40 dark:hover:bg-gray-800/60"
                     aria-label="Pesquisar no sistema"
                   >
                     <Search
@@ -349,7 +349,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                     <span className="flex-1 text-left text-[11px] text-gray-500 dark:text-gray-400">
                       {t.navbar.searchPlaceholder}
                     </span>
-                    <kbd className="flex items-bottom gap-1 px-1.5 font-sans text-[10px] font-medium text-gray-500 dark:border-gray-700/60 dark:text-gray-500">
+                    <kbd className="flex items-bottom gap-1 px-1.5 font-sans text-[10px] font-medium text-gray-500 dark:border-surface-dark-border dark:text-gray-500">
                       <span>⌘</span>K
                     </kbd>
                   </button>
@@ -405,7 +405,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
                     {isMenuOpen && (
                       <div className="absolute top-full right-0 z-50 mt-2 hidden w-72 origin-top-right sm:block">
-                        <div className="overflow-hidden rounded-md border border-gray-200/60 bg-white shadow-2xl ring-1 ring-black/5 dark:border-gray-800/60 dark:bg-[#1d1d1b]">
+                        <div className="overflow-hidden rounded-md border border-gray-200/60 bg-white shadow-2xl ring-1 ring-black/5 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
                           <UserMenuContent
                             user={user}
                             theme={theme}
@@ -441,7 +441,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
             <dialog
               ref={mobileMenuRef}
               open
-              className="relative z-[111] m-0 flex w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:border-neutral-900 dark:bg-[#1d1d1b]"
+              className="relative z-[111] m-0 flex w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
             >
               <div className="max-h-[75vh] overflow-y-auto">
                 <UserMenuContent
@@ -454,7 +454,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 />
               </div>
 
-              <footer className="border-t border-neutral-200 bg-white p-3 dark:border-neutral-900 dark:bg-[#1d1d1b]">
+              <footer className="border-t border-neutral-200 bg-white p-3 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
                 <button
                   onClick={() => setIsMenuOpen(false)}
                   className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-200/50 py-2.5 text-xs font-bold text-neutral-900 active:scale-95 dark:bg-neutral-800 dark:text-neutral-100"

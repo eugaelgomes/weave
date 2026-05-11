@@ -246,13 +246,13 @@ const markdownComponents = (opts: {
     </a>
   ),
   blockquote: ({ children }) => (
-    <blockquote className="my-2 border-l-4 border-neutral-300 pl-4 text-neutral-700 italic dark:border-neutral-600 dark:text-neutral-300">
+    <blockquote className="my-2 border-l-4 border-neutral-300 pl-4 text-neutral-700 italic dark:border-surface-dark-border-muted dark:text-neutral-300">
       {children}
     </blockquote>
   ),
-  hr: () => <hr className="my-4 border-neutral-200 dark:border-neutral-700" />,
+  hr: () => <hr className="my-4 border-neutral-200 dark:border-surface-dark-border-strong" />,
   pre: ({ children }) => (
-    <pre className="my-3 overflow-x-auto rounded-xl bg-neutral-100 p-4 dark:bg-neutral-900/80">
+    <pre className="my-3 overflow-x-auto rounded-xl bg-neutral-100 p-4 dark:bg-[#1d1d1b]/80">
       {children}
     </pre>
   ),
@@ -274,10 +274,10 @@ const markdownComponents = (opts: {
       <table className="w-full border-collapse text-left text-sm">{children}</table>
     </div>
   ),
-  thead: ({ children }) => <thead className="border-b border-neutral-200 dark:border-neutral-700">{children}</thead>,
+  thead: ({ children }) => <thead className="border-b border-neutral-200 dark:border-surface-dark-border-strong">{children}</thead>,
   tbody: ({ children }) => <tbody>{children}</tbody>,
   tr: ({ children }) => (
-    <tr className="border-b border-neutral-100 last:border-0 dark:border-neutral-800">{children}</tr>
+    <tr className="border-b border-neutral-100 last:border-0 dark:border-surface-dark-border">{children}</tr>
   ),
   th: ({ children }) => (
     <th className="px-3 py-2 font-semibold text-neutral-900 dark:text-neutral-100">{children}</th>
@@ -307,7 +307,7 @@ const markdownComponents = (opts: {
           checked={Boolean(checked)}
           disabled={disabled}
           readOnly
-          className="mr-2 mt-1 h-4 w-4 shrink-0 rounded border-neutral-300 text-brand-primary-600 accent-brand-primary-500 dark:border-neutral-600"
+          className="mr-2 mt-1 h-4 w-4 shrink-0 rounded border-neutral-300 text-brand-primary-600 accent-brand-primary-500 dark:border-surface-dark-border-muted"
         />
       );
     }

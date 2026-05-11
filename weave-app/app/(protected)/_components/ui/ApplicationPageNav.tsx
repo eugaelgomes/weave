@@ -3,7 +3,7 @@
 import React, { ReactNode } from "react";
 
 const rootStyles =
-  "flex w-full min-w-0 flex-row items-center justify-between gap-2 rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-sm shadow-md dark:border-neutral-800 dark:bg-neutral-800";
+  "flex w-full min-w-0 flex-row items-center justify-between gap-2 rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-sm shadow-md dark:shadow-surface-dark-md dark:border-surface-dark-border dark:bg-neutral-800";
 
 interface ApplicationPageNavProps {
   /** Classes extras no container (mesma base do BaseHeader). */

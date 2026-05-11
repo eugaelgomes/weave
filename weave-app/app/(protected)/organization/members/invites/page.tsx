@@ -18,7 +18,7 @@ const Badge = ({ role }: { role: string }) => {
     admin: "bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400",
     member: "bg-neutral-500/10 text-neutral-700 border-neutral-500/20 dark:text-neutral-300",
     guest:
-      "bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-neutral-800/50 dark:border-neutral-800",
+      "bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-neutral-800/50 dark:border-surface-dark-border",
   };
   const labels = {
     super_admin: t.organizationMembers.superAdmin,
@@ -43,7 +43,7 @@ const ModalBase = ({ isOpen, onClose, title, children, footer }: any) => {
   return (
     <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/40 p-4 backdrop-blur-sm duration-300">
       <div className="absolute inset-0" onClick={onClose} />
-      <div className="relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-md border border-t-4 border-neutral-200 border-t-yellow-500 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-md border border-t-4 border-neutral-200 border-t-yellow-500 bg-white shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <button
           onClick={onClose}
           title="Fechar modal"
@@ -59,7 +59,7 @@ const ModalBase = ({ isOpen, onClose, title, children, footer }: any) => {
         </div>
         <div className="flex-1 overflow-y-auto p-5 pt-2 text-xs">{children}</div>
         {footer && (
-          <div className="flex justify-end gap-2 border-t border-neutral-100 bg-neutral-50/50 p-3 dark:border-neutral-800 dark:bg-neutral-900/50">
+          <div className="flex justify-end gap-2 border-t border-neutral-100 bg-neutral-50/50 p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
             {footer}
           </div>
         )}
@@ -159,7 +159,7 @@ const InviteModal = ({
               onChange={(e) => setName(e.target.value)}
               placeholder="Nome"
               autoComplete="name"
-              className="w-full rounded-md border border-neutral-300 py-1.5 pr-2 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+              className="w-full rounded-md border border-neutral-300 py-1.5 pr-2 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white"
             />
           </div>
         </div>
@@ -174,7 +174,7 @@ const InviteModal = ({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email@exemplo.com"
-              className="w-full rounded-md border border-neutral-300 py-1.5 pr-2 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+              className="w-full rounded-md border border-neutral-300 py-1.5 pr-2 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white"
             />
           </div>
         </div>
@@ -186,7 +186,7 @@ const InviteModal = ({
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as "admin" | "member" | "guest")}
-              className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+              className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white"
             >
               <option value="admin">{t.organizationMembers.adminRole}</option>
               <option value="member">{t.organizationMembers.standardRole}</option>
@@ -204,7 +204,7 @@ const InviteModal = ({
             <select
               value={areaId}
               onChange={(e) => setAreaId(e.target.value)}
-              className="w-full appearance-none rounded-md border border-neutral-300 py-1.5 pr-8 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+              className="w-full appearance-none rounded-md border border-neutral-300 py-1.5 pr-8 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white"
             >
               <option value="">{t.organizationMembers.areaNone}</option>
               {areas.map((a) => (
@@ -225,7 +225,7 @@ const InviteModal = ({
               <select
                 value={areaRole}
                 onChange={(e) => setAreaRole(e.target.value as "manager" | "editor" | "viewer")}
-                className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+                className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white"
               >
                 <option value="manager">{t.organizationMembers.areaManager}</option>
                 <option value="editor">{t.organizationMembers.areaEditor}</option>
@@ -320,7 +320,7 @@ export default function InvitesPage() {
     <div className="mx-auto w-full space-y-2">
       <WorkspaceHeader />
 
-      <div className="flex flex-col gap-4 rounded-md border border-neutral-200 bg-white px-4 py-2 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex flex-col gap-4 rounded-md border border-neutral-200 bg-white px-4 py-2 sm:flex-row sm:items-center sm:justify-between dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">
             {t.organizationMembers.title}
@@ -333,8 +333,8 @@ export default function InvitesPage() {
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-neutral-800">
+      <div className="mt-4 flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-surface-dark-border">
           <h2 className="text-sm font-bold text-neutral-900 dark:text-white">Convites Pendentes</h2>
           {userCanManage && (
             <button
@@ -346,10 +346,10 @@ export default function InvitesPage() {
             </button>
           )}
         </div>
-        <div className="mt-2 flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="mt-2 flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-neutral-50/50 dark:bg-neutral-950/50">
+              <thead className="bg-neutral-50/50 dark:bg-[#1d1d1b]/50">
                 <tr>
                   <th className="px-4 py-3 text-[10px] font-bold tracking-wider text-neutral-500">
                     Email
@@ -362,7 +362,7 @@ export default function InvitesPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
+              <tbody className="divide-y divide-neutral-200 dark:divide-surface-dark-border">
                 {invites?.length === 0 ? (
                   <tr>
                     <td colSpan={3} className="px-4 py-6 text-center text-xs text-neutral-500">

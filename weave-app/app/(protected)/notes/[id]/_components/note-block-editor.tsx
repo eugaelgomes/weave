@@ -345,7 +345,7 @@ export function NoteBlockEditor({
   const contentShellClass = clsx(
     "rounded-md px-1.5 py-0",
     isDragging && "bg-neutral-100 shadow-lg ring-2 ring-yellow-500/20 dark:bg-neutral-800 dark:ring-yellow-500/40",
-    block.type === "quote" && "border-l-4 border-neutral-300 pl-3 italic dark:border-neutral-600"
+    block.type === "quote" && "border-l-4 border-neutral-300 pl-3 italic dark:border-surface-dark-border-muted"
   );
 
   /* -------- Tipos especiais -------- */
@@ -354,7 +354,7 @@ export function NoteBlockEditor({
     return (
       <div className={shellClass}>
         <DragHandle dragHandleProps={dragHandleProps} />
-        <hr className="my-6 border-neutral-200 dark:border-neutral-700" />
+        <hr className="my-6 border-neutral-200 dark:border-surface-dark-border-strong" />
       </div>
     );
   }
@@ -431,7 +431,7 @@ export function NoteBlockEditor({
             onChange={(e) => {
               void onUpdate(block.id, { done: e.target.checked });
             }}
-            className="mt-1.5 h-4 w-4 shrink-0 rounded border-neutral-300 text-brand-primary-600 accent-brand-primary-500 dark:border-neutral-600"
+            className="mt-1.5 h-4 w-4 shrink-0 rounded border-neutral-300 text-brand-primary-600 accent-brand-primary-500 dark:border-surface-dark-border-muted"
           />
           <div className="min-w-0 flex-1">{editArea}</div>
         </div>
@@ -542,7 +542,7 @@ export function NoteBlockEditor({
       <div className={contentShellClass}>{editArea}</div>
 
       {block.children && block.children.length > 0 ? (
-        <div className="mt-0.5 ml-6 border-l-2 border-neutral-200 pl-4 dark:border-neutral-800">
+        <div className="mt-0.5 ml-6 border-l-2 border-neutral-200 pl-4 dark:border-surface-dark-border">
           {block.children.map((child: Block & { children?: Block[] }) => (
             <NoteBlockEditor
               key={child.id}

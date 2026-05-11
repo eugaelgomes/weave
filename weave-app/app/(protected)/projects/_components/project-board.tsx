@@ -46,10 +46,10 @@ function NoteCard({
 }) {
   return (
     <div
-      className={`group relative rounded-md border border-neutral-200 bg-white p-2 shadow-sm transition-all dark:border-neutral-800 dark:bg-[#121214] ${
+      className={`group relative rounded-md border border-neutral-200 bg-white p-2 shadow-sm transition-all dark:border-surface-dark-border dark:bg-[#121214] ${
         isDragging
           ? "rotate-[2deg] scale-105 shadow-lg ring-2 ring-yellow-400/50"
-          : "hover:border-neutral-300 hover:shadow-md dark:hover:border-neutral-700"
+          : "hover:border-neutral-300 hover:shadow-md dark:hover:border-surface-dark-border-strong"
       }`}
     >
       <div className="mb-1.5 flex items-start justify-between gap-1.5">
@@ -88,14 +88,14 @@ function NoteCard({
         </div>
       )}
 
-      <div className="flex items-center justify-between border-t border-neutral-100 pt-2 dark:border-neutral-800/60">
+      <div className="flex items-center justify-between border-t border-neutral-100 pt-2 dark:border-surface-dark-border">
         <div className="flex items-center gap-1.5">
           <button
             onClick={onSetDueDate}
             className={`flex items-center gap-1 rounded px-1 py-0.5 transition-colors ${
               note.properties?.due_date
                 ? "bg-red-50 text-red-500 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20"
-                : "bg-neutral-50 text-neutral-400 hover:text-neutral-600 dark:bg-neutral-900 dark:hover:text-neutral-300"
+                : "bg-neutral-50 text-neutral-400 hover:text-neutral-600 dark:bg-[#1d1d1b] dark:hover:text-neutral-300"
             }`}
             title={
               note.properties?.due_date
@@ -123,7 +123,7 @@ function NoteCard({
                   ? "bg-orange-50 text-orange-500 dark:bg-orange-500/10 dark:text-orange-400"
                   : note.properties?.priority === "baixa"
                     ? "bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400"
-                    : "bg-neutral-50 text-neutral-400 hover:text-neutral-600 dark:bg-neutral-900 dark:hover:text-neutral-300"
+                    : "bg-neutral-50 text-neutral-400 hover:text-neutral-600 dark:bg-[#1d1d1b] dark:hover:text-neutral-300"
             }`}
             title={`Prioridade: ${note.properties?.priority || "Nenhuma"}`}
           >
@@ -133,7 +133,7 @@ function NoteCard({
 
         <div className="flex items-center">
           <button
-            className="flex h-4 w-4 items-center justify-center rounded-full border border-dashed border-neutral-300 bg-neutral-50 text-neutral-400 transition-colors hover:border-neutral-400 hover:text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:text-neutral-300"
+            className="flex h-4 w-4 items-center justify-center rounded-full border border-dashed border-neutral-300 bg-neutral-50 text-neutral-400 transition-colors hover:border-neutral-400 hover:text-neutral-600 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:hover:text-neutral-300"
             title="Em breve: Atribuir pessoa"
           >
             <Plus className="h-2.5 w-2.5 bg-transparent" />
@@ -198,7 +198,7 @@ function DroppableStageColumn({
       className={`flex h-full min-h-0 w-[280px] flex-shrink-0 flex-col rounded-md transition-colors ${
         isOver
           ? "bg-yellow-50/60 ring-2 ring-inset ring-yellow-400/40 dark:bg-yellow-500/5 dark:ring-yellow-500/30"
-          : "bg-neutral-50/50 dark:bg-neutral-950/30"
+          : "bg-neutral-50/50 dark:bg-[#1d1d1b]/30"
       }`}
     >
       <div className="flex items-center justify-between p-3">
@@ -359,7 +359,7 @@ export default function ProjectBoard({
               count={stageNotes.length}
             >
               {stageNotes.length === 0 ? (
-                <div className="flex items-center justify-center rounded-md border border-dashed border-neutral-300 bg-transparent py-8 dark:border-neutral-800">
+                <div className="flex items-center justify-center rounded-md border border-dashed border-neutral-300 bg-transparent py-8 dark:border-surface-dark-border">
                   <span className="text-xs text-neutral-400">Solte os cards aqui</span>
                 </div>
               ) : (

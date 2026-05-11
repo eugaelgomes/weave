@@ -50,13 +50,13 @@ export function SettingsForm({
   return (
     <div className="space-y-6">
       {/* Plan & Usage Section - New */}
-      <section className="rounded-md border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
           <CreditCard className="h-5 w-5 text-zinc-500" />
           Plano & Uso
         </h2>
 
-        <div className="mb-6 rounded-md border border-zinc-100 bg-zinc-50 p-4 dark:border-zinc-900 dark:bg-zinc-900/50">
+        <div className="mb-6 rounded-md border border-zinc-100 bg-zinc-50 p-4 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/50">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-semibold text-zinc-900 dark:text-zinc-100">
@@ -114,7 +114,7 @@ export function SettingsForm({
       {/* Grid Layout for General & Address */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* General Settings */}
-        <section className="h-full rounded-md border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+        <section className="h-full rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
             <Settings className="h-5 w-5 text-zinc-500" />
             Geral
@@ -156,7 +156,7 @@ export function SettingsForm({
         </section>
 
         {/* Address & Location (Placeholder for now as Address is complex usually) */}
-        <section className="h-full rounded-md border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+        <section className="h-full rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
             <MapPin className="h-5 w-5 text-zinc-500" />
             Localização
@@ -165,13 +165,13 @@ export function SettingsForm({
           <div className="space-y-4 text-xs text-zinc-500">
             {organization?.address ? (
               <>
-                <div className="flex justify-between border-b border-zinc-100 py-2 dark:border-zinc-900">
+                <div className="flex justify-between border-b border-zinc-100 py-2 dark:border-surface-dark-border-strong">
                   <span>Endereço</span>
                   <span className="font-medium text-zinc-900 dark:text-zinc-100">
                     {organization.address.street || "-"}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-zinc-100 py-2 dark:border-zinc-900">
+                <div className="flex justify-between border-b border-zinc-100 py-2 dark:border-surface-dark-border-strong">
                   <span>Cidade/Estado</span>
                   <span className="font-medium text-zinc-900 dark:text-zinc-100">
                     {organization.address.city
@@ -179,7 +179,7 @@ export function SettingsForm({
                       : "-"}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-zinc-100 py-2 dark:border-zinc-900">
+                <div className="flex justify-between border-b border-zinc-100 py-2 dark:border-surface-dark-border-strong">
                   <span>País</span>
                   <span className="font-medium text-zinc-900 dark:text-zinc-100">
                     {organization.address.country || "-"}
@@ -189,7 +189,7 @@ export function SettingsForm({
             ) : (
               <p className="italic">Nenhum endereço cadastrado.</p>
             )}
-            <div className="mt-4 rounded-md bg-zinc-50 p-3 text-xs dark:bg-zinc-900">
+            <div className="mt-4 rounded-md bg-zinc-50 p-3 text-xs dark:bg-[#1d1d1b]">
               Endereços são usados para faturamento e podem ser editados na gestão da assinatura.
             </div>
           </div>
@@ -198,7 +198,7 @@ export function SettingsForm({
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Features */}
-        <section className="h-full rounded-md border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+        <section className="h-full rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
             <Layers className="h-5 w-5 text-zinc-500" />
             Funcionalidades
@@ -229,7 +229,7 @@ export function SettingsForm({
         </section>
 
         {/* Notifications */}
-        <section className="h-full rounded-md border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+        <section className="h-full rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
             <Bell className="h-5 w-5 text-zinc-500" />
             Notificações
@@ -267,7 +267,7 @@ export function SettingsForm({
       </div>
 
       {/* Integrations (New Placeholder) */}
-      <section className="rounded-md border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
           <Puzzle className="h-5 w-5 text-zinc-500" />
           Integrações
@@ -278,7 +278,7 @@ export function SettingsForm({
             {Object.entries(organization.integrations).map(([key, value]: [string, any]) => (
               <div
                 key={key}
-                className="flex items-center justify-between rounded-md border border-zinc-100 p-3 dark:border-zinc-800"
+                className="flex items-center justify-between rounded-md border border-zinc-100 p-3 dark:border-surface-dark-border"
               >
                 <div className="font-medium capitalize">{key}</div>
                 <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
@@ -286,7 +286,7 @@ export function SettingsForm({
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-zinc-200 bg-zinc-50 py-8 text-center dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-zinc-200 bg-zinc-50 py-8 text-center dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
             <Zap className="mb-3 h-8 w-8 text-zinc-300 dark:text-zinc-600" />
             <p className="text-xs font-medium text-zinc-900 dark:text-zinc-100">
               Nenhuma integração ativa
@@ -302,7 +302,7 @@ export function SettingsForm({
       <DomainsSection userIsOwner={userIsOwner} />
 
       {/* Branding */}
-      <section className="rounded-md border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
           <Palette className="h-5 w-5 text-zinc-500" />
           Identidade Visual
@@ -317,7 +317,7 @@ export function SettingsForm({
                   value={localProps?.branding?.primaryColor || "#000000"}
                   onChange={(e) => handlePropertyChange("branding", "primaryColor", e.target.value)}
                   disabled={!userIsOwner}
-                  className="h-10 w-10 cursor-pointer rounded border border-zinc-200 p-1 dark:border-zinc-800 dark:bg-zinc-900"
+                  className="h-10 w-10 cursor-pointer rounded border border-zinc-200 p-1 dark:border-surface-dark-border dark:bg-[#1d1d1b]"
                 />
                 <div className="flex flex-col justify-center">
                   <span className="text-[10px] text-zinc-500 uppercase">Primária</span>
@@ -334,7 +334,7 @@ export function SettingsForm({
                     handlePropertyChange("branding", "secondaryColor", e.target.value)
                   }
                   disabled={!userIsOwner}
-                  className="h-10 w-10 cursor-pointer rounded border border-zinc-200 p-1 dark:border-zinc-800 dark:bg-zinc-900"
+                  className="h-10 w-10 cursor-pointer rounded border border-zinc-200 p-1 dark:border-surface-dark-border dark:bg-[#1d1d1b]"
                 />
                 <div className="flex flex-col justify-center">
                   <span className="text-[10px] text-zinc-500 uppercase">Secundária</span>
@@ -372,7 +372,7 @@ export function SettingsForm({
             Ações nesta área podem ser irreversíveis ou causar perda de dados temporária.
           </p>
 
-          <div className="flex items-center justify-between rounded-md border border-red-200 bg-white p-4 dark:border-red-900/30 dark:bg-zinc-900">
+          <div className="flex items-center justify-between rounded-md border border-red-200 bg-white p-4 dark:border-red-900/30 dark:bg-[#1d1d1b]">
             <div>
               <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                 Deletar Organização

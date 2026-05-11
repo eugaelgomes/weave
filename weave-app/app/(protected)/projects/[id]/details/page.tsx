@@ -53,12 +53,12 @@ const LEVEL_LABELS: Record<string, string> = {
 };
 
 const inputCls =
-  "w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs text-neutral-800 transition-colors focus:border-neutral-400 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100";
+  "w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs text-neutral-800 transition-colors focus:border-neutral-400 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100";
 const selectCls = inputCls;
 const btnPrimaryCls =
   "bg-brand-primary-500 inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-semibold text-neutral-900 transition-colors hover:bg-yellow-500 disabled:opacity-50";
 const btnSecondaryCls =
-  "inline-flex items-center gap-1.5 rounded-md border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800";
+  "inline-flex items-center gap-1.5 rounded-md border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-100 dark:border-surface-dark-border-strong dark:text-neutral-200 dark:hover:bg-neutral-800";
 const btnDangerCls =
   "inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10";
 
@@ -642,7 +642,7 @@ export default function ProjectDetailsPage() {
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-[#FAFAFA] dark:bg-[#0E0E11]">
-      <div className="flex h-10 flex-none items-center justify-between border-b border-neutral-200 bg-white px-2 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex h-10 flex-none items-center justify-between border-b border-neutral-200 bg-white px-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <button
           type="button"
           onClick={() => router.push(`/projects/${projectId}`)}
@@ -658,7 +658,7 @@ export default function ProjectDetailsPage() {
 
       <div className="mx-auto flex w-full flex-col gap-2">
         {/* Seção: Geral */}
-        <div className="bg-white p-3 dark:bg-neutral-900">
+        <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
             Geral
           </h2>
@@ -763,7 +763,7 @@ export default function ProjectDetailsPage() {
                 type="color"
                 value={formData.color}
                 onChange={(e) => handleChange("color", e.target.value)}
-                className="h-8 w-full rounded-md border border-neutral-200 bg-white px-1 py-0.5 dark:border-neutral-700 dark:bg-neutral-950"
+                className="h-8 w-full rounded-md border border-neutral-200 bg-white px-1 py-0.5 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
                 disabled={!canEdit}
               />
             </label>
@@ -772,7 +772,7 @@ export default function ProjectDetailsPage() {
               <span className="mb-1 block text-[10px] text-neutral-500">Ícone do Projeto</span>
               <div className="flex items-center gap-3">
                 {iconPreview ? (
-                  <div className="relative h-12 w-12 overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-700">
+                  <div className="relative h-12 w-12 overflow-hidden rounded-md border border-neutral-200 dark:border-surface-dark-border-strong">
                     <img
                       src={iconPreview.startsWith("http") || iconPreview.startsWith("blob") ? iconPreview : `https://spaces.weavenotes.com/${iconPreview}`}
                       alt="Ícone do Projeto"
@@ -783,7 +783,7 @@ export default function ProjectDetailsPage() {
                     />
                   </div>
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 text-neutral-400 dark:border-neutral-700 dark:bg-neutral-900">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 text-neutral-400 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
                     <FaArrowLeft className="size-4 opacity-0" />
                   </div>
                 )}
@@ -828,7 +828,7 @@ export default function ProjectDetailsPage() {
             </label>
           </div>
 
-          <div className="mt-2 flex items-center justify-between border-t border-neutral-200 pt-2 dark:border-neutral-800">
+          <div className="mt-2 flex items-center justify-between border-t border-neutral-200 pt-2 dark:border-surface-dark-border">
             {isOwner && (
               <button
                 type="button"
@@ -859,7 +859,7 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Seção: Tags */}
-        <div className="bg-white p-3 dark:bg-neutral-900">
+        <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
               Tags ({projectTags.length})
@@ -867,7 +867,7 @@ export default function ProjectDetailsPage() {
           </div>
 
           {canEdit && (
-            <div className="flex items-end gap-1.5 pb-2 border-b border-neutral-100 dark:border-neutral-800">
+            <div className="flex items-end gap-1.5 pb-2 border-b border-neutral-100 dark:border-surface-dark-border">
               <label className="flex-1">
                 <span className="mb-0.5 block text-[10px] text-neutral-500">Nova Tag</span>
                 <input
@@ -883,7 +883,7 @@ export default function ProjectDetailsPage() {
                   type="color"
                   value={newTagColor}
                   onChange={(e) => setNewTagColor(e.target.value)}
-                  className="h-7 w-8 rounded-md border border-neutral-200 bg-white p-0 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="h-7 w-8 rounded-md border border-neutral-200 bg-white p-0 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
                 />
               </label>
               <button
@@ -901,7 +901,7 @@ export default function ProjectDetailsPage() {
             {projectTags.map((tag) => (
               <div
                 key={tag.id}
-                className="flex items-center gap-1.5 rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-neutral-800 dark:bg-neutral-900/50"
+                className="flex items-center gap-1.5 rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50"
               >
                 {editingTagId === tag.id ? (
                   <>
@@ -951,7 +951,7 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Seção: Prioridades */}
-        <div className="bg-white p-3 dark:bg-neutral-900">
+        <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
               Prioridades ({taskPriorities.length})
@@ -959,7 +959,7 @@ export default function ProjectDetailsPage() {
           </div>
 
           {canEdit && (
-            <div className="flex items-end gap-1.5 pb-2 border-b border-neutral-100 dark:border-neutral-800">
+            <div className="flex items-end gap-1.5 pb-2 border-b border-neutral-100 dark:border-surface-dark-border">
               <label className="flex-1">
                 <span className="mb-0.5 block text-[10px] text-neutral-500">Nova Prioridade</span>
                 <input
@@ -975,7 +975,7 @@ export default function ProjectDetailsPage() {
                   type="color"
                   value={newPriorityColor}
                   onChange={(e) => setNewPriorityColor(e.target.value)}
-                  className="h-7 w-8 rounded-md border border-neutral-200 bg-white p-0 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="h-7 w-8 rounded-md border border-neutral-200 bg-white p-0 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
                 />
               </label>
               <label>
@@ -1002,7 +1002,7 @@ export default function ProjectDetailsPage() {
             {taskPriorities.map((priority) => (
               <div
                 key={priority.id}
-                className="flex items-center gap-1.5 rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-neutral-800 dark:bg-neutral-900/50"
+                className="flex items-center gap-1.5 rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50"
               >
                 {editingPriorityId === priority.id ? (
                   <>
@@ -1057,7 +1057,7 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Seção: Etapas */}
-        <div className="bg-white p-3 dark:bg-neutral-900">
+        <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <div className="mb-2">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
               Etapas do Board ({stages.length})
@@ -1070,7 +1070,7 @@ export default function ProjectDetailsPage() {
               .map((stage) => (
                 <div
                   key={stage.id}
-                  className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-neutral-800 dark:bg-neutral-900/50"
+                  className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50"
                 >
                   <div className="flex items-center gap-1.5">
                     <span
@@ -1100,13 +1100,13 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Seção: Colaboradores */}
-        <div className="bg-white p-3 dark:bg-neutral-900">
+        <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
             Colaboradores ({collaborators.length})
           </h2>
 
           {canEdit && (
-            <div className="mb-2 border-b border-neutral-100 pb-2 dark:border-neutral-800">
+            <div className="mb-2 border-b border-neutral-100 pb-2 dark:border-surface-dark-border">
               <div className="relative">
                 <FaSearch className="absolute top-1/2 left-2 size-2.5 -translate-y-1/2 text-neutral-400" />
                 <input
@@ -1124,11 +1124,11 @@ export default function ProjectDetailsPage() {
               )}
 
               {searchResults.length > 0 && (
-                <div className="mt-1 max-h-32 space-y-1 overflow-y-auto rounded-md border border-neutral-200 p-1 dark:border-neutral-800">
+                <div className="mt-1 max-h-32 space-y-1 overflow-y-auto rounded-md border border-neutral-200 p-1 dark:border-surface-dark-border">
                   {searchResults.map((u) => (
                     <div
                       key={u.id}
-                      className="flex items-center justify-between rounded bg-neutral-50 p-1.5 dark:bg-neutral-950/50"
+                      className="flex items-center justify-between rounded bg-neutral-50 p-1.5 dark:bg-[#1d1d1b]/50"
                     >
                       <div className="flex items-center gap-1.5">
                         <div className="flex size-5 items-center justify-center rounded bg-neutral-200 text-[9px] font-bold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
@@ -1145,14 +1145,14 @@ export default function ProjectDetailsPage() {
                         <button
                           onClick={() => handleAddCollaborator(u.id, "viewer")}
                           disabled={addingCollab === u.id}
-                          className="rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
+                          className="rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] hover:bg-neutral-100 dark:border-surface-dark-border-strong dark:hover:bg-neutral-800"
                         >
                           Leitor
                         </button>
                         <button
                           onClick={() => handleAddCollaborator(u.id, "admin")}
                           disabled={addingCollab === u.id}
-                          className="rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
+                          className="rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] hover:bg-neutral-100 dark:border-surface-dark-border-strong dark:hover:bg-neutral-800"
                         >
                           Admin
                         </button>
@@ -1168,7 +1168,7 @@ export default function ProjectDetailsPage() {
             {collaborators.map((collab) => (
               <div
                 key={collab.user_id}
-                className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-neutral-800 dark:bg-neutral-900/50"
+                className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50"
               >
                 <div className="flex items-center gap-1.5 overflow-hidden">
                   <div className="flex size-6 flex-shrink-0 items-center justify-center rounded bg-neutral-200 text-[10px] font-bold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
@@ -1191,7 +1191,7 @@ export default function ProjectDetailsPage() {
                           e.target.value as "admin" | "viewer"
                         )
                       }
-                      className="rounded border border-neutral-200 bg-white px-1 py-0.5 text-[10px] focus:outline-none dark:border-neutral-700 dark:bg-neutral-950"
+                      className="rounded border border-neutral-200 bg-white px-1 py-0.5 text-[10px] focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
                     >
                       <option value="viewer">Leitor</option>
                       <option value="admin">Admin</option>
@@ -1216,7 +1216,7 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Seção: Sprints */}
-        <div className="bg-white p-3 dark:bg-neutral-900">
+        <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
               Sprints ({sprints.length})
@@ -1263,7 +1263,7 @@ export default function ProjectDetailsPage() {
           )}
 
           {showCreateSprint && canEdit && (
-            <div className="mb-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-950/50">
+            <div className="mb-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
               <div className="grid gap-1.5 sm:grid-cols-2">
                 <label>
                   <span className="mb-0.5 block text-[10px] text-neutral-500">Título</span>
@@ -1339,7 +1339,7 @@ export default function ProjectDetailsPage() {
                 .map((sprint: any) => (
                   <div
                     key={sprint.id}
-                    className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-neutral-800 dark:bg-neutral-900/50"
+                    className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50"
                   >
                     <div className="flex items-center gap-1.5">
                       <span className={`size-2 rounded-full ${sprint.status === "completed" ? "bg-green-500" : sprint.status === "active" ? "bg-blue-500" : "bg-neutral-400"}`} />
@@ -1362,7 +1362,7 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Seção: AI Report Config */}
-        <div className="bg-white p-3 dark:bg-neutral-900">
+        <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
               Relatórios & IA
@@ -1379,7 +1379,7 @@ export default function ProjectDetailsPage() {
               <FaSpinner className="size-2.5 animate-spin" /> A carregar...
             </div>
           ) : editingReport && reportForm ? (
-            <div className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-950/50">
+            <div className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
               <div className="grid gap-1.5 sm:grid-cols-2">
                 <label>
                   <span className="mb-0.5 block text-[10px] text-neutral-500">Hora (UTC)</span>
@@ -1454,7 +1454,7 @@ export default function ProjectDetailsPage() {
                   </label>
                 ))}
               </div>
-              <div className="flex items-center justify-between border-t border-neutral-200 pt-2 dark:border-neutral-800">
+              <div className="flex items-center justify-between border-t border-neutral-200 pt-2 dark:border-surface-dark-border">
                 <label className="flex items-center gap-1.5 text-[10px] text-neutral-600 dark:text-neutral-300">
                   <input
                     type="checkbox"
@@ -1491,7 +1491,7 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Seção: AI Reasonings */}
-        <div className="bg-white p-3 dark:bg-neutral-900">
+        <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
               Análises IA ({reasonings.length})
@@ -1508,7 +1508,7 @@ export default function ProjectDetailsPage() {
           </div>
 
           {showCreateReasoning && canEdit && (
-            <div className="mb-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-950/50">
+            <div className="mb-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
               <div className="grid gap-1.5 sm:grid-cols-2">
                 <label>
                   <span className="mb-0.5 block text-[10px] text-neutral-500">Título *</span>
@@ -1619,7 +1619,7 @@ export default function ProjectDetailsPage() {
                   className={`flex items-center justify-between rounded-md border px-2 py-1.5 text-left transition-colors ${
                     selectedReasoning?.id === reasoning.id
                       ? "border-indigo-300 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/20"
-                      : "border-neutral-100 bg-neutral-50 hover:border-neutral-200 dark:border-neutral-800 dark:bg-neutral-900/50 dark:hover:border-neutral-700"
+                      : "border-neutral-100 bg-neutral-50 hover:border-neutral-200 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50 dark:hover:border-surface-dark-border-strong"
                   }`}
                 >
                   <div className="flex items-center gap-1.5">

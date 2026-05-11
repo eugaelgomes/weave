@@ -38,7 +38,7 @@ type AvatarUser = { avatar_url?: string | null };
 const UserAvatar = ({ user, size = "sm" }: { user?: AvatarUser; size?: "sm" | "md" | "lg" }) => {
   const sizeClasses = { sm: "h-8 w-8", md: "h-10 w-10", lg: "h-12 w-12" };
   const iconClasses = { sm: "h-4 w-4", md: "h-5 w-5", lg: "h-6 w-6" };
-  const wrapperClass = `${sizeClasses[size]} flex items-center justify-center relative overflow-hidden rounded-full border border-neutral-200 bg-neutral-100 flex-shrink-0 dark:border-neutral-800 dark:bg-neutral-800`;
+  const wrapperClass = `${sizeClasses[size]} flex items-center justify-center relative overflow-hidden rounded-full border border-neutral-200 bg-neutral-100 flex-shrink-0 dark:border-surface-dark-border dark:bg-neutral-800`;
 
   if (user?.avatar_url && typeof user.avatar_url === "string") {
     return (
@@ -68,7 +68,7 @@ const Badge = ({ role }: { role: string }) => {
     admin: "bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400",
     member: "bg-neutral-500/10 text-neutral-700 border-neutral-500/20 dark:text-neutral-300",
     guest:
-      "bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-neutral-800/50 dark:border-neutral-800",
+      "bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-neutral-800/50 dark:border-surface-dark-border",
   };
   const labels = {
     super_admin: t.organizationMembers.superAdmin,
@@ -96,7 +96,7 @@ const FilterSelect = ({ label, value, onChange, options, placeholder, icon: Icon
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full cursor-pointer appearance-none rounded-md border border-neutral-200 bg-white py-1.5 pr-8 text-xs font-medium text-neutral-700 transition-all outline-none hover:bg-neutral-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800/50 ${Icon ? "pl-8" : "pl-3"}`}
+        className={`w-full cursor-pointer appearance-none rounded-md border border-neutral-200 bg-white py-1.5 pr-8 text-xs font-medium text-neutral-700 transition-all outline-none hover:bg-neutral-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-800/50 ${Icon ? "pl-8" : "pl-3"}`}
       >
         <option value="all">{placeholder}</option>
         {options.map((opt: any) => (
@@ -117,7 +117,7 @@ const ModalBase = ({ isOpen, onClose, title, children, footer }: any) => {
   return (
     <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/40 p-4 backdrop-blur-sm duration-300">
       <div className="absolute inset-0" onClick={onClose} />
-      <div className="relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-md border border-t-4 border-neutral-200 border-t-yellow-500 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-md border border-t-4 border-neutral-200 border-t-yellow-500 bg-white shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <button
           onClick={onClose}
           title="Fechar modal"
@@ -133,7 +133,7 @@ const ModalBase = ({ isOpen, onClose, title, children, footer }: any) => {
         </div>
         <div className="flex-1 overflow-y-auto p-5 pt-2 text-xs">{children}</div>
         {footer && (
-          <div className="flex justify-end gap-2 border-t border-neutral-100 bg-neutral-50/50 p-3 dark:border-neutral-800 dark:bg-neutral-900/50">
+          <div className="flex justify-end gap-2 border-t border-neutral-100 bg-neutral-50/50 p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
             {footer}
           </div>
         )}
@@ -235,7 +235,7 @@ const InviteModal = ({
               onChange={(e) => setName(e.target.value)}
               placeholder="Nome"
               autoComplete="name"
-              className="w-full rounded-md border border-neutral-300 py-1.5 pr-2 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+              className="w-full rounded-md border border-neutral-300 py-1.5 pr-2 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white"
             />
           </div>
         </div>
@@ -250,7 +250,7 @@ const InviteModal = ({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email@exemplo.com"
-              className="w-full rounded-md border border-neutral-300 py-1.5 pr-2 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+              className="w-full rounded-md border border-neutral-300 py-1.5 pr-2 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white"
             />
           </div>
         </div>
@@ -262,7 +262,7 @@ const InviteModal = ({
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as "admin" | "member" | "guest")}
-              className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+              className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white"
             >
               <option value="admin">{t.organizationMembers.adminRole}</option>
               <option value="member">{t.organizationMembers.standardRole}</option>
@@ -280,7 +280,7 @@ const InviteModal = ({
             <select
               value={areaId}
               onChange={(e) => setAreaId(e.target.value)}
-              className="w-full appearance-none rounded-md border border-neutral-300 py-1.5 pr-8 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+              className="w-full appearance-none rounded-md border border-neutral-300 py-1.5 pr-8 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white"
             >
               <option value="">{t.organizationMembers.areaNone}</option>
               {areas.map((a) => (
@@ -301,7 +301,7 @@ const InviteModal = ({
               <select
                 value={areaRole}
                 onChange={(e) => setAreaRole(e.target.value as "manager" | "editor" | "viewer")}
-                className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+                className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white"
               >
                 <option value="manager">{t.organizationMembers.areaManager}</option>
                 <option value="editor">{t.organizationMembers.areaEditor}</option>
@@ -348,7 +348,7 @@ const RoleManageModal = ({ isOpen, onClose, onUpdate, loading, currentMember }: 
       }
     >
       <div className="space-y-4">
-        <div className="flex items-center gap-3 rounded-md border border-neutral-200 p-2 dark:border-neutral-800">
+        <div className="flex items-center gap-3 rounded-md border border-neutral-200 p-2 dark:border-surface-dark-border">
           <UserAvatar user={{ avatar_url: currentMember?.avatar_url }} size="md" />
           <div>
             <p className="text-xs font-semibold dark:text-white">
@@ -365,7 +365,7 @@ const RoleManageModal = ({ isOpen, onClose, onUpdate, loading, currentMember }: 
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+              className="w-full appearance-none rounded-md border border-neutral-300 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white"
             >
               <option value="admin">{t.organizationMembers.adminRole}</option>
               <option value="member">{t.organizationMembers.standardRole}</option>
@@ -574,7 +574,7 @@ export default function MembersPage() {
     <div className="mx-auto w-full space-y-2">
       <WorkspaceHeader />
 
-      <div className="flex flex-col gap-4 rounded-md border border-neutral-200 bg-white px-4 py-2 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex flex-col gap-4 rounded-md border border-neutral-200 bg-white px-4 py-2 sm:flex-row sm:items-center sm:justify-between dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <div>
           <h1 className="text-sm font-bold tracking-tight text-neutral-900 dark:text-white">
             {t.organizationMembers.title}
@@ -588,7 +588,7 @@ export default function MembersPage() {
       </div>
 
       {/* Bloco de Filtros Refinado */}
-      <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
           <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-end xl:w-auto">
             <div className="flex w-full shrink-0 flex-col gap-1.5 lg:w-48">
@@ -599,7 +599,7 @@ export default function MembersPage() {
                   placeholder={t.organizationMembers.searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full rounded-md border border-neutral-300 bg-transparent py-1.5 pr-3 pl-8 text-xs transition-all outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-neutral-700 dark:text-white"
+                  className="w-full rounded-md border border-neutral-300 bg-transparent py-1.5 pr-3 pl-8 text-xs transition-all outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:text-white"
                 />
               </div>
             </div>
@@ -655,7 +655,7 @@ export default function MembersPage() {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center justify-between gap-3 border-t border-neutral-100 pt-2 text-xs font-medium text-neutral-500 xl:justify-end xl:border-t-0 xl:pt-0 dark:border-neutral-800/50">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-t border-neutral-100 pt-2 text-xs font-medium text-neutral-500 xl:justify-end xl:border-t-0 xl:pt-0 dark:border-surface-dark-border-muted">
             <div className="flex items-center gap-3">
               {activeFiltersCount > 0 && (
                 <button
@@ -680,10 +680,10 @@ export default function MembersPage() {
         </div>
       </div>
 
-      <div className="flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-neutral-50/50 dark:bg-neutral-950/50">
+            <thead className="bg-neutral-50/50 dark:bg-[#1d1d1b]/50">
               <tr>
                 <th className="px-4 py-3 text-[10px] font-bold tracking-wider text-neutral-500">
                   {t.organizationMembers.tableUser}
@@ -702,7 +702,7 @@ export default function MembersPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
+            <tbody className="divide-y divide-neutral-200 dark:divide-surface-dark-border">
               {filteredMembers.map((member) => {
                 const isCurrentUser = member.id === user?.id;
                 const isProtectedRole = member.membership.role === "super_admin";

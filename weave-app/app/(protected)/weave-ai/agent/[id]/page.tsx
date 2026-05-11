@@ -61,7 +61,7 @@ const CAPABILITIES = [
 const INSTRUCTIONS_MAX = 4000;
 
 const inputClass =
-  "h-8 w-full rounded-md border border-neutral-200 bg-white px-2.5 text-xs text-neutral-900 placeholder:text-neutral-400 focus:border-brand-primary-500 focus:outline-none focus:ring-1 focus:ring-brand-primary-500/40 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100";
+  "h-8 w-full rounded-md border border-neutral-200 bg-white px-2.5 text-xs text-neutral-900 placeholder:text-neutral-400 focus:border-brand-primary-500 focus:outline-none focus:ring-1 focus:ring-brand-primary-500/40 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-100";
 
 const labelClass = "text-[11px] font-medium text-neutral-600 dark:text-neutral-300";
 
@@ -209,7 +209,7 @@ export function AgentForm({
   };
 
   return (
-    <div className="flex min-h-full flex-col rounded-md border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="flex min-h-full flex-col rounded-md border border-neutral-200 bg-neutral-50 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-3 py-2">
         <div className="min-w-0">
           <p className="text-brand-primary-600 dark:text-brand-primary-400 text-[10px] font-bold tracking-wider">
@@ -251,7 +251,7 @@ export function AgentForm({
           <button
             type="button"
             onClick={handleCancel}
-            className="flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-[11px] font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
+            className="flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-[11px] font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-800"
           >
             <X className="h-3 w-3" />
             Cancelar
@@ -269,7 +269,7 @@ export function AgentForm({
       </div>
 
       <div className="custom-scrollbar flex-1 overflow-y-auto">
-        <section className="border-b border-neutral-100 px-3 py-3 dark:border-neutral-800/60">
+        <section className="border-b border-neutral-100 px-3 py-3 dark:border-surface-dark-border">
           <h2 className="mb-2.5 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
             Identidade
           </h2>
@@ -304,7 +304,7 @@ export function AgentForm({
           </div>
         </section>
 
-        <section className="border-b border-neutral-100 px-3 py-3 dark:border-neutral-800/60">
+        <section className="border-b border-neutral-100 px-3 py-3 dark:border-surface-dark-border">
           <h2 className="mb-2.5 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
             Modelo e ferramentas
           </h2>
@@ -393,7 +393,7 @@ export function AgentForm({
           </div>
         </section>
 
-        <section className="border-b border-neutral-100 px-3 py-4 dark:border-neutral-800/60">
+        <section className="border-b border-neutral-100 px-3 py-4 dark:border-surface-dark-border">
           <div className="mb-3">
             <h2 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
               Instruções do sistema
@@ -405,7 +405,7 @@ export function AgentForm({
 
           <div
             data-color-mode="auto"
-            className="overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800"
+            className="overflow-hidden rounded-md border border-neutral-200 dark:border-surface-dark-border"
           >
             <MDEditor
               value={instructions}
@@ -449,7 +449,7 @@ export function AgentForm({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="hover:border-brand-primary-500/50 hover:bg-brand-primary-500/5 dark:hover:border-brand-primary-500/40 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-300 bg-neutral-50/50 px-2.5 py-4 text-center text-xs transition lg:py-6 dark:border-neutral-700 dark:bg-neutral-900/40"
+            className="hover:border-brand-primary-500/50 hover:bg-brand-primary-500/5 dark:hover:border-brand-primary-500/40 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-300 bg-neutral-50/50 px-2.5 py-4 text-center text-xs transition lg:py-6 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/40"
           >
             <Upload className="text-brand-primary-500 h-4 w-4 shrink-0" />
             <div className="flex min-w-0 flex-col items-start">
@@ -469,7 +469,7 @@ export function AgentForm({
                 {existingFiles.map((file, i) => (
                   <li
                     key={`existing-${i}`}
-                    className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs dark:border-neutral-800 dark:bg-neutral-950"
+                    className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs dark:border-surface-dark-border dark:bg-[#1d1d1b]"
                   >
                     <FileText className="text-brand-primary-500 h-3.5 w-3.5 shrink-0" />
                     <a
@@ -495,7 +495,7 @@ export function AgentForm({
                 {files.map((file, i) => (
                   <li
                     key={i}
-                    className="group flex items-center justify-between gap-2 rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs dark:border-neutral-800 dark:bg-neutral-950"
+                    className="group flex items-center justify-between gap-2 rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs dark:border-surface-dark-border dark:bg-[#1d1d1b]"
                   >
                     <div className="flex min-w-0 items-center gap-2">
                       <FileText className="text-brand-primary-500 h-3.5 w-3.5 shrink-0" />
@@ -525,7 +525,7 @@ export function AgentForm({
 function AgentDetailSkeleton() {
   return (
     <div className="flex min-h-full flex-col">
-      <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 dark:border-neutral-800">
+      <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 dark:border-surface-dark-border">
         <div className="space-y-1.5">
           <div className="h-2.5 w-16 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
           <div className="h-3 w-32 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
@@ -547,7 +547,7 @@ function AgentDetailSkeleton() {
           ))}
         </div>
 
-        <div className="mt-6 border-t border-neutral-100 pt-3 dark:border-neutral-800/60">
+        <div className="mt-6 border-t border-neutral-100 pt-3 dark:border-surface-dark-border">
           <div className="mb-2.5 h-2.5 w-28 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
           <div className="h-[120px] w-full animate-pulse rounded-md bg-neutral-100 dark:bg-neutral-800/60" />
         </div>
@@ -578,7 +578,7 @@ export default function AgentDetailPage() {
   if (!agent) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 px-4 text-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-neutral-100 text-neutral-400 dark:bg-neutral-900">
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-neutral-100 text-neutral-400 dark:bg-[#1d1d1b]">
           <Bot className="h-5 w-5" />
         </div>
         <div>
@@ -591,7 +591,7 @@ export default function AgentDetailPage() {
         </div>
         <Link
           href="/weave-ai/agent"
-          className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900"
+          className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-surface-dark-border dark:text-neutral-300 dark:hover:bg-neutral-900"
         >
           <ArrowLeft className="h-3 w-3" />
           Visão geral

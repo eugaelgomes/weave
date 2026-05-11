@@ -188,19 +188,19 @@ const SettingsPage = () => {
   const labelClass = "text-[10px] font-bold tracking-[0.12em] text-neutral-400 dark:text-neutral-500 mb-1 block uppercase";
   const inputBaseClass = "w-full rounded-md text-[12px] font-medium transition-all outline-none py-1.5 h-8";
   const inputStateClass = editMode
-    ? "border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200"
-    : "border border-neutral-100 bg-neutral-50/80 px-3 text-neutral-500 cursor-default dark:border-neutral-800/80 dark:bg-neutral-900/50 dark:text-neutral-400";
+    ? "border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200"
+    : "border border-neutral-100 bg-neutral-50/80 px-3 text-neutral-500 cursor-default dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/50 dark:text-neutral-400";
 
-  const prefCardClass = "space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:border-neutral-800/50 dark:bg-neutral-900/20";
+  const prefCardClass = "space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/20";
   const prefLabelClass = "text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2 uppercase";
   const itemLabelClass = "group flex cursor-pointer items-center gap-2.5 rounded-md py-1 transition-all";
-  const prefInputClass = "w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-200";
+  const prefInputClass = "w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-200";
 
   return (
     <div className="flex w-full flex-col gap-6 p-4">
       {/* 1. PERFIL E IDENTIDADE */}
-      <div className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800/60 dark:bg-neutral-950">
-        <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5 dark:border-neutral-800/60">
+      <div className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+        <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5 dark:border-surface-dark-border">
           <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
             <UserIcon size={14} className="text-amber-500" />
             MEUS DADOS
@@ -208,7 +208,7 @@ const SettingsPage = () => {
           {!editMode && (
             <button
               onClick={() => setEditMode(true)}
-              className="rounded-md border border-neutral-200 bg-white px-3 py-1 text-[10px] font-bold text-neutral-700 shadow-sm transition-all hover:bg-neutral-50 active:scale-95 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300"
+              className="rounded-md border border-neutral-200 bg-white px-3 py-1 text-[10px] font-bold text-neutral-700 shadow-sm transition-all hover:bg-neutral-50 active:scale-95 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300"
             >
               Editar Dados
             </button>
@@ -218,7 +218,7 @@ const SettingsPage = () => {
         <div className="p-4 sm:p-6">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             <div className="flex flex-col items-center gap-4 lg:col-span-3 lg:items-start">
-              <div className={`group relative h-28 w-28 shrink-0 overflow-hidden rounded-md border-2 transition-all ${editMode ? "border-amber-500 shadow-lg" : "border-neutral-100 dark:border-neutral-800"}`}>
+              <div className={`group relative h-28 w-28 shrink-0 overflow-hidden rounded-md border-2 transition-all ${editMode ? "border-amber-500 shadow-lg" : "border-neutral-100 dark:border-surface-dark-border"}`}>
                 <Image src={formData.avatar_url || "/default-avatar.png"} alt="Avatar" fill className="object-cover" />
                 {editMode && (
                   <label className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
@@ -228,7 +228,7 @@ const SettingsPage = () => {
                   </label>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 rounded bg-neutral-100 px-2 py-1 text-[9px] font-bold text-neutral-500 uppercase dark:bg-neutral-900 dark:text-neutral-400">
+              <div className="flex items-center gap-1.5 rounded bg-neutral-100 px-2 py-1 text-[9px] font-bold text-neutral-500 uppercase dark:bg-[#1d1d1b] dark:text-neutral-400">
                 <Calendar size={11} />
                 Membro: {formatDate(user?.created_at || "")}
               </div>
@@ -279,16 +279,16 @@ const SettingsPage = () => {
               </div>
 
               {/* SEGURANÇA / SENHA */}
-              <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
+              <div className="pt-4 border-t border-neutral-100 dark:border-surface-dark-border">
                 <label className={labelClass}>Segurança da Conta</label>
                 {!isChangingPassword ? (
-                  <div className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50/50 p-2 pl-3 dark:border-neutral-800/50 dark:bg-neutral-900/30">
+                  <div className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50/50 p-2 pl-3 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/30">
                     <div className="flex items-center gap-2">
                       <Lock size={12} className="text-neutral-400" />
                       <span className="text-[12px] font-medium tracking-[0.2em] text-neutral-500">••••••••••••</span>
                     </div>
                     {editMode && (
-                      <button type="button" onClick={() => setIsChangingPassword(true)} className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-3 py-1 text-[10px] font-bold text-neutral-600 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300">
+                      <button type="button" onClick={() => setIsChangingPassword(true)} className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-3 py-1 text-[10px] font-bold text-neutral-600 dark:bg-neutral-800 dark:border-surface-dark-border-strong dark:text-neutral-300">
                         <KeyRound size={12} /> Alterar Senha
                       </button>
                     )}
@@ -310,7 +310,7 @@ const SettingsPage = () => {
               </div>
 
               {editMode && (
-                <div className="flex items-center justify-end gap-3 pt-6 border-t border-neutral-100 dark:border-neutral-800">
+                <div className="flex items-center justify-end gap-3 pt-6 border-t border-neutral-100 dark:border-surface-dark-border">
                   <button onClick={() => {setEditMode(false); setIsChangingPassword(false);}} className="text-[11px] font-bold text-neutral-400">Descartar</button>
                   <button onClick={handleSaveChanges} disabled={isLoading} className="flex items-center gap-2 rounded-md bg-neutral-900 px-6 py-1.5 text-[11px] font-bold text-white dark:bg-neutral-100 dark:text-neutral-900">
                     {isLoading ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Salvar Perfil
@@ -323,8 +323,8 @@ const SettingsPage = () => {
       </div>
 
       {/* 2. PREFERÊNCIAS COMPLETAS */}
-      <div className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-neutral-800/60 dark:bg-neutral-950">
-        <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5 dark:border-neutral-800/60">
+      <div className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+        <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5 dark:border-surface-dark-border">
           <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] text-neutral-500 dark:text-neutral-400 uppercase">
             <Layout size={14} className="text-amber-500" />
             Preferências do Sistema
@@ -374,7 +374,7 @@ const SettingsPage = () => {
                   <input type="number" step="0.1" defaultValue={formData.usage_preference?.editor?.lineHeight ?? 1.6} onBlur={(e) => handlePreferenceChange("editor", "lineHeight", parseFloat(e.target.value))} className={prefInputClass} />
                 </div>
               </div>
-              <div className="space-y-1 border-t border-neutral-100 pt-2 dark:border-neutral-800/50">
+              <div className="space-y-1 border-t border-neutral-100 pt-2 dark:border-surface-dark-border-muted">
                 {[
                   { key: "autoSave", label: "Auto-Save" },
                   { key: "spellCheck", label: "Corretor" },

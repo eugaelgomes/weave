@@ -20,10 +20,10 @@ export function Stats({ stats, projectsStats, tagCloudData }: StatsProps) {
   return (
     <div className="grid grid-cols-1 gap-2 lg:grid-cols-[260px_1fr]">
       {/* === CARD 1 — MÉTRICAS === */}
-      <div className="flex flex-col rounded-md border border-neutral-200 bg-neutral-50 shadow-md backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="flex flex-col rounded-md border border-neutral-200 bg-neutral-50 shadow-md backdrop-blur-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <button
           onClick={() => setShowMetrics(!showMetrics)}
-          className="flex w-full items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900/50"
+          className="flex w-full items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50"
         >
           <h3 className="font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
             {t.home.metrics}
@@ -97,10 +97,10 @@ export function Stats({ stats, projectsStats, tagCloudData }: StatsProps) {
         </div>
       </div>
       {/* === CARD 2 — NUVEM DE PALAVRAS === */}
-      <div className="flex flex-col rounded-md border border-neutral-200 bg-neutral-50 shadow-md backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="flex flex-col rounded-md border border-neutral-200 bg-neutral-50 shadow-md backdrop-blur-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <button
           onClick={() => setShowTags(!showTags)}
-          className="flex w-full items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-neutral-800 dark:bg-neutral-900/30"
+          className="flex w-full items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 sm:px-4 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30"
         >
           <h3 className="font-mono text-[9px] font-bold tracking-widest text-neutral-600 uppercase sm:text-[10px] dark:text-neutral-500">
             {t.home.tagCloud}

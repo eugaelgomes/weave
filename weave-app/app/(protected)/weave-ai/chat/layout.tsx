@@ -55,7 +55,7 @@ function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
               router.push("/weave-ai/chat");
               onLinkClick?.();
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-neutral-200 bg-neutral-900 px-2 py-2 text-[11px] font-semibold text-white shadow-sm transition hover:bg-neutral-800 dark:border-neutral-800 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200"
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-neutral-200 bg-neutral-900 px-2 py-2 text-[11px] font-semibold text-white shadow-sm transition hover:bg-neutral-800 dark:border-surface-dark-border dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200"
           >
             <Plus className="h-3.5 w-3.5" />
             Nova Conversa
@@ -138,14 +138,14 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {/* Cabeçalho mobile padronizado */}
-        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
             Navegação
           </span>
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
+            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:text-neutral-300 dark:hover:bg-neutral-900"
           >
             {isMobileMenuOpen ? (
               <>
@@ -176,14 +176,14 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
                 onClick={() => setIsMobileMenuOpen(false)}
               />
               <ChatSidebar
-                className="relative z-10 ml-auto h-full w-[80%] max-w-xs bg-white shadow-xl dark:bg-neutral-950"
+                className="relative z-10 ml-auto h-full w-[80%] max-w-xs bg-white shadow-xl dark:bg-[#1d1d1b]"
                 onLinkClick={() => setIsMobileMenuOpen(false)}
               />
             </div>
           )}
 
           {/* CONTEÚDO PRINCIPAL (Chat Area) */}
-          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-50 md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:bg-neutral-950 dark:md:border-neutral-800">
+          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-50 md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:shadow-surface-dark-sm dark:bg-[#1d1d1b] dark:md:border-neutral-800">
             <div className="custom-scrollbar flex-1 overflow-auto text-neutral-900 dark:text-neutral-100">
               {children}
             </div>

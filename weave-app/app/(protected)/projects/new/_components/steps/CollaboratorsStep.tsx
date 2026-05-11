@@ -21,7 +21,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
 
   if (!state.created.projectId) {
     return (
-      <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900/50">
+      <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
         <div className="flex items-start gap-2 text-sm text-neutral-700 dark:text-neutral-200">
           <AlertCircle className="mt-0.5 h-4 w-4 text-neutral-400" aria-hidden />
           Crie o projeto no passo “Básico” para convidar pessoas.
@@ -127,7 +127,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
   };
 
   return (
-    <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900/50">
+    <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
       <div className="mb-2 flex items-start gap-2">
         <Users className="mt-0.5 h-4 w-4 text-neutral-400" aria-hidden />
         <div>
@@ -156,7 +156,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
               value={collabSearch}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCollabSearch(e.target.value)}
               placeholder="Nome ou email (mín. 2 caracteres)…"
-              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm outline-none transition placeholder:text-neutral-400 focus:border-brand-primary-500 focus:ring-2 focus:ring-brand-primary-500/20 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm outline-none transition placeholder:text-neutral-400 focus:border-brand-primary-500 focus:ring-2 focus:ring-brand-primary-500/20 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-100"
             />
           </div>
           <div className="space-y-1.5 sm:w-44">
@@ -167,7 +167,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
               id="invite-role"
               value={inviteRole}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setInviteRole(e.target.value)}
-              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-100"
             >
               {COLLAB_ROLES.map((r) => (
                 <option key={r.value} value={r.value}>
@@ -179,7 +179,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
         </div>
 
         {collabSearch.trim().length >= 2 && (
-          <div className="max-h-48 overflow-y-auto rounded-md border border-neutral-100 bg-neutral-50/90 dark:border-neutral-800 dark:bg-neutral-950/50">
+          <div className="max-h-48 overflow-y-auto rounded-md border border-neutral-100 bg-neutral-50/90 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
             {searchingUsers ? (
               <div className="flex items-center justify-center gap-2 py-2 text-xs text-neutral-500">
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> A procurar…
@@ -187,7 +187,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
             ) : searchResults.length === 0 ? (
               <p className="py-2 text-center text-xs text-neutral-500">Nenhum resultado.</p>
             ) : (
-              <ul className="divide-y divide-neutral-100 dark:divide-neutral-800">
+              <ul className="divide-y divide-neutral-100 dark:divide-surface-dark-border">
                 {searchResults.map((user: SearchUser) => (
                   <li
                     key={user.id}
@@ -230,11 +230,11 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
         )}
 
         {state.draft.collaborators.length > 0 && (
-          <ul className="space-y-2 rounded-md border border-neutral-100 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900/40">
+          <ul className="space-y-2 rounded-md border border-neutral-100 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/40">
             {state.draft.collaborators.map((p) => (
               <li
                 key={p.user.id}
-                className="flex flex-col gap-2 rounded-md border border-neutral-50 px-2 py-2 dark:border-neutral-800 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-2 rounded-md border border-neutral-50 px-2 py-2 dark:border-surface-dark-border sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex min-w-0 items-center gap-2">
                   {p.user.avatar_url ? (
@@ -277,7 +277,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
         )}
       </div>
 
-      <div className="mt-3 flex items-center justify-end gap-2 border-t border-neutral-200 pt-2 dark:border-neutral-800">
+      <div className="mt-3 flex items-center justify-end gap-2 border-t border-neutral-200 pt-2 dark:border-surface-dark-border">
         <button
           type="button"
           onClick={() => actions.goToStep("ai_reports")}

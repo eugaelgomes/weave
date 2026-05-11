@@ -32,7 +32,7 @@ export default function HomePage() {
   const recentProjects = getRecentProjects();
 
   return (
-    <div className="flex min-h-screen flex-col bg-white dark:bg-[#1d1d1b]">
+    <div className="flex min-h-screen flex-col">
       <div className="flex-1 space-y-3 overflow-y-auto">
         <HomeHeader />
 

@@ -328,8 +328,8 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
   const chatHeaderTitle = getChatHeaderTitle(messages || [], currentSession?.title);
 
   return (
-    <div className="flex h-full flex-col bg-white dark:bg-neutral-950">
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-2 dark:border-neutral-800">
+    <div className="flex h-full flex-col bg-white dark:bg-[#1d1d1b]">
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-2 dark:border-surface-dark-border">
         <div className="flex items-center gap-2">
           <h1 className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
             {chatHeaderTitle}
@@ -342,7 +342,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
             className={`flex items-center gap-1.5 rounded px-1 py-0.5 text-[10px] transition-all ${
               allowWebSearch
                 ? "bg-brand-yellow text-brand-navy"
-                : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+                : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200 dark:bg-[#1d1d1b] dark:hover:bg-neutral-800"
             }`}
           >
             <Globe className="h-2 w-2" />
@@ -353,7 +353,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
             className={`flex items-center gap-1.5 rounded px-1 py-0.5 text-[10px] transition-all ${
               allowEdit
                 ? "bg-brand-yellow text-brand-navy"
-                : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+                : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200 dark:bg-[#1d1d1b] dark:hover:bg-neutral-800"
             }`}
           >
             {allowEdit ? <Unlock className="h-2 w-2" /> : <Lock className="h-2 w-2" />}
@@ -419,7 +419,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                     className={`relative rounded-lg border p-1.5 text-xs leading-relaxed ${
                       isUser
                         ? "border-brand-yellow bg-brand-yellow text-brand-navy"
-                        : "border-neutral-200 bg-white text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200"
+                        : "border-neutral-200 bg-white text-neutral-800 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-200"
                     }`}
                   >
                     {isUser ? (
@@ -472,7 +472,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
               <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-brand-navy">
                 <Bot className="h-3 w-3 text-white" />
               </div>
-              <div className="flex items-center rounded border border-neutral-200 bg-white px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900">
+              <div className="flex items-center rounded border border-neutral-200 bg-white px-3 py-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
                 <div className="flex gap-1">
                   <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-yellow [animation-delay:-0.3s]"></span>
                   <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-yellow [animation-delay:-0.15s]"></span>
@@ -492,7 +492,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                 onClick={scrollToTop}
                 title="Ir para o topo"
                 aria-label="Ir para o topo"
-                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-700 shadow-sm transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900/95 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-700 shadow-sm transition-colors hover:bg-neutral-100 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/95 dark:text-neutral-200 dark:hover:bg-neutral-800"
               >
                 <ChevronUp className="h-4 w-4" />
               </button>
@@ -502,7 +502,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                 onClick={scrollToBottom}
                 title="Ir para o fim"
                 aria-label="Ir para o fim"
-                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-700 shadow-sm transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900/95 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-700 shadow-sm transition-colors hover:bg-neutral-100 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/95 dark:text-neutral-200 dark:hover:bg-neutral-800"
               >
                 <ChevronDown className="h-4 w-4" />
               </button>
@@ -557,7 +557,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
             </div>
           </div>
 
-          <div className="relative flex flex-col gap-1 rounded-xl border border-neutral-300 bg-white p-2 shadow-sm transition-all focus-within:border-brand-yellow focus-within:ring-1 focus-within:ring-brand-yellow/40 dark:border-neutral-700 dark:bg-neutral-900 dark:focus-within:border-brand-yellow dark:focus-within:ring-brand-yellow/30">
+          <div className="relative flex flex-col gap-1 rounded-xl border border-neutral-300 bg-white p-2 shadow-sm transition-all focus-within:border-brand-yellow focus-within:ring-1 focus-within:ring-brand-yellow/40 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:focus-within:border-brand-yellow dark:focus-within:ring-brand-yellow/30">
             <input
               ref={fileInputRef}
               type="file"
@@ -609,7 +609,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                   {showContextMenu && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setShowContextMenu(false)} />
-                      <div className="absolute bottom-full left-0 z-20 mb-2 w-56 overflow-hidden rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+                      <div className="absolute bottom-full left-0 z-20 mb-2 w-56 overflow-hidden rounded border border-neutral-200 bg-white shadow-lg dark:border-surface-dark-border dark:bg-[#1d1d1b]">
                         <div className="max-h-48 overflow-y-auto p-1">
                           <div className="px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase">
                             Tarefas
@@ -625,7 +625,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                             </button>
                           ))}
 
-                          <div className="mt-1 border-t border-neutral-100 px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase dark:border-neutral-800">
+                          <div className="mt-1 border-t border-neutral-100 px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase dark:border-surface-dark-border">
                             Projetos
                           </div>
                           {projectsOverview?.slice(0, 5).map((project: any) => (
@@ -647,7 +647,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                 <div className="relative ml-1">
                   <button
                     onClick={() => setIsModelMenuOpen((v) => !v)}
-                    className="flex h-8 items-center gap-1.5 rounded-md border border-brand-beige bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400 dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
+                    className="flex h-8 items-center gap-1.5 rounded-md border border-brand-beige bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
                   >
                     <ModelIcon model={selectedModel} className="h-3.5 w-3.5" />
                     <span>{selectedModel ? formatModelLabel(selectedModel) : "Modelo"}</span>
@@ -657,7 +657,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                   {isModelMenuOpen && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setIsModelMenuOpen(false)} />
-                      <div className="absolute bottom-full left-0 z-20 mb-2 w-48 overflow-hidden rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+                      <div className="absolute bottom-full left-0 z-20 mb-2 w-48 overflow-hidden rounded border border-neutral-200 bg-white shadow-lg dark:border-surface-dark-border dark:bg-[#1d1d1b]">
                         <div className="max-h-48 overflow-y-auto p-1">
                           {models.map((model) => (
                             <button
@@ -685,7 +685,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                 <div className="relative ml-1">
                   <button
                     onClick={() => setIsAgentMenuOpen((prev) => !prev)}
-                    className="flex h-8 items-center gap-1.5 rounded-md border border-brand-beige bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400 dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
+                    className="flex h-8 items-center gap-1.5 rounded-md border border-brand-beige bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
                   >
                     <Bot className="h-3.5 w-3.5" />
                     <span>{selectedAgent ? selectedAgent.name : "Agente padrão"}</span>
@@ -695,7 +695,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                   {isAgentMenuOpen && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setIsAgentMenuOpen(false)} />
-                      <div className="absolute right-0 bottom-full z-20 mb-2 w-56 rounded border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+                      <div className="absolute right-0 bottom-full z-20 mb-2 w-56 rounded border border-neutral-200 bg-white shadow-lg dark:border-surface-dark-border dark:bg-[#1d1d1b]">
                         <button
                           onClick={() => {
                             setSelectedAgentId(null);

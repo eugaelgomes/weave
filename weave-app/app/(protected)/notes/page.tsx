@@ -596,13 +596,13 @@ const NotesWithPagination = () => {
   const toolbarTextBtn =
     "inline-flex h-6 min-h-6 shrink-0 items-center justify-center gap-0.5 rounded-sm border px-0.5 py-0.5 text-[10px] font-medium leading-none transition-colors focus-visible:ring-1 focus-visible:ring-yellow-500 focus-visible:outline-none";
   const toolbarSearchInput =
-    "box-border h-6 min-h-6 w-full rounded-sm border border-neutral-200 bg-white py-0.5 pr-4 pl-5 text-[10px] leading-tight text-neutral-900 placeholder:text-neutral-400 transition-all focus:border-yellow-500 focus:bg-white focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:border-yellow-500/50";
+    "box-border h-6 min-h-6 w-full rounded-sm border border-neutral-200 bg-white py-0.5 pr-4 pl-5 text-[10px] leading-tight text-neutral-900 placeholder:text-neutral-400 transition-all focus:border-yellow-500 focus:bg-white focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:border-yellow-500/50";
 
   // =================== RENDER ===================
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center bg-neutral-50 p-6 dark:bg-neutral-950">
+      <div className="flex h-full items-center justify-center bg-neutral-50 p-6 dark:bg-[#1d1d1b]">
         <div className="text-center">
           <p className="font-medium text-red-500 dark:text-red-400">Erro ao carregar tarefas</p>
           <button
@@ -619,9 +619,9 @@ const NotesWithPagination = () => {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-1">
 {/* =================== FILTROS + TOOLBAR + CABEÇALHO COLUNAS =================== */}
-<div className="border-b border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+<div className="border-b border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         {/* Container com padding y de 1 orgânico */}
-        <div className="flex flex-col border-b border-neutral-100 px-2 py-1 dark:border-neutral-800">
+        <div className="flex flex-col border-b border-neutral-100 px-2 py-1 dark:border-surface-dark-border">
           <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
             
             {/* Lado Esquerdo: Registros & Check */}
@@ -640,7 +640,7 @@ const NotesWithPagination = () => {
                 className={`flex p-0.5 items-center justify-center rounded ${toolbarIconBtn} ${
                   selectionMode
                     ? "dark:bg-brand-primary-500/10 dark:text-brand-primary-500 border-yellow-500 bg-yellow-50 text-yellow-700 dark:border-yellow-500/30"
-                    : "border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300 hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                    : "border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300 hover:bg-neutral-100 hover:text-neutral-900 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:border-surface-dark-border-strong dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                 }`}
               >
                 <FiCheckSquare size={11} />
@@ -678,7 +678,7 @@ const NotesWithPagination = () => {
                 disabled={isLoading}
                 title="Atualizar"
                 // p-0.5 para botão de ícone
-                className={`flex p-0.5 items-center justify-center rounded ${toolbarIconBtn} border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200`}
+                className={`flex p-0.5 items-center justify-center rounded ${toolbarIconBtn} border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300 hover:text-neutral-900 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:border-surface-dark-border-strong dark:hover:text-neutral-200`}
               >
                 <RefreshCw size={11} className={isLoading ? "animate-spin" : ""} />
               </button>
@@ -690,7 +690,7 @@ const NotesWithPagination = () => {
                 className={`flex py-0.5 px-2 items-center gap-1 rounded text-[11px] ${toolbarTextBtn} ${
                   showFilters || activeFilterCount > 0
                     ? "dark:bg-brand-primary-500/10 dark:text-brand-primary-500 border-yellow-500 bg-yellow-50 text-yellow-700 dark:border-yellow-500/30"
-                    : "border-neutral-200 bg-white font-medium text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200"
+                    : "border-neutral-200 bg-white font-medium text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:border-surface-dark-border-strong dark:hover:text-neutral-200"
                 }`}
               >
                 <Filter size={11} className="shrink-0" />
@@ -719,11 +719,11 @@ const NotesWithPagination = () => {
 
         {/* Painel de Filtros */}
         {showFilters && (
-          <div className="animate-in slide-in-from-top-1 mx-1 mb-1 mt-1 max-h-[60vh] overflow-y-auto rounded border border-neutral-200 bg-white p-2 dark:border-neutral-700 dark:bg-neutral-950">
+          <div className="animate-in slide-in-from-top-1 mx-1 mb-1 mt-1 max-h-[60vh] overflow-y-auto rounded border border-neutral-200 bg-white p-2 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
             <div className="flex flex-col gap-1.5">
               {/* Projetos */}
               {projectsForFilter.length > 0 && (
-                <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
+                <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/80">
                   <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
                     Projetos ({projectsForFilter.length})
                   </span>
@@ -735,7 +735,7 @@ const NotesWithPagination = () => {
                         className={`flex py-0.5 px-2 items-center rounded-full border text-[10px] font-medium transition-colors ${
                           selectedProjects.includes(project.id)
                             ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
-                            : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800"
+                            : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:border-surface-dark-border-strong dark:hover:bg-neutral-800"
                         }`}
                       >
                         {project.name}
@@ -747,7 +747,7 @@ const NotesWithPagination = () => {
 
               {/* Estágios */}
               {selectedProjects.length > 0 && (
-                <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
+                <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/80">
                   <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
                     Estágios
                     {taxonomyLoading ? (
@@ -776,7 +776,7 @@ const NotesWithPagination = () => {
                           className={`flex py-0.5 px-2 items-center max-w-full truncate rounded-full border text-[10px] font-medium transition-colors ${
                             selectedStageIds.includes(st.id)
                               ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
-                              : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
+                              : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:border-surface-dark-border-strong"
                           }`}
                         >
                           {multi ? (
@@ -799,7 +799,7 @@ const NotesWithPagination = () => {
 
               {/* Prioridades */}
               {selectedProjects.length > 0 && (
-                <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
+                <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/80">
                   <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
                     Prioridades
                     {taxonomyLoading ? (
@@ -826,7 +826,7 @@ const NotesWithPagination = () => {
                           className={`flex py-0.5 px-2 max-w-full items-center gap-1 truncate rounded-full border text-[10px] font-medium transition-colors ${
                             selectedPriorityIds.includes(pr.id)
                               ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
-                              : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
+                              : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:border-surface-dark-border-strong"
                           }`}
                         >
                           <span
@@ -853,7 +853,7 @@ const NotesWithPagination = () => {
               )}
 
               {/* Vencimento */}
-              <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
+              <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/80">
                 <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
                   Vencimento
                 </span>
@@ -872,7 +872,7 @@ const NotesWithPagination = () => {
                       className={`flex py-0.5 px-2 items-center rounded-full border text-[10px] font-medium transition-colors ${
                         dueDatePreset === preset.id
                           ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
-                          : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
+                          : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:border-surface-dark-border-strong"
                       }`}
                     >
                       {preset.label}
@@ -882,7 +882,7 @@ const NotesWithPagination = () => {
               </div>
 
               {/* Tags */}
-              <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
+              <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/80">
                 <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
                   Tags ({availableTags.length})
                 </span>
@@ -911,7 +911,7 @@ const NotesWithPagination = () => {
               </div>
 
               {/* Colaboradores */}
-              <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
+              <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/80">
                 <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
                   Colaboradores ({availableCollaborators.length})
                 </span>
@@ -924,7 +924,7 @@ const NotesWithPagination = () => {
                         className={`flex py-0.5 px-2 items-center rounded-full border text-[10px] font-medium transition-colors ${
                           selectedCollaborators.includes(collaborator)
                             ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-neutral-50 dark:text-neutral-950"
-                            : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-700"
+                            : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:border-surface-dark-border-strong"
                         }`}
                       >
                         {collaborator}
@@ -939,7 +939,7 @@ const NotesWithPagination = () => {
               </div>
 
               {/* Ordenação */}
-              <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-neutral-800 dark:bg-neutral-900/80">
+              <div className="space-y-1 rounded border border-neutral-100 bg-neutral-50 p-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/80">
                 <div className="flex items-center justify-between">
                   <div className="w-full space-y-1 sm:w-auto sm:min-w-[200px]">
                     <span className="px-0.5 text-[9px] font-semibold tracking-wider text-neutral-500">
@@ -950,7 +950,7 @@ const NotesWithPagination = () => {
                         value={sortBy}
                         onChange={(e) => handleSortChange(e.target.value as SortBy)}
                         aria-label="Ordenar por"
-                        className="py-0.5 px-1 min-w-0 flex-1 rounded border border-neutral-200 bg-white text-[10px] text-neutral-700 focus:border-neutral-400 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300"
+                        className="py-0.5 px-1 min-w-0 flex-1 rounded border border-neutral-200 bg-white text-[10px] text-neutral-700 focus:border-neutral-400 focus:outline-none dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300"
                       >
                         <option value="updated_at">Data de Atualização</option>
                         <option value="created_at">Data de Criação</option>
@@ -958,7 +958,7 @@ const NotesWithPagination = () => {
                       </select>
                       <button
                         onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
-                        className="flex p-0.5 shrink-0 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                        className="flex p-0.5 shrink-0 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-neutral-800"
                         title={sortOrder === "asc" ? "Crescente" : "Decrescente"}
                       >
                         {sortOrder === "asc" ? (
@@ -974,7 +974,7 @@ const NotesWithPagination = () => {
             </div>
 
             {(searchTerm || activeFilterCount > 0) && (
-              <div className="mt-1 flex justify-end border-t border-neutral-100 pt-1.5 dark:border-neutral-800">
+              <div className="mt-1 flex justify-end border-t border-neutral-100 pt-1.5 dark:border-surface-dark-border">
                 <button
                   onClick={clearFilters}
                   className="flex py-0.5 px-1.5 items-center gap-1 rounded text-[10px] font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
@@ -988,7 +988,7 @@ const NotesWithPagination = () => {
 
         {/* Cabeçalho da lista (desktop) */}
         {notes.length > 0 && !showFullSkeleton && !showListSkeleton && (
-          <div className="hidden bg-white px-2 py-1.5 sm:block dark:bg-neutral-950">
+          <div className="hidden bg-white px-2 py-1.5 sm:block dark:bg-[#1d1d1b]">
             <div className="grid grid-cols-12 gap-3 text-[9px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
               <div className="col-span-3 flex min-w-0 items-center">Título</div>
               <div className="col-span-2 flex min-w-0 items-center">Projeto</div>
@@ -1032,7 +1032,7 @@ const NotesWithPagination = () => {
             </button>
             <button
               onClick={toggleSelectionMode}
-              className="flex items-center gap-0.5 rounded border border-neutral-300 bg-neutral-50 px-0.5 py-0.5 text-[10px] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+              className="flex items-center gap-0.5 rounded border border-neutral-300 bg-neutral-50 px-0.5 py-0.5 text-[10px] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
             >
               <X size={11} />
               <span className="hidden sm:inline">Cancelar</span>
@@ -1049,11 +1049,11 @@ const NotesWithPagination = () => {
               {Array.from({ length: itemsPerPage }).map((_, i) => (
                 <div
                   key={i}
-                  className="flex h-12 animate-pulse items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 sm:h-11 dark:border-neutral-800 dark:bg-neutral-950"
+                  className="flex h-12 animate-pulse items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 sm:h-11 dark:border-surface-dark-border dark:bg-[#1d1d1b]"
                 >
                   <div className="flex-1 space-y-2">
                     <div className="h-3.5 w-2/3 rounded bg-neutral-100 sm:w-1/3 dark:bg-neutral-800"></div>
-                    <div className="h-2.5 w-1/2 rounded bg-neutral-50 dark:bg-neutral-900"></div>
+                    <div className="h-2.5 w-1/2 rounded bg-neutral-50 dark:bg-[#1d1d1b]"></div>
                   </div>
                 </div>
               ))}
@@ -1062,7 +1062,7 @@ const NotesWithPagination = () => {
             <div className="relative flex flex-col gap-1">
               {/* Overlay Loading */}
               {showOverlayLoading && (
-                <div className="absolute inset-0 z-30 flex items-start justify-center bg-white/60 pt-10 backdrop-blur-[1px] dark:bg-neutral-950/60">
+                <div className="absolute inset-0 z-30 flex items-start justify-center bg-white/60 pt-10 backdrop-blur-[1px] dark:bg-[#1d1d1b]/60">
                   <Loader2 size={24} className="animate-spin text-neutral-900 dark:text-white" />
                 </div>
               )}
@@ -1075,7 +1075,7 @@ const NotesWithPagination = () => {
                     className={`group relative overflow-hidden rounded-md border transition-colors ${
                       isSelected
                         ? "dark:bg-brand-primary-500/10 border-yellow-400/70 bg-yellow-50/95 dark:border-yellow-500/35"
-                        : "border-neutral-200 bg-white hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-600"
+                        : "border-neutral-200 bg-white hover:border-neutral-300 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:border-neutral-600"
                     }`}
                   >
                     {selectionMode && (
@@ -1084,7 +1084,7 @@ const NotesWithPagination = () => {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleNoteSelection(note.id)}
-                          className="text-brand-primary-500 dark:checked:bg-brand-primary-500 h-4 w-4 cursor-pointer rounded border-neutral-300 transition-colors focus:ring-2 focus:ring-yellow-500 focus:ring-offset-0 dark:border-neutral-600 dark:bg-neutral-800"
+                          className="text-brand-primary-500 dark:checked:bg-brand-primary-500 h-4 w-4 cursor-pointer rounded border-neutral-300 transition-colors focus:ring-2 focus:ring-yellow-500 focus:ring-offset-0 dark:border-surface-dark-border-muted dark:bg-neutral-800"
                         />
                       </div>
                     )}
@@ -1176,7 +1176,7 @@ const NotesWithPagination = () => {
                                   return (
                                     <div
                                       key={i}
-                                      className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full border border-white bg-neutral-100 dark:border-neutral-900 dark:bg-neutral-800"
+                                      className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full border border-white bg-neutral-100 dark:border-surface-dark-border-strong dark:bg-neutral-800"
                                       title={name}
                                     >
                                       {avatar ? (
@@ -1218,7 +1218,7 @@ const NotesWithPagination = () => {
 
                         <div className="col-span-2 flex min-w-0 items-center">
                           {note.project_name ? (
-                            <div className="flex min-w-0 items-center gap-1 truncate rounded bg-neutral-50 px-1.5 py-0.5 dark:bg-neutral-900">
+                            <div className="flex min-w-0 items-center gap-1 truncate rounded bg-neutral-50 px-1.5 py-0.5 dark:bg-[#1d1d1b]">
                               <div className="h-1 w-1 shrink-0 rounded-full bg-blue-500"></div>
                               <span className="truncate text-[9px] text-neutral-600 dark:text-neutral-300">
                                 {note.project_name}
@@ -1308,7 +1308,7 @@ const NotesWithPagination = () => {
                                 return (
                                   <div
                                     key={i}
-                                    className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full border border-white bg-neutral-100 dark:border-neutral-950 dark:bg-neutral-800"
+                                    className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full border border-white bg-neutral-100 dark:border-surface-dark-border-strong dark:bg-neutral-800"
                                     title={name}
                                   >
                                     {avatar ? (
@@ -1351,8 +1351,8 @@ const NotesWithPagination = () => {
             </div>
           ) : (
             // Empty State
-            <div className="flex h-48 flex-col items-center justify-center rounded-md border border-neutral-200 bg-white text-center sm:h-64 dark:border-neutral-800 dark:bg-neutral-950">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-neutral-100 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+            <div className="flex h-48 flex-col items-center justify-center rounded-md border border-neutral-200 bg-white text-center sm:h-64 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-neutral-100 bg-neutral-50 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
                 <Search size={16} className="text-neutral-400" />
               </div>
               <h3 className="text-[13px] font-bold text-neutral-900 dark:text-neutral-100">
@@ -1375,7 +1375,7 @@ const NotesWithPagination = () => {
       </div>
       {/* =================== FOOTER =================== */}
       {totalPages > 1 && (
-        <div className="shrink-0 bg-white dark:bg-neutral-950">
+        <div className="shrink-0 bg-white dark:bg-[#1d1d1b]">
           <div className="origin-center scale-[0.85] sm:scale-90">
             <Pagination
               currentPage={pagination.currentPage}

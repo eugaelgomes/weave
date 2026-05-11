@@ -17,16 +17,16 @@ export default function WorkspaceSettingsPage() {
 
   // Escala de design padrão
   const cardBase =
-    "flex flex-col overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm dark:border-neutral-800/60 dark:bg-neutral-950 transition-all";
+    "flex flex-col overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] transition-all";
   const headerBase =
-    "flex items-center justify-between border-b border-neutral-100/60 px-4 py-2.5 dark:border-neutral-800/50";
+    "flex items-center justify-between border-b border-neutral-100/60 px-4 py-2.5 dark:border-surface-dark-border-muted";
   const headerTitle =
     "flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] text-neutral-500 dark:text-neutral-400";
 
   return (
     <>
-      <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-100/50 dark:border-neutral-800/60 dark:bg-neutral-950">
-        <div className="flex items-center justify-between border-b border-neutral-200/80 bg-white/50 px-4 py-3 dark:border-neutral-800/80 dark:bg-neutral-950">
+      <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-100/50 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+        <div className="flex items-center justify-between border-b border-neutral-200/80 bg-white/50 px-4 py-3 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
           <h3 className="flex items-center gap-2 text-[12px] font-bold tracking-[0.15em] text-neutral-600 dark:text-neutral-300">
             <LayoutTemplate size={14} className="text-amber-500" />
             Workspace
@@ -54,7 +54,7 @@ export default function WorkspaceSettingsPage() {
               {user?.org_id ? (
                 <>
                   <div className="flex items-center gap-3">
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-neutral-100 dark:border-neutral-800">
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-neutral-100 dark:border-surface-dark-border">
                       {user.org_logo_url ? (
                         <Image src={user.org_logo_url} alt="Logo" fill className="object-cover" />
                       ) : (

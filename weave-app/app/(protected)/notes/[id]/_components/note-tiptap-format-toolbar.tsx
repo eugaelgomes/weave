@@ -269,7 +269,7 @@ export function NoteTiptapFormatToolbar({
   );
 
   const barClass = clsx(
-    "rounded-lg border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-800",
+    "rounded-lg border border-neutral-200 bg-white shadow-lg dark:border-surface-dark-border-strong dark:bg-neutral-800",
     variant === "slash" && "max-w-[min(100vw-1rem,42rem)] flex flex-wrap items-center gap-0.5 px-1 py-1",
     variant !== "slash" && "flex items-center gap-0.5 px-1.5 py-1",
     compact && variant !== "slash" && "gap-0 px-1 py-0.5"
@@ -294,7 +294,7 @@ export function NoteTiptapFormatToolbar({
           }}
           placeholder="https://..."
           autoFocus
-          className="h-7 min-w-0 flex-1 rounded border border-neutral-300 bg-transparent px-2 text-sm outline-none focus:border-yellow-500 dark:border-neutral-600"
+          className="h-7 min-w-0 flex-1 rounded border border-neutral-300 bg-transparent px-2 text-sm outline-none focus:border-yellow-500 dark:border-surface-dark-border-muted"
         />
         <button
           type="button"
@@ -489,7 +489,7 @@ export function NoteTiptapFormatToolbar({
           title="Linguagem do código"
           aria-label="Linguagem do código"
           className={clsx(
-            "shrink-0 cursor-pointer rounded-md border border-neutral-300 bg-white px-1 text-xs text-neutral-800 outline-none dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100",
+            "shrink-0 cursor-pointer rounded-md border border-neutral-300 bg-white px-1 text-xs text-neutral-800 outline-none dark:border-surface-dark-border-muted dark:bg-[#1d1d1b] dark:text-neutral-100",
             compact ? "h-7 max-w-[6.5rem]" : "h-8 max-w-[9rem]"
           )}
         >

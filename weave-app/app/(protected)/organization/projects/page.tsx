@@ -37,7 +37,7 @@ const statusColors: Record<string, string> = {
   [PROJECT_STATUS.COMPLETED]:
     "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800",
   [PROJECT_STATUS.ARCHIVED]:
-    "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700",
+    "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 border-neutral-200 dark:border-surface-dark-border-strong",
 };
 
 const ProjectsManagementPage = () => {
@@ -76,11 +76,11 @@ const ProjectsManagementPage = () => {
   }, [projects, searchTerm, statusFilter, priorityFilter]);
 
   return (
-    <div className="animate-in fade-in flex h-full flex-col bg-neutral-50 duration-200 dark:bg-neutral-950">
+    <div className="animate-in fade-in flex h-full flex-col bg-neutral-50 duration-200 dark:bg-[#1d1d1b]">
       <WorkspaceHeader />
 
       {/* Header Analítico - Compacto */}
-      <div className="border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="border-b border-neutral-200 bg-white px-4 py-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <div className="bg-brand-primary-500/10 rounded p-1.5">
@@ -97,7 +97,7 @@ const ProjectsManagementPage = () => {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button className="flex h-7 items-center justify-center gap-1.5 rounded border border-neutral-300 bg-white px-2.5 text-[11px] font-medium text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800">
+            <button className="flex h-7 items-center justify-center gap-1.5 rounded border border-neutral-300 bg-white px-2.5 text-[11px] font-medium text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-800">
               <Download className="h-3 w-3" />
               <span>Exportar</span>
             </button>
@@ -111,7 +111,7 @@ const ProjectsManagementPage = () => {
         {/* Micro KPI Cards */}
         {!isLoading && (
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-neutral-800">
+            <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-surface-dark-border">
               <div>
                 <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                   Total
@@ -123,7 +123,7 @@ const ProjectsManagementPage = () => {
               <Layers className="h-4 w-4 text-neutral-300 dark:text-neutral-600" />
             </div>
 
-            <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-neutral-800">
+            <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-surface-dark-border">
               <div>
                 <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                   Ativos
@@ -135,7 +135,7 @@ const ProjectsManagementPage = () => {
               <TrendingUp className="h-4 w-4 text-blue-500/70" />
             </div>
 
-            <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-neutral-800">
+            <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-surface-dark-border">
               <div>
                 <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                   Risco
@@ -147,7 +147,7 @@ const ProjectsManagementPage = () => {
               <AlertCircle className="text-brand-primary-500/70 h-4 w-4" />
             </div>
 
-            <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-neutral-800">
+            <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-surface-dark-border">
               <div className="w-full">
                 <div className="mb-1 flex items-center justify-between">
                   <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
@@ -182,7 +182,7 @@ const ProjectsManagementPage = () => {
                 placeholder="Buscar (ex: nome, metodologia)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-8 w-full rounded border border-neutral-300 bg-white pr-3 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+                className="h-8 w-full rounded border border-neutral-300 bg-white pr-3 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
               />
             </div>
 
@@ -191,7 +191,7 @@ const ProjectsManagementPage = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-8 appearance-none rounded border border-neutral-300 bg-white pr-8 pl-2.5 text-xs text-neutral-700 focus:border-yellow-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
+                className="h-8 appearance-none rounded border border-neutral-300 bg-white pr-8 pl-2.5 text-xs text-neutral-700 focus:border-yellow-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-300"
               >
                 <option value="all">Todos os Status</option>
                 <option value={PROJECT_STATUS.OPEN}>Abertos</option>
@@ -208,7 +208,7 @@ const ProjectsManagementPage = () => {
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="h-8 appearance-none rounded border border-neutral-300 bg-white pr-8 pl-2.5 text-xs text-neutral-700 focus:border-yellow-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
+                className="h-8 appearance-none rounded border border-neutral-300 bg-white pr-8 pl-2.5 text-xs text-neutral-700 focus:border-yellow-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-300"
               >
                 <option value="all">Qualquer Prioridade</option>
                 <option value="alta">Alta</option>
@@ -220,14 +220,14 @@ const ProjectsManagementPage = () => {
           </div>
 
           {/* Tabela */}
-          <div className="flex-1 overflow-auto rounded border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="flex-1 overflow-auto rounded border border-neutral-200 bg-white dark:border-surface-dark-border dark:bg-[#1d1d1b]">
             {isLoading ? (
               <div className="flex h-full items-center justify-center">
                 <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-yellow-500" />
               </div>
             ) : (
               <table className="min-w-full text-left text-xs whitespace-nowrap">
-                <thead className="sticky top-0 z-10 border-b border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-500 uppercase dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400">
+                <thead className="sticky top-0 z-10 border-b border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-500 uppercase dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400">
                   <tr>
                     <th className="px-3 py-2">Projeto</th>
                     <th className="w-32 px-3 py-2">Status</th>
@@ -237,7 +237,7 @@ const ProjectsManagementPage = () => {
                     <th className="w-10 px-3 py-2 text-center"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/50">
+                <tbody className="divide-y divide-neutral-100 dark:divide-surface-dark-border-muted">
                   {filteredProjects.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="p-8 text-center text-neutral-400">

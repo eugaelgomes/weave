@@ -55,7 +55,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-white dark:bg-[#1d1d1b]">
+    <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-neutral-100 dark:bg-[#1d1d1b]">
       {/* Desktop: full-width navbar above sidebar + main so sidebar height respects the bar. */}
       {isLg ? (
         <div className="shrink-0">
@@ -86,7 +86,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
                 onClick={closeSidebar}
               />
 
-              <div className="relative z-[101] flex h-[85vh] min-h-0 w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-[#1d1d1b]">
+              <div className="relative z-[101] flex h-[85vh] min-h-0 w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl ring-1 ring-black/5 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-xl dark:ring-white/10">
                 <Sidebar
                   onLinkClick={closeSidebar}
                   isCollapsed={false}
@@ -103,7 +103,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
 
               <div
                 className={cn(
-                  "flex w-full min-w-0 flex-col overflow-hidden rounded-md bg-white p-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.8),inset_0_-1px_0_rgba(0,0,0,0.06),inset_0_6px_14px_rgba(0,0,0,0.05)] dark:border-gray-800 dark:bg-[#1d1d1b] dark:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.05),inset_0_-1px_0_rgba(0,0,0,0.5),inset_0_6px_14px_rgba(0,0,0,0.35)]",
+                  "flex w-full min-w-0 flex-col overflow-hidden rounded-md border border-neutral-200 bg-white p-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.8),inset_0_-1px_0_rgba(0,0,0,0.06),inset_0_6px_14px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.04] dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md dark:ring-white/[0.08]",
                   isLg ? "min-h-0 flex-1" : "shrink-0"
                 )}
               >

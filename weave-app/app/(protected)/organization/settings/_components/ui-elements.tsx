@@ -85,7 +85,7 @@ export const Select = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="w-full appearance-none rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-700 focus:dark:ring-zinc-800"
+        className="w-full appearance-none rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-zinc-100 dark:focus:border-zinc-700 focus:dark:ring-zinc-800"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -125,7 +125,7 @@ export const Input = ({
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       placeholder={placeholder}
-      className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-700 focus:dark:ring-zinc-800"
+      className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-zinc-100 dark:focus:border-zinc-700 focus:dark:ring-zinc-800"
     />
   </div>
 );
@@ -172,7 +172,7 @@ export const ImageEditModal = ({
 
   return (
     <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm duration-200">
-      <div className="w-full max-w-sm rounded-md border border-zinc-200 bg-neutral-50 p-5 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="w-full max-w-sm rounded-md border border-zinc-200 bg-neutral-50 p-5 shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>
           <button
@@ -183,7 +183,7 @@ export const ImageEditModal = ({
           </button>
         </div>
 
-        <div className="relative mb-4 flex h-32 items-center justify-center overflow-hidden rounded-md border border-dashed border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="relative mb-4 flex h-32 items-center justify-center overflow-hidden rounded-md border border-dashed border-zinc-200 bg-zinc-50 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
           {preview ? (
             <img
               src={preview}

@@ -60,7 +60,7 @@ export default function NotesCarousel({
   };
 
   return (
-    <div className="rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:p-3 dark:border-neutral-800 dark:bg-[#1d1d1b]">
+    <div className="rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md">
       <div className="mb-2 flex items-center justify-between gap-2">
         <h3 className="text-xs font-semibold text-neutral-500 sm:text-sm dark:text-neutral-100">
           {resolvedTitle}
@@ -135,7 +135,7 @@ export default function NotesCarousel({
                   className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center sm:w-[220px] sm:snap-start"
                 >
                   <div
-                    className={`group flex min-h-[176px] flex-col justify-between rounded-md border border-neutral-200 bg-neutral-50 p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:shadow-neutral-900/50 ${note.done ? "opacity-90" : ""}`}
+                    className={`group flex min-h-[176px] flex-col justify-between rounded-md border border-neutral-200 bg-neutral-50 p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:border-surface-dark-border-strong dark:hover:shadow-surface-dark-md ${note.done ? "opacity-90" : ""}`}
                     style={{
                       backgroundColor: baseColor ? `${baseColor}40` : undefined,
                       boxShadow: baseColor ? `0 2px 8px 0 ${baseColor}15` : undefined,
@@ -215,7 +215,7 @@ export default function NotesCarousel({
                           </span>
                         )}
                         {dueDate && (
-                          <span className="inline-flex items-center gap-0.5 rounded border border-neutral-200 bg-neutral-100/80 px-1.5 py-[1px] text-[8px] font-medium text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800/80 dark:text-neutral-300">
+                          <span className="inline-flex items-center gap-0.5 rounded border border-neutral-200 bg-neutral-100/80 px-1.5 py-[1px] text-[8px] font-medium text-neutral-600 dark:border-surface-dark-border-strong dark:bg-neutral-800/80 dark:text-neutral-300">
                             <Calendar className="h-2.5 w-2.5 shrink-0" />
                             {dueDate.toLocaleDateString(dateLocale, {
                               day: "2-digit",
@@ -247,14 +247,14 @@ export default function NotesCarousel({
                             );
                           })}
                           {(note.tags?.length || 0) > 3 && (
-                            <span className="inline-flex items-center rounded border border-neutral-200 bg-neutral-100 px-1.5 py-[1px] text-[8px] font-medium text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+                            <span className="inline-flex items-center rounded border border-neutral-200 bg-neutral-100 px-1.5 py-[1px] text-[8px] font-medium text-neutral-500 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400">
                               +{note.tags!.length - 3}
                             </span>
                           )}
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between border-t border-neutral-100 pt-2 dark:border-neutral-900">
+                      <div className="flex items-center justify-between border-t border-neutral-100 pt-2 dark:border-surface-dark-border-strong">
                         <div className="flex -space-x-1.5">
                           <div
                             className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full border border-neutral-900 bg-neutral-100 dark:border-neutral-200 dark:bg-neutral-800"
@@ -282,7 +282,7 @@ export default function NotesCarousel({
                                 return (
                                   <div
                                     key={i}
-                                    className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full border border-neutral-900 bg-neutral-100 dark:border-neutral-950 dark:bg-neutral-800 dark:ring-neutral-900"
+                                    className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full border border-neutral-900 bg-neutral-100 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:ring-neutral-900"
                                     title={name}
                                   >
                                     {avatar ? (
@@ -302,7 +302,7 @@ export default function NotesCarousel({
                                 );
                               })}
                               {note.collaborators.length > 3 && (
-                                <div className="relative flex h-4 w-4 items-center justify-center rounded-full border border-white bg-neutral-200 text-[6px] font-bold text-neutral-600 dark:border-neutral-950 dark:bg-neutral-800 dark:text-neutral-400">
+                                <div className="relative flex h-4 w-4 items-center justify-center rounded-full border border-white bg-neutral-200 text-[6px] font-bold text-neutral-600 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-400">
                                   +{note.collaborators.length - 3}
                                 </div>
                               )}

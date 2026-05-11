@@ -66,7 +66,7 @@ const STATUS_CONFIG = {
     icon: Archive,
     color: "text-neutral-500 dark:text-neutral-500",
     bg: "bg-neutral-100 dark:bg-neutral-500/10",
-    border: "border-neutral-200 dark:border-neutral-500/20",
+    border: "border-neutral-200 dark:border-surface-dark-border-muted",
   },
 };
 
@@ -110,7 +110,7 @@ export default function ProjectsCarousel({
   };
 
   return (
-    <div className="rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:p-3 dark:border-neutral-800 dark:bg-[#1d1d1b]">
+    <div className="rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md">
       <div className="mb-2 flex items-center justify-between gap-2">
         <h3 className="text-xs font-semibold text-neutral-500 sm:text-sm dark:text-neutral-100">
           {resolvedTitle}
@@ -176,7 +176,7 @@ export default function ProjectsCarousel({
                   href={`/projects/${project.id}`}
                   className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center sm:w-[220px] sm:snap-start"
                 >
-                  <div className="group flex min-h-[176px] flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700 dark:hover:shadow-neutral-900/50">
+                  <div className="group flex min-h-[176px] flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:border-surface-dark-border-strong dark:hover:shadow-surface-dark-md">
                     <div className="mb-1.5 flex flex-shrink-0 items-start justify-between gap-1.5">
                       <div className="flex min-w-0 flex-1 items-center gap-1.5">
                         {project.icon && (
@@ -205,7 +205,7 @@ export default function ProjectsCarousel({
                     </div>
 
                     <div className="mb-1.5 flex flex-shrink-0 items-center justify-between gap-1 text-[8px] text-neutral-500 dark:text-neutral-400">
-                      <span className="shrink-0 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-[1px] font-semibold text-neutral-700 dark:border-neutral-700 dark:bg-neutral-800/80 dark:text-neutral-200">
+                      <span className="shrink-0 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-[1px] font-semibold text-neutral-700 dark:border-surface-dark-border-strong dark:bg-neutral-800/80 dark:text-neutral-200">
                         {methodologyLabel}
                       </span>
                       {updatedAt ? (
@@ -245,7 +245,7 @@ export default function ProjectsCarousel({
                           );
                         })}
                         {project.tags.length > 3 && (
-                          <span className="inline-flex items-center rounded border border-neutral-200 bg-neutral-100 px-1.5 py-[1px] text-[8px] font-medium text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800/70 dark:text-neutral-400">
+                          <span className="inline-flex items-center rounded border border-neutral-200 bg-neutral-100 px-1.5 py-[1px] text-[8px] font-medium text-neutral-500 dark:border-surface-dark-border-strong dark:bg-neutral-800/70 dark:text-neutral-400">
                             +{project.tags.length - 3}
                           </span>
                         )}
@@ -253,7 +253,7 @@ export default function ProjectsCarousel({
                     )}
 
                     {(project.complexity || project.estimatedTime) && (
-                      <div className="mb-1.5 flex w-full items-center justify-between border-t border-neutral-100 pt-1.5 dark:border-neutral-800/50">
+                      <div className="mb-1.5 flex w-full items-center justify-between border-t border-neutral-100 pt-1.5 dark:border-surface-dark-border-muted">
                         {project.complexity && (
                           <div className="flex items-center gap-1">
                             <Zap
@@ -341,7 +341,7 @@ export default function ProjectsCarousel({
                             title={`${t.home.carousel.ownerTitle}: ${project.owner_name}`}
                           >
                             {project.owner_avatar_url ? (
-                              <div className="relative h-4 w-4 overflow-hidden rounded-full border border-neutral-200 dark:border-neutral-700">
+                              <div className="relative h-4 w-4 overflow-hidden rounded-full border border-neutral-200 dark:border-surface-dark-border-strong">
                                 <Image
                                   src={project.owner_avatar_url}
                                   alt={project.owner_name}
@@ -351,7 +351,7 @@ export default function ProjectsCarousel({
                                 />
                               </div>
                             ) : (
-                              <span className="flex h-4 w-4 items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 text-[6px] font-bold text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+                              <span className="flex h-4 w-4 items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 text-[6px] font-bold text-neutral-600 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-300">
                                 {project.owner_name.charAt(0).toUpperCase()}
                               </span>
                             )}

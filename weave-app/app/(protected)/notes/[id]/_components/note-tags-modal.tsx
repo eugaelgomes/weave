@@ -28,7 +28,7 @@ export function NoteTagsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
+      <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
         <div className="mb-5 flex items-center justify-between">
           <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
@@ -57,7 +57,7 @@ export function NoteTagsModal({
                 value={newTag}
                 onChange={(e) => onNewTagChange(e.target.value)}
                 placeholder="Digite o nome da tag..."
-                className="flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-3 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                className="flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-3 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -104,7 +104,7 @@ export function NoteTagsModal({
             </div>
           ) : null}
 
-          <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-neutral-800">
+          <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-surface-dark-border">
             <button
               onClick={onClose}
               className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"

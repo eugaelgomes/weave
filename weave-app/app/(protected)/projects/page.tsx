@@ -225,7 +225,7 @@ const ProjectsPage = () => {
 
   return (
     <div className="animate-in fade-in flex flex-col gap-4 p-3 duration-300 sm:p-4">
-      <div className="flex items-start justify-between gap-3 border-b border-neutral-200 pb-3 dark:border-neutral-800">
+      <div className="flex items-start justify-between gap-3 border-b border-neutral-200 pb-3 dark:border-surface-dark-border">
         <div className="text-brand-primary-500 flex h-7 w-7 items-center justify-center rounded-md bg-yellow-400/10 dark:text-yellow-400">
           <BarChart2 className="h-3.5 w-3.5" />
         </div>
@@ -282,7 +282,7 @@ const ProjectsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/30">
+        <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30">
           <div className="mb-2 flex items-center gap-1.5">
             <UserRound className="h-3.5 w-3.5 text-blue-500" />
             <span className="text-[10px] font-bold tracking-wider text-neutral-500  dark:text-neutral-400">
@@ -307,7 +307,7 @@ const ProjectsPage = () => {
           </div>
         </div>
 
-        <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/30">
+        <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30">
           <div className="mb-2 flex items-center gap-1.5">
             <Flag className="h-3.5 w-3.5 text-orange-500" />
             <span className="text-[10px] font-bold tracking-wider text-neutral-500  dark:text-neutral-400">
@@ -325,7 +325,7 @@ const ProjectsPage = () => {
         </div>
       </div>
 
-      <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900/30">
+      <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30">
         <div className="mb-2.5 flex items-center gap-1.5">
           <Layers3 className="h-3.5 w-3.5 text-teal-500" />
           <span className="text-[10px] font-bold tracking-wider text-neutral-500  dark:text-neutral-400">
@@ -352,7 +352,7 @@ const ProjectsPage = () => {
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-b border-neutral-200 pb-2 dark:border-neutral-800">
+      <div className="flex items-center justify-between border-b border-neutral-200 pb-2 dark:border-surface-dark-border">
         <h2 className="text-xs font-semibold tracking-wider text-neutral-600  dark:text-neutral-300">
           Por projeto
         </h2>
@@ -362,7 +362,7 @@ const ProjectsPage = () => {
       </div>
 
       {projectStats.length === 0 && (
-        <div className="rounded-md border border-dashed border-neutral-300 p-6 text-center dark:border-neutral-700">
+        <div className="rounded-md border border-dashed border-neutral-300 p-6 text-center dark:border-surface-dark-border-strong">
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
             Nenhum projeto ainda. Crie o primeiro para começar.
           </p>
@@ -375,7 +375,7 @@ const ProjectsPage = () => {
             key={project.id}
             type="button"
             onClick={() => router.push(`/projects/${project.id}`)}
-            className="w-full rounded-md border border-neutral-200 bg-white p-3 text-left transition hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/40 dark:hover:border-neutral-700 dark:hover:bg-neutral-900"
+            className="w-full rounded-md border border-neutral-200 bg-white p-3 text-left transition hover:border-neutral-300 hover:bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b]/40 dark:hover:border-surface-dark-border-strong dark:hover:bg-neutral-900"
           >
             <div className="mb-2 flex items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-2">
@@ -388,7 +388,7 @@ const ProjectsPage = () => {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="rounded border border-neutral-200 px-1.5 py-0.5 text-[10px] text-neutral-600 dark:border-neutral-700 dark:text-neutral-300">
+                <span className="rounded border border-neutral-200 px-1.5 py-0.5 text-[10px] text-neutral-600 dark:border-surface-dark-border-strong dark:text-neutral-300">
                   {statusLabels[project.status] || project.status}
                 </span>
                 <ChevronRight className="h-3.5 w-3.5 text-neutral-400" />
@@ -438,7 +438,7 @@ function StatCard({
   bg: string;
 }) {
   return (
-    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2.5 dark:border-neutral-800 dark:bg-neutral-900/30">
+    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30">
       <div className="mb-1 flex items-center gap-1.5">
         <span className={`rounded p-0.5 ${bg} ${color}`}>{icon}</span>
         <span className="text-[10px] font-bold tracking-wider text-neutral-500  dark:text-neutral-400">
@@ -461,7 +461,7 @@ function NoteStatItem({ label, value, color }: { label: string; value: number; c
 
 function MiniStat({ label, value, danger = false }: { label: string; value: number; danger?: boolean }) {
   return (
-    <div className="rounded border border-neutral-200 px-2 py-1 dark:border-neutral-800">
+    <div className="rounded border border-neutral-200 px-2 py-1 dark:border-surface-dark-border">
       <p className="text-[10px] text-neutral-500 dark:text-neutral-400">{label}</p>
       <p
         className={`text-sm font-semibold ${
@@ -491,7 +491,7 @@ function Distribution({
 
   if (entries.length === 0) {
     return (
-      <div className="rounded border border-neutral-200 p-2 dark:border-neutral-800">
+      <div className="rounded border border-neutral-200 p-2 dark:border-surface-dark-border">
         <p className="mb-1 text-[10px] font-semibold tracking-wide text-neutral-500  dark:text-neutral-400">
           {title}
         </p>
@@ -501,7 +501,7 @@ function Distribution({
   }
 
   return (
-    <div className="rounded border border-neutral-200 p-2 dark:border-neutral-800">
+    <div className="rounded border border-neutral-200 p-2 dark:border-surface-dark-border">
       <p className="mb-1 text-[10px] font-semibold tracking-wide text-neutral-500  dark:text-neutral-400">
         {title}
       </p>

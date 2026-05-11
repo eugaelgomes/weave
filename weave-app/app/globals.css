@@ -32,6 +32,21 @@
   --color-brand-secondary-950: #0a0a0a;
 
   --font-fredoka: var(--font-fredoka), ui-sans-serif, system-ui;
+
+  /**
+   * Dark surfaces (#1d1d1b): borders and elevation shadows.
+   * Use with dark: — e.g. dark:border-surface-dark-border dark:shadow-surface-dark-sm
+   */
+  --color-surface-dark-border: rgb(255 255 255 / 0.1);
+  --color-surface-dark-border-muted: rgb(255 255 255 / 0.06);
+  --color-surface-dark-border-strong: rgb(255 255 255 / 0.16);
+
+  --shadow-surface-dark-sm: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 2px 8px rgb(0 0 0 / 0.4),
+    0 8px 24px rgb(0 0 0 / 0.35);
+  --shadow-surface-dark-md: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 4px 12px rgb(0 0 0 / 0.45),
+    0 12px 32px rgb(0 0 0 / 0.4);
+  --shadow-surface-dark-xl: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 8px 24px rgb(0 0 0 / 0.5),
+    0 24px 56px rgb(0 0 0 / 0.48);
 }
 
 @variant dark (&:where(.dark, .dark *));

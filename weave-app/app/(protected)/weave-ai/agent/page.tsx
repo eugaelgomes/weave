@@ -46,7 +46,7 @@ function ProviderChip({
         "rounded-md px-2.5 py-1 text-[11px] font-medium transition-all",
         selected
           ? "bg-neutral-800 text-white shadow-sm dark:bg-neutral-200 dark:text-neutral-900"
-          : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800"
+          : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-neutral-800"
       )}
     >
       {label}
@@ -66,7 +66,7 @@ function AgentCard({ agent, onOpen }: { agent: Agent; onOpen: () => void }) {
       className={cn(
         "group flex h-full flex-col rounded-md border border-neutral-200 bg-white p-4 text-left shadow-sm transition",
         "hover:border-brand-primary-500/40 hover:shadow-md",
-        "dark:hover:border-brand-primary-500/35 dark:border-neutral-800 dark:bg-neutral-950"
+        "dark:hover:border-brand-primary-500/35 dark:border-surface-dark-border dark:bg-[#1d1d1b]"
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -98,7 +98,7 @@ function AgentCard({ agent, onOpen }: { agent: Agent; onOpen: () => void }) {
             {agent.description || "Sem descrição — adicione uma para orientar o uso do agente."}
           </p>
         </div>
-        <div className="text-brand-primary-600 group-hover:bg-brand-primary-500/15 dark:text-brand-primary-400 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-neutral-100 transition dark:bg-neutral-900">
+        <div className="text-brand-primary-600 group-hover:bg-brand-primary-500/15 dark:text-brand-primary-400 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-neutral-100 transition dark:bg-[#1d1d1b]">
           <Sparkles className="h-3.5 w-3.5" />
         </div>
       </div>
@@ -120,7 +120,7 @@ function AgentCard({ agent, onOpen }: { agent: Agent; onOpen: () => void }) {
         ) : null}
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3 dark:border-neutral-800">
+      <div className="mt-4 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3 dark:border-surface-dark-border">
         <span className="min-w-0 truncate text-[11px] text-neutral-400 dark:text-neutral-500">
           {tagLine || "Sem tags"}
         </span>
@@ -155,7 +155,7 @@ export default function AgentsOverviewPage() {
   }, [agents, providerFilter, query]);
 
   return (
-    <div className="flex min-h-full flex-col gap-4 bg-neutral-50/50 p-4 pb-8 dark:bg-neutral-950">
+    <div className="flex min-h-full flex-col gap-4 bg-neutral-50/50 p-4 pb-8 dark:bg-[#1d1d1b]">
       <div className="flex justify-between gap-2">
         <h1 className="text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
           Agentes AI
@@ -165,7 +165,7 @@ export default function AgentsOverviewPage() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 shadow-sm xl:flex-row xl:items-center xl:justify-between dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 shadow-sm xl:flex-row xl:items-center xl:justify-between dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
           <div className="relative w-full sm:max-w-xs">
             <Search className="absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
@@ -173,7 +173,7 @@ export default function AgentsOverviewPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar agente..."
-              className="focus:border-brand-primary-500 focus:ring-brand-primary-500/50 h-8 w-full rounded-md border border-neutral-200 bg-neutral-50/50 pr-3 pl-8 text-xs text-neutral-900 placeholder:text-neutral-400 focus:ring-1 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100"
+              className="focus:border-brand-primary-500 focus:ring-brand-primary-500/50 h-8 w-full rounded-md border border-neutral-200 bg-neutral-50/50 pr-3 pl-8 text-xs text-neutral-900 placeholder:text-neutral-400 focus:ring-1 focus:outline-none dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-100"
             />
           </div>
 
@@ -201,10 +201,10 @@ export default function AgentsOverviewPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 border-t border-neutral-100 pt-2 xl:border-0 xl:pt-0 dark:border-neutral-800">
+        <div className="flex items-center gap-1.5 border-t border-neutral-100 pt-2 xl:border-0 xl:pt-0 dark:border-surface-dark-border">
           <button
             type="button"
-            className="flex h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-900 disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+            className="flex h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-900 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
             title="Desativar agentes selecionados"
           >
             <Ban className="h-3.5 w-3.5" />
@@ -213,7 +213,7 @@ export default function AgentsOverviewPage() {
 
           <button
             type="button"
-            className="flex h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-red-600 transition hover:border-red-200 hover:bg-red-50 disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-red-400 dark:hover:border-red-900/50 dark:hover:bg-red-900/20"
+            className="flex h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-red-600 transition hover:border-red-200 hover:bg-red-50 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-red-400 dark:hover:border-red-900/50 dark:hover:bg-red-900/20"
             title="Deletar agentes selecionados"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -234,8 +234,8 @@ export default function AgentsOverviewPage() {
       </div>
 
       {filteredAgents.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center rounded-md border border-dashed border-neutral-300 bg-white px-6 py-16 text-center dark:border-neutral-800 dark:bg-neutral-950">
-          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-neutral-100 text-neutral-400 dark:bg-neutral-900 dark:text-neutral-500">
+        <div className="flex flex-1 flex-col items-center justify-center rounded-md border border-dashed border-neutral-300 bg-white px-6 py-16 text-center dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-neutral-100 text-neutral-400 dark:bg-[#1d1d1b] dark:text-neutral-500">
             <Search className="h-5 w-5" />
           </div>
           <h2 className="mt-4 text-sm font-semibold text-neutral-900 dark:text-neutral-100">

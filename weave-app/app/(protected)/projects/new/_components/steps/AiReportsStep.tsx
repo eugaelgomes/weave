@@ -12,7 +12,7 @@ export function AiReportsStep({ state, actions }: CreateProjectWizardStepProps) 
 
   if (!state.created.projectId) {
     return (
-      <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900/50">
+      <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
         <div className="flex items-start gap-2 text-sm text-neutral-700 dark:text-neutral-200">
           <AlertCircle className="mt-0.5 h-4 w-4 text-neutral-400" aria-hidden />
           Crie o projeto no passo “Básico” para configurar relatórios.
@@ -64,7 +64,7 @@ export function AiReportsStep({ state, actions }: CreateProjectWizardStepProps) 
   };
 
   return (
-    <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900/50">
+    <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
       <div className="mb-2 flex items-start gap-2">
         <BarChart3 className="mt-0.5 h-4 w-4 text-neutral-400" aria-hidden />
         <div className="flex-1">
@@ -82,7 +82,7 @@ export function AiReportsStep({ state, actions }: CreateProjectWizardStepProps) 
       ) : null}
 
       <div className="mt-3">
-        <label className="flex cursor-pointer items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-xs font-medium text-neutral-700 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+        <label className="flex cursor-pointer items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-xs font-medium text-neutral-700 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-200">
           <input
             type="checkbox"
             checked={state.draft.configureReports}
@@ -94,7 +94,7 @@ export function AiReportsStep({ state, actions }: CreateProjectWizardStepProps) 
       </div>
 
       {state.draft.configureReports ? (
-        <div className="mt-3 grid grid-cols-1 gap-2 border-t border-neutral-100 pt-2 dark:border-neutral-800 sm:grid-cols-2">
+        <div className="mt-3 grid grid-cols-1 gap-2 border-t border-neutral-100 pt-2 dark:border-surface-dark-border sm:grid-cols-2">
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">Hora (UTC)</label>
             <input
@@ -102,7 +102,7 @@ export function AiReportsStep({ state, actions }: CreateProjectWizardStepProps) 
               value={state.draft.reportForm.report_time_utc ?? "09:00"}
               onChange={(e) => actions.setReportForm({ report_time_utc: e.target.value })}
               placeholder="HH:mm"
-              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 font-mono text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 font-mono text-sm dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-100"
             />
           </div>
           <div className="space-y-1.5">
@@ -119,7 +119,7 @@ export function AiReportsStep({ state, actions }: CreateProjectWizardStepProps) 
                   default_sprint_duration_days: Number(e.target.value) || 14,
                 })
               }
-              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-100"
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
@@ -153,7 +153,7 @@ export function AiReportsStep({ state, actions }: CreateProjectWizardStepProps) 
               onChange={(e) =>
                 actions.setReportForm({ recipient_scope: e.target.value as "owner_only" | "all_members" | "custom" })
               }
-              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-100"
             >
               <option value="owner_only">Apenas dono</option>
               <option value="all_members">Todos os membros</option>
@@ -183,7 +183,7 @@ export function AiReportsStep({ state, actions }: CreateProjectWizardStepProps) 
         </div>
       ) : null}
 
-      <div className="mt-3 flex gap-2 border-t border-neutral-100 pt-2 dark:border-neutral-800">
+      <div className="mt-3 flex gap-2 border-t border-neutral-100 pt-2 dark:border-surface-dark-border">
         <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
         <p className="text-xs leading-relaxed text-neutral-500 dark:text-neutral-500">
           <span className="font-medium text-neutral-600 dark:text-neutral-400">IA no projeto:</span>{" "}
@@ -191,7 +191,7 @@ export function AiReportsStep({ state, actions }: CreateProjectWizardStepProps) 
         </p>
       </div>
 
-      <div className="mt-3 flex items-center justify-end gap-2 border-t border-neutral-200 pt-2 dark:border-neutral-800">
+      <div className="mt-3 flex items-center justify-end gap-2 border-t border-neutral-200 pt-2 dark:border-surface-dark-border">
         <button
           type="button"
           onClick={() => actions.goToStep("review")}
