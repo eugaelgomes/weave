@@ -156,11 +156,17 @@ export function NoteBlockEditor({
 
   const prevPlain = React.useRef(plainSource);
   useEffect(() => {
-    if (plainSource !== prevPlain.current) {
-      prevPlain.current = plainSource;
-      setLocalText(plainSource);
-    }
-  }, [plainSource]);
+    if (plainSource === prevPlain.current) return;
+    const previousPlain = prevPlain.current;
+    prevPlain.current = plainSource;
+
+    const hasLocalDraft = localText !== previousPlain;
+    const shouldPreserveLocalDraft =
+      isFocused || (coalescedTextSave && hasLocalDraft);
+
+    if (shouldPreserveLocalDraft) return;
+    setLocalText(plainSource);
+  }, [plainSource, localText, isFocused, coalescedTextSave]);
 
   useEffect(() => {
     if (focusBlockId === block.id && textareaRef.current && canEdit) {
@@ -376,6 +382,35 @@ export function NoteBlockEditor({
             />
           ) : (
             <p className="text-sm text-neutral-500">Sem imagem (defina attrs.src no bloco)</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (block.type === "video") {
+    const src =
+      typeof attrs.src === "string"
+        ? attrs.src
+        : typeof block.text === "string"
+          ? block.text
+          : "";
+    const resolved = src ? getStorageUrl(src) : "";
+
+    return (
+      <div className={shellClass}>
+        <DragHandle dragHandleProps={dragHandleProps} />
+        <div className="rounded-md px-1.5 py-1">
+          {resolved ? (
+            <video
+              src={resolved}
+              controls
+              playsInline
+              preload="metadata"
+              className="max-h-[min(480px,70vh)] w-full rounded-lg"
+            />
+          ) : (
+            <p className="text-sm text-neutral-500">Sem vídeo (defina attrs.src no bloco)</p>
           )}
         </div>
       </div>

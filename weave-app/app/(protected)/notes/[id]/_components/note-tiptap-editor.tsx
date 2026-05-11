@@ -6,9 +6,11 @@ import type { Editor } from "@tiptap/react";
 import { Loader2, Check } from "lucide-react";
 
 import type { Block, CreateBlockData } from "@/app/_services/notes-service/notes.schema";
+import { uploadNoteDocumentImages } from "@/app/_services/notes-service/notes-service";
+import getStorageUrl from "@/app/_utils/get-storage-url";
 import { createTiptapExtensions } from "./note-tiptap-extensions";
 import { blocksToTiptapDoc, tiptapDocToBlocks, isDocumentEmpty } from "./note-tiptap-serializer";
-import { NoteTiptapBubbleMenu } from "./note-tiptap-menu";
+import { NoteTiptapBubbleMenu, NoteTiptapFloatingMenu } from "./note-tiptap-menu";
 import { TiptapDragHandle } from "./note-tiptap-drag-handle";
 import "./note-tiptap-styles.css";
 
@@ -20,6 +22,7 @@ interface NoteTiptapEditorProps {
 }
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
+const TIPTAP_AUTOSAVE_DELAY_MS = 1200;
 
 function createBlocksSnapshot(blocks: CreateBlockData[]): string {
   const normalized = blocks.map((block) => ({
@@ -48,6 +51,7 @@ export function NoteTiptapEditor({
   const pendingSaveRef = useRef<CreateBlockData[] | null>(null);
   const lastSavedJsonRef = useRef<string>("");
   const editorRef = useRef<Editor | null>(null);
+  const hasPendingTimeoutRef = useRef(false);
 
   const flushSave = useCallback(
     async (blocks: CreateBlockData[]) => {
@@ -88,17 +92,24 @@ export function NoteTiptapEditor({
     [onSave]
   );
 
+  const uploadDocumentImagesForNote = useCallback(async (files: File[]) => {
+    const { files: uploaded } = await uploadNoteDocumentImages(noteId, files);
+    return uploaded.map((f) => getStorageUrl(f.path));
+  }, [noteId]);
+
   const scheduleAutosave = useCallback(
     (editor: Editor) => {
       if (saveTimeoutRef.current) {
         window.clearTimeout(saveTimeoutRef.current);
       }
+      hasPendingTimeoutRef.current = true;
 
       saveTimeoutRef.current = window.setTimeout(() => {
+        hasPendingTimeoutRef.current = false;
         const doc = editor.getJSON();
         const blocks = tiptapDocToBlocks(doc);
         void flushSave(blocks);
-      }, 3500);
+      }, TIPTAP_AUTOSAVE_DELAY_MS);
     },
     [flushSave]
   );
@@ -107,6 +118,7 @@ export function NoteTiptapEditor({
     if (saveTimeoutRef.current) {
       window.clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = null;
+      hasPendingTimeoutRef.current = false;
     }
 
     if (editorRef.current) {
@@ -138,6 +150,22 @@ export function NoteTiptapEditor({
   }, [editor]);
 
   useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
+    const bridge = (
+      editor.storage as {
+        noteEditorUiBridge?: { uploadDocumentImages: typeof uploadDocumentImagesForNote | null };
+      }
+    ).noteEditorUiBridge;
+    if (!bridge) return;
+    bridge.uploadDocumentImages = uploadDocumentImagesForNote;
+    return () => {
+      if (!editor.isDestroyed) {
+        bridge.uploadDocumentImages = null;
+      }
+    };
+  }, [editor, uploadDocumentImagesForNote]);
+
+  useEffect(() => {
     if (!canEdit) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -165,16 +193,30 @@ export function NoteTiptapEditor({
       if (saveTimeoutRef.current) {
         window.clearTimeout(saveTimeoutRef.current);
       }
+      hasPendingTimeoutRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (lastSavedJsonRef.current) return;
+    lastSavedJsonRef.current = createBlocksSnapshot(
+      tiptapDocToBlocks(blocksToTiptapDoc(initialBlocks))
+    );
+  }, [initialBlocks]);
 
   useEffect(() => {
     if (editor && !editor.isDestroyed) {
       const newContent = blocksToTiptapDoc(initialBlocks);
       const currentJson = JSON.stringify(editor.getJSON());
       const newJson = JSON.stringify(newContent);
+      const currentSnapshot = createBlocksSnapshot(tiptapDocToBlocks(editor.getJSON()));
+      const hasLocalDirtyDraft =
+        currentSnapshot !== lastSavedJsonRef.current ||
+        hasPendingTimeoutRef.current ||
+        saveInFlightRef.current ||
+        pendingSaveRef.current !== null;
 
-      if (currentJson !== newJson && !saveInFlightRef.current) {
+      if (currentJson !== newJson && !hasLocalDirtyDraft) {
         editor.commands.setContent(newContent);
         lastSavedJsonRef.current = createBlocksSnapshot(tiptapDocToBlocks(newContent));
       }
@@ -192,6 +234,7 @@ export function NoteTiptapEditor({
   return (
     <div className="tiptap-editor-wrapper relative">
       {canEdit && editor && <NoteTiptapBubbleMenu editor={editor} />}
+      {canEdit && editor && <NoteTiptapFloatingMenu editor={editor} />}
       {canEdit && editor && <TiptapDragHandle editor={editor} />}
 
       <EditorContent editor={editor} />

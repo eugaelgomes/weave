@@ -216,6 +216,10 @@ class NotesBaseController {
       priority_color: note.priority_color ?? null,
       created_at: note.created_at,
       updated_at: note.updated_at,
+      revision:
+        note.revision === undefined || note.revision === null
+          ? null
+          : Number(note.revision),
       associated_project: projectId
         ? {
             id: projectId,

@@ -15,6 +15,59 @@ const { PLAN_PATHS } = require("@/services/plans/plan-paths");
  * Criação, atualização e exclusão de notas.
  */
 class NotesWriteController extends NotesBaseController {
+  _parseBaseRevision(rawValue) {
+    if (rawValue === undefined || rawValue === null || rawValue === "") {
+      return null;
+    }
+    const parsed = Number(rawValue);
+    if (!Number.isInteger(parsed) || parsed < 1) {
+      throw new Error("baseRevision inválido");
+    }
+    return parsed;
+  }
+
+  _isSameFieldValue(fieldName, currentValue, incomingValue) {
+    if (fieldName === "due_date") {
+      const currentDate = currentValue ? new Date(currentValue).toISOString() : null;
+      const incomingDate = incomingValue ? new Date(incomingValue).toISOString() : null;
+      return currentDate === incomingDate;
+    }
+    if (fieldName === "tags") {
+      return JSON.stringify(currentValue || []) === JSON.stringify(incomingValue || []);
+    }
+    if (fieldName === "properties") {
+      if (!incomingValue || typeof incomingValue !== "object") return true;
+      if (!currentValue || typeof currentValue !== "object") return false;
+      return Object.entries(incomingValue).every(([key, value]) => {
+        return JSON.stringify(currentValue[key]) === JSON.stringify(value);
+      });
+    }
+    return currentValue === incomingValue;
+  }
+
+  _buildConflictPayload({ incomingData, latestNote, noteId }) {
+    const conflictFields = Object.keys(incomingData).filter((fieldName) => {
+      return !this._isSameFieldValue(
+        fieldName,
+        latestNote?.[fieldName],
+        incomingData[fieldName]
+      );
+    });
+    return {
+      code: "NOTE_CONFLICT",
+      error: "Conflito de edição detectado",
+      noteId,
+      currentRevision:
+        latestNote?.revision === undefined || latestNote?.revision === null
+          ? null
+          : Number(latestNote.revision),
+      conflictFields,
+      serverNote: this._formatNoteResponse(latestNote || {}, [], {
+        includeBlocks: false,
+      }),
+    };
+  }
+
   async createNote(req, res, next) {
     try {
       let blocksPayload = req.body.blocks;
@@ -255,6 +308,10 @@ class NotesWriteController extends NotesBaseController {
         status: result.status,
         created_at: result.note_created_at,
         updated_at: result.note_updated_at,
+        revision:
+          result.note_revision === undefined || result.note_revision === null
+            ? 1
+            : Number(result.note_revision),
         user: {
           id: result.user_id,
           name: result.user_name,
@@ -288,6 +345,7 @@ class NotesWriteController extends NotesBaseController {
         properties,
         priority_id,
         due_date,
+        baseRevision,
       } = req.body;
 
       if (typeof properties === "string") {
@@ -309,6 +367,14 @@ class NotesWriteController extends NotesBaseController {
             .map((t) => t.trim())
             .filter(Boolean);
         }
+      }
+      const parsedBaseRevision = this._parseBaseRevision(baseRevision);
+      const occEnforced =
+        String(process.env.ENABLE_NOTES_OCC_REQUIRED || "false").toLowerCase() === "true";
+      if (occEnforced && parsedBaseRevision === null) {
+        return res.status(400).json({
+          error: "baseRevision é obrigatório para atualizar a nota",
+        });
       }
 
       // Validação de autenticação
@@ -621,11 +687,31 @@ class NotesWriteController extends NotesBaseController {
 
       let updatedNote = null;
       if (hadOtherUpdates) {
-        updatedNote = await this.notesRepository.updateNoteById(id, updateData);
+        updatedNote = await this.notesRepository.updateNoteById(
+          id,
+          updateData,
+          parsedBaseRevision
+        );
         if (!updatedNote) {
-          return res.status(400).json({
-            error: "Nenhuma atualização foi realizada",
+          const latestNote = await this.notesRepository.getNoteById(id);
+          if (!latestNote) {
+            return res.status(404).json({ error: "Nota não encontrada" });
+          }
+          console.info("[notes.update.conflict]", {
+            baseRevision: parsedBaseRevision,
+            noteId: id,
+            serverRevision: latestNote.revision ?? null,
+            userId,
           });
+          return res
+            .status(409)
+            .json(
+              this._buildConflictPayload({
+                incomingData: updateData,
+                latestNote,
+                noteId: id,
+              })
+            );
         }
       }
 

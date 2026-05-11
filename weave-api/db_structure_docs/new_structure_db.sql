@@ -604,7 +604,7 @@ CREATE TABLE public.note_blocks (
   updated_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT note_blocks_type_check CHECK (type IN (
     'paragraph', 'heading', 'quote', 'code', 'divider',
-    'image', 'list', 'todo', 'table', 'page'
+    'image', 'video', 'list', 'todo', 'table', 'page'
   )),
   CONSTRAINT note_blocks_properties_is_object_check
     CHECK (jsonb_typeof(properties) = 'object')

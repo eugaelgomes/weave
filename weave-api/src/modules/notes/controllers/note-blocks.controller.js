@@ -1,10 +1,22 @@
 const NotesBaseController = require("./base.controller");
-const { normalizeBlocksTree } = require("../block-normalizer");
+const { normalizeBlocksTree, flattenBlocksForInsert } = require("../block-normalizer");
+const { getConnection } = require("@/database/connection");
 
 /**
  * CRUD e reordenação de blocos (`note_blocks`).
  */
 class NoteBlocksController extends NotesBaseController {
+  _parsePositiveInt(rawValue, fieldName) {
+    if (rawValue === undefined || rawValue === null || rawValue === "") {
+      return null;
+    }
+    const parsed = Number(rawValue);
+    if (!Number.isInteger(parsed) || parsed < 1) {
+      throw new Error(`${fieldName} inválido`);
+    }
+    return parsed;
+  }
+
   /**
    * GET /api/notes/:noteId/blocks
    */
@@ -70,6 +82,27 @@ class NoteBlocksController extends NotesBaseController {
       if (!existing || String(existing.note_id) !== String(noteId)) {
         return res.status(404).json({ error: "Bloco não encontrado" });
       }
+      const expectedVersion = this._parsePositiveInt(
+        req.body?.expectedVersion ?? req.body?.expected_version,
+        "expectedVersion"
+      );
+      if (expectedVersion !== null && Number(existing.version) !== expectedVersion) {
+        console.info("[notes.blocks.patch.conflict]", {
+          blockId,
+          currentVersion: Number(existing.version),
+          expectedVersion,
+          noteId,
+          userId,
+        });
+        return res.status(409).json({
+          code: "BLOCK_CONFLICT",
+          error: "Conflito de edição no bloco",
+          blockId,
+          expectedVersion,
+          currentVersion: Number(existing.version),
+          serverBlock: existing,
+        });
+      }
 
       const updated = await this.notesRepository.updateNoteBlock(blockId, {
         type: req.body?.type,
@@ -77,8 +110,26 @@ class NoteBlocksController extends NotesBaseController {
         text: req.body?.text,
         done: req.body?.done,
         properties: req.body?.properties,
-      });
+      }, expectedVersion);
       if (!updated) {
+        const latest = await this.notesRepository.findNoteBlockById(blockId);
+        if (latest && String(latest.note_id) === String(noteId)) {
+          console.info("[notes.blocks.patch.conflict]", {
+            blockId,
+            currentVersion: Number(latest.version),
+            expectedVersion,
+            noteId,
+            userId,
+          });
+          return res.status(409).json({
+            code: "BLOCK_CONFLICT",
+            error: "Conflito de edição no bloco",
+            blockId,
+            expectedVersion,
+            currentVersion: Number(latest.version),
+            serverBlock: latest,
+          });
+        }
         return res.status(404).json({ error: "Bloco não encontrado" });
       }
       if (String(process.env.ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true").toLowerCase() !== "false") {
@@ -171,6 +222,13 @@ class NoteBlocksController extends NotesBaseController {
       if (!userId) return;
 
       await this._validateNoteAccess(noteId, userId);
+      const baseRevision = this._parsePositiveInt(
+        req.body?.baseRevision ?? req.body?.base_revision,
+        "baseRevision"
+      );
+      if (baseRevision === null) {
+        return res.status(400).json({ error: "baseRevision é obrigatório" });
+      }
 
       const tree = req.body?.blocks;
       if (!Array.isArray(tree)) {
@@ -178,22 +236,86 @@ class NoteBlocksController extends NotesBaseController {
       }
       normalizeBlocksTree(tree);
 
-      await this.notesRepository.deleteAllNoteBlocks(noteId);
-
-      if (tree.length > 0) {
-        await this.notesRepository.bulkInsertNoteBlocks(
-          noteId,
-          userId,
-          tree
+      let nextRevision = null;
+      const client = await getConnection();
+      try {
+        await client.query("BEGIN");
+        const noteResult = await client.query(
+          `
+            UPDATE notes
+            SET revision = revision + 1, updated_at = NOW()
+            WHERE id = $1::uuid AND revision = $2
+            RETURNING revision
+          `,
+          [noteId, baseRevision]
         );
-      } else {
-        await this.notesRepository.insertDefaultNoteBlock(noteId, userId);
+        if ((noteResult.rowCount || 0) === 0) {
+          await client.query("ROLLBACK");
+          const latestNote = await this.notesRepository.getNoteById(noteId);
+          console.info("[notes.blocks.sync.conflict]", {
+            baseRevision,
+            noteId,
+            serverRevision: latestNote?.revision ?? null,
+            userId,
+          });
+          return res.status(409).json({
+            code: "NOTE_CONFLICT",
+            error: "Conflito de edição detectado",
+            noteId,
+            currentRevision:
+              latestNote?.revision === undefined || latestNote?.revision === null
+                ? null
+                : Number(latestNote.revision),
+            conflictFields: ["blocks"],
+          });
+        }
+        nextRevision = Number(noteResult.rows[0]?.revision || baseRevision);
+
+        await client.query(`DELETE FROM note_blocks WHERE note_id = $1::uuid`, [noteId]);
+        if (tree.length > 0) {
+          const flat = flattenBlocksForInsert(tree, noteId, userId, null, 0);
+          for (const row of flat) {
+            await client.query(
+              `
+                INSERT INTO note_blocks (
+                  id, note_id, parent_id, type, properties, position, version, created_by
+                )
+                VALUES ($1::uuid, $2::uuid, $3::uuid, $4, $5::jsonb, $6, 1, $7::uuid)
+              `,
+              [
+                row.id,
+                row.note_id,
+                row.parent_id,
+                row.type,
+                JSON.stringify(row.properties || {}),
+                row.position,
+                row.created_by,
+              ]
+            );
+          }
+        } else {
+          await client.query(
+            `
+              INSERT INTO note_blocks (
+                note_id, parent_id, type, properties, position, version, created_by
+              )
+              VALUES ($1, NULL, 'paragraph', '{}'::jsonb, 0, 1, $2)
+            `,
+            [noteId, userId]
+          );
+        }
+        await client.query("COMMIT");
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
       }
 
       const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
         noteId
       );
-      return res.status(200).json({ blocks });
+      return res.status(200).json({ blocks, revision: nextRevision });
     } catch (error) {
       this._handleError(error, res, next);
     }

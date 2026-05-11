@@ -10,6 +10,7 @@ const ALLOWED_BLOCK_TYPES = Object.freeze([
   "code",
   "divider",
   "image",
+  "video",
   "list",
   "todo",
   "table",
@@ -195,6 +196,18 @@ const validateAttrsForBlockType = (blockType, attrs, path) => {
       }
       break;
     }
+    case "video": {
+      if (typeof attrs.src !== "string" || !attrs.src.trim()) {
+        throw new Error(`${path}: video exige attrs.src`);
+      }
+      if (!isStorageImageSource(attrs.src)) {
+        throw new Error(`${path}: video attrs.src deve apontar para arquivo no storage`);
+      }
+      if (attrs.title !== undefined && typeof attrs.title !== "string") {
+        throw new Error(`${path}: video attrs.title deve ser string`);
+      }
+      break;
+    }
     case "divider":
     case "page":
     default:
@@ -249,6 +262,9 @@ const normalizeBlockProperties = (blockType, rawProperties, path) => {
     validateAttrsForBlockType(blockType, props.attrs || {}, `${path}.attrs`);
   }
   if (blockType === "image") {
+    validateAttrsForBlockType(blockType, props.attrs || {}, `${path}.attrs`);
+  }
+  if (blockType === "video") {
     validateAttrsForBlockType(blockType, props.attrs || {}, `${path}.attrs`);
   }
 

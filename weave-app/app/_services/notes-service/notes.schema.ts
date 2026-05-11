@@ -39,7 +39,7 @@ export const NotePropertiesSchema = z.object({
   relations: z.array(z.string()).optional(),
   priority: z.string().optional(),
   due_date: z.string().optional(),
-}).optional();
+});
 
 // --- Tags & Priorities ---
 export const TagSchema = z.object({
@@ -113,6 +113,7 @@ export const NoteSchema = z.object({
   status: NoteStatusSchema.nullable().optional(),
   created_at: z.string(),
   updated_at: z.string(),
+  revision: z.number().nullable().optional(),
   lastModified: z.string().nullable().optional(),
   preview: z.string().nullable().optional(),
   done: z.boolean().nullable().optional(),
@@ -215,6 +216,7 @@ export const UpdateNoteDataSchema = z.object({
   project_id: z.string().nullable().optional(),
   priority_id: z.string().nullable().optional(),
   due_date: z.string().nullable().optional(),
+  baseRevision: z.number().int().positive().optional(),
   properties: NotePropertiesSchema.optional(), // Since it's partial in TS, making it optional is enough as properties are optional inside too
   icon: z.any().optional(), // File is hard to validate cleanly without custom logic
   banner: z.any().optional(),

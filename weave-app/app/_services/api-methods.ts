@@ -66,6 +66,7 @@ export const API_ENDPOINTS = {
   NOTES_BLOCK_BY_ID: (noteId: string, blockId: string) =>
     `/notes/${noteId}/blocks/${blockId}`,
   NOTES_BLOCKS_REORDER: (noteId: string) => `/notes/${noteId}/blocks/reorder`,
+  NOTES_DOCUMENT_IMAGES: (noteId: string) => `/notes/${noteId}/document-images`,
 
   // Projects
   PROJECTS: "/projects",

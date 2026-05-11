@@ -71,6 +71,10 @@ class NotesReadController extends NotesBaseController {
         priority_color: note.priority_color ?? null,
         created_at: note.created_at,
         updated_at: note.updated_at,
+        revision:
+          note.revision === undefined || note.revision === null
+            ? null
+            : Number(note.revision),
         deleted: note.deleted,
         associated_project: note.project_id
           ? {
@@ -141,6 +145,10 @@ class NotesReadController extends NotesBaseController {
         priority_color: note.priority_color ?? null,
         created_at: note.created_at,
         updated_at: note.updated_at,
+        revision:
+          note.revision === undefined || note.revision === null
+            ? null
+            : Number(note.revision),
         deleted: note.deleted,
         associated_project: note.project_id
           ? {

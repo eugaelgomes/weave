@@ -47,6 +47,7 @@ export type {
 
 const NoteBlocksListSchema = z.object({
   blocks: z.array(BlockSchema),
+  revision: z.number().nullable().optional(),
 });
 
 // =================== NOTES API ===================
@@ -136,6 +137,8 @@ export async function updateNote(noteId: string, noteData: UpdateNoteData): Prom
     if (noteData.priority_id !== undefined)
       formData.append("priority_id", noteData.priority_id ?? "");
     if (noteData.due_date !== undefined) formData.append("due_date", noteData.due_date ?? "");
+    if (noteData.baseRevision !== undefined)
+      formData.append("baseRevision", String(noteData.baseRevision));
     if (noteData.properties !== undefined)
       formData.append("properties", JSON.stringify(noteData.properties));
 
@@ -159,6 +162,7 @@ export async function updateNote(noteId: string, noteData: UpdateNoteData): Prom
     project_id: noteData.project_id,
     priority_id: noteData.priority_id,
     due_date: noteData.due_date,
+    baseRevision: noteData.baseRevision,
     properties: noteData.properties,
   });
 
@@ -178,6 +182,39 @@ export async function deleteNotes(noteIds: string[]): Promise<boolean> {
   });
   await handleResponse<void>(response);
   return true;
+}
+
+const UploadedDocumentImagesResponseSchema = z.object({
+  files: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      path: z.string(),
+      size: z.number(),
+      type: z.string(),
+    })
+  ),
+});
+
+export type UploadedDocumentImage = z.infer<typeof UploadedDocumentImagesResponseSchema>["files"][number];
+
+/**
+ * POST /notes/:noteId/document-images — uploads body media (images or short videos for Tiptap) to object storage.
+ */
+export async function uploadNoteDocumentImages(
+  noteId: string,
+  files: File[]
+): Promise<{ files: UploadedDocumentImage[] }> {
+  if (files.length === 0) {
+    throw new Error("Nenhum ficheiro selecionado");
+  }
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append("documentImages", file);
+  }
+  const response = await apiClient.post(API_ENDPOINTS.NOTES_DOCUMENT_IMAGES(noteId), formData);
+  const raw = await handleResponse<unknown>(response);
+  return UploadedDocumentImagesResponseSchema.parse(raw);
 }
 
 // --- Note blocks (note_blocks / CRUD) ---
@@ -206,7 +243,10 @@ export async function createNoteBlock(noteId: string, data: CreateBlockData): Pr
 export async function updateNoteBlock(
   noteId: string,
   blockId: string,
-  patch: Partial<Block> & { properties?: Record<string, unknown> }
+  patch: Partial<Block> & {
+    properties?: Record<string, unknown>;
+    expectedVersion?: number;
+  }
 ): Promise<Block> {
   const body: Record<string, unknown> = {};
   if (patch.type !== undefined) body.type = patch.type;
@@ -214,6 +254,7 @@ export async function updateNoteBlock(
   if (patch.position !== undefined) body.position = patch.position;
   if (patch.done !== undefined) body.done = patch.done;
   if (patch.properties !== undefined) body.properties = patch.properties;
+  if (patch.expectedVersion !== undefined) body.expectedVersion = patch.expectedVersion;
 
   const response = await apiClient.patch(
     API_ENDPOINTS.NOTES_BLOCK_BY_ID(noteId, blockId),
@@ -243,10 +284,21 @@ export async function reorderNoteBlocks(
   return true;
 }
 
-export async function putNoteBlocksSync(noteId: string, blocks: unknown[]): Promise<Block[]> {
-  const response = await apiClient.put(API_ENDPOINTS.NOTES_BLOCKS(noteId), { blocks });
+export async function putNoteBlocksSync(
+  noteId: string,
+  blocks: unknown[],
+  baseRevision?: number
+): Promise<{ blocks: Block[]; revision?: number | null }> {
+  const response = await apiClient.put(API_ENDPOINTS.NOTES_BLOCKS(noteId), {
+    blocks,
+    baseRevision,
+  });
   const raw = await handleResponse<unknown>(response);
-  return NoteBlocksListSchema.parse(raw).blocks;
+  const parsed = NoteBlocksListSchema.parse(raw);
+  return {
+    blocks: parsed.blocks,
+    revision: parsed.revision,
+  };
 }
 
 //

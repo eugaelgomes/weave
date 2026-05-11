@@ -296,7 +296,7 @@ class NoteBlocksRepository extends BaseRepository {
    * @param {{ type?: string, properties?: Record<string, unknown>, position?: number, text?: string, done?: boolean }} patch
    * @returns {Promise<Record<string, unknown> | null>}
    */
-  async update(blockId, patch) {
+  async update(blockId, patch, expectedVersion = null) {
     const existing = await this.findById(blockId);
     if (!existing) return null;
 
@@ -348,11 +348,18 @@ class NoteBlocksRepository extends BaseRepository {
     sets.push(`version = version + 1`);
     sets.push(`updated_at = NOW()`);
     values.push(blockId);
+    if (expectedVersion !== null && expectedVersion !== undefined) {
+      values.push(Number(expectedVersion));
+    }
+    const whereClause =
+      expectedVersion !== null && expectedVersion !== undefined
+        ? `id = $${i}::uuid AND deleted = false AND version = $${i + 1}`
+        : `id = $${i}::uuid AND deleted = false`;
 
     const query = `
       UPDATE note_blocks
       SET ${sets.join(", ")}
-      WHERE id = $${i}::uuid AND deleted = false
+      WHERE ${whereClause}
       RETURNING
         id::text,
         note_id::text,

@@ -233,6 +233,17 @@
 }
 
 /* Images */
+.tiptap-editor .tiptap-video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
+.dark .tiptap-editor .tiptap-video {
+  outline: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .tiptap-editor .tiptap-image {
   max-width: 100%;
   height: auto;
@@ -358,76 +369,6 @@
 
 .dark .tiptap-drag-handle:active {
   color: #a3a3a3;
-}
-
-/* ===== Slash Toolbar (horizontal, matches BubbleMenu) ===== */
-.slash-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  border-radius: 8px;
-  border: 1px solid #e5e5e5;
-  background: #fff;
-  padding: 4px 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.dark .slash-toolbar {
-  border-color: #333;
-  background: #262626;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-}
-
-.slash-toolbar__btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: #737373;
-  cursor: pointer;
-  transition: background-color 80ms ease, color 80ms ease;
-  flex-shrink: 0;
-}
-
-.slash-toolbar__btn:hover {
-  background-color: #f0f0f0;
-  color: #262626;
-}
-
-.slash-toolbar__btn--active {
-  background-color: #e5e5e5;
-  color: #171717;
-}
-
-.dark .slash-toolbar__btn {
-  color: #a3a3a3;
-}
-
-.dark .slash-toolbar__btn:hover {
-  background-color: #333;
-  color: #e5e5e5;
-}
-
-.dark .slash-toolbar__btn--active {
-  background-color: #404040;
-  color: #fff;
-}
-
-.slash-toolbar__divider {
-  display: block;
-  width: 1px;
-  height: 20px;
-  background-color: #e0e0e0;
-  margin: 0 2px;
-  flex-shrink: 0;
-}
-
-.dark .slash-toolbar__divider {
-  background-color: #404040;
 }
 
 /* Tippy reset — remove default arrow / bg */

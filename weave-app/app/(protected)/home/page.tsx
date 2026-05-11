@@ -5,7 +5,7 @@ import { useNotes } from "@/app/_contexts/notes-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { HomeHeader } from "@/app/(protected)/_components/ui/headers/home-header";
 import { CalendarPreview } from "@/app/(protected)/calendar/_components/calendar-component";
-import HomeDashboard from "./_components/home-dashboard";
+import HomeDashboard from "./_components/weave-reasonings";
 import NotesCarousel from "./_components/notes-carousel";
 import ProjectsCarousel from "./_components/project-carousel";
 

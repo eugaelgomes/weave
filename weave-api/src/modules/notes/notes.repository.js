@@ -28,6 +28,8 @@ module.exports = {
   createCompleteNote: (...args) =>
     createNotesRepository.createCompleteNote(...args),
   updateNoteById: (...args) => mutateNotesRepository.updateNoteById(...args),
+  bumpNoteRevisionById: (...args) =>
+    mutateNotesRepository.bumpRevisionById(...args),
   deleteNoteById: (...args) => mutateNotesRepository.deleteNoteById(...args),
   addCollaborator: (...args) =>
     noteCollaboratorsRepository.addCollaborator(...args),

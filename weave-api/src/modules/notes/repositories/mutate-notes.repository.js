@@ -5,7 +5,7 @@ const { enqueueNoteEmbeddingJob } = require("../../../services/queue/queue-contr
  * Atualização e exclusão lógica de notas.
  */
 class MutateNotesRepository extends BaseRepository {
-  async updateNoteById(noteId, updateData) {
+  async updateNoteById(noteId, updateData, baseRevision = null) {
     const allowedFields = [
       "title",
       "description",
@@ -44,13 +44,22 @@ class MutateNotesRepository extends BaseRepository {
     }
 
     updates.push("updated_at = NOW()");
+    updates.push("revision = revision + 1");
 
     values.push(noteId);
+    if (baseRevision !== null && baseRevision !== undefined) {
+      values.push(Number(baseRevision));
+    }
+
+    const whereClause =
+      baseRevision !== null && baseRevision !== undefined
+        ? `id = $${paramIndex} AND revision = $${paramIndex + 1}`
+        : `id = $${paramIndex}`;
 
     const query = `
       UPDATE notes
       SET ${updates.join(", ")}
-      WHERE id = $${paramIndex}
+      WHERE ${whereClause}
       RETURNING *;
     `;
 
@@ -69,6 +78,25 @@ class MutateNotesRepository extends BaseRepository {
     }
 
     return updatedNote;
+  }
+
+  async bumpRevisionById(noteId, baseRevision = null) {
+    const values = [noteId];
+    let revisionFilter = "";
+    if (baseRevision !== null && baseRevision !== undefined) {
+      values.push(Number(baseRevision));
+      revisionFilter = `AND revision = $2`;
+    }
+
+    const query = `
+      UPDATE notes
+      SET revision = revision + 1, updated_at = NOW()
+      WHERE id = $1
+      ${revisionFilter}
+      RETURNING id::text, revision, updated_at
+    `;
+    const results = await this.executeQuery(query, values);
+    return results[0] || null;
   }
 
   async deleteNoteById(noteIds) {

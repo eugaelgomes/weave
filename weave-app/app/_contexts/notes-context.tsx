@@ -107,7 +107,7 @@ export interface NotesContextType {
   updateBlock: (
     noteId: string,
     blockId: string,
-    blockData: Partial<Block>
+    blockData: Partial<Block> & { expectedVersion?: number }
   ) => Promise<Block | null>;
   deleteBlock: (noteId: string, blockId: string) => Promise<boolean>;
   reorderBlocks: (
@@ -115,7 +115,11 @@ export interface NotesContextType {
     blockPositions: Array<{ id: string; position: number }>,
     parentId?: string | null
   ) => Promise<boolean>;
-  putNoteBlocksSync: (noteId: string, blocks: unknown[]) => Promise<Block[]>;
+  putNoteBlocksSync: (
+    noteId: string,
+    blocks: unknown[],
+    baseRevision?: number
+  ) => Promise<{ blocks: Block[]; revision?: number | null }>;
 
   // Funções de colaboração
   shareNote: (noteId: string, collaboratorData: ShareNoteData) => Promise<unknown>;
@@ -582,7 +586,11 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateBlock = useCallback(
-    async (noteId: string, blockId: string, blockData: Partial<Block>): Promise<Block | null> => {
+    async (
+      noteId: string,
+      blockId: string,
+      blockData: Partial<Block> & { expectedVersion?: number }
+    ): Promise<Block | null> => {
       if (!user?.id) return null;
 
       try {
@@ -639,12 +647,16 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
   );
 
   const putNoteBlocksSyncCtx = useCallback(
-    async (noteId: string, blocks: unknown[]): Promise<Block[]> => {
-      if (!user?.id) return [];
+    async (
+      noteId: string,
+      blocks: unknown[],
+      baseRevision?: number
+    ): Promise<{ blocks: Block[]; revision?: number | null }> => {
+      if (!user?.id) return { blocks: [], revision: null };
       try {
-        const saved = await putNoteBlocksSync(noteId, blocks);
+        const saved = await putNoteBlocksSync(noteId, blocks, baseRevision);
         // refresh local tree to keep UI consistent
-        applyLocalBlocksUpdate(noteId, saved as (Block & { children?: Block[] })[]);
+        applyLocalBlocksUpdate(noteId, saved.blocks as (Block & { children?: Block[] })[]);
         return saved;
       } catch (err: unknown) {
         console.error("Erro ao sincronizar blocos:", err);

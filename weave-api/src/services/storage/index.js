@@ -264,6 +264,10 @@ class SpacesService {
       "application/gzip": ".gz",
       "application/json": ".json",
       "application/xml": ".xml",
+      "video/mp4": ".mp4",
+      "video/webm": ".webm",
+      "video/quicktime": ".mov",
+      "video/ogg": ".ogv",
     };
 
     return mimeToExt[mimeType] || ".bin";

@@ -3,12 +3,14 @@ import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import Image from "@tiptap/extension-image";
+import { NoteTiptapVideo } from "./note-tiptap-video";
 import Link from "@tiptap/extension-link";
 import Highlight from "@tiptap/extension-highlight";
 import Underline from "@tiptap/extension-underline";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
 import { SlashCommands } from "./note-tiptap-slash-commands";
+import { NoteEditorUiBridge } from "./note-tiptap-editor-bridge";
 
 const lowlight = createLowlight(common);
 
@@ -51,6 +53,7 @@ export function createTiptapExtensions(placeholder = "Comece a escrever...") {
         class: "tiptap-image",
       },
     }),
+    NoteTiptapVideo,
     Link.configure({
       openOnClick: false,
       autolink: true,
@@ -70,6 +73,7 @@ export function createTiptapExtensions(placeholder = "Comece a escrever...") {
         class: "tiptap-code-block",
       },
     }),
+    NoteEditorUiBridge,
     SlashCommands,
   ];
 }

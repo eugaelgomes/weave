@@ -94,6 +94,12 @@ function getImageAttrs(block: Block): { src: string; alt: string } {
   return { src, alt };
 }
 
+function getVideoAttrs(block: Block): { src: string } {
+  const attrs = getAttrsFromBlock(block);
+  const src = (typeof attrs.src === "string" ? attrs.src : getTextFromBlock(block)) || "";
+  return { src };
+}
+
 function isOrderedList(block: Block): boolean {
   const attrs = getAttrsFromBlock(block);
   return attrs.ordered === true;
@@ -258,6 +264,10 @@ function blockToNode(block: Block): JSONContent | null {
       const { src, alt } = getImageAttrs(block);
       return { type: "image", attrs: { src, alt } };
     }
+    case "video": {
+      const { src } = getVideoAttrs(block);
+      return { type: "video", attrs: { src } };
+    }
     default:
       if (!text) return null;
       return { type: "paragraph", content: buildInlineContent(text, marks) };
@@ -397,6 +407,17 @@ function nodeToBlock(node: JSONContent, position: number): SyncBlockData[] {
           text: src,
           position,
           properties: createBlockProperties(src, [], { src, alt }),
+        },
+      ];
+    }
+    case "video": {
+      const src = typeof node.attrs?.src === "string" ? node.attrs.src : "";
+      return [
+        {
+          type: "video",
+          text: src,
+          position,
+          properties: createBlockProperties(src, [], { src }),
         },
       ];
     }

@@ -76,6 +76,7 @@ import getStorageUrl from "@/app/_utils/get-storage-url";
 import { NoteBlockEditor } from "@/app/(protected)/notes/[id]/_components/note-block-editor";
 import { NoteTiptapEditor } from "@/app/(protected)/notes/[id]/_components/note-tiptap-editor";
 import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema";
+import { ApiError } from "@/app/_services/api-methods";
 
 // =================== BLOCO SORTABLE (Markdown / tipos) ===================
 interface SortableBlockProps {
@@ -91,6 +92,13 @@ interface SortableBlockProps {
   onFocused?: () => void;
   canEdit?: boolean;
 }
+
+type NoteConflictState = {
+  noteId: string;
+  currentRevision: number | null;
+  conflictFields: string[];
+  serverNote?: Partial<Note>;
+};
 
 const SortableBlockComponent: React.FC<SortableBlockProps> = ({
   block,
@@ -215,6 +223,8 @@ const NoteDetail = () => {
   const [blocks, setBlocks] = useState<(Block & { children?: Block[] })[]>([]);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingDescription, setEditingDescription] = useState("");
+  const editingTitleRef = React.useRef("");
+  const editingDescriptionRef = React.useRef("");
   const [isSaving, setIsSaving] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -231,12 +241,32 @@ const NoteDetail = () => {
   const textAutosaveTimersRef = React.useRef<Map<string, number>>(new Map());
   const textAutosaveQueuedRef = React.useRef<Map<string, string>>(new Map());
   const textAutosaveInFlightRef = React.useRef<Set<string>>(new Set());
-  const textAutosaveDelayMs = 3500;
+  const textAutosaveDelayMs = 1200;
+  const metadataAutosaveDelayMs = 800;
   const blockAutosaveV2Enabled =
     String(process.env.NEXT_PUBLIC_ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true").toLowerCase() !==
     "false";
   const useTiptapEditor =
     String(process.env.NEXT_PUBLIC_USE_TIPTAP_EDITOR || "true").toLowerCase() !== "false";
+  const noteRevisionRef = React.useRef<number>(1);
+  /** Parses API revision (number or numeric string); `null` if missing or invalid. */
+  const parseNoteRevision = React.useCallback((revision: unknown): number | null => {
+    if (revision === undefined || revision === null || revision === "") return null;
+    const n = Number(revision);
+    if (Number.isFinite(n) && n >= 1) return Math.floor(n);
+    return null;
+  }, []);
+  /** Syncs ref from API `revision` (number or numeric string). */
+  const applyServerRevisionToRef = React.useCallback(
+    (revision: unknown) => {
+      const parsed = parseNoteRevision(revision);
+      if (parsed !== null) noteRevisionRef.current = parsed;
+    },
+    [parseNoteRevision]
+  );
+  const noteSaveQueueRef = React.useRef<Promise<unknown>>(Promise.resolve());
+  const hasPendingBlockWritesRef = React.useRef(false);
+  const [noteConflict, setNoteConflict] = useState<NoteConflictState | null>(null);
 
   // Estados para modais e funcionalidades
   const [showShareModal, setShowShareModal] = useState(false);
@@ -262,6 +292,14 @@ const NoteDetail = () => {
   const [taskPriorities, setTaskPriorities] = useState<TaskPriority[]>([]);
   const [projectStages, setProjectStages] = useState<ProjectStage[]>([]);
 
+  useEffect(() => {
+    editingTitleRef.current = editingTitle;
+  }, [editingTitle]);
+
+  useEffect(() => {
+    editingDescriptionRef.current = editingDescription;
+  }, [editingDescription]);
+
   /** Itens visíveis em colapso para tags, collabs, relações e URLs (toggle Ver mais / Ver menos) */
   const META_LIST_PREVIEW_LIMIT = 2;
 
@@ -270,22 +308,71 @@ const NoteDetail = () => {
   const bannerInputRef = React.useRef<HTMLInputElement>(null);
   const filesInputRef = React.useRef<HTMLInputElement>(null);
 
+  const isConflictError = (error: unknown): error is ApiError =>
+    error instanceof ApiError && error.status === 409;
+
+  const applyServerNote = React.useCallback(
+    (serverNote: Note, options?: { replaceBlocks?: boolean }) => {
+      const shouldReplaceBlocks =
+        options?.replaceBlocks === true && hasPendingBlockWritesRef.current === false;
+      setNote((prev) => (prev ? { ...prev, ...serverNote } : serverNote));
+      applyServerRevisionToRef(serverNote.revision);
+      if (shouldReplaceBlocks && Array.isArray(serverNote.blocks)) {
+        setBlocks(serverNote.blocks as (Block & { children?: Block[] })[]);
+      }
+    },
+    [applyServerRevisionToRef]
+  );
+
+  const enqueueNoteMutation = React.useCallback(
+    async <T,>(task: () => Promise<T>): Promise<T> => {
+      const run = noteSaveQueueRef.current.then(task, task);
+      noteSaveQueueRef.current = run.then(
+        () => undefined,
+        () => undefined
+      );
+      return run;
+    },
+    []
+  );
+
   // Helper: salva no backend e retorna a tarefa atualizada (usado para uploads de arquivo)
   const saveAndApply = async (data: UpdateNoteData): Promise<Note | null> => {
     if (!note) return null;
-    setIsSaving(true);
-    try {
-      const updated = await updateNote(note.id, data);
-      if (updated) {
-        setNote((prev) => (prev ? { ...prev, ...updated } : updated));
+    return enqueueNoteMutation(async () => {
+      setIsSaving(true);
+      try {
+        const updated = await updateNote(note.id, {
+          ...data,
+          baseRevision: noteRevisionRef.current,
+        });
+        if (updated) {
+          applyServerNote(updated, { replaceBlocks: false });
+          setNoteConflict(null);
+        }
+        return updated;
+      } catch (err) {
+        if (isConflictError(err)) {
+          const data =
+            (err.data as {
+              currentRevision?: number | null;
+              conflictFields?: string[];
+              serverNote?: Partial<Note>;
+            }) || {};
+          applyServerRevisionToRef(data.currentRevision);
+          setNoteConflict({
+            noteId: note.id,
+            currentRevision: parseNoteRevision(data.currentRevision),
+            conflictFields: Array.isArray(data.conflictFields) ? data.conflictFields : [],
+            serverNote: data.serverNote,
+          });
+        }
+        console.error("Erro ao atualizar tarefa:", err);
+        return null;
+      } finally {
+        setIsSaving(false);
       }
-      return updated;
-    } catch (err) {
-      console.error("Erro ao atualizar tarefa:", err);
-      return null;
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   const handleExportNote = async () => {
@@ -321,10 +408,7 @@ const NoteDetail = () => {
     try {
       const fresh = await getNoteById(id);
       if (fresh) {
-        setNote((prev) => (prev ? { ...prev, ...fresh } : fresh));
-        if (Array.isArray(fresh.blocks)) {
-          setBlocks(fresh.blocks as (Block & { children?: Block[] })[]);
-        }
+        applyServerNote(fresh, { replaceBlocks: true });
       }
     } catch (e) {
       console.error("Erro ao recarregar a tarefa:", e);
@@ -590,8 +674,12 @@ const NoteDetail = () => {
           const loadedNote = await getNoteById(id);
           if (loadedNote) {
             setNote(loadedNote);
+            applyServerRevisionToRef(loadedNote.revision);
+            setNoteConflict(null);
             setEditingTitle(loadedNote.title);
             setEditingDescription(loadedNote.description || "");
+            editingTitleRef.current = loadedNote.title;
+            editingDescriptionRef.current = loadedNote.description || "";
             // Carregar blocos da tarefa
             if (loadedNote.blocks) {
               setBlocks(loadedNote.blocks as (Block & { children?: Block[] })[]);
@@ -603,7 +691,7 @@ const NoteDetail = () => {
       };
       loadNote();
     }
-  }, [id, getNoteById]);
+  }, [applyServerRevisionToRef, id, getNoteById]);
 
   useEffect(() => {
     let cancelled = false;
@@ -707,20 +795,51 @@ const NoteDetail = () => {
       metadataSaveInFlightRef.current = true;
       setIsSaving(true);
       try {
-        const updatedNote = await updateNote(note.id, payload);
+        const updatedNote = await enqueueNoteMutation(async () =>
+          updateNote(note.id, {
+            ...payload,
+            baseRevision: noteRevisionRef.current,
+          })
+        );
         if (updatedNote) {
+          applyServerNote(updatedNote, { replaceBlocks: false });
+          setNoteConflict(null);
+          const latestPayload = {
+            description: editingDescriptionRef.current,
+            title: editingTitleRef.current,
+          };
           setNote((prev) =>
             prev
               ? {
                   ...prev,
-                  ...updatedNote,
-                  description: payload.description,
-                  title: payload.title,
+                  description: latestPayload.description,
+                  title: latestPayload.title,
                 }
-              : updatedNote
+              : prev
           );
+          if (
+            latestPayload.title !== payload.title ||
+            latestPayload.description !== payload.description
+          ) {
+            pendingMetadataRef.current = latestPayload;
+          }
         }
       } catch (error) {
+        if (isConflictError(error)) {
+          const data =
+            (error.data as {
+              currentRevision?: number | null;
+              conflictFields?: string[];
+              serverNote?: Partial<Note>;
+            }) || {};
+          applyServerRevisionToRef(data.currentRevision);
+          setNoteConflict({
+            noteId: note.id,
+            currentRevision: parseNoteRevision(data.currentRevision),
+            conflictFields: Array.isArray(data.conflictFields) ? data.conflictFields : [],
+            serverNote: data.serverNote,
+          });
+        }
         console.error("Erro ao salvar:", error);
       } finally {
         metadataSaveInFlightRef.current = false;
@@ -733,7 +852,15 @@ const NoteDetail = () => {
         setIsSaving(false);
       }
     },
-    [note, updateNote]
+    [
+      applyServerNote,
+      applyServerRevisionToRef,
+      enqueueNoteMutation,
+      isConflictError,
+      note,
+      parseNoteRevision,
+      updateNote,
+    ]
   );
 
   // Auto-salvar título/descrição com debounce e fila para evitar travamentos
@@ -753,14 +880,14 @@ const NoteDetail = () => {
         description: editingDescription,
         title: editingTitle,
       });
-    }, 1500);
+    }, metadataAutosaveDelayMs);
 
     return () => {
       if (metadataDebounceRef.current) {
         clearTimeout(metadataDebounceRef.current);
       }
     };
-  }, [editingDescription, editingTitle, flushMetadataSave, note]);
+  }, [editingDescription, editingTitle, flushMetadataSave, metadataAutosaveDelayMs, note]);
 
   // =================== FUNÇÕES PARA DRAG AND DROP ===================
   const handleDragStart = (event: DragStartEvent) => {
@@ -829,6 +956,13 @@ const NoteDetail = () => {
     });
   }, []);
 
+  const syncPendingBlockWritesFlag = React.useCallback(() => {
+    hasPendingBlockWritesRef.current =
+      textAutosaveTimersRef.current.size > 0 ||
+      textAutosaveQueuedRef.current.size > 0 ||
+      textAutosaveInFlightRef.current.size > 0;
+  }, []);
+
   const flushBlockTextSave = React.useCallback(
     async (blockId: string) => {
       if (!note) return;
@@ -838,23 +972,81 @@ const NoteDetail = () => {
 
       textAutosaveQueuedRef.current.delete(blockId);
       textAutosaveInFlightRef.current.add(blockId);
+      syncPendingBlockWritesFlag();
       try {
-        await updateBlockService(note.id, blockId, { text: queuedText });
+        const blockVersion = (() => {
+          const queue = [...blocks];
+          while (queue.length > 0) {
+            const current = queue.shift();
+            if (!current) continue;
+            if (current.id === blockId) return current.version;
+            if (Array.isArray(current.children) && current.children.length > 0) {
+              queue.push(...(current.children as (Block & { children?: Block[] })[]));
+            }
+          }
+          return undefined;
+        })();
+        const updatedBlock = await updateBlockService(note.id, blockId, {
+          text: queuedText,
+          expectedVersion: typeof blockVersion === "number" ? blockVersion : undefined,
+        });
+        if (updatedBlock) {
+          const queuedAfterSave = textAutosaveQueuedRef.current.get(blockId);
+          if (
+            typeof queuedAfterSave === "string" &&
+            queuedAfterSave !== (updatedBlock.text ?? "")
+          ) {
+            const mergedProperties =
+              updatedBlock.properties && typeof updatedBlock.properties === "object"
+                ? {
+                    ...updatedBlock.properties,
+                    text: queuedAfterSave,
+                  }
+                : {
+                    text: queuedAfterSave,
+                  };
+            updateLocalBlock(blockId, {
+              ...updatedBlock,
+              properties: mergedProperties,
+              text: queuedAfterSave,
+            });
+          } else {
+            updateLocalBlock(blockId, updatedBlock);
+          }
+        }
       } catch (error) {
+        if (isConflictError(error)) {
+          const data =
+            (error.data as {
+              currentVersion?: number | null;
+              expectedVersion?: number | null;
+            }) || {};
+          setNoteConflict((prev) => ({
+            noteId: note.id,
+            currentRevision: prev?.currentRevision ?? noteRevisionRef.current,
+            conflictFields: ["blocks"],
+            serverNote: prev?.serverNote,
+          }));
+          if (typeof data.currentVersion === "number") {
+            await refreshNoteDetail();
+          }
+        }
         console.error("Erro ao salvar texto do bloco:", error);
       } finally {
         textAutosaveInFlightRef.current.delete(blockId);
+        syncPendingBlockWritesFlag();
         if (textAutosaveQueuedRef.current.has(blockId)) {
           void flushBlockTextSave(blockId);
         }
       }
     },
-    [note, updateBlockService]
+    [blocks, isConflictError, note, refreshNoteDetail, updateBlockService, updateLocalBlock]
   );
 
   const scheduleBlockTextSave = React.useCallback(
     (blockId: string, text: string) => {
       textAutosaveQueuedRef.current.set(blockId, text);
+      syncPendingBlockWritesFlag();
       const existingTimer = textAutosaveTimersRef.current.get(blockId);
       if (existingTimer) {
         window.clearTimeout(existingTimer);
@@ -874,10 +1066,12 @@ const NoteDetail = () => {
       window.clearTimeout(timer);
       textAutosaveTimersRef.current.delete(blockId);
     }
+    syncPendingBlockWritesFlag();
     await Promise.all(
       Array.from(textAutosaveQueuedRef.current.keys()).map((blockId) => flushBlockTextSave(blockId))
     );
-  }, [flushBlockTextSave]);
+    syncPendingBlockWritesFlag();
+  }, [flushBlockTextSave, syncPendingBlockWritesFlag]);
 
   const handleUpdateBlock = async (blockId: string, data: Partial<Block>) => {
     if (!note) return;
@@ -892,15 +1086,44 @@ const NoteDetail = () => {
     }
 
     try {
+      hasPendingBlockWritesRef.current = true;
       if (!isTextOnlyUpdate) {
         setIsSaving(true);
       }
       await flushBlockTextSave(blockId);
-      await updateBlockService(note.id, blockId, data);
-      updateLocalBlock(blockId, data);
+      const blockVersion = (() => {
+        const queue = [...blocks];
+        while (queue.length > 0) {
+          const current = queue.shift();
+          if (!current) continue;
+          if (current.id === blockId) return current.version;
+          if (Array.isArray(current.children) && current.children.length > 0) {
+            queue.push(...(current.children as (Block & { children?: Block[] })[]));
+          }
+        }
+        return undefined;
+      })();
+      const updatedBlock = await updateBlockService(note.id, blockId, {
+        ...data,
+        expectedVersion: typeof blockVersion === "number" ? blockVersion : undefined,
+      });
+      if (updatedBlock) {
+        updateLocalBlock(blockId, updatedBlock);
+      } else {
+        updateLocalBlock(blockId, data);
+      }
     } catch (error) {
+      if (isConflictError(error)) {
+        setNoteConflict((prev) => ({
+          noteId: note.id,
+          currentRevision: prev?.currentRevision ?? noteRevisionRef.current,
+          conflictFields: ["blocks"],
+          serverNote: prev?.serverNote,
+        }));
+      }
       console.error("Erro ao atualizar bloco:", error);
     } finally {
+      syncPendingBlockWritesFlag();
       if (!isTextOnlyUpdate) {
         setIsSaving(false);
       }
@@ -1020,15 +1243,50 @@ const NoteDetail = () => {
   const handleTiptapSave = React.useCallback(
     async (blocksData: CreateBlockData[]) => {
       if (!note) return;
-      try {
-        const savedBlocks = await putNoteBlocksSyncCtx(note.id, blocksData);
-        setBlocks(savedBlocks as (Block & { children?: Block[] })[]);
-      } catch (error) {
-        console.error("Erro ao salvar blocos via TipTap:", error);
-        throw error;
-      }
+      await enqueueNoteMutation(async () => {
+        try {
+          hasPendingBlockWritesRef.current = true;
+          const savedBlocks = await putNoteBlocksSyncCtx(
+            note.id,
+            blocksData,
+            noteRevisionRef.current
+          );
+          setBlocks(savedBlocks.blocks as (Block & { children?: Block[] })[]);
+          const nextRev = parseNoteRevision(savedBlocks.revision);
+          if (nextRev !== null) {
+            noteRevisionRef.current = nextRev;
+            setNote((prev) => (prev ? { ...prev, revision: nextRev } : prev));
+          }
+          setNoteConflict(null);
+        } catch (error) {
+          if (isConflictError(error)) {
+            const data =
+              (error.data as {
+                currentRevision?: number | null;
+                conflictFields?: string[];
+              }) || {};
+            applyServerRevisionToRef(data.currentRevision);
+            setNoteConflict({
+              noteId: note.id,
+              currentRevision: parseNoteRevision(data.currentRevision),
+              conflictFields: Array.isArray(data.conflictFields) ? data.conflictFields : ["blocks"],
+            });
+          }
+          console.error("Erro ao salvar blocos via TipTap:", error);
+          throw error;
+        } finally {
+          hasPendingBlockWritesRef.current = false;
+        }
+      });
     },
-    [note, putNoteBlocksSyncCtx]
+    [
+      applyServerRevisionToRef,
+      enqueueNoteMutation,
+      isConflictError,
+      note,
+      parseNoteRevision,
+      putNoteBlocksSyncCtx,
+    ]
   );
 
   const handleDelete = async () => {
@@ -1159,7 +1417,7 @@ const NoteDetail = () => {
     setShowTagModal(false);
 
     try {
-      await updateNote(note.id, { tags: updatedTags });
+      await saveAndApply({ tags: updatedTags });
     } catch (error) {
       // Reverter
       setNote((prev) => (prev ? { ...prev, tags: currentTags } : null));
@@ -1177,7 +1435,7 @@ const NoteDetail = () => {
     setNote((prev) => (prev ? { ...prev, tags: updatedTags } : null));
 
     try {
-      await updateNote(note.id, { tags: updatedTags });
+      await saveAndApply({ tags: updatedTags });
     } catch (error) {
       // Reverter
       setNote((prev) => (prev ? { ...prev, tags: currentTags } : null));
@@ -1261,6 +1519,19 @@ const NoteDetail = () => {
     !note.access || Boolean(note.access.canEdit || note.access.isCollaborator);
 
   const hasNoteHero = Boolean(note.properties?.banner?.path || note.properties?.color);
+  const handleReloadAfterConflict = async () => {
+    setNoteConflict(null);
+    await refreshNoteDetail();
+  };
+
+  const handleRetryAfterConflict = async () => {
+    setNoteConflict(null);
+    await flushMetadataSave({
+      title: editingTitle,
+      description: editingDescription,
+    });
+    await flushAllBlockTextSaves();
+  };
 
   const IconPropsToolbar = () => (
     <div className="group/props mb-3 flex flex-wrap items-center gap-2">
@@ -1368,6 +1639,35 @@ const NoteDetail = () => {
           setShowColorPicker={setShowColorPicker}
           showColorPicker={showColorPicker}
         />
+        {noteConflict ? (
+          <div className="border-y border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">Conflito de edição detectado</p>
+                <p className="text-xs opacity-90">
+                  Revisão atual: {noteConflict.currentRevision ?? "desconhecida"}
+                  {noteConflict.conflictFields.length > 0
+                    ? ` · Campos: ${noteConflict.conflictFields.join(", ")}`
+                    : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRetryAfterConflict}
+                  className="rounded-md border border-amber-300 px-2.5 py-1 text-xs font-medium hover:bg-amber-100 dark:border-amber-800 dark:hover:bg-amber-900/40"
+                >
+                  Tentar novamente
+                </button>
+                <button
+                  onClick={handleReloadAfterConflict}
+                  className="rounded-md border border-amber-300 px-2.5 py-1 text-xs font-medium hover:bg-amber-100 dark:border-amber-800 dark:hover:bg-amber-900/40"
+                >
+                  Recarregar do servidor
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {/* =================== CONTEÚDO: banner cheio; abaixo = corpo | comentários =================== */}
         <NoteDetailBody>
@@ -1475,6 +1775,7 @@ const NoteDetail = () => {
                           value={editingTitle}
                           onChange={(e) => {
                             setEditingTitle(e.target.value);
+                            editingTitleRef.current = e.target.value;
                             const el = e.target;
                             el.style.height = "auto";
                             el.style.height = `${el.scrollHeight}px`;
@@ -1493,6 +1794,7 @@ const NoteDetail = () => {
                           value={editingDescription}
                           onChange={(e) => {
                             setEditingDescription(e.target.value);
+                            editingDescriptionRef.current = e.target.value;
                             const el = e.target;
                             el.style.height = "auto";
                             el.style.height = `${el.scrollHeight}px`;
