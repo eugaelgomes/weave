@@ -3,7 +3,6 @@
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import Navbar from "@/app/(protected)/_components/layout/navbar";
 import Sidebar from "@/app/(protected)/_components/layout/sidebar";
-import PagesFooter from "@/app/(protected)/_components/layout/footer";
 import WeaveAi from "@/app/(protected)/_components/layout/WeaveAi";
 import { cn } from "@/lib/utils";
 
@@ -99,7 +98,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden gap-1 md:mr-1.5 md:mb-1">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
-              {/* Mobile: navbar scrolls with main + footer; desktop: already rendered above. */}
+              {/* Mobile: navbar scrolls with main; desktop: already rendered above. */}
               {!isLg ? <Navbar onToggleSidebar={toggleSidebar} /> : null}
 
               <div
@@ -123,10 +122,6 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
                     {children}
                   </div>
                 </div>
-              </div>
-
-              <div className="shrink-0 pt-2">
-                <PagesFooter />
               </div>
             </div>
           </div>
