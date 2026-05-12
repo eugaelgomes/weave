@@ -1,10 +1,6 @@
 const OrganizationsBaseController = require("./base-controller");
 const areasRepository = require("@/modules/organizations/repositories/areas.repository");
-const CreateUsersRepository = require("@/modules/users/repositories/create-users.repository");
-const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
-const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
-const DeleteUsersRepository = require("@/modules/users/repositories/delete-users.repository");
 const { normalizeOrganizationName } = require("../normalizer");
 const {
   ORG_ROLES,

@@ -96,6 +96,9 @@ const CREATION_STEPS = [
   },
 ] as const;
 
+const inputFieldClass =
+  "w-full rounded-md border border-neutral-200 bg-white px-2 py-2 text-sm text-neutral-900 outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100 dark:focus:border-yellow-500/50";
+
 export default function OrganizationCreatePage() {
   const router = useRouter();
   const { refreshOrganization, uploadLogo, organization } = useOrganization();
@@ -249,32 +252,32 @@ export default function OrganizationCreatePage() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-neutral-50 dark:bg-[#1d1d1b]">
         <Loader2 className="h-6 w-6 animate-spin text-neutral-500" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full flex-col gap-2">
+    <div className="animate-in fade-in flex min-h-screen w-full flex-col gap-4 bg-neutral-50 px-4 pb-8 duration-200 dark:bg-[#1d1d1b]">
       <WorkspaceHeader />
-      <div className="grid w-full gap-2 lg:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="rounded-md border border-zinc-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-          <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-zinc-800 dark:text-zinc-100">
-            <Sparkles className="h-3.5 w-3.5 text-zinc-500" />
+      <div className="mx-auto grid w-full max-w-6xl gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+          <div className="mb-3 flex items-center gap-1.5 text-xs font-semibold text-neutral-800 dark:text-neutral-100">
+            <Sparkles className="h-3.5 w-3.5 text-neutral-500" />
             Workspace creation steps
           </div>
-          <div className="space-y-1">
+          <div className="space-y-2">
             {CREATION_STEPS.map((step) => {
               const isCurrent = step.id === 1;
               const isDone = step.id < 1 || (step.id === 1 && stepOneCompleted);
               return (
                 <div
                   key={step.key}
-                  className={`rounded-md border p-2 ${
+                  className={`rounded-md border p-3 ${
                     isCurrent
-                      ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
-                      : "border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-zinc-300"
+                      ? "border-brand-primary-500 bg-brand-primary-500 text-white dark:border-brand-primary-500 dark:bg-brand-primary-500"
+                      : "border-neutral-200 bg-neutral-50 text-neutral-700 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1">
@@ -297,24 +300,24 @@ export default function OrganizationCreatePage() {
           </div>
         </aside>
 
-        <section className="rounded-md border border-zinc-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-          <div className="mb-2 border-b border-zinc-200 pb-2 dark:border-surface-dark-border">
-            <h1 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+        <section className="rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+          <div className="mb-4 border-b border-neutral-200 pb-3 dark:border-surface-dark-border">
+            <h1 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
               Step 1 - Basic information
             </h1>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
               Required: name, unique name, role, locale, country and language.
             </p>
           </div>
 
-          <form className="space-y-2" onSubmit={handleSave}>
-            <div className="grid gap-2 md:grid-cols-2">
+          <form className="space-y-3" onSubmit={handleSave}>
+            <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
                   Organization name
                 </label>
                 <input
-                  className="w-full rounded-md border border-zinc-300 bg-transparent px-2 py-2 text-sm outline-none focus:border-zinc-500 dark:border-surface-dark-border-strong"
+                  className={inputFieldClass}
                   placeholder="Acme Inc."
                   value={form.org_name}
                   onChange={handleFieldChange("org_name")}
@@ -323,11 +326,11 @@ export default function OrganizationCreatePage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
                   Unique name
                 </label>
                 <input
-                  className="w-full rounded-md border border-zinc-300 bg-transparent px-2 py-2 text-sm outline-none focus:border-zinc-500 dark:border-surface-dark-border-strong"
+                  className={inputFieldClass}
                   placeholder="acme-inc"
                   value={form.unique_name}
                   onChange={handleFieldChange("unique_name")}
@@ -336,8 +339,8 @@ export default function OrganizationCreatePage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-start gap-2 rounded-md border border-zinc-200 p-2 dark:border-surface-dark-border">
-              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-zinc-200 bg-zinc-50 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+            <div className="flex flex-wrap items-start gap-3 rounded-md border border-neutral-200 p-3 dark:border-surface-dark-border">
+              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
                 {organization?.logo_url ? (
                   <img
                     src={getStorageUrl(organization.logo_url)}
@@ -346,12 +349,12 @@ export default function OrganizationCreatePage() {
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
-                    <Building2 className="h-8 w-8 text-zinc-300 dark:text-zinc-600" />
+                    <Building2 className="h-8 w-8 text-neutral-300 dark:text-neutral-600" />
                   </div>
                 )}
               </div>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
                   Logo (opcional)
                 </span>
                 <input
@@ -366,7 +369,7 @@ export default function OrganizationCreatePage() {
                   type="button"
                   disabled={logoUploading || !organization?.id}
                   onClick={() => logoInputRef.current?.click()}
-                  className="inline-flex w-fit items-center gap-1 rounded-md border border-zinc-300 px-2 py-2 text-xs font-medium text-zinc-800 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-surface-dark-border-strong dark:text-zinc-200 dark:hover:bg-neutral-800"
+                  className="inline-flex w-fit items-center gap-1 rounded-md border border-neutral-300 px-2 py-2 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-surface-dark-border-strong dark:text-neutral-200 dark:hover:bg-neutral-800"
                 >
                   {logoUploading ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -375,19 +378,19 @@ export default function OrganizationCreatePage() {
                   )}
                   {logoUploading ? "Enviando..." : "Escolher imagem"}
                 </button>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
                   PNG, JPG ou WebP. Depois de salvar o passo 1 uma vez, o upload fica disponível.
                 </p>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
+              <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
                 Organization role
               </label>
               <select
                 aria-label="Organization role"
-                className="w-full rounded-md border border-zinc-300 bg-transparent px-2 py-2 text-sm outline-none focus:border-zinc-500 dark:border-surface-dark-border-strong"
+                className={inputFieldClass}
                 value={form.organization_role}
                 onChange={handleFieldChange("organization_role")}
                 required
@@ -401,11 +404,11 @@ export default function OrganizationCreatePage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
+              <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
                 Description (optional)
               </label>
               <textarea
-                className="w-full rounded-md border border-zinc-300 bg-transparent px-2 py-2 text-sm outline-none focus:border-zinc-500 dark:border-surface-dark-border-strong"
+                className={inputFieldClass}
                 placeholder="What does your workspace focus on?"
                 rows={3}
                 value={form.description}
@@ -413,11 +416,13 @@ export default function OrganizationCreatePage() {
               />
             </div>
 
-            <div className="grid gap-2 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Locale</label>
+                <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
+                  Locale
+                </label>
                 <input
-                  className="w-full rounded-md border border-zinc-300 bg-transparent px-2 py-2 text-sm outline-none focus:border-zinc-500 dark:border-surface-dark-border-strong"
+                  className={inputFieldClass}
                   placeholder="en-US"
                   value={form.default_locale}
                   onChange={handleFieldChange("default_locale")}
@@ -426,10 +431,12 @@ export default function OrganizationCreatePage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Country</label>
+                <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
+                  Country
+                </label>
                 <input
                   maxLength={2}
-                  className="w-full rounded-md border border-zinc-300 bg-transparent px-2 py-2 text-sm uppercase outline-none focus:border-zinc-500 dark:border-surface-dark-border-strong"
+                  className={`${inputFieldClass} uppercase`}
                   placeholder="BR"
                   value={form.country}
                   onChange={handleFieldChange("country")}
@@ -438,11 +445,11 @@ export default function OrganizationCreatePage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
                   Language
                 </label>
                 <input
-                  className="w-full rounded-md border border-zinc-300 bg-transparent px-2 py-2 text-sm lowercase outline-none focus:border-zinc-500 dark:border-surface-dark-border-strong"
+                  className={`${inputFieldClass} lowercase`}
                   placeholder="en"
                   value={form.language}
                   onChange={handleFieldChange("language")}
@@ -451,15 +458,15 @@ export default function OrganizationCreatePage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-200 pt-2 dark:border-surface-dark-border">
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200 pt-3 dark:border-surface-dark-border">
+              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
                 Next steps are optional and can be completed later.
               </p>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex items-center gap-1 rounded-md bg-zinc-900 px-2 py-2 text-xs font-medium text-white transition hover:bg-zinc-800 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
+                  className="inline-flex items-center gap-1 rounded-md border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-60 dark:border-surface-dark-border-strong dark:text-neutral-200 dark:hover:bg-neutral-800"
                 >
                   {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   {saving ? "Saving..." : "Save step 1"}
@@ -468,7 +475,7 @@ export default function OrganizationCreatePage() {
                   type="button"
                   onClick={handleComplete}
                   disabled={completing || saving || !canComplete}
-                  className="inline-flex items-center gap-1 rounded-md border border-zinc-300 px-2 py-2 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50 dark:border-surface-dark-border-strong dark:text-zinc-200 dark:hover:bg-neutral-800"
+                  className="inline-flex items-center gap-1 rounded-md bg-brand-primary-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-yellow-600 disabled:opacity-50 dark:hover:bg-yellow-600"
                 >
                   {completing ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />

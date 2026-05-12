@@ -182,30 +182,34 @@ const WorkspacePage = () => {
   // --- CREATE SCREEN ---
   if (!hasOrganization && !organization?.deleted) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
-        <div className="text-center">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-md bg-zinc-50 shadow-sm ring-1 ring-zinc-200 dark:bg-[#1d1d1b] dark:ring-zinc-800">
-            <Building2 className="h-10 w-10 text-zinc-400" />
+      <div className="animate-in fade-in flex min-h-screen w-full flex-col bg-neutral-50 duration-200 dark:bg-[#1d1d1b]">
+        <WorkspaceHeader />
+        <div className="flex flex-1 flex-col items-center justify-center px-4 py-12">
+          <div className="w-full max-w-md rounded-md border border-neutral-200 bg-white p-8 text-center shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-md bg-neutral-50 shadow-sm ring-1 ring-neutral-200 dark:bg-[#1d1d1b] dark:ring-surface-dark-border-strong">
+              <Building2 className="h-10 w-10 text-neutral-400" />
+            </div>
+            <h1 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+              Bem-vindo ao Weave
+            </h1>
+            <p className="mx-auto mt-3 max-w-sm text-neutral-600 dark:text-neutral-400">
+              Crie seu primeiro workspace para começar a gerenciar projetos e colaborar com sua
+              equipe.
+            </p>
+            <button
+              type="button"
+              onClick={handleCreateOrganization}
+              disabled={isCreating}
+              className="mt-8 inline-flex items-center gap-2 rounded-md bg-brand-primary-500 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-yellow-600 hover:shadow-lg disabled:opacity-70 dark:hover:bg-yellow-600"
+            >
+              {isCreating ? (
+                <Activity className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+              Criar Workspace
+            </button>
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Bem-vindo ao Weave
-          </h1>
-          <p className="mx-auto mt-3 max-w-sm text-zinc-500">
-            Crie seu primeiro workspace para começar a gerenciar projetos e colaborar com sua
-            equipe.
-          </p>
-          <button
-            onClick={handleCreateOrganization}
-            disabled={isCreating}
-            className="mt-8 inline-flex items-center gap-2 rounded-md bg-zinc-900 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-zinc-800 hover:shadow-lg disabled:opacity-70 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
-            {isCreating ? (
-              <Activity className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-            Criar Workspace
-          </button>
         </div>
       </div>
     );
@@ -214,29 +218,37 @@ const WorkspacePage = () => {
   // --- DELETED STATE ---
   if (organization?.deleted) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-md bg-red-100 dark:bg-red-900/20">
-          <Trash2 className="h-10 w-10 text-red-600 dark:text-red-400" />
+      <div className="animate-in fade-in flex min-h-screen w-full flex-col bg-neutral-50 duration-200 dark:bg-[#1d1d1b]">
+        <WorkspaceHeader />
+        <div className="flex flex-1 flex-col items-center justify-center px-4 py-12">
+          <div className="w-full max-w-md rounded-md border border-neutral-200 bg-white p-8 text-center shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-md bg-red-100 dark:bg-red-900/20">
+              <Trash2 className="h-10 w-10 text-red-600 dark:text-red-400" />
+            </div>
+            <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+              Workspace Deletado
+            </h1>
+            <p className="mt-2 text-neutral-600 dark:text-neutral-400">
+              Este workspace está marcado para exclusão definitiva em 30 dias.
+            </p>
+            <button
+              type="button"
+              onClick={handleRestoreOrganization}
+              className="mt-6 inline-flex items-center gap-2 rounded-md bg-brand-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-600 dark:hover:bg-yellow-600"
+            >
+              <RefreshCw className="h-4 w-4" /> Restaurar Workspace
+            </button>
+          </div>
         </div>
-        <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Workspace Deletado</h1>
-        <p className="mt-2 text-zinc-500">
-          Este workspace está marcado para exclusão definitiva em 30 dias.
-        </p>
-        <button
-          onClick={handleRestoreOrganization}
-          className="mt-6 flex items-center gap-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900"
-        >
-          <RefreshCw className="h-4 w-4" /> Restaurar Workspace
-        </button>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col space-y-2">
+    <div className="flex min-h-screen w-full flex-col space-y-2 bg-neutral-50 dark:bg-[#1d1d1b]">
       <WorkspaceHeader />
 
-      <div className="fade-in animate-in space-y-2 duration-500">
+      <div className="fade-in animate-in space-y-2 px-4 pb-8 duration-500">
         <WorkspaceOverview
           workspace={organization}
           stats={stats}

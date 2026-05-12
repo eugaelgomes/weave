@@ -50,19 +50,19 @@ export function SettingsForm({
   return (
     <div className="space-y-6">
       {/* Plan & Usage Section - New */}
-      <section className="rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
-          <CreditCard className="h-5 w-5 text-zinc-500" />
+      <section className="rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+        <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
+          <CreditCard className="h-5 w-5 text-neutral-500" />
           Plano & Uso
         </h2>
 
-        <div className="mb-6 rounded-md border border-zinc-100 bg-zinc-50 p-4 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/50">
+        <div className="mb-6 rounded-md border border-neutral-100 bg-neutral-50 p-4 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+              <p className="font-semibold text-neutral-900 dark:text-neutral-100">
                 Plano Atual: {currentPlan}
               </p>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-neutral-500">
                 {planValue > 0
                   ? `${currency} ${planValue.toFixed(2)} / ${organization?.billing_cycle === "monthly" ? "mês" : "ano"}`
                   : "Gratuito para sempre"}
@@ -71,7 +71,7 @@ export function SettingsForm({
             {userIsOwner && (
               <button
                 disabled
-                className="cursor-not-allowed rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+                className="cursor-not-allowed rounded-md bg-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-500 opacity-70 dark:bg-neutral-800 dark:text-neutral-400"
               >
                 Gerenciar Assinatura
               </button>
@@ -82,28 +82,28 @@ export function SettingsForm({
         <div className="space-y-6">
           <div>
             <div className="mb-2 flex justify-between text-xs">
-              <span className="text-zinc-600 dark:text-zinc-400">Membros da Organização</span>
-              <span className="font-medium text-zinc-900 dark:text-zinc-100">
+              <span className="text-neutral-600 dark:text-neutral-400">Membros da Organização</span>
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">
                 {stats.totalMembers} / {memberLimit}
               </span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
               <div
-                className="h-full rounded-full bg-zinc-900 transition-all dark:bg-zinc-100"
+                className="bg-brand-primary-500 h-full rounded-full transition-all"
                 style={{ width: `${memberPercent}%` }}
               />
             </div>
           </div>
           <div>
             <div className="mb-2 flex justify-between text-xs">
-              <span className="text-zinc-600 dark:text-zinc-400">Projetos Ativos</span>
-              <span className="font-medium text-zinc-900 dark:text-zinc-100">
+              <span className="text-neutral-600 dark:text-neutral-400">Projetos Ativos</span>
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">
                 {stats.totalProjects} / {projectLimit}
               </span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
               <div
-                className="h-full rounded-full bg-zinc-900 transition-all dark:bg-zinc-100"
+                className="bg-brand-primary-500 h-full rounded-full transition-all"
                 style={{ width: `${projectPercent}%` }}
               />
             </div>
@@ -114,9 +114,9 @@ export function SettingsForm({
       {/* Grid Layout for General & Address */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* General Settings */}
-        <section className="h-full rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-          <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
-            <Settings className="h-5 w-5 text-zinc-500" />
+        <section className="h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+          <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
+            <Settings className="h-5 w-5 text-neutral-500" />
             Geral
           </h2>
 
@@ -156,32 +156,32 @@ export function SettingsForm({
         </section>
 
         {/* Address & Location (Placeholder for now as Address is complex usually) */}
-        <section className="h-full rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-          <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
-            <MapPin className="h-5 w-5 text-zinc-500" />
+        <section className="h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+          <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
+            <MapPin className="h-5 w-5 text-neutral-500" />
             Localização
           </h2>
           {/* Currently read-only or placeholder as we don't have update logic per field in this form yet */}
-          <div className="space-y-4 text-xs text-zinc-500">
+          <div className="space-y-4 text-xs text-neutral-500">
             {organization?.address ? (
               <>
-                <div className="flex justify-between border-b border-zinc-100 py-2 dark:border-surface-dark-border-strong">
+                <div className="flex justify-between border-b border-neutral-100 py-2 dark:border-surface-dark-border-strong">
                   <span>Endereço</span>
-                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <span className="font-medium text-neutral-900 dark:text-neutral-100">
                     {organization.address.street || "-"}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-zinc-100 py-2 dark:border-surface-dark-border-strong">
+                <div className="flex justify-between border-b border-neutral-100 py-2 dark:border-surface-dark-border-strong">
                   <span>Cidade/Estado</span>
-                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <span className="font-medium text-neutral-900 dark:text-neutral-100">
                     {organization.address.city
                       ? `${organization.address.city}, ${organization.address.state}`
                       : "-"}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-zinc-100 py-2 dark:border-surface-dark-border-strong">
+                <div className="flex justify-between border-b border-neutral-100 py-2 dark:border-surface-dark-border-strong">
                   <span>País</span>
-                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <span className="font-medium text-neutral-900 dark:text-neutral-100">
                     {organization.address.country || "-"}
                   </span>
                 </div>
@@ -189,7 +189,7 @@ export function SettingsForm({
             ) : (
               <p className="italic">Nenhum endereço cadastrado.</p>
             )}
-            <div className="mt-4 rounded-md bg-zinc-50 p-3 text-xs dark:bg-[#1d1d1b]">
+            <div className="mt-4 rounded-md bg-neutral-50 p-3 text-xs dark:bg-[#1d1d1b]">
               Endereços são usados para faturamento e podem ser editados na gestão da assinatura.
             </div>
           </div>
@@ -198,12 +198,12 @@ export function SettingsForm({
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Features */}
-        <section className="h-full rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-          <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
-            <Layers className="h-5 w-5 text-zinc-500" />
+        <section className="h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+          <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
+            <Layers className="h-5 w-5 text-neutral-500" />
             Funcionalidades
           </h2>
-          <div className="space-y-2 divide-y divide-zinc-100 dark:divide-zinc-900">
+          <div className="space-y-2 divide-y divide-neutral-100 dark:divide-neutral-800">
             <Toggle
               label="Assistente de IA"
               description="Recursos de inteligência artificial"
@@ -229,13 +229,13 @@ export function SettingsForm({
         </section>
 
         {/* Notifications */}
-        <section className="h-full rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-          <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
-            <Bell className="h-5 w-5 text-zinc-500" />
+        <section className="h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+          <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
+            <Bell className="h-5 w-5 text-neutral-500" />
             Notificações
           </h2>
           <div className="space-y-4">
-            <div className="space-y-2 divide-y divide-zinc-100 dark:divide-zinc-900">
+            <div className="space-y-2 divide-y divide-neutral-100 dark:divide-neutral-800">
               <Toggle
                 label="Emails"
                 checked={localProps?.notifications?.email || false}
@@ -267,9 +267,9 @@ export function SettingsForm({
       </div>
 
       {/* Integrations (New Placeholder) */}
-      <section className="rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
-          <Puzzle className="h-5 w-5 text-zinc-500" />
+      <section className="rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+        <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
+          <Puzzle className="h-5 w-5 text-neutral-500" />
           Integrações
         </h2>
 
@@ -278,7 +278,7 @@ export function SettingsForm({
             {Object.entries(organization.integrations).map(([key, value]: [string, any]) => (
               <div
                 key={key}
-                className="flex items-center justify-between rounded-md border border-zinc-100 p-3 dark:border-surface-dark-border"
+                className="flex items-center justify-between rounded-md border border-neutral-100 p-3 dark:border-surface-dark-border"
               >
                 <div className="font-medium capitalize">{key}</div>
                 <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
@@ -286,12 +286,12 @@ export function SettingsForm({
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-zinc-200 bg-zinc-50 py-8 text-center dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
-            <Zap className="mb-3 h-8 w-8 text-zinc-300 dark:text-zinc-600" />
-            <p className="text-xs font-medium text-zinc-900 dark:text-zinc-100">
+          <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-neutral-200 bg-neutral-50 py-8 text-center dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+            <Zap className="mb-3 h-8 w-8 text-neutral-300 dark:text-neutral-600" />
+            <p className="text-xs font-medium text-neutral-900 dark:text-neutral-100">
               Nenhuma integração ativa
             </p>
-            <p className="mt-1 text-[11px] text-zinc-500">
+            <p className="mt-1 text-[11px] text-neutral-500">
               Conecte ferramentas externas para expandir o potencial.
             </p>
           </div>
@@ -302,14 +302,14 @@ export function SettingsForm({
       <DomainsSection userIsOwner={userIsOwner} />
 
       {/* Branding */}
-      <section className="rounded-md border border-zinc-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
-          <Palette className="h-5 w-5 text-zinc-500" />
+      <section className="rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+        <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
+          <Palette className="h-5 w-5 text-neutral-500" />
           Identidade Visual
         </h2>
         <div className="grid gap-6 md:grid-cols-2">
           <div>
-            <label className="mb-2 block text-xs font-medium text-zinc-500">Cores da Marca</label>
+            <label className="mb-2 block text-xs font-medium text-neutral-500">Cores da Marca</label>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex gap-2">
                 <input
@@ -317,10 +317,10 @@ export function SettingsForm({
                   value={localProps?.branding?.primaryColor || "#000000"}
                   onChange={(e) => handlePropertyChange("branding", "primaryColor", e.target.value)}
                   disabled={!userIsOwner}
-                  className="h-10 w-10 cursor-pointer rounded border border-zinc-200 p-1 dark:border-surface-dark-border dark:bg-[#1d1d1b]"
+                  className="h-10 w-10 cursor-pointer rounded border border-neutral-200 p-1 dark:border-surface-dark-border dark:bg-[#1d1d1b]"
                 />
                 <div className="flex flex-col justify-center">
-                  <span className="text-[10px] text-zinc-500 uppercase">Primária</span>
+                  <span className="text-[10px] text-neutral-500 uppercase">Primária</span>
                   <span className="font-mono text-xs">
                     {localProps?.branding?.primaryColor || "#000000"}
                   </span>
@@ -334,10 +334,10 @@ export function SettingsForm({
                     handlePropertyChange("branding", "secondaryColor", e.target.value)
                   }
                   disabled={!userIsOwner}
-                  className="h-10 w-10 cursor-pointer rounded border border-zinc-200 p-1 dark:border-surface-dark-border dark:bg-[#1d1d1b]"
+                  className="h-10 w-10 cursor-pointer rounded border border-neutral-200 p-1 dark:border-surface-dark-border dark:bg-[#1d1d1b]"
                 />
                 <div className="flex flex-col justify-center">
-                  <span className="text-[10px] text-zinc-500 uppercase">Secundária</span>
+                  <span className="text-[10px] text-neutral-500 uppercase">Secundária</span>
                   <span className="font-mono text-xs">
                     {localProps?.branding?.secondaryColor || "#ffffff"}
                   </span>
@@ -354,7 +354,7 @@ export function SettingsForm({
               placeholder="docs.example.com"
               disabled={!userIsOwner}
             />
-            <p className="mt-1.5 text-[10px] text-zinc-400">
+            <p className="mt-1.5 text-[10px] text-neutral-400">
               Requer configuração DNS. A propagação pode levar até 24h.
             </p>
           </div>
@@ -374,10 +374,10 @@ export function SettingsForm({
 
           <div className="flex items-center justify-between rounded-md border border-red-200 bg-white p-4 dark:border-red-900/30 dark:bg-[#1d1d1b]">
             <div>
-              <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+              <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                 Deletar Organização
               </h4>
-              <p className="text-[11px] text-zinc-500">
+              <p className="text-[11px] text-neutral-500">
                 Isso marcará a organização para exclusão em 30 dias.
               </p>
             </div>

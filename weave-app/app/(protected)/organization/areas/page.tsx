@@ -11,6 +11,7 @@ import {
   ChevronRight,
   ChevronDown,
   GitMerge,
+  RefreshCw,
   Plus,
   Trash2,
   Pencil,
@@ -25,7 +26,6 @@ import {
   type OrganizationAreaMember,
   type OrganizationMember,
   type OrganizationAreaMemberRole,
-  type OrganizationAreaProperties,
 } from "@/app/_contexts/organization-context";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 
@@ -59,32 +59,26 @@ const statusStyles: Record<string, { bg: string; text: string; dot: string }> = 
   },
 };
 
-const resolveAreaStatus = (area?: OrganizationArea | null): string => {
-  if (!area) return "ativo";
-  return area.properties?.status?.toLowerCase() || (area.active === false ? "pausado" : "ativo");
-};
-
 const STATUS_OPTIONS = [
   { value: "ativo", label: "Ativo" },
   { value: "planejamento", label: "Planejamento" },
   { value: "pausado", label: "Pausado" },
   { value: "arquivado", label: "Arquivado" },
-];
+] as const;
 
-const MEMBER_ROLE_OPTIONS: Array<{ value: OrganizationAreaMemberRole; label: string }> = [
-  { value: "manager", label: "Gestor" },
-  { value: "editor", label: "Editor" },
-  { value: "viewer", label: "Observador" },
-];
+const resolveAreaStatus = (area?: OrganizationArea | null): string => {
+  if (!area) return "ativo";
+  const fromProps = area.properties?.status?.toLowerCase();
+  const raw =
+    (typeof fromProps === "string" && fromProps) || (area.active === false ? "pausado" : "ativo");
+  const allowed = new Set(STATUS_OPTIONS.map((o) => o.value));
+  return allowed.has(raw) ? raw : "ativo";
+};
 
 type AreaFormState = {
   area_name: string;
   parent_area_id: string | null;
-  slug: string;
   description: string;
-  status: string;
-  tags: string;
-  headcount: string;
   active: boolean;
 };
 
@@ -93,28 +87,23 @@ type AddMemberFormState = {
   role: OrganizationAreaMemberRole;
 };
 
+const MEMBER_ROLE_OPTIONS: Array<{ value: OrganizationAreaMemberRole; label: string }> = [
+  { value: "manager", label: "Gestor" },
+  { value: "editor", label: "Editor" },
+  { value: "viewer", label: "Observador" },
+];
+
 const createEmptyAreaForm = (parentId: string | null = null): AreaFormState => ({
   area_name: "",
   parent_area_id: parentId,
-  slug: "",
   description: "",
-  status: "ativo",
-  tags: "",
-  headcount: "",
   active: true,
 });
 
 const mapAreaToFormState = (area: OrganizationArea): AreaFormState => ({
   area_name: area.area_name || "",
   parent_area_id: area.parent_area_id,
-  slug: area.slug || "",
   description: area.description || "",
-  status: resolveAreaStatus(area),
-  tags: (area.properties?.tags ?? []).join(", "),
-  headcount:
-    typeof area.properties?.metrics?.headcount === "number"
-      ? String(area.properties.metrics.headcount)
-      : "",
   active: area.active !== false,
 });
 
@@ -260,55 +249,29 @@ export default function AreasPage() {
     setAreaFormSubmitting(true);
     const normalizedName = areaFormValues.area_name.trim();
     const normalizedDescription = areaFormValues.description.trim();
-    const tags = areaFormValues.tags
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-
-    const existingArea = editingAreaId ? areas.find((area) => area.id === editingAreaId) : null;
-    const baseProperties = (existingArea?.properties ?? {}) as OrganizationAreaProperties;
-    const properties: OrganizationAreaProperties = {
-      ...baseProperties,
-      status: areaFormValues.status,
-    };
-
-    if (tags.length) properties.tags = tags;
-    else delete properties.tags;
-
-    const baseMetrics = baseProperties.metrics ? { ...baseProperties.metrics } : undefined;
-    const headcountValue =
-      areaFormValues.headcount.trim() !== "" ? Number(areaFormValues.headcount) : null;
-
-    if (headcountValue !== null && !Number.isNaN(headcountValue)) {
-      properties.metrics = { ...(baseMetrics ?? {}), headcount: headcountValue };
-    } else if (baseMetrics) {
-      delete baseMetrics.headcount;
-      if (Object.keys(baseMetrics).length) properties.metrics = baseMetrics;
-      else delete properties.metrics;
-    } else {
-      delete properties.metrics;
-    }
 
     const safeParentId =
       areaFormValues.parent_area_id && areaFormValues.parent_area_id === editingAreaId
         ? null
         : areaFormValues.parent_area_id;
 
-    const basePayload = {
-      area_name: normalizedName,
-      parent_area_id: safeParentId || null,
-      slug: areaFormValues.slug.trim() || undefined,
-      description: normalizedDescription ? normalizedDescription : null,
-      properties,
-    };
-
     try {
       if (areaFormMode === "create") {
-        const created = await createArea(basePayload);
+        const created = await createArea({
+          area_name: normalizedName,
+          parent_area_id: safeParentId || null,
+          description: normalizedDescription || null,
+          properties: {},
+        });
         toast.success("Área criada com sucesso.");
         if (created?.id) setSelectedAreaId(created.id);
       } else if (editingAreaId) {
-        await updateArea(editingAreaId, { ...basePayload, active: areaFormValues.active });
+        await updateArea(editingAreaId, {
+          area_name: normalizedName,
+          parent_area_id: safeParentId ?? null,
+          description: normalizedDescription || null,
+          active: areaFormValues.active,
+        });
         toast.success("Área atualizada.");
       }
       setAreaFormOpen(false);
@@ -451,8 +414,8 @@ export default function AreasPage() {
 
   if (!hasOrganization) {
     return (
-      <div className="mx-auto flex h-[calc(100vh-4rem)] w-full max-w-2xl flex-col items-center justify-center gap-4 p-4 text-center">
-        <div className="flex flex-col items-center gap-4 rounded-md border border-neutral-200 bg-white p-8 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+      <div className="mx-auto flex h-[calc(100vh-4rem)] w-full max-w-2xl flex-col items-center justify-center gap-2 p-2 text-center">
+        <div className="flex flex-col items-center gap-2 rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <Layers3 className="h-10 w-10 text-neutral-300 dark:text-neutral-700" />
           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
             Estrutura não encontrada
@@ -469,39 +432,6 @@ export default function AreasPage() {
     <div className="mx-auto flex h-[calc(100vh-4rem)] w-full flex-col gap-2">
       <WorkspaceHeader />
 
-      {/* Cabeçalho Minimalista e Responsivo */}
-      <div className="flex shrink-0 flex-col gap-4 rounded-md border-1 border-neutral-100 bg-white px-4 py-2 shadow-sm md:flex-row md:items-center md:justify-between dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <div className="flex flex-col gap-0.5">
-          <div className="flex items-center gap-2">
-            <h1 className="text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-              Mapa Estrutural
-            </h1>
-            <div className="h-1 w-1 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-            <span className="text-xs font-medium text-neutral-400">{organization?.org_name}</span>
-          </div>
-          <p className="text-xs text-neutral-500">
-            Arraste áreas para reorganizar ou use (+) para criar sub-áreas.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleRefreshAreas}
-            disabled={areasLoading}
-            className={clsx(
-              "inline-flex items-center gap-2 rounded-md border border-neutral-200 px-3 py-1.5 text-xs font-medium transition-all",
-              "bg-white text-neutral-700 hover:bg-neutral-50 active:scale-[0.98]",
-              "dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-900",
-              areasLoading && "cursor-not-allowed opacity-50"
-            )}
-          >
-            <GitMerge className={clsx("h-3.5 w-3.5", areasLoading && "animate-spin")} />
-            {areasLoading ? "Sincronizando" : "Atualizar"}
-          </button>
-        </div>
-      </div>
-
       {areasError && (
         <div className="flex-shrink-0 rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-700 dark:border-red-900/30 dark:bg-red-900/10 dark:text-red-400">
           {areasError}
@@ -517,14 +447,16 @@ export default function AreasPage() {
         </div>
       ) : !areas.length ? (
         <EmptyAreasState
+          orgName={organization?.org_name}
           onRefresh={handleRefreshAreas}
           onCreate={() => handleOpenCreateArea(null)}
+          refreshing={areasLoading}
         />
       ) : (
-        <section className="grid min-h-0 flex-1 items-stretch gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <section className="grid min-h-0 flex-1 items-stretch gap-2 px-1 sm:px-0 lg:grid-cols-[minmax(0,1fr)_280px]">
           {/* MAPA TOPOLÓGICO COM DRAG AND DROP */}
           <div
-            className="h-full overflow-auto rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]"
+            className="flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               // Permite arrastar para o fundo da lista para transformar numa área "raiz"
@@ -535,7 +467,42 @@ export default function AreasPage() {
               }
             }}
           >
-            <div className="flex min-w-max flex-col gap-3">
+            <div className="flex shrink-0 flex-row items-center justify-between gap-2 border-b border-neutral-200 px-2 py-2 dark:border-surface-dark-border">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <h2 className="shrink-0 text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+                  Mapa Estrutural
+                </h2>
+                <span
+                  className="hidden shrink-0 text-neutral-300 sm:inline dark:text-neutral-600"
+                  aria-hidden
+                >
+                  ·
+                </span>
+                <span className="min-w-0 truncate text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                  {organization?.org_name ?? "—"}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleRefreshAreas}
+                disabled={areasLoading}
+                aria-label={areasLoading ? "A sincronizar…" : "Atualizar mapa"}
+                title="Atualizar mapa. Arraste áreas para reorganizar ou use (+) para criar sub-áreas."
+                className={clsx(
+                  "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 text-neutral-600 transition-colors",
+                  "hover:border-neutral-300 hover:bg-white hover:text-neutral-900",
+                  "dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:border-neutral-600 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-100",
+                  areasLoading && "cursor-not-allowed opacity-60"
+                )}
+              >
+                <RefreshCw className={clsx("h-3.5 w-3.5", areasLoading && "animate-spin")} />
+              </button>
+            </div>
+            <div
+              className="min-h-0 flex-1 overflow-auto p-2"
+              title="Arraste áreas para reorganizar ou use (+) para criar sub-áreas."
+            >
+            <div className="flex min-w-max flex-col gap-2">
               {treeRoots.map((rootNode) => (
                 <TreeNodeView
                   key={rootNode.area.id}
@@ -546,6 +513,7 @@ export default function AreasPage() {
                   onMove={handleMoveArea}
                 />
               ))}
+            </div>
             </div>
           </div>
 
@@ -819,7 +787,7 @@ const DetailPanel = ({
 }: DetailPanelProps) => {
   if (!area) {
     return (
-      <aside className="h-full rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+      <aside className="h-full rounded-md border border-neutral-200 bg-white p-2 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
           Selecione uma área no mapa para detalhes.
         </p>
@@ -836,7 +804,7 @@ const DetailPanel = ({
       : null;
 
   return (
-    <aside className="flex h-full flex-col gap-4 overflow-y-auto rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-800">
+    <aside className="flex h-full flex-col gap-2 overflow-y-auto rounded-md border border-neutral-200 bg-white p-2 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-800">
       <div className="space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -923,7 +891,7 @@ const DetailPanel = ({
         </div>
       )}
 
-      <div className="space-y-3 border-t border-neutral-100 pt-3 dark:border-surface-dark-border-muted">
+      <div className="space-y-2 border-t border-neutral-100 pt-2 dark:border-surface-dark-border-muted">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100">
             <Users className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400" />
@@ -956,7 +924,7 @@ const DetailPanel = ({
                   <select
                     value={addMemberForm.userId}
                     onChange={(event) => onAddMemberFieldChange("userId", event.target.value)}
-                    className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-neutral-800 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
+                    className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-neutral-800 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:focus:border-yellow-500/50 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
                   >
                     <option value="">Selecione um membro</option>
                     {availableMembers.map((member) => (
@@ -973,7 +941,7 @@ const DetailPanel = ({
                   <select
                     value={addMemberForm.role}
                     onChange={(event) => onAddMemberFieldChange("role", event.target.value)}
-                    className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-neutral-800 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
+                    className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-neutral-800 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:focus:border-yellow-500/50 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
                   >
                     {MEMBER_ROLE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -1065,7 +1033,7 @@ const DetailPanel = ({
                       )
                     }
                     disabled={actionState === "updating"}
-                    className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-[10px] text-neutral-700 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
+                    className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-[10px] text-neutral-700 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:focus:border-yellow-500/50 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
                   >
                     {!roleExists && memberRoleValue && (
                       <option value={memberRoleValue}>{memberRoleValue}</option>
@@ -1105,30 +1073,58 @@ const DetailPanel = ({
 // --- Empty State & Modals ---
 
 type EmptyAreasStateProps = {
+  orgName?: string;
   onRefresh: () => void;
   onCreate?: () => void;
+  refreshing?: boolean;
 };
 
-const EmptyAreasState = ({ onRefresh, onCreate }: EmptyAreasStateProps) => (
-  <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-md border border-neutral-200 bg-white py-10 text-center shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-    <GitMerge className="h-6 w-6 text-neutral-400 dark:text-neutral-500" />
-    <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">Nenhuma hierarquia</h3>
-    <p className="max-w-xs text-[10px] text-neutral-500 dark:text-neutral-400">
-      Crie áreas e vincule filhas para construir o mapa.
-    </p>
-    <div className="mt-1 flex flex-wrap items-center justify-center gap-3 text-xs font-medium">
+const EmptyAreasState = ({
+  orgName,
+  onRefresh,
+  onCreate,
+  refreshing = false,
+}: EmptyAreasStateProps) => (
+  <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+    <div className="flex shrink-0 flex-row items-center justify-between gap-2 border-b border-neutral-200 px-2 py-2 dark:border-surface-dark-border">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <h2 className="shrink-0 text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+          Mapa Estrutural
+        </h2>
+        <span className="hidden shrink-0 text-neutral-300 sm:inline dark:text-neutral-600" aria-hidden>
+          ·
+        </span>
+        <span className="min-w-0 truncate text-xs font-medium text-neutral-500 dark:text-neutral-400">
+          {orgName ?? "—"}
+        </span>
+      </div>
       <button
         type="button"
         onClick={onRefresh}
-        className="text-blue-600 hover:underline dark:text-blue-400"
+        disabled={refreshing}
+        aria-label={refreshing ? "A sincronizar…" : "Atualizar mapa"}
+        title="Atualizar mapa"
+        className={clsx(
+          "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 text-neutral-600 transition-colors",
+          "hover:border-neutral-300 hover:bg-white hover:text-neutral-900",
+          "dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:border-neutral-600 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-100",
+          refreshing && "cursor-not-allowed opacity-60"
+        )}
       >
-        Atualizar visualização
+        <RefreshCw className={clsx("h-3.5 w-3.5", refreshing && "animate-spin")} />
       </button>
+    </div>
+    <div className="flex flex-1 flex-col items-center justify-center gap-2 px-2 py-2 text-center">
+      <GitMerge className="h-6 w-6 text-neutral-400 dark:text-neutral-500" />
+      <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">Nenhuma hierarquia</h3>
+      <p className="max-w-xs text-[10px] text-neutral-500 dark:text-neutral-400">
+        Crie áreas e vincule filhas para construir o mapa.
+      </p>
       {onCreate && (
         <button
           type="button"
           onClick={onCreate}
-          className="inline-flex items-center gap-1 rounded-md border border-blue-200 px-2 py-1 text-blue-600 transition hover:bg-blue-50 dark:border-blue-900/40 dark:text-blue-300"
+          className="mt-1 inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-xs font-medium text-neutral-800 transition hover:bg-white dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200 dark:hover:bg-neutral-800"
         >
           <Plus className="h-3 w-3" /> Nova área
         </button>
@@ -1150,41 +1146,32 @@ const Modal = ({ open, title, description, onClose, children }: ModalProps) => {
 
   return (
     <div
-      className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/40 p-4 backdrop-blur-sm transition-all duration-300"
+      className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/40 p-2 backdrop-blur-sm transition-all duration-300"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
-        className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-t-4 border-neutral-200 border-t-yellow-500 bg-white shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]" // Detalhe de destaque superior
+        className="relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-lg dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md"
         onClick={(event) => event.stopPropagation()}
       >
-        {/* Botão Fechar com foco em amarelo */}
         <button
           type="button"
           onClick={onClose}
-          className="dark:hover:text-brand-primary-500 absolute top-4 right-4 z-10 rounded-full p-2 text-neutral-500 transition-all hover:bg-yellow-50 hover:text-yellow-600 focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:outline-none dark:hover:bg-yellow-900/20"
+          className="absolute top-2 right-2 z-10 rounded-md p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:outline-none dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
           aria-label="Fechar modal"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4" />
         </button>
 
-        {/* Header */}
-        <div className="p-6 pb-2">
-          <div className="mb-1 flex items-center gap-2">
-            {/* Opcional: Um pequeno detalhe visual antes do título */}
-            <div className="bg-brand-primary-500 h-4 w-1 rounded-full" />
-            <h2 className="text-lg leading-none font-bold tracking-tight text-neutral-900 dark:text-white">
-              {title}
-            </h2>
-          </div>
-          {description && (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">{description}</p>
-          )}
+        <div className="p-2 pr-10">
+          <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{title}</h2>
+          {description ? (
+            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{description}</p>
+          ) : null}
         </div>
 
-        {/* Área de Conteúdo */}
-        <div className="flex-1 overflow-y-auto p-6 pt-2 text-sm selection:bg-yellow-100 dark:selection:bg-yellow-900/30">
+        <div className="max-h-[min(70vh,32rem)] flex-1 overflow-y-auto border-t border-neutral-200 p-2 text-sm dark:border-surface-dark-border">
           {children}
         </div>
       </div>
@@ -1204,6 +1191,9 @@ type AreaFormModalProps = {
   submitting: boolean;
 };
 
+const fieldInputClass =
+  "w-full rounded-md border border-neutral-200 bg-white px-2 py-2 text-xs text-neutral-900 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100 dark:focus:border-yellow-500/50";
+
 const AreaFormModal = ({
   open,
   mode,
@@ -1215,43 +1205,63 @@ const AreaFormModal = ({
   onSubmit,
   submitting,
 }: AreaFormModalProps) => {
+  const nameId = React.useId();
+  const parentId = React.useId();
+  const descId = React.useId();
+  const activeId = React.useId();
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!submitting) onSubmit();
   };
 
+  const modalDescription =
+    mode === "create"
+      ? "Nome obrigatório. Slug é gerado no servidor. Descrição é opcional."
+      : "Altere nome, nível na hierarquia ou descrição. Slug atualiza quando o nome muda.";
+
   return (
     <Modal
       open={open}
       title={mode === "create" ? "Nova área" : "Editar área"}
-      description="Defina as informações organizacionais e relacionamentos hierárquicos."
+      description={modalDescription}
       onClose={onClose}
     >
-      <form className="space-y-3" onSubmit={handleSubmit}>
+      <form className="space-y-2" onSubmit={handleSubmit}>
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-200">
-            Nome
+          <label
+            htmlFor={nameId}
+            className="text-xs font-medium text-neutral-700 dark:text-neutral-200"
+          >
+            Nome <span className="text-red-600">*</span>
           </label>
           <input
+            id={nameId}
             type="text"
             value={form.area_name}
             onChange={(event) => onChange("area_name", event.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
-            placeholder="Squad Apollo"
+            className={fieldInputClass}
+            placeholder="Ex.: Squad Apollo"
             required
+            autoFocus
           />
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-200">
+          <label
+            htmlFor={parentId}
+            className="text-xs font-medium text-neutral-700 dark:text-neutral-200"
+          >
             Área pai
           </label>
           <select
+            id={parentId}
             value={form.parent_area_id || ""}
             onChange={(event) => onChange("parent_area_id", event.target.value || null)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
+            className={fieldInputClass}
+            aria-label="Área pai na hierarquia"
           >
-            <option value="">Sem vínculo (nível raiz)</option>
+            <option value="">Raiz (sem pai)</option>
             {areas
               .filter((area) => area.id !== disableParentId)
               .map((area) => (
@@ -1263,106 +1273,54 @@ const AreaFormModal = ({
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-200">
-            Slug
-          </label>
-          <input
-            type="text"
-            value={form.slug}
-            onChange={(event) => onChange("slug", event.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
-            placeholder="squad-apollo"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-200">
-            Descrição
+          <label
+            htmlFor={descId}
+            className="text-xs font-medium text-neutral-700 dark:text-neutral-200"
+          >
+            Descrição <span className="font-normal text-neutral-400">(opcional)</span>
           </label>
           <textarea
+            id={descId}
             value={form.description}
             onChange={(event) => onChange("description", event.target.value)}
-            rows={3}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
-            placeholder="Responsável pelo discovery de integrações..."
+            rows={2}
+            className={`${fieldInputClass} resize-none`}
+            placeholder="Breve contexto da área"
           />
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-200">
-              Status operacional
-            </label>
-            <select
-              value={form.status}
-              onChange={(event) => onChange("status", event.target.value)}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
-            >
-              {STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-200">
-              Headcount
-            </label>
+        {mode === "edit" ? (
+          <label
+            htmlFor={activeId}
+            className="flex cursor-pointer items-center gap-2 text-xs font-medium text-neutral-700 dark:text-neutral-200"
+          >
             <input
-              type="number"
-              min={0}
-              value={form.headcount}
-              onChange={(event) => onChange("headcount", event.target.value)}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
-              placeholder="12"
+              id={activeId}
+              type="checkbox"
+              checked={form.active}
+              onChange={(event) => onChange("active", event.target.checked)}
+              className="h-3.5 w-3.5 rounded border-neutral-300 text-brand-primary-500 focus:ring-yellow-500 dark:border-surface-dark-border-muted"
             />
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-200">
-            Tags (separadas por vírgula)
+            Área ativa
           </label>
-          <input
-            type="text"
-            value={form.tags}
-            onChange={(event) => onChange("tags", event.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
-            placeholder="mobile, discovery"
-          />
-        </div>
+        ) : null}
 
-        <label className="flex items-center gap-2 text-xs font-semibold text-neutral-700 dark:text-neutral-200">
-          <input
-            type="checkbox"
-            checked={form.active}
-            onChange={(event) => onChange("active", event.target.checked)}
-            className="h-3.5 w-3.5 rounded border border-neutral-400 text-blue-600 focus:ring-blue-500"
-          />
-          Área ativa
-        </label>
-
-        <div className="flex items-center justify-end gap-2 pt-2 text-xs">
+        <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-2 dark:border-surface-dark-border-muted">
           <button
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="rounded-md border border-neutral-200 px-3 py-2 font-semibold text-neutral-600 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-70 dark:border-surface-dark-border-strong dark:text-neutral-200 dark:hover:bg-neutral-800"
+            className="rounded-md border border-neutral-200 px-2 py-2 text-xs font-medium text-neutral-600 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-70 dark:border-surface-dark-border-strong dark:text-neutral-200 dark:hover:bg-neutral-800"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-2 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-blue-500 dark:hover:bg-blue-400"
+            className="inline-flex items-center gap-1 rounded-md bg-brand-primary-500 px-2 py-2 text-xs font-medium text-white transition hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-70 dark:hover:bg-yellow-600"
           >
-            {submitting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Plus className="h-3.5 w-3.5" />
-            )}
-            {mode === "create" ? "Criar área" : "Salvar alterações"}
+            {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+            {mode === "create" ? "Criar" : "Guardar"}
           </button>
         </div>
       </form>
@@ -1397,7 +1355,7 @@ const ConfirmDialog = ({
         type="button"
         onClick={onCancel}
         disabled={loading}
-        className="rounded-md border border-neutral-200 px-3 py-2 font-semibold text-neutral-600 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-70 dark:border-surface-dark-border-strong dark:text-neutral-200 dark:hover:bg-neutral-800"
+        className="rounded-md border border-neutral-200 px-2 py-2 text-xs font-semibold text-neutral-600 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-70 dark:border-surface-dark-border-strong dark:text-neutral-200 dark:hover:bg-neutral-800"
       >
         {cancelLabel}
       </button>
@@ -1405,7 +1363,7 @@ const ConfirmDialog = ({
         type="button"
         onClick={onConfirm}
         disabled={loading}
-        className="inline-flex items-center gap-1 rounded-md bg-red-600 px-3 py-2 font-semibold text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-70"
+        className="inline-flex items-center gap-1 rounded-md bg-red-600 px-2 py-2 text-xs font-semibold text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {loading ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
