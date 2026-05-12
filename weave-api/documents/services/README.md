@@ -1,27 +1,27 @@
-# Services da API
+# API services
 
-Documentacao simples e direta dos services principais do `weave-api`.
+Short index of main `weave-api` service modules and their companion notes under `documents/services/`.
 
-## Lista de services
+## Service modules
 
-- `secrets/index.js` -> `secrets-manager.md`
-- `queue/connection.js` -> `queue-connection.md`
-- `queue/queue-keys.js` -> `queue-keys.md`
-- `queue/queue-controller.js` -> `queue-controller.md`
-- `email/config.js` -> `email-config.md`
-- `email/mail-template.js` -> `email-template.md`
-- `domains/domain-verifier.js` -> `domain-verifier.md`
-- `plans/plan-paths.js` -> `plan-paths.md`
-- `plans/manager.js` -> `plans-manager.md`
-- `storage/index.js` -> `storage-service.md`
-- `storage/access-control.js` -> `storage-access-control.md`
-- `modules/notes/services/pdf.service.js` -> `notes-pdf-service.md`
+- `secrets/index.js` → `secrets-manager.md`
+- `queue/connection.js` → `queue-connection.md`
+- `queue/queue-keys.js` → `queue-keys.md`
+- `queue/queue-controller.js` → `queue-controller.md`
+- `email/config.js` → `email-config.md`
+- `email/mail-template.js` → `email-template.md`
+- `domains/domain-verifier.js` → `domain-verifier.md`
+- `plans/plan-paths.js` → `plan-paths.md`
+- `plans/manager.js` → `plans-manager.md`
+- `storage/index.js` → `storage-service.md`
+- `storage/access-control.js` → `storage-access-control.md`
+- `modules/notes/services/pdf.service.js` → `notes-pdf-service.md`
 
-## Convencao usada
+## Document shape
 
-Cada documento segue este formato:
+Each note file follows:
 
-- O que faz
-- Entradas e saidas
-- Regras importantes
-- Onde normalmente e usado
+- What it does
+- Inputs and outputs
+- Important rules
+- Typical call sites

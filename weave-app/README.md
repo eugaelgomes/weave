@@ -1,6 +1,6 @@
-# 🖥️ Weave Notes - Front-End
+# Weave Notes — Front end
 
-> Interface web do Weave Notes, construída com Next.js, React 19 e TailwindCSS.
+Web UI for Weave Notes, built with Next.js, React 19, and Tailwind CSS.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16+-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
@@ -8,186 +8,141 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Visão Geral
+## Overview
 
-Frontend do **Weave Notes** — um web app full-stack para gerenciamento de tarefas estruturadas com sistema de blocos, drag-and-drop, compartilhamento colaborativo e chat com IA.
+The **Weave Notes** front end is a Next.js application for structured work: block-based notes, drag-and-drop, collaboration, and Weave AI chat.
 
-## Tecnologias
+## Technologies
 
-| Tecnologia         | Versão | Uso                            |
-| ------------------ | ------ | ------------------------------ |
-| **Next.js**        | 16+    | Framework React com App Router |
-| **React**          | 19     | Biblioteca UI                  |
-| **TypeScript**     | 5+     | Tipagem estática               |
-| **TailwindCSS**    | 4+     | Estilização utility-first      |
-| **@dnd-kit**       | 6+     | Drag and drop                  |
-| **react-markdown** | 10+    | Renderização Markdown          |
-| **lucide-react**   | -      | Ícones                         |
-| **sonner**         | 2+     | Notificações toast             |
-| **next-themes**    | -      | Tema claro/escuro              |
+| Technology         | Version | Usage                          |
+| ------------------ | ------- | ------------------------------ |
+| **Next.js**        | 16+     | React framework (App Router)   |
+| **React**          | 19      | UI library                     |
+| **TypeScript**     | 5+      | Static typing                  |
+| **Tailwind CSS**   | 4+      | Utility-first styling          |
+| **@dnd-kit**       | 6+      | Drag and drop                  |
+| **react-markdown** | 10+     | Markdown rendering             |
+| **lucide-react**   | —       | Icons                          |
+| **sonner**         | 2+      | Toast notifications            |
+| **next-themes**    | —       | Light / dark theme             |
 
-## Estrutura de diretórios
+## Directory layout
 
-```
-web/
+```text
+weave-app/
 ├── app/
-│   ├── about/                    # Página institucional
-│   ├── home/                     # Landing page
-│   ├── auth/                     # Páginas de autenticação
-│   │   ├── activate/            # Ativação de conta
-│   │   ├── signin/              # Login
-│   │   ├── signup/              # Cadastro
-│   │   ├── reset-password/      # Recuperação de senha
-│   │   └── modals/              # Modais de autenticação
-│   ├── app/                      # Páginas protegidas (autenticado)
-│   │   ├── home/                # Dashboard
-│   │   ├── notes/               # Gerenciamento de tarefas
-│   │   │   └── view/           # Visualização de tarefa
-│   │   ├── projects/            # Projetos
-│   │   │   └── view/           # Visualização de projeto
-│   │   ├── organization/        # Organizações
-│   │   │   ├── members/        # Membros
-│   │   │   ├── projects/       # Projetos da org
-│   │   │   └── settings/       # Configurações da org
-│   │   ├── notifications/       # Notificações
-│   │   ├── settings/            # Configurações do usuário
-│   │   ├── weave-ai/            # Chat com IA
-│   │   │   ├── agent/          # Agente IA
-│   │   │   └── chat/           # Interface de chat
-│   │   ├── hooks/               # Custom hooks
-│   │   └── components/          # Componentes do app
-│   │       ├── auth/           # Componentes de auth
-│   │       ├── layout/         # Layout (sidebar, header)
-│   │       └── ui/             # Componentes de UI
-│   ├── contexts/                 # Context API (providers)
-│   │   ├── AuthContext          # Estado de autenticação
-│   │   ├── NotesContext         # Estado de tarefas
-│   │   ├── ProjectsContext      # Estado de projetos
-│   │   ├── OrganizationContext  # Estado de organizações
-│   │   ├── ChatContext          # Estado do chat IA
-│   │   └── ThemeContext         # Tema claro/escuro
-│   ├── services/                 # Camada de comunicação com API
-│   │   ├── ai-agent-service/    # Serviço de IA
-│   │   ├── authentication/      # Serviço de autenticação
-│   │   ├── backup-service/      # Serviço de backup
-│   │   ├── health-service/      # Health check
-│   │   ├── notes-service/       # Serviço de tarefas
-│   │   ├── organization/        # Serviço de organizações
-│   │   └── projects-service/    # Serviço de projetos
-│   └── utils/                    # Utilitários
-├── components/ui/                # Componentes UI compartilhados (shadcn)
-├── config/
-│   └── nginx.conf                # Configuração Nginx (produção)
-├── lib/                          # Funções utilitárias
-├── public/                       # Arquivos estáticos
-├── types/                        # Definições TypeScript globais
-├── Dockerfile                    # Container de produção
+│   ├── (public)/           # Landing, auth, activation (no app shell)
+│   ├── (protected)/       # Authenticated area (AppShell)
+│   ├── _components/       # Shared shell and small UI pieces
+│   ├── _contexts/         # Providers (auth, notes, projects, chat, …)
+│   ├── _services/         # HTTP client, API_ENDPOINTS, domain services
+│   ├── _i18n/             # Locale strings
+│   └── _utils/            # Shared helpers
+├── public/                # Static assets
+├── Dockerfile             # Production container (optional)
 └── package.json
 ```
 
-## ⚙️ Arquitetura
+Feature UI is colocated under route folders (for example `app/(protected)/notes/[id]/_components`).
 
-### Context Providers
+## Architecture
 
-Sistema condicional de providers baseado no estado de autenticação:
+### Context providers
 
-```
+Conditional providers depend on authentication state:
+
+```text
 AuthContext → ConditionalProviders → AuthenticatedProviders
-                                      ├── NotesContext
+                                      ├── NotesContext (and related)
                                       ├── ProjectsContext
                                       ├── OrganizationContext
                                       ├── ChatContext
                                       └── ThemeContext
 ```
 
-Os contexts autenticados só são carregados quando o usuário está logado.
+Authenticated-only providers mount after the user is signed in.
 
-### Comunicação com API
+### API client
 
-Cliente centralizado em `services/api-methods.ts`:
+- Central client: [`app/_services/api-methods.ts`](app/_services/api-methods.ts) (`apiClient`, `API_ENDPOINTS`, `API_BASE_URL`).
+- Barrel exports: [`app/_services/index.ts`](app/_services/index.ts).
+- Errors: [`app/_services/api-error.ts`](app/_services/api-error.ts).
+- Requests use `credentials: "include"` where cookies are required.
 
-- Todas as requisições incluem `credentials: 'include'` para cookies HttpOnly
-- Endpoints definidos em `services/index.ts`
-- Tratamento de erros via `api-error.ts`
+### Routes (high level)
 
-### Rotas
+| Route pattern              | Type        | Description                    |
+| -------------------------- | ----------- | ------------------------------ |
+| `/`                        | Public      | Landing                        |
+| `/auth`, `/activate`       | Public      | Sign-in, sign-up, activation   |
+| `/home`                    | Protected   | Dashboard                      |
+| `/notes`, `/notes/[id]`    | Protected   | Notes                          |
+| `/projects`, `/projects/*` | Protected   | Projects                       |
+| `/organization/*`          | Protected   | Organization admin and areas |
+| `/settings/*`              | Protected   | User and workspace settings    |
+| `/weave-ai/*`              | Protected   | AI chat and agents             |
+| `/notifications/*`       | Protected   | Notifications                  |
+| `/calendar`                | Protected   | Calendar                       |
 
-| Rota                 | Tipo      | Descrição                 |
-| -------------------- | --------- | ------------------------- |
-| `/`                  | Pública   | Landing page              |
-| `/about`             | Pública   | Página institucional      |
-| `/auth/*`            | Pública   | Login, cadastro, ativação |
-| `/app`               | Protegida | Dashboard                 |
-| `/app/notes`         | Protegida | Gerenciamento de tarefas    |
-| `/app/projects`      | Protegida | Projetos                  |
-| `/app/organization`  | Protegida | Organizações              |
-| `/app/settings`      | Protegida | Configurações             |
-| `/app/weave-ai`      | Protegida | Chat com IA               |
-| `/app/notifications` | Protegida | Notificações              |
+Exact URLs follow the App Router file tree under `app/(public)` and `app/(protected)`.
 
-## Iniciação do projeto
+## Getting started
 
-### Pré-requisitos
+### Prerequisites
 
-- Node.js 22+
-- npm ou yarn
+- Node.js 20+ (aligned with API CI; use 22+ if that is your team standard)
+- npm or yarn
 
-### Desenvolvimento
+### Development
 
 ```bash
-# Instale as dependências
 npm install
-
-# Configure as variáveis de ambiente
-cp .env.example .env
-
-# Inicie o servidor de desenvolvimento
+cp .env.example .env   # set NEXT_PUBLIC_API_BASE_URL and related vars
 npm run dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000).
 
-### Produção
+### Production
 
 ```bash
-# Build de produção
 npm run build
-
-# Iniciar servidor
 npm start
 ```
 
-### Via Docker (recomendado)
+### Backend stack (monorepo root)
+
+The Next.js app is **not** defined in the root [`docker-compose.yml`](../docker-compose.yml) services list. Run the API, worker, and engine with Compose from the repo root, and run this package locally with `npm run dev`, or containerize `weave-app` in your own override or deployment pipeline.
 
 ```bash
-# Na raiz do monorepo
+cd ..
 docker compose up --build
 ```
 
-## 📜 Scripts
+## Scripts
 
-| Script                 | Descrição                                  |
-| ---------------------- | ------------------------------------------ |
-| `npm run dev`          | Servidor de desenvolvimento com hot-reload |
-| `npm run build`        | Build de produção                          |
-| `npm start`            | Servidor de produção                       |
-| `npm run lint`         | Verificação de lint                        |
-| `npm run lint:fix`     | Correção automática de lint                |
-| `npm run format`       | Formatação com Prettier                    |
-| `npm run format:check` | Verificação de formatação                  |
+| Script                 | Description                    |
+| ---------------------- | ------------------------------ |
+| `npm run dev`          | Dev server with hot reload     |
+| `npm run build`        | Production build               |
+| `npm start`            | Production server              |
+| `npm run lint`         | ESLint                         |
+| `npm run lint:fix`     | ESLint with fixes              |
+| `npm run format`       | Prettier write                 |
+| `npm run format:check` | Prettier check                 |
 
 ---
 
-## Licença
+## License
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
 
-© 2025-2026 Gael Renê Gomes. Todos os direitos reservados sob os termos da licença MIT.
+© 2025–2026 Gael Renê Gomes. All rights reserved under the MIT License terms.
 
-## Autor
+## Author
 
 **Gael Renê Gomes**
 
-- 📧 Email: [hello@gaelgomes.dev](mailto:hello@gaelgomes.dev)
-- 🌐 Website: [gaelgomes.dev](https://gaelgomes.dev)
+- Email: [hello@gaelgomes.dev](mailto:hello@gaelgomes.dev)
+- Website: [gaelgomes.dev](https://gaelgomes.dev)
 - GitHub: [@eugaelgomes](https://github.com/eugaelgomes)
