@@ -28,6 +28,10 @@ const navIconMobileShellClass =
 const navIconDesktopClass =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200 [&>svg]:shrink-0";
 
+/** Desktop search + user chip: light `bg-white` / dark `bg-neutral-950` with xs elevation; dark uses neutral-200 tint. */
+const navbarElevatedSurfaceClass =
+  "bg-white shadow-xs hover:bg-neutral-50 dark:bg-neutral-950 dark:shadow-xs dark:shadow-neutral-200/25 dark:hover:bg-neutral-900";
+
 // --- Custom Hooks
 
 const useKeyboardShortcut = (key: string, callback: () => void) => {
@@ -74,8 +78,9 @@ const formatters = {
 
 // --- Sub-componentes ---
 
-const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "sm" | "md" | "lg" }) => {
+const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "xs" | "sm" | "md" | "lg" }) => {
   const sizeClasses = {
+    xs: "h-[26px] w-[26px]",
     sm: "h-8 w-8",
     md: "h-10 w-10",
     lg: "h-12 w-12",
@@ -85,7 +90,7 @@ const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "sm" | "md" | "l
     <figure
       className={cn(
         sizeClasses[size],
-        "relative flex-shrink-0 overflow-hidden rounded-md border border-gray-100 bg-gray-100 transition-all duration-300 dark:border-surface-dark-border-strong dark:bg-gray-800"
+        "relative flex-shrink-0 overflow-hidden rounded-full border border-gray-200/70 bg-gray-100 transition-all duration-300 dark:border-gray-700 dark:bg-gray-800"
       )}
       aria-label={`Avatar de ${user?.user_name || "Usuário"}`}
     >
@@ -94,8 +99,8 @@ const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "sm" | "md" | "l
           src={user.avatar_url}
           alt={`Avatar de ${user.user_name}`}
           fill
-          className="object-cover"
-          sizes="64px"
+          className="object-cover rounded-full"
+          sizes={size === "xs" ? "28px" : size === "sm" ? "32px" : size === "md" ? "40px" : "48px"}
         />
       ) : (
         <CircleUserRound
@@ -262,7 +267,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
     <>
       <header className="relative z-40 w-full shrink-0 bg-neutral-100 print:hidden dark:bg-[#1d1d1b]">
         <nav
-          className="mx-auto w-full max-w-[1920px] px-1.5 pt-1 pb-0.5 sm:px-2 lg:px-4 lg:py-0 lg:pb-0"
+          className="mx-auto w-full max-w-[1920px] px-1.5 pt-1 pb-0.5 sm:px-2 lg:px-2 lg:py-0 lg:pb-0"
           aria-label="Navegação principal"
         >
           <div
@@ -339,7 +344,10 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                   <button
                     type="button"
                     onClick={() => setIsSearchOpen(true)}
-                    className="group flex w-full max-w-[480px] items-center gap-2.5 rounded-full border border-gray-200/60 bg-brand-beige/40 px-3 py-1 transition-all hover:bg-brand-beige/60 hover:ring-4 hover:ring-brand-yellow/10 dark:border-surface-dark-border dark:bg-[#1d1d1b]/40 dark:hover:bg-gray-800/60"
+                    className={cn(
+                      "group flex w-full max-w-[480px] items-center gap-2.5 rounded-full border-0 px-3 py-1 transition-all",
+                      navbarElevatedSurfaceClass
+                    )}
                     aria-label="Pesquisar no sistema"
                   >
                     <Search
@@ -375,7 +383,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
                   <NotificationsLink ariaLabel={t.nav.notifications} className="md:hidden" surface="mobile" />
 
-                  <div className="relative" ref={desktopMenuRef}>
+                  <div className="relative self-center" ref={desktopMenuRef}>
                     <button
                       type="button"
                       onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -383,24 +391,23 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                       aria-haspopup="menu"
                       aria-label="Abrir menu do usuário"
                       className={cn(
-                        "flex shrink-0 items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50",
-                        "h-8 w-8 rounded-md p-0.5 text-gray-700 hover:bg-black/5 dark:text-white dark:hover:bg-white/10",
-                        "max-lg:active:bg-black/10 dark:max-lg:active:bg-white/[0.14]",
-                        "md:h-auto md:w-auto md:rounded-md md:p-1 md:hover:bg-gray-100/60 dark:md:hover:bg-gray-800/40",
-                        isMenuOpen
-                          ? "bg-black/10 dark:bg-white/15 md:bg-gray-100 dark:md:bg-gray-800"
-                          : ""
+                        navbarElevatedSurfaceClass,
+                        "flex shrink-0 items-center justify-center border-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50",
+                        "h-7 w-7 max-h-8 rounded-full p-px text-gray-700 dark:text-white",
+                        "max-lg:active:bg-neutral-100 dark:max-lg:active:bg-neutral-900",
+                        "md:h-fit md:max-h-8 md:w-auto md:gap-1 md:rounded-full md:py-0.5 md:pr-0.5 md:pl-1.5",
+                        isMenuOpen ? "bg-neutral-100 dark:bg-neutral-900" : ""
                       )}
                     >
-                      <div className="hidden lg:flex lg:flex-col lg:items-end lg:pr-3">
-                        <span className="text-xs leading-none font-bold text-gray-900 dark:text-gray-100">
+                      <div className="hidden max-h-8 min-h-0 shrink lg:flex lg:flex-col lg:items-end lg:justify-center lg:gap-0.5 lg:pr-1.5 lg:leading-none">
+                        <span className="max-w-[140px] truncate text-[8.5px] leading-none font-bold text-gray-900 dark:text-gray-100">
                           {formatters.getDisplayName(user, t.common.user)}
                         </span>
-                        <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">
+                        <span className="max-w-[140px] truncate text-[7px] leading-none font-medium text-gray-600 dark:text-gray-400">
                           @{formatters.getUsername(user, t.common.username)}
                         </span>
                       </div>
-                      <UserAvatar user={user} size="sm" />
+                      <UserAvatar user={user} size="xs" />
                     </button>
 
                     {isMenuOpen && (
