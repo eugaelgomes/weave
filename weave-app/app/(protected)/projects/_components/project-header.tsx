@@ -57,15 +57,15 @@ export default function ProjectHeader({
         {/* View Selectors - Ultra Compact Segmented Control */}
         <div className="flex items-center rounded-md bg-neutral-100 p-0.5 dark:bg-[#1d1d1b]">
           {[
-            { id: "board" as const, icon: <Columns3 className="size-3" />, label: "Board" },
-            { id: "list" as const, icon: <List className="size-3" />, label: "List" },
+            { id: "board" as const, icon: <Columns3 className="size-3" />, label: "board" },
+            { id: "list" as const, icon: <List className="size-3" />, label: "list" },
           ].map((view) => (
             <button
               key={view.id}
               onClick={() => setActiveView(view.id)}
-              className={`flex items-center gap-1 rounded-[4px] px-2 py-1 text-[10px] font-medium transition-all ${
+              className={`flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-all ${
                 activeView === view.id
-                  ? "bg-white text-neutral-950 shadow-sm dark:bg-neutral-800 dark:text-neutral-100"
+                  ? "bg-brand-primary-500 text-neutral-900 shadow-sm dark:bg-brand-primary-500 dark:text-neutral-900"
                   : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-300"
               }`}
             >

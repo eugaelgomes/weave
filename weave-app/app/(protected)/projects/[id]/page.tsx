@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { useNotes } from "@/app/_contexts/notes-context";
@@ -8,7 +8,7 @@ import { useAuth } from "@/app/_contexts/auth-context";
 
 // Componentes importados (idealmente separados em seus próprios arquivos)
 import ProjectHeader from "@/app/(protected)/projects/_components/project-header";
-import ProjectBoard from "@/app/(protected)/projects/_components/project-board";
+import ProjectBoard from "@/app/(protected)/projects/_components/project-board-v2";
 import AddCollaboratorModal from "@/app/(protected)/projects/_components/modals/add-collaborator-modal";
 import AddNoteModal from "@/app/(protected)/projects/_components/modals/add-note-modal";
 import { ProjectFilters } from "@/app/(protected)/projects/_components/project-filters";
@@ -28,6 +28,7 @@ export default function ProjectViewPage() {
     getProjectStages,
     getProjectTags,
     getTaskPriorities,
+    patchProjectTask,
   } = useProjects();
 
   const { notes } = useNotes();
@@ -45,6 +46,7 @@ export default function ProjectViewPage() {
   const [activeView, setActiveView] = useState<"board" | "list">("board");
   const [showAddCollaborator, setShowAddCollaborator] = useState(false);
   const [showAddNote, setShowAddNote] = useState(false);
+  const [addTaskStageId, setAddTaskStageId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!projectId) return;
@@ -89,6 +91,25 @@ export default function ProjectViewPage() {
     fetchProjectData();
   }, [projectId]);
 
+  const isOwner = project?.user_id === user?.id;
+  const canEdit =
+    isOwner ||
+    collaborators.some((c) => c.user_id === user?.id && c.permission === "admin");
+
+  const enrichedProjectNotes = useMemo(() => {
+    return projectNotes.map((projectNote) => {
+      const fullNote = notes.find((note) => note.id === projectNote.id);
+      if (!fullNote) return projectNote;
+      return {
+        ...projectNote,
+        properties: fullNote.properties ?? projectNote.properties,
+        priority_id: fullNote.priority_id ?? projectNote.priority_id,
+        due_date: fullNote.due_date ?? projectNote.due_date,
+        tags: fullNote.tags ?? projectNote.tags,
+      };
+    });
+  }, [notes, projectNotes]);
+
   if (loading) {
     return (
       <div className="flex min-h-[50vh] flex-1 items-center justify-center">
@@ -99,12 +120,8 @@ export default function ProjectViewPage() {
 
   if (!project) return null;
 
-  const isOwner = project.user_id === user?.id;
-  const canEdit =
-    isOwner || collaborators.some((c) => c.user_id === user?.id && c.permission === "admin");
-
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#FAFAFA] dark:bg-[#0E0E11]">
+    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-neutral-50 dark:bg-[#0E0E11]">
       <ProjectHeader
         project={project}
         stagesCount={stages.length}
@@ -121,12 +138,20 @@ export default function ProjectViewPage() {
 
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white shadow-sm dark:shadow-surface-dark-sm dark:bg-[#1d1d1b]/50">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md bg-white shadow-sm dark:bg-[#1d1d1b]/50 dark:shadow-surface-dark-sm">
             {activeView === "board" && (
               <ProjectBoard
                 stages={stages}
-                projectNotes={projectNotes}
+                projectNotes={enrichedProjectNotes}
                 projectTags={projectTags}
+                onAddCard={canEdit ? (stageId) => {
+                  setAddTaskStageId(stageId);
+                  setShowAddNote(true);
+                } : undefined}
+                onPatchTask={async (noteId, taskData) => {
+                  const updatedNotes = await patchProjectTask(projectId, noteId, taskData);
+                  setProjectNotes(updatedNotes);
+                }}
                 onNoteStageChange={(noteId, newStageId) => {
                   setProjectNotes((prev) =>
                     prev.map((n) =>
@@ -161,10 +186,19 @@ export default function ProjectViewPage() {
       {showAddNote && (
         <AddNoteModal
           projectId={projectId}
-          existingNotes={projectNotes}
-          allUserNotes={notes}
-          onClose={() => setShowAddNote(false)}
-          onSuccess={(updatedNotes) => setProjectNotes(updatedNotes)}
+          stageId={addTaskStageId}
+          projectTags={projectTags}
+          projectCollaborators={collaborators}
+          taskPriorities={taskPriorities}
+          onClose={() => {
+            setShowAddNote(false);
+            setAddTaskStageId(null);
+          }}
+          onSuccess={(updatedNotes) => {
+            setProjectNotes(updatedNotes);
+            setShowAddNote(false);
+            setAddTaskStageId(null);
+          }}
         />
       )}
     </div>

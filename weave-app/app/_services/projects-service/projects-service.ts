@@ -27,6 +27,7 @@ import {
   ReasoningEnvelopeSchema,
   ReasoningsListSchema,
   SprintsListSchema,
+  TaskMutationResponseSchema,
   UpdateProjectEnvelopeSchema,
 } from "./projects.schema";
 
@@ -94,7 +95,13 @@ export interface ProjectNote {
   description?: string;
   tags?: string[];
   status?: string;
+  project_id?: string | null;
   project_stage_id?: string | null;
+  properties?: Record<string, unknown>;
+  priority_id?: string | null;
+  due_date?: string | null;
+  comments_count?: number;
+  attachments_count?: number;
   created_by?: {
     user_id: string;
     username: string;
@@ -102,7 +109,8 @@ export interface ProjectNote {
   collaborators?: Array<{
     user_id: string;
     username: string;
-    permission: string;
+    permission?: string;
+    avatar_url?: string | null;
   }>;
   created_at: string;
   updated_at: string;
@@ -173,6 +181,34 @@ export interface ManageCollaboratorData {
 export interface ManageNoteData {
   action: "add" | "sync" | "remove";
   noteId: string;
+}
+
+export interface CreateTaskInStageData {
+  title: string;
+  description?: string;
+  tags?: string[];
+  priority_id?: string | null;
+  due_date?: string | null;
+  collaborator_ids?: string[];
+  properties?: Record<string, unknown>;
+  files?: File[];
+}
+
+export interface PatchProjectTaskData {
+  title?: string;
+  description?: string;
+  priority_id?: string | null;
+  due_date?: string | null;
+  stage_id?: string | null;
+  set_tags?: string[];
+  add_tags?: string[];
+  remove_tags?: string[];
+  set_collaborators?: string[];
+  add_collaborators?: string[];
+  remove_collaborators?: string[];
+  remove_file_ids?: string[];
+  properties?: Record<string, unknown>;
+  files?: File[];
 }
 
 /**
@@ -425,6 +461,75 @@ export const updateProjectNoteStage = async (
   });
   const raw = await handleResponse<unknown>(response);
   return NoteStageUpdateResponseSchema.parse(raw);
+};
+
+export const createTaskInStage = async (
+  projectId: string,
+  stageId: string,
+  taskData: CreateTaskInStageData
+): Promise<ProjectNote[]> => {
+  const formData = new FormData();
+  formData.append("title", taskData.title);
+  if (taskData.description !== undefined) formData.append("description", taskData.description);
+  if (taskData.tags !== undefined) formData.append("tags", JSON.stringify(taskData.tags));
+  if (taskData.priority_id !== undefined)
+    formData.append("priority_id", taskData.priority_id ?? "");
+  if (taskData.due_date !== undefined) formData.append("due_date", taskData.due_date ?? "");
+  if (taskData.collaborator_ids !== undefined) {
+    formData.append("collaborator_ids", JSON.stringify(taskData.collaborator_ids));
+  }
+  if (taskData.properties !== undefined) {
+    formData.append("properties", JSON.stringify(taskData.properties));
+  }
+  if (taskData.files?.length) {
+    taskData.files.forEach((file) => formData.append("files", file));
+  }
+
+  const response = await apiClient.post(API_ENDPOINTS.PROJECTS_STAGE_TASKS(projectId, stageId), formData);
+  const raw = await handleResponse<unknown>(response);
+  const data = TaskMutationResponseSchema.parse(raw);
+  return data.notes as ProjectNote[];
+};
+
+export const patchProjectTask = async (
+  projectId: string,
+  noteId: string,
+  taskData: PatchProjectTaskData
+): Promise<ProjectNote[]> => {
+  const formData = new FormData();
+  if (taskData.title !== undefined) formData.append("title", taskData.title);
+  if (taskData.description !== undefined) formData.append("description", taskData.description);
+  if (taskData.priority_id !== undefined)
+    formData.append("priority_id", taskData.priority_id ?? "");
+  if (taskData.due_date !== undefined) formData.append("due_date", taskData.due_date ?? "");
+  if (taskData.stage_id !== undefined) formData.append("stage_id", taskData.stage_id ?? "");
+  if (taskData.set_tags !== undefined) formData.append("set_tags", JSON.stringify(taskData.set_tags));
+  if (taskData.add_tags !== undefined) formData.append("add_tags", JSON.stringify(taskData.add_tags));
+  if (taskData.remove_tags !== undefined)
+    formData.append("remove_tags", JSON.stringify(taskData.remove_tags));
+  if (taskData.set_collaborators !== undefined) {
+    formData.append("set_collaborators", JSON.stringify(taskData.set_collaborators));
+  }
+  if (taskData.add_collaborators !== undefined) {
+    formData.append("add_collaborators", JSON.stringify(taskData.add_collaborators));
+  }
+  if (taskData.remove_collaborators !== undefined) {
+    formData.append("remove_collaborators", JSON.stringify(taskData.remove_collaborators));
+  }
+  if (taskData.remove_file_ids !== undefined) {
+    formData.append("remove_file_ids", JSON.stringify(taskData.remove_file_ids));
+  }
+  if (taskData.properties !== undefined) {
+    formData.append("properties", JSON.stringify(taskData.properties));
+  }
+  if (taskData.files?.length) {
+    taskData.files.forEach((file) => formData.append("files", file));
+  }
+
+  const response = await apiClient.patch(API_ENDPOINTS.PROJECTS_TASK_BY_ID(projectId, noteId), formData);
+  const raw = await handleResponse<unknown>(response);
+  const data = TaskMutationResponseSchema.parse(raw);
+  return data.notes as ProjectNote[];
 };
 
 // --- STAGE DELETE ---

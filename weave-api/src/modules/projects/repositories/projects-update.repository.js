@@ -515,6 +515,15 @@ class ProjectsUpdateRepository {
       WHERE id = $2::uuid 
         AND project_id = $1::uuid
         AND deleted = false
+        AND (
+          $3::uuid IS NULL
+          OR EXISTS (
+            SELECT 1 FROM project_stages ps
+            WHERE ps.id = $3::uuid
+              AND ps.project_id = $1::uuid
+              AND ps.deleted = false
+          )
+        )
       RETURNING id::text, project_stage_id::text;
     `;
     return executeQuery(query, [projectId, noteId, stageId]);

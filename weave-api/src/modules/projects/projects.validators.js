@@ -14,6 +14,7 @@ const {
 const UUID_PARAM_NAMES = new Set([
   "id",
   "projectId",
+  "noteId",
   "stageId",
   "sprintId",
   "reasoningId",

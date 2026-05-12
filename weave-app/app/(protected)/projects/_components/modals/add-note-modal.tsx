@@ -1,41 +1,67 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { FaTimes, FaSpinner } from "react-icons/fa";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Paperclip, Plus } from "lucide-react";
 import { useProjects } from "@/app/_contexts/projects-context";
 
 interface AddNoteModalProps {
   projectId: string;
-  existingNotes: any[];
-  allUserNotes: any[];
+  stageId: string | null;
+  projectTags: Array<{ id: string; name: string }>;
+  projectCollaborators: Array<{ user_id: string; username: string; name?: string }>;
+  taskPriorities: Array<{ id: string; name: string; color_hex?: string | null }>;
   onClose: () => void;
   onSuccess: (updatedNotes: any[]) => void;
 }
 
 export default function AddNoteModal({
   projectId,
-  existingNotes,
-  allUserNotes,
+  stageId,
+  projectTags,
+  projectCollaborators,
+  taskPriorities,
   onClose,
   onSuccess,
 }: AddNoteModalProps) {
-  const { addNoteToProject, getProjectNotes } = useProjects();
-  const [isAdding, setIsAdding] = useState<string | null>(null);
+  const { createTaskInStage } = useProjects();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [priorityId, setPriorityId] = useState<string>("");
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [selectedCollaborators, setSelectedCollaborators] = useState<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Derivação de estado: Calcula quais tarefas do utilizador AINDA NÃO estão no projeto
-  const availableNotes = allUserNotes.filter(
-    (note) => !existingNotes.some((pn) => pn.id === note.id)
+  const disabled = !stageId || !title.trim() || isSaving;
+  const stageLabel = useMemo(
+    () => (stageId ? `Estágio: ${stageId.slice(0, 8)}...` : "Nenhum estágio selecionado"),
+    [stageId]
   );
 
-  const handleAddNote = async (noteId: string) => {
-    setIsAdding(noteId);
+  const toggleValue = (value: string, values: string[], setter: (next: string[]) => void) => {
+    if (values.includes(value)) {
+      setter(values.filter((item) => item !== value));
+      return;
+    }
+    setter([...values, value]);
+  };
+
+  const handleCreateTask = async () => {
+    if (!stageId || !title.trim()) return;
+    setIsSaving(true);
     try {
-      await addNoteToProject(projectId, noteId);
-      const updatedNotes = await getProjectNotes(projectId);
+      const updatedNotes = await createTaskInStage(projectId, stageId, {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        tags: selectedTagIds,
+        priority_id: priorityId || null,
+        collaborator_ids: selectedCollaborators,
+        files,
+      });
       onSuccess(updatedNotes);
-      onClose(); // Fechar após o sucesso
     } catch (error) {
-      console.error("Erro ao adicionar tarefa:", error);
-      setIsAdding(null);
+      console.error("Erro ao criar tarefa:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -43,65 +69,141 @@ export default function AddNoteModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity dark:bg-black/70">
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
 
-      <div className="relative z-10 w-full max-w-md rounded-xl border border-neutral-200 bg-white p-5 shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+      <div className="relative z-10 w-full max-w-xl rounded-md border border-neutral-200 bg-white p-5 shadow-2xl dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-xl">
         <header className="mb-4 flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-sm font-bold text-neutral-800 dark:text-neutral-100">
             <FileText className="text-brand-primary-500 h-4 w-4" />
-            Adicionar Tarefa ao Projeto
+            Criar tarefa no estágio
           </h3>
           <button
             onClick={onClose}
+            title="Fechar modal"
+            aria-label="Fechar modal"
             className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
           >
             <FaTimes className="h-3.5 w-3.5" />
           </button>
         </header>
 
-        <div className="min-h-[200px]">
-          {availableNotes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 py-10 dark:border-surface-dark-border">
-              <FileText className="mb-2 h-8 w-8 text-neutral-300 dark:text-neutral-700" />
-              <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                Nenhuma tarefa disponível
-              </p>
-              <p className="mt-1 text-xs text-neutral-400">
-                Todas as suas tarefas já foram adicionadas a este projeto.
-              </p>
-            </div>
-          ) : (
-            <>
-              <p className="mb-3 text-xs text-neutral-500 dark:text-neutral-400">
-                Selecione uma tarefa para a associar a este projeto e disponibilizá-la no seu Quadro.
-              </p>
-              <div className="max-h-72 space-y-2 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-200 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-700">
-                {availableNotes.map((note) => (
-                  <button
-                    key={note.id}
-                    onClick={() => handleAddNote(note.id)}
-                    disabled={isAdding === note.id}
-                    className="group dark:hover:bg-brand-primary-500/5 relative flex w-full flex-col gap-1.5 rounded-lg border border-neutral-200 bg-white p-3 text-left transition-all hover:border-yellow-500/50 hover:bg-yellow-50/30 disabled:opacity-60 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:border-yellow-500/30"
-                  >
-                    <div className="flex w-full items-start justify-between gap-2">
-                      <p className="dark:group-hover:text-brand-primary-500 text-xs font-semibold text-neutral-800 transition-colors group-hover:text-yellow-600 dark:text-neutral-200">
-                        {note.title}
-                      </p>
-                      {isAdding === note.id ? (
-                        <FaSpinner className="text-brand-primary-500 h-3 w-3 animate-spin" />
-                      ) : (
-                        <Plus className="group-hover:text-brand-primary-500 h-3.5 w-3.5 text-neutral-400 opacity-0 transition-all group-hover:opacity-100" />
-                      )}
-                    </div>
+        <div className="space-y-3">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">{stageLabel}</p>
 
-                    {note.content && (
-                      <p className="line-clamp-2 text-[10px] leading-relaxed text-neutral-500 dark:text-neutral-400">
-                        {note.content.substring(0, 120)}...
-                      </p>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+          <input
+            type="text"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Título da tarefa"
+            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none focus:border-brand-primary-500 dark:border-surface-dark-border dark:bg-[#141414] dark:text-neutral-200"
+          />
+
+          <textarea
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            placeholder="Descrição (opcional)"
+            rows={3}
+            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none focus:border-brand-primary-500 dark:border-surface-dark-border dark:bg-[#141414] dark:text-neutral-200"
+          />
+
+          <select
+            value={priorityId}
+            onChange={(event) => setPriorityId(event.target.value)}
+            aria-label="Selecionar prioridade da tarefa"
+            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700 outline-none focus:border-brand-primary-500 dark:border-surface-dark-border dark:bg-[#141414] dark:text-neutral-200"
+          >
+            <option value="">Sem prioridade</option>
+            {taskPriorities.map((priority) => (
+              <option key={priority.id} value={priority.id}>
+                {priority.name}
+              </option>
+            ))}
+          </select>
+
+          <div className="rounded-md border border-neutral-200 p-2 dark:border-surface-dark-border">
+            <p className="mb-1 text-xs font-semibold text-neutral-600 dark:text-neutral-300">Tags</p>
+            <div className="flex flex-wrap gap-2">
+              {projectTags.map((tag) => (
+                <button
+                  type="button"
+                  key={tag.id}
+                  onClick={() => toggleValue(tag.id, selectedTagIds, setSelectedTagIds)}
+                  className={`rounded-md border px-2 py-1 text-[11px] ${
+                    selectedTagIds.includes(tag.id)
+                      ? "border-brand-primary-500 bg-brand-primary-500/10 text-brand-primary-500"
+                      : "border-neutral-200 text-neutral-500 dark:border-surface-dark-border dark:text-neutral-300"
+                  }`}
+                >
+                  {tag.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-md border border-neutral-200 p-2 dark:border-surface-dark-border">
+            <p className="mb-1 text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+              Colaboradores
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {projectCollaborators.map((collaborator) => (
+                <button
+                  type="button"
+                  key={collaborator.user_id}
+                  onClick={() =>
+                    toggleValue(
+                      collaborator.user_id,
+                      selectedCollaborators,
+                      setSelectedCollaborators
+                    )
+                  }
+                  className={`rounded-md border px-2 py-1 text-[11px] ${
+                    selectedCollaborators.includes(collaborator.user_id)
+                      ? "border-brand-primary-500 bg-brand-primary-500/10 text-brand-primary-500"
+                      : "border-neutral-200 text-neutral-500 dark:border-surface-dark-border dark:text-neutral-300"
+                  }`}
+                >
+                  {collaborator.name || collaborator.username}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-neutral-300 px-3 py-2 text-xs text-neutral-500 transition-colors hover:border-brand-primary-500 hover:text-brand-primary-500 dark:border-surface-dark-border dark:text-neutral-300">
+            <Paperclip className="h-3.5 w-3.5" />
+            <span>{files.length > 0 ? `${files.length} arquivo(s) selecionado(s)` : "Anexar arquivos"}</span>
+            <input
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(event) => setFiles(Array.from(event.target.files || []))}
+            />
+          </label>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md border border-neutral-200 px-3 py-2 text-xs font-medium text-neutral-500 hover:bg-neutral-100 dark:border-surface-dark-border dark:text-neutral-300 dark:hover:bg-neutral-800"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={handleCreateTask}
+              className="bg-brand-primary-500 inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold text-neutral-900 transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSaving ? (
+                <>
+                  <FaSpinner className="h-3 w-3 animate-spin" />
+                  Salvando
+                </>
+              ) : (
+                <>
+                  <Plus className="h-3 w-3" />
+                  Criar tarefa
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

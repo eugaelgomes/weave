@@ -86,10 +86,17 @@ export const ProjectNoteSchema = z
         z.object({
           user_id: z.string(),
           username: z.string(),
-          permission: z.string(),
+          permission: z.string().optional(),
+          avatar_url: z.string().nullable().optional(),
         })
       )
       .optional(),
+    project_id: z.string().nullable().optional(),
+    properties: z.record(z.string(), z.unknown()).optional(),
+    priority_id: z.string().nullable().optional(),
+    due_date: z.string().nullable().optional(),
+    comments_count: z.number().optional(),
+    attachments_count: z.number().optional(),
     created_at: z.string(),
     updated_at: z.string(),
   })
@@ -167,6 +174,12 @@ export const ProjectNotesListSchema = z.object({
 export const ManageNotesResponseSchema = z.object({
   message: z.string(),
   notes: z.array(ProjectNoteSchema).optional(),
+});
+
+export const TaskMutationResponseSchema = z.object({
+  message: z.string(),
+  noteId: z.string().optional(),
+  notes: z.array(ProjectNoteSchema),
 });
 
 export const NoteStageUpdateResponseSchema = z.object({

@@ -12,6 +12,7 @@ const {
   PROJECT_PERMISSIONS,
 } = require("@/middlewares/auth/require-project-permission");
 const { projectUpdateUpload } = require("@/utils/data/project-upload");
+const { noteUpdateUpload } = require("@/utils/data/note-upload");
 const {
   highTrafficLimiter,
   standardTrafficLimiter,
@@ -170,6 +171,22 @@ router.put(
   "/:projectId/notes/:noteId/stage",
   requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
   ProjectsUpdateController.updateNoteStage.bind(ProjectsUpdateController)
+);
+
+router.post(
+  "/:projectId/stages/:stageId/tasks",
+  standardTrafficLimiter,
+  requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
+  noteUpdateUpload.fields([{ name: "files", maxCount: 10 }]),
+  ProjectsUpdateController.createTaskInStage.bind(ProjectsUpdateController)
+);
+
+router.patch(
+  "/:projectId/tasks/:noteId",
+  standardTrafficLimiter,
+  requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
+  noteUpdateUpload.fields([{ name: "files", maxCount: 10 }]),
+  ProjectsUpdateController.patchTaskInProject.bind(ProjectsUpdateController)
 );
 
 router.get(

@@ -12,6 +12,8 @@ const {
   inviteProjectMember,
 } = require("@/services/email/templates/project-add-person");
 const spacesService = require("@/services/storage");
+const notesRepository = require("@/modules/notes/notes.repository");
+const taskPrioritiesRepository = require("@/modules/task_priorities/repositories/task-priorities.repository");
 const {
   ASSIGNABLE_PROJECT_ROLES,
 } = require("@/modules/projects/project-role-policy");
@@ -794,6 +796,342 @@ class ProjectsUpdateController extends ProjectsCoreController {
       this._handleError(error, res, next);
     }
   }
+
+  _parseStringArrayField(value) {
+    if (value === undefined || value === null || value === "") return [];
+    if (Array.isArray(value)) return value.map((item) => String(item)).filter(Boolean);
+    if (typeof value === "string") {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+          return parsed.map((item) => String(item)).filter(Boolean);
+        }
+      } catch {
+        return value
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+    }
+    return [];
+  }
+
+  _parseNullableField(value) {
+    if (value === undefined) return undefined;
+    if (value === null || value === "") return null;
+    return String(value);
+  }
+
+  async _validateTaskPriorityScope(priorityId, projectId, orgId) {
+    if (!priorityId) return;
+    const tp = await taskPrioritiesRepository.findActiveById(priorityId);
+    if (!tp) {
+      throw new Error("Prioridade inválida");
+    }
+    if (tp.project_id && String(tp.project_id) !== String(projectId)) {
+      throw new Error("Prioridade não pertence a este projeto");
+    }
+    if (tp.org_id && orgId && String(tp.org_id) !== String(orgId)) {
+      throw new Error("Prioridade não pertence à organização do projeto");
+    }
+  }
+
+  async _uploadTaskFiles(noteId, userId, files) {
+    if (!Array.isArray(files) || files.length === 0) return [];
+    return Promise.all(
+      files.map(async (file) => {
+        const result = await spacesService.uploadNoteFile(
+          file.buffer,
+          file.mimetype,
+          noteId,
+          userId,
+          file.originalname
+        );
+        return {
+          id: result.fileName,
+          name: file.originalname,
+          path: result.key || result.path || "",
+          type: file.mimetype,
+        };
+      })
+    );
+  }
+
+  async createTaskInStage(req, res, next) {
+    try {
+      const { projectId, stageId } = req.params;
+      const {
+        title,
+        description = "",
+        tags,
+        priority_id,
+        due_date,
+        collaborator_ids,
+        properties,
+      } = req.body;
+
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      if (!title || !String(title).trim()) {
+        throw new Error("Título é obrigatório");
+      }
+
+      await this._validateProjectAccess(projectId, userId);
+      const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
+      if (!canWrite) {
+        throw new Error(
+          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
+        );
+      }
+
+      const stageRows = await this.projectsRepository.getProjectStages(projectId);
+      if (!stageRows.some((stage) => String(stage.id) === String(stageId))) {
+        return res.status(404).json({ error: "Estágio não encontrado para este projeto" });
+      }
+
+      const project = await this.projectsRepository.getProjectByIdWithAccess(
+        projectId,
+        userId
+      );
+      const projectOrgId = project?.[0]?.organization_id || null;
+      await this._validateTaskPriorityScope(
+        this._parseNullableField(priority_id),
+        projectId,
+        projectOrgId
+      );
+
+      const parsedTags = this._parseStringArrayField(tags);
+      let parsedProperties = properties || {};
+      if (typeof properties === "string") {
+        try {
+          parsedProperties = JSON.parse(properties || "{}");
+        } catch {
+          return res.status(400).json({ error: "properties deve ser um JSON válido" });
+        }
+      }
+      const parsedDueDate =
+        due_date && due_date !== "" ? new Date(due_date).toISOString() : null;
+      const parsedPriorityId = this._parseNullableField(priority_id);
+
+      const createdNote = await notesRepository.createNotesQuery(
+        userId,
+        String(title).trim(),
+        description,
+        parsedTags,
+        "VISIBLE",
+        projectId,
+        parsedPriorityId,
+        null
+      );
+
+      const uploadedFiles = await this._uploadTaskFiles(
+        createdNote.id,
+        userId,
+        req.files?.files || []
+      );
+
+      const mergedProperties = {
+        ...(createdNote.properties || {}),
+        ...(parsedProperties && typeof parsedProperties === "object" ? parsedProperties : {}),
+      };
+      if (uploadedFiles.length > 0) {
+        mergedProperties.files = [
+          ...(Array.isArray(mergedProperties.files) ? mergedProperties.files : []),
+          ...uploadedFiles,
+        ];
+      }
+
+      await notesRepository.updateNoteById(createdNote.id, {
+        due_date: parsedDueDate,
+        project_stage_id: stageId,
+        properties: mergedProperties,
+      });
+
+      const collaboratorIds = this._parseStringArrayField(collaborator_ids);
+      await Promise.all(
+        collaboratorIds
+          .filter((collaboratorId) => collaboratorId !== userId)
+          .map((collaboratorId) =>
+            notesRepository.addCollaborator(createdNote.id, collaboratorId)
+          )
+      );
+
+      await this.projectsRepository.updateNoteInProject(projectId, createdNote.id, userId);
+      const notes = await this.projectsRepository.getAssociatedNotes(projectId, userId);
+
+      res.status(201).json({
+        message: "Tarefa criada com sucesso",
+        noteId: String(createdNote.id),
+        notes,
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  async patchTaskInProject(req, res, next) {
+    try {
+      const { projectId, noteId } = req.params;
+      const {
+        title,
+        description,
+        priority_id,
+        due_date,
+        stage_id,
+        set_tags,
+        add_tags,
+        remove_tags,
+        set_collaborators,
+        add_collaborators,
+        remove_collaborators,
+        remove_file_ids,
+        properties,
+      } = req.body;
+
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+      const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
+      if (!canWrite) {
+        throw new Error(
+          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
+        );
+      }
+
+      const currentNote = await notesRepository.getNoteById(noteId);
+      if (!currentNote || String(currentNote.project_id) !== String(projectId)) {
+        return res.status(404).json({ error: "Tarefa não encontrada neste projeto" });
+      }
+
+      const project = await this.projectsRepository.getProjectByIdWithAccess(
+        projectId,
+        userId
+      );
+      const projectOrgId = project?.[0]?.organization_id || null;
+      const parsedPriorityId = this._parseNullableField(priority_id);
+      if (parsedPriorityId !== undefined) {
+        await this._validateTaskPriorityScope(parsedPriorityId, projectId, projectOrgId);
+      }
+
+      const updateData = {};
+      if (title !== undefined) updateData.title = String(title).trim();
+      if (description !== undefined) updateData.description = description;
+      if (parsedPriorityId !== undefined) updateData.priority_id = parsedPriorityId;
+      if (due_date !== undefined) {
+        updateData.due_date =
+          due_date === null || due_date === "" ? null : new Date(due_date).toISOString();
+      }
+
+      if (stage_id !== undefined) {
+        updateData.project_stage_id = this._parseNullableField(stage_id);
+      }
+
+      const currentTags = Array.isArray(currentNote.tags) ? currentNote.tags.map(String) : [];
+      let nextTags = currentTags;
+      const setTags = this._parseStringArrayField(set_tags);
+      if (set_tags !== undefined) {
+        nextTags = [...new Set(setTags)];
+      } else {
+        const addTags = this._parseStringArrayField(add_tags);
+        const removeTags = new Set(this._parseStringArrayField(remove_tags));
+        nextTags = [...new Set([...currentTags, ...addTags])].filter(
+          (tagId) => !removeTags.has(tagId)
+        );
+      }
+      updateData.tags = nextTags;
+
+      let incomingProperties = properties || {};
+      if (typeof properties === "string") {
+        try {
+          incomingProperties = JSON.parse(properties || "{}");
+        } catch {
+          return res.status(400).json({ error: "properties deve ser um JSON válido" });
+        }
+      }
+      const mergedProperties = {
+        ...(currentNote.properties || {}),
+        ...(incomingProperties && typeof incomingProperties === "object"
+          ? incomingProperties
+          : {}),
+      };
+
+      const uploadedFiles = await this._uploadTaskFiles(
+        noteId,
+        userId,
+        req.files?.files || []
+      );
+
+      if (uploadedFiles.length > 0) {
+        mergedProperties.files = [
+          ...(Array.isArray(mergedProperties.files) ? mergedProperties.files : []),
+          ...uploadedFiles,
+        ];
+      }
+
+      const removeFileIds = new Set(this._parseStringArrayField(remove_file_ids));
+      if (removeFileIds.size > 0 && Array.isArray(mergedProperties.files)) {
+        const filesToDelete = mergedProperties.files.filter((file) => removeFileIds.has(file.id));
+        await Promise.all(
+          filesToDelete
+            .filter((file) => file.path)
+            .map((file) => spacesService.deleteImage(file.path).catch(() => null))
+        );
+        mergedProperties.files = mergedProperties.files.filter(
+          (file) => !removeFileIds.has(file.id)
+        );
+      }
+      updateData.properties = mergedProperties;
+
+      await notesRepository.updateNoteById(noteId, updateData);
+
+      const setCollaborators = this._parseStringArrayField(set_collaborators);
+      const addCollaborators = this._parseStringArrayField(add_collaborators);
+      const removeCollaborators = this._parseStringArrayField(remove_collaborators);
+
+      if (set_collaborators !== undefined) {
+        const currentCollaborators = await notesRepository.getCollaboratorsByNoteId(noteId);
+        const targetIds = new Set(setCollaborators);
+        await Promise.all(
+          currentCollaborators
+            .filter((collaborator) => !collaborator.removed)
+            .filter((collaborator) => !targetIds.has(String(collaborator.user_id)))
+            .map((collaborator) =>
+              notesRepository.removeCollaborator(noteId, String(collaborator.user_id))
+            )
+        );
+        await Promise.all(
+          [...targetIds]
+            .filter((collaboratorId) => collaboratorId !== userId)
+            .map((collaboratorId) => notesRepository.addCollaborator(noteId, collaboratorId))
+        );
+      } else {
+        await Promise.all(
+          addCollaborators
+            .filter((collaboratorId) => collaboratorId !== userId)
+            .map((collaboratorId) => notesRepository.addCollaborator(noteId, collaboratorId))
+        );
+        await Promise.all(
+          removeCollaborators.map((collaboratorId) =>
+            notesRepository.removeCollaborator(noteId, collaboratorId)
+          )
+        );
+      }
+
+      await this.projectsRepository.updateNoteInProject(projectId, noteId, userId);
+      const notes = await this.projectsRepository.getAssociatedNotes(projectId, userId);
+
+      res.status(200).json({
+        message: "Tarefa atualizada com sucesso",
+        noteId,
+        notes,
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
   async updateNoteStage(req, res, next) {
     try {
       const { projectId, noteId } = req.params;
@@ -803,8 +1141,17 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      if (!stageId) {
-        throw new Error("O campo 'stageId' é obrigatório.");
+      const parsedStageId =
+        stageId === undefined || stageId === null || stageId === ""
+          ? null
+          : String(stageId);
+      if (parsedStageId) {
+        const stages = await this.projectsRepository.getProjectStages(projectId);
+        if (!stages.some((stage) => String(stage.id) === parsedStageId)) {
+          return res.status(404).json({
+            error: "Estágio não encontrado para este projeto.",
+          });
+        }
       }
 
       // Validação de segurança: O usuário tem acesso ao projeto?
@@ -821,7 +1168,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const result = await this.projectsRepository.updateNoteStage(
         projectId,
         noteId,
-        stageId
+        parsedStageId
       );
 
       if (!result || result.length === 0) {

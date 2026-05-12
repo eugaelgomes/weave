@@ -48,11 +48,13 @@ const ASSIGNABLE_PROJECT_ROLES = Object.freeze([
   "viewer",
 ]);
 
+/**
+ * Roles allowed to pass `project_members.role` checks in SQL WHERE clauses.
+ * Must use only values from DB type `project_member_role_enum` (not org roles like ADMIN/MEMBER).
+ */
 const PROJECT_WRITE_CAPABLE_ROLES = Object.freeze([
   PROJECT_ROLES.PROJECT_MANAGER,
   PROJECT_ROLES.CONTRIBUTOR,
-  "ADMIN",
-  "MEMBER",
 ]);
 
 function normalizeProjectRole(role) {

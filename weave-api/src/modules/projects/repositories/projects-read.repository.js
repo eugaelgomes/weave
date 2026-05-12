@@ -989,14 +989,34 @@ class ProjectsReadRepository {
       SELECT 
         n.id::text,
         n.user_id::text,
+        n.project_id::text,
         n.title,
         n.description,
         n.tags,
         n.status,
         n.project_stage_id::text,
+        n.properties,
+        n.priority_id::text,
+        n.due_date,
         n.created_at,
         n.updated_at,
-        nu.username AS created_by_username
+        nu.username AS created_by_username,
+        COALESCE(
+          (
+            SELECT jsonb_agg(
+              jsonb_build_object(
+                'user_id', c.user_id::text,
+                'username', c.username,
+                'avatar_url', c.avatar_url
+              )
+            )
+            FROM note_collaborators nc
+            JOIN users c ON c.user_id = nc.user_id
+            WHERE nc.note_id = n.id
+              AND nc.removed = false
+          ),
+          '[]'::jsonb
+        ) AS collaborators
       FROM notes n
       JOIN users nu ON nu.user_id = n.user_id
       WHERE n.project_id = $1::uuid
@@ -1017,14 +1037,34 @@ class ProjectsReadRepository {
       SELECT 
         n.id::text,
         n.user_id::text,
+        n.project_id::text,
         n.title,
         n.description,
         n.tags,
         n.status,
         n.project_stage_id::text,
+        n.properties,
+        n.priority_id::text,
+        n.due_date,
         n.created_at,
         n.updated_at,
-        nu.username AS created_by_username
+        nu.username AS created_by_username,
+        COALESCE(
+          (
+            SELECT jsonb_agg(
+              jsonb_build_object(
+                'user_id', c.user_id::text,
+                'username', c.username,
+                'avatar_url', c.avatar_url
+              )
+            )
+            FROM note_collaborators nc
+            JOIN users c ON c.user_id = nc.user_id
+            WHERE nc.note_id = n.id
+              AND nc.removed = false
+          ),
+          '[]'::jsonb
+        ) AS collaborators
       FROM notes n
       JOIN users nu ON nu.user_id = n.user_id
       WHERE n.project_id = $1::uuid
@@ -1199,14 +1239,34 @@ class ProjectsReadRepository {
       SELECT 
         n.id::text,
         n.user_id::text,
+        n.project_id::text,
         n.title,
         n.description,
         n.tags,
         n.status,
         n.project_stage_id::text,
+        n.properties,
+        n.priority_id::text,
+        n.due_date,
         n.created_at,
         n.updated_at,
         nu.username AS created_by_username,
+        COALESCE(
+          (
+            SELECT jsonb_agg(
+              jsonb_build_object(
+                'user_id', c.user_id::text,
+                'username', c.username,
+                'avatar_url', c.avatar_url
+              )
+            )
+            FROM note_collaborators nc
+            JOIN users c ON c.user_id = nc.user_id
+            WHERE nc.note_id = n.id
+              AND nc.removed = false
+          ),
+          '[]'::jsonb
+        ) AS collaborators,
         COUNT(*) OVER() AS total_count
       FROM notes n
       JOIN users nu ON nu.user_id = n.user_id

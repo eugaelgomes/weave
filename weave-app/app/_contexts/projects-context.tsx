@@ -19,6 +19,8 @@ import {
   manageProjectNote as manageProjectNoteService,
   fetchProjectStages as fetchProjectStagesService,
   updateProjectNoteStage as updateProjectNoteStageService,
+  createTaskInStage as createTaskInStageService,
+  patchProjectTask as patchProjectTaskService,
   fetchProjectsStats as fetchProjectsStatsService,
   fetchAiReportConfig as fetchAiReportConfigService,
   putProjectAiReportConfig as putProjectAiReportConfigService,
@@ -42,6 +44,8 @@ import {
   type PatchProjectStagePayload,
   type ManageCollaboratorData,
   type ManageNoteData,
+  type CreateTaskInStageData,
+  type PatchProjectTaskData,
   type ProjectDashboardStats,
   type ProjectStatsFilters,
   type AiReportConfig,
@@ -224,6 +228,16 @@ export interface ProjectsContextType {
   // Funções de tarefas
   getProjectNotes: (projectId: string) => Promise<ProjectNote[]>;
   addNoteToProject: (projectId: string, noteId: string) => Promise<boolean>;
+  createTaskInStage: (
+    projectId: string,
+    stageId: string,
+    taskData: CreateTaskInStageData
+  ) => Promise<ProjectNote[]>;
+  patchProjectTask: (
+    projectId: string,
+    noteId: string,
+    taskData: PatchProjectTaskData
+  ) => Promise<ProjectNote[]>;
   syncProjectNote: (projectId: string, noteId: string) => Promise<boolean>;
   removeNoteFromProject: (projectId: string, noteId: string) => Promise<boolean>;
   updateProjectNoteStage: (projectId: string, noteId: string, stageId: string) => Promise<void>;
@@ -845,6 +859,42 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     [user?.id, fetchProjects]
   );
 
+  const createTaskInStage = useCallback(
+    async (
+      projectId: string,
+      stageId: string,
+      taskData: CreateTaskInStageData
+    ): Promise<ProjectNote[]> => {
+      if (!user?.id) return [];
+
+      try {
+        return await createTaskInStageService(projectId, stageId, taskData);
+      } catch (err: unknown) {
+        console.error("Erro ao criar tarefa no estágio:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
+  const patchProjectTask = useCallback(
+    async (
+      projectId: string,
+      noteId: string,
+      taskData: PatchProjectTaskData
+    ): Promise<ProjectNote[]> => {
+      if (!user?.id) return [];
+
+      try {
+        return await patchProjectTaskService(projectId, noteId, taskData);
+      } catch (err: unknown) {
+        console.error("Erro ao atualizar tarefa no projeto:", err);
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
   const syncProjectNote = useCallback(
     async (projectId: string, noteId: string): Promise<boolean> => {
       if (!user?.id) return false;
@@ -1130,6 +1180,8 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     removeCollaborator,
     getProjectNotes,
     addNoteToProject,
+    createTaskInStage,
+    patchProjectTask,
     syncProjectNote,
     removeNoteFromProject,
     updateProjectNoteStage,

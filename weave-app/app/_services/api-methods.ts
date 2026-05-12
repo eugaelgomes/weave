@@ -82,6 +82,10 @@ export const API_ENDPOINTS = {
   PROJECTS_NOTES: (projectId: string) => `/projects/${projectId}/notes`,
   PROJECTS_NOTE_STAGE: (projectId: string, noteId: string) =>
     `/projects/${projectId}/notes/${noteId}/stage`,
+  PROJECTS_STAGE_TASKS: (projectId: string, stageId: string) =>
+    `/projects/${projectId}/stages/${stageId}/tasks`,
+  PROJECTS_TASK_BY_ID: (projectId: string, noteId: string) =>
+    `/projects/${projectId}/tasks/${noteId}`,
   PROJECTS_TAGS: (projectId: string) => `/projects/${projectId}/tags`,
   PROJECTS_TAG_BY_ID: (projectId: string, tagId: string) => `/projects/${projectId}/tags/${tagId}`,
   PROJECTS_TASK_PRIORITIES: (projectId: string) => `/projects/${projectId}/task-priorities`,
@@ -291,7 +295,7 @@ class ApiClient {
     return this.request(endpoint, {
       ...options,
       method: "PATCH",
-      body: data ? JSON.stringify(data) : undefined,
+      body: data instanceof FormData ? data : data ? JSON.stringify(data) : undefined,
     });
   }
 
