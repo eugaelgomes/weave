@@ -3,15 +3,19 @@
 import React, { useEffect, useCallback, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import type { Editor } from "@tiptap/react";
+import type { JSONContent } from "@tiptap/core";
+import type { EditorView } from "@tiptap/pm/view";
 import { Loader2, Check } from "lucide-react";
+import { toast } from "sonner";
 
 import type { Block, CreateBlockData } from "@/app/_services/notes-service/notes.schema";
 import { uploadNoteDocumentImages } from "@/app/_services/notes-service/notes-service";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { createTiptapExtensions } from "./note-tiptap-extensions";
-import { blocksToTiptapDoc, tiptapDocToBlocks, isDocumentEmpty } from "./note-tiptap-serializer";
+import { blocksToTiptapDoc, tiptapDocToBlocks } from "./note-tiptap-serializer";
 import { NoteTiptapBubbleMenu, NoteTiptapFloatingMenu } from "./note-tiptap-menu";
 import { TiptapDragHandle } from "./note-tiptap-drag-handle";
+import { getClipboardImagesForUpload, sanitizePastedHtml } from "./note-tiptap-paste";
 import "./note-tiptap-styles.css";
 
 interface NoteTiptapEditorProps {
@@ -92,10 +96,19 @@ export function NoteTiptapEditor({
     [onSave]
   );
 
-  const uploadDocumentImagesForNote = useCallback(async (files: File[]) => {
-    const { files: uploaded } = await uploadNoteDocumentImages(noteId, files);
-    return uploaded.map((f) => getStorageUrl(f.path));
-  }, [noteId]);
+  const uploadDocumentImagesForNote = useCallback(
+    async (files: File[]) => {
+      const { files: uploaded } = await uploadNoteDocumentImages(noteId, files);
+      return uploaded.map((f) => getStorageUrl(f.path));
+    },
+    [noteId]
+  );
+
+  const uploadDocumentImagesRef = useRef(uploadDocumentImagesForNote);
+  uploadDocumentImagesRef.current = uploadDocumentImagesForNote;
+
+  const canEditRef = useRef(canEdit);
+  canEditRef.current = canEdit;
 
   const scheduleAutosave = useCallback(
     (editor: Editor) => {
@@ -113,6 +126,9 @@ export function NoteTiptapEditor({
     },
     [flushSave]
   );
+
+  const scheduleAutosaveRef = useRef(scheduleAutosave);
+  scheduleAutosaveRef.current = scheduleAutosave;
 
   const handleImmediateSave = useCallback(() => {
     if (saveTimeoutRef.current) {
@@ -141,6 +157,37 @@ export function NoteTiptapEditor({
     editorProps: {
       attributes: {
         class: "tiptap-editor",
+      },
+      transformPastedHTML: sanitizePastedHtml,
+      handlePaste(_view: EditorView, event: ClipboardEvent) {
+        if (!canEditRef.current) return false;
+        const data = event.clipboardData;
+        if (!data) return false;
+        const imageFiles = getClipboardImagesForUpload(data);
+        if (!imageFiles || imageFiles.length === 0) return false;
+
+        event.preventDefault();
+        void (async () => {
+          try {
+            const urls = await uploadDocumentImagesRef.current(imageFiles);
+            const ed = editorRef.current;
+            if (!ed || ed.isDestroyed) return;
+
+            const toInsert: JSONContent[] = [];
+            urls.forEach((src, index) => {
+              if (index > 0) toInsert.push({ type: "paragraph" });
+              toInsert.push({ type: "image", attrs: { src, alt: "" } });
+            });
+
+            ed.chain().focus().insertContent(toInsert).run();
+            scheduleAutosaveRef.current(ed);
+          } catch (error) {
+            console.error("Erro ao enviar imagem(ns) colada(s):", error);
+            toast.error("Não foi possível carregar a(s) imagem(ns) colada(s).");
+          }
+        })();
+
+        return true;
       },
     },
   });
@@ -253,9 +300,7 @@ export function NoteTiptapEditor({
               <span className="text-green-500">Salvo</span>
             </>
           )}
-          {saveStatus === "error" && (
-            <span className="text-red-500">Erro ao salvar</span>
-          )}
+          {saveStatus === "error" && <span className="text-red-500">Erro ao salvar</span>}
         </div>
       )}
     </div>

@@ -48,7 +48,7 @@ export function createTiptapExtensions(placeholder = "Comece a escrever...") {
       },
     }),
     Image.configure({
-      allowBase64: true,
+      allowBase64: false,
       HTMLAttributes: {
         class: "tiptap-image",
       },
