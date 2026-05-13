@@ -49,6 +49,7 @@ const ptBR = {
     backToHome: "Voltar para o início",
     areas: "Áreas",
     weaveAiOpenFull: "Abrir em tela cheia",
+    weaveFlow: "Weave Flow",
   },
 
   home: {

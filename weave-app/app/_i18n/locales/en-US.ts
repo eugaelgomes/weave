@@ -51,6 +51,7 @@ const enUS: TranslationKeys = {
     backToHome: "Back to home",
     areas: "Areas",
     weaveAiOpenFull: "Open full page",
+    weaveFlow: "Weave Flow",
   },
 
   home: {

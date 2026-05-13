@@ -20,6 +20,7 @@ import {
   UsersRound,
   ChevronsLeft,
   ChevronsRight,
+  Waypoints,
   Calendar,
   Settings,
   Sparkles,
@@ -114,6 +115,11 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       path: "/projects",
       icon: Network,
       label: t.nav.projects,
+    },
+    {
+      path: "/weave-flow",
+      icon: Waypoints,
+      label: t.nav.weaveFlow,
     },
     {
       path: "/weave-ai/chat",
@@ -224,34 +230,26 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
                       handleLinkClick();
                     }}
                     title={isCollapsed ? item.label : undefined}
+                    aria-label={item.label}
                     className={`group flex rounded-md text-[13px] font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-brand-yellow/50 focus-visible:outline-none ${
                       active
                         ? "bg-brand-yellow/10 text-brand-yellow"
                         : "text-gray-700 hover:bg-black/5 dark:text-white dark:hover:bg-white/10"
                     } ${
                       isCollapsed
-                        ? "flex-col items-center justify-center gap-1 px-0.5 py-2"
+                        ? "items-center justify-center px-1 py-2.5"
                         : "w-full min-w-0 items-center px-2.5 py-2"
                     }`}
                   >
                     {isCollapsed ? (
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="relative inline-flex shrink-0">
-                          <Icon
-                            className={`h-4 w-4 transition-colors ${active ? "text-brand-yellow" : "text-gray-600 dark:text-white"}`}
-                          />
-                          {item.badge !== undefined && item.badge > 0 && (
-                            <span className="bg-brand-yellow absolute -top-0.5 -right-0.5 size-1.5 rounded-full ring-2 ring-white dark:ring-[#242422]" />
-                          )}
-                        </span>
-                        <span
-                          className={`line-clamp-2 w-full max-w-[4.5rem] text-center text-[8px] font-semibold leading-[1.15] tracking-tight ${
-                            active ? "text-brand-yellow" : "text-gray-600 dark:text-white"
-                          }`}
-                        >
-                          {item.label}
-                        </span>
-                      </div>
+                      <span className="relative inline-flex shrink-0">
+                        <Icon
+                          className={`h-4 w-4 transition-colors ${active ? "text-brand-yellow" : "text-gray-600 dark:text-white"}`}
+                        />
+                        {item.badge !== undefined && item.badge > 0 && (
+                          <span className="bg-brand-yellow absolute -top-0.5 -right-0.5 size-1.5 rounded-full ring-2 ring-white dark:ring-[#242422]" />
+                        )}
+                      </span>
                     ) : (
                       <>
                         <div className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -424,20 +422,14 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
               aria-label={t.footer.help}
               className={`text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:ring-brand-yellow/50 focus-visible:outline-none dark:text-white dark:hover:bg-white/10 ${
                 isCollapsed
-                  ? "flex flex-col items-center justify-center gap-1 rounded-md px-0.5 py-2"
+                  ? "inline-flex items-center justify-center rounded-md px-1 py-2.5"
                   : "inline-flex w-full items-center justify-start gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium"
               }`}
             >
               <CircleHelp
                 className={`shrink-0 text-gray-600 dark:text-white ${isCollapsed ? "size-[18px]" : "size-4"}`}
               />
-              {isCollapsed ? (
-                <span className="line-clamp-2 max-w-[4.5rem] text-center text-[8px] font-semibold leading-[1.15] tracking-tight text-gray-600 dark:text-white">
-                  {t.footer.help}
-                </span>
-              ) : (
-                <span className="truncate">{t.footer.help}</span>
-              )}
+              {!isCollapsed ? <span className="truncate">{t.footer.help}</span> : null}
             </a>
           </div>
         </div>

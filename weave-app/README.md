@@ -114,6 +114,16 @@ npm start
 
 The Next.js app is **not** defined in the root [`docker-compose.yml`](../docker-compose.yml) services list. Run the API, worker, and engine with Compose from the repo root, and run this package locally with `npm run dev`, or containerize `weave-app` in your own override or deployment pipeline.
 
+**Docker dev (`Dockerfile.dev`):** the image sets `WEAVE_APP_AUTO_DEPS=1`. On container start, if `package-lock.json` is present and `npm ls --depth=0` fails (for example because `./weave-app:/app` bind-mount replaced `node_modules`), the entrypoint runs **`npm ci`** so you do not need `npm install` on the host. Commit an updated `package-lock.json` whenever `package.json` dependencies change, then **`docker compose build --no-cache`** (or rebuild the web service) so the image receives the new lockfile.
+
+For faster iteration, you can still use a **named volume** for `node_modules` so the bind mount does not overwrite installed packages:
+
+```yaml
+volumes:
+  - ./weave-app:/app
+  - weave_app_node_modules:/app/node_modules
+```
+
 ```bash
 cd ..
 docker compose up --build

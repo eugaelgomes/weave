@@ -51,6 +51,7 @@ const esES: TranslationKeys = {
     backToHome: "Volver al inicio",
     areas: "Áreas",
     weaveAiOpenFull: "Abrir a pantalla completa",
+    weaveFlow: "Weave Flow",
   },
 
   home: {

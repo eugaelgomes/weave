@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fredoka } from "next/font/google";
+import "@xyflow/react/dist/style.css";
 import "./globals.css";
 import AuthProviderClient from "./_contexts/auth-provider-client";
 import { Toaster } from "@/app/sonner";

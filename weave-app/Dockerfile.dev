@@ -23,6 +23,9 @@ RUN --mount=type=cache,target=/root/.npm \
 
 COPY . .
 
+# Let docker-entrypoint.sh run `npm ci` on start when bind-mount hides or stalemates node_modules.
+ENV WEAVE_APP_AUTO_DEPS=1
+
 EXPOSE 3000
 
 ENV PORT=3000
