@@ -510,21 +510,32 @@ class ProjectsUpdateRepository {
   }
   async updateNoteStage(projectId, noteId, stageId) {
     const query = `
-      UPDATE notes
-      SET project_stage_id = $3::uuid, updated_at = NOW()
-      WHERE id = $2::uuid 
-        AND project_id = $1::uuid
-        AND deleted = false
-        AND (
-          $3::uuid IS NULL
-          OR EXISTS (
-            SELECT 1 FROM project_stages ps
-            WHERE ps.id = $3::uuid
-              AND ps.project_id = $1::uuid
-              AND ps.deleted = false
+      WITH RECURSIVE subtree AS (
+        SELECT id FROM notes
+        WHERE id = $2::uuid AND project_id = $1::uuid AND deleted = false
+        UNION ALL
+        SELECT n.id FROM notes n
+        INNER JOIN subtree s ON n.parent_id = s.id
+        WHERE n.project_id = $1::uuid AND n.deleted = false
+      ),
+      moved AS (
+        UPDATE notes
+        SET project_stage_id = $3::uuid, updated_at = NOW()
+        WHERE project_id = $1::uuid
+          AND deleted = false
+          AND id IN (SELECT id FROM subtree)
+          AND (
+            $3::uuid IS NULL
+            OR EXISTS (
+              SELECT 1 FROM project_stages ps
+              WHERE ps.id = $3::uuid
+                AND ps.project_id = $1::uuid
+                AND ps.deleted = false
+            )
           )
-        )
-      RETURNING id::text, project_stage_id::text;
+        RETURNING id::text, project_stage_id::text
+      )
+      SELECT * FROM moved LIMIT 1;
     `;
     return executeQuery(query, [projectId, noteId, stageId]);
   }

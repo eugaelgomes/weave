@@ -46,6 +46,7 @@ import {
   type ManageNoteData,
   type CreateTaskInStageData,
   type PatchProjectTaskData,
+  type NoteStageUpdateResult,
   type ProjectDashboardStats,
   type ProjectStatsFilters,
   type AiReportConfig,
@@ -240,7 +241,11 @@ export interface ProjectsContextType {
   ) => Promise<ProjectNote[]>;
   syncProjectNote: (projectId: string, noteId: string) => Promise<boolean>;
   removeNoteFromProject: (projectId: string, noteId: string) => Promise<boolean>;
-  updateProjectNoteStage: (projectId: string, noteId: string, stageId: string) => Promise<void>;
+  updateProjectNoteStage: (
+    projectId: string,
+    noteId: string,
+    stageId: string
+  ) => Promise<NoteStageUpdateResult | null>;
 
   // Stage delete
   deleteProjectStage: (projectId: string, stageId: string) => Promise<boolean>;
@@ -936,11 +941,11 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateProjectNoteStage = useCallback(
-    async (projectId: string, noteId: string, stageId: string): Promise<void> => {
-      if (!user?.id) return;
+    async (projectId: string, noteId: string, stageId: string): Promise<NoteStageUpdateResult | null> => {
+      if (!user?.id) return null;
 
       try {
-        await updateProjectNoteStageService(projectId, noteId, stageId);
+        return await updateProjectNoteStageService(projectId, noteId, stageId);
       } catch (err: unknown) {
         console.error("Erro ao atualizar estágio da tarefa no projeto:", err);
         throw err;

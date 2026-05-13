@@ -66,13 +66,16 @@ const STATUS_OPTIONS = [
   { value: "arquivado", label: "Arquivado" },
 ] as const;
 
-const resolveAreaStatus = (area?: OrganizationArea | null): string => {
+type AreaStatus = (typeof STATUS_OPTIONS)[number]["value"];
+
+const AREA_STATUS_VALUES = new Set<string>(STATUS_OPTIONS.map((option) => option.value));
+
+const resolveAreaStatus = (area?: OrganizationArea | null): AreaStatus => {
   if (!area) return "ativo";
   const fromProps = area.properties?.status?.toLowerCase();
   const raw =
     (typeof fromProps === "string" && fromProps) || (area.active === false ? "pausado" : "ativo");
-  const allowed = new Set(STATUS_OPTIONS.map((o) => o.value));
-  return allowed.has(raw) ? raw : "ativo";
+  return AREA_STATUS_VALUES.has(raw) ? (raw as AreaStatus) : "ativo";
 };
 
 type AreaFormState = {

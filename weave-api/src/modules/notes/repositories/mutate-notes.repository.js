@@ -17,6 +17,7 @@ class MutateNotesRepository extends BaseRepository {
       "deleted",
       "project_id",
       "project_stage_id",
+      "parent_id",
       "properties",
     ];
 

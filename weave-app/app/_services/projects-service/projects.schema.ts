@@ -75,6 +75,7 @@ export const ProjectNoteSchema = z
     tags: z.array(z.string()).optional(),
     status: z.string().optional(),
     project_stage_id: z.string().nullable().optional(),
+    parent_id: z.string().nullable().optional(),
     created_by: z
       .object({
         user_id: z.string(),
@@ -185,7 +186,8 @@ export const TaskMutationResponseSchema = z.object({
 export const NoteStageUpdateResponseSchema = z.object({
   message: z.string(),
   noteId: z.string(),
-  newStageId: z.string(),
+  newStageId: z.string().nullable().optional(),
+  notes: z.array(ProjectNoteSchema).optional(),
 });
 
 export const MessageOnlySchema = z.object({

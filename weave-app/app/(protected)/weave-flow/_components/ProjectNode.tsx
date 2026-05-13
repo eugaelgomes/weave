@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { cn } from "@/lib/utils";
 
 /** AI health signal for predictive indicators on the canvas. */
@@ -18,7 +18,7 @@ export type ProjectNodeData = {
   };
 };
 
-function ProjectNodeComponent({ data }: NodeProps<ProjectNodeData>) {
+function ProjectNodeComponent({ data }: NodeProps<Node<ProjectNodeData>>) {
   const isAtRisk = data.aiStatus.health === "at_risk";
   const showAiMessage = isAtRisk && Boolean(data.aiStatus.message?.trim());
 

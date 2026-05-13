@@ -47,6 +47,8 @@ export default function ProjectViewPage() {
   const [showAddCollaborator, setShowAddCollaborator] = useState(false);
   const [showAddNote, setShowAddNote] = useState(false);
   const [addTaskStageId, setAddTaskStageId] = useState<string | null>(null);
+  const [addTaskParentNoteId, setAddTaskParentNoteId] = useState<string | null>(null);
+  const [addTaskParentTitle, setAddTaskParentTitle] = useState<string | null>(null);
 
   useEffect(() => {
     if (!projectId) return;
@@ -102,10 +104,13 @@ export default function ProjectViewPage() {
       if (!fullNote) return projectNote;
       return {
         ...projectNote,
+        description: fullNote.description ?? projectNote.description,
+        preview: fullNote.preview ?? projectNote.preview,
         properties: fullNote.properties ?? projectNote.properties,
         priority_id: fullNote.priority_id ?? projectNote.priority_id,
         due_date: fullNote.due_date ?? projectNote.due_date,
         tags: fullNote.tags ?? projectNote.tags,
+        parent_id: fullNote.parent_id ?? projectNote.parent_id ?? null,
       };
     });
   }, [notes, projectNotes]);
@@ -144,14 +149,32 @@ export default function ProjectViewPage() {
                 stages={stages}
                 projectNotes={enrichedProjectNotes}
                 projectTags={projectTags}
+                taskPriorities={taskPriorities}
                 onAddCard={canEdit ? (stageId) => {
                   setAddTaskStageId(stageId);
+                  setAddTaskParentNoteId(null);
+                  setAddTaskParentTitle(null);
                   setShowAddNote(true);
                 } : undefined}
-                onPatchTask={async (noteId, taskData) => {
-                  const updatedNotes = await patchProjectTask(projectId, noteId, taskData);
-                  setProjectNotes(updatedNotes);
-                }}
+                onAddSubtask={
+                  canEdit
+                    ? (parentNoteId, stageId, parentTitle) => {
+                        setAddTaskStageId(stageId);
+                        setAddTaskParentNoteId(parentNoteId);
+                        setAddTaskParentTitle(parentTitle ?? null);
+                        setShowAddNote(true);
+                      }
+                    : undefined
+                }
+                onProjectNotesReplaced={(next) => setProjectNotes(next)}
+                onPatchTask={
+                  canEdit
+                    ? async (noteId, taskData) => {
+                        const updatedNotes = await patchProjectTask(projectId, noteId, taskData);
+                        setProjectNotes(updatedNotes);
+                      }
+                    : undefined
+                }
                 onNoteStageChange={(noteId, newStageId) => {
                   setProjectNotes((prev) =>
                     prev.map((n) =>
@@ -162,7 +185,7 @@ export default function ProjectViewPage() {
               />
             )}
             {activeView === "list" && (
-              <div className="flex min-h-[200px] flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
+              <div className="flex min-h-[200px] flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-xs text-neutral-500 dark:text-neutral-400">
                 <p className="font-medium text-neutral-700 dark:text-neutral-200">Vista em lista</p>
                 <p className="max-w-sm">
                   A vista em lista está em construção. Use o quadro (Board) para gerir tarefas por
@@ -187,17 +210,23 @@ export default function ProjectViewPage() {
         <AddNoteModal
           projectId={projectId}
           stageId={addTaskStageId}
+          parentNoteId={addTaskParentNoteId}
+          parentTitle={addTaskParentTitle}
           projectTags={projectTags}
           projectCollaborators={collaborators}
           taskPriorities={taskPriorities}
           onClose={() => {
             setShowAddNote(false);
             setAddTaskStageId(null);
+            setAddTaskParentNoteId(null);
+            setAddTaskParentTitle(null);
           }}
           onSuccess={(updatedNotes) => {
             setProjectNotes(updatedNotes);
             setShowAddNote(false);
             setAddTaskStageId(null);
+            setAddTaskParentNoteId(null);
+            setAddTaskParentTitle(null);
           }}
         />
       )}

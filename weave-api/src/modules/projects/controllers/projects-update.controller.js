@@ -837,6 +837,53 @@ class ProjectsUpdateController extends ProjectsCoreController {
     }
   }
 
+  /**
+   * Validates parent_id when creating a task (parent must be a non-deleted note in the same project).
+   * @param {string} projectId
+   * @param {unknown} parentIdRaw
+   * @returns {Promise<string|null>} UUID string or null when absent / cleared
+   */
+  async _validateParentForNewTask(projectId, parentIdRaw) {
+    const parsed = this._parseNullableField(parentIdRaw);
+    if (parsed === null || parsed === undefined) return null;
+    const parent = await notesRepository.getNoteById(parsed);
+    if (!parent || parent.deleted || String(parent.project_id) !== String(projectId)) {
+      throw new Error("Tarefa pai inválida ou não pertence a este projeto");
+    }
+    return String(parsed);
+  }
+
+  /**
+   * Validates parent_id on PATCH (same project; no self or cycle via ancestors of the new parent).
+   * @param {string} projectId
+   * @param {string} noteId
+   * @param {unknown} parentIdRaw
+   * @returns {Promise<string|null|undefined>} undefined = leave unchanged, null = clear parent
+   */
+  async _resolveParentIdForPatchTask(projectId, noteId, parentIdRaw) {
+    if (parentIdRaw === undefined) return undefined;
+    const parsed = this._parseNullableField(parentIdRaw);
+    if (parsed === null) return null;
+    if (String(parsed) === String(noteId)) {
+      throw new Error("Tarefa não pode ser pai de si mesma");
+    }
+    const parent = await notesRepository.getNoteById(parsed);
+    if (!parent || parent.deleted || String(parent.project_id) !== String(projectId)) {
+      throw new Error("Tarefa pai inválida ou não pertence a este projeto");
+    }
+    let walker = parent;
+    let depth = 0;
+    const maxDepth = 64;
+    while (walker && walker.parent_id && depth < maxDepth) {
+      if (String(walker.parent_id) === String(noteId)) {
+        throw new Error("parent_id inválido: referência circular");
+      }
+      walker = await notesRepository.getNoteById(walker.parent_id);
+      depth += 1;
+    }
+    return String(parsed);
+  }
+
   async _uploadTaskFiles(noteId, userId, files) {
     if (!Array.isArray(files) || files.length === 0) return [];
     return Promise.all(
@@ -918,6 +965,11 @@ class ProjectsUpdateController extends ProjectsCoreController {
         due_date && due_date !== "" ? new Date(due_date).toISOString() : null;
       const parsedPriorityId = this._parseNullableField(priority_id);
 
+      const validatedParentId = await this._validateParentForNewTask(
+        projectId,
+        req.body.parent_id ?? req.body.parentId
+      );
+
       const createdNote = await notesRepository.createNotesQuery(
         userId,
         effectiveTitle,
@@ -950,6 +1002,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
         due_date: parsedDueDate,
         project_stage_id: stageId,
         properties: mergedProperties,
+        ...(validatedParentId ? { parent_id: validatedParentId } : {}),
       });
 
       const collaboratorIds = this._parseStringArrayField(collaborator_ids);
@@ -991,6 +1044,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
         remove_collaborators,
         remove_file_ids,
         properties,
+        parent_id,
       } = req.body;
 
       const userId = this._requireAuthenticatedUser(req, res);
@@ -1030,6 +1084,15 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       if (stage_id !== undefined) {
         updateData.project_stage_id = this._parseNullableField(stage_id);
+      }
+
+      const resolvedParentId = await this._resolveParentIdForPatchTask(
+        projectId,
+        noteId,
+        parent_id
+      );
+      if (resolvedParentId !== undefined) {
+        updateData.parent_id = resolvedParentId;
       }
 
       const currentTags = Array.isArray(currentNote.tags) ? currentNote.tags.map(String) : [];
@@ -1181,10 +1244,13 @@ class ProjectsUpdateController extends ProjectsCoreController {
         });
       }
 
+      const notes = await this.projectsRepository.getAssociatedNotes(projectId, userId);
+
       res.status(200).json({
         message: "Estágio da nota atualizado com sucesso",
         noteId: result[0].id,
         newStageId: result[0].project_stage_id,
+        notes,
       });
     } catch (error) {
       this._handleError(error, res, next);

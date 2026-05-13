@@ -6,6 +6,8 @@ import { useProjects } from "@/app/_contexts/projects-context";
 interface AddNoteModalProps {
   projectId: string;
   stageId: string | null;
+  parentNoteId?: string | null;
+  parentTitle?: string | null;
   projectTags: Array<{ id: string; name: string }>;
   projectCollaborators: Array<{ user_id: string; username: string; name?: string }>;
   taskPriorities: Array<{ id: string; name: string; color_hex?: string | null }>;
@@ -16,6 +18,8 @@ interface AddNoteModalProps {
 export default function AddNoteModal({
   projectId,
   stageId,
+  parentNoteId = null,
+  parentTitle = null,
   projectTags,
   projectCollaborators,
   taskPriorities,
@@ -33,8 +37,13 @@ export default function AddNoteModal({
 
   const disabled = !stageId || isSaving;
   const stageLabel = useMemo(
-    () => (stageId ? `Estágio: ${stageId.slice(0, 8)}...` : "Nenhum estágio selecionado"),
-    [stageId]
+    () =>
+      parentNoteId && parentTitle
+        ? `Subtarefa de "${parentTitle}"`
+        : stageId
+          ? `Estágio: ${stageId.slice(0, 8)}...`
+          : "Nenhum estágio selecionado",
+    [stageId, parentNoteId, parentTitle]
   );
 
   const toggleValue = (value: string, values: string[], setter: (next: string[]) => void) => {
@@ -56,6 +65,7 @@ export default function AddNoteModal({
         priority_id: priorityId || null,
         collaborator_ids: selectedCollaborators,
         files,
+        parent_id: parentNoteId || undefined,
       });
       onSuccess(updatedNotes);
     } catch (error) {
@@ -73,7 +83,7 @@ export default function AddNoteModal({
         <header className="mb-4 flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-sm font-bold text-neutral-800 dark:text-neutral-100">
             <FileText className="text-brand-primary-500 h-4 w-4" />
-            Criar tarefa no estágio
+            Criar {parentNoteId ? "subtarefa" : "tarefa"} no estágio
           </h3>
           <button
             onClick={onClose}
@@ -199,7 +209,7 @@ export default function AddNoteModal({
               ) : (
                 <>
                   <Plus className="h-3 w-3" />
-                  Criar tarefa
+                  Criar {parentNoteId ? "subtarefa" : "tarefa"}
                 </>
               )}
             </button>

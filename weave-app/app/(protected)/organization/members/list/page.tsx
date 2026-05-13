@@ -445,7 +445,7 @@ const RoleManageModal = ({ isOpen, onClose, onUpdate, loading, currentMember }: 
           <div className="relative">
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value)}
+              onChange={(e) => setRole(e.target.value as OrganizationMember["membership"]["role"])}
               aria-label={t.organizationMembers.newLevel}
               className={inputClass}
             >

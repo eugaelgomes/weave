@@ -348,6 +348,7 @@ class ReadNotesRepository extends BaseRepository {
         p.title AS project_name,
         n.project_stage_id::text,
         pst.name AS project_stage_name,
+        n.parent_id::text AS parent_id,
 
         tp.id AS priority_id,
         tp.name AS priority_name,
@@ -391,7 +392,8 @@ class ReadNotesRepository extends BaseRepository {
         p.organization_id,
         o.id,
         tp.id,
-        pst.id
+        pst.id,
+        n.parent_id
     LIMIT 1;
     `;
     const results = await this.executeQuery(query, [noteId]);

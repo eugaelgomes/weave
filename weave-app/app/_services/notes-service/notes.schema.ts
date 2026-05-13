@@ -125,6 +125,7 @@ export const NoteSchema = z.object({
   name: z.string().nullable().optional(),
   blocks: z.array(BlockSchema).nullable().optional(),
   project_id: z.string().nullable().optional(),
+  parent_id: z.string().nullable().optional(),
   project_name: z.string().nullable().optional(),
   
   author: z.object({

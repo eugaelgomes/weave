@@ -97,6 +97,7 @@ export interface ProjectNote {
   status?: string;
   project_id?: string | null;
   project_stage_id?: string | null;
+  parent_id?: string | null;
   properties?: Record<string, unknown>;
   priority_id?: string | null;
   due_date?: string | null;
@@ -115,6 +116,13 @@ export interface ProjectNote {
   created_at: string;
   updated_at: string;
 }
+
+export type NoteStageUpdateResult = {
+  message: string;
+  noteId: string;
+  newStageId?: string | null;
+  notes?: ProjectNote[];
+};
 
 export interface SubProject {
   id: string;
@@ -192,6 +200,7 @@ export interface CreateTaskInStageData {
   collaborator_ids?: string[];
   properties?: Record<string, unknown>;
   files?: File[];
+  parent_id?: string | null;
 }
 
 export interface PatchProjectTaskData {
@@ -200,6 +209,7 @@ export interface PatchProjectTaskData {
   priority_id?: string | null;
   due_date?: string | null;
   stage_id?: string | null;
+  parent_id?: string | null;
   set_tags?: string[];
   add_tags?: string[];
   remove_tags?: string[];
@@ -455,7 +465,7 @@ export const updateProjectNoteStage = async (
   projectId: string,
   noteId: string,
   stageId: string
-): Promise<{ message: string; noteId: string; newStageId: string }> => {
+): Promise<NoteStageUpdateResult> => {
   const response = await apiClient.put(API_ENDPOINTS.PROJECTS_NOTE_STAGE(projectId, noteId), {
     stageId,
   });
@@ -477,6 +487,9 @@ export const createTaskInStage = async (
   if (taskData.due_date !== undefined) formData.append("due_date", taskData.due_date ?? "");
   if (taskData.collaborator_ids !== undefined) {
     formData.append("collaborator_ids", JSON.stringify(taskData.collaborator_ids));
+  }
+  if (taskData.parent_id !== undefined && taskData.parent_id !== null) {
+    formData.append("parent_id", taskData.parent_id);
   }
   if (taskData.properties !== undefined) {
     formData.append("properties", JSON.stringify(taskData.properties));
@@ -503,6 +516,7 @@ export const patchProjectTask = async (
     formData.append("priority_id", taskData.priority_id ?? "");
   if (taskData.due_date !== undefined) formData.append("due_date", taskData.due_date ?? "");
   if (taskData.stage_id !== undefined) formData.append("stage_id", taskData.stage_id ?? "");
+  if (taskData.parent_id !== undefined) formData.append("parent_id", taskData.parent_id ?? "");
   if (taskData.set_tags !== undefined) formData.append("set_tags", JSON.stringify(taskData.set_tags));
   if (taskData.add_tags !== undefined) formData.append("add_tags", JSON.stringify(taskData.add_tags));
   if (taskData.remove_tags !== undefined)

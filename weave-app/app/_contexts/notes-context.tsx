@@ -33,6 +33,7 @@ import {
   type User as SearchUser,
 } from "../_services/notes-service/notes-service";
 import getStorageUrl from "@/app/_utils/get-storage-url";
+import { plainTextPreview } from "@/app/_utils/note-text-preview";
 
 export type {
   Note,
@@ -192,13 +193,8 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     mostUsedTags: [],
   });
 
-  // Função auxiliar para extrair preview
-  const extractPreview = (content: string | undefined): string => {
-    if (!content) return "";
-    // Remove tags HTML/Markdown e pega os primeiros 150 caracteres
-    const cleanContent = content.replace(/<[^>]*>/g, "").replace(/[#*_`]/g, "");
-    return cleanContent.length > 150 ? cleanContent.substring(0, 150) + "..." : cleanContent;
-  };
+  const extractPreview = (content: string | undefined): string =>
+    plainTextPreview(content, 150);
 
   /**
    * Mirrors list payload from GET notes:

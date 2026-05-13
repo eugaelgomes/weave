@@ -98,7 +98,7 @@ export default function CanvasView() {
     [setEdges]
   );
 
-  const onInit = useCallback((instance: ReactFlowInstance) => {
+  const onInit = useCallback((instance: ReactFlowInstance<Node<ProjectNodeData>, Edge>) => {
     instance.fitView({ padding: 0.2, duration: 200 });
   }, []);
 
