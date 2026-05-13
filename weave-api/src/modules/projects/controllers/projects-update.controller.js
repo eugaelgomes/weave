@@ -24,6 +24,7 @@ const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
 const {
   respondIfWorkspaceShareDenied,
 } = require("@/utils/workspace-share-guard");
+const { resolveNoteTitle } = require("@/modules/notes/utils/derive-note-title");
 
 class ProjectsUpdateController extends ProjectsCoreController {
   /**
@@ -873,9 +874,12 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      if (!title || !String(title).trim()) {
-        throw new Error("Título é obrigatório");
-      }
+      const descStr = description != null ? String(description) : "";
+      const effectiveTitle =
+        resolveNoteTitle({
+          title: title != null ? String(title) : "",
+          description: descStr,
+        }) || "Sem título";
 
       await this._validateProjectAccess(projectId, userId);
       const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
@@ -916,7 +920,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       const createdNote = await notesRepository.createNotesQuery(
         userId,
-        String(title).trim(),
+        effectiveTitle,
         description,
         parsedTags,
         "VISIBLE",

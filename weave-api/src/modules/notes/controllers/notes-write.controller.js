@@ -8,6 +8,7 @@ const {
 } = require("@/utils/patterns/product-patterns");
 const spacesService = require("@/services/storage");
 const { normalizeBlocksTree } = require("../block-normalizer");
+const { resolveNoteTitle, deriveTitleFromBlocks } = require("@/modules/notes/utils/derive-note-title");
 const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
 const { PLAN_PATHS } = require("@/services/plans/plan-paths");
 
@@ -123,13 +124,6 @@ class NotesWriteController extends NotesBaseController {
         });
       }
 
-      // 5. Validação de dados obrigatórios
-      if (!title) {
-        return res.status(400).json({
-          error: "Título é obrigatório",
-        });
-      }
-
       const noteStatus = normalizeNoteStatus(status);
       if (!noteStatus || !ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
         return res.status(400).json({
@@ -149,10 +143,21 @@ class NotesWriteController extends NotesBaseController {
         }
       }
 
+      const resolvedTitle = resolveNoteTitle({
+        title,
+        description,
+        blocks: normalizedBlocks,
+      });
+      if (!resolvedTitle) {
+        return res.status(400).json({
+          error: "Informe um título ou texto na descrição ou nos blocos.",
+        });
+      }
+
       // 6. Criação da nota no banco
       const newNote = await this.notesRepository.createNotesQuery(
         userId,
-        title,
+        resolvedTitle,
         description,
         tags,
         noteStatus,
@@ -241,11 +246,6 @@ class NotesWriteController extends NotesBaseController {
         });
       }
 
-      // Validação de dados obrigatórios
-      if (!title) {
-        throw new Error("Título é obrigatório");
-      }
-
       const noteStatus = normalizeNoteStatus(status);
       if (!noteStatus || !ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
         return res.status(400).json({
@@ -265,10 +265,22 @@ class NotesWriteController extends NotesBaseController {
         }
       }
 
+      const resolvedTitle = resolveNoteTitle({
+        title,
+        description,
+        blocks: normalizedBlocks,
+        plainFallback: initialBlockContent,
+      });
+      if (!resolvedTitle) {
+        return res.status(400).json({
+          error: "Informe um título ou texto na descrição, no bloco inicial ou nos blocos.",
+        });
+      }
+
       // Criação da nota + utilizador (sem document jsonb)
       const result = await this.notesRepository.createCompleteNote(
         userId,
-        title,
+        resolvedTitle,
         description,
         tags,
         initialBlockContent,
@@ -439,7 +451,16 @@ class NotesWriteController extends NotesBaseController {
 
       // Prepara os dados para atualização (apenas campos fornecidos)
       const updateData = {};
-      if (title !== undefined) updateData.title = title;
+      if (title !== undefined) {
+        const trimmed = title === null || title === undefined ? "" : String(title).trim();
+        if (trimmed === "") {
+          const blocksFromDb = await this.notesRepository.findNoteBlocksTreeByNoteId(id);
+          const derived = deriveTitleFromBlocks(blocksFromDb);
+          updateData.title = derived || "Sem título";
+        } else {
+          updateData.title = title;
+        }
+      }
       if (description !== undefined) updateData.description = description;
       if (tags !== undefined) updateData.tags = tags;
       if (status !== undefined) updateData.status = normalizeNoteStatus(status);

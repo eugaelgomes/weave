@@ -31,7 +31,7 @@ export default function AddNoteModal({
   const [files, setFiles] = useState<File[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  const disabled = !stageId || !title.trim() || isSaving;
+  const disabled = !stageId || isSaving;
   const stageLabel = useMemo(
     () => (stageId ? `Estágio: ${stageId.slice(0, 8)}...` : "Nenhum estágio selecionado"),
     [stageId]
@@ -46,7 +46,7 @@ export default function AddNoteModal({
   };
 
   const handleCreateTask = async () => {
-    if (!stageId || !title.trim()) return;
+    if (!stageId) return;
     setIsSaving(true);
     try {
       const updatedNotes = await createTaskInStage(projectId, stageId, {
@@ -92,7 +92,7 @@ export default function AddNoteModal({
             type="text"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="Título da tarefa"
+            placeholder="Título (opcional; se vazio, usa a primeira linha da descrição)"
             className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none focus:border-brand-primary-500 dark:border-surface-dark-border dark:bg-[#141414] dark:text-neutral-200"
           />
 

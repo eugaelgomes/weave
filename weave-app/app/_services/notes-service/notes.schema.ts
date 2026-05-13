@@ -201,7 +201,7 @@ export const CollaboratorsResponseSchema = z.object({
 
 // --- Payloads ---
 export const CreateNoteDataSchema = z.object({
-  title: z.string(),
+  title: z.string().optional().default(""),
   description: z.string().optional(),
   tags: z.array(z.string()).optional(),
   /** Árvore opcional de blocos (API salva em note_blocks) */

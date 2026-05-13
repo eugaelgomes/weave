@@ -184,7 +184,7 @@ export interface ManageNoteData {
 }
 
 export interface CreateTaskInStageData {
-  title: string;
+  title?: string;
   description?: string;
   tags?: string[];
   priority_id?: string | null;
@@ -469,7 +469,7 @@ export const createTaskInStage = async (
   taskData: CreateTaskInStageData
 ): Promise<ProjectNote[]> => {
   const formData = new FormData();
-  formData.append("title", taskData.title);
+  formData.append("title", (taskData.title ?? "").trim());
   if (taskData.description !== undefined) formData.append("description", taskData.description);
   if (taskData.tags !== undefined) formData.append("tags", JSON.stringify(taskData.tags));
   if (taskData.priority_id !== undefined)
