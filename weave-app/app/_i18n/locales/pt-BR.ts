@@ -235,6 +235,8 @@ const ptBR = {
     banSuspendTitle: "Suspender ou remover",
     inviteNamePlaceholder: "Nome",
     inviteEmailPlaceholder: "email@exemplo.com",
+    inviteEmailPlusAliasNotAllowed:
+      "E-mails com alias (+) no endereço não são permitidos. Use o e-mail principal, sem o sinal +.",
     invitesPageTitle: "Convites",
     invitesPageDescription: "Veja convites pendentes e envie novos para a equipe.",
     invitesPendingSection: "Convites pendentes",

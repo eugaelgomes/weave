@@ -37,6 +37,8 @@ export const ptBR = {
     successTitle: "Conta criada com sucesso!",
     successMessage: "Por favor, verifique seu e-mail para ativar sua conta antes de fazer o login.",
     loginNowCta: "Ir para o login",
+    emailPlusAliasNotAllowed:
+      "E-mails com alias (+) no endereço não são permitidos. Use o e-mail principal, sem o sinal +.",
   },
   forgotPassword: {
     title: "Esqueceu a senha?",
@@ -45,6 +47,8 @@ export const ptBR = {
     submitButton: "Enviar",
     rememberedPassword: "Lembrou sua senha?",
     loginNow: "Entrar agora!",
+    emailPlusAliasNotAllowed:
+      "E-mails com alias (+) no endereço não são permitidos. Use o e-mail principal, sem o sinal +.",
   },
   errors: {
     defaultTitle: "Ocorreu um erro",

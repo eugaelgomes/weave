@@ -36,6 +36,8 @@ export const enUS = {
     successTitle: "Account created successfully!",
     successMessage: "Please verify your email to activate your account before logging in.",
     loginNowCta: "Go to login",
+    emailPlusAliasNotAllowed:
+      "Plus-addressed emails (with + in the local part) are not allowed. Use your primary address without +.",
   },
   forgotPassword: {
     title: "Forgot Password?",
@@ -44,6 +46,8 @@ export const enUS = {
     submitButton: "Send",
     rememberedPassword: "Remembered your password?",
     loginNow: "Sign in now!",
+    emailPlusAliasNotAllowed:
+      "Plus-addressed emails (with + in the local part) are not allowed. Use your primary address without +.",
   },
   errors: {
     defaultTitle: "An error occurred",

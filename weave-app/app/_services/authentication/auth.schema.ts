@@ -1,4 +1,13 @@
 import { z } from "zod";
+import { emailLocalPartContainsPlus } from "@/app/_utils/email-rules";
+
+/** RFC-like email string without `+` in the local part (aligned with API rules). */
+export const EmailNoPlusAliasSchema = z
+  .string()
+  .email()
+  .refine((val: string) => !emailLocalPartContainsPlus(val), {
+    message: "E-mails com alias (+) no endereço não são permitidos.",
+  });
 
 // Zod schema for UserPreferences
 export const UserPreferencesSchema = z.object({
@@ -253,7 +262,7 @@ export const LoginCredentialsSchema = z.object({
 export const CreateUserDataSchema = z.object({
   name: z.string().optional(),
   username: z.string().min(3),
-  email: z.string().email(),
+  email: EmailNoPlusAliasSchema,
   password: z.string().min(6),
   user_name: z.string().optional(),
 });
@@ -261,7 +270,7 @@ export const CreateUserDataSchema = z.object({
 export const ActivateAccountPayloadSchema = z.object({
   token: z.string().optional(),
   code: z.string().optional(),
-  email: z.string().email().optional(),
+  email: EmailNoPlusAliasSchema.optional(),
 });
 
 // Tipos inferidos

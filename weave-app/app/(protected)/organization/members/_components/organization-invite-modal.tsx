@@ -10,6 +10,7 @@ import type {
   ProjectMemberRoleForInvite,
 } from "@/app/_services/organization";
 import { ORG_WORKSPACE_ROLES, PROJECT_MEMBER_ROLES } from "@/app/_services/organization";
+import { emailLocalPartContainsPlus } from "@/app/_utils/email-rules";
 import { X, Mail, ChevronDown, User, Layers3 } from "lucide-react";
 
 type ModalBaseProps = {
@@ -135,6 +136,7 @@ export function OrganizationInviteModal({
     const trimmedEmail = email.trim();
     const trimmedName = name.trim();
     if (!trimmedEmail || !trimmedName) return;
+    if (emailLocalPartContainsPlus(trimmedEmail)) return;
     const payload: InviteMemberData = {
       email: trimmedEmail,
       name: trimmedName,
@@ -149,7 +151,11 @@ export function OrganizationInviteModal({
     onInvite(payload);
   };
 
-  const canSubmit = Boolean(email.trim() && name.trim());
+  const canSubmit =
+    Boolean(email.trim() && name.trim()) && !emailLocalPartContainsPlus(email.trim());
+
+  const inviteEmailPlusError =
+    email.trim().length > 0 && emailLocalPartContainsPlus(email) ? t.organizationMembers.inviteEmailPlusAliasNotAllowed : null;
 
   const inputClass =
     "w-full rounded-md border border-neutral-200 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1d] dark:text-white";
@@ -210,6 +216,9 @@ export function OrganizationInviteModal({
               className={`${inputClass} pr-2 pl-8`}
             />
           </div>
+          {inviteEmailPlusError ? (
+            <p className="mt-1 text-[10px] font-medium text-red-600 dark:text-red-400">{inviteEmailPlusError}</p>
+          ) : null}
         </div>
         <div>
           <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">

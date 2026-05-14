@@ -37,6 +37,8 @@ export const esES = {
     successMessage:
       "Por favor, verifica tu correo electrónico para activar tu cuenta antes de iniciar sesión.",
     loginNowCta: "Ir a iniciar sesión",
+    emailPlusAliasNotAllowed:
+      "No se permiten correos con alias (+) en la parte local. Usa tu dirección principal sin +.",
   },
   forgotPassword: {
     title: "¿Olvidaste la Contraseña?",
@@ -45,6 +47,8 @@ export const esES = {
     submitButton: "Enviar",
     rememberedPassword: "¿Recordaste tu contraseña?",
     loginNow: "¡Entra ahora!",
+    emailPlusAliasNotAllowed:
+      "No se permiten correos con alias (+) en la parte local. Usa tu dirección principal sin +.",
   },
   errors: {
     defaultTitle: "Ocurrió un error",

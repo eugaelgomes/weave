@@ -237,6 +237,8 @@ const enUS: TranslationKeys = {
     banSuspendTitle: "Suspend or remove",
     inviteNamePlaceholder: "Name",
     inviteEmailPlaceholder: "name@example.com",
+    inviteEmailPlusAliasNotAllowed:
+      "Plus-addressed emails (with + in the local part) are not allowed. Use the primary address without +.",
     invitesPageTitle: "Invites",
     invitesPageDescription: "View pending invites and send new ones to your team.",
     invitesPendingSection: "Pending invites",

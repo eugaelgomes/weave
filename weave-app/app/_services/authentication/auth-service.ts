@@ -3,6 +3,7 @@ import { API_BASE_URL, API_ENDPOINTS } from "../api-methods";
 import { apiClient, handleResponse } from "../api-methods";
 import { notifyUnauthorized } from "../session-invalidation";
 import getStorageUrl from "@/app/_utils/get-storage-url";
+import { emailLocalPartContainsPlus } from "@/app/_utils/email-rules";
 import {
   type UserPreferences,
   type PlanDetails,
@@ -435,7 +436,11 @@ export const getUsers = async (): Promise<User[]> => {
 };
 
 export const requestPasswordRecovery = async (email: string): Promise<{ message: string }> => {
-  const response = await apiClient.post(API_ENDPOINTS.FORGOT_PASSWORD, { email });
+  const trimmed = email.trim();
+  if (emailLocalPartContainsPlus(trimmed)) {
+    throw new Error("E-mails com alias (+) no endereço não são permitidos.");
+  }
+  const response = await apiClient.post(API_ENDPOINTS.FORGOT_PASSWORD, { email: trimmed });
   return await handleResponse<{ message: string }>(response, {
     skipSessionInvalidationOn401: true,
   });

@@ -238,6 +238,8 @@ const esES: TranslationKeys = {
     banSuspendTitle: "Suspender o eliminar",
     inviteNamePlaceholder: "Nombre",
     inviteEmailPlaceholder: "correo@ejemplo.com",
+    inviteEmailPlusAliasNotAllowed:
+      "No se permiten correos con alias (+) en la parte local. Usa la dirección principal sin +.",
     invitesPageTitle: "Invitaciones",
     invitesPageDescription: "Consulta invitaciones pendientes y envía nuevas al equipo.",
     invitesPendingSection: "Invitaciones pendientes",

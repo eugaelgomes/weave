@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { User, Lock, Eye, EyeOff, Mail } from "lucide-react";
 import { getTranslations, LocaleKey } from "@/app/(public)/auth/_i18n";
 import { useAuth } from "@/app/_contexts/auth-context";
+import { emailLocalPartContainsPlus } from "@/app/_utils/email-rules";
 
 interface Props {
   onNavigate: (
@@ -174,9 +175,11 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
 
   const emailError = !trimmedEmail
     ? "E-mail é obrigatório."
-    : !EMAIL_REGEX.test(trimmedEmail)
-      ? "E-mail inválido."
-      : "";
+    : emailLocalPartContainsPlus(trimmedEmail)
+      ? t.signUp.emailPlusAliasNotAllowed
+      : !EMAIL_REGEX.test(trimmedEmail)
+        ? "E-mail inválido."
+        : "";
 
   const passwordError = !password
     ? "Senha é obrigatória."

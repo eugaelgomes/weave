@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Mail, CheckCircle2 } from "lucide-react";
 import { getTranslations, LocaleKey } from "@/app/(public)/auth/_i18n";
 import { useAuth } from "@/app/_contexts/auth-context";
+import { emailLocalPartContainsPlus } from "@/app/_utils/email-rules";
 
 interface Props {
   onNavigate: (view: "signin" | "signup" | "forgot") => void;
@@ -31,14 +32,21 @@ export function ForgotPassword({ onNavigate, locale = "pt-br" }: Props) {
     setSuccess(null);
     setIsLoading(true);
 
-    if (!email) {
+    const trimmed = email.trim();
+    if (!trimmed) {
       setError("Por favor, preencha o email.");
       setIsLoading(false);
       return;
     }
 
+    if (emailLocalPartContainsPlus(trimmed)) {
+      setError(t.forgotPassword.emailPlusAliasNotAllowed);
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const res = await recoverPassword(email);
+      const res = await recoverPassword(trimmed);
       if (!res.success) {
         setError(res.message || "Erro ao solicitar recuperação de senha.");
       } else {
