@@ -173,7 +173,7 @@ const enUS: TranslationKeys = {
     userEmail: "User Email",
     inviteeFullName: "Full name",
     areaOptional: "Area (optional)",
-    areaRoleLabel: "Role in area",
+    areaRoleLabel: "Project role (area)",
     areaNone: "None",
     areaManager: "Manager",
     areaEditor: "Editor",
@@ -182,6 +182,15 @@ const enUS: TranslationKeys = {
     adminRole: "Administrator",
     standardRole: "Standard Member",
     guestRole: "Guest",
+    billingManager: "Billing manager",
+    projectMemberRoleProjectManager: "Project manager",
+    projectMemberRoleContributor: "Contributor",
+    projectMemberRoleCommenter: "Commenter",
+    projectMemberRoleViewer: "Viewer",
+    projectRoleInAreaHint:
+      "Project role for the selected area; when the invite is accepted it maps to the area membership role.",
+    inviteAdminAreaNoProjectRole:
+      "Admins and super admins do not pick a project role for the area: on accept they get area manager access.",
     cancel: "Cancel",
     sendInvite: "Send Invite",
     sending: "Sending...",
@@ -240,6 +249,33 @@ const enUS: TranslationKeys = {
     invitesCancelInviteTitle: "Cancel invite",
     cancelInviteError: "Could not cancel invite.",
     cancelInviteSuccess: "Invite cancelled successfully.",
+  },
+
+  acceptOrganizationInvite: {
+    greetingWithName: "Hi, {name}. You've been invited to join the {org} workspace.",
+    greetingNoName: "Hi! You've been invited to join the {org} workspace.",
+    confirmCredentials: "Confirm your name, username, and password below.",
+    loading: "Loading invite…",
+    loadErrorDefault: "Invalid or expired invite.",
+    backToLogin: "Back to sign in",
+    close: "Close",
+    existingAccountHint:
+      "You already have an account with this email. After accepting, sign in to the workspace with the same login.",
+    acceptInvite: "Accept invite",
+    enterOtherAccount: "Sign in with another account",
+    closeAfterSuccess: "Close",
+    fillAllFields: "Please enter name, username, and password.",
+    createAccountSubmit: "Create account and accept invite",
+    cancel: "Cancel",
+    fullNamePlaceholder: "Full name",
+    usernamePlaceholder: "Username",
+    passwordPlaceholder: "Password",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+    successExisting:
+      "Invite accepted! We sent a confirmation email. Sign in with the invited email and your password — you'll be taken to your organization's areas.",
+    successCreatedLoginElse: "Account created and invite accepted. Sign in with your username and password on the next screen.",
+    acceptError: "Could not accept invite.",
   },
 };
 export default enUS;

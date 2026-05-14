@@ -10,17 +10,22 @@ const { getCookieDomain } = require("@/config/allowed-origins");
 function getAuthCookieOptions(req, options = {}) {
   const isProduction = process.env.NODE_ENV === "production";
   const maxAge = options.maxAge || 12 * 60 * 60 * 1000; // 12h padrão
+  const hostname = req?.hostname || "";
+  const forwardedProto = req?.headers?.["x-forwarded-proto"];
+  const isHttps = req?.secure || forwardedProto === "https";
+  const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
 
   // Obter domínio do cookie
   const domain = getCookieDomain(req.hostname);
 
   // Usar sameSite 'lax' por padrão (funciona para subdomínios)
   // Só usar 'none' se COOKIE_SAME_SITE estiver explicitamente definido como 'none'
-  const sameSite = isProduction ? process.env.COOKIE_SAME_SITE || "lax" : "lax";
+  const sameSite = isProduction && !isLocalhost ? process.env.COOKIE_SAME_SITE || "lax" : "lax";
+  const secure = isProduction && !isLocalhost ? isHttps : false;
 
   const cookieOptions = {
     httpOnly: true,
-    secure: isProduction,
+    secure,
     sameSite: sameSite,
     maxAge: maxAge,
     path: "/",
@@ -64,12 +69,17 @@ function setAuthCookie(res, req, token, options = {}) {
  */
 function clearAuthCookie(res, req) {
   const isProduction = process.env.NODE_ENV === "production";
+  const hostname = req?.hostname || "";
+  const forwardedProto = req?.headers?.["x-forwarded-proto"];
+  const isHttps = req?.secure || forwardedProto === "https";
+  const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
   const domain = getCookieDomain(req.hostname);
-  const sameSite = isProduction ? process.env.COOKIE_SAME_SITE || "lax" : "lax";
+  const sameSite = isProduction && !isLocalhost ? process.env.COOKIE_SAME_SITE || "lax" : "lax";
+  const secure = isProduction && !isLocalhost ? isHttps : false;
 
   const clearOptions = {
     httpOnly: true,
-    secure: isProduction,
+    secure,
     sameSite: sameSite,
     path: "/",
   };

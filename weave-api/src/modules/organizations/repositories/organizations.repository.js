@@ -665,10 +665,12 @@ class OrganizationsRepository {
         UPPER($5)::public.organization_workspace_role_enum,
         $6,
         NOW() + INTERVAL '7 days',
-        $7,
+        NULLIF(trim(COALESCE($7::text, '')), '')::uuid,
         CASE
-          WHEN $8 IS NULL THEN NULL
-          ELSE UPPER($8)::public.project_member_role_enum
+          WHEN trim(COALESCE($7::text, '')) = '' THEN NULL::public.project_member_role_enum
+          ELSE UPPER(
+            COALESCE(NULLIF(trim(COALESCE($8::text, '')), ''), 'CONTRIBUTOR')
+          )::public.project_member_role_enum
         END
       )
       RETURNING *;

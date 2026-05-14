@@ -185,10 +185,10 @@ class MicrosoftOauthController extends AuthBaseController {
         maxAge: 24 * 60 * 60 * 1000,
       });
 
-      return res.redirect(`${frontendURL}/app/home?auth=success`);
+      return res.redirect(`${frontendURL}/home/?auth=success`);
     } catch (error) {
       console.error("Microsoft OAuth callback error:", error.message);
-      return res.redirect(`${frontendURL}/?error=auth_failed`);
+      return res.redirect(`${frontendURL}/auth/?error=auth_failed`);
     }
   }
 }

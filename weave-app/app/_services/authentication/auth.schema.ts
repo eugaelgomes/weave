@@ -129,11 +129,11 @@ export const UserSchema = z.object({
 });
 
 export const BackendProfileSchema = z.object({
-  id: z.string(),
+  id: z.coerce.string(),
   user_name: z.string(),
   username: z.string(),
-  email: z.string().email(),
-  avatar_url: z.string(),
+  email: z.union([z.string().email(), z.null(), z.literal("")]),
+  avatar_url: z.union([z.string(), z.null()]),
   created_at: z.string(),
   updated_at: z.string().optional().nullable(),
   birth_date: z.string().optional().nullable(),
@@ -141,10 +141,11 @@ export const BackendProfileSchema = z.object({
 });
 
 export const BackendSettingsSchema = z.object({
-  theme_mode: z.string().optional(),
-  private_profile: z.boolean().optional(),
-  auth_with_google: z.boolean().optional(),
-  auth_with_github: z.boolean().optional(),
+  theme_mode: z.string().nullable().optional(),
+  private_profile: z.boolean().nullable().optional(),
+  auth_with_google: z.boolean().nullable().optional(),
+  auth_with_github: z.boolean().nullable().optional(),
+  auth_with_microsoft: z.boolean().nullable().optional(),
   usage_preference: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -218,21 +219,28 @@ export const BackendMeResponseSchema = z.object({
       })
       .optional()
       .nullable(),
-    current_plan: z.object({
-      id: z.string(),
-      plan_name: z.string(),
-      client_type: z.string(),
-      details: z.any(),
-    }).optional().nullable(),
-    current_plan_usage: z.object({
-      plan_id: z.string(),
-      plan_name: z.string(),
-      client_type: z.string(),
-      period_start: z.string(),
-      period_end: z.string(),
-      details: z.any(),
-    }).optional().nullable(),
-    usage_preference: z.record(z.string(), z.unknown()).optional(),
+    /** API always sends this object; plan fields may be null for new/OAuth users. */
+    current_plan: z
+      .object({
+        id: z.string().nullable().optional(),
+        plan_name: z.string().nullable().optional(),
+        client_type: z.string().nullable().optional(),
+        details: z.unknown(),
+      })
+      .optional()
+      .nullable(),
+    current_plan_usage: z
+      .object({
+        plan_id: z.string().nullable().optional(),
+        plan_name: z.string().nullable().optional(),
+        client_type: z.string().nullable().optional(),
+        period_start: z.string().nullable().optional(),
+        period_end: z.string().nullable().optional(),
+        details: z.unknown(),
+      })
+      .optional()
+      .nullable(),
+    usage_preference: z.record(z.string(), z.unknown()).nullable().optional(),
   }),
 });
 

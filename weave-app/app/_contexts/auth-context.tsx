@@ -132,11 +132,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        // A validação de sessão ocorre automaticamente aqui.
-        // Se o cookie HttpOnly for inválido ou expirado, o backend retornará 401.
-        const profileData = await getUserDataService();
+      const params = new URLSearchParams(window.location.search);
+      const isOauthSuccessReturn = params.get("auth") === "success";
+      const maxAttempts = isOauthSuccessReturn ? 5 : 1;
 
+      try {
+        let profileData: User | null = null;
+        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+          try {
+            // A validação de sessão ocorre automaticamente aqui.
+            // Se o cookie HttpOnly for inválido ou expirado, o backend retornará 401.
+            profileData = await getUserDataService();
+            break;
+          } catch (error) {
+            if (attempt === maxAttempts) {
+              throw error;
+            }
+            await new Promise((resolve) => window.setTimeout(resolve, 250));
+          }
+        }
+
+        if (!profileData) {
+          throw new Error("Unable to load authenticated profile");
+        }
         setUser(profileData);
 
         const profileThemeMode = toUiThemeMode(profileData.theme_mode);
@@ -147,6 +165,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Se falhar (401/403), o usuário não está logado - ignora o erro silenciosamente
         setUser(null);
       } finally {
+        if (typeof window !== "undefined") {
+          const p = new URLSearchParams(window.location.search);
+          if (p.has("auth") || p.has("error")) {
+            p.delete("auth");
+            p.delete("error");
+            const qs = p.toString();
+            const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+            window.history.replaceState({}, document.title, next);
+          }
+        }
         setLoading(false);
       }
     };
@@ -163,19 +191,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       checkAuth();
     }
   }, [setTheme]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const auth = params.get("auth");
-    const err = params.get("error");
-    if (auth !== "success" && !err) return;
-    params.delete("auth");
-    params.delete("error");
-    const qs = params.toString();
-    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
-    window.history.replaceState({}, document.title, next);
-  }, []);
 
   const login = async (
     usernameOrPayload: string | { login: string; password: string },

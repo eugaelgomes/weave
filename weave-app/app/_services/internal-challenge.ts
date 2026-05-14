@@ -1,6 +1,42 @@
 /** Default API base URL for internal challenges, avoiding circular imports with `api-methods`. */
-const API_BASE_FOR_CHALLENGE: string =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
+const ensureApiV1Path = (baseUrl: string): string => {
+  const normalized = baseUrl.replace(/\/+$/, "");
+  if (normalized.endsWith("/api/v1")) {
+    return normalized;
+  }
+  return `${normalized}/api/v1`;
+};
+
+const isLocalHostname = (hostname: string): boolean =>
+  hostname === "localhost" || hostname === "127.0.0.1";
+
+const shouldForceLocalApi = (configuredBaseUrl: string): boolean => {
+  if (typeof window === "undefined") return false;
+  if (!isLocalHostname(window.location.hostname)) return false;
+
+  try {
+    const configuredHost = new URL(configuredBaseUrl).hostname;
+    return !isLocalHostname(configuredHost);
+  } catch {
+    return true;
+  }
+};
+
+const resolveApiBaseForChallenge = (): string => {
+  const configuredBaseUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    "http://localhost:8080/api/v1";
+
+  if (shouldForceLocalApi(configuredBaseUrl)) {
+    return "http://localhost:8080/api/v1";
+  }
+
+  return ensureApiV1Path(configuredBaseUrl);
+};
+
+/** Default API base URL for internal challenges, avoiding circular imports with `api-methods`. */
+const API_BASE_FOR_CHALLENGE: string = resolveApiBaseForChallenge();
 
 /** Endpoint path for internal challenges. */
 const CHALLENGE_PATH: string = "/_internal/challenge";

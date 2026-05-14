@@ -1,8 +1,9 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const LookupApiTokensRepository = require("@/modules/api-tokens/repositories/lookup-api-tokens.repository");
+const secretsService = require("@/services/secrets");
 
-const APPLICATION_SECRET_KEY = process.env.SECRET_KEY;
+const secretsManager = secretsService.secretsManager;
 
 /**
  * Middlare that verifies the authentication of the request.
@@ -118,7 +119,7 @@ const verifyToken = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, APPLICATION_SECRET_KEY, {
+    const decoded = jwt.verify(token, secretsManager(), {
       algorithms: ["HS256"],
     });
 

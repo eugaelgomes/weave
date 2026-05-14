@@ -1,6 +1,22 @@
 import { apiClient, handleResponse } from "../api-methods";
 import { API_ENDPOINTS } from "../api-methods";
 import { OrgJsonSchema } from "./organization.schema";
+import {
+  type OrgWorkspaceRole,
+  type ProjectMemberRoleForInvite,
+  isOrgWorkspaceRole,
+} from "./org-role-constants";
+
+export {
+  ORG_WORKSPACE_ROLES,
+  PROJECT_MEMBER_ROLES,
+  normalizeOrgRoleForUi,
+  isOrgWorkspaceRole,
+  isProjectMemberRoleForInvite,
+  type OrgWorkspaceRole,
+  type ProjectMemberRoleForInvite,
+  type OrgRoleUiKey,
+} from "./org-role-constants";
 
 function orgApiErrorMessage(data: Record<string, unknown>, fallback: string): string {
   const err = data.error;
@@ -54,7 +70,7 @@ export interface OrganizationMember {
   email?: string;
   avatar_url?: string | null;
   membership: {
-    role: "super_admin" | "admin" | "member" | "guest";
+    role: OrgWorkspaceRole;
     status: "active" | "pending" | "suspended";
     suspended: boolean;
     created_at: string;
@@ -158,10 +174,12 @@ export interface UpdateAreaMemberInput {
 export interface OrganizationInvite {
   invite_id: string;
   email: string;
-  role: "admin" | "member" | "guest";
+  role: OrgWorkspaceRole;
   expires_at: string;
   created_at?: string;
   invited_by?: string;
+  area_id?: string | null;
+  project_member_role?: ProjectMemberRoleForInvite | null;
 }
 
 export interface OrganizationDomain {
@@ -270,13 +288,13 @@ export interface UpdateOrganizationData {
 
 export interface InviteMemberData {
   email: string;
-  role: "admin" | "member" | "guest";
+  role: OrgWorkspaceRole;
   name: string;
   username?: string;
-  /** Área da organização à qual o convidado será vinculado ao aceitar */
+  /** Organization area the invitee is linked to when accepting */
   area_id?: string | null;
-  /** Papel na área: manager | editor | viewer */
-  area_member_role?: "manager" | "editor" | "viewer";
+  /** Stored on invite; maps to area membership on accept (API: project_member_role) */
+  project_member_role?: ProjectMemberRoleForInvite | null;
 }
 
 export interface AcceptInviteData {
@@ -295,7 +313,7 @@ export interface OrganizationInvitePreview {
   invited_name?: string | null;
   area_id?: string | null;
   area_name?: string | null;
-  area_member_role?: string | null;
+  project_member_role?: ProjectMemberRoleForInvite | string | null;
 }
 
 /** Payload in `data` from POST invites/accept (matches API members.controller acceptInvite). */
@@ -745,7 +763,12 @@ export const addMemberDirectly = async (
   role: string,
   userId?: string
 ): Promise<OrganizationMember> => {
-  const payload = { memberId, role, userId };
+  const normalized =
+    typeof role === "string" ? (role.trim().toUpperCase() as OrgWorkspaceRole) : role;
+  if (!isOrgWorkspaceRole(normalized)) {
+    throw new Error("Invalid organization role");
+  }
+  const payload = { memberId, role: normalized, userId };
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_MEMBERS, payload);
   const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
@@ -759,7 +782,19 @@ export const inviteMember = async (
   inviteData: InviteMemberData,
   userId?: string
 ): Promise<{ message: string }> => {
-  const payload = { ...inviteData, userId };
+  const payload: Record<string, unknown> = {
+    email: inviteData.email,
+    name: inviteData.name,
+    role: inviteData.role,
+    userId,
+  };
+  if (inviteData.username !== undefined) payload.username = inviteData.username;
+  if (inviteData.area_id) {
+    payload.area_id = inviteData.area_id;
+    if (inviteData.project_member_role) {
+      payload.project_member_role = inviteData.project_member_role;
+    }
+  }
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_INVITES, payload);
   const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
@@ -853,14 +888,20 @@ export const removeMember = async (
 
 export const updateMemberRole = async (
   memberId: string,
-  role: OrganizationMember["membership"]["role"],
+  role: OrgWorkspaceRole,
   userId?: string
 ): Promise<OrganizationMember> => {
   const url = userId
     ? `${API_ENDPOINTS.ORGANIZATIONS_MEMBER(memberId)}?userId=${userId}`
     : API_ENDPOINTS.ORGANIZATIONS_MEMBER(memberId);
 
-  const response = await apiClient.patch(url, { role, userId });
+  const normalized =
+    typeof role === "string" ? (role.trim().toUpperCase() as OrgWorkspaceRole) : role;
+  if (!isOrgWorkspaceRole(normalized)) {
+    throw new Error("Invalid organization role");
+  }
+
+  const response = await apiClient.patch(url, { role: normalized, userId });
   const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   if ((data.status !== "OK" && !data.success) || !data.data) {

@@ -129,6 +129,11 @@ export {
   type OrganizationStepOneResponse,
   type UpdateOrganizationData,
   type InviteMemberData,
+  type OrgWorkspaceRole,
+  type ProjectMemberRoleForInvite,
+  ORG_WORKSPACE_ROLES,
+  PROJECT_MEMBER_ROLES,
+  normalizeOrgRoleForUi,
 } from "./organization";
 
 // Backup Services

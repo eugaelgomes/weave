@@ -173,7 +173,7 @@ const esES: TranslationKeys = {
     userEmail: "Correo del Usuario",
     inviteeFullName: "Nombre completo",
     areaOptional: "Área (opcional)",
-    areaRoleLabel: "Rol en el área",
+    areaRoleLabel: "Rol en proyecto (área)",
     areaNone: "Ninguna",
     areaManager: "Gestor",
     areaEditor: "Editor",
@@ -182,6 +182,15 @@ const esES: TranslationKeys = {
     adminRole: "Administrador",
     standardRole: "Miembro Estándar",
     guestRole: "Invitado",
+    billingManager: "Responsable de facturación",
+    projectMemberRoleProjectManager: "Gestor de proyecto",
+    projectMemberRoleContributor: "Colaborador",
+    projectMemberRoleCommenter: "Comentador",
+    projectMemberRoleViewer: "Lector",
+    projectRoleInAreaHint:
+      "Rol en los proyectos del área; al aceptar la invitación se mapea al rol en el área.",
+    inviteAdminAreaNoProjectRole:
+      "Los administradores y super administradores no eligen rol de proyecto en el área: al aceptar obtienen acceso de gestión en el área.",
     cancel: "Cancelar",
     sendInvite: "Enviar Invitación",
     sending: "Enviando...",
@@ -241,6 +250,34 @@ const esES: TranslationKeys = {
     invitesCancelInviteTitle: "Cancelar invitación",
     cancelInviteError: "Error al cancelar la invitación.",
     cancelInviteSuccess: "Invitación cancelada correctamente.",
+  },
+
+  acceptOrganizationInvite: {
+    greetingWithName: "Hola, {name}. Has sido invitado a participar en el workspace {org}.",
+    greetingNoName: "¡Hola! Has sido invitado a participar en el workspace {org}.",
+    confirmCredentials: "Confirma abajo tu nombre, usuario y contraseña.",
+    loading: "Cargando invitación…",
+    loadErrorDefault: "Invitación no válida o caducada.",
+    backToLogin: "Volver al inicio de sesión",
+    close: "Cerrar",
+    existingAccountHint:
+      "Ya tienes una cuenta con este correo. Al aceptar, entras al workspace con el mismo acceso.",
+    acceptInvite: "Aceptar invitación",
+    enterOtherAccount: "Entrar con otra cuenta",
+    closeAfterSuccess: "Cerrar",
+    fillAllFields: "Completa nombre, usuario y contraseña.",
+    createAccountSubmit: "Crear cuenta y aceptar invitación",
+    cancel: "Cancelar",
+    fullNamePlaceholder: "Nombre completo",
+    usernamePlaceholder: "Nombre de usuario",
+    passwordPlaceholder: "Contraseña",
+    showPassword: "Mostrar contraseña",
+    hidePassword: "Ocultar contraseña",
+    successExisting:
+      "¡Invitación aceptada! Te enviamos un correo de confirmación. Entra con el correo invitado y tu contraseña — te llevaremos a las áreas de la organización.",
+    successCreatedLoginElse:
+      "Cuenta creada e invitación aceptada. Entra con tu usuario y contraseña en la siguiente pantalla.",
+    acceptError: "Error al aceptar la invitación.",
   },
 };
 export default esES;

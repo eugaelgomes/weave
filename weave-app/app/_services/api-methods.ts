@@ -8,8 +8,44 @@ import { notifyPlanLimitExceededSync } from "./plan-limit-sync";
 
 export { ApiError };
 
+const ensureApiV1Path = (baseUrl: string): string => {
+  const normalized = baseUrl.replace(/\/+$/, "");
+  if (normalized.endsWith("/api/v1")) {
+    return normalized;
+  }
+  return `${normalized}/api/v1`;
+};
+
+const isLocalHostname = (hostname: string): boolean =>
+  hostname === "localhost" || hostname === "127.0.0.1";
+
+const shouldForceLocalApi = (configuredBaseUrl: string): boolean => {
+  if (typeof window === "undefined") return false;
+  if (!isLocalHostname(window.location.hostname)) return false;
+
+  try {
+    const configuredHost = new URL(configuredBaseUrl).hostname;
+    return !isLocalHostname(configuredHost);
+  } catch {
+    return true;
+  }
+};
+
+const resolveApiBaseUrl = (): string => {
+  const configuredBaseUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    "http://localhost:8080/api/v1";
+
+  if (shouldForceLocalApi(configuredBaseUrl)) {
+    return "http://localhost:8080/api/v1";
+  }
+
+  return ensureApiV1Path(configuredBaseUrl);
+};
+
 // Configurações da API
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
+export const API_BASE_URL = resolveApiBaseUrl();
 
 export const API_CONFIG = {
   timeout: 30000,

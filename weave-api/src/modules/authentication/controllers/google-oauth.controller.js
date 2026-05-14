@@ -176,11 +176,11 @@ class GoogleOauthController extends AuthBaseController {
         maxAge: 24 * 60 * 60 * 1000,
       });
 
-      res.redirect(`${frontendURL}/app/home?auth=success`);
+      res.redirect(`${frontendURL}/home/?auth=success`);
     } catch (error) {
       console.error("Google OAuth callback error:", error.message);
       const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
-      res.redirect(`${frontendURL}/?error=auth_failed`);
+      res.redirect(`${frontendURL}/auth/?error=auth_failed`);
     }
   }
 }

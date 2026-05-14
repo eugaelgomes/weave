@@ -170,7 +170,7 @@ const ptBR = {
     userEmail: "E-mail do Usuário",
     inviteeFullName: "Nome completo",
     areaOptional: "Área (opcional)",
-    areaRoleLabel: "Papel na área",
+    areaRoleLabel: "Papel no projeto (área)",
     areaNone: "Nenhuma",
     areaManager: "Gestor",
     areaEditor: "Editor",
@@ -179,6 +179,15 @@ const ptBR = {
     adminRole: "Administrador",
     standardRole: "Membro Padrão",
     guestRole: "Convidado",
+    billingManager: "Gestor de faturação",
+    projectMemberRoleProjectManager: "Gestor de projeto",
+    projectMemberRoleContributor: "Contribuidor",
+    projectMemberRoleCommenter: "Comentador",
+    projectMemberRoleViewer: "Leitor",
+    projectRoleInAreaHint:
+      "Papel nos projetos da área; ao aceitar o convite, converte-se no papel na área (gestor de projeto → admin da área, etc.).",
+    inviteAdminAreaNoProjectRole:
+      "Administradores e super administradores não precisam de papel de projeto na área: ao aceitar, recebem acesso de gestão na área.",
     cancel: "Cancelar",
     sendInvite: "Enviar Convite",
     sending: "Enviando...",
@@ -238,6 +247,33 @@ const ptBR = {
     invitesCancelInviteTitle: "Cancelar convite",
     cancelInviteError: "Erro ao cancelar convite.",
     cancelInviteSuccess: "Convite cancelado com sucesso.",
+  },
+
+  acceptOrganizationInvite: {
+    greetingWithName: "Oi {name}. Você foi convidado para participar do workspace {org}.",
+    greetingNoName: "Oi! Você foi convidado para participar do workspace {org}.",
+    confirmCredentials: "Confirme abaixo seu nome, usuário e senha.",
+    loading: "Carregando convite…",
+    loadErrorDefault: "Convite inválido ou expirado.",
+    backToLogin: "Voltar ao login",
+    close: "Fechar",
+    existingAccountHint:
+      "Sua conta já existe com este e-mail. Ao aceitar, você entra no workspace usando o mesmo login.",
+    acceptInvite: "Aceitar convite",
+    enterOtherAccount: "Entrar com outra conta",
+    closeAfterSuccess: "Fechar",
+    fillAllFields: "Preencha nome, usuário e senha.",
+    createAccountSubmit: "Criar conta e aceitar convite",
+    cancel: "Cancelar",
+    fullNamePlaceholder: "Nome completo",
+    usernamePlaceholder: "Nome de usuário",
+    passwordPlaceholder: "Senha",
+    showPassword: "Mostrar senha",
+    hidePassword: "Ocultar senha",
+    successExisting:
+      "Convite aceito! Enviamos um e-mail de confirmação. Entre com o e-mail convidado e sua senha — você será levado às áreas da organização.",
+    successCreatedLoginElse: "Conta criada e convite aceito. Entre com seu usuário e senha na próxima tela.",
+    acceptError: "Erro ao aceitar convite.",
   },
 };
 export default ptBR;

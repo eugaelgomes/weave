@@ -41,6 +41,7 @@ import {
   type AddAreaMemberInput,
   type UpdateAreaMemberInput,
   type OrganizationMembersData,
+  type OrgWorkspaceRole,
 } from "../_services/organization";
 
 export type {
@@ -50,6 +51,7 @@ export type {
   OrganizationAreaMemberRole,
   OrganizationAreaProperties,
   OrganizationMembersData,
+  OrgWorkspaceRole,
 } from "../_services/organization";
 
 export interface OrganizationStats {
@@ -93,7 +95,7 @@ export interface OrganizationContextType {
   inviteMember: (data: InviteMemberData) => Promise<{ success: boolean; message: string }>; // Convite por email
   cancelInvite: (inviteId: string) => Promise<boolean>;
   removeMember: (memberId: string) => Promise<boolean>;
-  updateMemberRole: (memberId: string, role: string) => Promise<boolean>;
+  updateMemberRole: (memberId: string, role: OrgWorkspaceRole) => Promise<boolean>;
 
   // Gestão de Áreas
   fetchAreas: (force?: boolean) => Promise<OrganizationArea[]>;
@@ -118,7 +120,7 @@ export interface OrganizationContextType {
 
   // Dados Derivados
   getStats: () => OrganizationStats;
-  getMemberRole: (userId: string) => string | null;
+  getMemberRole: (userId: string) => OrgWorkspaceRole | null;
   isOwner: (userId: string) => boolean;
   isAdmin: (userId: string) => boolean;
   isMember: (userId: string) => boolean;
@@ -352,7 +354,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   // 5. MEMBROS: Adicionar Direto (Admin)
   const addMember = useCallback(
-    async (memberId: string, role: string = "member"): Promise<boolean> => {
+    async (memberId: string, role: string = "MEMBER"): Promise<boolean> => {
       setLoading(true);
       try {
         await addMemberDirectlyService(memberId, role);
@@ -431,13 +433,10 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  const updateMemberRole = useCallback(async (memberId: string, role: string): Promise<boolean> => {
+  const updateMemberRole = useCallback(async (memberId: string, role: OrgWorkspaceRole): Promise<boolean> => {
     setLoading(true);
     try {
-      const updatedMember = await updateMemberRoleService(
-        memberId,
-        role as OrganizationMember["membership"]["role"]
-      );
+      const updatedMember = await updateMemberRoleService(memberId, role);
 
       setMembers((prev) =>
         prev.map((member) =>
@@ -699,7 +698,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     const featuresEnabled = Object.values(features).filter(Boolean).length;
 
     const adminsCount = members.filter(
-      (m) => m.membership.role === "admin" || m.membership.role === "super_admin"
+      (m) => m.membership.role === "ADMIN" || m.membership.role === "SUPER_ADMIN"
     ).length;
 
     return {
@@ -726,7 +725,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       // Check rápido na prop owner da organização
       if (organization?.user_id === userId) return true;
       // Fallback para lista de membros
-      return getMemberRole(userId) === "super_admin";
+      return getMemberRole(userId) === "SUPER_ADMIN";
     },
     [organization, getMemberRole]
   );
@@ -734,7 +733,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const isAdmin = useCallback(
     (userId: string): boolean => {
       const role = getMemberRole(userId);
-      return role === "admin";
+      return role === "ADMIN";
     },
     [getMemberRole]
   );
@@ -742,7 +741,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const isMember = useCallback(
     (userId: string): boolean => {
       const role = getMemberRole(userId);
-      return role === "member";
+      return role === "MEMBER";
     },
     [getMemberRole]
   );

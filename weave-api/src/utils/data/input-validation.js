@@ -1,4 +1,5 @@
 const { body } = require("express-validator");
+const { hasPlusAliasInLocalPart } = require("./email-rules");
 
 const inputValidation = () => {
   return [
@@ -33,7 +34,11 @@ const inputValidation = () => {
       .trim()
       .isEmail()
       .withMessage("E-mail inválido.")
-      .normalizeEmail(),
+      .bail()
+      .custom((value) => !hasPlusAliasInLocalPart(value))
+      .withMessage(
+        "E-mails com alias (+) no endereço não são permitidos."
+      ),
 
     body("password")
       .isStrongPassword({

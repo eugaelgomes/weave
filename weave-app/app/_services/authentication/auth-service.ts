@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import { API_ENDPOINTS } from "../api-methods";
+import { API_BASE_URL, API_ENDPOINTS } from "../api-methods";
 import { apiClient, handleResponse } from "../api-methods";
 import { notifyUnauthorized } from "../session-invalidation";
 import getStorageUrl from "@/app/_utils/get-storage-url";
@@ -188,8 +188,11 @@ const mapMeResponseToUser = (data: BackendMeResponse): User => {
     id: user.user_profile.id,
     user_name: user.user_profile.user_name,
     username: user.user_profile.username,
-    email: user.user_profile.email,
-    avatar_url: getStorageUrl(user.user_profile.avatar_url),
+    email: (() => {
+      const em = user.user_profile.email;
+      return typeof em === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em) ? em : undefined;
+    })(),
+    avatar_url: getStorageUrl(user.user_profile.avatar_url ?? ""),
     birth_date: user.user_profile.birth_date ?? undefined,
     phone_number: user.user_profile.phone_number ?? undefined,
     created_at: user.user_profile.created_at,
@@ -263,7 +266,14 @@ export const getUserData = async (): Promise<User> => {
   }
 
   const rawData = await handleResponse<unknown>(response);
-  const data = BackendMeResponseSchema.parse(rawData);
+  const parsed = BackendMeResponseSchema.safeParse(rawData);
+  if (!parsed.success) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[getUserData] /users/me response failed validation", parsed.error.flatten());
+    }
+    throw new Error("Resposta de perfil inválida (validação).");
+  }
+  const data = parsed.data;
 
   if (data.user) {
     return mapMeResponseToUser(data);
@@ -332,18 +342,15 @@ export const logout = async (): Promise<void> => {
 };
 
 export const initiateGoogleLogin = (): void => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
-  window.location.href = `${baseUrl}${API_ENDPOINTS.GOOGLE_AUTH}`;
+  window.location.href = `${API_BASE_URL}${API_ENDPOINTS.GOOGLE_AUTH}`;
 };
 
 export const initiateGithubLogin = (): void => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
-  window.location.href = `${baseUrl}${API_ENDPOINTS.GITHUB_AUTH}`;
+  window.location.href = `${API_BASE_URL}${API_ENDPOINTS.GITHUB_AUTH}`;
 };
 
 export const initiateMicrosoftLogin = (): void => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
-  window.location.href = `${baseUrl}${API_ENDPOINTS.MICROSOFT_AUTH}`;
+  window.location.href = `${API_BASE_URL}${API_ENDPOINTS.MICROSOFT_AUTH}`;
 };
 
 export const updateUserData = async (

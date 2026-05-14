@@ -4,7 +4,12 @@ import React, { useEffect, useState } from "react";
 import { useOrganization } from "@/app/_contexts/organization-context";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
-import type { OrganizationArea, OrganizationMember } from "@/app/_services/organization";
+import type {
+  InviteMemberData,
+  OrganizationMember,
+  OrgWorkspaceRole,
+} from "@/app/_services/organization";
+import { ORG_WORKSPACE_ROLES } from "@/app/_services/organization";
 import Image from "next/image";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -13,7 +18,6 @@ import {
   Activity,
   Search,
   ShieldAlert,
-  Mail,
   User,
   Layers3,
   Edit2,
@@ -25,13 +29,8 @@ import {
 import { WorkspaceHeader } from "@/app/(protected)/_components/ui/headers/workspace-header";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { cn } from "@/lib/utils";
-
-const ORG_MEMBER_ROLES: OrganizationMember["membership"]["role"][] = [
-  "super_admin",
-  "admin",
-  "member",
-  "guest",
-];
+import { MemberWorkspaceRoleBadge } from "@/app/(protected)/organization/members/_components/member-workspace-role-badge";
+import { OrganizationInviteModal } from "@/app/(protected)/organization/members/_components/organization-invite-modal";
 
 const MEMBERSHIP_STATUSES: OrganizationMember["membership"]["status"][] = [
   "active",
@@ -63,32 +62,6 @@ const UserAvatar = ({ user, size = "sm" }: { user?: AvatarUser; size?: "sm" | "m
     <div className={wrapperClass}>
       <User className={`${iconClasses[size]} text-neutral-400 dark:text-neutral-500`} />
     </div>
-  );
-};
-
-const Badge = ({ role }: { role: string }) => {
-  const { t } = useLanguage();
-  const styles = {
-    super_admin:
-      "bg-brand-primary-500/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-400",
-    admin: "bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400",
-    member: "bg-neutral-500/10 text-neutral-700 border-neutral-500/20 dark:text-neutral-300",
-    guest:
-      "bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-neutral-800/50 dark:border-surface-dark-border",
-  };
-  const labels = {
-    super_admin: t.organizationMembers.superAdmin,
-    admin: t.organizationMembers.admin,
-    member: t.organizationMembers.member,
-    guest: t.organizationMembers.guest,
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-bold tracking-wider ${styles[role as keyof typeof styles] || styles.member}`}
-    >
-      {labels[role as keyof typeof labels] || role}
-    </span>
   );
 };
 
@@ -206,202 +179,59 @@ const ModalBase = ({ isOpen, onClose, title, children, footer }: ModalBaseProps)
   );
 };
 
-type InviteFormPayload = {
-  email: string;
-  name: string;
-  role: "admin" | "member" | "guest";
-  area_id?: string;
-  area_member_role?: "manager" | "editor" | "viewer";
-};
-
-const InviteModal = ({
-  isOpen,
-  onClose,
-  onInvite,
-  loading,
-  areas,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onInvite: (payload: InviteFormPayload) => void;
-  loading: boolean;
-  areas: OrganizationArea[];
-}) => {
-  const { t } = useLanguage();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"admin" | "member" | "guest">("member");
-  const [areaId, setAreaId] = useState("");
-  const [areaRole, setAreaRole] = useState<"manager" | "editor" | "viewer">("editor");
-
-  useEffect(() => {
-    if (!isOpen) return;
-    setName("");
-    setEmail("");
-    setRole("member");
-    setAreaId("");
-    setAreaRole("editor");
-  }, [isOpen]);
-
-  const handleSubmit = () => {
-    const trimmedEmail = email.trim();
-    const trimmedName = name.trim();
-    if (!trimmedEmail || !trimmedName) return;
-    const payload: InviteFormPayload = {
-      email: trimmedEmail,
-      name: trimmedName,
-      role,
-    };
-    if (areaId) {
-      payload.area_id = areaId;
-      payload.area_member_role = areaRole;
-    }
-    onInvite(payload);
-  };
-
-  const canSubmit = Boolean(email.trim() && name.trim());
-
-  const inputClass =
-    "w-full rounded-md border border-neutral-200 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white";
-
-  return (
-    <ModalBase
-      isOpen={isOpen}
-      onClose={onClose}
-      title={t.organizationMembers.inviteModalTitle}
-      footer={
-        <>
-          <button
-            onClick={onClose}
-            className="px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
-          >
-            {t.organizationMembers.cancel}
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading || !canSubmit}
-            className="bg-brand-primary-500 rounded-md px-3 py-1.5 text-xs font-semibold text-black hover:bg-yellow-600 disabled:opacity-50"
-          >
-            {loading ? t.organizationMembers.sending : t.organizationMembers.sendInvite}
-          </button>
-        </>
-      }
-    >
-      <div className="space-y-4">
-        <div>
-          <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-            {t.organizationMembers.inviteeFullName}
-          </label>
-          <div className="relative">
-            <User className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t.organizationMembers.inviteNamePlaceholder}
-              autoComplete="name"
-              className={`${inputClass} pr-2 pl-8`}
-            />
-          </div>
-        </div>
-        <div>
-          <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-            {t.organizationMembers.userEmail}
-          </label>
-          <div className="relative">
-            <Mail className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t.organizationMembers.inviteEmailPlaceholder}
-              className={`${inputClass} pr-2 pl-8`}
-            />
-          </div>
-        </div>
-        <div>
-          <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-            {t.organizationMembers.accessLevel}
-          </label>
-          <div className="relative">
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as "admin" | "member" | "guest")}
-              aria-label={t.organizationMembers.accessLevel}
-              className={`${inputClass} appearance-none px-3`}
-            >
-              <option value="admin">{t.organizationMembers.adminRole}</option>
-              <option value="member">{t.organizationMembers.standardRole}</option>
-              <option value="guest">{t.organizationMembers.guestRole}</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-          </div>
-        </div>
-        <div>
-          <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-            {t.organizationMembers.areaOptional}
-          </label>
-          <div className="relative">
-            <Layers3 className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-            <select
-              value={areaId}
-              onChange={(e) => setAreaId(e.target.value)}
-              aria-label={t.organizationMembers.areaOptional}
-              className={`${inputClass} appearance-none py-1.5 pr-8 pl-8`}
-            >
-              <option value="">{t.organizationMembers.areaNone}</option>
-              {areas.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.area_name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-          </div>
-        </div>
-        {areaId ? (
-          <div>
-            <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-              {t.organizationMembers.areaRoleLabel}
-            </label>
-            <div className="relative">
-              <select
-                value={areaRole}
-                onChange={(e) => setAreaRole(e.target.value as "manager" | "editor" | "viewer")}
-                aria-label={t.organizationMembers.areaRoleLabel}
-                className={`${inputClass} appearance-none px-3`}
-              >
-                <option value="manager">{t.organizationMembers.areaManager}</option>
-                <option value="editor">{t.organizationMembers.areaEditor}</option>
-                <option value="viewer">{t.organizationMembers.areaViewer}</option>
-              </select>
-              <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-            </div>
-          </div>
-        ) : null}
-      </div>
-    </ModalBase>
-  );
-};
-
 type RoleManageModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (memberId: string, newRole: string) => void;
+  onUpdate: (memberId: string, newRole: OrgWorkspaceRole) => void;
   loading: boolean;
   currentMember: OrganizationMember | null;
+  /** When false, SUPER_ADMIN is omitted from the role dropdown */
+  assignSuperAdmin: boolean;
 };
 
-const RoleManageModal = ({ isOpen, onClose, onUpdate, loading, currentMember }: RoleManageModalProps) => {
+const RoleManageModal = ({
+  isOpen,
+  onClose,
+  onUpdate,
+  loading,
+  currentMember,
+  assignSuperAdmin,
+}: RoleManageModalProps) => {
   const { t } = useLanguage();
-  const [role, setRole] = useState(currentMember?.membership?.role || "member");
+  const [role, setRole] = useState<OrgWorkspaceRole>("MEMBER");
+
+  const roleOptions = React.useMemo(
+    () => ORG_WORKSPACE_ROLES.filter((r) => assignSuperAdmin || r !== "SUPER_ADMIN"),
+    [assignSuperAdmin]
+  );
 
   React.useEffect(() => {
-    if (currentMember) setRole(currentMember.membership.role);
-  }, [currentMember]);
+    if (currentMember) {
+      const r = currentMember.membership.role;
+      setRole(roleOptions.includes(r) ? r : (roleOptions[0] ?? "MEMBER"));
+    }
+  }, [currentMember, roleOptions]);
 
   const inputClass =
     "w-full appearance-none rounded-md border border-neutral-200 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white";
+
+  const workspaceRoleLabel = (r: OrgWorkspaceRole): string => {
+    const o = t.organizationMembers;
+    switch (r) {
+      case "SUPER_ADMIN":
+        return o.superAdmin;
+      case "ADMIN":
+        return o.adminRole;
+      case "BILLING_MANAGER":
+        return o.billingManager;
+      case "MEMBER":
+        return o.standardRole;
+      case "GUEST":
+        return o.guestRole;
+      default:
+        return r;
+    }
+  };
 
   if (!currentMember) return null;
 
@@ -413,12 +243,14 @@ const RoleManageModal = ({ isOpen, onClose, onUpdate, loading, currentMember }: 
       footer={
         <>
           <button
+            type="button"
             onClick={onClose}
             className="px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
           >
             {t.organizationMembers.cancel}
           </button>
           <button
+            type="button"
             onClick={() => onUpdate(currentMember.id, role)}
             disabled={loading || role === currentMember.membership.role}
             className="bg-brand-primary-500 rounded-md px-3 py-1.5 text-xs font-semibold text-black hover:bg-yellow-600 disabled:opacity-50"
@@ -435,7 +267,7 @@ const RoleManageModal = ({ isOpen, onClose, onUpdate, loading, currentMember }: 
             <p className="text-xs font-semibold dark:text-white">
               {currentMember.name || currentMember.email}
             </p>
-            <Badge role={currentMember.membership.role} />
+            <MemberWorkspaceRoleBadge role={currentMember.membership.role} />
           </div>
         </div>
         <div>
@@ -445,13 +277,15 @@ const RoleManageModal = ({ isOpen, onClose, onUpdate, loading, currentMember }: 
           <div className="relative">
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value as OrganizationMember["membership"]["role"])}
+              onChange={(e) => setRole(e.target.value as OrgWorkspaceRole)}
               aria-label={t.organizationMembers.newLevel}
               className={inputClass}
             >
-              <option value="admin">{t.organizationMembers.adminRole}</option>
-              <option value="member">{t.organizationMembers.standardRole}</option>
-              <option value="guest">{t.organizationMembers.guestRole}</option>
+              {roleOptions.map((r) => (
+                <option key={r} value={r}>
+                  {workspaceRoleLabel(r)}
+                </option>
+              ))}
             </select>
             <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
           </div>
@@ -479,6 +313,7 @@ export default function MembersPage() {
     canManageMembers,
     areas,
     fetchAreas,
+    getMemberRole,
   } = useOrganization();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -495,6 +330,8 @@ export default function MembersPage() {
   const [memberToRemove, setMemberToRemove] = useState<OrganizationMember | null>(null);
 
   const userCanManage = user?.id ? canManageMembers(user.id) : false;
+  const showSuperAdminWorkspaceRole = user?.id ? getMemberRole(user.id) === "SUPER_ADMIN" : false;
+  const assignSuperAdminInRoleModal = showSuperAdminWorkspaceRole;
 
   useEffect(() => {
     if (showInviteModal) fetchAreas(true).catch(() => {});
@@ -520,13 +357,15 @@ export default function MembersPage() {
   }, [members]);
 
   const roleFilterOptions = React.useMemo((): FilterSelectOption[] => {
-    const labels: Record<OrganizationMember["membership"]["role"], string> = {
-      super_admin: t.organizationMembers.superAdmin,
-      admin: t.organizationMembers.admin,
-      member: t.organizationMembers.member,
-      guest: t.organizationMembers.guest,
+    const o = t.organizationMembers;
+    const labels: Record<OrgWorkspaceRole, string> = {
+      SUPER_ADMIN: o.superAdmin,
+      ADMIN: o.adminRole,
+      BILLING_MANAGER: o.billingManager,
+      MEMBER: o.member,
+      GUEST: o.guest,
     };
-    return ORG_MEMBER_ROLES.map((r) => ({ value: r, label: labels[r] }));
+    return ORG_WORKSPACE_ROLES.map((r) => ({ value: r, label: labels[r] }));
   }, [t]);
 
   const statusFilterOptions = React.useMemo((): FilterSelectOption[] => {
@@ -543,16 +382,10 @@ export default function MembersPage() {
     setTimeout(() => setStatus(null), 4000);
   };
 
-  const handleInvite = async (payload: InviteFormPayload) => {
+  const handleInvite = async (payload: InviteMemberData) => {
     setLoadingAction(true);
     try {
-      const result = await inviteMember({
-        email: payload.email,
-        role: payload.role,
-        name: payload.name,
-        area_id: payload.area_id,
-        area_member_role: payload.area_member_role,
-      });
+      const result = await inviteMember(payload);
       if (!result.success) {
         showFeedback("error", result.message || t.organizationMembers.inviteError);
         return;
@@ -570,7 +403,7 @@ export default function MembersPage() {
     }
   };
 
-  const handleUpdateRole = async (memberId: string, newRole: string) => {
+  const handleUpdateRole = async (memberId: string, newRole: OrgWorkspaceRole) => {
     setLoadingAction(true);
     try {
       await updateMemberRole(memberId, newRole);
@@ -796,12 +629,12 @@ export default function MembersPage() {
               <tbody className="divide-y divide-neutral-200 dark:divide-surface-dark-border">
                 {filteredMembers.map((member) => {
                   const isCurrentUser = member.id === user?.id;
-                  const isProtectedRole = member.membership.role === "super_admin";
+                  const isProtectedRole = member.membership.role === "SUPER_ADMIN";
                   const canEdit =
                     userCanManage &&
                     !isCurrentUser &&
                     (!isProtectedRole ||
-                      members.find((m) => m.id === user?.id)?.membership.role === "super_admin");
+                      members.find((m) => m.id === user?.id)?.membership.role === "SUPER_ADMIN");
 
                   return (
                     <tr
@@ -856,7 +689,7 @@ export default function MembersPage() {
                       </td>
                       <td className="px-3 py-2">
                         <div className="flex flex-col items-start gap-1.5">
-                          <Badge role={member.membership.role} />
+                          <MemberWorkspaceRoleBadge role={member.membership.role} />
                           <span className="text-[10px] text-neutral-500 dark:text-neutral-400">
                             {member.membership.status === "active"
                               ? t.organizationMembers.membershipStatusActive
@@ -902,12 +735,13 @@ export default function MembersPage() {
         </div>
       </div>
 
-      <InviteModal
+      <OrganizationInviteModal
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
         onInvite={handleInvite}
         loading={loadingAction}
         areas={areas}
+        showSuperAdminWorkspaceRole={showSuperAdminWorkspaceRole}
       />
       <RoleManageModal
         isOpen={!!memberToEdit}
@@ -915,6 +749,7 @@ export default function MembersPage() {
         currentMember={memberToEdit}
         onUpdate={handleUpdateRole}
         loading={loadingAction}
+        assignSuperAdmin={assignSuperAdminInRoleModal}
       />
 
       <ModalBase

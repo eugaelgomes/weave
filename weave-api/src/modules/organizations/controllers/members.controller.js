@@ -22,6 +22,7 @@ const {
   send_organization_invite_accepted,
 } = require("@/services/email/templates/invite-member-accepted");
 const { validRoles } = require("../normalizer");
+const { hasPlusAliasInLocalPart } = require("@/utils/data/email-rules");
 const {
   ORG_ROLES,
 } = require("@/modules/organizations/organization-role-policy");
@@ -304,6 +305,13 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return res.status(400).json({ error: "Email is required" });
       }
 
+      if (hasPlusAliasInLocalPart(email)) {
+        return res.status(400).json({
+          error:
+            "Email addresses using a plus (+) alias in the local part are not allowed.",
+        });
+      }
+
       if (!name || typeof name !== "string" || !name.trim()) {
         return res.status(400).json({ error: "Name is required" });
       }
@@ -339,13 +347,20 @@ class OrganizationMembersController extends OrganizationsBaseController {
           currentOrg.id
         );
         if (!area) return res.status(404).json({ error: "Area not found" });
-        resolvedProjectMemberRole =
-          this._resolveProjectMemberRole(project_member_role);
-        if (!PROJECT_MEMBER_ROLES.includes(resolvedProjectMemberRole)) {
-          return res.status(400).json({
-            error:
-              "Invalid project_member_role. Use: PROJECT_MANAGER, CONTRIBUTOR, COMMENTER, VIEWER",
-          });
+        if (
+          normalizedRole === ORG_ROLES.ADMIN ||
+          normalizedRole === ORG_ROLES.SUPER_ADMIN
+        ) {
+          resolvedProjectMemberRole = "PROJECT_MANAGER";
+        } else {
+          resolvedProjectMemberRole =
+            this._resolveProjectMemberRole(project_member_role);
+          if (!PROJECT_MEMBER_ROLES.includes(resolvedProjectMemberRole)) {
+            return res.status(400).json({
+              error:
+                "Invalid project_member_role. Use: PROJECT_MANAGER, CONTRIBUTOR, COMMENTER, VIEWER",
+            });
+          }
         }
       }
 
