@@ -4,7 +4,13 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, Sparkles, RefreshCw, MessageSquare } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useChat, type AIModel } from "@/app/_contexts/chat-context";
+import {
+  fetchAvailableModels,
+  sendChatMessage,
+  type AIModel,
+  type ChatMessage,
+  type SendMessageData,
+} from "@/app/_services/ai-agent-service/agent-service";
 import { useAuth } from "@/app/_contexts/auth-context";
 
 interface ChatWidgetProps {
@@ -18,10 +24,12 @@ export default function ChatWidget({
   maxHeight = "400px",
   className = "",
 }: ChatWidgetProps) {
-  const { models, messages, isTyping, loadModels, sendMessage, createNewSession, currentSession } =
-    useChat();
-
   const { user } = useAuth();
+  const [models, setModels] = useState<AIModel[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [sessionId, setSessionId] = useState<string | undefined>(undefined);
+  const [isTyping, setIsTyping] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [selectedModel, setSelectedModel] = useState<AIModel | null>(null);
 
@@ -29,8 +37,18 @@ export default function ChatWidget({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const loadModels = async () => {
+      try {
+        const availableModels = await fetchAvailableModels();
+        setModels(availableModels);
+      } catch (loadError) {
+        setError(
+          loadError instanceof Error ? loadError.message : "Erro ao carregar modelos"
+        );
+      }
+    };
     loadModels();
-  }, [loadModels]);
+  }, []);
 
   useEffect(() => {
     if (models.length && !selectedModel) {
@@ -52,15 +70,74 @@ export default function ChatWidget({
     if (!input.trim() || !selectedModel || isTyping) return;
     const value = input;
     setInput("");
+    setIsTyping(true);
+    setError(null);
 
-    await sendMessage({
+    const requestId =
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `widget-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const optimisticMessage: ChatMessage = {
+      id: `widget-user-${requestId}`,
+      role: "user",
+      content: value,
+      timestamp: new Date(),
+      metadata: {
+        requestId,
+        status: "pending",
+      },
+    };
+    setMessages((prev) => [...prev, optimisticMessage]);
+
+    const payload: SendMessageData = {
       message: value,
       model: {
-        name: selectedModel.id,
+        name: selectedModel.provider || selectedModel.name,
         version: selectedModel.version,
       },
-      sessionId: currentSession?.id,
-    });
+      requestId,
+      sessionId,
+    };
+
+    try {
+      const response = await sendChatMessage(payload);
+      setSessionId(response.sessionId || sessionId);
+      setMessages((prev) =>
+        prev
+          .map((message) =>
+            message.id === optimisticMessage.id
+              ? {
+                  ...message,
+                  metadata: {
+                    ...(message.metadata || {}),
+                    status: "sent",
+                  },
+                }
+              : message
+          )
+          .concat(response.message)
+      );
+    } catch (sendError) {
+      const errorMessage =
+        sendError instanceof Error ? sendError.message : "Erro ao enviar mensagem";
+      setError(errorMessage);
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === optimisticMessage.id
+            ? {
+                ...message,
+                metadata: {
+                  ...(message.metadata || {}),
+                  errorMessage,
+                  status: "failed",
+                },
+              }
+            : message
+        )
+      );
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   return (
@@ -78,7 +155,11 @@ export default function ChatWidget({
 
         <div className="flex items-center gap-1">
           <button
-            onClick={() => createNewSession()}
+            onClick={() => {
+              setSessionId(undefined);
+              setMessages([]);
+              setError(null);
+            }}
             className="rounded-md p-1 transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-800"
             title="Nova conversa"
           >
@@ -123,6 +204,11 @@ export default function ChatWidget({
                   <div className="prose prose-invert max-w-none leading-relaxed text-inherit">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                   </div>
+                  {msg.role === "user" && msg?.metadata?.status === "failed" && (
+                    <p className="mt-1 text-[10px] text-red-500">
+                      {String(msg?.metadata?.errorMessage || "Falha ao enviar mensagem")}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}
@@ -170,6 +256,7 @@ export default function ChatWidget({
             <Send className="h-3.5 w-3.5" />
           </button>
         </div>
+        {error ? <p className="mt-2 text-[11px] text-red-500">{error}</p> : null}
       </div>
     </div>
   );

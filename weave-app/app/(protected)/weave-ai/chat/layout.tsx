@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { flushSync } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { MessageSquare, Plus, Menu, X, Trash2 } from "lucide-react";
@@ -50,8 +51,9 @@ function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
         <div className="mb-4">
           <button
             onClick={() => {
-              createNewSession();
-              // Se o chat principal está na raiz de chat/
+              flushSync(() => {
+                createNewSession();
+              });
               router.push("/weave-ai/chat");
               onLinkClick?.();
             }}

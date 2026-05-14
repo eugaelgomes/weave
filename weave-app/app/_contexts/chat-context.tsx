@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import { useAuth } from "./auth-context";
 import {
   fetchAvailableModels,
@@ -26,6 +26,7 @@ export interface ChatContextType {
   // Funções
   loadModels: () => Promise<void>;
   sendMessage: (data: SendMessageData) => Promise<ChatMessage | null>;
+  retryMessage: (messageId: string) => Promise<ChatMessage | null>;
   loadChatHistory: (sessionId?: string) => Promise<void>;
   loadSession: (sessionId: string) => Promise<void>;
   createNewSession: () => void;
@@ -37,8 +38,29 @@ export type { AIModel, ChatMessage, SendMessageData, ChatSession };
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
+const DEFAULT_SESSION_TITLE = "Nova Conversa";
+
+function createRequestId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function deriveSessionTitleFromMessages(messages: ChatMessage[]): string | null {
+  const first = messages.find((m) => m.role === "user" && typeof m.content === "string");
+  const raw = first?.content?.trim();
+  if (!raw) return null;
+  const firstLine = raw.split(/\n/).find((l) => l.trim().length > 0)?.trim() ?? raw;
+  const collapsed = firstLine.replace(/\s+/g, " ").trim();
+  if (!collapsed) return null;
+  return collapsed.length > 255 ? collapsed.slice(0, 255) : collapsed;
+}
+
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { authenticated } = useAuth();
+  /** Bumped on createNewSession and at the start of each loadSession / scoped loadChatHistory; stale async completions must not overwrite state. */
+  const chatStateEpochRef = useRef(0);
   const [models, setModels] = useState<AIModel[]>([]);
   const [currentSession, setCurrentSessionState] = useState<ChatSession | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
@@ -46,6 +68,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+
+  const chatHistoryRef = useRef<ChatSession[]>([]);
+  const messagesRef = useRef<ChatMessage[]>([]);
+  useEffect(() => {
+    chatHistoryRef.current = chatHistory;
+  }, [chatHistory]);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   // Carrega lista de sessões quando autenticado
   useEffect(() => {
@@ -74,16 +105,19 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     async (sessionId?: string) => {
       if (!authenticated) return;
 
+      const requestToken = sessionId ? ++chatStateEpochRef.current : null;
+
       try {
         setLoading(true);
 
         const response = await fetchChatHistory(sessionId);
 
         if (sessionId) {
-          // Resposta é array de mensagens
+          if (requestToken !== null && requestToken !== chatStateEpochRef.current) {
+            return;
+          }
           setMessages(response as ChatMessage[]);
         } else {
-          // Resposta é array de sessões
           setChatHistory(response as ChatSession[]);
         }
       } catch (err) {
@@ -100,33 +134,76 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     async (data: SendMessageData): Promise<ChatMessage | null> => {
       if (!authenticated) return null;
 
+      const epochAtSendStart = chatStateEpochRef.current;
+      const requestId = data.requestId || createRequestId();
+      const optimisticMessageId = `user-${requestId}`;
+
       try {
         setIsTyping(true);
         setError(null);
 
         const userMessage: ChatMessage = {
-          id: Date.now().toString(),
+          id: optimisticMessageId,
           role: "user",
           content: data.message,
           timestamp: new Date(),
           model: data.model.version ? `${data.model.name}:${data.model.version}` : data.model.name,
           metadata: {
             allowEdit: data.allowEdit,
+            errorMessage: null,
+            payload: {
+              ...data,
+              requestId,
+            },
+            requestId,
+            status: "pending",
           },
         };
 
-        setMessages((prev) => [...prev, userMessage]);
+        setMessages((prev: ChatMessage[]) => {
+          const existingIndex = prev.findIndex((message: ChatMessage) => message.id === optimisticMessageId);
+          if (existingIndex >= 0) {
+            const next = [...prev];
+            next[existingIndex] = userMessage;
+            return next;
+          }
+          return [...prev, userMessage];
+        });
 
-        const response = await sendChatMessage(data);
+        const response = await sendChatMessage({
+          ...data,
+          requestId,
+        });
+
+        if (epochAtSendStart !== chatStateEpochRef.current) {
+          return null;
+        }
+
+        setMessages((prev: ChatMessage[]) =>
+          prev.map((message: ChatMessage) =>
+            message.id === optimisticMessageId
+              ? {
+                  ...message,
+                  metadata: {
+                    ...(message.metadata || {}),
+                    errorMessage: null,
+                    status: "sent",
+                  },
+                }
+              : message
+          )
+        );
 
         if (response?.message) {
-          setMessages((prev) => [...prev, response.message]);
+          setMessages((prev: ChatMessage[]) => [...prev, response.message]);
 
           if (response.sessionId) {
-            setCurrentSessionState((prev) => {
+            setCurrentSessionState((prev: ChatSession | null) => {
               if (prev?.id === response.sessionId) return prev;
 
-              const existingSession = chatHistory.find((session) => session.id === response.sessionId);
+              const existingSession = chatHistoryRef.current.find(
+                (session: ChatSession) => session.id === response.sessionId
+              );
               if (existingSession) return existingSession;
 
               return {
@@ -144,37 +221,84 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
         return response?.message || null;
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao enviar mensagem");
+        const errorMessage = err instanceof Error ? err.message : "Erro ao enviar mensagem";
+        setError(errorMessage);
+        setMessages((prev: ChatMessage[]) =>
+          prev.map((message: ChatMessage) =>
+            message.id === optimisticMessageId
+              ? {
+                  ...message,
+                  metadata: {
+                    ...(message.metadata || {}),
+                    errorMessage,
+                    status: "failed",
+                  },
+                }
+              : message
+          )
+        );
         console.error("Erro ao enviar mensagem:", err);
         return null;
       } finally {
         setIsTyping(false);
       }
     },
-    [authenticated, chatHistory, loadChatHistory]
+    [authenticated, loadChatHistory]
+  );
+
+  const retryMessage = useCallback(
+    async (messageId: string): Promise<ChatMessage | null> => {
+      const failedMessage = messagesRef.current.find(
+        (message: ChatMessage) => message.id === messageId && message.role === "user"
+      );
+      const retryPayload = failedMessage?.metadata?.payload as SendMessageData | undefined;
+      if (!retryPayload) {
+        return null;
+      }
+      return sendMessage(retryPayload);
+    },
+    [sendMessage]
   );
 
   const loadSession = useCallback(
     async (sessionId: string) => {
       if (!authenticated) return;
 
+      const requestToken = ++chatStateEpochRef.current;
+
       try {
         setLoading(true);
         setError(null);
         const history = await fetchChatHistory(sessionId);
-        setMessages(history as ChatMessage[]);
+        if (requestToken !== chatStateEpochRef.current) {
+          return;
+        }
+        const list = history as ChatMessage[];
+        setMessages(list);
 
-        // Atualiza a sessão atual
-        const session = chatHistory.find((s) => s.id === sessionId) || null;
+        const derivedTitle = deriveSessionTitleFromMessages(list);
+        const session = chatHistoryRef.current.find((s: ChatSession) => s.id === sessionId) || null;
+        const isStaleDefaultTitle =
+          session?.title === DEFAULT_SESSION_TITLE ||
+          session?.title?.toLowerCase() === "nova conversa";
+
         if (session) {
-          setCurrentSessionState(session);
+          if (derivedTitle && isStaleDefaultTitle) {
+            const updated = { ...session, title: derivedTitle };
+            setCurrentSessionState(updated);
+            setChatHistory((prev: ChatSession[]) =>
+              prev.map((s: ChatSession) => (s.id === sessionId ? { ...s, title: derivedTitle } : s))
+            );
+          } else {
+            setCurrentSessionState(session);
+          }
         } else {
           setCurrentSessionState({
             id: sessionId,
-            title: "Conversa",
+            title: derivedTitle ?? "Conversa",
             createdAt: new Date(),
             updatedAt: new Date(),
-            messageCount: (history as ChatMessage[]).length,
+            messageCount: list.length,
           });
         }
       } catch (err) {
@@ -184,10 +308,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     },
-    [authenticated, chatHistory]
+    [authenticated]
   );
 
   const createNewSession = useCallback(() => {
+    chatStateEpochRef.current += 1;
     setCurrentSessionState(null);
     setMessages([]);
     setError(null);
@@ -201,10 +326,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         setError(null);
         await deleteChatSessionService(sessionId);
 
-        setChatHistory((prev) => prev.filter((session) => session.id !== sessionId));
+        chatStateEpochRef.current += 1;
 
-        setCurrentSessionState((prev) => (prev?.id === sessionId ? null : prev));
-        setMessages((prev) =>
+        setChatHistory((prev: ChatSession[]) => prev.filter((session: ChatSession) => session.id !== sessionId));
+
+        setCurrentSessionState((prev: ChatSession | null) => (prev?.id === sessionId ? null : prev));
+        setMessages((prev: ChatMessage[]) =>
           currentSession?.id === sessionId ? [] : prev
         );
 
@@ -237,6 +364,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     isTyping,
     loadModels,
     sendMessage,
+    retryMessage,
     loadChatHistory,
     loadSession,
     createNewSession,

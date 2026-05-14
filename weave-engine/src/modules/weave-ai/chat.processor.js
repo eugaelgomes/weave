@@ -26,6 +26,17 @@ const CHAT_HISTORY_MAX_TOTAL_CHARS = Number.parseInt(
   process.env.WEAVE_CHAT_CONTEXT_MAX_TOTAL_CHARS || "12000",
   10
 );
+const ENGINE_CHAT_TASK_TIMEOUT_MS = Number.parseInt(
+  process.env.WEAVE_ENGINE_CHAT_TASK_TIMEOUT_MS || "65000",
+  10
+);
+const ENGINE_JOB_MAX_RETRIES = Number.parseInt(
+  process.env.WEAVE_ENGINE_JOB_MAX_RETRIES || "2",
+  10
+);
+const ENGINE_DEAD_LETTER_QUEUE_KEY =
+  process.env.REDIS_ENGINE_LLM_DEAD_LETTER_QUEUE_KEY ||
+  "weave:engine:llm:dead-letter";
 
 function resolveOrganizationId(payload = {}, context = {}) {
   return (
@@ -63,8 +74,12 @@ class LlmQueueProcessor {
           continue;
         }
 
-        const [, payload] = result;
-        await this.processJob(JSON.parse(payload));
+        const [, rawPayload] = result;
+        const parsedJob = this.parseRawJob(rawPayload);
+        if (!parsedJob) {
+          continue;
+        }
+        await this.processJob(parsedJob);
       } catch (error) {
         logger.error("Engine LLM processor loop failed", {
           error: error.message,
@@ -75,6 +90,75 @@ class LlmQueueProcessor {
   }
 
   /**
+   * @param {string} rawPayload
+   * @returns {object|null}
+   */
+  parseRawJob(rawPayload) {
+    let parsedJob;
+    try {
+      parsedJob = JSON.parse(rawPayload);
+    } catch (error) {
+      logger.error("Engine LLM job parse failed", {
+        error: error.message,
+      });
+      this.pushDeadLetter({
+        errorCode: "ENGINE_JOB_PARSE_FAILED",
+        errorMessage: error.message,
+        rawPayload,
+      }).catch(() => {});
+      return null;
+    }
+
+    if (!this.isValidJobEnvelope(parsedJob)) {
+      logger.warn("Engine LLM job discarded: invalid envelope");
+      this.pushDeadLetter({
+        errorCode: "ENGINE_JOB_INVALID_ENVELOPE",
+        errorMessage: "Invalid job envelope",
+        job: parsedJob,
+      }).catch(() => {});
+      return null;
+    }
+
+    return {
+      ...parsedJob,
+      attempts:
+        Number.isInteger(parsedJob.attempts) && parsedJob.attempts >= 0
+          ? parsedJob.attempts
+          : 0,
+      createdAt:
+        typeof parsedJob.createdAt === "string" ? parsedJob.createdAt : new Date().toISOString(),
+      requestId:
+        typeof parsedJob.requestId === "string" && parsedJob.requestId.trim().length > 0
+          ? parsedJob.requestId.trim()
+          : null,
+      taskType:
+        typeof parsedJob.taskType === "string" && parsedJob.taskType.trim().length > 0
+          ? parsedJob.taskType
+          : "provider_call",
+    };
+  }
+
+  /**
+   * @param {object} job
+   * @returns {boolean}
+   */
+  isValidJobEnvelope(job) {
+    if (!job || typeof job !== "object") {
+      return false;
+    }
+
+    if (typeof job.responseQueueKey !== "string" || !job.responseQueueKey.trim()) {
+      return false;
+    }
+
+    if (!job.payload || typeof job.payload !== "object" || Array.isArray(job.payload)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * @param {object} job
    * @param {object} [job.payload]
    * @param {string} job.responseQueueKey
@@ -82,7 +166,14 @@ class LlmQueueProcessor {
    * @returns {Promise<void>}
    */
   async processJob(job) {
-    const { payload = {}, responseQueueKey, taskType = "provider_call" } = job;
+    const {
+      payload = {},
+      responseQueueKey,
+      taskType = "provider_call",
+      requestId = null,
+      attempts = 0,
+      createdAt = null,
+    } = job;
 
     if (!responseQueueKey) {
       logger.warn("Engine LLM job discarded: missing response queue key");
@@ -90,23 +181,59 @@ class LlmQueueProcessor {
     }
 
     let responsePayload;
+    const startedAt = Date.now();
+    const queueLatencyMs = createdAt ? Date.now() - new Date(createdAt).getTime() : null;
 
     try {
       const data = await this.executeTask(taskType, payload);
       responsePayload = JSON.stringify({
         data,
+        requestId,
         success: true,
+      });
+      logger.info("Engine LLM task succeeded", {
+        attempts,
+        queueLatencyMs,
+        requestId,
+        taskLatencyMs: Date.now() - startedAt,
+        taskType,
       });
     } catch (error) {
       const normalizedError = this.normalizeTaskError(error, taskType);
       logger.error("Engine LLM task failed", {
+        attempts,
         code: normalizedError.code,
         message: normalizedError.message,
+        requestId,
         taskType,
       });
+
+      if (attempts < ENGINE_JOB_MAX_RETRIES) {
+        const retriedJob = {
+          ...job,
+          attempts: attempts + 1,
+          createdAt,
+          requestId,
+        };
+        await redis.rpush(this.queueName, JSON.stringify(retriedJob));
+        return;
+      }
+
       responsePayload = JSON.stringify({
         error: normalizedError,
+        requestId,
         success: false,
+      });
+      await this.pushDeadLetter({
+        errorCode: normalizedError.code,
+        errorMessage: normalizedError.message,
+        job: {
+          attempts,
+          payload,
+          requestId,
+          responseQueueKey,
+          taskType,
+        },
       });
     }
 
@@ -131,6 +258,20 @@ class LlmQueueProcessor {
           : "Engine task failed",
       taskType,
     };
+  }
+
+  /**
+   * @param {object} deadLetterPayload
+   * @returns {Promise<void>}
+   */
+  async pushDeadLetter(deadLetterPayload) {
+    await redis.rpush(
+      ENGINE_DEAD_LETTER_QUEUE_KEY,
+      JSON.stringify({
+        ...deadLetterPayload,
+        createdAt: new Date().toISOString(),
+      })
+    );
   }
 
   /**
@@ -194,16 +335,25 @@ class LlmQueueProcessor {
           payload.conversationHistory
         );
 
-        const { data, providerUsed } = await executeAgenticTask({
-          allowEdit: Boolean(payload.allowEdit),
-          allowWebSearch: Boolean(payload.allowWebSearch),
-          files: Array.isArray(payload.files) ? payload.files : [],
-          functions: Array.isArray(payload.functions) ? payload.functions : [],
-          message: payload.message || "",
-          model: payload.model || null,
-          systemMessage,
-          conversationHistory,
-        });
+        const { data, providerUsed } = await Promise.race([
+          executeAgenticTask({
+            allowEdit: Boolean(payload.allowEdit),
+            allowWebSearch: Boolean(payload.allowWebSearch),
+            files: Array.isArray(payload.files) ? payload.files : [],
+            functions: Array.isArray(payload.functions) ? payload.functions : [],
+            message: payload.message || "",
+            model: payload.model || null,
+            systemMessage,
+            conversationHistory,
+          }),
+          new Promise((_, reject) => {
+            setTimeout(() => {
+              const timeoutError = new Error("Engine chat task timeout");
+              timeoutError.code = "ENGINE_CHAT_TASK_TIMEOUT";
+              reject(timeoutError);
+            }, ENGINE_CHAT_TASK_TIMEOUT_MS);
+          }),
+        ]);
 
         const functions =
           data?.type === "function_call" && data?.functionCall

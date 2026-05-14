@@ -111,6 +111,28 @@ function createProviderError(code, message) {
 }
 
 /**
+ * @template T
+ * @param {Promise<T>} promise
+ * @param {number} timeoutMs
+ * @param {string} code
+ * @returns {Promise<T>}
+ */
+async function withTimeout(promise, timeoutMs, code) {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(createProviderError(code, `Provider timeout after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
  * Gemini function declarations do not accept some JSON Schema fields
  * like "additionalProperties". This sanitizer removes unsupported keys.
  *
@@ -272,7 +294,11 @@ async function callGeminiApi(
     }
   }
 
-  const result = await model.generateContent({ contents });
+  const result = await withTimeout(
+    model.generateContent({ contents }),
+    config.timeout,
+    "ENGINE_PROVIDER_TIMEOUT"
+  );
   const response = await result.response;
 
   if (response.promptFeedback && response.promptFeedback.blockReason) {

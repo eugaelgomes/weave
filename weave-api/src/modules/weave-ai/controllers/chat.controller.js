@@ -12,8 +12,12 @@ const {
 const { enqueueNoteEmbeddingJob } = require("@/services/queue/queue-controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
 const projectsUpdateRepository = require("@/modules/projects/repositories/projects-update.repository");
+const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
+const {
+  PROJECT_WRITE_CAPABLE_ROLES,
+} = require("@/modules/projects/project-role-policy");
 const { resolveAuthorizedFunctions } = require("@/modules/weave-ai/authorized-functions");
-const redis = require("@/services/queue/connection");
+const engineRpcRedis = require("@/services/queue/engine-rpc-connection");
 const {
   getEngineLlmRequestQueueRedisKey,
   getEngineLlmResponsePrefixRedisKey,
@@ -23,7 +27,7 @@ const workspaceUserScopeRepository = require("@/modules/users/repositories/works
 const { WORKSPACE_SHARE_DENIED } = require("@/utils/workspace-share-guard");
 
 const ENGINE_CHAT_TIMEOUT_SECONDS = Number.parseInt(
-  process.env.WEAVE_ENGINE_CHAT_TIMEOUT_SECONDS || "45",
+  process.env.WEAVE_ENGINE_CHAT_TIMEOUT_SECONDS || "75",
   10
 );
 const CHAT_CONTEXT_MAX_MESSAGES = Number.parseInt(
@@ -34,6 +38,8 @@ const CHAT_CONTEXT_MAX_MESSAGE_CHARS = Number.parseInt(
   process.env.WEAVE_CHAT_CONTEXT_MAX_MESSAGE_CHARS || "1500",
   10
 );
+const REQUEST_ID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
  * @typedef {Object} ChatModelInput
@@ -50,6 +56,9 @@ const CHAT_CONTEXT_MAX_MESSAGE_CHARS = Number.parseInt(
  * @property {string[]|null} projectIds
  * @property {string|null} agentId
  * @property {string|null} sessionId
+ * @property {string|null} requestId
+ * @property {string|null} useCase
+ * @property {Record<string, unknown>|null} context
  */
 
 class ChatController {
@@ -135,6 +144,44 @@ class ChatController {
   }
 
   /**
+   * Parses nullable object values from body payloads.
+   *
+   * @param {unknown} value
+   * @param {string} fieldName
+   * @returns {Record<string, unknown>|null}
+   */
+  _parseNullableObject(value, fieldName) {
+    if (value === undefined || value === null || value === "") {
+      return null;
+    }
+
+    let parsed = value;
+    if (typeof value === "string") {
+      if (value.toLowerCase() === "null") {
+        return null;
+      }
+
+      try {
+        parsed = JSON.parse(value);
+      } catch {
+        const parseError = new Error(`Campo "${fieldName}" deve ser um objeto JSON válido`);
+        parseError.code = "CHAT_INVALID_OBJECT_FIELD";
+        parseError.statusCode = 400;
+        throw parseError;
+      }
+    }
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      const parseError = new Error(`Campo "${fieldName}" deve ser objeto ou null`);
+      parseError.code = "CHAT_INVALID_OBJECT_FIELD";
+      parseError.statusCode = 400;
+      throw parseError;
+    }
+
+    return parsed;
+  }
+
+  /**
    * Parses and validates model payload.
    *
    * @param {unknown} value
@@ -183,7 +230,19 @@ class ChatController {
    * @returns {ParsedChatPayload}
    */
   _parseChatPayload(req) {
-    const { message, model, allowEdit, allowWebSearch, noteIds, projectIds, agentId, sessionId } = req.body;
+    const {
+      message,
+      model,
+      allowEdit,
+      allowWebSearch,
+      noteIds,
+      projectIds,
+      agentId,
+      sessionId,
+      requestId,
+      useCase,
+      context,
+    } = req.body;
 
     if (typeof message !== "string" || !message.trim()) {
       const error = new Error("Campo \"message\" é obrigatório");
@@ -201,6 +260,20 @@ class ChatController {
       sessionId === undefined || sessionId === null || sessionId === "" || sessionId === "null"
         ? null
         : String(sessionId);
+    const parsedRequestId =
+      requestId === undefined || requestId === null || requestId === "" || requestId === "null"
+        ? null
+        : String(requestId).trim();
+    if (parsedRequestId && !REQUEST_ID_REGEX.test(parsedRequestId)) {
+      const requestError = new Error("Campo \"requestId\" deve ser um UUID válido");
+      requestError.code = "CHAT_INVALID_REQUEST_ID";
+      requestError.statusCode = 400;
+      throw requestError;
+    }
+    const parsedUseCase =
+      useCase === undefined || useCase === null || useCase === "" || useCase === "null"
+        ? null
+        : String(useCase).trim() || null;
 
     return {
       message: message.trim(),
@@ -211,7 +284,100 @@ class ChatController {
       projectIds: this._parseNullableStringArray(projectIds, "projectIds"),
       agentId: parsedAgentId,
       sessionId: parsedSessionId,
+      requestId: parsedRequestId,
+      useCase: parsedUseCase,
+      context: this._parseNullableObject(context, "context"),
     };
+  }
+
+  /**
+   * @param {string} userId
+   * @param {string} noteId
+   * @param {string|null} organizationId
+   * @returns {Promise<void>}
+   */
+  async _assertNoteMutationAccess(userId, noteId, organizationId = null) {
+    if (!noteId) {
+      const error = new Error("noteId é obrigatório");
+      error.code = "CHAT_NOTE_ID_REQUIRED";
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const summary = await notesRepository.getNoteAccessSummary(noteId);
+    if (!summary) {
+      const error = new Error("Nota não encontrada");
+      error.code = "CHAT_NOTE_NOT_FOUND";
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (String(summary.user_id) === String(userId)) {
+      return;
+    }
+
+    const isCollaborator = await notesRepository.isCollaborator(noteId, userId);
+    if (isCollaborator) {
+      return;
+    }
+
+    if (organizationId && summary.project_id) {
+      const scopedProjectRows = await projectsReadRepository.getProjectByIdWithOrgScope(
+        summary.project_id,
+        organizationId
+      );
+      if (Array.isArray(scopedProjectRows) && scopedProjectRows.length > 0) {
+        return;
+      }
+    }
+
+    const deniedError = new Error("Sem permissão para modificar esta nota");
+    deniedError.code = "CHAT_NOTE_ACCESS_DENIED";
+    deniedError.statusCode = 403;
+    throw deniedError;
+  }
+
+  /**
+   * @param {string} userId
+   * @param {string} projectId
+   * @param {string|null} organizationId
+   * @returns {Promise<void>}
+   */
+  async _assertProjectMutationAccess(userId, projectId, organizationId = null) {
+    if (!projectId) {
+      const error = new Error("projectId é obrigatório");
+      error.code = "CHAT_PROJECT_ID_REQUIRED";
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (organizationId) {
+      const scopedProjectRows = await projectsReadRepository.getProjectByIdWithOrgScope(
+        projectId,
+        organizationId
+      );
+      if (Array.isArray(scopedProjectRows) && scopedProjectRows.length > 0) {
+        return;
+      }
+    }
+
+    const ownerProjectRows = await projectsReadRepository.getProjectById(projectId, userId);
+    if (Array.isArray(ownerProjectRows) && ownerProjectRows.length > 0) {
+      return;
+    }
+
+    const collaboratorRole = await projectsReadRepository.getProjectMemberRole(projectId, userId);
+    if (
+      collaboratorRole &&
+      PROJECT_WRITE_CAPABLE_ROLES.includes(String(collaboratorRole).toUpperCase())
+    ) {
+      return;
+    }
+
+    const deniedError = new Error("Sem permissão para modificar este projeto");
+    deniedError.code = "CHAT_PROJECT_ACCESS_DENIED";
+    deniedError.statusCode = 403;
+    throw deniedError;
   }
 
   /**
@@ -299,6 +465,30 @@ class ChatController {
   }
 
   /**
+   * Builds a short session title from the first user message (fits ai_chat_sessions.title).
+   *
+   * @param {string} message
+   * @returns {string}
+   */
+  _deriveSessionTitleFromMessage(message) {
+    if (typeof message !== "string") {
+      return "";
+    }
+    const trimmed = message.trim();
+    if (!trimmed) {
+      return "";
+    }
+    const lines = trimmed.split(/\r?\n/);
+    const firstLine =
+      lines.find((line) => typeof line === "string" && line.trim().length > 0)?.trim() || trimmed;
+    const collapsed = firstLine.replace(/\s+/g, " ").trim();
+    if (!collapsed) {
+      return "";
+    }
+    return collapsed.length > 255 ? collapsed.slice(0, 255) : collapsed;
+  }
+
+  /**
    * Sends chat payload to engine queue and awaits response.
    *
    * @param {object} payload
@@ -309,25 +499,28 @@ class ChatController {
     const requestQueueKey = getEngineLlmRequestQueueRedisKey();
     const responseQueueKey = `${getEngineLlmResponsePrefixRedisKey()}:${requestId}`;
     const job = {
+      attempts: 0,
+      createdAt: new Date().toISOString(),
       payload,
       requestId,
       responseQueueKey,
       taskType: "chat_v2_process",
     };
 
-    await redis.lpush(requestQueueKey, JSON.stringify(job));
+    await engineRpcRedis.lpush(requestQueueKey, JSON.stringify(job));
 
-    const queueResult = await redis.blpop(responseQueueKey, ENGINE_CHAT_TIMEOUT_SECONDS);
+    const queueResult = await engineRpcRedis.blpop(responseQueueKey, ENGINE_CHAT_TIMEOUT_SECONDS);
     if (!queueResult) {
-      await redis.del(responseQueueKey);
+      await engineRpcRedis.del(responseQueueKey);
       const timeoutError = new Error("Tempo limite ao aguardar resposta do Weave Engine");
       timeoutError.code = "ENGINE_TIMEOUT";
+      timeoutError.requestId = requestId;
       timeoutError.statusCode = 504;
       throw timeoutError;
     }
 
     const [, rawResponsePayload] = queueResult;
-    await redis.del(responseQueueKey);
+    await engineRpcRedis.del(responseQueueKey);
 
     let parsedResponse;
     try {
@@ -577,7 +770,7 @@ class ChatController {
    * @param {{name: string, arguments?: Record<string, unknown>}} functionCall
    * @returns {Promise<{name: string, success: boolean, result?: object}>}
    */
-  async _executeFunctionCall(userId, functionCall) {
+  async _executeFunctionCall(userId, functionCall, organizationId = null) {
     const name = String(functionCall?.name || "");
     const args = functionCall?.arguments && typeof functionCall.arguments === "object"
       ? functionCall.arguments
@@ -585,6 +778,14 @@ class ChatController {
 
     switch (name) {
       case "create_note": {
+        if (args.projectId) {
+          await this._assertProjectMutationAccess(
+            userId,
+            String(args.projectId),
+            organizationId
+          );
+        }
+
         const createdNote = await notesRepository.createNotesQuery(
           userId,
           args.title || "Nova Tarefa",
@@ -666,6 +867,11 @@ class ChatController {
         return { name, result: { noteId, created: true }, success: true };
       }
       case "update_note_title": {
+        await this._assertNoteMutationAccess(
+          userId,
+          String(args.noteId || ""),
+          organizationId
+        );
         const result = await notesRepository.updateNoteById(args.noteId, {
           title: args.title,
         });
@@ -676,6 +882,7 @@ class ChatController {
         if (!noteId) {
           throw new Error("update_note_content requer noteId");
         }
+        await this._assertNoteMutationAccess(userId, noteId, organizationId);
 
         let tree;
         if (Array.isArray(args.blocks) && args.blocks.length > 0) {
@@ -717,18 +924,33 @@ class ChatController {
         };
       }
       case "update_note_stage": {
+        await this._assertNoteMutationAccess(
+          userId,
+          String(args.noteId || ""),
+          organizationId
+        );
         const result = await notesRepository.updateNoteById(args.noteId, {
           project_stage_id: args.stageId || null,
         });
         return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_priority": {
+        await this._assertNoteMutationAccess(
+          userId,
+          String(args.noteId || ""),
+          organizationId
+        );
         const result = await notesRepository.updateNoteById(args.noteId, {
           priority_id: args.priorityId || null,
         });
         return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_due_date": {
+        await this._assertNoteMutationAccess(
+          userId,
+          String(args.noteId || ""),
+          organizationId
+        );
         const normalizedDueDate = args.dueDate ? new Date(String(args.dueDate)).toISOString() : null;
         const result = await notesRepository.updateNoteById(args.noteId, {
           due_date: normalizedDueDate,
@@ -736,6 +958,11 @@ class ChatController {
         return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_tags": {
+        await this._assertNoteMutationAccess(
+          userId,
+          String(args.noteId || ""),
+          organizationId
+        );
         const tags = Array.isArray(args.tags) ? args.tags : [];
         const result = await notesRepository.updateNoteById(args.noteId, {
           tags,
@@ -743,6 +970,11 @@ class ChatController {
         return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_collaborator_add": {
+        await this._assertNoteMutationAccess(
+          userId,
+          String(args.noteId || ""),
+          organizationId
+        );
         const collabUid = String(args.collaboratorUserId || "");
         if (!collabUid) {
           const error = new Error("update_note_collaborator_add requer collaboratorUserId");
@@ -766,6 +998,11 @@ class ChatController {
         return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_collaborator_remove": {
+        await this._assertNoteMutationAccess(
+          userId,
+          String(args.noteId || ""),
+          organizationId
+        );
         const result = await notesRepository.removeCollaborator(
           args.noteId,
           args.collaboratorUserId
@@ -777,6 +1014,11 @@ class ChatController {
         };
       }
       case "update_project_title": {
+        await this._assertProjectMutationAccess(
+          userId,
+          String(args.projectId || ""),
+          organizationId
+        );
         const result = await projectsUpdateRepository.updateProject(args.projectId, userId, {
           title: args.title,
         });
@@ -802,21 +1044,19 @@ class ChatController {
    * @param {Array<{name: string, arguments?: Record<string, unknown>}>} functionCalls
    * @returns {Promise<Array<object>>}
    */
-  async _executeFunctionCalls(userId, functionCalls = []) {
+  async _executeFunctionCalls(userId, functionCalls = [], organizationId = null) {
     const results = [];
     for (const functionCall of functionCalls) {
-      const execution = await this._executeFunctionCall(userId, functionCall);
+      const execution = await this._executeFunctionCall(
+        userId,
+        functionCall,
+        organizationId
+      );
       results.push(execution);
     }
     return results;
   }
 
-  /**
-   * Handles user chat message ingestion and persistence.
-   *
-   * @param {import("express").Request} req
-   * @param {import("express").Response} res
-   * @returns {Promise<void>}
   /**
    * Handles user chat message ingestion and persistence.
    *
@@ -830,7 +1070,7 @@ class ChatController {
       const payload = this._parseChatPayload(req);
       const organizationId = req.user?.organizationId || null;
       const userLanguage = req.user?.language || req.user?.userLanguage || null;
-      const requestId = randomUUID();
+      const requestId = payload.requestId || randomUUID();
       let selectedAgent = null;
       let authorizedFunctions = [];
       let capabilityRules = {};
@@ -838,7 +1078,10 @@ class ChatController {
       const planUsageContext = await this._buildPlanUsageContext(userId, organizationId);
 
       if (payload.agentId) {
-        selectedAgent = await agentsRepository.getAgentById(payload.agentId, userId);
+        selectedAgent = await agentsRepository.getAgentByIdWithAccess(
+          payload.agentId,
+          userId
+        );
         if (!selectedAgent) {
           return res.status(404).json({
             success: false,
@@ -879,24 +1122,63 @@ class ChatController {
       const conversationHistory = this._normalizeConversationHistory(rawConversationHistory);
 
       const filesMetadata = this._buildFilesMetadata(req.files);
-      await chatRepository.saveMessage({
+      const existingMessagesForRequest = await chatRepository.getMessagesByRequestId(
         sessionId,
         userId,
-        role: "user",
-        content: payload.message,
-        model: `${payload.model.name}:${payload.model.version}`,
-        requestId,
-        status: "ok",
-        agentId: payload.agentId,
-        allowEdit: payload.allowEdit,
-        metadata: {
-          allowEdit: payload.allowEdit,
-          noteIds: payload.noteIds,
-          projectIds: payload.projectIds,
-          files: filesMetadata,
+        requestId
+      );
+      const existingAssistantMessage = existingMessagesForRequest.find(
+        (message) => message.role === "assistant"
+      );
+      if (existingAssistantMessage) {
+        return res.json({
+          success: true,
+          sessionId,
+          response: {
+            role: "assistant",
+            content: existingAssistantMessage.content || "",
+            citations: existingAssistantMessage?.metadata?.citations || [],
+            functionExecution:
+              existingAssistantMessage?.metadata?.functionExecution || [],
+            functions: existingAssistantMessage?.metadata?.functions || [],
+            model: payload.model,
+            provider: existingAssistantMessage.provider || null,
+          },
+        });
+      }
+
+      const hasPersistedUserMessage = existingMessagesForRequest.some(
+        (message) => message.role === "user"
+      );
+      if (!hasPersistedUserMessage) {
+        await chatRepository.saveMessageIdempotent({
+          sessionId,
+          userId,
+          role: "user",
+          content: payload.message,
+          model: `${payload.model.name}:${payload.model.version}`,
+          requestId,
+          status: "ok",
           agentId: payload.agentId,
-        },
-      });
+          allowEdit: payload.allowEdit,
+          metadata: {
+            allowEdit: payload.allowEdit,
+            context: payload.context,
+            noteIds: payload.noteIds,
+            projectIds: payload.projectIds,
+            files: filesMetadata,
+            agentId: payload.agentId,
+            useCase: payload.useCase,
+          },
+        });
+      }
+
+      if (conversationHistory.length === 0) {
+        const derivedTitle = this._deriveSessionTitleFromMessage(payload.message);
+        if (derivedTitle) {
+          await chatRepository.updateSessionTitle(sessionId, userId, derivedTitle);
+        }
+      }
 
       try {
         const authorization = await resolveAuthorizedFunctions({
@@ -927,10 +1209,12 @@ class ChatController {
         allowWebSearch: payload.allowWebSearch,
         context: {
           capabilityRules,
+          clientContext: payload.context,
           noteBlocksContract: this._buildNoteBlocksContract(),
           noteDocumentContract: this._buildNoteBlocksContract(),
           organizationId,
           resourceAccess,
+          useCase: payload.useCase,
           userLanguage,
         },
         files: this._buildEngineFilesPayload(req.files),
@@ -958,7 +1242,7 @@ class ChatController {
         ? enginePayload.functions
         : [];
       const functionExecution = responseFunctions.length > 0
-        ? await this._executeFunctionCalls(userId, responseFunctions)
+        ? await this._executeFunctionCalls(userId, responseFunctions, organizationId)
         : [];
       const fallbackText =
         functionExecution.length > 0
@@ -969,7 +1253,7 @@ class ChatController {
       const finalAssistantText = assistantText || fallbackText;
       const providerUsed = enginePayload?.providerUsed || null;
       const tokenUsage = this._extractTokenUsage(enginePayload);
-      await chatRepository.saveMessage({
+      await chatRepository.saveMessageIdempotent({
         sessionId,
         userId,
         role: "assistant",
@@ -1012,9 +1296,26 @@ class ChatController {
         message: "Erro ao processar chat",
         statusCode: 500,
       });
+      const cause = error?.cause;
+      const causeSummary =
+        cause instanceof Error
+          ? { name: cause.name, message: cause.message, code: cause.code }
+          : cause != null && typeof cause === "object"
+            ? { message: String(cause.message || cause) }
+            : cause != null
+              ? { detail: String(cause) }
+              : undefined;
+
       console.error("[weave-ai/chat] request failed", {
+        cause: causeSummary,
         code: normalizedError.code,
+        errorCode: error?.code,
+        errorName: error?.name,
         message: normalizedError.message,
+        requestId:
+          (typeof req.body?.requestId === "string" && req.body.requestId) ||
+          error?.requestId ||
+          null,
         statusCode: normalizedError.statusCode,
       });
       return res.status(normalizedError.statusCode).json({

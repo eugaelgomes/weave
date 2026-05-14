@@ -55,6 +55,7 @@ export interface ChatSession {
 export interface SendMessageData {
   message: string;
   model: ChatModelSelection;
+  requestId?: string;
   sessionId?: string;
   noteIds?: string[];
   projectIds?: string[];
@@ -245,6 +246,7 @@ export async function sendChatMessage(data: SendMessageData): Promise<SendMessag
   const payload = {
     message: data.message,
     model: data.model,
+    requestId: data.requestId,
     sessionId: data.sessionId,
     noteIds: data.noteIds,
     projectIds: data.projectIds,
@@ -259,6 +261,7 @@ export async function sendChatMessage(data: SendMessageData): Promise<SendMessag
     const formData = new FormData();
     formData.append("message", data.message);
     formData.append("model", JSON.stringify(data.model));
+    if (data.requestId) formData.append("requestId", data.requestId);
     if (data.sessionId) formData.append("sessionId", data.sessionId);
     if (data.agentId) formData.append("agentId", data.agentId);
     formData.append("allowEdit", String(Boolean(data.allowEdit)));

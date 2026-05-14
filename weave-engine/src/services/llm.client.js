@@ -9,6 +9,14 @@ const AI_MODELS = {
   GEMINI_3_1_PRO_PREVIEW: "gemini-3.1-pro-preview",
   OPENAI_GPT_4O_MINI: "gpt-4o-mini",
 };
+const LLM_PROVIDER_TIMEOUT_MS = Number.parseInt(
+  process.env.WEAVE_LLM_PROVIDER_TIMEOUT_MS || "18000",
+  10
+);
+const LLM_PROVIDER_MAX_RETRIES = Number.parseInt(
+  process.env.WEAVE_LLM_PROVIDER_MAX_RETRIES || "1",
+  10
+);
 
 const geminiConfig = {
   apiKey: process.env.GEMINI_API_KEY,
@@ -18,7 +26,7 @@ const geminiConfig = {
   retry: {
     backoffFactor: 2,
     initialDelay: 1000,
-    maxRetries: 3,
+    maxRetries: LLM_PROVIDER_MAX_RETRIES,
   },
   safetySettings: [
     {
@@ -39,7 +47,7 @@ const geminiConfig = {
     },
   ],
   temperature: 0.7,
-  timeout: 30000,
+  timeout: LLM_PROVIDER_TIMEOUT_MS,
   topK: 40,
   topP: 0.95,
 };
@@ -53,10 +61,10 @@ const openaiConfig = {
   retry: {
     backoffFactor: 2,
     initialDelay: 1000,
-    maxRetries: 3,
+    maxRetries: LLM_PROVIDER_MAX_RETRIES,
   },
   temperature: 0.7,
-  timeout: 30000,
+  timeout: LLM_PROVIDER_TIMEOUT_MS,
   topP: 0.9,
 };
 

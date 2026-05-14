@@ -18,15 +18,17 @@ class WeaveAIRepository {
   /**
    * Atualiza título da sessão
    */
-  async updateSessionTitle(sessionId, title) {
+  async updateSessionTitle(sessionId, userId, title) {
     const query = `
     UPDATE ai_chat_sessions
     SET title = $1, updated_at = NOW()
     WHERE id = $2
+      AND user_id = $3
+      AND COALESCE(deleted, false) = false
     RETURNING *
   `;
 
-    const result = await pool.query(query, [title, sessionId]);
+    const result = await pool.query(query, [title, sessionId, userId]);
     return result.rows[0];
   }
 
@@ -119,6 +121,65 @@ class WeaveAIRepository {
     );
 
     return result.rows[0];
+  }
+
+  /**
+   * Saves a message once for a session/user/role/request tuple.
+   * Returns the existing row when a duplicate is detected.
+   *
+   * @param {object} data
+   * @returns {Promise<object>}
+   */
+  async saveMessageIdempotent(data) {
+    const { requestId = null, role, sessionId, userId } = data;
+
+    if (!requestId) {
+      return this.saveMessage(data);
+    }
+
+    const existingQuery = `
+      SELECT *
+      FROM ai_chat_messages
+      WHERE session_id = $1
+        AND user_id = $2
+        AND role = $3
+        AND request_id = $4
+      ORDER BY created_at DESC
+      LIMIT 1
+    `;
+    const existingResult = await pool.query(existingQuery, [
+      sessionId,
+      userId,
+      role,
+      requestId,
+    ]);
+    if (existingResult.rows[0]) {
+      return existingResult.rows[0];
+    }
+
+    return this.saveMessage(data);
+  }
+
+  /**
+   * Reads stored chat messages for a request id inside a user session.
+   *
+   * @param {string} sessionId
+   * @param {string} userId
+   * @param {string} requestId
+   * @returns {Promise<Array<object>>}
+   */
+  async getMessagesByRequestId(sessionId, userId, requestId) {
+    const query = `
+      SELECT *
+      FROM ai_chat_messages
+      WHERE session_id = $1
+        AND user_id = $2
+        AND request_id = $3
+      ORDER BY created_at ASC
+    `;
+
+    const result = await pool.query(query, [sessionId, userId, requestId]);
+    return result.rows;
   }
 
   /**

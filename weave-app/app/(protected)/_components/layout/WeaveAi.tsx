@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { Sparkles, X } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { cn } from "@/lib/utils";
-import ChatInterface from "@/app/(protected)/weave-ai/chat/_components/chat-interface";
+import ChatWidget from "@/app/(protected)/_components/ui/weave-ai/chat-widget";
 
 export default function WeaveAi() {
   const { t } = useLanguage();
@@ -48,7 +48,6 @@ export default function WeaveAi() {
           "bg-brand-primary-500 text-neutral-900 hover:bg-brand-primary-400",
           "focus-visible:ring-brand-primary-400 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none dark:text-neutral-950 dark:focus-visible:ring-offset-neutral-900"
         )}
-        aria-expanded={open}
         aria-haspopup="dialog"
         aria-label={open ? t.common.close : t.nav.weaveAi}
       >
@@ -103,7 +102,7 @@ export default function WeaveAi() {
               </div>
 
               <div className="min-h-0 flex-1 overflow-hidden">
-                <ChatInterface />
+                <ChatWidget maxHeight="100%" className="h-full border-0 shadow-none" />
               </div>
             </div>
           </>,

@@ -95,7 +95,14 @@ const {
   getInternalToolDefinitions,
 } = require("../tools/tool-dispatcher");
 
-const MAX_REACT_ITERATIONS = 5;
+const MAX_REACT_ITERATIONS = Number.parseInt(
+  process.env.WEAVE_ENGINE_MAX_REACT_ITERATIONS || "4",
+  10
+);
+const MAX_AGENTIC_DURATION_MS = Number.parseInt(
+  process.env.WEAVE_ENGINE_CHAT_TASK_TIMEOUT_MS || "65000",
+  10
+);
 
 /**
  * Autonomous ReAct Loop
@@ -112,6 +119,7 @@ async function executeAgenticTask({
   conversationHistory = [],
 }) {
   let iterations = 0;
+  const startedAt = Date.now();
 
   // Combine internal engine tools with API tools
   const availableFunctions = [...(functions || [])];
@@ -130,6 +138,12 @@ async function executeAgenticTask({
   let providerUsed = null;
 
   while (iterations < MAX_REACT_ITERATIONS) {
+    if (Date.now() - startedAt >= MAX_AGENTIC_DURATION_MS) {
+      const error = new Error("Engine chat task budget exceeded");
+      error.code = "ENGINE_CHAT_BUDGET_EXCEEDED";
+      throw error;
+    }
+
     iterations++;
 
     const { data, provider } = await callAIProvider({

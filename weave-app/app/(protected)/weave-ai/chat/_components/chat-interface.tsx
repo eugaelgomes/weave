@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   Send,
   Bot,
@@ -18,6 +18,7 @@ import {
   NotebookPen,
   FileText,
   FolderKanban,
+  RefreshCw,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -31,7 +32,8 @@ import { type AIModel } from "@/app/_contexts/chat-context";
 import { useAgent } from "@/app/_contexts/agent-context";
 import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { isChatSessionId } from "@/app/_utils/chat-session-id";
 
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
@@ -96,16 +98,27 @@ function formatMessageDateTime(dateValue?: string | number): string {
   });
 }
 
-export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
+export type ChatInterfaceVariant = "fullPage" | "widget";
+
+export default function ChatInterface({
+  chatId,
+  variant = "fullPage",
+}: {
+  chatId?: string;
+  variant?: ChatInterfaceVariant;
+} = {}) {
   const router = useRouter();
+  const pathname = usePathname();
   const {
     models,
     messages,
     loading,
+    error,
     isTyping,
     currentSession,
     loadModels,
     loadSession,
+    retryMessage,
     sendMessage,
     createNewSession,
   } = useChat();
@@ -122,6 +135,9 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
   const [allowEdit, setAllowEdit] = useState(true);
   const [allowWebSearch, setAllowWebSearch] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
+  const [contextSearch, setContextSearch] = useState("");
+  const [noteContextLimit, setNoteContextLimit] = useState(10);
+  const [projectContextLimit, setProjectContextLimit] = useState(10);
   const [fileError, setFileError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [contextItems, setContextItems] = useState<{ type: string; id: string; title: string }[]>(
@@ -132,6 +148,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const didInitializeNewSessionRef = useRef(false);
   const [showScrollTopButton, setShowScrollTopButton] = useState(false);
   const [showScrollBottomButton, setShowScrollBottomButton] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
@@ -151,23 +168,39 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
   }, [models, selectedModel]);
 
   useEffect(() => {
+    if (variant !== "fullPage") return;
+    if (chatId) {
+      didInitializeNewSessionRef.current = false;
+      return;
+    }
+    if (didInitializeNewSessionRef.current) return;
+
+    didInitializeNewSessionRef.current = true;
+    createNewSession();
+  }, [chatId, createNewSession, variant]);
+
+  useEffect(() => {
+    if (chatId && !isChatSessionId(chatId)) {
+      router.replace("/weave-ai/chat");
+      return;
+    }
     if (chatId) {
       // Prevent overwriting freshly rendered messages right after first-send route replace.
       if (currentSession?.id === chatId && messages.length > 0) {
         return;
       }
       loadSession(chatId);
-      return;
     }
-
-    createNewSession();
-  }, [chatId, loadSession, createNewSession, currentSession?.id, messages.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid re-running on messages.length; optimistic sends would restart loadSession and bump chatStateEpoch, invalidating sendMessage.
+  }, [chatId, loadSession, currentSession?.id, router]);
 
   useEffect(() => {
-    if (!chatId && currentSession?.id) {
-      router.replace(`/weave-ai/chat/${currentSession.id}`);
-    }
-  }, [chatId, currentSession?.id, router]);
+    if (chatId) return;
+    if (!currentSession?.id || !isChatSessionId(currentSession.id)) return;
+    if (pathname !== "/weave-ai/chat") return;
+    if (messages.length === 0) return;
+    router.replace(`/weave-ai/chat/${currentSession.id}`);
+  }, [chatId, currentSession?.id, messages.length, pathname, router]);
 
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
@@ -182,13 +215,16 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
     const message = input.trim();
     setInput("");
 
+    const rawSessionId = currentSession?.id || chatId;
+    const sessionId = isChatSessionId(rawSessionId) ? rawSessionId : undefined;
+
     await sendMessage({
       message,
       model: {
         name: selectedModel?.provider || selectedModel?.name || "auto",
         version: selectedModel?.version,
       },
-      sessionId: currentSession?.id || chatId,
+      sessionId,
       allowEdit,
       allowWebSearch,
       agentId: selectedAgentId || undefined,
@@ -326,6 +362,30 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
 
   const selectedAgent = agents.find((agent) => agent.id === selectedAgentId) || null;
   const chatHeaderTitle = getChatHeaderTitle(messages || [], currentSession?.title);
+  const normalizedContextSearch = contextSearch.trim().toLowerCase();
+  const filteredNotes = useMemo(() => {
+    const source = Array.isArray(notesOverview) ? notesOverview : [];
+    if (!normalizedContextSearch) {
+      return source;
+    }
+    return source.filter((note: any) =>
+      String(note?.title || "").toLowerCase().includes(normalizedContextSearch)
+    );
+  }, [normalizedContextSearch, notesOverview]);
+  const filteredProjects = useMemo(() => {
+    const source = Array.isArray(projectsOverview) ? projectsOverview : [];
+    if (!normalizedContextSearch) {
+      return source;
+    }
+    return source.filter((project: any) =>
+      String(project?.title || "").toLowerCase().includes(normalizedContextSearch)
+    );
+  }, [normalizedContextSearch, projectsOverview]);
+
+  useEffect(() => {
+    setNoteContextLimit(10);
+    setProjectContextLimit(10);
+  }, [normalizedContextSearch]);
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-[#1d1d1b]">
@@ -382,6 +442,13 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
 
           {messages?.map((msg: any) => {
             const isUser = msg.role === "user";
+            const messageStatus = msg?.metadata?.status;
+            const isFailedUserMessage = isUser && messageStatus === "failed";
+            const citations = Array.isArray(msg?.citations)
+              ? msg.citations
+              : Array.isArray(msg?.metadata?.citations)
+                ? msg.metadata.citations
+                : [];
 
             return (
               <div
@@ -443,6 +510,53 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                             {execution.name} - {execution.success ? "ok" : "erro"}
                           </p>
                         ))}
+                      </div>
+                    )}
+
+                    {!isUser && citations.length > 0 && (
+                      <div className="mt-2 rounded border border-brand-navy/30 bg-brand-beige p-1.5 text-[10px] text-brand-navy dark:border-brand-beige/20 dark:bg-brand-navy/30 dark:text-brand-beige">
+                        <p className="mb-1 font-semibold uppercase tracking-wide">Citações</p>
+                        <ul className="space-y-1">
+                          {citations.map((citation: any, index: number) => {
+                            const title = String(
+                              citation?.title ||
+                                citation?.name ||
+                                citation?.label ||
+                                `Fonte ${index + 1}`
+                            );
+                            const href = citation?.url ? String(citation.url) : "";
+                            return (
+                              <li key={`citation-${msg.id}-${index}`}>
+                                {href ? (
+                                  <a
+                                    href={href}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="underline-offset-2 hover:underline"
+                                  >
+                                    {title}
+                                  </a>
+                                ) : (
+                                  <span>{title}</span>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
+
+                    {isFailedUserMessage && (
+                      <div className="mt-2 rounded border border-brand-red/40 bg-red-50 p-1.5 text-[10px] text-brand-red dark:bg-red-950/30">
+                        <p>{String(msg?.metadata?.errorMessage || "Falha ao enviar mensagem.")}</p>
+                        <button
+                          type="button"
+                          onClick={() => retryMessage(String(msg.id))}
+                          className="mt-1 inline-flex items-center gap-1 rounded border border-brand-red/40 px-1.5 py-0.5 text-[10px] font-semibold hover:bg-brand-red/10"
+                        >
+                          <RefreshCw className="h-2.5 w-2.5" />
+                          Tentar novamente
+                        </button>
                       </div>
                     )}
 
@@ -610,11 +724,19 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setShowContextMenu(false)} />
                       <div className="absolute bottom-full left-0 z-20 mb-2 w-56 overflow-hidden rounded border border-neutral-200 bg-white shadow-lg dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+                        <div className="border-b border-neutral-100 p-1 dark:border-surface-dark-border">
+                          <input
+                            value={contextSearch}
+                            onChange={(event) => setContextSearch(event.target.value)}
+                            placeholder="Buscar nota ou projeto..."
+                            className="w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs outline-none focus:border-brand-yellow dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
+                          />
+                        </div>
                         <div className="max-h-48 overflow-y-auto p-1">
                           <div className="px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase">
                             Tarefas
                           </div>
-                          {notesOverview?.slice(0, 5).map((note: any) => (
+                          {filteredNotes.slice(0, noteContextLimit).map((note: any) => (
                             <button
                               key={note.id}
                               onClick={() => handleAddContext("note", note.id, note.title)}
@@ -624,11 +746,20 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                               <span className="truncate">{note.title}</span>
                             </button>
                           ))}
+                          {filteredNotes.length > noteContextLimit && (
+                            <button
+                              type="button"
+                              onClick={() => setNoteContextLimit((prev) => prev + 10)}
+                              className="w-full rounded px-2 py-1 text-left text-[10px] font-semibold text-brand-navy hover:bg-brand-beige dark:text-brand-yellow dark:hover:bg-brand-navy/30"
+                            >
+                              Mostrar mais tarefas
+                            </button>
+                          )}
 
                           <div className="mt-1 border-t border-neutral-100 px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase dark:border-surface-dark-border">
                             Projetos
                           </div>
-                          {projectsOverview?.slice(0, 5).map((project: any) => (
+                          {filteredProjects.slice(0, projectContextLimit).map((project: any) => (
                             <button
                               key={project.id}
                               onClick={() => handleAddContext("project", project.id, project.title)}
@@ -638,6 +769,15 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
                               <span className="truncate">{project.title}</span>
                             </button>
                           ))}
+                          {filteredProjects.length > projectContextLimit && (
+                            <button
+                              type="button"
+                              onClick={() => setProjectContextLimit((prev) => prev + 10)}
+                              className="w-full rounded px-2 py-1 text-left text-[10px] font-semibold text-brand-navy hover:bg-brand-beige dark:text-brand-yellow dark:hover:bg-brand-navy/30"
+                            >
+                              Mostrar mais projetos
+                            </button>
+                          )}
                         </div>
                       </div>
                     </>
@@ -746,6 +886,7 @@ export default function ChatInterface({ chatId }: { chatId?: string } = {}) {
           </div>
 
           {fileError ? <p className="text-[11px] text-brand-red">{fileError}</p> : null}
+          {error ? <p className="text-[11px] text-brand-red">{error}</p> : null}
         </div>
       </div>
     </div>
