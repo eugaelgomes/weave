@@ -18,6 +18,11 @@ Handles organization profile lifecycle, members, invites, domains/SSO settings, 
 - Areas: CRUD + member management
 - Assets: upload logo/banner
 - Organization projects listing
+- Slack integration: status, default channel, disconnect (`/integrations/slack/*`)
+
+### Slack and organization scope
+
+Slack settings use the **active organization** resolved from the authenticated user (`getActiveOrganizationWithMembership`), consistent with `GET /organizations/` and other org routes. Paths are **`/organizations/integrations/slack`** — there is **no** `organizationId` (or `:orgId`) in the URL. For the full contract and setup, see the canonical doc [slack-integration.md](slack-integration.md).
 
 ## Middleware and security notes
 

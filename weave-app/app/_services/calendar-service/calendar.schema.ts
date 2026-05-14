@@ -17,6 +17,7 @@ export const GoogleCalendarEventSchema = z.object({
 export const CalendarEventsResponseSchema = z.object({
   connected: z.boolean(),
   events: z.array(GoogleCalendarEventSchema),
+  error: z.string().optional(),
 });
 
 export const GoogleCalendarSchema = z.object({

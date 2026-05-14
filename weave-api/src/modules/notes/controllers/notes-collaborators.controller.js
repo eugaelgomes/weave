@@ -10,6 +10,11 @@ const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
 const {
   respondIfWorkspaceShareDenied,
 } = require("@/utils/workspace-share-guard");
+const {
+  notifyOrganizationDefaultChannel,
+} = require("@/services/slack/slack-notify.service");
+
+const APP_FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 /**
  * Colaboradores em notas.
@@ -139,6 +144,14 @@ class NotesCollaboratorsController extends NotesBaseController {
             note_id: noteId,
             shared_by: userId,
           },
+        });
+      }
+
+      if (noteData?.scope_organization_id) {
+        const noteUrl = `${APP_FRONTEND_URL.replace(/\/+$/, "")}/app/notes/${noteId}`;
+        void notifyOrganizationDefaultChannel({
+          organizationId: noteData.scope_organization_id,
+          text: `*[Weave]* ${ownerData?.name || "A user"} added a collaborator to the note *${noteData.title}*.\n${noteUrl}`,
         });
       }
 

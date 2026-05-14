@@ -140,27 +140,39 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
       const timeMin = new Date(year - 1, 11, 1).toISOString();
       const timeMax = new Date(year + 1, 11, 31, 23, 59, 59).toISOString();
 
-      const [googleResult, internalResult] = await Promise.allSettled([
-        fetchGoogleCalendarEvents(timeMin, timeMax),
+      const [statusResult, internalResult] = await Promise.allSettled([
+        fetchGoogleCalendarStatus(),
         fetchInternalCalendarEvents(timeMin, timeMax),
       ]);
+
+      let googlePayload: Awaited<ReturnType<typeof fetchGoogleCalendarEvents>> = {
+        connected: false,
+        events: [],
+      };
+
+      if (statusResult.status === "fulfilled" && statusResult.value.connected) {
+        try {
+          googlePayload = await fetchGoogleCalendarEvents(timeMin, timeMax);
+        } catch {
+          googlePayload = { connected: false, events: [] };
+        }
+      }
+
+      const statusOk = statusResult.status === "fulfilled";
+      const googleIntended = statusOk && statusResult.value.connected;
+      setGoogleConnected(googleIntended && googlePayload.connected);
 
       const nextEvents: UnifiedCalendarEvent[] = [];
       const googleEventIds = new Set<string>();
 
-      if (googleResult.status === "fulfilled") {
-        setGoogleConnected(googleResult.value.connected);
-        if (googleResult.value.connected) {
-          googleResult.value.events.forEach((event) => {
-            googleEventIds.add(event.id);
-            nextEvents.push({
-              ...event,
-              source: "google" as const,
-            });
+      if (googlePayload.connected) {
+        googlePayload.events.forEach((event) => {
+          googleEventIds.add(event.id);
+          nextEvents.push({
+            ...event,
+            source: "google" as const,
           });
-        }
-      } else {
-        setGoogleConnected(false);
+        });
       }
 
       if (internalResult.status === "fulfilled") {
@@ -176,8 +188,12 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         });
       }
 
-      if (googleResult.status === "rejected" && internalResult.status === "rejected") {
+      if (internalResult.status === "rejected" && statusResult.status === "rejected") {
         setError("Falha ao carregar eventos do calendário");
+      } else if (internalResult.status === "rejected") {
+        setError("Falha ao carregar eventos internos do calendário");
+      } else if (googlePayload.error) {
+        setError(googlePayload.error);
       }
 
       setCalendarEvents(nextEvents);

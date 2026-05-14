@@ -6,6 +6,7 @@ const organizationMembersController = require("@/modules/organizations/controlle
 const organizationAreasController = require("@/modules/organizations/controllers/areas.controller");
 const organizationDomainsController = require("@/modules/organizations/controllers/domains.controller");
 const organizationCreationStepsController = require("@/modules/organizations/controllers/creation-steps.controller");
+const slackIntegrationsController = require("@/modules/organizations/controllers/slack-integrations.controller");
 
 // Middlewares
 const { verifyToken } = require("@/middlewares/auth/verify-token");
@@ -181,6 +182,24 @@ router.patch(
 router.delete(
   "/",
   organizationsController.deleteOrganization.bind(organizationsController)
+);
+
+router.get(
+  "/integrations/slack",
+  standardTrafficLimiter,
+  slackIntegrationsController.getSlackIntegration.bind(slackIntegrationsController)
+);
+
+router.put(
+  "/integrations/slack/default-channel",
+  structuralLimiter,
+  slackIntegrationsController.setDefaultChannel.bind(slackIntegrationsController)
+);
+
+router.delete(
+  "/integrations/slack",
+  structuralLimiter,
+  slackIntegrationsController.disconnectSlack.bind(slackIntegrationsController)
 );
 
 router.post(
