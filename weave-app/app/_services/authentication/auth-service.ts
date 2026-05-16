@@ -64,6 +64,10 @@ const normalizeThemeMode = (value?: string): "LIGHT" | "DARK" | undefined => {
   return undefined;
 };
 
+/** Maps API profile email (nullable / empty) to {@link User} optional email. */
+const backendProfileEmailToUser = (email: BackendProfile["email"]): User["email"] =>
+  email ? email : undefined;
+
 const mapOrgDefaultAreaToUser = (
   area: OrgDefaultArea | null | undefined
 ): User["org_default_area"] => {
@@ -102,17 +106,17 @@ const _mapBackendDataToUser = (data: BackendUserData): User => {
     id: profile.id,
     user_name: profile.user_name,
     username: profile.username,
-    email: profile.email,
-    avatar_url: getStorageUrl(profile.avatar_url),
+    email: backendProfileEmailToUser(profile.email),
+    avatar_url: getStorageUrl(profile.avatar_url ?? ""),
     created_at: profile.created_at,
     updated_at: profile.updated_at ?? undefined, // Corrige 'null' para 'undefined'
     birth_date: profile.birth_date ?? undefined,
     phone_number: profile.phone_number ?? undefined,
 
     // Settings
-    theme_mode: normalizeThemeMode(settings?.theme_mode),
-    private_profile: settings?.private_profile,
-    auth_with_google: settings?.auth_with_google,
+    theme_mode: normalizeThemeMode(settings?.theme_mode ?? undefined),
+    private_profile: settings?.private_profile ?? undefined,
+    auth_with_google: settings?.auth_with_google ?? undefined,
 
     // Organization (Optional)
     org_id: organization?.id,
@@ -189,19 +193,16 @@ const mapMeResponseToUser = (data: BackendMeResponse): User => {
     id: user.user_profile.id,
     user_name: user.user_profile.user_name,
     username: user.user_profile.username,
-    email: (() => {
-      const em = user.user_profile.email;
-      return typeof em === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em) ? em : undefined;
-    })(),
+    email: backendProfileEmailToUser(user.user_profile.email),
     avatar_url: getStorageUrl(user.user_profile.avatar_url ?? ""),
     birth_date: user.user_profile.birth_date ?? undefined,
     phone_number: user.user_profile.phone_number ?? undefined,
     created_at: user.user_profile.created_at,
     updated_at: user.user_profile.updated_at ?? undefined, // Corrige 'null' para 'undefined'
     // Settings
-    theme_mode: normalizeThemeMode(user.user_settings.theme_mode),
-    private_profile: user.user_settings.private_profile,
-    auth_with_google: user.user_settings.auth_with_google,
+    theme_mode: normalizeThemeMode(user.user_settings.theme_mode ?? undefined),
+    private_profile: user.user_settings.private_profile ?? undefined,
+    auth_with_google: user.user_settings.auth_with_google ?? undefined,
 
     // Organization
     org_id: organization?.id,
@@ -209,22 +210,22 @@ const mapMeResponseToUser = (data: BackendMeResponse): User => {
     org_unique_name: organization?.unique_name,
     org_logo_url: normalizeStorageUrl(organization?.logo_url),
     org_member_role: organization?.member_role,
-    org_member_since: organization?.member_since,
+    org_member_since: organization?.member_since ?? undefined,
     org_default_area: mapOrgDefaultAreaToUser(organization?.default_area ?? undefined),
 
     // Plan
-    plan_id: currentPlan?.id,
-    plan_name: currentPlan?.plan_name,
-    plan_client_type: currentPlan?.client_type,
-    plan_details: currentPlan?.details,
+    plan_id: currentPlan?.id ?? undefined,
+    plan_name: currentPlan?.plan_name ?? undefined,
+    plan_client_type: currentPlan?.client_type ?? undefined,
+    plan_details: currentPlan?.details as User["plan_details"],
 
     // Usage
-    usage_plan_id: currentPlanUsage?.plan_id,
-    usage_plan_name: currentPlanUsage?.plan_name,
-    usage_client_type: currentPlanUsage?.client_type,
-    usage_period_start: currentPlanUsage?.period_start,
-    usage_period_end: currentPlanUsage?.period_end,
-    usage_details: currentPlanUsage?.details,
+    usage_plan_id: currentPlanUsage?.plan_id ?? undefined,
+    usage_plan_name: currentPlanUsage?.plan_name ?? undefined,
+    usage_client_type: currentPlanUsage?.client_type ?? undefined,
+    usage_period_start: currentPlanUsage?.period_start ?? undefined,
+    usage_period_end: currentPlanUsage?.period_end ?? undefined,
+    usage_details: currentPlanUsage?.details as User["usage_details"],
 
     // App Preferences
     usage_preference: user.usage_preference || {},
@@ -401,15 +402,15 @@ export const updateUserData = async (
     id: data.user.user_profile.id,
     user_name: data.user.user_profile.user_name,
     username: data.user.user_profile.username,
-    email: data.user.user_profile.email,
-    avatar_url: getStorageUrl(data.user.user_profile.avatar_url),
+    email: backendProfileEmailToUser(data.user.user_profile.email),
+    avatar_url: getStorageUrl(data.user.user_profile.avatar_url ?? ""),
     birth_date: data.user.user_profile.birth_date ?? undefined,
     phone_number: data.user.user_profile.phone_number ?? undefined,
     created_at: data.user.user_profile.created_at,
     updated_at: data.user.user_profile.updated_at ?? undefined, // Corrige 'null' para 'undefined'
-    theme_mode: normalizeThemeMode(data.user.user_settings.theme_mode),
-    private_profile: data.user.user_settings.private_profile,
-    auth_with_google: data.user.user_settings.auth_with_google,
+    theme_mode: normalizeThemeMode(data.user.user_settings.theme_mode ?? undefined),
+    private_profile: data.user.user_settings.private_profile ?? undefined,
+    auth_with_google: data.user.user_settings.auth_with_google ?? undefined,
     usage_preference: data.user.usage_preference || {},
   };
 };
