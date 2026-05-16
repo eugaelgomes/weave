@@ -20,6 +20,7 @@ async function resolveProjectPublicIdParam(req, res, next, id) {
         // In Express, router.param allows modifying req.params by just updating it:
         if (req.params.id === id) req.params.id = internalId;
         if (req.params.projectId === id) req.params.projectId = internalId;
+        if (req.params.project_id === id) req.params.project_id = internalId;
       }
     }
     next();
@@ -44,6 +45,7 @@ async function resolveOrganizationPublicIdParam(req, res, next, id) {
         const internalId = results[0].id;
         if (req.params.id === id) req.params.id = internalId;
         if (req.params.orgId === id) req.params.orgId = internalId;
+        if (req.params.org_id === id) req.params.org_id = internalId;
       }
     }
     next();

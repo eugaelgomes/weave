@@ -236,7 +236,7 @@ class ProjectsCoreController extends ProjectsBaseController {
     }
 
     const projectRole = await this.projectsRepository.getProjectMemberRole(
-      projectId,
+      project.id,
       userId
     );
     return projectRoleHasPermission(

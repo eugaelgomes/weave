@@ -112,6 +112,8 @@ const _mapBackendDataToUser = (data: BackendUserData): User => {
     updated_at: profile.updated_at ?? undefined, // Corrige 'null' para 'undefined'
     birth_date: profile.birth_date ?? undefined,
     phone_number: profile.phone_number ?? undefined,
+    public_id: profile.public_id,
+
 
     // Settings
     theme_mode: normalizeThemeMode(settings?.theme_mode ?? undefined),
@@ -120,7 +122,9 @@ const _mapBackendDataToUser = (data: BackendUserData): User => {
 
     // Organization (Optional)
     org_id: organization?.id,
+    org_public_id: organization?.public_id,
     org_name: organization?.org_name,
+
     org_unique_name: organization?.unique_name,
     org_logo_url: normalizeStorageUrl(organization?.org_logo_url),
     org_member_role: organization?.org_member_role,
@@ -159,6 +163,8 @@ const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
     username: user.user_profile.username,
     email: user.user_profile.email,
     avatar_url: getStorageUrl(user.user_profile.avatar_url),
+    public_id: user.user_profile.public_id,
+
 
     // Settings
     theme_mode: normalizeThemeMode(user.user_settings.theme_mode),
@@ -166,7 +172,9 @@ const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
 
     // Organization
     org_id: organization?.id,
+    org_public_id: organization?.public_id,
     org_name: organization?.name,
+
     org_unique_name: organization?.unique_name,
     org_logo_url: normalizeStorageUrl(organization?.logo_url),
     org_member_role: organization?.role,
@@ -199,6 +207,8 @@ const mapMeResponseToUser = (data: BackendMeResponse): User => {
     phone_number: user.user_profile.phone_number ?? undefined,
     created_at: user.user_profile.created_at,
     updated_at: user.user_profile.updated_at ?? undefined, // Corrige 'null' para 'undefined'
+    public_id: user.user_profile.public_id,
+
     // Settings
     theme_mode: normalizeThemeMode(user.user_settings.theme_mode ?? undefined),
     private_profile: user.user_settings.private_profile ?? undefined,
@@ -206,7 +216,9 @@ const mapMeResponseToUser = (data: BackendMeResponse): User => {
 
     // Organization
     org_id: organization?.id,
+    org_public_id: organization?.public_id,
     org_name: organization?.name,
+
     org_unique_name: organization?.unique_name,
     org_logo_url: normalizeStorageUrl(organization?.logo_url),
     org_member_role: organization?.member_role,
@@ -408,7 +420,9 @@ export const updateUserData = async (
     phone_number: data.user.user_profile.phone_number ?? undefined,
     created_at: data.user.user_profile.created_at,
     updated_at: data.user.user_profile.updated_at ?? undefined, // Corrige 'null' para 'undefined'
+    public_id: data.user.user_profile.public_id,
     theme_mode: normalizeThemeMode(data.user.user_settings.theme_mode ?? undefined),
+
     private_profile: data.user.user_settings.private_profile ?? undefined,
     auth_with_google: data.user.user_settings.auth_with_google ?? undefined,
     usage_preference: data.user.usage_preference || {},

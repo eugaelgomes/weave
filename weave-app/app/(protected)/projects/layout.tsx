@@ -84,7 +84,8 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
 
       <ul className="space-y-0.5">
         {recentProjects.map((project) => {
-          const isActive = currentProjectId === project.id;
+          const isActive = currentProjectId === project.public_id;
+
           const hasSubprojects = project.subprojects && project.subprojects.length > 0;
           const isExpanded = expandedProjects.includes(project.id);
 
@@ -108,7 +109,8 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                 </div>
 
                 <Link
-                  href={`/projects/${project.id}`}
+                  href={`/projects/${project.public_id}`}
+
                   className={`group flex min-w-0 flex-1 items-center justify-between rounded-md px-2 py-1.5 text-xs transition-all ${
                     isActive
                       ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
@@ -130,7 +132,8 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
               {hasSubprojects && isExpanded && (
                 <ul className="relative mt-1 ml-[17px] flex flex-col pl-4">
                   {project.subprojects?.map((sub, index) => {
-                    const isSubActive = currentProjectId === sub.id;
+                    const isSubActive = currentProjectId === sub.public_id;
+
                     const isLast = index === project.subprojects!.length - 1;
 
                     return (
@@ -144,7 +147,8 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                         <div className="absolute top-0 -left-4 h-[15px] w-4 rounded-bl-md border-b border-l border-yellow-500/50 dark:border-yellow-500/50" />
 
                         <Link
-                          href={`/projects/${sub.id}`}
+                          href={`/projects/${sub.public_id}`}
+
                           className={`group mb-0.5 ml-1 flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] transition-all ${
                             isSubActive
                               ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"

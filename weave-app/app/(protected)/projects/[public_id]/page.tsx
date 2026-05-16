@@ -16,7 +16,7 @@ import { ProjectFilters } from "@/app/(protected)/projects/_components/project-f
 export default function ProjectViewPage() {
   const router = useRouter();
   const params = useParams();
-  const projectId = params?.id as string;
+  const projectId = params?.public_id as string;
   const { user } = useAuth();
 
   const {

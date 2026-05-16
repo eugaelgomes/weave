@@ -285,7 +285,7 @@ const ProjectsManagementPage = () => {
                         </td>
                         <td className="px-3 py-1.5 text-center">
                           <Link
-                            href={`/projects/${project.id}`}
+                            href={`/projects/${project.public_id}`}
                             className="inline-flex h-6 w-6 items-center justify-center rounded text-neutral-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-neutral-200 hover:text-neutral-900 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
                             title="Acessar projeto"
                           >

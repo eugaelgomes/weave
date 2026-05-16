@@ -102,7 +102,7 @@ export function ReviewStep({ state, actions }: CreateProjectWizardStepProps) {
         <button
           type="button"
           disabled={!projectId}
-          onClick={() => router.push(`/projects/${projectId}`)}
+          onClick={() => router.push(`/projects/${state.created.project?.public_id || projectId}`)}
           className="inline-flex items-center gap-2 rounded-md bg-brand-primary-500 px-2 py-2 text-sm font-bold text-neutral-950 transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <CheckCircle2 className="h-4 w-4" aria-hidden />

@@ -283,6 +283,7 @@ class ProjectsReadRepository {
           (SELECT jsonb_agg(
             jsonb_build_object(
               'id', sp.id::text,
+              'public_id', sp.public_project_id,
               'title', sp.title,
               'description', sp.description,
               'status', sp.status,
@@ -415,6 +416,7 @@ class ProjectsReadRepository {
           (SELECT jsonb_agg(
             jsonb_build_object(
               'id', sp.id::text,
+              'public_id', sp.public_project_id,
               'title', sp.title,
               'description', sp.description,
               'status', sp.status,
@@ -464,7 +466,7 @@ class ProjectsReadRepository {
         updated_at,
         deleted
       FROM projects
-      WHERE id = $1
+      WHERE (id::text = $1 OR public_project_id = $1)
         AND user_id = $2
         AND deleted = false
       LIMIT 1;
@@ -538,7 +540,7 @@ class ProjectsReadRepository {
       LEFT JOIN organizations o ON o.id = p.organization_id
       LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users cu ON cu.user_id = pm.user_id
-      WHERE p.id = $1::uuid
+      WHERE (p.id::text = $1 OR p.public_project_id = $1)
         AND p.deleted = false
         AND (
           p.user_id::text = $2::text
@@ -622,6 +624,7 @@ class ProjectsReadRepository {
           (SELECT jsonb_agg(
             jsonb_build_object(
               'id', sp.id::text,
+              'public_id', sp.public_project_id,
               'title', sp.title,
               'description', sp.description,
               'status', sp.status,
@@ -714,7 +717,7 @@ class ProjectsReadRepository {
       LEFT JOIN organizations o ON o.id = p.organization_id
       LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.deleted = false
       LEFT JOIN users cu ON cu.user_id = pm.user_id
-      WHERE p.id = $1::uuid
+      WHERE (p.id::text = $1 OR p.public_project_id = $1)
         AND p.deleted = false
         AND p.organization_id = $2::uuid
       GROUP BY p.id, u.username, u.email, u.name, u.avatar_url, o.org_name, o.unique_name, o.logo_url
@@ -842,6 +845,7 @@ class ProjectsReadRepository {
     const query = `
       SELECT 
         id::text,
+        public_project_id,
         title,
         description,
         status,

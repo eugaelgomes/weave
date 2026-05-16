@@ -243,7 +243,7 @@ class ProjectsReadController extends ProjectsCoreController {
       }
 
       if (include.includes("stages")) {
-        const stages = await this.projectsRepository.getProjectStages(id);
+        const stages = await this.projectsRepository.getProjectStages(project.id);
         formattedProject.stages = (stages || []).map((s) =>
           this._formatProjectStage(s)
         );
@@ -298,7 +298,11 @@ class ProjectsReadController extends ProjectsCoreController {
     try {
       const { id } = req.params;
 
-      if (!this._requireAuthenticatedUser(req, res)) return;
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      const project = await this._loadProjectForRead(id, userId);
+      const projectId = project.id;
 
       const wantsEnvelope = hasAnyQueryKey(
         req.query,
@@ -328,7 +332,7 @@ class ProjectsReadController extends ProjectsCoreController {
         );
       }
 
-      const stages = await this.projectsRepository.getProjectStages(id);
+      const stages = await this.projectsRepository.getProjectStages(projectId);
       const formatted = (stages || []).map((s) => this._formatProjectStage(s));
 
       res.status(200).json({
@@ -344,9 +348,13 @@ class ProjectsReadController extends ProjectsCoreController {
    */
   async getCollaborators(req, res, next) {
     try {
-      const { projectId } = req.params;
+      let { projectId } = req.params;
 
-      if (!this._requireAuthenticatedUser(req, res)) return;
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      const project = await this._loadProjectForRead(projectId, userId);
+      projectId = project.id;
 
       const wantsEnvelope = hasAnyQueryKey(
         req.query,
@@ -405,10 +413,13 @@ class ProjectsReadController extends ProjectsCoreController {
    */
   async getAssociatedNotes(req, res, next) {
     try {
-      const { projectId } = req.params;
+      let { projectId } = req.params;
 
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
+
+      const project = await this._loadProjectForRead(projectId, userId);
+      projectId = project.id;
 
       const membership =
         await organizationsRepository.getActiveOrganizationWithMembership(
@@ -582,9 +593,13 @@ class ProjectsReadController extends ProjectsCoreController {
    */
   async getAiReportConfig(req, res, next) {
     try {
-      const { id: projectId } = req.params;
+      const { id } = req.params;
 
-      if (!this._requireAuthenticatedUser(req, res)) return;
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      const project = await this._loadProjectForRead(id, userId);
+      const projectId = project.id;
 
       const config = await reportConfigRepository.getByProjectId(projectId);
 
@@ -603,9 +618,13 @@ class ProjectsReadController extends ProjectsCoreController {
    */
   async getProjectSprints(req, res, next) {
     try {
-      const { id: projectId } = req.params;
+      const { id } = req.params;
 
-      if (!this._requireAuthenticatedUser(req, res)) return;
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      const project = await this._loadProjectForRead(id, userId);
+      const projectId = project.id;
 
       const wantsEnvelope = hasAnyQueryKey(
         req.query,
@@ -647,9 +666,13 @@ class ProjectsReadController extends ProjectsCoreController {
    */
   async getActiveSprint(req, res, next) {
     try {
-      const { id: projectId } = req.params;
+      const { id } = req.params;
 
-      if (!this._requireAuthenticatedUser(req, res)) return;
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      const project = await this._loadProjectForRead(id, userId);
+      const projectId = project.id;
 
       const sprint = await sprintsRepository.getActiveByProject(projectId);
 
@@ -664,10 +687,13 @@ class ProjectsReadController extends ProjectsCoreController {
    */
   async getReasonings(req, res, next) {
     try {
-      const { id: projectId } = req.params;
+      const { id } = req.params;
 
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
+
+      const project = await this._loadProjectForRead(id, userId);
+      const projectId = project.id;
 
       const wantsEnvelope = hasAnyQueryKey(
         req.query,

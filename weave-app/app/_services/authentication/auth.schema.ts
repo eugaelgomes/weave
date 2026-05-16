@@ -105,8 +105,11 @@ export const UserSchema = z.object({
   updated_at: z.string().optional(),
   birth_date: z.string().optional(),
   phone_number: z.string().optional(),
+  public_id: z.string().optional(),
+
 
   org_id: z.string().nullable().optional(),
+  org_public_id: z.string().nullable().optional(),
   org_name: z.string().nullable().optional(),
   org_unique_name: z.string().nullable().optional(),
   org_logo_url: z.string().nullable().optional(),
@@ -147,7 +150,9 @@ export const BackendProfileSchema = z.object({
   updated_at: z.string().optional().nullable(),
   birth_date: z.string().optional().nullable(),
   phone_number: z.string().optional().nullable(),
+  public_id: z.string().optional(),
 });
+
 
 export const BackendSettingsSchema = z.object({
   theme_mode: z.string().nullable().optional(),
@@ -170,7 +175,9 @@ export const BackendOrganizationSchema = z.object({
   org_member_role: z.union([z.string(), z.array(z.string())]).nullable().optional(),
   member_since: z.string().nullable().optional(),
   org_member_since: z.string().nullable().optional(),
+  public_id: z.string().nullable().optional(),
 });
+
 
 export const BackendAuthResponseSchema = z.object({
   status: z.string(),
@@ -182,7 +189,9 @@ export const BackendAuthResponseSchema = z.object({
       username: z.string(),
       email: z.string().email(),
       avatar_url: z.string(),
+      public_id: z.string().optional(),
     }),
+
     user_settings: z.object({
       theme_mode: z.string().optional(),
       private_profile: z.boolean().optional(),
@@ -195,7 +204,9 @@ export const BackendAuthResponseSchema = z.object({
         role: z.union([z.string(), z.array(z.string())]).nullable().optional(),
         logo_url: z.string().nullable().optional(),
         member_since: z.string().nullable().optional(),
+        public_id: z.string().nullable().optional(),
         default_area: BackendOrgDefaultAreaSchema,
+
       })
       .optional()
       .nullable(),
@@ -224,6 +235,7 @@ export const BackendMeResponseSchema = z.object({
         logo_url: z.string().nullable().optional(),
         member_role: z.union([z.string(), z.array(z.string())]).nullable().optional(),
         member_since: z.string().nullable().optional(),
+        public_id: z.string().nullable().optional(),
         default_area: BackendOrgDefaultAreaSchema,
       })
       .optional()

@@ -8,7 +8,15 @@ const {
   ORG_PERMISSIONS,
 } = require("@/modules/organizations/organization-role-policy");
 
+const {
+  resolveProjectPublicIdParam,
+  resolveOrganizationPublicIdParam,
+} = require("@/middlewares/public-id-resolver");
+
 const router = Router({ mergeParams: true });
+
+router.param("project_id", resolveProjectPublicIdParam);
+router.param("org_id", resolveOrganizationPublicIdParam);
 
 const requireManageTaskPriorities = requireOrgPermission(
   ORG_PERMISSIONS.MANAGE_TASK_PRIORITIES

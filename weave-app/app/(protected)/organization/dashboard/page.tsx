@@ -115,7 +115,7 @@ const ProjectsPage = () => {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredProjects.map((project) => (
                 <Link
-                  href={`/projects/${project.id}`}
+                  href={`/projects/${project.public_id}`}
                   key={project.id}
                   className="group flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-5 transition-all hover:border-yellow-500 hover:shadow-md dark:shadow-surface-dark-md dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:border-yellow-500"
                 >

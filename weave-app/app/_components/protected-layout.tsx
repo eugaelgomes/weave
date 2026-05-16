@@ -103,7 +103,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
 
               <div
                 className={cn(
-                  "flex w-full min-w-0 flex-col overflow-hidden rounded-md border border-neutral-200 bg-white p-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.8),inset_0_-1px_0_rgba(0,0,0,0.06),inset_0_6px_14px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.04] dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md dark:ring-white/[0.08]",
+                  "flex w-full min-w-0 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white p-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.8),inset_0_-1px_0_rgba(0,0,0,0.06),inset_0_6px_14px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.04] dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md dark:ring-white/[0.08]",
                   isLg ? "min-h-0 flex-1" : "shrink-0"
                 )}
               >

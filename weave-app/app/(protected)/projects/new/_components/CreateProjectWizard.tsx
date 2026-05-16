@@ -289,7 +289,7 @@ export function CreateProjectWizard() {
             showOpenProject ? (
               <button
                 type="button"
-                onClick={() => router.push(`/projects/${state.created.projectId}`)}
+                onClick={() => router.push(`/projects/${state.created.project?.public_id || state.created.projectId}`)}
                 className="inline-flex items-center gap-2 rounded-md bg-brand-primary-500 px-2 py-1.5 text-xs font-bold text-neutral-950 transition hover:brightness-95"
               >
                 <CheckCircle2 className="h-4 w-4" aria-hidden />

@@ -108,6 +108,8 @@ export const SubProjectSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
   status: z.string(),
+  public_id: z.string().nullable().optional(),
+
   properties: z.union([z.string(), ProjectPropertiesSchema]).optional(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -119,6 +121,8 @@ export const ProjectSchema = z
     user_id: z.string(),
     org_id: z.string().nullable().optional(),
     parent_project_id: z.string().nullable().optional(),
+    public_id: z.string().nullable().optional(),
+
     title: z.string(),
     description: z.string().nullable().optional(),
     properties: z.union([z.string(), ProjectPropertiesSchema]).optional(),

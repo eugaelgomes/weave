@@ -130,7 +130,7 @@ function NavItem({
           fontSize,
           isRoot && isCollapsed ? "justify-center px-1" : "",
           showActiveHighlight
-            ? "bg-brand-yellow/10 text-brand-yellow"
+            ? "bg-brand-yellow/40 text-slate-950"
             : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6",
         )}
       >
@@ -141,8 +141,8 @@ function NavItem({
           aria-label={item.label}
           className={cn(
             "group flex min-w-0 items-center",
-            isRoot && isCollapsed ? "justify-center" : "flex-1",
-            !isRoot && "gap-2.5",
+            isRoot && isCollapsed ? "justify-center" : "flex-1 gap-3",
+            !isRoot && "gap-3",
           )}
         >
           {isRoot ? (
@@ -152,7 +152,7 @@ function NavItem({
                 className={cn(
                   iconSize,
                   "shrink-0 transition-colors",
-                  active ? "text-brand-yellow" : "text-gray-800 dark:text-gray-400",
+                  active ? "text-slate-950" : "text-slate-950 dark:text-gray-400",
                 )}
               />
               {isCollapsed && item.badge !== undefined && item.badge > 0 ? (
@@ -165,7 +165,7 @@ function NavItem({
               className={cn(
                 iconSize,
                 "shrink-0 transition-colors",
-                showActiveHighlight ? "text-brand-yellow" : "text-gray-800 dark:text-gray-400",
+                showActiveHighlight ? "text-slate-950" : "text-gray-800 dark:text-gray-400",
               )}
             />
           )}
@@ -282,16 +282,16 @@ function RecentItems({ recentItems, pathname, onLinkClick, emptyLabel, sectionLa
                   onClick={onLinkClick}
                   title={item.title}
                   className={cn(
-                    "group flex items-center gap-2.5 rounded-md px-3 py-1 transition-all duration-200",
+                    "group flex items-center gap-3 rounded-md px-3 py-1 transition-all duration-200",
                     active
-                      ? "bg-brand-yellow/10 text-brand-yellow"
+                      ? "bg-brand-yellow/50 text-slate-950"
                       : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6",
                   )}
                 >
                   <ItemIcon
                     className={cn(
                       "h-3.5 w-3.5 shrink-0 transition-colors",
-                      active ? "text-brand-yellow" : "text-gray-800 dark:text-gray-400",
+                      active ? "text-slate-950" : "text-gray-800 dark:text-gray-400",
                     )}
                   />
                   <span className="truncate text-[12px]">{item.title}</span>
@@ -325,7 +325,7 @@ function SidebarFooter({ isCollapsed, helpLabel }: SidebarFooterProps) {
         aria-label={helpLabel}
         className={cn(
           NAV_ROW_CLASS,
-          isCollapsed ? "justify-center px-1" : "",
+          isCollapsed ? "justify-center px-1" : "gap-3",
           "focus-visible:ring-brand-yellow/50 text-gray-700 hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6",
         )}
       >
@@ -475,36 +475,39 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {/* Toggle collapse: chevron fixed in same column as nav icon rail (desktop only). */}
         <div
           className={cn(
             "hidden shrink-0 items-center py-1 lg:flex",
-            isCollapsed ? "justify-center px-1" : "px-2",
+            isCollapsed ? "justify-center px-1" : "px-2 w-full",
           )}
         >
-          <div className={NAV_ICON_RAIL_CLASS}>
-            {toggleCollapse ? (
+          {isCollapsed ? (
+            <div className={NAV_ICON_RAIL_CLASS}>
+              {toggleCollapse ? (
+                <button
+                  type="button"
+                  onClick={toggleCollapse}
+                  className="focus-visible:ring-brand-yellow/50  flex size-7 items-center justify-center rounded-md text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
+                  title={t.nav.expandMenu}
+                  aria-label={t.nav.expandMenu}
+                >
+                 <ChevronsRight size={14} />
+                </button>
+              ) : null}
+            </div>
+          ) : (
+            toggleCollapse ? (
               <button
                 type="button"
                 onClick={toggleCollapse}
-                className="focus-visible:ring-brand-yellow/50 flex size-7 items-center justify-center rounded-md text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
-                title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
-                aria-label={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
+                className="relative focus-visible:ring-brand-yellow/50 bg-neutral-200/20 dark:bg-neutral-800/40 flex w-full h-7 items-center justify-end pr-2.5 rounded-md text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
+                title={t.nav.collapseMenu}
+                aria-label={t.nav.collapseMenu}
               >
-                {isCollapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
+                <ChevronsLeft size={14} />
               </button>
-            ) : null}
-          </div>
-          <div
-            className={cn(
-              COLLAPSED_LABEL_CLASS,
-              isCollapsed ? "pointer-events-none max-w-0 opacity-0" : "opacity-100",
-            )}
-          >
-            <h2 className="text-[9px] font-bold tracking-widest text-gray-600 uppercase dark:text-gray-500">
-              {t.nav.menu}
-            </h2>
-          </div>
+            ) : null
+          )}
         </div>
 
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-black/15 dark:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent">

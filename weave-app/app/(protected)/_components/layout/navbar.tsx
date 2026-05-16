@@ -270,7 +270,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 <button
                   type="button"
                   onClick={onToggleSidebar}
-                  className={cn(navIconMobileShellClass, "lg:hidden")}
+                  className={cn(navIconMobileShellClass, "lg:hidden self-center")}
                   aria-label={t.nav.openSidebar}
                   title={t.nav.openSidebar}
                 >
@@ -280,12 +280,12 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
               <Link
                 href={authenticated ? "/home" : "/"}
-                className="flex min-w-0 items-center"
+                className="flex min-w-0 items-center self-center"
                 aria-label={t.nav.backToHome}
               >
                 <span
                   className={cn(
-                    "truncate text-sm font-bold text-brand-yellow sm:text-base",
+                    "truncate text-sm font-bold text-brand-yellow sm:text-base leading-none",
                     fredoka.className
                   )}
                 >
@@ -302,22 +302,22 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               </Link>
 
               {user?.org_id && (
-                <div className="hidden items-center gap-2 sm:flex">
-                  <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-800" aria-hidden="true" />
+                <div className="hidden items-center gap-2 sm:flex self-center">
+                  <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-800 self-center" aria-hidden="true" />
                   <Link
-                    href={`/organization/about/${user.org_id}`}
-                    className="flex min-w-0 items-center gap-1.5 rounded-md transition-opacity hover:opacity-80"
+                    href={`/organization/about/${user.org_unique_name}`}
+                    className="flex min-w-0 items-center gap-1.5 rounded-md transition-opacity hover:opacity-80 self-center"
                   >
-                    <figure className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded">
+                    <figure className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded self-center">
                       <Image
                         src={user.org_logo_url || "/default-org-icon.png"}
                         alt={t.navbar.logoOf.replace("{name}", user.org_name || "")}
                         width={16}
                         height={16}
-                        className="object-contain"
+                        className="object-contain self-center"
                       />
                     </figure>
-                    <span className="max-w-[180px] truncate text-xs font-medium text-gray-900 dark:text-gray-100">
+                    <span className="max-w-[180px] truncate text-xs font-medium text-gray-900 dark:text-gray-100 leading-none self-center">
                       {user.org_name}
                     </span>
                   </Link>

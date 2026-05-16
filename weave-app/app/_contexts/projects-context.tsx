@@ -308,9 +308,9 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
        * Root list: `weave-api` GET /projects returns owner, notes, subprojects (not stages).
        * @see weave-api/src/modules/projects/controllers/projects-read.controller.js getAllProjects
        */
-      const overview: ProjectOverview[] = projectsData.map((project: Project & { public_id?: string }) => ({
+      const overview: ProjectOverview[] = projectsData.map((project: Project) => ({
         id: project.id,
-        public_id: project.public_id,
+        public_id: project.public_id || undefined,
         title: project.title || "Projeto sem título",
         description: project.description,
         status: project.status || PROJECT_STATUS.OPEN,

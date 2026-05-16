@@ -129,6 +129,8 @@ export interface SubProject {
   title: string;
   description?: string;
   status: string;
+  public_id?: string | null;
+
   properties?: ProjectProperties;
   created_at: string;
   updated_at: string;
@@ -139,6 +141,8 @@ export interface Project {
   user_id: string;
   org_id?: string | null;
   parent_project_id?: string | null;
+  public_id?: string | null;
+
   title: string;
   description?: string;
   properties?: ProjectProperties;
