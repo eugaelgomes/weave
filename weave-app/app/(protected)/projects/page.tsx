@@ -45,6 +45,7 @@ type StageLike = {
 
 type ProjectLike = {
   id: string;
+  public_id?: string;
   title: string;
   status: string;
   properties?: {
@@ -140,6 +141,7 @@ function buildProjectStats(
 
   return {
     id: project.id,
+    public_id: project.public_id,
     title: project.title || "Projeto sem título",
     status: project.status || PROJECT_STATUS.OPEN,
     color: project.properties?.color,
@@ -374,7 +376,7 @@ const ProjectsPage = () => {
           <button
             key={project.id}
             type="button"
-            onClick={() => router.push(`/projects/${project.id}`)}
+            onClick={() => router.push(`/projects/${project.public_id || project.id}`)}
             className="w-full rounded-md border border-neutral-200 bg-white p-3 text-left transition hover:border-neutral-300 hover:bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b]/40 dark:hover:border-surface-dark-border-strong dark:hover:bg-neutral-900"
           >
             <div className="mb-2 flex items-center justify-between gap-2">

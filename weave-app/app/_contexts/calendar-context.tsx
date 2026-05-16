@@ -29,6 +29,8 @@ import {
   type FreeBusyResponse,
 } from "@/app/_services/calendar-service/calendar-service";
 
+export type { FreeBusyResponse } from "@/app/_services/calendar-service/calendar-service";
+
 export type CalendarEventSource = "google" | "internal";
 export type UnifiedCalendarEvent = GoogleCalendarEvent & {
   source: CalendarEventSource;

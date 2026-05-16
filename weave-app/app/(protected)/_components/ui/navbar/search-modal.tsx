@@ -110,7 +110,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
         type: "project",
         icon: Folder,
         subtitle: project.status || searchT.projectFallback,
-        href: `/projects/${project.id}`,
+        href: `/projects/${project.public_id || project.id}`,
         color: project.color,
       }));
 
@@ -125,7 +125,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
     type: "project",
     icon: Folder,
     subtitle: p.status,
-    href: `/projects/${p.id}`,
+    href: `/projects/${p.public_id || p.id}`,
     color: p.color,
   }));
 

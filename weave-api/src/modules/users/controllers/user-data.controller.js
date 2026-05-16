@@ -61,6 +61,7 @@ const mapOrganizationInfo = (organizationData) => {
   if (!organizationData) return null;
   return {
     id: organizationData.org_id,
+    public_id: organizationData.org_public_id,
     unique_name: organizationData.org_unique_name,
     name: organizationData.org_name,
     logo_url: organizationData.org_logo_url,
@@ -201,6 +202,7 @@ class UserDataController extends BaseController {
         user: {
           user_profile: {
             id: protectedUser.user_id,
+            public_id: protectedUser.public_user_id,
             user_name: protectedUser.user_name,
             username: protectedUser.username,
             email: protectedUser.email,
@@ -217,6 +219,7 @@ class UserDataController extends BaseController {
           },
           user_organization: {
             id: protectedOrg?.id || null,
+            public_id: protectedOrg?.public_id || null,
             unique_name: protectedOrg?.unique_name || null,
             name: protectedOrg?.name || null,
             logo_url: protectedOrg?.logo_url || null,
@@ -460,6 +463,7 @@ class UserDataController extends BaseController {
         user: {
           user_profile: {
             id: updatedUser.user_id,
+            public_id: updatedUser.public_user_id,
             user_name: updatedUser.user_name || updatedUser.name,
             username: updatedUser.username,
             email: updatedUser.email,

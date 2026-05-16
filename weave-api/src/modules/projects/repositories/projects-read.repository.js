@@ -306,6 +306,7 @@ class ProjectsReadRepository {
     const query = `
       SELECT 
         p.id::text,
+        p.public_project_id,
         p.user_id::text,
         p.parent_project_id::text,
         p.title,
@@ -353,6 +354,7 @@ class ProjectsReadRepository {
     const query = `
       SELECT 
         p.id::text,
+        p.public_project_id,
         p.user_id::text,
         p.parent_project_id::text,
         p.title,
@@ -451,6 +453,7 @@ class ProjectsReadRepository {
     const query = `
       SELECT 
         id::text,
+        public_project_id,
         user_id::text,
         title,
         description,
@@ -473,6 +476,7 @@ class ProjectsReadRepository {
     const query = `
       SELECT 
         p.id::text,
+        p.public_project_id,
         p.user_id::text,
         p.parent_project_id::text,
         p.title,
@@ -557,6 +561,7 @@ class ProjectsReadRepository {
     const query = `
       SELECT 
         p.id::text,
+        p.public_project_id,
         p.user_id::text,
         p.parent_project_id::text,
         p.title,
@@ -647,6 +652,7 @@ class ProjectsReadRepository {
     const query = `
       SELECT 
         p.id::text,
+        p.public_project_id,
         p.user_id::text,
         p.parent_project_id::text,
         p.title,

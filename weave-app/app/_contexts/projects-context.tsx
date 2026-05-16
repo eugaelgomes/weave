@@ -111,6 +111,7 @@ export type {
 
 export interface ProjectOverview {
   id: string;
+  public_id?: string;
   title: string;
   description?: string;
   status: string;
@@ -307,8 +308,9 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
        * Root list: `weave-api` GET /projects returns owner, notes, subprojects (not stages).
        * @see weave-api/src/modules/projects/controllers/projects-read.controller.js getAllProjects
        */
-      const overview: ProjectOverview[] = projectsData.map((project: Project) => ({
+      const overview: ProjectOverview[] = projectsData.map((project: Project & { public_id?: string }) => ({
         id: project.id,
+        public_id: project.public_id,
         title: project.title || "Projeto sem título",
         description: project.description,
         status: project.status || PROJECT_STATUS.OPEN,

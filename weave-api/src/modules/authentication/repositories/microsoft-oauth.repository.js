@@ -1,5 +1,6 @@
 const BaseRepository = require("./base.repository");
 const PlansRepository = require("@/modules/plans/plans.repository");
+const { generatePublicId } = require("@/utils/generate-public-id");
 
 /**
  * Persistence for Microsoft OAuth flow.
@@ -12,7 +13,7 @@ class MicrosoftOauthRepository extends BaseRepository {
   async findUserByMicrosoftId(microsoftId) {
     const query = `
       SELECT
-        u.user_id, u.username, u.name, u.email, u.password,
+        u.user_id, u.public_user_id, u.username, u.name, u.email, u.password,
         u.avatar_url, u.auth_with_google, u.auth_with_github, u.auth_with_microsoft, u.github_id, u.microsoft_id, u.theme_mode,
         u.private_profile, u.plan_id, u.created_at,
         
@@ -21,7 +22,7 @@ class MicrosoftOauthRepository extends BaseRepository {
         (
           SELECT row_to_json(org_data)
           FROM (
-            SELECT om.organization_id AS org_id, om.role AS org_member_role, o.unique_name AS org_unique_name, o.org_name
+            SELECT om.organization_id AS org_id, om.role AS org_member_role, o.unique_name AS org_unique_name, o.public_organization_id AS org_public_id, o.org_name
             FROM organization_members om
             JOIN organizations o ON o.id = om.organization_id
             WHERE om.user_id = u.user_id
@@ -73,17 +74,18 @@ class MicrosoftOauthRepository extends BaseRepository {
     const rawUsername = `${email.split("@")[0]}_${Date.now()}`;
     const username = rawUsername.slice(0, 80);
     const planId = await PlansRepository.getDefaultSignupPlanId();
+    const publicUserId = generatePublicId();
 
     const query = `
       INSERT INTO users (
         microsoft_id, name, email, username, auth_with_microsoft,
-        password, email_verified, email_verified_at, plan_id
+        password, email_verified, email_verified_at, plan_id, public_user_id
       )
       VALUES (
         $1, $2, $3, $4, true,
-        '', true, NOW(), $5
+        '', true, NOW(), $5, $6
       )
-      RETURNING user_id, username, name, email, auth_with_microsoft, created_at;
+      RETURNING user_id, public_user_id, username, name, email, auth_with_microsoft, created_at;
     `;
 
     const results = await this.executeQuery(query, [
@@ -92,6 +94,7 @@ class MicrosoftOauthRepository extends BaseRepository {
       email,
       username,
       planId,
+      publicUserId,
     ]);
     return results[0];
   }

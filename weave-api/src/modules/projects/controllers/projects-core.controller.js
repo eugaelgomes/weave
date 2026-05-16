@@ -257,6 +257,7 @@ class ProjectsCoreController extends ProjectsBaseController {
       deleted: project.deleted,
       description: project.description,
       id: project.id,
+      public_id: project.public_project_id || null,
       methodology: project.methodology,
       org_id: project.organization_id ?? project.org_id ?? null,
       parent_project_id: project.parent_project_id ?? null,

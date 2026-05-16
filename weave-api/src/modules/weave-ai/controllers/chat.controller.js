@@ -1339,8 +1339,10 @@ class ChatController {
     try {
       const userId = this._validateAuthentication(req);
       const { sessionId } = req.query;
-      const parsedLimit = Number.parseInt(String(req.query.limit || "50"), 10);
-      const limit = Number.isNaN(parsedLimit) || parsedLimit <= 0 ? 50 : parsedLimit;
+      const parsedLimit = Number.parseInt(String(req.query.limit || "10"), 10);
+      const limit = Number.isNaN(parsedLimit) || parsedLimit <= 0 ? 10 : parsedLimit;
+      const parsedOffset = Number.parseInt(String(req.query.offset || "0"), 10);
+      const offset = Number.isNaN(parsedOffset) || parsedOffset < 0 ? 0 : parsedOffset;
 
       if (sessionId) {
         const messages = await chatRepository.getSessionMessages(String(sessionId), userId);
@@ -1351,7 +1353,7 @@ class ChatController {
         });
       }
 
-      const sessions = await chatRepository.getUserSessions(userId, limit);
+      const sessions = await chatRepository.getUserSessions(userId, limit, offset);
       return res.json({
         success: true,
         sessions,

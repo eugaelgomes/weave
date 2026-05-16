@@ -2,6 +2,7 @@ const { executeQuery } = require("@/database/connection");
 const {
   PROJECT_WRITE_CAPABLE_ROLES,
 } = require("@/modules/projects/project-role-policy");
+const { generatePublicId } = require("@/utils/generate-public-id");
 
 const PROJECT_WRITE_CAPABLE_ROLES_SQL = PROJECT_WRITE_CAPABLE_ROLES.map(
   (role) => `'${role}'`
@@ -20,7 +21,8 @@ class ProjectsCreateRepository {
           methodology, 
           status, 
           properties,
-          parent_project_id
+          parent_project_id,
+          public_project_id
         )
         VALUES (
           $1::uuid, 
@@ -30,7 +32,8 @@ class ProjectsCreateRepository {
           $5::project_methodology_enum, 
           $6::project_status, 
           $7::jsonb,
-          $9::uuid
+          $9::uuid,
+          $10
         )
         RETURNING *
       ),
@@ -51,6 +54,7 @@ class ProjectsCreateRepository {
       -- 3. Retornamos o projeto montado já com o array de stages embutido
       SELECT 
         np.id::text,
+        np.public_project_id,
         np.user_id::text,
         np.organization_id::text,
         np.parent_project_id::text,
@@ -90,6 +94,7 @@ class ProjectsCreateRepository {
       projectData.properties,
       JSON.stringify(stagesData),
       projectData.parent_project_id || null,
+      generatePublicId()
     ];
 
     return executeQuery(query, values);

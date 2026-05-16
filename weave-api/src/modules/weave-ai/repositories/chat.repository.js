@@ -245,41 +245,28 @@ class WeaveAIRepository {
   /**
    * Busca todas as sessões de um usuário
    */
-  async getUserSessions(userId, limit = 50) {
+  async getUserSessions(userId, limit = 50, offset = 0) {
     const query = `
     SELECT 
-      s.id,
-      s.title,
-      s.created_at,
-      s.updated_at,
-      s.last_message_at,
-      s.last_model,
-      s.last_provider,
-      s.deleted,
-      s.deleted_at,
-      s.total_tokens,
-      COALESCE(s.message_count, COUNT(m.id)::int) as message_count
-    FROM ai_chat_sessions s
-    LEFT JOIN ai_chat_messages m ON m.session_id = s.id
-    WHERE s.user_id = $1
-      AND COALESCE(s.deleted, false) = false
-    GROUP BY
-      s.id,
-      s.title,
-      s.created_at,
-      s.updated_at,
-      s.last_message_at,
-      s.last_model,
-      s.last_provider,
-      s.deleted,
-      s.deleted_at,
-      s.total_tokens,
-      s.message_count
-    ORDER BY s.updated_at DESC
-    LIMIT $2
+      id,
+      title,
+      created_at,
+      updated_at,
+      last_message_at,
+      last_model,
+      last_provider,
+      deleted,
+      deleted_at,
+      total_tokens,
+      COALESCE(message_count, 0) as message_count
+    FROM ai_chat_sessions
+    WHERE user_id = $1
+      AND COALESCE(deleted, false) = false
+    ORDER BY updated_at DESC
+    LIMIT $2 OFFSET $3
   `;
 
-    const result = await pool.query(query, [userId, limit]);
+    const result = await pool.query(query, [userId, limit, offset]);
     return result.rows;
   }
 

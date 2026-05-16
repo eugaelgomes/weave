@@ -15,7 +15,7 @@ export default function CalendarLayout({ children }: { children: React.ReactNode
 
   return (
     <CalendarPageViewProvider>
-      <div className="flex h-[calc(100vh-5rem)] flex-col gap-2">
+      <div className="flex h-full flex-col gap-2">
         <CalendarHeader />
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row md:gap-2">

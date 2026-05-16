@@ -27,6 +27,7 @@ class SigninRepository extends BaseRepository {
       )
       SELECT
         u.user_id,
+        u.public_user_id,
         u.username,
         u.name AS user_name,
         u.email,
@@ -59,6 +60,7 @@ class SigninRepository extends BaseRepository {
               om.role AS org_member_role, 
               om.created_at AS org_member_since, 
               o.unique_name AS org_unique_name, 
+              o.public_organization_id AS org_public_id,
               o.org_name, 
               o.logo_url AS org_logo_url
             FROM organization_members om

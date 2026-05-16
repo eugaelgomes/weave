@@ -19,7 +19,10 @@ import {
   FileText,
   FolderKanban,
   RefreshCw,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
+import { useLanguage } from "@/app/_contexts/language-context";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -109,6 +112,7 @@ export default function ChatInterface({
 } = {}) {
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useLanguage();
   const {
     models,
     messages,
@@ -152,6 +156,7 @@ export default function ChatInterface({
   const [showScrollTopButton, setShowScrollTopButton] = useState(false);
   const [showScrollBottomButton, setShowScrollBottomButton] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [feedbackState, setFeedbackState] = useState<Record<string, { rating: "like" | "dislike" | null; comment: string; showComment: boolean }>>({});
 
   useEffect(() => {
     loadModels();
@@ -389,9 +394,9 @@ export default function ChatInterface({
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-[#1d1d1b]">
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-2 dark:border-surface-dark-border">
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-1 dark:border-surface-dark-border">
         <div className="flex items-center gap-2">
-          <h1 className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+          <h1 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
             {chatHeaderTitle}
           </h1>
         </div>
@@ -406,7 +411,7 @@ export default function ChatInterface({
             }`}
           >
             <Globe className="h-2 w-2" />
-            <span>Web Search</span>
+            <span>{t.weaveAi.webSearch}</span>
           </button>
           <button
             onClick={() => setAllowEdit(!allowEdit)}
@@ -417,7 +422,7 @@ export default function ChatInterface({
             }`}
           >
             {allowEdit ? <Unlock className="h-2 w-2" /> : <Lock className="h-2 w-2" />}
-            <span>Permitir editar</span>
+            <span>{t.weaveAi.allowEdit}</span>
           </button>
         </div>
       </div>
@@ -429,14 +434,26 @@ export default function ChatInterface({
       >
         <div className="mx-auto w-full max-w-4xl space-y-4">
           {messages?.length === 0 && !loading && (
-            <div className="animate-in fade-in mt-12 flex flex-col items-center text-center duration-500">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded bg-brand-beige dark:bg-brand-navy/30">
-                <Sparkles className="h-5 w-5 text-brand-orange" />
+            <div className="animate-in fade-in mx-auto mt-24 flex max-w-xl flex-col items-center text-center duration-500">
+              <div className="mb-6 h-px w-12 bg-neutral-200 dark:bg-neutral-800" />
+              <h2 className="text-lg font-medium tracking-tight text-neutral-400 dark:text-neutral-500">
+                {t.weaveAi.welcomeTitle}
+              </h2>
+              
+              <div className="mt-10 flex max-w-md flex-wrap justify-center gap-2">
+                {[
+                  t.weaveAi.suggestionTask,
+                  t.weaveAi.suggestionProject,
+                ].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => setInput(suggestion)}
+                    className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-[10px] font-medium text-neutral-600 transition-all hover:bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
               </div>
-              <h2 className="text-sm font-semibold tracking-tight">Como posso ajudar?</h2>
-              <p className="mt-1 text-xs text-neutral-500">
-                Selecione contexto, arquivos opcionais e inicie a conversa.
-              </p>
             </div>
           )}
 
@@ -457,7 +474,7 @@ export default function ChatInterface({
               >
                 <div className="mt-0.5 flex-shrink-0">
                   <div
-                    className={`flex h-6 w-6 items-center justify-center overflow-hidden rounded shadow-sm ${
+                    className={`flex h-6 w-6 items-center justify-center overflow-hidden rounded-full ${
                       isUser ? "bg-brand-yellow" : "bg-brand-navy"
                     }`}
                   >
@@ -483,10 +500,10 @@ export default function ChatInterface({
                   className={`flex max-w-[85%] flex-col ${isUser ? "items-end" : "items-start"}`}
                 >
                   <div
-                    className={`relative rounded-lg border p-1.5 text-xs leading-relaxed ${
+                    className={`relative rounded-2xl p-2 text-xs leading-relaxed ${
                       isUser
-                        ? "border-brand-yellow bg-brand-yellow text-brand-navy"
-                        : "border-neutral-200 bg-white text-neutral-800 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-200"
+                        ? "bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200"
+                        : "bg-transparent text-neutral-800 dark:text-neutral-200"
                     }`}
                   >
                     {isUser ? (
@@ -504,7 +521,7 @@ export default function ChatInterface({
 
                     {!isUser && Array.isArray(msg.functionExecution) && msg.functionExecution.length > 0 && (
                       <div className="mt-2 rounded border border-brand-orange/50 bg-brand-beige p-1.5 text-[10px] text-brand-navy dark:border-brand-orange/40 dark:bg-brand-navy/20 dark:text-brand-beige">
-                        <p className="mb-1 font-semibold uppercase tracking-wide">Acoes executadas</p>
+                        <p className="mb-1 font-semibold tracking-wide">{t.weaveAi.actionsExecuted}</p>
                         {msg.functionExecution.map((execution: any, index: number) => (
                           <p key={`${execution.name}-${index}`}>
                             {execution.name} - {execution.success ? "ok" : "erro"}
@@ -515,14 +532,14 @@ export default function ChatInterface({
 
                     {!isUser && citations.length > 0 && (
                       <div className="mt-2 rounded border border-brand-navy/30 bg-brand-beige p-1.5 text-[10px] text-brand-navy dark:border-brand-beige/20 dark:bg-brand-navy/30 dark:text-brand-beige">
-                        <p className="mb-1 font-semibold uppercase tracking-wide">Citações</p>
+                        <p className="mb-1 font-semibold tracking-wide">{t.weaveAi.citations}</p>
                         <ul className="space-y-1">
                           {citations.map((citation: any, index: number) => {
                             const title = String(
                               citation?.title ||
                                 citation?.name ||
                                 citation?.label ||
-                                `Fonte ${index + 1}`
+                                `${t.weaveAi.source} ${index + 1}`
                             );
                             const href = citation?.url ? String(citation.url) : "";
                             return (
@@ -548,32 +565,95 @@ export default function ChatInterface({
 
                     {isFailedUserMessage && (
                       <div className="mt-2 rounded border border-brand-red/40 bg-red-50 p-1.5 text-[10px] text-brand-red dark:bg-red-950/30">
-                        <p>{String(msg?.metadata?.errorMessage || "Falha ao enviar mensagem.")}</p>
+                        <p>{String(msg?.metadata?.errorMessage || t.weaveAi.errorSend)}</p>
                         <button
                           type="button"
                           onClick={() => retryMessage(String(msg.id))}
                           className="mt-1 inline-flex items-center gap-1 rounded border border-brand-red/40 px-1.5 py-0.5 text-[10px] font-semibold hover:bg-brand-red/10"
                         >
                           <RefreshCw className="h-2.5 w-2.5" />
-                          Tentar novamente
+                          {t.common.retry}
                         </button>
                       </div>
                     )}
 
                     <div
-                      className={`mt-1.5 flex items-center gap-2 pt-1 opacity-70 ${isUser ? "justify-end" : "justify-between"}`}
+                      className={`mt-1.5 flex flex-col gap-1.5 pt-1 ${isUser ? "items-end" : "items-start"}`}
                     >
-                      <span className="text-[9px]">
-                        {formatMessageDateTime(msg.created_at || msg.timestamp)}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleCopyMessage(msg.id, msg.content)}
-                        className="flex items-center gap-1 text-[9px] uppercase hover:opacity-100"
-                      >
-                        <Copy className="h-2.5 w-2.5" />{" "}
-                        {copiedMessageId === msg.id ? "Copiado!" : ""}
-                      </button>
+                      <div className={`flex items-center gap-3 opacity-40 transition-opacity hover:opacity-100 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+                        <span className="text-[9px]">
+                          {formatMessageDateTime(msg.created_at || msg.timestamp)}
+                        </span>
+                        
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyMessage(msg.id, msg.content)}
+                            title={t.weaveAi.copyMessage}
+                            className="flex items-center hover:text-neutral-900 dark:hover:text-neutral-100"
+                          >
+                            <Copy className="h-2.5 w-2.5" />
+                            {copiedMessageId === msg.id && <span className="ml-1 text-[8px]">{t.weaveAi.copied}</span>}
+                          </button>
+
+                          {!isUser && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const current = feedbackState[msg.id];
+                                  setFeedbackState({
+                                    ...feedbackState,
+                                    [msg.id]: { 
+                                      rating: current?.rating === "like" ? null : "like",
+                                      comment: current?.comment || "",
+                                      showComment: current?.rating !== "like"
+                                    }
+                                  });
+                                }}
+                                className={`flex items-center transition-colors ${feedbackState[msg.id]?.rating === "like" ? "text-green-600 opacity-100" : "hover:text-green-600"}`}
+                                title={t.weaveAi.like}
+                              >
+                                <ThumbsUp className="h-2.5 w-2.5" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const current = feedbackState[msg.id];
+                                  setFeedbackState({
+                                    ...feedbackState,
+                                    [msg.id]: { 
+                                      rating: current?.rating === "dislike" ? null : "dislike",
+                                      comment: current?.comment || "",
+                                      showComment: current?.rating !== "dislike"
+                                    }
+                                  });
+                                }}
+                                className={`flex items-center transition-colors ${feedbackState[msg.id]?.rating === "dislike" ? "text-red-600 opacity-100" : "hover:text-red-600"}`}
+                                title={t.weaveAi.dislike}
+                              >
+                                <ThumbsDown className="h-2.5 w-2.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {!isUser && feedbackState[msg.id]?.showComment && (
+                        <div className={`animate-in fade-in slide-in-from-top-1 w-full max-w-[200px] duration-200 text-left`}>
+                          <input
+                            type="text"
+                            placeholder={t.weaveAi.feedbackPlaceholder}
+                            value={feedbackState[msg.id]?.comment || ""}
+                            onChange={(e) => setFeedbackState({
+                              ...feedbackState,
+                              [msg.id]: { ...feedbackState[msg.id], comment: e.target.value }
+                            })}
+                            className="w-full bg-transparent border-b border-neutral-200 py-0.5 text-[9px] outline-none placeholder:text-neutral-400 focus:border-brand-yellow dark:border-neutral-800"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -604,8 +684,8 @@ export default function ChatInterface({
             {showScrollTopButton && (
               <button
                 onClick={scrollToTop}
-                title="Ir para o topo"
-                aria-label="Ir para o topo"
+                title={t.weaveAi.scrollToTop}
+                aria-label={t.weaveAi.scrollToTop}
                 className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-700 shadow-sm transition-colors hover:bg-neutral-100 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/95 dark:text-neutral-200 dark:hover:bg-neutral-800"
               >
                 <ChevronUp className="h-4 w-4" />
@@ -614,8 +694,8 @@ export default function ChatInterface({
             {showScrollBottomButton && (
               <button
                 onClick={scrollToBottom}
-                title="Ir para o fim"
-                aria-label="Ir para o fim"
+                title={t.weaveAi.scrollToBottom}
+                aria-label={t.weaveAi.scrollToBottom}
                 className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-700 shadow-sm transition-colors hover:bg-neutral-100 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/95 dark:text-neutral-200 dark:hover:bg-neutral-800"
               >
                 <ChevronDown className="h-4 w-4" />
@@ -638,8 +718,8 @@ export default function ChatInterface({
                   <span className="font-medium">{file.name}</span>
                   <button
                     onClick={() => handleRemoveFile(file)}
-                    title="Remover arquivo"
-                    aria-label="Remover arquivo"
+                    title={t.common.remove}
+                    aria-label={t.common.remove}
                     className="hover:text-brand-red dark:hover:text-brand-red"
                   >
                     <X className="h-2.5 w-2.5" />
@@ -660,8 +740,8 @@ export default function ChatInterface({
                   <span className="font-medium">{item.title}</span>
                   <button
                     onClick={() => handleRemoveContext(item.type, item.id)}
-                    title="Remover contexto"
-                    aria-label="Remover contexto"
+                    title={t.common.remove}
+                    aria-label={t.common.remove}
                     className="hover:text-brand-red dark:hover:text-brand-red"
                   >
                     <X className="h-2.5 w-2.5" />
@@ -695,7 +775,7 @@ export default function ChatInterface({
                   handleSend();
                 }
               }}
-              placeholder="Envie uma mensagem..."
+              placeholder={t.weaveAi.inputPlaceholder}
               className="max-h-32 min-h-[40px] w-full resize-none bg-transparent px-1 py-1 text-sm outline-none placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500"
             />
 
@@ -703,9 +783,9 @@ export default function ChatInterface({
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  title="Anexar arquivos"
-                  aria-label="Anexar arquivos"
-                  className="flex h-8 w-8 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
+                  title={t.weaveAi.attachFiles}
+                  aria-label={t.weaveAi.attachFiles}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
                 >
                   <Paperclip className="h-4 w-4" />
                 </button>
@@ -713,9 +793,9 @@ export default function ChatInterface({
                 <div className="relative">
                   <button
                     onClick={() => setShowContextMenu(!showContextMenu)}
-                    title="Indexar contexto"
-                    aria-label="Indexar contexto"
-                    className="flex h-8 w-8 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
+                    title={t.weaveAi.indexContext}
+                    aria-label={t.weaveAi.indexContext}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
                   >
                     <NotebookPen className="h-4 w-4" />
                   </button>
@@ -728,13 +808,13 @@ export default function ChatInterface({
                           <input
                             value={contextSearch}
                             onChange={(event) => setContextSearch(event.target.value)}
-                            placeholder="Buscar nota ou projeto..."
+                            placeholder={t.weaveAi.searchContext}
                             className="w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs outline-none focus:border-brand-yellow dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
                           />
                         </div>
                         <div className="max-h-48 overflow-y-auto p-1">
-                          <div className="px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase">
-                            Tarefas
+                          <div className="px-1.5 py-1 text-[9px] font-bold text-neutral-400">
+                            {t.weaveAi.tasks}
                           </div>
                           {filteredNotes.slice(0, noteContextLimit).map((note: any) => (
                             <button
@@ -752,12 +832,12 @@ export default function ChatInterface({
                               onClick={() => setNoteContextLimit((prev) => prev + 10)}
                               className="w-full rounded px-2 py-1 text-left text-[10px] font-semibold text-brand-navy hover:bg-brand-beige dark:text-brand-yellow dark:hover:bg-brand-navy/30"
                             >
-                              Mostrar mais tarefas
+                              {t.common.showMore}
                             </button>
                           )}
 
-                          <div className="mt-1 border-t border-neutral-100 px-1.5 py-1 text-[9px] font-bold text-neutral-400 uppercase dark:border-surface-dark-border">
-                            Projetos
+                          <div className="mt-1 border-t border-neutral-100 px-1.5 py-1 text-[9px] font-bold text-neutral-400 dark:border-surface-dark-border">
+                            {t.weaveAi.projects}
                           </div>
                           {filteredProjects.slice(0, projectContextLimit).map((project: any) => (
                             <button
@@ -775,7 +855,7 @@ export default function ChatInterface({
                               onClick={() => setProjectContextLimit((prev) => prev + 10)}
                               className="w-full rounded px-2 py-1 text-left text-[10px] font-semibold text-brand-navy hover:bg-brand-beige dark:text-brand-yellow dark:hover:bg-brand-navy/30"
                             >
-                              Mostrar mais projetos
+                              {t.common.showMore}
                             </button>
                           )}
                         </div>
@@ -787,10 +867,12 @@ export default function ChatInterface({
                 <div className="relative ml-1">
                   <button
                     onClick={() => setIsModelMenuOpen((v) => !v)}
-                    className="flex h-8 items-center gap-1.5 rounded-md border border-brand-beige bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
+                    className="flex h-8 items-center gap-1.5 rounded-full border border-brand-beige bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
                   >
-                    <ModelIcon model={selectedModel} className="h-3.5 w-3.5" />
-                    <span>{selectedModel ? formatModelLabel(selectedModel) : "Modelo"}</span>
+                    <span className="text-[10px] font-medium text-neutral-500">{t.weaveAi.model}:</span>
+                    <span className="text-[10px] text-neutral-400">
+                      {loading ? t.common.loading : selectedModel?.name}
+                    </span>
                     <ChevronDown className="h-3 w-3 text-neutral-500" />
                   </button>
 
@@ -825,10 +907,12 @@ export default function ChatInterface({
                 <div className="relative ml-1">
                   <button
                     onClick={() => setIsAgentMenuOpen((prev) => !prev)}
-                    className="flex h-8 items-center gap-1.5 rounded-md border border-brand-beige bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
+                    className="flex h-8 items-center gap-1.5 rounded-full border border-brand-beige bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition-colors hover:bg-brand-beige hover:text-brand-navy dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige"
                   >
-                    <Bot className="h-3.5 w-3.5" />
-                    <span>{selectedAgent ? selectedAgent.name : "Agente padrão"}</span>
+                    <span className="text-[10px] font-medium text-neutral-500">{t.weaveAi.agent}:</span>
+                    <span className="text-[10px] text-neutral-400">
+                      {loading ? t.common.loading : selectedAgent?.name || t.nav.agent}
+                    </span>
                     <ChevronDown className="h-3 w-3 text-neutral-500" />
                   </button>
 
@@ -878,7 +962,7 @@ export default function ChatInterface({
                 disabled={!input.trim()}
                 title="Enviar mensagem"
                 aria-label="Enviar mensagem"
-                className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-brand-yellow text-brand-navy transition-colors hover:bg-brand-orange disabled:opacity-30 dark:bg-brand-yellow dark:text-brand-navy dark:hover:bg-brand-orange"
+                className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-yellow text-brand-navy transition-colors hover:bg-brand-orange disabled:opacity-30 dark:bg-brand-yellow dark:text-brand-navy dark:hover:bg-brand-orange"
               >
                 <Send className="ml-0.5 h-4 w-4" />
               </button>

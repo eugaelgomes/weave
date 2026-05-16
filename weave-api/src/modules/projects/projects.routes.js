@@ -30,8 +30,12 @@ const {
   validateGetMyViewPref,
   validateSetMyViewPref,
 } = require("@/modules/projects/projects.validators");
+const { resolveProjectPublicIdParam } = require("@/middlewares/public-id-resolver");
 
 const router = express.Router();
+
+router.param('id', resolveProjectPublicIdParam);
+router.param('projectId', resolveProjectPublicIdParam);
 
 router.use(verifyToken);
 

@@ -5,10 +5,8 @@ import { ChevronLeft, ChevronRight, Loader2, Users, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/app/_contexts/auth-context";
-import { useCalendar } from "@/app/_contexts/calendar-context";
-import { useNotes } from "@/app/_contexts/notes-context";
-import type { FreeBusyResponse } from "@/app/_services/calendar-service/calendar-service";
-import type { User as SearchUser } from "@/app/_services/notes-service/notes-service";
+import { useCalendar, type FreeBusyResponse } from "@/app/_contexts/calendar-context";
+import { useNotes, type SearchUser } from "@/app/_contexts/notes-context";
 import type { UserPreferences } from "@/types/user-preferences";
 import { calendarUtils } from "@/app/_utils/calendar";
 import { useCalendarPageView } from "../_contexts/calendar-page-view-context";
@@ -253,7 +251,7 @@ function MicroCalendarPeopleFreeBusy({
   );
 }
 
-export function MicroCalendar() {
+const MicroCalendar = () => {
   const { user } = useAuth();
   const { currentDate, setCurrentDate, selectedDate, setSelectedDate } = useCalendarPageView();
 
@@ -302,7 +300,7 @@ export function MicroCalendar() {
   };
 
   return (
-    <div className="rounded-md border border-neutral-200 bg-neutral-100/80 p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/80">
+    <div>
       <div className="mb-1.5 flex items-center justify-between gap-1">
         <span className="truncate text-[11px] font-medium text-neutral-800 dark:text-neutral-100">
           {headerLabel}
@@ -365,3 +363,5 @@ export function MicroCalendar() {
     </div>
   );
 }
+
+export { MicroCalendar };

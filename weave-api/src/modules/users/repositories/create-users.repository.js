@@ -2,6 +2,7 @@ const BaseRepository = require("./base.repository");
 const { executeQuery } = require("@/database/connection");
 const { defaultAppPreferences } = require("@/modules/users/normalize");
 const PlansRepository = require("@/modules/plans/plans.repository");
+const { generatePublicId } = require("@/utils/generate-public-id");
 
 /**
  * @typedef {Object} CreateUserRow
@@ -51,6 +52,8 @@ class CreateUsersRepository extends BaseRepository {
     const resolvedPlanId =
       plan_id || (await PlansRepository.getDefaultSignupPlanId());
 
+    const publicUserId = generatePublicId();
+
     const query = `
     INSERT INTO users (
       name, 
@@ -63,13 +66,14 @@ class CreateUsersRepository extends BaseRepository {
       phone_number, 
       avatar_url,
       user_preference,
-      plan_id
+      plan_id,
+      public_user_id
     ) 
     VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-      $11
+      $11, $12
     )
-    RETURNING user_id, email, name, avatar_url, created_at;
+    RETURNING user_id, public_user_id, email, name, avatar_url, created_at;
   `;
 
     return await executeQuery(query, [
@@ -84,6 +88,7 @@ class CreateUsersRepository extends BaseRepository {
       avatar_url,
       defaultAppPreferences,
       resolvedPlanId,
+      publicUserId,
     ]);
   }
 
@@ -95,15 +100,16 @@ class CreateUsersRepository extends BaseRepository {
    */
   async createGithubUser(username, name, githubId) {
     const planId = await PlansRepository.getDefaultSignupPlanId();
+    const publicUserId = generatePublicId();
     const query = `
       INSERT INTO 
-        users (username, name, github_id, plan_id) 
+        users (username, name, github_id, plan_id, public_user_id) 
       VALUES (
-        $1, $2, $3, $4
+        $1, $2, $3, $4, $5
       )
-      RETURNING user_id;
+      RETURNING user_id, public_user_id;
     `;
-    return await executeQuery(query, [username, name, githubId, planId]);
+    return await executeQuery(query, [username, name, githubId, planId, publicUserId]);
   }
 }
 module.exports = new CreateUsersRepository();

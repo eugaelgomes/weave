@@ -27,11 +27,12 @@ export interface ChatContextType {
   loadModels: () => Promise<void>;
   sendMessage: (data: SendMessageData) => Promise<ChatMessage | null>;
   retryMessage: (messageId: string) => Promise<ChatMessage | null>;
-  loadChatHistory: (sessionId?: string) => Promise<void>;
+  loadChatHistory: (sessionId?: string, append?: boolean) => Promise<void>;
   loadSession: (sessionId: string) => Promise<void>;
   createNewSession: () => void;
   deleteSession: (sessionId: string) => Promise<boolean>;
   setCurrentSession: (session: ChatSession | null) => void;
+  hasMoreHistory: boolean;
 }
 
 export type { AIModel, ChatMessage, SendMessageData, ChatSession };
@@ -68,6 +69,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [hasMoreHistory, setHasMoreHistory] = useState(true);
 
   const chatHistoryRef = useRef<ChatSession[]>([]);
   const messagesRef = useRef<ChatMessage[]>([]);
@@ -102,15 +104,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, [authenticated]);
 
   const loadChatHistory = useCallback(
-    async (sessionId?: string) => {
+    async (sessionId?: string, append = false) => {
       if (!authenticated) return;
 
       const requestToken = sessionId ? ++chatStateEpochRef.current : null;
+      const limit = 10;
+      const offset = append ? chatHistoryRef.current.length : 0;
 
       try {
         setLoading(true);
 
-        const response = await fetchChatHistory(sessionId);
+        const response = await fetchChatHistory(sessionId, limit, offset);
 
         if (sessionId) {
           if (requestToken !== null && requestToken !== chatStateEpochRef.current) {
@@ -118,7 +122,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           }
           setMessages(response as ChatMessage[]);
         } else {
-          setChatHistory(response as ChatSession[]);
+          const sessions = response as ChatSession[];
+          if (append) {
+            setChatHistory((prev) => {
+              const existingIds = new Set(prev.map((s) => s.id));
+              const uniqueNew = sessions.filter((s) => !existingIds.has(s.id));
+              return [...prev, ...uniqueNew];
+            });
+          } else {
+            setChatHistory(sessions);
+          }
+          setHasMoreHistory(sessions.length === limit);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erro ao carregar histórico");
@@ -370,6 +384,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     createNewSession,
     deleteSession,
     setCurrentSession,
+    hasMoreHistory,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

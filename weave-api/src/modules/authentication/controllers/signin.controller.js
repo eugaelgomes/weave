@@ -107,6 +107,7 @@ class SigninController extends AuthBaseController {
         user: {
           user_profile: {
             id: protectedUser.user_id,
+            public_id: protectedUser.public_user_id,
             name: protectedUser.user_name || protectedUser.name,
             username: protectedUser.username,
             email: protectedUser.email,
@@ -118,6 +119,7 @@ class SigninController extends AuthBaseController {
           },
           user_organization: {
             id: protectedOrg?.id || null,
+            public_id: protectedOrg?.org_public_id || null,
             unique_name: protectedOrg?.unique_name || null,
             name: protectedOrg?.name || null,
             logo_url: protectedOrg?.logo_url || null,

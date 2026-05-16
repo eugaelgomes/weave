@@ -14,6 +14,7 @@ import {
   Home,
   Network,
   X,
+  FileText,
   Frown,
   MessageSquare,
   ChevronRight,
@@ -399,6 +400,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   const navigationItems: NavigationItem[] = [
     { path: "/home", icon: Home, label: t.nav.home },
     { path: "/notes", icon: Book, label: t.nav.notes },
+    { path: "/documents", icon: FileText, label: t.nav.documents },
     {
       path: "/projects",
       icon: Network,
@@ -423,12 +425,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       icon: Calendar,
       label: t.nav.calendar,
     },
-    {
-      path: "/notifications",
-      icon: MessageSquare,
-      label: t.nav.notifications,
-      badge: unreadCount,
-    },
+
     ...(hasOrg
       ? [
           {

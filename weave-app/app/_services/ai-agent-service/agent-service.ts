@@ -341,10 +341,24 @@ export async function sendChatMessage(data: SendMessageData): Promise<SendMessag
   };
 }
 
-export async function fetchChatHistory(sessionId?: string): Promise<ChatMessage[] | ChatSession[]> {
-  const endpoint = sessionId
+export async function fetchChatHistory(
+  sessionId?: string,
+  limit?: number,
+  offset?: number
+): Promise<ChatMessage[] | ChatSession[]> {
+  let endpoint = sessionId
     ? `${API_ENDPOINTS.AI_CHAT_HISTORY}?sessionId=${sessionId}`
     : API_ENDPOINTS.AI_CHAT_HISTORY;
+
+  if (!sessionId) {
+    const params = new URLSearchParams();
+    if (limit !== undefined) params.append("limit", String(limit));
+    if (offset !== undefined) params.append("offset", String(offset));
+    const queryString = params.toString();
+    if (queryString) {
+      endpoint += (endpoint.includes("?") ? "&" : "?") + queryString;
+    }
+  }
 
   const response = await apiClient.get(endpoint);
 
