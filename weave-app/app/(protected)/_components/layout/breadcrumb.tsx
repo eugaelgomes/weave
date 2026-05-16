@@ -4,9 +4,11 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
+import { useLanguage } from "@/app/_contexts/language-context";
 
 const Breadcrumb = () => {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   // Função para formatar o label
   const formatLabel = (segment: string): string => {
@@ -55,17 +57,17 @@ const Breadcrumb = () => {
 
   return (
     <nav
-      aria-label="Breadcrumb"
+      aria-label={t.nav.breadcrumbNav}
       className="mb-3 flex items-center gap-2 overflow-x-auto rounded-md border border-neutral-800 bg-neutral-900/50 px-3 py-2 backdrop-blur-sm sm:mb-4 sm:px-4"
     >
       {/* Home Link */}
       <Link
         href="/home"
         className="group hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md px-2 py-1 text-neutral-400 transition-all hover:bg-neutral-800/50"
-        aria-label="Início"
+        aria-label={t.nav.breadcrumbHome}
       >
         <Home className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
-        <span className="hidden text-xs font-medium sm:inline">Início</span>
+        <span className="hidden text-xs font-medium sm:inline">{t.nav.breadcrumbHome}</span>
       </Link>
 
       {/* Breadcrumb */}

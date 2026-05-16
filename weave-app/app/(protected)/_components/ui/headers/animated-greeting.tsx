@@ -49,19 +49,19 @@ export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
       case "notifications":
         return <span className="text-brand-primary-500 font-semibold">{t.nav.notifications}</span>;
       case "settings":
-        return <span className="text-brand-primary-500 font-semibold">{t.nav.settings || "Dados e Preferências"}</span>;
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.settings}</span>;
       case "workspace":
-        return <span className="text-brand-primary-500 font-semibold">{t.nav.workspace || "Workspace"}</span>;
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.workspace}</span>;
       case "plans":
-        return <span className="text-brand-primary-500 font-semibold">{t.nav.plans || "Plano e Consumo"}</span>;
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.plans}</span>;
       case "security":
-        return <span className="text-brand-primary-500 font-semibold">{t.nav.security || "Tokens e APIs"}</span>;
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.security}</span>;
       case "integrations":
-        return <span className="text-brand-primary-500 font-semibold">{t.nav.integrations || "Integrações"}</span>;
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.integrations}</span>;
       case "preferences":
-        return <span className="text-brand-primary-500 font-semibold">{t.nav.preferences || "Preferências"}</span>;
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.preferences}</span>;
       case "weave-ai":
-        return <span className="bg-linear-to-r from-brand-primary-500 to-purple-600 bg-clip-text text-transparent font-bold">Weave AI</span>;
+        return <span className="bg-linear-to-r from-brand-primary-500 to-purple-600 bg-clip-text text-transparent font-bold">{t.nav.weaveAi}</span>;
       default:
         return <span className="font-semibold text-gray-900 dark:text-gray-100">{t.greeting.hello} {formattedName}</span>;
     }
@@ -70,29 +70,29 @@ export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
   const getMessage = () => {
     switch (type) {
       case "home":
-        return "let's work smarter today.";
+        return t.headers.home;
       case "projects":
-        return "— track your progress.";
+        return t.headers.projects;
       case "notes":
-        return "— capture your thoughts.";
+        return t.headers.notes;
       case "calendar":
-        return "— plan your schedule.";
+        return t.headers.calendar;
       case "notifications":
-        return "— stay updated.";
+        return t.headers.notifications;
       case "settings":
-        return "— manage your profile and app experience.";
+        return t.headers.settings;
       case "workspace":
-        return "— collaborate with your team.";
+        return t.headers.workspace;
       case "plans":
-        return "— monitor your subscription and usage metrics.";
+        return t.headers.plans;
       case "security":
-        return "— manage your API keys and tokens.";
+        return t.headers.security;
       case "integrations":
-        return "— connect your tools.";
+        return t.headers.integrations;
       case "preferences":
-        return "— customize your experience.";
+        return t.headers.preferences;
       case "weave-ai":
-        return "— your intelligent assistant.";
+        return t.headers.weaveAi;
       default:
         return "";
     }

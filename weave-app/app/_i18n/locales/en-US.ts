@@ -52,6 +52,12 @@ const enUS: TranslationKeys = {
     areas: "Areas",
     weaveAiOpenFull: "Open full page",
     weaveFlow: "Weave Flow",
+    settingsLabel: "Settings",
+    closeMenu: "Close menu",
+    collapseItem: "Collapse {label}",
+    expandItem: "Expand {label}",
+    breadcrumbNav: "Breadcrumb",
+    breadcrumbHome: "Home",
   },
 
   home: {
@@ -97,6 +103,13 @@ const enUS: TranslationKeys = {
     aboutSystem: "About",
     logout: "Log out",
     closeMenu: "Close Menu",
+    mainNavigation: "Main navigation",
+    openSearch: "Open search",
+    searchSystem: "Search the system",
+    openUserMenu: "Open user menu",
+    userMenuNav: "User menu",
+    avatarOf: "{name}'s avatar",
+    logoOf: "{name} logo",
     searchModal: {
       placeHome: "Home",
       placeExplore: "Explore",
@@ -278,6 +291,20 @@ const enUS: TranslationKeys = {
       "Invite accepted! We sent a confirmation email. Sign in with the invited email and your password — you'll be taken to your organization's areas.",
     successCreatedLoginElse: "Account created and invite accepted. Sign in with your username and password on the next screen.",
     acceptError: "Could not accept invite.",
+  },
+  headers: {
+    home: "let's work smarter today.",
+    projects: "— track your progress.",
+    notes: "— capture your thoughts.",
+    calendar: "— plan your schedule.",
+    notifications: "— stay updated.",
+    settings: "— manage your profile and app experience.",
+    workspace: "— collaborate with your team.",
+    plans: "— monitor your subscription and usage metrics.",
+    security: "— manage your API keys and tokens.",
+    integrations: "— connect your tools.",
+    preferences: "— customize your experience.",
+    weaveAi: "— your intelligent assistant.",
   },
 };
 export default enUS;

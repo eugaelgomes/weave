@@ -50,6 +50,12 @@ const ptBR = {
     areas: "Áreas",
     weaveAiOpenFull: "Abrir em tela cheia",
     weaveFlow: "Weave Flow",
+    settingsLabel: "Configurações",
+    closeMenu: "Fechar menu",
+    collapseItem: "Recolher {label}",
+    expandItem: "Expandir {label}",
+    breadcrumbNav: "Navegação estrutural",
+    breadcrumbHome: "Início",
   },
 
   home: {
@@ -95,6 +101,13 @@ const ptBR = {
     aboutSystem: "Sobre o Sistema",
     logout: "Sair",
     closeMenu: "Fechar Menu",
+    mainNavigation: "Navegação principal",
+    openSearch: "Abrir busca",
+    searchSystem: "Pesquisar no sistema",
+    openUserMenu: "Abrir menu do usuário",
+    userMenuNav: "Menu do usuário",
+    avatarOf: "Avatar de {name}",
+    logoOf: "Logo da {name}",
     searchModal: {
       placeHome: "Início",
       placeExplore: "Explorar",
@@ -276,6 +289,20 @@ const ptBR = {
       "Convite aceito! Enviamos um e-mail de confirmação. Entre com o e-mail convidado e sua senha — você será levado às áreas da organização.",
     successCreatedLoginElse: "Conta criada e convite aceito. Entre com seu usuário e senha na próxima tela.",
     acceptError: "Erro ao aceitar convite.",
+  },
+  headers: {
+    home: "vamos trabalhar de forma mais inteligente hoje.",
+    projects: "— acompanhe seu progresso.",
+    notes: "— capture seus pensamentos.",
+    calendar: "— planeje sua agenda.",
+    notifications: "— mantenha-se atualizado.",
+    settings: "— gerencie seu perfil e experiência no app.",
+    workspace: "— colabore com sua equipe.",
+    plans: "— monitore sua assinatura e métricas de uso.",
+    security: "— gerencie suas chaves de API e tokens.",
+    integrations: "— conecte suas ferramentas.",
+    preferences: "— personalize sua experiência.",
+    weaveAi: "— seu assistente inteligente.",
   },
 };
 export default ptBR;

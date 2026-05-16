@@ -52,6 +52,12 @@ const esES: TranslationKeys = {
     areas: "Áreas",
     weaveAiOpenFull: "Abrir a pantalla completa",
     weaveFlow: "Weave Flow",
+    settingsLabel: "Configuración",
+    closeMenu: "Cerrar menú",
+    collapseItem: "Contraer {label}",
+    expandItem: "Expandir {label}",
+    breadcrumbNav: "Navegación estructural",
+    breadcrumbHome: "Inicio",
   },
 
   home: {
@@ -97,6 +103,13 @@ const esES: TranslationKeys = {
     aboutSystem: "Acerca del Sistema",
     logout: "Cerrar sesión",
     closeMenu: "Cerrar Menú",
+    mainNavigation: "Navegación principal",
+    openSearch: "Abrir búsqueda",
+    searchSystem: "Buscar en el sistema",
+    openUserMenu: "Abrir menú del usuario",
+    userMenuNav: "Menú del usuario",
+    avatarOf: "Avatar de {name}",
+    logoOf: "Logo de {name}",
     searchModal: {
       placeHome: "Inicio",
       placeExplore: "Explorar",
@@ -280,6 +293,20 @@ const esES: TranslationKeys = {
     successCreatedLoginElse:
       "Cuenta creada e invitación aceptada. Entra con tu usuario y contraseña en la siguiente pantalla.",
     acceptError: "Error al aceptar la invitación.",
+  },
+  headers: {
+    home: "trabajemos de forma más inteligente hoy.",
+    projects: "— sigue tu progreso.",
+    notes: "— captura teus pensamentos.",
+    calendar: "— planifica tu agenda.",
+    notifications: "— mantente actualizado.",
+    settings: "— gestiona tu perfil y experiencia en la aplicación.",
+    workspace: "— colabora con tu equipo.",
+    plans: "— monitoriza tu suscripción e indicadores de uso.",
+    security: "— gestiona tus claves de API e tokens.",
+    integrations: "— conecta tus herramientas.",
+    preferences: "— personaliza tu experiencia.",
+    weaveAi: "— tu asistente inteligente.",
   },
 };
 export default esES;

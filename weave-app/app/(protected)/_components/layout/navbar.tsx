@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { Fredoka } from "next/font/google";
-import { Menu, X, Sun, Moon, Search, CircleUserRound, MessageSquare } from "lucide-react";
+import { Menu, X, Sun, Moon, Search, CircleUserRound, Bell } from "lucide-react";
 
 import { useAuth, type User } from "@/app/_contexts/auth-context";
 import { useTheme } from "@/app/_contexts/theme-context";
@@ -79,6 +79,7 @@ const formatters = {
 // --- Sub-componentes ---
 
 const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "xs" | "sm" | "md" | "lg" }) => {
+  const { t } = useLanguage();
   const sizeClasses = {
     xs: "h-[26px] w-[26px]",
     sm: "h-8 w-8",
@@ -92,12 +93,12 @@ const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "xs" | "sm" | "m
         sizeClasses[size],
         "relative flex-shrink-0 overflow-hidden rounded-full border border-gray-200/70 bg-gray-100 transition-all duration-300 dark:border-gray-700 dark:bg-gray-800"
       )}
-      aria-label={`Avatar de ${user?.user_name || "Usuário"}`}
+      aria-label={t.navbar.avatarOf.replace("{name}", user?.user_name || t.common.user)}
     >
       {user?.avatar_url ? (
         <Image
           src={user.avatar_url}
-          alt={`Avatar de ${user.user_name}`}
+          alt={t.navbar.avatarOf.replace("{name}", user.user_name || t.common.user)}
           fill
           className="object-cover rounded-full"
           sizes={size === "xs" ? "28px" : size === "sm" ? "32px" : size === "md" ? "40px" : "48px"}
@@ -119,7 +120,6 @@ const NotificationsLink = ({
 }: {
   ariaLabel: string;
   className?: string;
-  /** `mobile` = sidebar-like; `desktop` = gray toolbar next to search. */
   surface?: "mobile" | "desktop";
 }) => {
   const { unreadCount } = useNotification();
@@ -128,15 +128,17 @@ const NotificationsLink = ({
     <Link
       href="/notifications"
       className={cn(
-        surface === "desktop" ? navIconDesktopClass : navIconMobileShellClass,
-        "relative",
+        surface === "desktop" ? navbarElevatedSurfaceClass : navIconMobileShellClass,
+        "relative flex items-center justify-center border-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50",
+        surface === "desktop" ? "h-4 w-4 p-1 shadow-sm rounded-full text-gray-700 dark:text-white md:h-6 md:w-6" : "",
         className
       )}
       aria-label={ariaLabel}
+      title={ariaLabel}
     >
-      <MessageSquare className="h-4 w-4" strokeWidth={1.75} />
+      <Bell className="h-4 w-4" strokeWidth={1.75} />
       {unreadCount > 0 && (
-        <span className="bg-brand-primary-500 absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full border-2 border-white px-1 text-[8px] font-bold text-white dark:border-surface-dark-border-strong">
+        <span className="bg-brand-primary-500 absolute -top-0.5 -right-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full border-2 border-white px-0.5 text-[7px] font-bold text-white dark:border-surface-dark-border-strong md:h-4 md:min-w-[16px] md:text-[8px]">
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}
@@ -146,15 +148,13 @@ const NotificationsLink = ({
 
 interface UserMenuProps {
   user: User;
-  theme: string;
   t: ReturnType<typeof useLanguage>["t"];
   onClose: () => void;
-  onToggleTheme: () => void;
   onLogout: () => void;
 }
 
-const UserMenuContent = ({ user, theme, t, onClose, onToggleTheme, onLogout }: UserMenuProps) => (
-  <nav aria-label="Menu do usuário" className="flex flex-col overflow-hidden">
+const UserMenuContent = ({ user, t, onClose, onLogout }: UserMenuProps) => (
+  <nav aria-label={t.navbar.userMenuNav} className="flex flex-col overflow-hidden">
     <header className="flex items-center gap-3 border-b border-gray-200 bg-brand-yellow/5 px-4 py-3 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
       <UserAvatar user={user} size="md" />
       <div className="min-w-0 flex-1">
@@ -178,20 +178,7 @@ const UserMenuContent = ({ user, theme, t, onClose, onToggleTheme, onLogout }: U
         </Link>
       </li>
 
-      <li>
-        <button
-          onClick={onToggleTheme}
-          className="flex w-full items-center justify-between rounded-md px-4 py-2.5 text-left text-xs font-medium text-gray-900 hover:bg-black/5 dark:text-gray-100 dark:hover:bg-white/5"
-        >
-          <div className="flex items-center gap-2">
-            {theme === "light" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
-            <span>{t.navbar.theme}</span>
-          </div>
-          <span className="rounded-md bg-black/5 px-2 py-0.5 text-[10px] font-bold tracking-wider text-gray-600 uppercase dark:bg-white/10 dark:text-gray-400">
-            {theme === "light" ? t.navbar.light : t.navbar.dark}
-          </span>
-        </button>
-      </li>
+
 
       <li>
         <a
@@ -265,10 +252,10 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
   return (
     <>
-      <header className="relative z-40 w-full shrink-0 bg-neutral-100 print:hidden dark:bg-[#1d1d1b]">
+      <header className="relative z-40 w-full shrink-0 print:hidden">
         <nav
           className="mx-auto w-full max-w-[1920px] px-1.5 pt-1 pb-0.5 sm:px-2 lg:px-2 lg:py-0 lg:pb-0"
-          aria-label="Navegação principal"
+          aria-label={t.navbar.mainNavigation}
         >
           <div
             className={cn(
@@ -284,7 +271,8 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                   type="button"
                   onClick={onToggleSidebar}
                   className={cn(navIconMobileShellClass, "lg:hidden")}
-                  aria-label="Abrir menu lateral"
+                  aria-label={t.nav.openSidebar}
+                  title={t.nav.openSidebar}
                 >
                   <Menu className="h-4 w-4" strokeWidth={1.75} />
                 </button>
@@ -295,22 +283,22 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 className="flex min-w-0 items-center"
                 aria-label={t.nav.backToHome}
               >
-                {/* <span
+                <span
                   className={cn(
                     "truncate text-sm font-bold text-brand-yellow sm:text-base",
                     fredoka.className
                   )}
                 >
-                  Weave Notes
+                  Weave
                 </span>
-                */}
-                <Image
+                {/* <Image
                   src="/weave-notes-nobg.png"
                   alt="Weave Notes"
                   width={24}
                   height={24}
                   className="object-contain"
                 />
+                */}
               </Link>
 
               {user?.org_id && (
@@ -323,7 +311,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                     <figure className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded">
                       <Image
                         src={user.org_logo_url || "/default-org-icon.png"}
-                        alt={`Logo da ${user.org_name}`}
+                        alt={t.navbar.logoOf.replace("{name}", user.org_name || "")}
                         width={16}
                         height={16}
                         className="object-contain"
@@ -348,7 +336,8 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                       "group flex w-full max-w-[480px] items-center gap-2.5 rounded-full border-0 px-3 py-1 transition-all",
                       navbarElevatedSurfaceClass
                     )}
-                    aria-label="Pesquisar no sistema"
+                    aria-label={t.navbar.searchSystem}
+                    title={t.navbar.searchSystem}
                   >
                     <Search
                       className="h-3.5 w-3.5 text-gray-500 transition-colors group-hover:text-brand-yellow dark:text-gray-500"
@@ -376,12 +365,26 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                     type="button"
                     onClick={() => setIsSearchOpen(true)}
                     className={cn(navIconMobileShellClass, "md:hidden")}
-                    aria-label="Abrir busca"
+                    aria-label={t.navbar.openSearch}
+                    title={t.navbar.openSearch}
                   >
                     <Search className="h-4 w-4" strokeWidth={1.75} />
                   </button>
 
                   <NotificationsLink ariaLabel={t.nav.notifications} className="md:hidden" surface="mobile" />
+
+                  <button
+                    type="button"
+                    onClick={handleThemeToggle}
+                    className={cn(
+                      navbarElevatedSurfaceClass,
+                      "flex h-7 w-7 items-center justify-center rounded-full border-0 text-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50 dark:text-white md:h-8 md:w-8"
+                    )}
+                    aria-label={t.navbar.theme}
+                    title={t.navbar.theme}
+                  >
+                    {theme === "light" ? <Moon size={14} /> : <Sun size={14} />}
+                  </button>
 
                   <div className="relative self-center" ref={desktopMenuRef}>
                     <button
@@ -389,7 +392,8 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                       onClick={() => setIsMenuOpen((prev) => !prev)}
                       aria-expanded={isMenuOpen}
                       aria-haspopup="menu"
-                      aria-label="Abrir menu do usuário"
+                      aria-label={t.navbar.openUserMenu}
+                      title={t.navbar.openUserMenu}
                       className={cn(
                         navbarElevatedSurfaceClass,
                         "flex shrink-0 items-center justify-center border-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50",
@@ -415,10 +419,8 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                         <div className="overflow-hidden rounded-md border border-gray-200/60 bg-white shadow-2xl ring-1 ring-black/5 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
                           <UserMenuContent
                             user={user}
-                            theme={theme}
                             t={t}
                             onClose={() => setIsMenuOpen(false)}
-                            onToggleTheme={handleThemeToggle}
                             onLogout={logout}
                           />
                         </div>
@@ -453,10 +455,8 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               <div className="max-h-[75vh] overflow-y-auto">
                 <UserMenuContent
                   user={user!}
-                  theme={theme}
                   t={t}
                   onClose={() => setIsMenuOpen(false)}
-                  onToggleTheme={handleThemeToggle}
                   onLogout={logout}
                 />
               </div>

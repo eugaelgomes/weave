@@ -55,7 +55,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-neutral-100 dark:bg-[#1d1d1b]">
+    <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-[#F3F3F3] dark:bg-[#1d1d1b]">
       {/* Desktop: full-width navbar above sidebar + main so sidebar height respects the bar. */}
       {isLg ? (
         <div className="shrink-0">
@@ -68,7 +68,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
           <div
             className={`hidden min-h-0 flex-col ${
               isCollapsed ? "lg:w-16" : "lg:w-[170px]"
-            } transition-all duration-300 lg:flex`}
+            } transition-[width] duration-300 ease-out lg:flex`}
           >
             <Sidebar
               onLinkClick={closeSidebar}
