@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { AlertTriangle, Download, Trash2, Loader2, X } from "lucide-react";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useBackup } from "@/app/_contexts/backup-context";
+import { SettingsPageShell } from "@/app/(protected)/settings/_components/settings-page-shell";
 
 // --- Sub-componente Interno de Modal (Ajustado para a nova escala) ---
 const ConfirmationModal = ({
@@ -236,19 +237,23 @@ export default function DangerZonePage() {
   };
 
   return (
-    <div className="flex w-full flex-col gap-4 p-4">
-      {error ? (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400">
-          {error}
+    <SettingsPageShell description="Ações sensíveis da conta e exportação de dados.">
+      <div className="overflow-hidden">
+        <div className="flex flex-col gap-4 p-2">
+          {error ? (
+            <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400">
+              {error}
+            </div>
+          ) : null}
+          <SettingsDangerZone
+            handleCreateBackup={handleCreateBackup}
+            backupLoading={backupLoading}
+            backupMessage={backupMessage}
+            backupError={backupError}
+            handleDeleteAccount={handleDeleteAccount}
+          />
         </div>
-      ) : null}
-      <SettingsDangerZone
-        handleCreateBackup={handleCreateBackup}
-        backupLoading={backupLoading}
-        backupMessage={backupMessage}
-        backupError={backupError}
-        handleDeleteAccount={handleDeleteAccount}
-      />
-    </div>
+      </div>
+    </SettingsPageShell>
   );
 }

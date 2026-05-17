@@ -26,6 +26,10 @@ const { hasPlusAliasInLocalPart } = require("@/utils/data/email-rules");
 const {
   ORG_ROLES,
 } = require("@/modules/organizations/organization-role-policy");
+const {
+  buildUniqueConflictPayload,
+  getUniqueFieldFromPgError,
+} = require("@/modules/users/utils/unique-conflicts");
 
 const PROJECT_MEMBER_ROLES = [
   "PROJECT_MANAGER",
@@ -520,12 +524,12 @@ class OrganizationMembersController extends OrganizationsBaseController {
           });
         }
 
-        const usernameCheck = await SearchUsersRepository.findByUsernameOrEmail(
-          username,
-          ""
-        );
-        if (usernameCheck.some((u) => u.username === username)) {
-          return res.status(400).json({ error: "Username is already in use" });
+        const usernameAvailability =
+          await SearchUsersRepository.checkUniqueAvailability({
+            username,
+          });
+        if (!usernameAvailability.username.available) {
+          return res.status(409).json(buildUniqueConflictPayload("username"));
         }
 
         const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
@@ -647,6 +651,10 @@ class OrganizationMembersController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("Error accepting invite:", error);
+      const uniqueField = getUniqueFieldFromPgError(error);
+      if (uniqueField) {
+        return res.status(409).json(buildUniqueConflictPayload(uniqueField));
+      }
       res.status(500).json({ error: "Error accepting invite" });
     }
   }

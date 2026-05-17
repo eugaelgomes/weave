@@ -12,6 +12,12 @@ const {
 } = require("@/services/email/templates/reset-password");
 const updateProfileLogs = require("@/utils/system_logs/update_profile-logs");
 const { normalizeAppPreferences } = require("@/modules/users/normalize");
+const {
+  buildUniqueConflictPayload,
+  normalizeEmail,
+  normalizeUsername,
+  normalizePhoneNumber,
+} = require("@/modules/users/utils/unique-conflicts");
 
 /**
  * @typedef {import('express').Request & {
@@ -244,6 +250,35 @@ class UserDataController extends BaseController {
   }
 
   /**
+   * Checa disponibilidade de `email`, `username` e `phone_number` para o usuário autenticado.
+   *
+   * @param {UserDataRequest} req
+   * @param {import('express').Response} res
+   * @returns {Promise<void>}
+   */
+  async checkAvailability(req, res) {
+    try {
+      this._validateAuthentication(req);
+
+      const email = normalizeEmail(req.query?.email);
+      const username = normalizeUsername(req.query?.username);
+      const phone_number = normalizePhoneNumber(req.query?.phone_number);
+
+      const availability = await SearchUsersRepository.checkUniqueAvailability(
+        { email, username, phone_number },
+        { excludeUserId: req.user.userId }
+      );
+
+      return res.status(200).json({
+        availability,
+      });
+    } catch (error) {
+      console.error("Error checking user unique availability:", error);
+      this._handleError(error, res);
+    }
+  }
+
+  /**
    * Atualiza perfil, preferências, e-mail (com fluxo de validação), senha e avatar opcional (`profilePicture`).
    *
    * @param {UserDataRequest} req
@@ -325,15 +360,16 @@ class UserDataController extends BaseController {
 
       if (
         email !== undefined &&
-        email !== currentUser.email &&
+        normalizeEmail(email) !== normalizeEmail(currentUser.email) &&
         !emailValidationToken
       ) {
-        const emailExists = await SearchUsersRepository.findByUsernameOrEmail(
-          "",
-          email
+        const emailAvailability = await SearchUsersRepository.checkUniqueAvailability(
+          { email },
+          { excludeUserId: req.user.userId }
         );
-        if (emailExists.length > 0)
-          return res.status(400).json({ message: "Email already in use" });
+        if (!emailAvailability.email.available) {
+          return res.status(409).json(buildUniqueConflictPayload("email"));
+        }
 
         const token = crypto.randomBytes(10).toString("hex");
         await UserTokensRepository.deactivateOldEmailTokens(req.user.userId);
@@ -378,12 +414,31 @@ class UserDataController extends BaseController {
         updates.user_preference = normalizeAppPreferences(parsed);
       }
 
-      if (username !== undefined && username !== currentUser.username) {
-        const usernameExists =
-          await SearchUsersRepository.findByUsernameOrEmail(username, "");
-        if (usernameExists.length > 0)
-          return res.status(400).json({ message: "Username already in use" });
+      if (
+        username !== undefined &&
+        normalizeUsername(username) !== normalizeUsername(currentUser.username)
+      ) {
+        const usernameAvailability = await SearchUsersRepository.checkUniqueAvailability(
+          { username },
+          { excludeUserId: req.user.userId }
+        );
+        if (!usernameAvailability.username.available) {
+          return res.status(409).json(buildUniqueConflictPayload("username"));
+        }
         updates.username = username;
+      }
+
+      if (
+        phone_number !== undefined &&
+        normalizePhoneNumber(phone_number) !== normalizePhoneNumber(currentUser.phone_number)
+      ) {
+        const phoneAvailability = await SearchUsersRepository.checkUniqueAvailability(
+          { phone_number },
+          { excludeUserId: req.user.userId }
+        );
+        if (!phoneAvailability.phone_number.available) {
+          return res.status(409).json(buildUniqueConflictPayload("phone_number"));
+        }
       }
 
       let updatedUser = currentUser;

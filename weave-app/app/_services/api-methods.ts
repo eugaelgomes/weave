@@ -69,6 +69,7 @@ export const API_ENDPOINTS = {
 
   // User Management
   UPDATE_PROFILE: "/users/me/update-profile",
+  CHECK_USER_AVAILABILITY: "/users/check-availability",
   UPDATE_PASSWORD: "/users/me/update-password",
   DELETE_ACCOUNT: "/users/delete-my-account",
   CREATE_ACCOUNT: "/users/create-account",
@@ -76,6 +77,7 @@ export const API_ENDPOINTS = {
 
   /** Lean plan + usage + gates for the authenticated web session */
   PLANS_ME: "/plans/me",
+  PLANS_USAGE_HISTORY: "/plans/usage-history",
 
   // Password Recovery
   FORGOT_PASSWORD: "/password/forgot-password",

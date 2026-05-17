@@ -51,6 +51,15 @@ export interface LoginResponse {
   token: string;
 }
 
+export type UserUniqueField = "email" | "username" | "phone_number";
+
+export type UserFieldAvailability = {
+  available: boolean;
+  reason?: string;
+};
+
+export type UserAvailabilityMap = Record<UserUniqueField, UserFieldAvailability>;
+
 const normalizeStorageUrl = (value?: string | null): string => {
   if (!value) return "";
   return getStorageUrl(value);
@@ -426,6 +435,36 @@ export const updateUserData = async (
     private_profile: data.user.user_settings.private_profile ?? undefined,
     auth_with_google: data.user.user_settings.auth_with_google ?? undefined,
     usage_preference: data.user.usage_preference || {},
+  };
+};
+
+export const checkUserAvailability = async (
+  params: Partial<Record<UserUniqueField, string>>
+): Promise<UserAvailabilityMap> => {
+  const searchParams = new URLSearchParams();
+
+  if (typeof params.email === "string" && params.email.trim()) {
+    searchParams.set("email", params.email.trim());
+  }
+  if (typeof params.username === "string" && params.username.trim()) {
+    searchParams.set("username", params.username.trim());
+  }
+  if (typeof params.phone_number === "string" && params.phone_number.trim()) {
+    searchParams.set("phone_number", params.phone_number.trim());
+  }
+
+  const query = searchParams.toString();
+  const endpoint = query
+    ? `${API_ENDPOINTS.CHECK_USER_AVAILABILITY}?${query}`
+    : API_ENDPOINTS.CHECK_USER_AVAILABILITY;
+
+  const response = await apiClient.get(endpoint);
+  const data = await handleResponse<{ availability: Partial<UserAvailabilityMap> }>(response);
+
+  return {
+    email: data.availability.email ?? { available: true },
+    username: data.availability.username ?? { available: true },
+    phone_number: data.availability.phone_number ?? { available: true },
   };
 };
 

@@ -1,0 +1,106 @@
+/**
+ * @typedef {"email"|"username"|"phone_number"} UniqueUserField
+ */
+
+/**
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+const isNonEmptyString = (value) => typeof value === "string" && value.trim().length > 0;
+
+/**
+ * @param {UniqueUserField} field
+ * @returns {string}
+ */
+const getUniqueFieldMessage = (field) => {
+  if (field === "email") return "Email already in use";
+  if (field === "username") return "Username already in use";
+  return "Phone number already in use";
+};
+
+/**
+ * @param {UniqueUserField} field
+ * @returns {{code: string, field: UniqueUserField, message: string, conflicts: Record<UniqueUserField, {available: boolean, reason: string}>}}
+ */
+const buildUniqueConflictPayload = (field) => ({
+  code: "USER_UNIQUE_CONFLICT",
+  field,
+  message: getUniqueFieldMessage(field),
+  conflicts: {
+    [field]: {
+      available: false,
+      reason: "already_in_use",
+    },
+  },
+});
+
+/**
+ * @param {unknown} rawValue
+ * @returns {string|null}
+ */
+const normalizeEmail = (rawValue) => {
+  if (!isNonEmptyString(rawValue)) return null;
+  return rawValue.trim().toLowerCase();
+};
+
+/**
+ * @param {unknown} rawValue
+ * @returns {string|null}
+ */
+const normalizeUsername = (rawValue) => {
+  if (!isNonEmptyString(rawValue)) return null;
+  return rawValue.trim();
+};
+
+/**
+ * @param {unknown} rawValue
+ * @returns {string|null}
+ */
+const normalizePhoneNumber = (rawValue) => {
+  if (!isNonEmptyString(rawValue)) return null;
+  return rawValue.trim();
+};
+
+/**
+ * @param {Error & { code?: string, constraint?: string, detail?: string }} error
+ * @returns {UniqueUserField|null}
+ */
+const getUniqueFieldFromPgError = (error) => {
+  if (!error || error.code !== "23505") return null;
+
+  const constraint = String(error.constraint || "").toLowerCase();
+  const detail = String(error.detail || "").toLowerCase();
+
+  if (
+    constraint.includes("users_email_key") ||
+    constraint.includes("uq_users_email_lower") ||
+    detail.includes("(email)") ||
+    detail.includes("lower(email)")
+  ) {
+    return "email";
+  }
+
+  if (
+    constraint.includes("users_username_key") ||
+    detail.includes("(username)")
+  ) {
+    return "username";
+  }
+
+  if (
+    constraint.includes("phone_number") ||
+    detail.includes("(phone_number)")
+  ) {
+    return "phone_number";
+  }
+
+  return null;
+};
+
+module.exports = {
+  buildUniqueConflictPayload,
+  normalizeEmail,
+  normalizeUsername,
+  normalizePhoneNumber,
+  getUniqueFieldFromPgError,
+};

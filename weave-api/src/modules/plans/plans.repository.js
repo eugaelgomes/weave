@@ -272,6 +272,40 @@ class PlansRepository {
     return results[0];
   }
 
+  /**
+   * Resolve individual user usage (subscriber=user) without organization fallback.
+   *
+   * @param {string} userId
+   * @returns {Promise<Record<string, any> | null>}
+   */
+  async getIndividualUserPlanUsage(userId) {
+    const query = `
+      SELECT
+        pu.id,
+        pu.plan_id,
+        pu.client_type,
+        pu.user_id,
+        pu.organization_id,
+        pu.usage_details,
+        pu.lifetime_stats,
+        pu.last_reset_at,
+        pu.created_at,
+        pu.updated_at,
+        pu.subscriber_type,
+        pu.subscriber_id,
+        pu.applied_plan_snapshot,
+        pu.applied_plan_version,
+        p.name AS plan_name
+      FROM plan_usages pu
+      LEFT JOIN plans p ON p.plan_id = pu.plan_id
+      WHERE pu.subscriber_type = 'user'
+        AND pu.subscriber_id = $1
+      LIMIT 1
+    `;
+    const results = await executeQuery(query, [userId]);
+    return results[0] || null;
+  }
+
   // ==========================================
   // ESCRITA E INICIALIZAÇÃO (WRITE)
   // ==========================================
@@ -531,6 +565,54 @@ class PlansRepository {
       LIMIT $2`;
 
     return await executeQuery(query, [userId, limit]);
+  }
+
+  /**
+   * Fetches detailed monthly usage history for individual users.
+   *
+   * @param {object} params
+   * @param {string} params.userId
+   * @param {number} params.limit
+   * @param {number} params.offset
+   * @param {string | null} params.from
+   * @param {string | null} params.to
+   * @returns {Promise<Array<Record<string, any>>>}
+   */
+  async getIndividualUsageHistoryDetailed({
+    userId,
+    limit = 6,
+    offset = 0,
+    from = null,
+    to = null,
+  }) {
+    const query = `
+      SELECT
+        h.id,
+        h.user_id,
+        h.organization_id,
+        h.plan_id,
+        p.name AS plan_name,
+        h.period_start,
+        h.period_end,
+        h.final_usage_details,
+        h.total_notes_created,
+        h.total_projects_created,
+        h.total_ai_messages,
+        h.total_storage_mb,
+        h.total_exports,
+        h.created_at
+      FROM plan_usage_history h
+      LEFT JOIN plans p ON p.plan_id = h.plan_id
+      WHERE h.user_id = $1
+        AND h.organization_id IS NULL
+        AND ($2::timestamptz IS NULL OR h.period_start >= $2::timestamptz)
+        AND ($3::timestamptz IS NULL OR h.period_end <= $3::timestamptz)
+      ORDER BY h.period_end DESC
+      OFFSET $4
+      LIMIT $5
+    `;
+
+    return await executeQuery(query, [userId, from, to, offset, limit]);
   }
 
   async assignPlanToUser(userId, planId) {

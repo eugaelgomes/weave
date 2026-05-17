@@ -1,4 +1,8 @@
 const SigninRepository = require("@/modules/authentication/repositories/signin.repository");
+const {
+  buildUniqueConflictPayload,
+  getUniqueFieldFromPgError,
+} = require("@/modules/users/utils/unique-conflicts");
 
 /**
  * Controller base dos módulos de usuário: utilitários de data, fuso horário e erros HTTP.
@@ -34,6 +38,11 @@ class BaseController {
     console.error(`[Controller Error]: ${error.message}`, {
       stack: error.stack,
     });
+
+    const uniqueField = getUniqueFieldFromPgError(error);
+    if (uniqueField) {
+      return res.status(409).json(buildUniqueConflictPayload(uniqueField));
+    }
 
     if (
       error.message.includes("obrigatório") ||

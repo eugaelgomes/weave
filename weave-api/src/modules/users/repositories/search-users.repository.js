@@ -1,5 +1,10 @@
 const BaseRepository = require("./base.repository");
 const { executeQuery } = require("@/database/connection");
+const {
+  normalizeEmail,
+  normalizeUsername,
+  normalizePhoneNumber,
+} = require("@/modules/users/utils/unique-conflicts");
 
 /**
  * Consultas de leitura e busca na tabela `users` (e joins leves).
@@ -26,6 +31,76 @@ class SearchUsersRepository extends BaseRepository {
   async findByUsernameOrEmail(username, email) {
     const query = `SELECT * FROM users WHERE (email = $1 OR username = $2) AND deleted = false`;
     return await executeQuery(query, [email, username]);
+  }
+
+  /**
+   * Verifica disponibilidade de campos únicos em `users`.
+   *
+   * @param {{ email?: unknown, username?: unknown, phone_number?: unknown }} fields
+   * @param {{ excludeUserId?: string|number }} [options]
+   * @returns {Promise<{ email: { available: boolean, reason?: string }, username: { available: boolean, reason?: string }, phone_number: { available: boolean, reason?: string } }>}
+   */
+  async checkUniqueAvailability(fields, options = {}) {
+    const email = normalizeEmail(fields.email);
+    const username = normalizeUsername(fields.username);
+    const phoneNumber = normalizePhoneNumber(fields.phone_number);
+
+    const availability = {
+      email: { available: true },
+      username: { available: true },
+      phone_number: { available: true },
+    };
+
+    const conditions = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (email) {
+      conditions.push(`LOWER(email) = LOWER($${paramIndex++})`);
+      values.push(email);
+    }
+    if (username) {
+      conditions.push(`username = $${paramIndex++}`);
+      values.push(username);
+    }
+    if (phoneNumber) {
+      conditions.push(`phone_number = $${paramIndex++}`);
+      values.push(phoneNumber);
+    }
+
+    if (conditions.length === 0) {
+      return availability;
+    }
+
+    let excludeClause = "";
+    if (options.excludeUserId) {
+      excludeClause = ` AND user_id <> $${paramIndex++}`;
+      values.push(options.excludeUserId);
+    }
+
+    const query = `
+      SELECT user_id, email, username, phone_number
+      FROM users
+      WHERE deleted = false
+        AND (${conditions.join(" OR ")})
+        ${excludeClause}
+    `;
+
+    const existingUsers = await executeQuery(query, values);
+
+    for (const user of existingUsers) {
+      if (email && normalizeEmail(user.email) === email) {
+        availability.email = { available: false, reason: "already_in_use" };
+      }
+      if (username && normalizeUsername(user.username) === username) {
+        availability.username = { available: false, reason: "already_in_use" };
+      }
+      if (phoneNumber && normalizePhoneNumber(user.phone_number) === phoneNumber) {
+        availability.phone_number = { available: false, reason: "already_in_use" };
+      }
+    }
+
+    return availability;
   }
 
   /**

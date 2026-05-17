@@ -1,8 +1,20 @@
 import type { User } from "@/app/_services/authentication/auth.schema";
 import { apiClient, API_ENDPOINTS, handleResponse } from "@/app/_services/api-methods";
 import { PlanMeResponseSchema, type PlanMeResponse } from "./plan-usage.schema";
+import {
+  PlanUsageHistoryResponseSchema,
+  type PlanUsageHistoryResponse,
+} from "./plan-usage-history.schema";
 
 export type { PlanMeResponse, PlanGate } from "./plan-usage.schema";
+export type {
+  PlanUsageCurrentPeriod,
+  PlanUsageHistoryItem,
+  PlanUsageHistoryResponse,
+  UsageComparison,
+  UsageMetric,
+  UsageMetrics,
+} from "./plan-usage-history.schema";
 
 function mergeUsageDetails(
   prev: NonNullable<User["usage_details"]>,
@@ -79,6 +91,31 @@ export async function fetchPlanUsageMe(): Promise<PlanMeResponse> {
   const response = await apiClient.get(API_ENDPOINTS.PLANS_ME);
   const raw = await handleResponse<unknown>(response);
   return PlanMeResponseSchema.parse(raw);
+}
+
+export type FetchPlanUsageHistoryParams = {
+  limit?: number;
+  offset?: number;
+  from?: string;
+  to?: string;
+};
+
+export async function fetchPlanUsageHistory(
+  params: FetchPlanUsageHistoryParams = {}
+): Promise<PlanUsageHistoryResponse> {
+  const query = new URLSearchParams();
+  if (typeof params.limit === "number") query.set("limit", String(params.limit));
+  if (typeof params.offset === "number") query.set("offset", String(params.offset));
+  if (params.from) query.set("from", params.from);
+  if (params.to) query.set("to", params.to);
+
+  const endpoint = query.size
+    ? `${API_ENDPOINTS.PLANS_USAGE_HISTORY}?${query.toString()}`
+    : API_ENDPOINTS.PLANS_USAGE_HISTORY;
+
+  const response = await apiClient.get(endpoint);
+  const raw = await handleResponse<unknown>(response);
+  return PlanUsageHistoryResponseSchema.parse(raw);
 }
 
 export { mergeUsageDetails };

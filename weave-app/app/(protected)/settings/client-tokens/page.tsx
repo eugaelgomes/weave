@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { SettingsPageShell } from "@/app/(protected)/settings/_components/settings-page-shell";
 
 
 
@@ -618,8 +619,12 @@ export function SettingsApiTokens() {
 
 export default function ClientTokensPage() {
   return (
-    <div className="flex w-full flex-col gap-4 p-4">
-      <SettingsApiTokens />
-    </div>
+    <SettingsPageShell description="Gerencie seus tokens de cliente e permissões de acesso.">
+      <div className="overflow-hidden">
+        <div className="p-2">
+          <SettingsApiTokens />
+        </div>
+      </div>
+    </SettingsPageShell>
   );
 }

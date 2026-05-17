@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { formatDate, formatRoleName } from "@/app/_utils/format";
 import { useAuth } from "@/app/_contexts/auth-context";
+import { SettingsPageShell } from "@/app/(protected)/settings/_components/settings-page-shell";
 
 export default function WorkspaceSettingsPage() {
   const { user } = useAuth();
@@ -24,16 +25,9 @@ export default function WorkspaceSettingsPage() {
     "flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] text-neutral-500 dark:text-neutral-400";
 
   return (
-    <>
-      <div className="overflow-hidden rounded-md border border-neutral-200 bg-neutral-100/50 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <div className="flex items-center justify-between border-b border-neutral-200/80 bg-white/50 px-4 py-3 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
-          <h3 className="flex items-center gap-2 text-[12px] font-bold tracking-[0.15em] text-neutral-600 dark:text-neutral-300">
-            <LayoutTemplate size={14} className="text-amber-500" />
-            Workspace
-          </h3>
-        </div>
-
-        <div className="p-4">
+    <SettingsPageShell description="Visualize informações do seu workspace e funções de membro.">
+      <div className="overflow-hidden">
+        <div className="p-2">
           <div className={cardBase}>
             <div className={headerBase}>
               <h3 className={headerTitle}>
@@ -108,6 +102,6 @@ export default function WorkspaceSettingsPage() {
           </div>
         </div>
       </div>
-    </>
+    </SettingsPageShell>
   );
 }

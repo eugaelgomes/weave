@@ -37,6 +37,13 @@ router.get(
   UserDataController.getProfile.bind(UserDataController)
 );
 
+router.get(
+  "/check-availability",
+  verifyToken,
+  standardTrafficLimiter,
+  UserDataController.checkAvailability.bind(UserDataController)
+);
+
 router.put(
   "/me/update-profile",
   verifyToken,

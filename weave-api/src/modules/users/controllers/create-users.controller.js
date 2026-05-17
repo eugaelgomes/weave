@@ -12,6 +12,9 @@ const SearchUsersRepository = require("@/modules/users/repositories/search-users
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 const { welcome_message } = require("@/services/email/templates/welcome-mail");
 const PlansManager = require("@/services/plans/manager");
+const {
+  buildUniqueConflictPayload,
+} = require("@/modules/users/utils/unique-conflicts");
 
 const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
 
@@ -103,31 +106,18 @@ class CreateUsersController extends BaseController {
         });
       }
 
-      const existingUsers = await SearchUsersRepository.findByUsernameOrEmail(
-        username,
-        email
+      const availability = await SearchUsersRepository.checkUniqueAvailability(
+        { username, email, phone_number }
       );
 
-      if (existingUsers.length > 0) {
-        const emailExists = existingUsers.some((u) => u.email === email);
-
-        const userExists = existingUsers.some(
-          (u) => u.username === username || u.usuario === username
-        );
-
-        if (emailExists && userExists)
-          return res.status(409).json({
-            status: "failed",
-            message: "User and email already exist!",
-          });
-        if (emailExists)
-          return res
-            .status(409)
-            .json({ status: "failed", message: "Email is already in use!" });
-        if (userExists)
-          return res
-            .status(409)
-            .json({ status: "failed", message: "Username is already in use!" });
+      if (!availability.email.available) {
+        return res.status(409).json(buildUniqueConflictPayload("email"));
+      }
+      if (!availability.username.available) {
+        return res.status(409).json(buildUniqueConflictPayload("username"));
+      }
+      if (!availability.phone_number.available) {
+        return res.status(409).json(buildUniqueConflictPayload("phone_number"));
       }
 
       const hashedPassword = await bcrypt.hash(password, saltRounds);

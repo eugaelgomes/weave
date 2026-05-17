@@ -9,6 +9,8 @@ import {
   activateAccountService,
   updateUserData,
   updatePassword,
+  type UserUniqueField,
+  type UserFieldAvailability,
   requestPasswordRecovery,
   resetPassword,
   deleteUser,
@@ -68,7 +70,11 @@ type AuthContextType = {
   activateAccount: (
     payload: ActivateAccountPayload
   ) => Promise<{ success: boolean; message?: string }>;
-  updateUser: (userData: Partial<User>) => Promise<{ success: boolean; message?: string }>;
+  updateUser: (userData: Partial<User>) => Promise<{
+    success: boolean;
+    message?: string;
+    conflicts?: Partial<Record<UserUniqueField, UserFieldAvailability>>;
+  }>;
   updateUserPassword: (
     currentPassword: string,
     newPassword: string
@@ -301,7 +307,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return { success: true };
     } catch (error) {
-      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+      let conflicts: Partial<Record<UserUniqueField, UserFieldAvailability>> | undefined;
+
+      if (error instanceof ApiError && error.data && typeof error.data === "object") {
+        const data = error.data as {
+          code?: unknown;
+          conflicts?: unknown;
+        };
+
+        if (data.code === "USER_UNIQUE_CONFLICT" && data.conflicts) {
+          const rawConflicts = data.conflicts as Record<string, UserFieldAvailability>;
+          conflicts = {};
+          if (rawConflicts.email) conflicts.email = rawConflicts.email;
+          if (rawConflicts.username) conflicts.username = rawConflicts.username;
+          if (rawConflicts.phone_number) conflicts.phone_number = rawConflicts.phone_number;
+        }
+      }
+
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Unknown error",
+        conflicts,
+      };
     }
   };
 

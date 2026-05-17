@@ -3,6 +3,7 @@ const express = require("express");
 
 const PlansManager = require("@/services/plans/manager");
 const PlansMeController = require("@/modules/plans/plans-me.controller");
+const PlansUsageHistoryController = require("@/modules/plans/plans-usage-history.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const {
   highTrafficLimiter,
@@ -15,6 +16,13 @@ router.get(
   verifyToken,
   highTrafficLimiter,
   PlansMeController.getPlanMe.bind(PlansMeController)
+);
+
+router.get(
+  "/usage-history",
+  verifyToken,
+  highTrafficLimiter,
+  PlansUsageHistoryController.getUsageHistory.bind(PlansUsageHistoryController)
 );
 
 router.get("/", PlansManager.getAllPlans.bind(PlansManager));

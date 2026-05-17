@@ -9,6 +9,7 @@ import Image from "next/image";
 import GoogleCalendarLogo from "@/app/_assets/google_logo.svg";
 import OutlookLogo from "@/app/_assets/microsoft_office_outlook_mail.svg";
 import SlackLogo from "@/app/_assets/slack_salesforce_logo.png";
+import { SettingsPageShell } from "@/app/(protected)/settings/_components/settings-page-shell";
 
 export const IntegrationsSettings: React.FC<any> = () => {
   const { googleConnected, connectGoogleCalendar, disconnectGoogleCalendar } = useCalendar();
@@ -177,5 +178,13 @@ export const IntegrationsSettings: React.FC<any> = () => {
 };
 
 export default function IntegrationsPage() {
-  return <IntegrationsSettings />;
+  return (
+    <SettingsPageShell description="Conecte e gerencie integrações da sua conta.">
+      <div className="overflow-hidden">
+        <div className="p-2">
+          <IntegrationsSettings />
+        </div>
+      </div>
+    </SettingsPageShell>
+  );
 }
