@@ -28,9 +28,9 @@ const navIconMobileShellClass =
 const navIconDesktopClass =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200 [&>svg]:shrink-0";
 
-/** Desktop search + user chip: light `bg-white` / dark `bg-neutral-950` with xs elevation; dark uses neutral-200 tint. */
+/** Desktop search + user chip: bordered surface (no shadow). */
 const navbarElevatedSurfaceClass =
-  "bg-white shadow-xs hover:bg-neutral-50 dark:bg-neutral-950 dark:shadow-xs dark:shadow-neutral-200/25 dark:hover:bg-neutral-900";
+  "border border-neutral-200 bg-white hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:bg-[#1D1D1B] dark:hover:bg-neutral-900";
 
 // --- Custom Hooks
 
@@ -129,8 +129,8 @@ const NotificationsLink = ({
       href="/notifications"
       className={cn(
         surface === "desktop" ? navbarElevatedSurfaceClass : navIconMobileShellClass,
-        "relative flex items-center justify-center border-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50",
-        surface === "desktop" ? "h-4 w-4 p-1 shadow-sm rounded-full text-gray-700 dark:text-white md:h-6 md:w-6" : "",
+        "relative flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50",
+        surface === "desktop" ? "h-4 w-4 rounded-full p-1 text-gray-700 dark:text-white md:h-6 md:w-6" : "",
         className
       )}
       aria-label={ariaLabel}
@@ -260,7 +260,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
           <div
             className={cn(
               "grid min-h-10 grid-cols-[auto_1fr_auto] items-center gap-x-2 px-2 py-1",
-              "md:min-h-10 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-x-4",
+              "md:min-h-10 md:grid-cols-[auto_minmax(0,1fr)_auto] md:gap-x-4",
               "lg:min-h-10 lg:px-0 lg:py-0"
             )}
           >
@@ -327,13 +327,13 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
             {/* Centro: respiro no mobile (1fr); busca + notificações no desktop */}
             {authenticated && user ? (
-              <section className="flex min-h-0 min-w-0 items-center justify-center justify-self-stretch">
-                <div className="hidden w-full max-w-[480px] items-center justify-center gap-2 md:flex">
+              <section className="flex w-full min-h-0 min-w-0 items-center justify-center px-1 md:px-2">
+                <div className="hidden w-full max-w-md items-center gap-2 md:flex">
                   <button
                     type="button"
                     onClick={() => setIsSearchOpen(true)}
                     className={cn(
-                      "group flex w-full max-w-[480px] items-center gap-2.5 rounded-full border-0 px-3 py-1 transition-all",
+                      "group flex w-full min-w-0 items-center gap-2.5 rounded-full px-3 py-1 transition-all",
                       navbarElevatedSurfaceClass
                     )}
                     aria-label={t.navbar.searchSystem}
@@ -378,7 +378,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                     onClick={handleThemeToggle}
                     className={cn(
                       navbarElevatedSurfaceClass,
-                      "flex h-7 w-7 items-center justify-center rounded-full border-0 text-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50 dark:text-white md:h-8 md:w-8"
+                      "flex h-7 w-7 items-center justify-center rounded-full text-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50 dark:text-white md:h-8 md:w-8"
                     )}
                     aria-label={t.navbar.theme}
                     title={t.navbar.theme}
@@ -396,7 +396,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                       title={t.navbar.openUserMenu}
                       className={cn(
                         navbarElevatedSurfaceClass,
-                        "flex shrink-0 items-center justify-center border-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50",
+                        "flex shrink-0 items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50",
                         "h-7 w-7 max-h-8 rounded-full p-px text-gray-700 dark:text-white",
                         "max-lg:active:bg-neutral-100 dark:max-lg:active:bg-neutral-900",
                         "md:h-fit md:max-h-8 md:w-auto md:gap-1 md:rounded-full md:py-0.5 md:pr-0.5 md:pl-1.5",
@@ -416,7 +416,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
                     {isMenuOpen && (
                       <div className="absolute top-full right-0 z-50 mt-2 hidden w-72 origin-top-right sm:block">
-                        <div className="overflow-hidden rounded-md border border-gray-200/60 bg-white shadow-2xl ring-1 ring-black/5 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+                        <div className="overflow-hidden rounded-md border border-gray-200/60 bg-white dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
                           <UserMenuContent
                             user={user}
                             t={t}
@@ -450,7 +450,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
             <dialog
               ref={mobileMenuRef}
               open
-              className="relative z-[111] m-0 flex w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
+              className="relative z-[111] m-0 flex w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
             >
               <div className="max-h-[75vh] overflow-y-auto">
                 <UserMenuContent

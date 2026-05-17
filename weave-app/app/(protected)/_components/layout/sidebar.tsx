@@ -400,12 +400,12 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   const navigationItems: NavigationItem[] = [
     { path: "/home", icon: Home, label: t.nav.home },
     { path: "/notes", icon: Book, label: t.nav.notes },
-    { path: "/documents", icon: FileText, label: t.nav.documents },
     {
       path: "/projects",
       icon: Network,
       label: t.nav.projects,
     },
+    { path: "/documents", icon: FileText, label: t.nav.documents },
     {
       path: "/weave-flow",
       icon: Waypoints,

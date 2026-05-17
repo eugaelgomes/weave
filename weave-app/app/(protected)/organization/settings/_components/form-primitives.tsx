@@ -1,5 +1,4 @@
 import React from "react";
-import { Camera, X, Save, Activity } from "lucide-react";
 
 const inputFocusClasses =
   "focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:focus:border-yellow-500/50";
@@ -21,9 +20,10 @@ export const Badge = ({
     purple: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400",
     blue: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
   };
+
   return (
     <span
-      className={`rounded-md px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase ${colors[color] || colors.neutral}`}
+      className={`rounded-md px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${colors[color] || colors.neutral}`}
     >
       {children}
     </span>
@@ -155,111 +155,6 @@ export const Input = ({
         placeholder={placeholder}
         className={`w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-100 ${inputFocusClasses}`}
       />
-    </div>
-  );
-};
-
-export const ImageEditModal = ({
-  isOpen,
-  onClose,
-  onSave,
-  title,
-  currentUrl,
-  loading,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (fileOrUrl: string | File) => void;
-  title: string;
-  currentUrl: string;
-  loading: boolean;
-}) => {
-  const [file, setFile] = React.useState<File | null>(null);
-  const [preview, setPreview] = React.useState<string>(currentUrl || "");
-
-  React.useEffect(() => {
-    setPreview(currentUrl || "");
-    setFile(null);
-  }, [currentUrl, isOpen]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-      setFile(selectedFile);
-      setPreview(URL.createObjectURL(selectedFile));
-    }
-  };
-
-  const handleSave = () => {
-    if (file) {
-      onSave(file);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm duration-200">
-      <div className="w-full max-w-sm rounded-md border border-neutral-200 bg-white p-5 shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{title}</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar"
-            className="rounded-full p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-          >
-            <X className="h-4 w-4 text-neutral-500" />
-          </button>
-        </div>
-
-        <div className="relative mb-4 flex h-32 items-center justify-center overflow-hidden rounded-md border border-dashed border-neutral-200 bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
-          {preview ? (
-            <img
-              src={preview}
-              alt="Preview"
-              className="h-full w-full rounded-md object-contain object-center p-2"
-            />
-          ) : (
-            <div className="flex flex-col items-center text-neutral-400">
-              <Camera className="mb-2 h-6 w-6" />
-              <span className="text-xs">Faça upload de uma imagem</span>
-            </div>
-          )}
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-          />
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md px-3 py-2 text-xs font-medium text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={loading || !file}
-              className="flex items-center gap-2 rounded-md bg-brand-primary-500 px-4 py-2 text-xs font-medium text-white hover:bg-yellow-600 disabled:opacity-50 dark:hover:bg-yellow-600"
-            >
-              {loading ? (
-                <Activity className="h-3 w-3 animate-spin" />
-              ) : (
-                <Save className="h-3 w-3" />
-              )}
-              Salvar
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

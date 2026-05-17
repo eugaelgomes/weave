@@ -1,37 +1,42 @@
 import React from "react";
-import { type OrganizationProperties } from "@/app/_services/organization";
+import {
+  type Organization,
+  type OrganizationProperties,
+} from "@/app/_services/organization";
+import { type OrganizationStats } from "@/app/_contexts/organization-context";
 import {
   Settings,
   Bell,
   Layers,
-  Palette,
   ShieldAlert,
   CreditCard,
   MapPin,
   Puzzle,
   Zap,
 } from "lucide-react";
-import { Toggle, Select, Input } from "./ui-elements";
+import { Toggle, Select } from "./form-primitives";
 import { DomainsSection } from "./domains-section";
+import {
+  type OnDirectPropertyChange,
+  type OnNestedPropertyChange,
+} from "./settings-types";
 
 interface SettingsFormProps {
   localProps: OrganizationProperties;
   userIsOwner: boolean;
-  handlePropertyChange: (
-    section: keyof OrganizationProperties,
-    key: string | null,
-    value: any
-  ) => void;
+  handleDirectPropertyChange: OnDirectPropertyChange;
+  handleNestedPropertyChange: OnNestedPropertyChange;
   handleDeleteOrganization: () => void;
   isDeleting: boolean;
-  organization: any;
-  stats: any;
+  organization: Organization | null;
+  stats: OrganizationStats;
 }
 
 export function SettingsForm({
   localProps,
   userIsOwner,
-  handlePropertyChange,
+  handleDirectPropertyChange,
+  handleNestedPropertyChange,
   handleDeleteOrganization,
   isDeleting,
   organization,
@@ -41,15 +46,27 @@ export function SettingsForm({
   const planValue = organization?.plan_value || 0;
   const currency = organization?.currency || "BRL";
 
-  // Calculate percentages for bars
-  const memberLimit = localProps.maxMembers || 50;
-  const projectLimit = localProps.maxProjects || 100;
+  const memberLimit = localProps.maxMembers && localProps.maxMembers > 0 ? localProps.maxMembers : 50;
+  const projectLimit =
+    localProps.maxProjects && localProps.maxProjects > 0 ? localProps.maxProjects : 100;
   const memberPercent = Math.min((stats.totalMembers / memberLimit) * 100, 100);
   const projectPercent = Math.min((stats.totalProjects / projectLimit) * 100, 100);
+  const address = organization?.address as
+    | {
+        street?: string;
+        city?: string;
+        state?: string;
+        country?: string;
+      }
+    | undefined;
+  const integrations =
+    organization?.integrations && typeof organization.integrations === "object"
+      ? (organization.integrations as Record<string, unknown>)
+      : {};
+  const integrationEntries = Object.entries(integrations);
 
   return (
     <div className="space-y-6">
-      {/* Plan & Usage Section - New */}
       <section className="rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
         <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
           <CreditCard className="h-5 w-5 text-neutral-500" />
@@ -124,10 +141,10 @@ export function SettingsForm({
             <Select
               label="Idioma Padrão"
               value={localProps.language || "pt-BR"}
-              onChange={(v) => handlePropertyChange("language", null, v)}
+              onChange={(value) => handleDirectPropertyChange("language", value)}
               options={[
                 { label: "Português (Brasil)", value: "pt-BR" },
-                { label: "English (US)", value: "en-US" },
+                { label: "Inglês (US)", value: "en-US" },
                 { label: "Español", value: "es" },
               ]}
               disabled={!userIsOwner}
@@ -135,7 +152,7 @@ export function SettingsForm({
             <Select
               label="Fuso Horário"
               value={localProps.timezone || "America/Sao_Paulo"}
-              onChange={(v) => handlePropertyChange("timezone", null, v)}
+              onChange={(value) => handleDirectPropertyChange("timezone", value)}
               options={[
                 { label: "Brasília (GMT-3)", value: "America/Sao_Paulo" },
                 { label: "UTC", value: "UTC" },
@@ -148,41 +165,39 @@ export function SettingsForm({
                 label="Permitir Tarefas Públicas"
                 description="Habilitar compartilhamento público"
                 checked={localProps?.allowPublicNotes || false}
-                onChange={(v) => handlePropertyChange("allowPublicNotes", null, v)}
+                onChange={(checked) => handleDirectPropertyChange("allowPublicNotes", checked)}
                 disabled={!userIsOwner}
               />
             </div>
           </div>
         </section>
 
-        {/* Address & Location (Placeholder for now as Address is complex usually) */}
         <section className="h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
           <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
             <MapPin className="h-5 w-5 text-neutral-500" />
             Localização
           </h2>
-          {/* Currently read-only or placeholder as we don't have update logic per field in this form yet */}
           <div className="space-y-4 text-xs text-neutral-500">
-            {organization?.address ? (
+            {address ? (
               <>
                 <div className="flex justify-between border-b border-neutral-100 py-2 dark:border-surface-dark-border-strong">
                   <span>Endereço</span>
                   <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                    {organization.address.street || "-"}
+                    {address.street || "-"}
                   </span>
                 </div>
                 <div className="flex justify-between border-b border-neutral-100 py-2 dark:border-surface-dark-border-strong">
                   <span>Cidade/Estado</span>
                   <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                    {organization.address.city
-                      ? `${organization.address.city}, ${organization.address.state}`
+                    {address.city
+                      ? `${address.city}, ${address.state}`
                       : "-"}
                   </span>
                 </div>
                 <div className="flex justify-between border-b border-neutral-100 py-2 dark:border-surface-dark-border-strong">
                   <span>País</span>
                   <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                    {organization.address.country || "-"}
+                    {address.country || "-"}
                   </span>
                 </div>
               </>
@@ -197,7 +212,6 @@ export function SettingsForm({
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Features */}
         <section className="h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
           <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
             <Layers className="h-5 w-5 text-neutral-500" />
@@ -208,27 +222,28 @@ export function SettingsForm({
               label="Assistente de IA"
               description="Recursos de inteligência artificial"
               checked={localProps?.features?.aiAgent || false}
-              onChange={(v) => handlePropertyChange("features", "aiAgent", v)}
+              onChange={(checked) => handleNestedPropertyChange("features", "aiAgent", checked)}
               disabled={!userIsOwner}
             />
             <Toggle
               label="Backup Automático"
               description="Backup diário de tarefas"
               checked={localProps?.features?.backup || false}
-              onChange={(v) => handlePropertyChange("features", "backup", v)}
+              onChange={(checked) => handleNestedPropertyChange("features", "backup", checked)}
               disabled={!userIsOwner}
             />
             <Toggle
-              label="Colaboração Real-time"
+              label="Colaboração em tempo real"
               description="Edição simultânea"
               checked={localProps?.features?.collaboration || false}
-              onChange={(v) => handlePropertyChange("features", "collaboration", v)}
+              onChange={(checked) =>
+                handleNestedPropertyChange("features", "collaboration", checked)
+              }
               disabled={!userIsOwner}
             />
           </div>
         </section>
 
-        {/* Notifications */}
         <section className="h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
           <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
             <Bell className="h-5 w-5 text-neutral-500" />
@@ -239,13 +254,13 @@ export function SettingsForm({
               <Toggle
                 label="Emails"
                 checked={localProps?.notifications?.email || false}
-                onChange={(v) => handlePropertyChange("notifications", "email", v)}
+                onChange={(checked) => handleNestedPropertyChange("notifications", "email", checked)}
                 disabled={!userIsOwner}
               />
               <Toggle
-                label="Push Notifications"
+                label="Notificações Push"
                 checked={localProps?.notifications?.push || false}
-                onChange={(v) => handlePropertyChange("notifications", "push", v)}
+                onChange={(checked) => handleNestedPropertyChange("notifications", "push", checked)}
                 disabled={!userIsOwner}
               />
             </div>
@@ -253,7 +268,7 @@ export function SettingsForm({
               <Select
                 label="Frequência do Resumo"
                 value={localProps?.notifications?.digest || "weekly"}
-                onChange={(v) => handlePropertyChange("notifications", "digest", v)}
+                onChange={(value) => handleNestedPropertyChange("notifications", "digest", value)}
                 options={[
                   { label: "Diário", value: "daily" },
                   { label: "Semanal", value: "weekly" },
@@ -266,22 +281,24 @@ export function SettingsForm({
         </section>
       </div>
 
-      {/* Integrations (New Placeholder) */}
       <section className="rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
         <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
           <Puzzle className="h-5 w-5 text-neutral-500" />
           Integrações
         </h2>
 
-        {organization?.integrations && Object.keys(organization.integrations).length > 0 ? (
+        {integrationEntries.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Object.entries(organization.integrations).map(([key, value]: [string, any]) => (
+            {integrationEntries.map(([key]) => (
               <div
                 key={key}
                 className="flex items-center justify-between rounded-md border border-neutral-100 p-3 dark:border-surface-dark-border"
               >
                 <div className="font-medium capitalize">{key}</div>
-                <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
+                <div className="flex items-center gap-2">
+                  <span className="sr-only">Integração ativa</span>
+                  <div className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true"></div>
+                </div>
               </div>
             ))}
           </div>
@@ -298,70 +315,8 @@ export function SettingsForm({
         )}
       </section>
 
-      {/* Domains Section */}
       <DomainsSection userIsOwner={userIsOwner} />
 
-      {/* Branding */}
-      <section className="rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
-        <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
-          <Palette className="h-5 w-5 text-neutral-500" />
-          Identidade Visual
-        </h2>
-        <div className="grid gap-6 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-xs font-medium text-neutral-500">Cores da Marca</label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={localProps?.branding?.primaryColor || "#000000"}
-                  onChange={(e) => handlePropertyChange("branding", "primaryColor", e.target.value)}
-                  disabled={!userIsOwner}
-                  className="h-10 w-10 cursor-pointer rounded border border-neutral-200 p-1 dark:border-surface-dark-border dark:bg-[#1d1d1b]"
-                />
-                <div className="flex flex-col justify-center">
-                  <span className="text-[10px] text-neutral-500 uppercase">Primária</span>
-                  <span className="font-mono text-xs">
-                    {localProps?.branding?.primaryColor || "#000000"}
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={localProps?.branding?.secondaryColor || "#ffffff"}
-                  onChange={(e) =>
-                    handlePropertyChange("branding", "secondaryColor", e.target.value)
-                  }
-                  disabled={!userIsOwner}
-                  className="h-10 w-10 cursor-pointer rounded border border-neutral-200 p-1 dark:border-surface-dark-border dark:bg-[#1d1d1b]"
-                />
-                <div className="flex flex-col justify-center">
-                  <span className="text-[10px] text-neutral-500 uppercase">Secundária</span>
-                  <span className="font-mono text-xs">
-                    {localProps?.branding?.secondaryColor || "#ffffff"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <Input
-              label="Domínio Personalizado (CNAME)"
-              value={localProps?.branding?.customDomain || ""}
-              onChange={(v) => handlePropertyChange("branding", "customDomain", v)}
-              placeholder="docs.example.com"
-              disabled={!userIsOwner}
-            />
-            <p className="mt-1.5 text-[10px] text-neutral-400">
-              Requer configuração DNS. A propagação pode levar até 24h.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Danger Zone */}
       {userIsOwner && (
         <section className="rounded-md border border-red-200 bg-red-50 p-6 dark:border-red-900/30 dark:bg-red-950/10">
           <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-red-900 dark:text-red-100">

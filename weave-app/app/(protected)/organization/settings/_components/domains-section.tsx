@@ -16,7 +16,7 @@ import {
   deleteDomain,
   type OrganizationDomain,
 } from "@/app/_services/organization";
-import { Badge } from "./ui-elements";
+import { Badge } from "./form-primitives";
 
 const domainInputFocus =
   "outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:focus:border-yellow-500/50";
