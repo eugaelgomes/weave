@@ -86,9 +86,9 @@ class ProjectsReadController extends ProjectsCoreController {
         }
 
         const include = {
-          collaborators: includeArr.includes("collaborators"),
-          notes: includeArr.includes("notes"),
-          subprojects: includeArr.includes("subprojects"),
+          collaborators: false,
+          notes: false,
+          subprojects: false,
         };
 
         const orgWide =
@@ -126,9 +126,6 @@ class ProjectsReadController extends ProjectsCoreController {
                   logo_url: project.organization_logo_url,
                 }
               : null,
-            collaborators: project.collaborators || [],
-            notes: project.associated_notes || [],
-            subprojects: project.subprojects || [],
           };
         });
 
@@ -174,9 +171,6 @@ class ProjectsReadController extends ProjectsCoreController {
                 logo_url: project.organization_logo_url,
               }
             : null,
-          collaborators: project.collaborators || [],
-          notes: project.associated_notes || [],
-          subprojects: project.subprojects || [],
         };
       });
 
