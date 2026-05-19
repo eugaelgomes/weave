@@ -9,6 +9,7 @@ import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/_uti
 import { getTagColor } from "@/app/_utils/tag-colors";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { useLanguage } from "@/app/_contexts/language-context";
+import { useTaskNoteModal } from "@/app/(protected)/_components/task-note-modal";
 
 import type { NoteOverview } from "@/app/_contexts/notes-context";
 
@@ -35,6 +36,7 @@ export default function NotesCarousel({
   emptyActionHref = "/notes",
 }: NotesCarouselProps) {
   const { t, locale } = useLanguage();
+  const { openModal } = useTaskNoteModal();
   const [currentSlide, setCurrentSlide] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
 
@@ -129,10 +131,11 @@ export default function NotesCarousel({
                   : null;
 
               return (
-                <Link
+                <button
                   key={note.id}
-                  href={`/notes/${note.id}`}
-                  className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center sm:w-[220px] sm:snap-start"
+                  type="button"
+                  onClick={() => openModal("edit", { noteId: note.id })}
+                  className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center text-left sm:w-[220px] sm:snap-start"
                 >
                   <div
                     className={`group flex min-h-[176px] flex-col justify-between rounded-md border border-neutral-200 bg-neutral-50 p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:border-surface-dark-border-strong dark:hover:shadow-surface-dark-md ${note.done ? "opacity-90" : ""}`}
@@ -328,7 +331,7 @@ export default function NotesCarousel({
                       </div>
                     </div>
                   </div>
-                </Link>
+                </button>
               );
             })}
           </div>

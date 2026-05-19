@@ -1,88 +1,280 @@
 "use client";
 
-import React, { useState } from "react";
-import { Clock, Users, Flag, Tags, Filter, Search, X } from "lucide-react";
-import { useProjects } from "@/app/_contexts/projects-context";
-import { useNotes } from "@/app/_contexts/notes-context";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Calendar, Clock, Columns3, Flag, Tags, X } from "lucide-react";
+import { useAuth } from "@/app/_contexts/auth-context";
+import {
+  FilterSearchInput,
+  FilterSelect,
+  FilterPeopleSelect,
+  type Collaborator,
+} from "@/app/(protected)/_components/ui/filter-select";
+import {
+  datePresetToIsoRange,
+  type DueDatePreset,
+  type CreatedDatePreset,
+  type ProjectNotesListFilters,
+} from "@/app/_services/projects-service/projects-service";
 
-export function ProjectFilters() {
-  const [activeTime, setActiveTime] = useState<string>("all");
-  const [activePriority, setActivePriority] = useState<string>("all");
+interface StageOption {
+  id: string;
+  name: string;
+}
 
-  const { projectsOverview } = useProjects();
-  const { notes } = useNotes();
+interface TagOption {
+  id: string;
+  name: string;
+}
+
+interface PriorityOption {
+  id: string;
+  name: string;
+}
+
+interface CollaboratorOption {
+  user_id: string;
+  username: string;
+  name?: string;
+  avatar_url?: string;
+}
+
+interface ProjectFiltersProps {
+  stages: StageOption[];
+  projectTags: TagOption[];
+  taskPriorities: PriorityOption[];
+  collaborators: CollaboratorOption[];
+  filters: ProjectNotesListFilters;
+  onChange: (filters: ProjectNotesListFilters) => void;
+  onClear: () => void;
+}
+
+const DATE_PRESET_OPTIONS = [
+  { value: "today", label: "Hoje" },
+  { value: "week", label: "Esta semana" },
+  { value: "month", label: "Este mês" },
+] as const;
+
+export function ProjectFilters({
+  stages,
+  projectTags,
+  taskPriorities,
+  collaborators,
+  filters,
+  onChange,
+  onClear,
+}: ProjectFiltersProps) {
+  const { user } = useAuth();
+
+  const [searchInput, setSearchInput] = useState(filters.search ?? "");
+  const [duePreset, setDuePreset] = useState<DueDatePreset>("all");
+  const [createdPreset, setCreatedPreset] = useState<CreatedDatePreset>("all");
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const next = { ...filters };
+      if (searchInput.trim()) {
+        next.search = searchInput.trim();
+      } else {
+        delete next.search;
+      }
+      onChange(next);
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchInput]);
+
+  const update = useCallback(
+    (patch: Partial<ProjectNotesListFilters>) => {
+      const next = { ...filters, ...patch };
+      Object.keys(next).forEach((k) => {
+        const key = k as keyof ProjectNotesListFilters;
+        const v = next[key];
+        if (v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0)) {
+          delete next[key];
+        }
+      });
+      onChange(next);
+    },
+    [filters, onChange]
+  );
+
+  const handleDuePreset = (preset: DueDatePreset) => {
+    setDuePreset(preset);
+    const range = datePresetToIsoRange(preset);
+    update({
+      due_from: range?.from,
+      due_to: range?.to,
+    });
+  };
+
+  const handleCreatedPreset = (preset: CreatedDatePreset) => {
+    setCreatedPreset(preset);
+    const range = datePresetToIsoRange(preset);
+    update({
+      created_from: range?.from,
+      created_to: range?.to,
+    });
+  };
+
+  const handlePriority = (priorityId: string) => {
+    update({
+      priority_id: priorityId === "all" ? undefined : [priorityId],
+    });
+  };
+
+  const handleStage = (stageId: string) => {
+    update({
+      stage_id: stageId === "all" ? undefined : [stageId],
+    });
+  };
+
+  const handleTag = (tagId: string) => {
+    update({
+      tags: tagId === "all" ? undefined : [tagId],
+    });
+  };
+
+  const handlePerson = (userId: string | null) => {
+    update({ collaborator_user_id: userId ? [userId] : undefined });
+  };
+
+  const clearDue = () => handleDuePreset("all");
+  const clearCreated = () => handleCreatedPreset("all");
+  const clearPriority = () => handlePriority("all");
+  const clearStage = () => handleStage("all");
+  const clearTag = () => handleTag("all");
+  const clearPerson = () => handlePerson(null);
+
+  const clearSearch = () => {
+    setSearchInput("");
+    const next = { ...filters };
+    delete next.search;
+    onChange(next);
+  };
+
+  const handleClear = () => {
+    setSearchInput("");
+    setDuePreset("all");
+    setCreatedPreset("all");
+    onClear();
+  };
+
+  const activeCount =
+    (filters.search ? 1 : 0) +
+    (filters.priority_id?.length ? 1 : 0) +
+    (filters.tags?.length ? 1 : 0) +
+    (filters.stage_id?.length ? 1 : 0) +
+    (filters.collaborator_user_id?.length ? 1 : 0) +
+    (filters.due_from ? 1 : 0) +
+    (filters.created_from ? 1 : 0);
+
+  const collaboratorsList: Collaborator[] = collaborators.map((c) => ({
+    user_id: c.user_id,
+    username: c.username,
+    name: c.name,
+    avatar_url: c.avatar_url,
+  }));
 
   return (
-    <div className="flex flex-none flex-wrap items-center gap-2 border-b border-neutral-200 bg-white/40 px-3 py-1.5 backdrop-blur-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]/40">
-      <div className="flex items-center gap-1.5 border-r border-neutral-200 pr-2 dark:border-surface-dark-border">
-        <Filter className="h-3 w-3 text-neutral-400" />
-        <span className="text-[9px] font-medium tracking-wider text-neutral-500 uppercase">
-          Filtros
-        </span>
-      </div>
+    <div className="flex flex-shrink-0 flex-wrap items-center gap-1 px-2 py-1">
+      <FilterSearchInput
+        value={searchInput}
+        onChange={setSearchInput}
+        onClear={clearSearch}
+        placeholder="Buscar..."
+      />
 
-      {/* Busca */}
-      <div className="relative flex items-center">
-        <Search className="absolute left-2 h-2.5 w-2.5 text-neutral-400" />
-        <input
-          type="text"
-          placeholder="Buscar tarefas..."
-          className="w-32 rounded-md border border-neutral-200 bg-white py-1 pr-2 pl-6 text-[10px] focus:border-purple-500 focus:outline-none dark:border-surface-dark-border dark:bg-[#1d1d1b]"
+      <FilterSelect
+        icon={Clock}
+        accent="amber"
+        placeholder="Vencimento"
+        title="Filtrar por vencimento"
+        value={duePreset}
+        onChange={(v) => handleDuePreset(v as DueDatePreset)}
+        onClear={clearDue}
+        options={[...DATE_PRESET_OPTIONS]}
+      />
+
+      <FilterSelect
+        icon={Calendar}
+        accent="blue"
+        placeholder="Criação"
+        title="Filtrar por data de criação"
+        value={createdPreset}
+        onChange={(v) => handleCreatedPreset(v as CreatedDatePreset)}
+        onClear={clearCreated}
+        options={[...DATE_PRESET_OPTIONS]}
+      />
+
+      {taskPriorities.length > 0 && (
+        <FilterSelect
+          icon={Flag}
+          accent="rose"
+          placeholder="Prioridade"
+          title="Filtrar por prioridade"
+          value={filters.priority_id?.[0] ?? "all"}
+          onChange={handlePriority}
+          onClear={clearPriority}
+          options={taskPriorities.map((p) => ({ value: p.id, label: p.name }))}
         />
-      </div>
+      )}
 
-      {/* Tempo */}
-      <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white p-0.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <Clock className="ml-1.5 h-2.5 w-2.5 text-neutral-400" />
-        <select
-          className="bg-transparent py-0.5 pr-4 pl-1 text-[10px] text-neutral-600 focus:outline-none dark:text-neutral-300"
-          value={activeTime}
-          onChange={(e) => setActiveTime(e.target.value)}
+      {stages.length > 0 && (
+        <FilterSelect
+          icon={Columns3}
+          accent="purple"
+          placeholder="Estágio"
+          title="Filtrar por estágio"
+          value={filters.stage_id?.[0] ?? "all"}
+          onChange={handleStage}
+          onClear={clearStage}
+          options={stages.map((s) => ({ value: s.id, label: s.name }))}
+        />
+      )}
+
+      {projectTags.length > 0 && (
+        <FilterSelect
+          icon={Tags}
+          accent="emerald"
+          placeholder="Tags"
+          title="Filtrar por tag"
+          value={filters.tags?.[0] ?? "all"}
+          onChange={handleTag}
+          onClear={clearTag}
+          options={projectTags.map((t) => ({ value: t.id, label: t.name }))}
+        />
+      )}
+
+      <FilterPeopleSelect
+        value={filters.collaborator_user_id?.[0] ?? null}
+        onChange={handlePerson}
+        collaborators={collaboratorsList}
+        currentUserId={user?.id}
+        placeholder="Pessoas"
+        onClear={clearPerson}
+      />
+
+      {activeCount > 0 && (
+        <button
+          type="button"
+          onClick={handleClear}
+          className="ml-auto flex items-center gap-0.5 rounded-full border border-neutral-200 px-2 py-px text-[10px] font-medium text-neutral-500 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-red-600/50 dark:hover:bg-red-950/40 dark:hover:text-red-400"
         >
-          <option value="all">Data</option>
-          <option value="today">Hoje</option>
-          <option value="week">Esta semana</option>
-          <option value="month">Este mês</option>
-        </select>
-      </div>
-
-      {/* Pessoas */}
-      <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white p-0.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <Users className="ml-1.5 h-2.5 w-2.5 text-neutral-400" />
-        <select className="bg-transparent py-0.5 pr-4 pl-1 text-[10px] text-neutral-600 focus:outline-none dark:text-neutral-300">
-          <option value="all">Pessoas</option>
-          <option value="me">Atribuído a mim</option>
-        </select>
-      </div>
-
-      {/* Prioridades */}
-      <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white p-0.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <Flag className="ml-1.5 h-2.5 w-2.5 text-neutral-400" />
-        <select
-          className="bg-transparent py-0.5 pr-4 pl-1 text-[10px] text-neutral-600 focus:outline-none dark:text-neutral-300"
-          value={activePriority}
-          onChange={(e) => setActivePriority(e.target.value)}
-        >
-          <option value="all">Prioridade</option>
-          <option value="alta">Alta</option>
-          <option value="media">Média</option>
-          <option value="baixa">Baixa</option>
-        </select>
-      </div>
-
-      {/* Tags */}
-      <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white p-0.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <Tags className="ml-1.5 h-2.5 w-2.5 text-neutral-400" />
-        <select className="bg-transparent py-0.5 pr-4 pl-1 text-[10px] text-neutral-600 focus:outline-none dark:text-neutral-300">
-          <option value="all">Tags</option>
-        </select>
-      </div>
-
-      {/* Limpar Filtros */}
-      <button className="ml-auto flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200">
-        <X className="h-2.5 w-2.5" />
-        Limpar
-      </button>
+          <X className="h-2 w-2" />
+          <span>Limpar ({activeCount})</span>
+        </button>
+      )}
     </div>
   );
 }

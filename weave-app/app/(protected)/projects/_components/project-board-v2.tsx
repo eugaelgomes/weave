@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import {
   DndContext,
   DragOverlay,
@@ -34,6 +33,7 @@ import { plainTextPreview } from "@/app/_utils/note-text-preview";
 import type { PatchProjectTaskData } from "@/app/_services/projects-service/projects-service";
 import type { TaskPriority } from "@/app/_services/projects-service/project-taxonomy.schema";
 import { CompactTaskModal } from "@/app/(protected)/projects/_components/compact-task-modal";
+import { useTaskNoteModal } from "@/app/(protected)/_components/task-note-modal";
 
 const COLUMN_WIDTH_CLASS = "w-[232px]";
 const DRAG_OVERLAY_CARD_CLASS = "w-[208px]";
@@ -774,7 +774,7 @@ function TaskBranch({
   childrenMap,
   getTagMeta,
   handleRemoveNote,
-  router,
+  onOpenNote,
   onPatchTask,
   taskPriorities,
   stageId,
@@ -787,7 +787,7 @@ function TaskBranch({
   childrenMap: Record<string, any[]>;
   getTagMeta: (tag: string) => { label: string; color: string };
   handleRemoveNote: (projectId: string, noteId: string) => void;
-  router: ReturnType<typeof useRouter>;
+  onOpenNote: (noteId: string) => void;
   onPatchTask?: (noteId: string, patch: PatchProjectTaskData) => Promise<void>;
   taskPriorities: TaskPriority[];
   stageId: string;
@@ -816,7 +816,7 @@ function TaskBranch({
         onRemoveNote={() =>
           handleRemoveNote(note.project_id || note.properties?.project_id, note.id)
         }
-        onOpenNote={() => router.push(`/notes/${note.id}`)}
+        onOpenNote={() => onOpenNote(note.id)}
         onPatchTask={onPatchTask}
         taskPriorities={taskPriorities}
         stageId={stageId}
@@ -830,7 +830,7 @@ function TaskBranch({
           childrenMap={childrenMap}
           getTagMeta={getTagMeta}
           handleRemoveNote={handleRemoveNote}
-          router={router}
+          onOpenNote={onOpenNote}
           onPatchTask={onPatchTask}
           taskPriorities={taskPriorities}
           stageId={stageId}
@@ -987,9 +987,16 @@ export default function ProjectBoardV2({
   onProjectNotesReplaced,
   onPatchTask,
 }: ProjectBoardProps) {
-  const router = useRouter();
+  const { openModal: openTaskModal } = useTaskNoteModal();
   const { removeNoteFromProject, updateProjectNoteStage } = useProjects();
   const [activeNote, setActiveNote] = useState<any>(null);
+
+  const handleOpenNote = useCallback(
+    (noteId: string) => {
+      openTaskModal("edit", { noteId });
+    },
+    [openTaskModal]
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -1144,7 +1151,7 @@ export default function ProjectBoardV2({
                     childrenMap={childrenMap}
                     getTagMeta={getTagMeta}
                     handleRemoveNote={handleRemoveNote}
-                    router={router}
+                    onOpenNote={handleOpenNote}
                     onPatchTask={onPatchTask}
                     taskPriorities={taskPriorities}
                     stageId={stage.id}

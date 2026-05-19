@@ -172,9 +172,13 @@ export const ManageCollaboratorsResponseSchema = z.object({
   collaborators: z.array(ProjectCollaboratorSchema).optional(),
 });
 
-export const ProjectNotesListSchema = z.object({
-  notes: z.array(ProjectNoteSchema),
-});
+export const ProjectNotesListSchema = z
+  .object({
+    notes: z.array(ProjectNoteSchema),
+    data: z.array(ProjectNoteSchema).optional(),
+    pagination: z.record(z.string(), z.unknown()).optional(),
+  })
+  .passthrough();
 
 export const ManageNotesResponseSchema = z.object({
   message: z.string(),

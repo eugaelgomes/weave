@@ -117,6 +117,86 @@ export interface ProjectNote {
   updated_at: string;
 }
 
+export type DueDatePreset = "all" | "today" | "week" | "month";
+export type CreatedDatePreset = "all" | "today" | "week" | "month";
+
+export interface ProjectNotesListFilters {
+  search?: string;
+  priority_id?: string[];
+  tags?: string[];
+  stage_id?: string[];
+  created_by?: string[];
+  collaborator_user_id?: string[];
+  due_from?: string;
+  due_to?: string;
+  created_from?: string;
+  created_to?: string;
+  sort?: string;
+}
+
+function startOfLocalDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function endOfLocalDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+}
+
+export function datePresetToIsoRange(
+  preset: DueDatePreset | CreatedDatePreset
+): { from: string; to: string } | null {
+  if (preset === "all") return null;
+  const now = new Date();
+
+  switch (preset) {
+    case "today":
+      return {
+        from: startOfLocalDay(now).toISOString(),
+        to: endOfLocalDay(now).toISOString(),
+      };
+    case "week": {
+      const day = now.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + diffToMonday);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      return {
+        from: startOfLocalDay(monday).toISOString(),
+        to: endOfLocalDay(sunday).toISOString(),
+      };
+    }
+    case "month":
+      return {
+        from: startOfLocalDay(new Date(now.getFullYear(), now.getMonth(), 1)).toISOString(),
+        to: endOfLocalDay(new Date(now.getFullYear(), now.getMonth() + 1, 0)).toISOString(),
+      };
+    default:
+      return null;
+  }
+}
+
+function buildNotesQueryString(filters: ProjectNotesListFilters): string {
+  const params = new URLSearchParams();
+  params.append("page", "1");
+  params.append("limit", "100");
+
+  if (filters.search) params.append("search", filters.search);
+  if (filters.priority_id?.length) params.append("priority_id", filters.priority_id.join(","));
+  if (filters.tags?.length) params.append("tags", filters.tags.join(","));
+  if (filters.stage_id?.length) params.append("stage_id", filters.stage_id.join(","));
+  if (filters.created_by?.length) params.append("created_by", filters.created_by.join(","));
+  if (filters.collaborator_user_id?.length)
+    params.append("collaborator_user_id", filters.collaborator_user_id.join(","));
+  if (filters.due_from) params.append("due_from", filters.due_from);
+  if (filters.due_to) params.append("due_to", filters.due_to);
+  if (filters.created_from) params.append("created_from", filters.created_from);
+  if (filters.created_to) params.append("created_to", filters.created_to);
+  if (filters.sort) params.append("sort", filters.sort);
+
+  return params.toString();
+}
+
 export type NoteStageUpdateResult = {
   message: string;
   noteId: string;
@@ -448,8 +528,17 @@ export const manageCollaborator = async (
 
 // --- NOTAS (CARDS) ---
 
-export const fetchProjectNotes = async (projectId: string): Promise<ProjectNote[]> => {
-  const response = await apiClient.get(API_ENDPOINTS.PROJECTS_NOTES(projectId));
+export const fetchProjectNotes = async (
+  projectId: string,
+  filters?: ProjectNotesListFilters
+): Promise<ProjectNote[]> => {
+  const hasFilters = filters && Object.values(filters).some((v) =>
+    Array.isArray(v) ? v.length > 0 : v !== undefined && v !== "" && v !== null
+  );
+  let url = API_ENDPOINTS.PROJECTS_NOTES(projectId);
+  if (hasFilters) url += `?${buildNotesQueryString(filters)}`;
+
+  const response = await apiClient.get(url);
   const raw = await handleResponse<unknown>(response);
   const data = ProjectNotesListSchema.parse(raw);
   return data.notes as ProjectNote[];

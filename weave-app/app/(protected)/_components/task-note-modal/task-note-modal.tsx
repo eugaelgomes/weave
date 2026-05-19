@@ -1,0 +1,577 @@
+"use client";
+
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
+import { Loader2 } from "lucide-react";
+
+import { useNotes, type Note, type Block, type UpdateNoteData } from "@/app/_contexts/notes-context";
+import { useProjects, type ProjectStage, type TaskPriority } from "@/app/_contexts/projects-context";
+import { NoteCommentsProvider, useNoteComments } from "@/app/_contexts/note-comments-context";
+import { NoteCommentsSidebar } from "@/app/(protected)/notes/_components/note-comments-sidebar";
+import { useTaskNoteModal, type TaskNoteModalMode } from "./use-task-note-modal";
+import { TaskNoteModalHeader } from "./task-note-modal-header";
+import { TaskNoteModalMeta } from "./task-note-modal-meta";
+import { TaskNoteModalContent } from "./task-note-modal-content";
+import { ApiError } from "@/app/_services/api-methods";
+import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema";
+import type { NoteCommentsEmbeddableFile } from "@/app/(protected)/notes/_components/note-comments-sidebar";
+
+type NoteConflictState = {
+  noteId: string;
+  currentRevision: number | null;
+  conflictFields: string[];
+  serverNote?: Partial<Note>;
+};
+
+export function TaskNoteModal() {
+  const { state, callbacks, closeModal } = useTaskNoteModal();
+  const { isOpen, mode, noteId, projectId, stageId, parentNoteId } = state;
+
+  const {
+    getNoteById,
+    createNote: createNoteService,
+    updateNote,
+    deleteNote,
+    exportNoteAsPDF,
+    putNoteBlocksSync,
+  } = useNotes();
+
+  const {
+    projects,
+    getProjectStages,
+    getOrgTaskPriorities,
+    addNoteToProject,
+    updateProjectNoteStage,
+    createTaskInStage,
+  } = useProjects();
+
+  const [mounted, setMounted] = useState(false);
+  const [note, setNote] = useState<Note | null>(null);
+  const [blocks, setBlocks] = useState<(Block & { children?: Block[] })[]>([]);
+  const [editingTitle, setEditingTitle] = useState("");
+  const [editingDescription, setEditingDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
+  const [taskPriorities, setTaskPriorities] = useState<TaskPriority[]>([]);
+  const [projectStages, setProjectStages] = useState<ProjectStage[]>([]);
+  const [noteConflict, setNoteConflict] = useState<NoteConflictState | null>(null);
+
+  const noteRevisionRef = useRef<number>(1);
+  const noteSaveQueueRef = useRef<Promise<unknown>>(Promise.resolve());
+  const metadataDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  const parseNoteRevision = useCallback((revision: unknown): number | null => {
+    if (revision === undefined || revision === null || revision === "") return null;
+    const n = Number(revision);
+    if (Number.isFinite(n) && n >= 1) return Math.floor(n);
+    return null;
+  }, []);
+
+  const applyServerRevisionToRef = useCallback(
+    (revision: unknown) => {
+      const parsed = parseNoteRevision(revision);
+      if (parsed !== null) noteRevisionRef.current = parsed;
+    },
+    [parseNoteRevision]
+  );
+
+  const isConflictError = (error: unknown): error is ApiError =>
+    error instanceof ApiError && error.status === 409;
+
+  const applyServerNote = useCallback(
+    (serverNote: Note, options?: { replaceBlocks?: boolean }) => {
+      const shouldReplaceBlocks = options?.replaceBlocks === true;
+      setNote((prev) => (prev ? { ...prev, ...serverNote } : serverNote));
+      applyServerRevisionToRef(serverNote.revision);
+      if (shouldReplaceBlocks && Array.isArray(serverNote.blocks)) {
+        setBlocks(serverNote.blocks as (Block & { children?: Block[] })[]);
+      }
+    },
+    [applyServerRevisionToRef]
+  );
+
+  const enqueueNoteMutation = useCallback(
+    async <T,>(task: () => Promise<T>): Promise<T> => {
+      const run = noteSaveQueueRef.current.then(task, task);
+      noteSaveQueueRef.current = run.then(
+        () => undefined,
+        () => undefined
+      );
+      return run;
+    },
+    []
+  );
+
+  const saveAndApply = useCallback(
+    async (data: UpdateNoteData): Promise<Note | null> => {
+      if (!note) return null;
+      return enqueueNoteMutation(async () => {
+        setIsSaving(true);
+        try {
+          const updated = await updateNote(note.id, {
+            ...data,
+            baseRevision: noteRevisionRef.current,
+          });
+          if (updated) {
+            applyServerNote(updated, { replaceBlocks: false });
+            setNoteConflict(null);
+            callbacks.onNoteUpdated?.(updated);
+          }
+          return updated;
+        } catch (err) {
+          if (isConflictError(err)) {
+            const data = (err.data as {
+              currentRevision?: number | null;
+              conflictFields?: string[];
+              serverNote?: Partial<Note>;
+            }) || {};
+            applyServerRevisionToRef(data.currentRevision);
+            setNoteConflict({
+              noteId: note.id,
+              currentRevision: parseNoteRevision(data.currentRevision),
+              conflictFields: Array.isArray(data.conflictFields) ? data.conflictFields : [],
+              serverNote: data.serverNote,
+            });
+          }
+          console.error("Error updating task:", err);
+          return null;
+        } finally {
+          setIsSaving(false);
+        }
+      });
+    },
+    [note, enqueueNoteMutation, updateNote, applyServerNote, applyServerRevisionToRef, parseNoteRevision, callbacks]
+  );
+
+  const loadNote = useCallback(async () => {
+    if (!noteId) return;
+    setLoading(true);
+    try {
+      const fetchedNote = await getNoteById(noteId);
+      if (fetchedNote) {
+        applyServerNote(fetchedNote, { replaceBlocks: true });
+        setEditingTitle(fetchedNote.title || "");
+        setEditingDescription(fetchedNote.description || "");
+
+        if (fetchedNote.associated_project?.id) {
+          const stages = await getProjectStages(fetchedNote.associated_project.id);
+          setProjectStages(stages || []);
+        }
+
+        const priorities = await getOrgTaskPriorities();
+        setTaskPriorities(priorities || []);
+      }
+    } catch (err) {
+      console.error("Error loading note:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [noteId, getNoteById, applyServerNote, getProjectStages, getOrgTaskPriorities]);
+
+  const initNewNote = useCallback(async () => {
+    setNote(null);
+    setBlocks([]);
+    setEditingTitle("");
+    setEditingDescription("");
+    noteRevisionRef.current = 1;
+
+    if (projectId) {
+      const stages = await getProjectStages(projectId);
+      setProjectStages(stages || []);
+    }
+
+    const priorities = await getOrgTaskPriorities();
+    setTaskPriorities(priorities || []);
+  }, [projectId, getProjectStages, getOrgTaskPriorities]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setNote(null);
+      setBlocks([]);
+      setEditingTitle("");
+      setEditingDescription("");
+      setShowColorPicker(false);
+      setShowCommentsPanel(false);
+      setNoteConflict(null);
+      noteRevisionRef.current = 1;
+      return;
+    }
+
+    if (mode === "create") {
+      void initNewNote();
+    } else if (noteId) {
+      void loadNote();
+    }
+  }, [isOpen, mode, noteId, loadNote, initNewNote]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeModal();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, closeModal]);
+
+  const handleTitleChange = useCallback(
+    (value: string) => {
+      setEditingTitle(value);
+      if (mode === "edit" && note) {
+        if (metadataDebounceRef.current) {
+          clearTimeout(metadataDebounceRef.current);
+        }
+        metadataDebounceRef.current = setTimeout(() => {
+          void saveAndApply({ title: value });
+        }, 800);
+      }
+    },
+    [mode, note, saveAndApply]
+  );
+
+  const handleDescriptionChange = useCallback(
+    (value: string) => {
+      setEditingDescription(value);
+      if (mode === "edit" && note) {
+        if (metadataDebounceRef.current) {
+          clearTimeout(metadataDebounceRef.current);
+        }
+        metadataDebounceRef.current = setTimeout(() => {
+          void saveAndApply({ description: value });
+        }, 800);
+      }
+    },
+    [mode, note, saveAndApply]
+  );
+
+  const handleBlocksSave = useCallback(
+    async (blocksToSave: CreateBlockData[]) => {
+      if (!note) return;
+      try {
+        const result = await putNoteBlocksSync(note.id, blocksToSave, noteRevisionRef.current);
+        if (result.revision !== null && result.revision !== undefined) {
+          noteRevisionRef.current = result.revision;
+        }
+        if (result.blocks) {
+          setBlocks(result.blocks as (Block & { children?: Block[] })[]);
+        }
+      } catch (err) {
+        console.error("Error saving blocks:", err);
+      }
+    },
+    [note, putNoteBlocksSync]
+  );
+
+  const handleCreateNote = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      let createdNote: Note | null = null;
+
+      if (projectId && stageId) {
+        const notes = await createTaskInStage(projectId, stageId, {
+          title: editingTitle.trim() || "Nova Tarefa",
+          description: editingDescription.trim() || undefined,
+          parent_id: parentNoteId || undefined,
+        });
+        if (notes && notes.length > 0) {
+          createdNote = notes[notes.length - 1] as Note;
+        }
+      } else {
+        createdNote = await createNoteService({
+          title: editingTitle.trim() || "Nova Tarefa",
+          description: editingDescription.trim() || undefined,
+        });
+      }
+
+      if (createdNote) {
+        callbacks.onNoteCreated?.(createdNote);
+        closeModal();
+      }
+    } catch (err) {
+      console.error("Error creating note:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [projectId, stageId, parentNoteId, editingTitle, editingDescription, createTaskInStage, createNoteService, callbacks, closeModal]);
+
+  const handleDelete = useCallback(async () => {
+    if (!note) return;
+    if (!window.confirm("Tem certeza que deseja deletar esta tarefa?")) return;
+
+    try {
+      const success = await deleteNote(note.id);
+      if (success) {
+        callbacks.onNoteDeleted?.(note.id);
+        closeModal();
+      }
+    } catch (err) {
+      console.error("Error deleting note:", err);
+    }
+  }, [note, deleteNote, callbacks, closeModal]);
+
+  const handleExport = useCallback(async () => {
+    if (!note || isExporting) return;
+    setIsExporting(true);
+    try {
+      const exported = await exportNoteAsPDF(note.id);
+      if (exported) {
+        const { blob, fileName } = exported;
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = fileName;
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error("Error exporting note:", err);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [note, isExporting, exportNoteAsPDF]);
+
+  const handleColorChange = useCallback(
+    async (color: string) => {
+      if (!note) return;
+      await saveAndApply({
+        properties: { ...note.properties, color },
+      });
+      setShowColorPicker(false);
+    },
+    [note, saveAndApply]
+  );
+
+  const handleProjectChange = useCallback(
+    async (newProjectId: string) => {
+      if (!note) return;
+      const current = note.associated_project?.id ?? "";
+      if (newProjectId === current) return;
+
+      setIsSaving(true);
+      try {
+        if (newProjectId === "") {
+          await saveAndApply({ project_id: null });
+        } else {
+          await addNoteToProject(newProjectId, note.id);
+          const stages = await getProjectStages(newProjectId);
+          setProjectStages(stages || []);
+          const fresh = await getNoteById(note.id);
+          if (fresh) {
+            applyServerNote(fresh, { replaceBlocks: false });
+          }
+        }
+      } catch (err) {
+        console.error("Error changing project:", err);
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [note, saveAndApply, addNoteToProject, getProjectStages, getNoteById, applyServerNote]
+  );
+
+  const handleStageChange = useCallback(
+    async (newStageId: string) => {
+      if (!note?.associated_project?.id) return;
+      if (!newStageId || newStageId === (note.associated_project.stage_id ?? "")) return;
+
+      setIsSaving(true);
+      try {
+        await updateProjectNoteStage(note.associated_project.id, note.id, newStageId);
+        const stageName = projectStages.find((s) => s.id === newStageId)?.name ?? "";
+        setNote((prev) =>
+          prev?.associated_project
+            ? {
+                ...prev,
+                associated_project: {
+                  ...prev.associated_project,
+                  stage_id: newStageId,
+                  stage_name: stageName,
+                },
+              }
+            : prev
+        );
+      } catch (err) {
+        console.error("Error changing stage:", err);
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [note, projectStages, updateProjectNoteStage]
+  );
+
+  const handlePriorityChange = useCallback(
+    async (priorityId: string) => {
+      if (!note) return;
+      await saveAndApply({ priority_id: priorityId === "" ? null : priorityId });
+    },
+    [note, saveAndApply]
+  );
+
+  const handleDueDateChange = useCallback(
+    async (dueDate: string | null) => {
+      if (!note) return;
+      await saveAndApply({ due_date: dueDate });
+    },
+    [note, saveAndApply]
+  );
+
+  const canEdit = mode === "edit" || mode === "create";
+
+  if (!mounted || !isOpen) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        aria-label="Fechar"
+        onClick={closeModal}
+      />
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="task-note-modal-title"
+        className="relative z-10 flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl sm:h-[90vh] sm:max-h-[900px] sm:w-full sm:max-w-4xl sm:rounded-xl dark:bg-[#1d1d1b]"
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        {loading ? (
+          <div className="flex flex-1 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-neutral-400" />
+          </div>
+        ) : (
+          <>
+            <TaskNoteModalHeader
+              mode={mode}
+              note={note}
+              isSaving={isSaving}
+              isExporting={isExporting}
+              showColorPicker={showColorPicker}
+              showCommentsPanel={showCommentsPanel}
+              onClose={closeModal}
+              onDelete={handleDelete}
+              onExport={handleExport}
+              onToggleColorPicker={() => setShowColorPicker((v) => !v)}
+              onColorChange={handleColorChange}
+              onToggleComments={() => setShowCommentsPanel((v) => !v)}
+              onCreateNote={mode === "create" ? handleCreateNote : undefined}
+            />
+
+            <div className="flex min-h-0 flex-1 overflow-hidden">
+              <div className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto ${showCommentsPanel ? "md:w-[60%]" : ""}`}>
+                {noteConflict && (
+                  <div className="mx-4 mt-4 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800 dark:border-yellow-500/30 dark:bg-yellow-500/10 dark:text-yellow-200">
+                    <strong>Conflito detectado:</strong> A tarefa foi modificada por outro usuário.
+                    <button
+                      onClick={() => noteId && loadNote()}
+                      className="ml-2 underline hover:no-underline"
+                    >
+                      Recarregar
+                    </button>
+                  </div>
+                )}
+
+                <TaskNoteModalMeta
+                  mode={mode}
+                  note={note}
+                  projects={projects}
+                  projectStages={projectStages}
+                  taskPriorities={taskPriorities}
+                  initialProjectId={projectId}
+                  initialStageId={stageId}
+                  canEdit={canEdit}
+                  onProjectChange={handleProjectChange}
+                  onStageChange={handleStageChange}
+                  onPriorityChange={handlePriorityChange}
+                  onDueDateChange={handleDueDateChange}
+                  onSaveAndApply={saveAndApply}
+                />
+
+                <TaskNoteModalContent
+                  mode={mode}
+                  note={note}
+                  blocks={blocks}
+                  editingTitle={editingTitle}
+                  editingDescription={editingDescription}
+                  canEdit={canEdit}
+                  onTitleChange={handleTitleChange}
+                  onDescriptionChange={handleDescriptionChange}
+                  onBlocksSave={handleBlocksSave}
+                />
+              </div>
+
+              {showCommentsPanel && note && (
+                <NoteCommentsProvider noteId={note.id}>
+                  <div className="hidden w-[40%] border-l border-neutral-200 md:block dark:border-surface-dark-border">
+                    <TaskNoteModalCommentsPanel 
+                      note={note}
+                      onClose={() => setShowCommentsPanel(false)} 
+                    />
+                  </div>
+                </NoteCommentsProvider>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  return createPortal(modalContent, document.body);
+}
+
+function TaskNoteModalCommentsPanel({ 
+  note, 
+  onClose 
+}: { 
+  note: Note; 
+  onClose: () => void;
+}) {
+  const { searchUsers } = useNotes();
+
+  const embeddableFiles: NoteCommentsEmbeddableFile[] = React.useMemo(() => {
+    const files = note.properties?.files || [];
+    return files.map((f) => ({
+      id: f.id,
+      name: f.name,
+      path: f.path,
+      type: f.type,
+    }));
+  }, [note.properties?.files]);
+
+  const handleSearchMentionUsers = React.useCallback(
+    async (query: string) => {
+      if (query.length < 3) return [];
+      try {
+        return await searchUsers(query);
+      } catch {
+        return [];
+      }
+    },
+    [searchUsers]
+  );
+
+  const canComment = note.access?.canEdit ?? false;
+
+  return (
+    <NoteCommentsSidebar
+      canComment={canComment}
+      onClose={onClose}
+      searchMentionUsers={handleSearchMentionUsers}
+      embeddableNoteFiles={embeddableFiles}
+    />
+  );
+}

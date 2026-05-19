@@ -1188,6 +1188,17 @@ class ProjectsReadRepository {
       i++;
     }
 
+    if (filters.collaborator_user_id?.length) {
+      params.push(filters.collaborator_user_id);
+      conditions.push(`EXISTS (
+          SELECT 1 FROM note_collaborators nc_f
+          WHERE nc_f.note_id = n.id
+            AND nc_f.user_id = ANY($${i}::uuid[])
+            AND nc_f.removed = false
+        )`);
+      i++;
+    }
+
     if (filters.due_from) {
       params.push(filters.due_from);
       conditions.push(`n.due_date >= $${i}::timestamptz`);

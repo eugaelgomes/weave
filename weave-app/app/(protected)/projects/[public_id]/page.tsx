@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { useNotes } from "@/app/_contexts/notes-context";
 import { useAuth } from "@/app/_contexts/auth-context";
+import type { ProjectNotesListFilters } from "@/app/_services/projects-service/projects-service";
 
-// Componentes importados (idealmente separados em seus próprios arquivos)
 import ProjectHeader from "@/app/(protected)/projects/_components/project-header";
 import ProjectBoard from "@/app/(protected)/projects/_components/project-board-v2";
 import AddCollaboratorModal from "@/app/(protected)/projects/_components/modals/add-collaborator-modal";
@@ -33,7 +33,6 @@ export default function ProjectViewPage() {
 
   const { notes } = useNotes();
 
-  // Estados Globais do Projeto
   const [project, setProject] = useState<any>(null);
   const [collaborators, setCollaborators] = useState<any[]>([]);
   const [projectNotes, setProjectNotes] = useState<any[]>([]);
@@ -41,7 +40,6 @@ export default function ProjectViewPage() {
   const [projectTags, setProjectTags] = useState<any[]>([]);
   const [taskPriorities, setTaskPriorities] = useState<any[]>([]);
 
-  // Estados de UI
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<"board" | "list">("board");
   const [showAddCollaborator, setShowAddCollaborator] = useState(false);
@@ -49,6 +47,22 @@ export default function ProjectViewPage() {
   const [addTaskStageId, setAddTaskStageId] = useState<string | null>(null);
   const [addTaskParentNoteId, setAddTaskParentNoteId] = useState<string | null>(null);
   const [addTaskParentTitle, setAddTaskParentTitle] = useState<string | null>(null);
+
+  const [noteFilters, setNoteFilters] = useState<ProjectNotesListFilters>({});
+  const filtersRef = useRef(noteFilters);
+  filtersRef.current = noteFilters;
+
+  const loadNotes = useCallback(
+    async (filters?: ProjectNotesListFilters) => {
+      try {
+        const data = await getProjectNotes(projectId, filters);
+        setProjectNotes(data);
+      } catch {
+        /* already logged in context */
+      }
+    },
+    [projectId, getProjectNotes]
+  );
 
   useEffect(() => {
     if (!projectId) return;
@@ -93,13 +107,30 @@ export default function ProjectViewPage() {
     fetchProjectData();
   }, [projectId]);
 
+  const handleFiltersChange = useCallback(
+    (next: ProjectNotesListFilters) => {
+      setNoteFilters(next);
+      void loadNotes(next);
+    },
+    [loadNotes]
+  );
+
+  const handleFiltersClear = useCallback(() => {
+    setNoteFilters({});
+    void loadNotes({});
+  }, [loadNotes]);
+
+  const refetchNotes = useCallback(() => {
+    void loadNotes(filtersRef.current);
+  }, [loadNotes]);
+
   const isOwner = project?.user_id === user?.id;
   const canEdit =
     isOwner ||
-    collaborators.some((c) => c.user_id === user?.id && c.permission === "admin");
+    collaborators.some((c: any) => c.user_id === user?.id && c.permission === "admin");
 
   const enrichedProjectNotes = useMemo(() => {
-    return projectNotes.map((projectNote) => {
+    return projectNotes.map((projectNote: any) => {
       const fullNote = notes.find((note) => note.id === projectNote.id);
       if (!fullNote) return projectNote;
       return {
@@ -126,7 +157,7 @@ export default function ProjectViewPage() {
   if (!project) return null;
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-neutral-50 dark:bg-[#0E0E11]">
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-white dark:bg-[#1d1d1b]">
       <ProjectHeader
         project={project}
         stagesCount={stages.length}
@@ -139,7 +170,15 @@ export default function ProjectViewPage() {
         onBack={() => router.push("/projects")}
       />
 
-      <ProjectFilters />
+      <ProjectFilters
+        stages={stages}
+        projectTags={projectTags}
+        taskPriorities={taskPriorities}
+        collaborators={collaborators}
+        filters={noteFilters}
+        onChange={handleFiltersChange}
+        onClear={handleFiltersClear}
+      />
 
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -170,8 +209,8 @@ export default function ProjectViewPage() {
                 onPatchTask={
                   canEdit
                     ? async (noteId, taskData) => {
-                        const updatedNotes = await patchProjectTask(projectId, noteId, taskData);
-                        setProjectNotes(updatedNotes);
+                        await patchProjectTask(projectId, noteId, taskData);
+                        refetchNotes();
                       }
                     : undefined
                 }
@@ -221,8 +260,8 @@ export default function ProjectViewPage() {
             setAddTaskParentNoteId(null);
             setAddTaskParentTitle(null);
           }}
-          onSuccess={(updatedNotes) => {
-            setProjectNotes(updatedNotes);
+          onSuccess={() => {
+            refetchNotes();
             setShowAddNote(false);
             setAddTaskStageId(null);
             setAddTaskParentNoteId(null);

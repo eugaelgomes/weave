@@ -13,6 +13,7 @@ import { TagsProvider } from "./tags-context";
 import { TaskPrioritiesProvider } from "./task-priorities-context";
 import { WeaveEngineProvider } from "./weave-engine-context";
 import { BackupProvider } from "./backup-context";
+import { TaskNoteModalProvider } from "@/app/(protected)/_components/task-note-modal";
 
 // Exemplo (opcional, apenas para melhorar a leitura do código)
 const composeProviders = (...providers: React.ElementType[]) =>
@@ -39,7 +40,8 @@ const AppProviders = composeProviders(
   TaskPrioritiesProvider,
   WeaveEngineProvider,
   ChatProvider,
-  AgentProvider
+  AgentProvider,
+  TaskNoteModalProvider
 );
 
 export function AuthenticatedProviders({ children }: { children: React.ReactNode }) {

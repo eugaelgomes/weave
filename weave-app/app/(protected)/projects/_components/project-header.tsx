@@ -1,15 +1,19 @@
 import React from "react";
-import { FaArrowLeft } from "react-icons/fa";
-import { Activity, Columns3, List, ChevronRight } from "lucide-react";
+import { ArrowLeft, Columns3, List, ChevronRight } from "lucide-react";
 
 interface ProjectHeaderProps {
-  project: any;
+  project: { title?: string; status?: string };
   stagesCount: number;
   activeView: "board" | "list";
   setActiveView: (view: "board" | "list") => void;
   onViewDetails: () => void;
   onBack: () => void;
 }
+
+const viewOptions = [
+  { id: "board" as const, icon: Columns3, label: "Board" },
+  { id: "list" as const, icon: List, label: "Lista" },
+];
 
 export default function ProjectHeader({
   project,
@@ -19,72 +23,52 @@ export default function ProjectHeader({
   onBack,
 }: ProjectHeaderProps) {
   return (
-    <div className="flex h-11 flex-none items-center justify-between bg-white px-3 backdrop-blur-md dark:bg-neutral-800">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-1 dark:border-surface-dark-border">
+      <div className="flex min-w-0 items-center gap-1.5">
         <button
           type="button"
           onClick={onBack}
           aria-label="Voltar"
           title="Voltar"
-          className="flex size-6 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+          className="flex shrink-0 items-center justify-center rounded p-0.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
         >
-          <FaArrowLeft className="size-2.5" />
+          <ArrowLeft className="h-2.5 w-2.5" />
         </button>
-
-        <div className="mx-1 h-3 w-[1px] bg-neutral-200 dark:bg-neutral-800" />
-
-        <div className="flex items-center gap-2">
-          <div
-            className="flex size-5 items-center justify-center rounded-[4px] shadow-sm"
-            style={{ backgroundColor: project.properties?.color || "#eab308" }}
-          >
-            <Activity className="size-3 text-white/90" />
-          </div>
-          <div className="flex flex-col leading-none">
-            <h1 className="text-[11px] font-medium tracking-tight text-neutral-800 dark:text-neutral-200">
-              {project.title}
-            </h1>
-            <div className="mt-0.5 flex items-center gap-1">
-              <span className="text-[8px] font-bold tracking-wider text-neutral-400 uppercase">
-                {project.status.replace("_", " ")}
-              </span>
-            </div>
-          </div>
-        </div>
+        <h1 className="truncate text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
+          {project.title || "Projeto"}
+        </h1>
       </div>
 
-      <div className="flex items-center gap-3">
-        {/* View Selectors - Ultra Compact Segmented Control */}
-        <div className="flex items-center rounded-md bg-neutral-100 p-0.5 dark:bg-[#1d1d1b]">
-          {[
-            { id: "board" as const, icon: <Columns3 className="size-3" />, label: "board" },
-            { id: "list" as const, icon: <List className="size-3" />, label: "list" },
-          ].map((view) => (
+      <div className="flex shrink-0 items-center gap-1.5">
+        {viewOptions.map((view) => {
+          const Icon = view.icon;
+          const isActive = activeView === view.id;
+
+          return (
             <button
               key={view.id}
+              type="button"
               onClick={() => setActiveView(view.id)}
-              className={`flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-all ${
-                activeView === view.id
-                  ? "bg-brand-primary-500 text-neutral-900 shadow-sm dark:bg-brand-primary-500 dark:text-neutral-900"
-                  : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-300"
+              className={`flex items-center gap-1 rounded px-1 py-0.5 text-[10px] transition-all ${
+                isActive
+                  ? "bg-brand-yellow text-brand-navy"
+                  : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200 dark:bg-[#1d1d1b] dark:hover:bg-neutral-800"
               }`}
             >
-              {view.icon}
-              <span className="hidden lg:inline">{view.label}</span>
+              <Icon className="h-2 w-2" />
+              <span className="hidden sm:inline">{view.label}</span>
             </button>
-          ))}
-        </div>
+          );
+        })}
 
-        <div className="flex items-center gap-1 border-l border-neutral-200 pl-3 dark:border-surface-dark-border">
-          <button
-            type="button"
-            onClick={onViewDetails}
-            className="ml-1 flex items-center gap-1 rounded border border-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:border-surface-dark-border-strong dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
-          >
-            Ver detalhes
-            <ChevronRight className="size-3" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onViewDetails}
+          className="flex items-center gap-1 rounded px-1 py-0.5 text-[10px] text-neutral-500 transition-all hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+        >
+          <span>Detalhes</span>
+          <ChevronRight className="h-2 w-2" />
+        </button>
       </div>
     </div>
   );

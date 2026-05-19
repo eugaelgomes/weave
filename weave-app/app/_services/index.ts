@@ -50,6 +50,10 @@ export {
   type UpdateProjectData,
   type ManageCollaboratorData,
   type ManageNoteData,
+  type ProjectNotesListFilters,
+  datePresetToIsoRange,
+  type DueDatePreset,
+  type CreatedDatePreset,
 } from "./projects-service/projects-service";
 
 // Project Taxonomy Services (Tags and Task Priorities)

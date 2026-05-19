@@ -50,8 +50,8 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
       : null;
 
   const sidebarContent = (
-    <div className="p-2.5">
-      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
+    <div className="py-2.5">
+      <h2 className="mb-2 px-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
         Menu
       </h2>
 
@@ -78,7 +78,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
         </li>
       </ul>
 
-      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
+      <h2 className="mb-2 px-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
         Meus Projetos
       </h2>
 
@@ -91,27 +91,25 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
 
           return (
             <li key={project.id} className="flex flex-col">
-              <div className="flex w-full min-w-0 items-center">
-                <div className="flex w-5 flex-shrink-0 items-center justify-center">
-                  {hasSubprojects && (
-                    <button
-                      onClick={(e) => toggleProject(e, project.id)}
-                      className="rounded p-0.5 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                      aria-label={isExpanded ? "Recolher projeto" : "Expandir projeto"}
-                    >
-                      {isExpanded ? (
-                        <ChevronDown className="h-3 w-3" />
-                      ) : (
-                        <ChevronRight className="h-3 w-3" />
-                      )}
-                    </button>
-                  )}
-                </div>
+              <div className="flex w-full min-w-0 items-center gap-0.5 px-2">
+                {hasSubprojects && (
+                  <button
+                    type="button"
+                    onClick={(e) => toggleProject(e, project.id)}
+                    className="flex-shrink-0 rounded p-0.5 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                    aria-label={isExpanded ? "Recolher projeto" : "Expandir projeto"}
+                  >
+                    {isExpanded ? (
+                      <ChevronDown className="h-3 w-3" />
+                    ) : (
+                      <ChevronRight className="h-3 w-3" />
+                    )}
+                  </button>
+                )}
 
                 <Link
                   href={`/projects/${project.public_id}`}
-
-                  className={`group flex min-w-0 flex-1 items-center justify-between rounded-md px-2 py-1.5 text-xs transition-all ${
+                  className={`group flex min-w-0 flex-1 items-center rounded-md py-1.5 text-xs transition-all ${
                     isActive
                       ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
                       : "text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800/50"
@@ -130,7 +128,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
 
               {/* Subprojetos com as guias visuais em Amarelo */}
               {hasSubprojects && isExpanded && (
-                <ul className="relative mt-1 ml-[17px] flex flex-col pl-4">
+                <ul className="relative mt-1 ml-[17px] flex flex-col">
                   {project.subprojects?.map((sub, index) => {
                     const isSubActive = currentProjectId === sub.public_id;
 
@@ -149,7 +147,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                         <Link
                           href={`/projects/${sub.public_id}`}
 
-                          className={`group mb-0.5 ml-1 flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] transition-all ${
+                          className={`group mb-0.5 ml-1 flex items-center gap-1.5 rounded-md px-4 py-1 text-[11px] transition-all ${
                             isSubActive
                               ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
                               : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-300"

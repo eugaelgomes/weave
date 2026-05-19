@@ -47,6 +47,7 @@ import {
   type CreateTaskInStageData,
   type PatchProjectTaskData,
   type NoteStageUpdateResult,
+  type ProjectNotesListFilters,
   type ProjectDashboardStats,
   type ProjectStatsFilters,
   type AiReportConfig,
@@ -228,7 +229,7 @@ export interface ProjectsContextType {
   removeCollaborator: (projectId: string, userId: string) => Promise<boolean>;
 
   // Funções de tarefas
-  getProjectNotes: (projectId: string) => Promise<ProjectNote[]>;
+  getProjectNotes: (projectId: string, filters?: ProjectNotesListFilters) => Promise<ProjectNote[]>;
   addNoteToProject: (projectId: string, noteId: string) => Promise<boolean>;
   createTaskInStage: (
     projectId: string,
@@ -832,11 +833,11 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   // --- FUNÇÕES DE NOTAS ---
 
   const getProjectNotes = useCallback(
-    async (projectId: string): Promise<ProjectNote[]> => {
+    async (projectId: string, filters?: ProjectNotesListFilters): Promise<ProjectNote[]> => {
       if (!user?.id) return [];
 
       try {
-        const notes = await fetchProjectNotesService(projectId);
+        const notes = await fetchProjectNotesService(projectId, filters);
         return notes;
       } catch (err: unknown) {
         console.error("Erro ao buscar tarefas do projeto:", err);
