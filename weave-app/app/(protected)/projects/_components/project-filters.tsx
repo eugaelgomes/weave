@@ -69,7 +69,7 @@ export function ProjectFilters({
   const [duePreset, setDuePreset] = useState<DueDatePreset>("all");
   const [createdPreset, setCreatedPreset] = useState<CreatedDatePreset>("all");
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isFirstRender = useRef(true);
 
   useEffect(() => {

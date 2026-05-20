@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { track } from "@vercel/analytics";
 import {
   BrainCircuit,
   CheckCircle2,
@@ -184,6 +185,10 @@ export default function HighDensityDashboard() {
   const submitCreateReasoning = async (projectId: string, payload: { reasoningType: string; title: string; outputMarkdown: string }) => {
     try {
       await createReasoningFromMarkdown(projectId, payload);
+      track("weave_engine_create_reasoning", {
+        projectId,
+        reasoningType: payload.reasoningType,
+      });
       setCreatingForProjectId(null);
       toast.success("Reasoning criado");
     } catch (err: unknown) {
@@ -461,7 +466,7 @@ function CreateReasoningModal({
   onClose: () => void;
   onSubmit: (payload: { reasoningType: string; title: string; outputMarkdown: string }) => void;
 }) {
-  const [reasoningType, setReasoningType] = useState("general");
+  const [reasoningType, setReasoningType] = useState("analysis");
   const [title, setTitle] = useState("");
   const [outputMarkdown, setOutputMarkdown] = useState("");
 
@@ -492,7 +497,7 @@ function CreateReasoningModal({
               value={reasoningType}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReasoningType(e.target.value)}
               className={formControlClass}
-              placeholder="ex.: sprint_review, daily_standup, general"
+              placeholder="ex.: sprint_review, daily_standup, analysis"
             />
           </label>
 
@@ -527,7 +532,7 @@ function CreateReasoningModal({
                   toast.error("Informe um título");
                   return;
                 }
-                onSubmit({ reasoningType: reasoningType.trim() || "general", title: title.trim(), outputMarkdown });
+                onSubmit({ reasoningType: reasoningType.trim() || "analysis", title: title.trim(), outputMarkdown });
               }}
               className={cn(primaryCtaMdClass, "w-full sm:w-auto")}
             >

@@ -13,6 +13,8 @@ const DEFAULT_ENGINE_LLM_RESPONSE_PREFIX = "weave:engine:llm:responses";
 const DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY = "queue:note-embeddings";
 const DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY = "weave:ai-reports:delivery";
 const DEFAULT_REASONING_TRIGGER_QUEUE_KEY = "queue:reasoning:triggers";
+const DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY = "queue:engine-proactive-tasks";
+const DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY = "queue:engine-proactive-responses";
 
 /**
  * List key for email jobs consumed by the worker email processor.
@@ -99,6 +101,28 @@ function getReasoningTriggerQueueRedisKey() {
 }
 
 /**
+ * List key for proactive jobs consumed by the engine proactive processor.
+ * @returns {string}
+ */
+function getEngineProactiveTaskQueueRedisKey() {
+  return (
+    process.env.REDIS_ENGINE_PROACTIVE_TASK_QUEUE_KEY ||
+    DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY
+  );
+}
+
+/**
+ * List key for proactive responses consumed by the API reasoning response consumer.
+ * @returns {string}
+ */
+function getEngineProactiveResponseQueueRedisKey() {
+  return (
+    process.env.REDIS_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY ||
+    DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY
+  );
+}
+
+/**
  * Resolved queue list keys (env-aware).
  * @readonly
  */
@@ -130,6 +154,12 @@ const REDIS_QUEUE_KEYS = Object.freeze({
   get REASONING_TRIGGER() {
     return getReasoningTriggerQueueRedisKey();
   },
+  get ENGINE_PROACTIVE_TASK() {
+    return getEngineProactiveTaskQueueRedisKey();
+  },
+  get ENGINE_PROACTIVE_RESPONSE() {
+    return getEngineProactiveResponseQueueRedisKey();
+  },
 });
 
 module.exports = {
@@ -142,6 +172,8 @@ module.exports = {
   DEFAULT_PLAN_USAGE_QUEUE_KEY,
   DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY,
   DEFAULT_REASONING_TRIGGER_QUEUE_KEY,
+  DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY,
+  DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY,
   getBackupExportQueueRedisKey,
   getDomainVerifyQueueRedisKey,
   getEmailQueueRedisKey,
@@ -151,5 +183,7 @@ module.exports = {
   getPlanUsageQueueRedisKey,
   getAiReportDeliveryQueueRedisKey,
   getReasoningTriggerQueueRedisKey,
+  getEngineProactiveTaskQueueRedisKey,
+  getEngineProactiveResponseQueueRedisKey,
   REDIS_QUEUE_KEYS,
 };

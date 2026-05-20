@@ -25,6 +25,8 @@ const {
   respondIfWorkspaceShareDenied,
 } = require("@/utils/workspace-share-guard");
 const { resolveNoteTitle } = require("@/modules/notes/utils/derive-note-title");
+const redis = require("@/services/queue/consumer-connection");
+const { getReasoningTriggerQueueRedisKey } = require("@/services/queue/queue-keys");
 
 class ProjectsUpdateController extends ProjectsCoreController {
   /**
@@ -1673,6 +1675,87 @@ class ProjectsUpdateController extends ProjectsCoreController {
   // ══════════════════════════════════════════════════════════════════════
 
   /**
+   * POST /api/projects/:id/reasonings/trigger
+   * Queues a proactive reasoning generation job for the engine pipeline.
+   */
+  async triggerReasoningGeneration(req, res, next) {
+    try {
+      const { id: projectId } = req.params;
+      const userId = this._requireAuthenticatedUser(req, res);
+      if (!userId) return;
+
+      await this._validateProjectAccess(projectId, userId);
+
+      const requestedType = String(req.body?.reasoningType || "analysis")
+        .trim()
+        .toLowerCase();
+      const reasoningType = this._normalizeReasoningType(requestedType);
+      const requestedSprintId = req.body?.sprintId ? String(req.body.sprintId) : null;
+      const titleOverride = req.body?.title ? String(req.body.title).trim() : null;
+
+      const reportConfig = await reportConfigRepository.getByProjectId(projectId);
+      if (!reportConfig) {
+        return res.status(400).json({
+          error: "Configure o relatório de IA do projeto antes de gerar reasonings.",
+        });
+      }
+
+      let sprint = null;
+      if (requestedSprintId) {
+        sprint = await sprintsRepository.getById(requestedSprintId);
+        if (!sprint || String(sprint.project_id) !== String(projectId)) {
+          return res.status(404).json({ error: "Sprint não encontrada para este projeto." });
+        }
+      } else {
+        sprint = await sprintsRepository.getActiveByProject(projectId);
+      }
+
+      if (!sprint) {
+        return res.status(400).json({
+          error: "Não há sprint ativa. Defina uma sprint para gerar o reasoning.",
+        });
+      }
+
+      const trigger = {
+        projectId,
+        sprintId: sprint.id,
+        reportType: reasoningType,
+        reasoningType,
+        title:
+          titleOverride ||
+          `${this._reasoningTypeLabel(reasoningType)} (${new Date()
+            .toISOString()
+            .slice(0, 10)})`,
+        triggeredBy: userId,
+        config: {
+          ...reportConfig,
+          project_id: projectId,
+          sprint_id: sprint.id,
+          sprint_number: sprint.sprint_number,
+          sprint_title: sprint.title,
+          sprint_status: sprint.status,
+          sprint_start: sprint.start_date,
+          sprint_end: sprint.end_date,
+          sprint_workable_days:
+            sprint.workable_days || reportConfig.default_workable_days || [1, 2, 3, 4, 5],
+        },
+        triggeredAt: new Date().toISOString(),
+      };
+
+      const queueKey = getReasoningTriggerQueueRedisKey();
+      await redis.rpush(queueKey, JSON.stringify(trigger));
+
+      res.status(202).json({
+        message: "Solicitação de reasoning enviada para processamento.",
+        queued: true,
+        reasoningType,
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  /**
    * POST /api/projects/:id/reasonings
    * Creates a new reasoning (used by the engine via API or internal calls).
    */
@@ -1769,6 +1852,37 @@ class ProjectsUpdateController extends ProjectsCoreController {
     } catch (error) {
       this._handleError(error, res, next);
     }
+  }
+
+  /**
+   * @param {string} type
+   * @returns {string}
+   */
+  _normalizeReasoningType(type) {
+    const normalized = String(type || "").trim();
+    const valid = [
+      "sprint_kickoff",
+      "daily_standup",
+      "sprint_review",
+      "deadline_alert",
+      "analysis",
+    ];
+    return valid.includes(normalized) ? normalized : "analysis";
+  }
+
+  /**
+   * @param {string} type
+   * @returns {string}
+   */
+  _reasoningTypeLabel(type) {
+    const labels = {
+      sprint_kickoff: "Sprint kickoff",
+      daily_standup: "Daily standup",
+      sprint_review: "Sprint review",
+      deadline_alert: "Deadline alert",
+      analysis: "Analysis",
+    };
+    return labels[type] || "Reasoning";
   }
 }
 

@@ -27,6 +27,7 @@ import {
   Calendar,
   Settings,
   Sparkles,
+  BrainCircuit,
   Workflow,
   CircleHelp,
   type LucideIcon,
@@ -404,6 +405,12 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       path: "/projects",
       icon: Network,
       label: t.nav.projects,
+    },
+    {
+      path: "/weave-engine",
+      icon: BrainCircuit,
+      label: t.nav.weaveEngine,
+      badge: unreadCount > 0 ? unreadCount : undefined,
     },
     { path: "/documents", icon: FileText, label: t.nav.documents },
     {

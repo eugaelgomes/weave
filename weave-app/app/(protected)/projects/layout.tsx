@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../../_contexts/auth-context";
 import { useProjects } from "../../_contexts/projects-context";
+import { useWeaveEngine } from "@/app/_contexts/weave-engine-context";
 import {
   Folder,
   ChevronRight,
@@ -18,6 +19,7 @@ import GlobalLoading from "@/app/_components/ui/global-loading";
 export default function ProjectsLayout({ children }: { children: React.ReactNode }) {
   const { authenticated, loading: authLoading } = useAuth();
   const { getRecentProjects, loading: projectsLoading } = useProjects();
+  const { feed } = useWeaveEngine();
   const pathname = usePathname();
   const [expandedProjects, setExpandedProjects] = useState<string[]>([]);
 
@@ -41,6 +43,30 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
   }
 
   const recentProjects = getRecentProjects();
+  const signalsByProjectPublicId = React.useMemo(() => {
+    const map = new Map<string, { hasNew: boolean; actions: number; risk: "low" | "medium" | "high" }>();
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+
+    feed.forEach((item) => {
+      const project = recentProjects.find((proj) => proj.id === item.projectId);
+      if (!project?.public_id) return;
+      const key = project.public_id;
+      const current = map.get(key) || { hasNew: false, actions: 0, risk: "low" as const };
+      const createdAt = item.created_at ? new Date(item.created_at).getTime() : 0;
+      const hasNew = current.hasNew || (createdAt > 0 && now - createdAt <= dayMs);
+      const actions = current.actions + (item.action_items_count || 0);
+      const nextRisk =
+        item.safety_label === "unsafe"
+          ? "high"
+          : item.safety_label === "review" && current.risk !== "high"
+            ? "medium"
+            : current.risk;
+      map.set(key, { hasNew, actions, risk: nextRisk });
+    });
+
+    return map;
+  }, [feed, recentProjects]);
 
   const base = pathname.replace(/\/+$/, "");
   const isDashboard = base === "/projects";
@@ -85,6 +111,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
       <ul className="space-y-0.5">
         {recentProjects.map((project) => {
           const isActive = currentProjectId === project.public_id;
+          const signal = signalsByProjectPublicId.get(project.public_id || "");
 
           const hasSubprojects = project.subprojects && project.subprojects.length > 0;
           const isExpanded = expandedProjects.includes(project.id);
@@ -122,6 +149,21 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                       }`}
                     />
                     <span className="truncate">{project.title}</span>
+                    {signal?.risk === "high" ? (
+                      <span className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" title="Risco alto" />
+                    ) : signal?.risk === "medium" ? (
+                      <span className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" title="Risco médio" />
+                    ) : null}
+                    {signal?.actions ? (
+                      <span className="rounded-full bg-brand-primary-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-brand-primary-700 dark:text-brand-primary-400">
+                        {signal.actions}
+                      </span>
+                    ) : null}
+                    {signal?.hasNew ? (
+                      <span className="rounded-full border border-brand-primary-500/50 px-1.5 py-0.5 text-[9px] font-semibold text-brand-primary-700 dark:text-brand-primary-400">
+                        Novo
+                      </span>
+                    ) : null}
                   </div>
                 </Link>
               </div>

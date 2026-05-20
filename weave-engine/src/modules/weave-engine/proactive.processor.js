@@ -1,6 +1,9 @@
 const redis = require("../../services/redis.client");
 const { logger } = require("../../logger");
 const { callAIProvider } = require("../core/providers/llm-provider.client");
+const {
+  getEngineProactiveTaskQueueRedisKey,
+} = require("../../services/redis-queue-keys");
 
 const RESPONSE_TTL_SECONDS = 60;
 const SAFETY_RECHECK_MODEL = process.env.WEAVE_PROACTIVE_SAFETY_MODEL || null;
@@ -8,7 +11,7 @@ const SAFETY_RECHECK_MODEL = process.env.WEAVE_PROACTIVE_SAFETY_MODEL || null;
 class ProactiveQueueProcessor {
   constructor() {
     this.isRunning = false;
-    this.queueName = "queue:engine-proactive-tasks"; // Can be dynamic or configured later
+    this.queueName = getEngineProactiveTaskQueueRedisKey();
   }
 
   async start() {

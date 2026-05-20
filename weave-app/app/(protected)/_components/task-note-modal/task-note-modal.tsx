@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Loader2 } from "lucide-react";
 
 import { useNotes, type Note, type Block, type UpdateNoteData } from "@/app/_contexts/notes-context";
+import { useOrganization } from "@/app/_contexts/organization-context";
 import { useProjects, type ProjectStage, type TaskPriority } from "@/app/_contexts/projects-context";
 import { NoteCommentsProvider, useNoteComments } from "@/app/_contexts/note-comments-context";
 import { NoteCommentsSidebar } from "@/app/(protected)/notes/_components/note-comments-sidebar";
@@ -36,9 +37,12 @@ export function TaskNoteModal() {
     putNoteBlocksSync,
   } = useNotes();
 
+  const { organization } = useOrganization();
+
   const {
     projects,
     getProjectStages,
+    getTaskPriorities,
     getOrgTaskPriorities,
     addNoteToProject,
     updateProjectNoteStage,
@@ -151,6 +155,26 @@ export function TaskNoteModal() {
     [note, enqueueNoteMutation, updateNote, applyServerNote, applyServerRevisionToRef, parseNoteRevision, callbacks]
   );
 
+  const loadTaskPriorities = useCallback(
+    async (opts: { projectId?: string; orgId?: string }) => {
+      const { projectId: pid, orgId } = opts;
+      try {
+        if (pid) {
+          const list = await getTaskPriorities(pid);
+          setTaskPriorities(list || []);
+        } else if (orgId) {
+          const list = await getOrgTaskPriorities(orgId);
+          setTaskPriorities(list || []);
+        } else {
+          setTaskPriorities([]);
+        }
+      } catch {
+        setTaskPriorities([]);
+      }
+    },
+    [getTaskPriorities, getOrgTaskPriorities]
+  );
+
   const loadNote = useCallback(async () => {
     if (!noteId) return;
     setLoading(true);
@@ -164,17 +188,21 @@ export function TaskNoteModal() {
         if (fetchedNote.associated_project?.id) {
           const stages = await getProjectStages(fetchedNote.associated_project.id);
           setProjectStages(stages || []);
+        } else {
+          setProjectStages([]);
         }
 
-        const priorities = await getOrgTaskPriorities();
-        setTaskPriorities(priorities || []);
+        await loadTaskPriorities({
+          projectId: fetchedNote.associated_project?.id,
+          orgId: fetchedNote.associated_organization?.id,
+        });
       }
     } catch (err) {
       console.error("Error loading note:", err);
     } finally {
       setLoading(false);
     }
-  }, [noteId, getNoteById, applyServerNote, getProjectStages, getOrgTaskPriorities]);
+  }, [noteId, getNoteById, applyServerNote, getProjectStages, loadTaskPriorities]);
 
   const initNewNote = useCallback(async () => {
     setNote(null);
@@ -186,11 +214,15 @@ export function TaskNoteModal() {
     if (projectId) {
       const stages = await getProjectStages(projectId);
       setProjectStages(stages || []);
+    } else {
+      setProjectStages([]);
     }
 
-    const priorities = await getOrgTaskPriorities();
-    setTaskPriorities(priorities || []);
-  }, [projectId, getProjectStages, getOrgTaskPriorities]);
+    await loadTaskPriorities({
+      projectId: projectId || undefined,
+      orgId: organization?.id,
+    });
+  }, [projectId, organization?.id, getProjectStages, loadTaskPriorities]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -364,10 +396,12 @@ export function TaskNoteModal() {
       try {
         if (newProjectId === "") {
           await saveAndApply({ project_id: null });
+          await loadTaskPriorities({ orgId: note.associated_organization?.id });
         } else {
           await addNoteToProject(newProjectId, note.id);
           const stages = await getProjectStages(newProjectId);
           setProjectStages(stages || []);
+          await loadTaskPriorities({ projectId: newProjectId });
           const fresh = await getNoteById(note.id);
           if (fresh) {
             applyServerNote(fresh, { replaceBlocks: false });
@@ -379,7 +413,7 @@ export function TaskNoteModal() {
         setIsSaving(false);
       }
     },
-    [note, saveAndApply, addNoteToProject, getProjectStages, getNoteById, applyServerNote]
+    [note, saveAndApply, addNoteToProject, getProjectStages, getNoteById, applyServerNote, loadTaskPriorities]
   );
 
   const handleStageChange = useCallback(

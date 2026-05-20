@@ -20,7 +20,21 @@ const getFirstAndLastUserName = (fullName: string): string => {
 };
 
 interface AnimatedGreetingProps {
-  type?: "home" | "projects" | "notes" | "settings" | "calendar" | "notifications" | "weave-ai" | "workspace" | "plans" | "security" | "integrations" | "preferences" | "documents";
+  type?:
+    | "home"
+    | "projects"
+    | "notes"
+    | "settings"
+    | "calendar"
+    | "notifications"
+    | "weave-ai"
+    | "weave-engine"
+    | "workspace"
+    | "plans"
+    | "security"
+    | "integrations"
+    | "preferences"
+    | "documents";
 }
 
 export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
@@ -64,6 +78,12 @@ export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
         return <span className="text-brand-primary-500 font-semibold">{t.nav.documents}</span>;
       case "weave-ai":
         return <span className="bg-linear-to-r from-brand-primary-500 to-purple-600 bg-clip-text text-transparent font-bold">{t.nav.weaveAi}</span>;
+      case "weave-engine":
+        return (
+          <span className="bg-linear-to-r from-brand-primary-500 to-amber-300 bg-clip-text text-transparent font-bold">
+            {t.nav.weaveEngine}
+          </span>
+        );
       default:
         return <span className="font-semibold text-gray-900 dark:text-gray-100">{t.greeting.hello} {formattedName}</span>;
     }
@@ -97,6 +117,8 @@ export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
         return t.headers.documents;
       case "weave-ai":
         return t.headers.weaveAi;
+      case "weave-engine":
+        return t.headers.weaveEngine;
       default:
         return "";
     }

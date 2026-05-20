@@ -1,24 +1,26 @@
 const redis = require("@/services/queue/consumer-connection");
 const reasoningsRepository = require("@/modules/projects/repositories/reasonings.repository");
-const { getAiReportDeliveryQueueRedisKey } = require("@/services/queue/queue-keys");
-
-const RESPONSE_QUEUE_KEY = "queue:engine-proactive-responses";
+const {
+  getAiReportDeliveryQueueRedisKey,
+  getEngineProactiveResponseQueueRedisKey,
+} = require("@/services/queue/queue-keys");
 
 class ReasoningResponseConsumer {
   constructor() {
     this.isRunning = false;
+    this.responseQueueKey = getEngineProactiveResponseQueueRedisKey();
   }
 
   async start() {
     if (this.isRunning) return;
     this.isRunning = true;
 
-    console.log(`[Reasoning Consumer] Listening for engine responses on: ${RESPONSE_QUEUE_KEY}`);
+    console.log(`[Reasoning Consumer] Listening for engine responses on: ${this.responseQueueKey}`);
 
     while (this.isRunning) {
       try {
         // Block waiting for a response
-        const result = await redis.blpop(RESPONSE_QUEUE_KEY, 0);
+        const result = await redis.blpop(this.responseQueueKey, 0);
 
         if (result) {
           const [, payloadStr] = result;

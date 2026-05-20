@@ -139,6 +139,7 @@ export const API_ENDPOINTS = {
 
   // Reasonings
   PROJECTS_REASONINGS: (projectId: string) => `/projects/${projectId}/reasonings`,
+  PROJECTS_REASONINGS_TRIGGER: (projectId: string) => `/projects/${projectId}/reasonings/trigger`,
   PROJECTS_REASONING_BY_ID: (projectId: string, reasoningId: string) =>
     `/projects/${projectId}/reasonings/${reasoningId}`,
   PROJECTS_REASONING_ACTION_ITEMS: (projectId: string, reasoningId: string) =>

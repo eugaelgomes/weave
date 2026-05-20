@@ -257,6 +257,12 @@ router.get(
   ProjectsReadController.getReasoningActionItems.bind(ProjectsReadController)
 );
 router.post(
+  "/:id/reasonings/trigger",
+  standardTrafficLimiter,
+  requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
+  ProjectsUpdateController.triggerReasoningGeneration.bind(ProjectsUpdateController)
+);
+router.post(
   "/:id/reasonings",
   standardTrafficLimiter,
   requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),

@@ -40,6 +40,12 @@ export type UpdateReasoningActionItemPayload = {
   priority?: string | null;
 };
 
+export type TriggerReasoningPayload = {
+  reasoningType?: string;
+  sprintId?: string;
+  title?: string;
+};
+
 export async function fetchProjectReasonings(
   projectId: string,
   options: FetchProjectReasoningsOptions = {}
@@ -88,6 +94,17 @@ export async function createReasoning(projectId: string, payload: CreateReasonin
   const response = await apiClient.post(API_ENDPOINTS.PROJECTS_REASONINGS(projectId), payload);
   const raw = await handleResponse<unknown>(response);
   return ReasoningCreateEnvelopeSchema.parse(raw);
+}
+
+export async function triggerReasoning(
+  projectId: string,
+  payload: TriggerReasoningPayload = {}
+) {
+  const response = await apiClient.post(
+    API_ENDPOINTS.PROJECTS_REASONINGS_TRIGGER(projectId),
+    payload
+  );
+  return handleResponse<unknown>(response);
 }
 
 export async function updateReasoningInteraction(

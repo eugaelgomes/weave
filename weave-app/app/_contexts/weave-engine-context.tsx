@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useProjects } from "@/app/_contexts/projects-context";
 import type { ProjectOverview } from "@/app/_contexts/projects-context";
 import type {
@@ -13,6 +13,7 @@ import {
   fetchProjectReasonings,
   fetchReasoningActionItems,
   fetchReasoningById,
+  triggerReasoning,
   updateReasoningActionItem,
   updateReasoningInteraction,
 } from "@/app/_services/projects-service/reasonings-service";
@@ -52,6 +53,7 @@ type WeaveEngineContextValue = {
     title: string;
     outputMarkdown: string;
   }) => Promise<void>;
+  triggerReasoningNow: (projectId: string, payload?: { reasoningType?: string; title?: string }) => Promise<void>;
 };
 
 const WeaveEngineContext = createContext<WeaveEngineContextValue | undefined>(undefined);
@@ -182,6 +184,18 @@ export function WeaveEngineProvider({ children }: { children: React.ReactNode })
     await refreshFeed();
   }, [refreshFeed]);
 
+  const triggerReasoningNow = useCallback(
+    async (projectId: string, payload: { reasoningType?: string; title?: string } = {}) => {
+      await triggerReasoning(projectId, payload);
+      await refreshFeed();
+    },
+    [refreshFeed]
+  );
+
+  useEffect(() => {
+    void refreshFeed();
+  }, [refreshFeed]);
+
   const value = useMemo<WeaveEngineContextValue>(
     () => ({
       loading,
@@ -200,6 +214,7 @@ export function WeaveEngineProvider({ children }: { children: React.ReactNode })
       markRead,
       toggleActionItemCompleted,
       createReasoningFromMarkdown,
+      triggerReasoningNow,
     }),
     [
       loading,
@@ -218,6 +233,7 @@ export function WeaveEngineProvider({ children }: { children: React.ReactNode })
       markRead,
       toggleActionItemCompleted,
       createReasoningFromMarkdown,
+      triggerReasoningNow,
     ]
   );
 

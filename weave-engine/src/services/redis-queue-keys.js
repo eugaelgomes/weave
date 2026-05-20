@@ -1,5 +1,7 @@
 const DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY = "weave:engine:llm:requests";
 const DEFAULT_ENGINE_LLM_RESPONSE_PREFIX = "weave:engine:llm:responses";
+const DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY = "queue:engine-proactive-tasks";
+const DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY = "queue:engine-proactive-responses";
 
 /**
  * Queue key where server pushes LLM requests.
@@ -26,9 +28,37 @@ function getEngineLlmResponsePrefixRedisKey() {
   );
 }
 
+/**
+ * Queue key where API pushes proactive generation tasks.
+ *
+ * @returns {string}
+ */
+function getEngineProactiveTaskQueueRedisKey() {
+  return (
+    process.env.REDIS_ENGINE_PROACTIVE_TASK_QUEUE_KEY ||
+    DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY
+  );
+}
+
+/**
+ * Queue key where engine writes proactive responses consumed by API.
+ *
+ * @returns {string}
+ */
+function getEngineProactiveResponseQueueRedisKey() {
+  return (
+    process.env.REDIS_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY ||
+    DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY
+  );
+}
+
 module.exports = {
   DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY,
   DEFAULT_ENGINE_LLM_RESPONSE_PREFIX,
+  DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY,
+  DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY,
   getEngineLlmRequestQueueRedisKey,
   getEngineLlmResponsePrefixRedisKey,
+  getEngineProactiveTaskQueueRedisKey,
+  getEngineProactiveResponseQueueRedisKey,
 };

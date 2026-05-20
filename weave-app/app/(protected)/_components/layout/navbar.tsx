@@ -6,11 +6,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { Fredoka } from "next/font/google";
 import { Menu, X, Sun, Moon, Search, CircleUserRound, Bell } from "lucide-react";
+import { track } from "@vercel/analytics";
 
 import { useAuth, type User } from "@/app/_contexts/auth-context";
 import { useTheme } from "@/app/_contexts/theme-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useNotification } from "@/app/_contexts/notification-context";
+import { useWeaveEngine } from "@/app/_contexts/weave-engine-context";
 
 import SearchModal from "@/app/(protected)/_components/ui/navbar/search-modal";
 import { cn } from "@/lib/utils";
@@ -19,6 +21,31 @@ const fredoka = Fredoka({
   subsets: ["latin"],
   weight: ["700"],
 });
+
+const fredokaRegular = Fredoka({
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
+const ENGINE_STATUS_CHIP_CLASS: Record<
+  "stable" | "attention" | "critical",
+  string
+> = {
+  stable:
+    "bg-green-800 text-white hover:bg-green-900 dark:bg-green-500 dark:text-white dark:hover:bg-green-400",
+  attention:
+    "bg-amber-500 text-neutral-950 hover:bg-amber-600 dark:bg-amber-400 dark:text-neutral-950 dark:hover:bg-amber-300",
+  critical:
+    "bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:text-white dark:hover:bg-red-400",
+};
+
+function getProjectInitials(title: string): string {
+  const parts = title.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return title.trim().slice(0, 2).toUpperCase() || "?";
+}
 
 /** Mobile navbar icons — same language as collapsed sidebar rows (rounded-md, soft hover). */
 const navIconMobileShellClass =
@@ -219,10 +246,56 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
   const { user, logout, authenticated, updateUser } = useAuth();
   const { theme, setTheme } = useTheme();
   const { t } = useLanguage();
+  const { feed, projects: engineProjects } = useWeaveEngine();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const engineInsightsUnread = React.useMemo(
+    () => feed.filter((item) => !item.is_read && !item.is_dismissed).length,
+    [feed]
+  );
+
+  const engineStatus: "stable" | "attention" | "critical" = React.useMemo(() => {
+    if (feed.some((item) => item.safety_label === "unsafe")) return "critical";
+    if (feed.some((item) => item.safety_label === "review")) return "attention";
+    return "stable";
+  }, [feed]);
+
+  const engineStatusLabel =
+    engineStatus === "critical"
+      ? t.navbar.engineCritical
+      : engineStatus === "attention"
+        ? t.navbar.engineAttention
+        : t.navbar.engineStable;
+
+  const engineWeAreLabel =
+    engineStatus === "critical"
+      ? t.navbar.engineWeAreCritical
+      : engineStatus === "attention"
+        ? t.navbar.engineWeAreAttention
+        : t.navbar.engineWeAreStable;
+
+  const engineChipProjects = React.useMemo(() => {
+    const seen = new Set<string>();
+    const list: { id: string; title: string; icon?: string; color?: string }[] = [];
+
+    for (const item of feed) {
+      if (seen.has(item.projectId)) continue;
+      seen.add(item.projectId);
+      const project = engineProjects.find((p) => p.id === item.projectId);
+      list.push({
+        id: item.projectId,
+        title: project?.title ?? item.projectName,
+        icon: project?.icon,
+        color: project?.color,
+      });
+      if (list.length >= 4) break;
+    }
+
+    return list;
+  }, [feed, engineProjects]);
 
   const desktopMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDialogElement>(null);
@@ -351,6 +424,47 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                     </kbd>
                   </button>
                   <NotificationsLink ariaLabel={t.nav.notifications} surface="desktop" />
+                  <Link
+                    href="/weave-engine"
+                    onClick={() => track("weave_engine_open", { source: "navbar" })}
+                    className={cn(
+                      "relative inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[10px] leading-none transition-colors",
+                      fredokaRegular.className,
+                      "font-normal",
+                      ENGINE_STATUS_CHIP_CLASS[engineStatus]
+                    )}
+                    aria-label={t.navbar.openEngine}
+                    title={`${t.navbar.engineStatus}: ${engineStatusLabel}`}
+                  >
+                    <span className="whitespace-nowrap">{engineWeAreLabel}</span>
+                    {engineChipProjects.length > 0 ? (
+                      <span className="flex items-center -space-x-1" aria-hidden>
+                        {engineChipProjects.map((project) => (
+                          <span
+                            key={project.id}
+                            className="inline-flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-800/90 text-[7px] font-medium leading-none text-white ring-2 ring-white/30"
+                            style={
+                              !project.icon && project.color
+                                ? { backgroundColor: project.color }
+                                : undefined
+                            }
+                            title={project.title}
+                          >
+                            {project.icon ? (
+                              <span className="text-[9px] leading-none">{project.icon}</span>
+                            ) : (
+                              getProjectInitials(project.title)
+                            )}
+                          </span>
+                        ))}
+                      </span>
+                    ) : null}
+                    {engineInsightsUnread > 0 ? (
+                      <span className="bg-brand-primary-500 absolute -top-0.5 -right-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full border-2 border-white px-0.5 text-[7px] font-bold text-white dark:border-surface-dark-border-strong">
+                        {engineInsightsUnread > 99 ? "99+" : engineInsightsUnread}
+                      </span>
+                    ) : null}
+                  </Link>
                 </div>
               </section>
             ) : (
@@ -378,7 +492,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                     onClick={handleThemeToggle}
                     className={cn(
                       navbarElevatedSurfaceClass,
-                      "flex h-7 w-7 items-center justify-center rounded-full text-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50 dark:text-white md:h-8 md:w-8"
+                      "flex h-6 w-6 items-center justify-center rounded-full text-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50 dark:text-white md:h-6 md:w-6"
                     )}
                     aria-label={t.navbar.theme}
                     title={t.navbar.theme}
@@ -403,14 +517,14 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                         isMenuOpen ? "bg-neutral-100 dark:bg-neutral-900" : ""
                       )}
                     >
-                      <div className="hidden max-h-8 min-h-0 shrink lg:flex lg:flex-col lg:items-end lg:justify-center lg:gap-0.5 lg:pr-1.5 lg:leading-none">
+                      {/*<div className="hidden max-h-8 min-h-0 shrink lg:flex lg:flex-col lg:items-end lg:justify-center lg:gap-0.5 lg:pr-1.5 lg:leading-none">
                         <span className="max-w-[140px] truncate text-[8.5px] leading-none font-bold text-gray-900 dark:text-gray-100">
                           {formatters.getDisplayName(user, t.common.user)}
                         </span>
                         <span className="max-w-[140px] truncate text-[7px] leading-none font-medium text-gray-600 dark:text-gray-400">
                           @{formatters.getUsername(user, t.common.username)}
                         </span>
-                      </div>
+                      </div>*/}
                       <UserAvatar user={user} size="xs" />
                     </button>
 
