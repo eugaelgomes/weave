@@ -267,6 +267,10 @@ class ProjectsCoreController extends ProjectsBaseController {
       title: project.title,
       updated_at: project.updated_at,
       user_id: project.user_id,
+      stages_count:
+        project.stages_count !== undefined && project.stages_count !== null
+          ? Number(project.stages_count)
+          : 0,
     };
   }
 

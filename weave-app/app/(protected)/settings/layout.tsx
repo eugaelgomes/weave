@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { User, Building2, Lock, Zap, CreditCard, type LucideIcon } from "lucide-react";
 import { SettingsHeader } from "../_components/ui/headers/settings-header";
+import { useLanguage } from "@/app/_contexts/language-context";
 
 type SettingsNavItem = {
   icon: LucideIcon;
@@ -14,43 +15,44 @@ type SettingsNavItem = {
   type: "settings" | "workspace" | "plans" | "security" | "integrations" | "preferences";
 };
 
-const SETTINGS_NAV: SettingsNavItem[] = [
-  {
-    icon: User,
-    label: "Meus dados e preferências",
-    href: "/settings",
-    matchPaths: ["/settings/user-data", "/settings/danger-zone", "/settings/preferences"],
-    type: "settings",
-  },
-  {
-    icon: CreditCard,
-    label: "Plano e consumo",
-    href: "/settings/plans",
-    type: "plans",
-  },
-  {
-    icon: Lock,
-    label: "Tokens e APIs",
-    href: "/settings/security",
-    matchPaths: ["/settings/client-tokens"],
-    type: "security",
-  },
-  {
-    icon: Building2,
-    label: "Workspace",
-    href: "/settings/workspace",
-    type: "workspace",
-  },
-  {
-    icon: Zap,
-    label: "Integrações",
-    href: "/settings/integrations",
-    type: "integrations",
-  },
-];
-
 function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { t } = useLanguage();
+
+  const SETTINGS_NAV: SettingsNavItem[] = useMemo(() => [
+    {
+      icon: User,
+      label: t.nav.settings,
+      href: "/settings",
+      matchPaths: ["/settings/user-data", "/settings/danger-zone", "/settings/preferences"],
+      type: "settings" as const,
+    },
+    {
+      icon: CreditCard,
+      label: t.nav.plans,
+      href: "/settings/plans",
+      type: "plans" as const,
+    },
+    {
+      icon: Lock,
+      label: t.nav.security,
+      href: "/settings/security",
+      matchPaths: ["/settings/client-tokens"],
+      type: "security" as const,
+    },
+    {
+      icon: Building2,
+      label: t.nav.workspace,
+      href: "/settings/workspace",
+      type: "workspace" as const,
+    },
+    {
+      icon: Zap,
+      label: t.nav.integrations,
+      href: "/settings/integrations",
+      type: "integrations" as const,
+    },
+  ], [t]);
 
   const activeItem = useMemo(() => {
     const matchers: { prefix: string; item: SettingsNavItem }[] = [];
@@ -71,7 +73,7 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
   const sidebarContent = (
     <div className="p-2">
       <h2 className="mb-3 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-        Configurações
+        {t.nav.settingsLabel}
       </h2>
 
       <ul className="space-y-0.5">

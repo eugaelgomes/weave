@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import {
   type Organization,
   type OrganizationProperties,
@@ -86,12 +87,12 @@ export function SettingsForm({
               </p>
             </div>
             {userIsOwner && (
-              <button
-                disabled
-                className="cursor-not-allowed rounded-md bg-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-500 opacity-70 dark:bg-neutral-800 dark:text-neutral-400"
+              <Link
+                href="/settings/plans"
+                className="rounded-md bg-brand-yellow px-3 py-1.5 text-xs font-semibold text-brand-navy transition-colors hover:bg-brand-orange"
               >
                 Gerenciar Assinatura
-              </button>
+              </Link>
             )}
           </div>
         </div>

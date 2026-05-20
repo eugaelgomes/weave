@@ -94,6 +94,7 @@ class ReadNotesRepository extends BaseRepository {
         n.id::text,
         n.user_id::text,
         n.project_id::text,
+        n.parent_id::text,
         n.title,
         n.description,
         n.tags,
@@ -113,6 +114,14 @@ class ReadNotesRepository extends BaseRepository {
 
         -- projeto associado
         p.title as project_name,
+        n.project_stage_id::text,
+        pst.name AS project_stage_name,
+
+        -- organização (via projeto)
+        p.organization_id::text AS org_id,
+        o.org_name,
+        o.unique_name AS org_unique_name,
+        o.logo_url AS org_logo_url,
 
         tp.id AS priority_id,
         tp.name AS priority_name,
@@ -124,24 +133,30 @@ class ReadNotesRepository extends BaseRepository {
            FROM tags t WHERE t.id = ANY(n.tags)), '[]'::json
         ) AS resolved_tags,
         
-        COALESCE(
-            json_agg(
-                json_build_object(
-                    'id', c.user_id,
-                    'name', c.name,
-                    'username', c.username,
-                    'email', c.email,
-                    'avatar_url', c.avatar_url,
-                    'added_at', nc.added_at
-                )
-            ) FILTER (WHERE c.user_id IS NOT NULL), '[]'
-        ) AS collaborators
+        COALESCE(collab.data, '[]'::json) AS collaborators
       FROM notes n
       INNER JOIN users u ON n.user_id = u.user_id
       LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
-    LEFT JOIN task_priorities tp ON n.priority_id = tp.id AND tp.deleted = false
-      LEFT JOIN note_collaborators nc ON n.id = nc.note_id
-      LEFT JOIN users c ON nc.user_id = c.user_id
+      LEFT JOIN project_stages pst
+        ON pst.id = n.project_stage_id
+        AND pst.project_id = n.project_id
+      LEFT JOIN organizations o ON p.organization_id = o.id AND o.deleted = false
+      LEFT JOIN task_priorities tp ON n.priority_id = tp.id AND tp.deleted = false
+      LEFT JOIN LATERAL (
+        SELECT json_agg(
+          json_build_object(
+            'id', c.user_id,
+            'name', c.name,
+            'username', c.username,
+            'email', c.email,
+            'avatar_url', c.avatar_url,
+            'added_at', nc.added_at
+          )
+        ) AS data
+        FROM note_collaborators nc
+        INNER JOIN users c ON nc.user_id = c.user_id
+        WHERE nc.note_id = n.id
+      ) collab ON true
       WHERE (
         n.user_id = $1 OR EXISTS (
           SELECT 1 FROM note_collaborators nc2 
@@ -159,7 +174,6 @@ class ReadNotesRepository extends BaseRepository {
         )
       )
         AND n.deleted = false
-      GROUP BY n.id, u.user_id, p.id, tp.id
       ORDER BY n.updated_at DESC;
     `;
     const results = await this.executeQuery(query, [

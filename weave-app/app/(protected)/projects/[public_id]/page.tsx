@@ -5,13 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { useNotes } from "@/app/_contexts/notes-context";
 import { useAuth } from "@/app/_contexts/auth-context";
-import { useWeaveEngine } from "@/app/_contexts/weave-engine-context";
 import type { ProjectNotesListFilters } from "@/app/_services/projects-service/projects-service";
-import { fetchProjectReasonings } from "@/app/_services/projects-service/reasonings-service";
-import { track } from "@vercel/analytics";
-import { AlertTriangle, BrainCircuit, Sparkles } from "lucide-react";
-import Link from "next/link";
-import { toast } from "sonner";
+import { updateProject as updateProjectService } from "@/app/_services/projects-service/projects-service";
 
 import ProjectHeader from "@/app/(protected)/projects/_components/project-header";
 import ProjectBoard from "@/app/(protected)/projects/_components/project-board-v2";
@@ -24,7 +19,6 @@ export default function ProjectViewPage() {
   const params = useParams();
   const projectId = params?.public_id as string;
   const { user } = useAuth();
-  const { triggerReasoningNow } = useWeaveEngine();
 
   const {
     getProjectById,
@@ -36,6 +30,7 @@ export default function ProjectViewPage() {
     getProjectTags,
     getTaskPriorities,
     patchProjectTask,
+    refreshProjects,
   } = useProjects();
 
   const { notes } = useNotes();
@@ -56,12 +51,6 @@ export default function ProjectViewPage() {
   const [addTaskParentTitle, setAddTaskParentTitle] = useState<string | null>(null);
 
   const [noteFilters, setNoteFilters] = useState<ProjectNotesListFilters>({});
-  const [engineSummary, setEngineSummary] = useState<{
-    risk: "low" | "medium" | "high";
-    actionItems: number;
-    lastBriefingAt: string | null;
-  }>({ risk: "low", actionItems: 0, lastBriefingAt: null });
-  const [engineLoading, setEngineLoading] = useState(true);
   const filtersRef = useRef(noteFilters);
   filtersRef.current = noteFilters;
 
@@ -120,30 +109,6 @@ export default function ProjectViewPage() {
     fetchProjectData();
   }, [projectId]);
 
-  useEffect(() => {
-    if (!projectId) return;
-    const loadEngineSummary = async () => {
-      setEngineLoading(true);
-      try {
-        const reasonings = await fetchProjectReasonings(projectId, { limit: 6 });
-        const hasHigh = reasonings.some((item) => item.safety_label === "unsafe");
-        const hasMedium = reasonings.some((item) => item.safety_label === "review");
-        const actionItems = reasonings.reduce(
-          (acc, item) => acc + (item.action_items_count || 0),
-          0
-        );
-        setEngineSummary({
-          risk: hasHigh ? "high" : hasMedium ? "medium" : "low",
-          actionItems,
-          lastBriefingAt: reasonings[0]?.created_at || null,
-        });
-      } finally {
-        setEngineLoading(false);
-      }
-    };
-    void loadEngineSummary();
-  }, [projectId]);
-
   const handleFiltersChange = useCallback(
     (next: ProjectNotesListFilters) => {
       setNoteFilters(next);
@@ -160,6 +125,24 @@ export default function ProjectViewPage() {
   const refetchNotes = useCallback(() => {
     void loadNotes(filtersRef.current);
   }, [loadNotes]);
+
+  const handleProjectIconChange = useCallback(
+    async (file: File) => {
+      if (!project?.id) return;
+      try {
+        const fd = new FormData();
+        fd.append("icon", file);
+        const updated = await updateProjectService(project.id, fd);
+        if (updated) {
+          setProject(updated);
+          await refreshProjects();
+        }
+      } catch (error) {
+        console.error("Erro ao atualizar ícone do projeto:", error);
+      }
+    },
+    [project, refreshProjects]
+  );
 
   const isOwner = project?.user_id === user?.id;
   const canEdit =
@@ -205,6 +188,8 @@ export default function ProjectViewPage() {
         }}
         onViewDetails={() => router.push(`/projects/${projectId}/details`)}
         onBack={() => router.push("/projects")}
+        canEdit={canEdit}
+        onIconFile={canEdit ? handleProjectIconChange : undefined}
       />
 
       <ProjectFilters
@@ -217,71 +202,6 @@ export default function ProjectViewPage() {
         onClear={handleFiltersClear}
       />
 
-      <section className="mx-2 mb-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-[11px] shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1 font-semibold text-neutral-800 dark:text-neutral-200">
-              <BrainCircuit className="h-3.5 w-3.5" />
-              Weave Engine
-            </span>
-            <span
-              className={`rounded-md px-1.5 py-0.5 font-semibold ${
-                engineSummary.risk === "high"
-                  ? "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300"
-                  : engineSummary.risk === "medium"
-                    ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
-                    : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
-              }`}
-            >
-              Risco {engineSummary.risk === "high" ? "Alto" : engineSummary.risk === "medium" ? "Médio" : "Baixo"}
-            </span>
-            <span className="inline-flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
-              <Sparkles className="h-3 w-3" />
-              {engineSummary.actionItems} ações sugeridas
-            </span>
-            <span className="text-neutral-500 dark:text-neutral-400">
-              {engineLoading
-                ? "Carregando insights..."
-                : `Último briefing: ${
-                    engineSummary.lastBriefingAt
-                      ? new Date(engineSummary.lastBriefingAt).toLocaleString()
-                      : "sem briefing"
-                  }`}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  await triggerReasoningNow(projectId, { reasoningType: "analysis" });
-                  track("weave_engine_generate_briefing", {
-                    source: "project_page",
-                    projectId,
-                  });
-                  toast.success("Solicitação enviada para o Weave Engine.");
-                } catch (error) {
-                  toast.error("Não foi possível gerar briefing agora.", {
-                    description: error instanceof Error ? error.message : "Erro inesperado.",
-                  });
-                }
-              }}
-              className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] font-medium text-neutral-700 hover:bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-200"
-            >
-              <BrainCircuit className="h-3.5 w-3.5" />
-              Gerar briefing
-            </button>
-            <Link
-              href={`/weave-engine?projectId=${projectId}&view=risks`}
-              className="inline-flex items-center gap-1 rounded-md bg-brand-primary-500 px-2 py-1 text-[11px] font-semibold text-neutral-900 hover:brightness-95"
-            >
-              <AlertTriangle className="h-3.5 w-3.5" />
-              Centro de riscos
-            </Link>
-          </div>
-        </div>
-      </section>
-
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md bg-white shadow-sm dark:bg-[#1d1d1b]/50 dark:shadow-surface-dark-sm">
@@ -290,6 +210,7 @@ export default function ProjectViewPage() {
                 stages={stages}
                 projectNotes={enrichedProjectNotes}
                 projectTags={projectTags}
+                projectCollaborators={collaborators}
                 taskPriorities={taskPriorities}
                 onAddCard={canEdit ? (stageId) => {
                   setAddTaskStageId(stageId);

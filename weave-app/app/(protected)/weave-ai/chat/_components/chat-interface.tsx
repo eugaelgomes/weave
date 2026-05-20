@@ -33,6 +33,7 @@ import { useNotes } from "@/app/_contexts/notes-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { type AIModel } from "@/app/_contexts/chat-context";
 import { useAgent } from "@/app/_contexts/agent-context";
+import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
 import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -130,6 +131,7 @@ export default function ChatInterface({
   const { notesOverview } = useNotes();
   const { projectsOverview } = useProjects();
   const { agents, loadAgents } = useAgent();
+  const { canSendAiMessage, gates } = usePlanUsage();
 
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<AIModel | null>(null);
@@ -208,7 +210,7 @@ export default function ChatInterface({
   }, [chatId, currentSession?.id, messages.length, pathname, router]);
 
   const handleSend = async () => {
-    if (!input.trim() || isTyping) return;
+    if (!input.trim() || isTyping || !canSendAiMessage) return;
 
     const noteIds = contextItems
       .filter((item) => item.type === "note")
@@ -775,8 +777,9 @@ export default function ChatInterface({
                   handleSend();
                 }
               }}
-              placeholder={t.weaveAi.inputPlaceholder}
-              className="max-h-32 min-h-[40px] w-full resize-none bg-transparent px-1 py-1 text-sm outline-none placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500"
+              disabled={!canSendAiMessage}
+              placeholder={canSendAiMessage ? t.weaveAi.inputPlaceholder : t.weaveAi.limitReached ?? "Monthly AI message limit reached"}
+              className="max-h-32 min-h-[40px] w-full resize-none bg-transparent px-1 py-1 text-sm outline-none placeholder:text-neutral-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-neutral-100 dark:placeholder:text-neutral-500"
             />
 
             <div className="flex items-center justify-between pt-1">
@@ -959,7 +962,7 @@ export default function ChatInterface({
 
               <button
                 onClick={handleSend}
-                disabled={!input.trim()}
+                disabled={!input.trim() || !canSendAiMessage}
                 title="Enviar mensagem"
                 aria-label="Enviar mensagem"
                 className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-yellow text-brand-navy transition-colors hover:bg-brand-orange disabled:opacity-30 dark:bg-brand-yellow dark:text-brand-navy dark:hover:bg-brand-orange"
@@ -969,6 +972,17 @@ export default function ChatInterface({
             </div>
           </div>
 
+          {!canSendAiMessage && (
+            <p className="text-[11px] text-brand-red">
+              {t.weaveAi.limitReached ?? "Monthly AI message limit reached."}{" "}
+              <button
+                onClick={() => router.push("/settings/plans")}
+                className="underline hover:text-brand-orange"
+              >
+                {t.weaveAi.viewPlans ?? "View plans"}
+              </button>
+            </p>
+          )}
           {fileError ? <p className="text-[11px] text-brand-red">{fileError}</p> : null}
           {error ? <p className="text-[11px] text-brand-red">{error}</p> : null}
         </div>

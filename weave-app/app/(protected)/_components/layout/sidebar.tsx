@@ -399,25 +399,19 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   const hasOrg = !!authData.user.org_id;
 
   const navigationItems: NavigationItem[] = [
-    { path: "/home", icon: Home, label: t.nav.home },
-    { path: "/notes", icon: Book, label: t.nav.notes },
-    {
-      path: "/projects",
-      icon: Network,
-      label: t.nav.projects,
-    },
     {
       path: "/weave-engine",
       icon: WeaveEngineIcon,
       label: t.nav.weaveEngine,
       badge: unreadCount > 0 ? unreadCount : undefined,
     },
-    { path: "/documents", icon: FileText, label: t.nav.documents },
+    { path: "/home", icon: Home, label: t.nav.home },
     {
-      path: "/weave-flow",
-      icon: Waypoints,
-      label: t.nav.weaveFlow,
+      path: "/projects",
+      icon: Network,
+      label: t.nav.projects,
     },
+    { path: "/notes", icon: Book, label: t.nav.notes },
     {
       path: "/weave-ai/chat",
       icon: Sparkles,
@@ -432,7 +426,13 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       icon: Calendar,
       label: t.nav.calendar,
     },
-
+    { path: "/documents", icon: FileText, label: t.nav.documents },
+    {
+      path: "/weave-flow",
+      icon: Waypoints,
+      label: t.nav.weaveFlow,
+    },
+    { path: "/settings", icon: Settings, label: t.nav.settingsLabel },
     ...(hasOrg
       ? [
           {
@@ -460,7 +460,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
           },
         ]
       : []),
-    { path: "/settings", icon: Settings, label: t.nav.settingsLabel },
   ];
 
   return (

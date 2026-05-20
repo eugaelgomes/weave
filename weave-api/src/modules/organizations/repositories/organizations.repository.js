@@ -431,6 +431,20 @@ class OrganizationsRepository {
         client
       );
 
+      if (defaultPlanId) {
+        const periodStart = new Date();
+        const periodEnd = new Date();
+        periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+        await client.query(
+          `INSERT INTO subscriptions (subscriber_type, subscriber_id, plan_id, status, provider, current_period_start, current_period_end)
+           VALUES ('organization', $1, $2, 'active', 'internal', $3, $4)
+           ON CONFLICT (subscriber_type, subscriber_id)
+           DO UPDATE SET plan_id = EXCLUDED.plan_id, status = 'active', updated_at = NOW()`,
+          [organization.id, defaultPlanId, periodStart, periodEnd]
+        );
+      }
+
       await client.query("COMMIT");
 
       return organization;

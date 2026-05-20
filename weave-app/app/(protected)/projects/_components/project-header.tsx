@@ -1,13 +1,20 @@
 import React from "react";
 import { ArrowLeft, Columns3, List, ChevronRight } from "lucide-react";
+import type { ProjectProperties } from "@/app/_services/projects-service/projects-service";
+import {
+  ProjectIcon,
+  ProjectIconEditable,
+} from "@/app/(protected)/projects/_components/project-icon";
 
 interface ProjectHeaderProps {
-  project: { title?: string; status?: string };
+  project: { title?: string; status?: string; properties?: ProjectProperties };
   stagesCount: number;
   activeView: "board" | "list";
   setActiveView: (view: "board" | "list") => void;
   onViewDetails: () => void;
   onBack: () => void;
+  canEdit?: boolean;
+  onIconFile?: (file: File) => void | Promise<void>;
 }
 
 const viewOptions = [
@@ -21,6 +28,8 @@ export default function ProjectHeader({
   setActiveView,
   onViewDetails,
   onBack,
+  canEdit = false,
+  onIconFile,
 }: ProjectHeaderProps) {
   return (
     <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-1 dark:border-surface-dark-border">
@@ -34,7 +43,21 @@ export default function ProjectHeader({
         >
           <ArrowLeft className="h-2.5 w-2.5" />
         </button>
-        <h1 className="truncate text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
+        {canEdit && onIconFile ? (
+          <ProjectIconEditable
+            icon={project.properties?.icon}
+            color={project.properties?.color}
+            size="sm"
+            onIconFile={onIconFile}
+          />
+        ) : (
+          <ProjectIcon
+            icon={project.properties?.icon}
+            color={project.properties?.color}
+            size="sm"
+          />
+        )}
+        <h1 className="truncate text-[10px] font-bold tracking-wider text-neutral-800 dark:text-neutral-200">
           {project.title || "Projeto"}
         </h1>
       </div>

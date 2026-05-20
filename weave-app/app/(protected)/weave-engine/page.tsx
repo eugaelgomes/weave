@@ -9,7 +9,7 @@ export default function WeaveEnginePage() {
     <div className="flex min-h-screen flex-col">
       <div className="flex-1 space-y-3 overflow-y-auto">
         <WeaveEngineHeader />
-        <WeaveEngineDashboard />
+        <WeaveEngineDashboard variant="page" />
       </div>
     </div>
   );

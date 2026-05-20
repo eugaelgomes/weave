@@ -3,6 +3,17 @@ const PlansRepository = require("@/modules/plans/plans.repository");
 const { USAGE_PATHS } = require("@/services/plans/plan-paths");
 
 class PlansManager {
+  /**
+   * Strips internal/sensitive fields from plan details for unauthenticated responses.
+   * @param {Record<string, any>} details
+   * @returns {Record<string, any>}
+   */
+  _sanitizePlanForPublic(details) {
+    if (!details || typeof details !== "object") return {};
+    const { billing, governance, weave_ai, ...publicFields } = details;
+    return publicFields;
+  }
+
   async getAllPlans(req, res) {
     try {
       const plans = await PlansRepository.getAllPlans();
@@ -18,7 +29,7 @@ class PlansManager {
         plans: plans.map((plan) => ({
           planId: plan.plan_id,
           name: plan.name,
-          details: plan.details || [],
+          details: this._sanitizePlanForPublic(plan.details),
           createdAt: plan.created_at,
           updatedAt: plan.updated_at,
         })),
@@ -34,67 +45,6 @@ class PlansManager {
    */
   toPgPath(dotPath) {
     return `{${dotPath.replace(/\./g, ",")}}`;
-  }
-
-  /**
-   * METODOS DE CONSUMO ESPECIFICOS
-   */
-
-  // Consumir Mensagem de IA
-  async consumeAiMessage(usageId, tokens = 0) {
-    // Incrementa contador de mensagens
-    await PlansRepository.incrementUsageCounter(
-      usageId,
-      this.toPgPath(USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT),
-      1
-    );
-    // Incrementa tokens (opcional)
-    if (tokens > 0) {
-      await PlansRepository.incrementUsageCounter(
-        usageId,
-        this.toPgPath(USAGE_PATHS.MONTHLY.WEAVE_AI.TOKENS_ESTIMATED),
-        tokens
-      );
-    }
-  }
-
-  // Consumir Criacao de Nota
-  async consumeNoteCreation(usageId) {
-    return await PlansRepository.incrementUsageCounter(
-      usageId,
-      this.toPgPath(USAGE_PATHS.SUMMARY.NOTES_TOTAL),
-      1
-    );
-  }
-
-  // Registrar Upload de Arquivo (Soma o tamanho em MB)
-  async consumeStorage(usageId, fileSizeMb) {
-    // Incrementa o contador de arquivos
-    await PlansRepository.incrementUsageCounter(
-      usageId,
-      this.toPgPath(USAGE_PATHS.MONTHLY.STORAGE.FILES_COUNT),
-      1
-    );
-    // Soma o peso do arquivo ao total do mes
-    return await PlansRepository.incrementUsageCounter(
-      usageId,
-      this.toPgPath(USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB),
-      fileSizeMb
-    );
-  }
-
-  // Consumir Exportacao
-  async consumeExport(usageId, type = "notes") {
-    const path =
-      type === "backup"
-        ? USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
-        : USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT;
-
-    return await PlansRepository.incrementUsageCounter(
-      usageId,
-      this.toPgPath(path),
-      1
-    );
   }
 
   /**

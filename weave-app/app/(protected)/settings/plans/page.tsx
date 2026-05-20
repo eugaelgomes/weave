@@ -3,6 +3,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Zap } from "lucide-react";
 import { useAuth } from "@/app/_contexts/auth-context";
+import { useLanguage } from "@/app/_contexts/language-context";
 import { SettingsPageShell } from "@/app/(protected)/settings/_components/settings-page-shell";
 import {
   fetchPlanUsageHistory,
@@ -76,6 +77,7 @@ function computeTotalPercentage(metrics: UsageMetrics): number | null {
 
 export default function PlansSettingsPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [isHistoryVisible, setIsHistoryVisible] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -93,10 +95,10 @@ export default function PlansSettingsPage() {
     computeTotalPercentage(currentMetrics);
 
   const featureLabels: Record<string, string> = {
-    dark_mode: "Modo Escuro",
-    custom_branding: "Branding Custom",
-    priority_support: "Suporte Prioritário",
-    collaboration_tools: "Colaboração",
+    dark_mode: t.plansSettings.darkMode,
+    custom_branding: t.plansSettings.customBranding,
+    priority_support: t.plansSettings.prioritySupport,
+    collaboration_tools: t.plansSettings.collaborationTools,
   };
   const planFeatures = user?.plan_details?.features;
 
@@ -120,7 +122,7 @@ export default function PlansSettingsPage() {
         setHistoryLoaded(true);
         setHistoryItems((prev) => (append ? [...prev, ...response.history] : response.history));
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Não foi possível carregar o histórico.";
+        const message = error instanceof Error ? error.message : t.plansSettings.historyLoadError;
         setHistoryError(message);
       } finally {
         if (append) {
@@ -144,10 +146,10 @@ export default function PlansSettingsPage() {
   }, [historyLoaded, historyLoading, loadHistory]);
 
   return (
-    <SettingsPageShell description="Detalhes do seu plano, limites e consumo atual.">
+    <SettingsPageShell description={t.plansSettings.description}>
       <div className="flex flex-col gap-4 p-2">
         {!user?.plan_id ? (
-          <p className="text-[12px] text-neutral-500">Nenhum plano ativo encontrado.</p>
+          <p className="text-[12px] text-neutral-500">{t.plansSettings.noPlanFound}</p>
         ) : (
           <>
             <CurrentUsageSummaryCard
@@ -170,7 +172,7 @@ export default function PlansSettingsPage() {
               <div className="flex items-center justify-between border-b border-neutral-100/60 px-4 py-2.5 dark:border-surface-dark-border-muted">
                 <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
                   <Zap size={13} className="text-amber-500" />
-                  Recursos Inclusos
+                  {t.plansSettings.includedFeatures}
                 </h3>
               </div>
               <div className="p-4">
@@ -186,12 +188,12 @@ export default function PlansSettingsPage() {
                         }`}
                       >
                         <span>{featureLabels[key] ?? key}</span>
-                        {value ? <span className="text-emerald-500">Ativo</span> : <span>—</span>}
+                        {value ? <span className="text-emerald-500">{t.plansSettings.active}</span> : <span>—</span>}
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[11px] text-neutral-400">Nenhum recurso listado.</p>
+                  <p className="text-[11px] text-neutral-400">{t.plansSettings.noFeaturesListed}</p>
                 )}
               </div>
             </div>

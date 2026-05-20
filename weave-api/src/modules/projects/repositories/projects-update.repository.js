@@ -66,11 +66,16 @@ class ProjectsUpdateRepository {
       RETURNING 
         id::text,
         user_id::text,
+        public_project_id,
+        parent_project_id::text,
+        organization_id::text,
         title,
         description,
+        methodology,
         properties,
         projects_files,
         status,
+        active,
         created_at,
         updated_at,
         deleted;
@@ -144,11 +149,16 @@ class ProjectsUpdateRepository {
       RETURNING 
         id::text,
         user_id::text,
+        public_project_id,
+        parent_project_id::text,
+        organization_id::text,
         title,
         description,
+        methodology,
         properties,
         projects_files,
         status,
+        active,
         created_at,
         updated_at,
         deleted;

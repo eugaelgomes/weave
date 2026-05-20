@@ -8,9 +8,16 @@ type CompactTaskModalProps = {
   title: string;
   children: React.ReactNode;
   onClose: () => void;
+  /** Wider dialog for tag/collaborator chip pickers */
+  size?: "sm" | "md";
 };
 
-export function CompactTaskModal({ title, children, onClose }: CompactTaskModalProps) {
+export function CompactTaskModal({
+  title,
+  children,
+  onClose,
+  size = "sm",
+}: CompactTaskModalProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -39,7 +46,9 @@ export function CompactTaskModal({ title, children, onClose }: CompactTaskModalP
         role="dialog"
         aria-modal="true"
         aria-labelledby="compact-task-modal-title"
-        className="relative z-10 w-full max-w-xs rounded-lg border border-neutral-200 bg-white p-3 text-xs shadow-lg dark:border-surface-dark-border dark:bg-[#171717]"
+        className={`relative z-10 w-full rounded-lg border border-neutral-200 bg-white p-3 text-xs shadow-lg dark:border-surface-dark-border dark:bg-[#171717] ${
+          size === "md" ? "max-w-md" : "max-w-sm"
+        }`}
         onPointerDown={(event) => event.stopPropagation()}
       >
         <div className="mb-2 flex items-start justify-between gap-2">

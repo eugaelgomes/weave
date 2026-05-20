@@ -164,6 +164,21 @@ export {
   type AgentProviderResponse,
 } from "./ai-agent-service/agent-service";
 
+// Plans Services
+export {
+  fetchPlanUsageMe,
+  fetchPlanUsageHistory,
+  buildUserPatchFromPlanMe,
+  mergeUsageDetails,
+  type PlanMeResponse,
+  type PlanGate,
+  type PlanUsageCurrentPeriod,
+  type PlanUsageHistoryItem,
+  type PlanUsageHistoryResponse,
+  type UsageMetric,
+  type UsageMetrics,
+} from "./plans-service/plan-usage-service";
+
 // API Client and Endpoints
 export {
   apiClient,

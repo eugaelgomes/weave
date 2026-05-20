@@ -5,7 +5,7 @@ import { useNotes } from "@/app/_contexts/notes-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { HomeHeader } from "@/app/(protected)/_components/ui/headers/home-header";
 import { CalendarPreview } from "@/app/(protected)/calendar/page";
-import HomeDashboard from "./_components/weave-reasonings";
+import WeaveEngineDashboard from "./_components/weave-reasonings";
 import NotesCarousel from "./_components/notes-carousel";
 import ProjectsCarousel from "./_components/project-carousel";
 
@@ -33,10 +33,10 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="flex-1 space-y-3 overflow-y-auto">
+      <div className="flex-1 space-y-2 overflow-y-auto">
         <HomeHeader />
 
-        <HomeDashboard />
+        <WeaveEngineDashboard variant="home" />
 
         <NotesCarousel notes={recentNotes} />
 

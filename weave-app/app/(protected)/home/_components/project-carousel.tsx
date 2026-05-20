@@ -20,9 +20,11 @@ import {
   Calendar,
 } from "lucide-react";
 import type { ProjectOverview } from "@/app/_contexts/projects-context";
+import { ProjectIcon } from "@/app/(protected)/projects/_components/project-icon";
 import { getTagColor } from "@/app/_utils/tag-colors";
 import { PROJECT_STATUS } from "@/app/_utils/db-enums";
 import { useLanguage } from "@/app/_contexts/language-context";
+import { useWeaveEngine } from "@/app/_contexts/weave-engine-context";
 
 interface ProjectsCarouselProps {
   projects: ProjectOverview[];
@@ -34,39 +36,24 @@ interface ProjectsCarouselProps {
 
 const STATUS_CONFIG = {
   [PROJECT_STATUS.OPEN]: {
-    label: "Aberto",
     icon: CircleDot,
     color: "text-cyan-600 dark:text-cyan-400",
-    bg: "bg-cyan-50 dark:bg-cyan-500/10",
-    border: "border-cyan-200 dark:border-cyan-500/20",
   },
   [PROJECT_STATUS.IN_PROGRESS]: {
-    label: "Em Andamento",
     icon: PlayCircle,
     color: "text-blue-600 dark:text-blue-400",
-    bg: "bg-blue-50 dark:bg-blue-500/10",
-    border: "border-blue-200 dark:border-blue-500/20",
   },
   [PROJECT_STATUS.COMPLETED]: {
-    label: "Concluído",
     icon: CheckCircle2,
     color: "text-green-600 dark:text-green-400",
-    bg: "bg-green-50 dark:bg-green-500/10",
-    border: "border-green-200 dark:border-green-500/20",
   },
   [PROJECT_STATUS.PAUSED]: {
-    label: "Pausado",
     icon: PauseCircle,
     color: "text-yellow-600 dark:text-yellow-400",
-    bg: "bg-yellow-50 dark:bg-brand-primary-500/10",
-    border: "border-yellow-200 dark:border-yellow-500/20",
   },
   [PROJECT_STATUS.ARCHIVED]: {
-    label: "Arquivado",
     icon: Archive,
     color: "text-neutral-500 dark:text-neutral-500",
-    bg: "bg-neutral-100 dark:bg-neutral-500/10",
-    border: "border-neutral-200 dark:border-surface-dark-border-muted",
   },
 };
 
@@ -85,10 +72,47 @@ export default function ProjectsCarousel({
   emptyActionHref = "/projects",
 }: ProjectsCarouselProps) {
   const { t, locale } = useLanguage();
+  const { feed } = useWeaveEngine();
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const carouselRef = React.useRef<HTMLDivElement>(null);
 
   const dateLocale = locale === "en-US" ? "en-US" : locale === "es-ES" ? "es-ES" : "pt-BR";
+
+  const signalsByProjectPublicId = React.useMemo(() => {
+    const map = new Map<string, { hasNew: boolean; actions: number; risk: "low" | "medium" | "high" }>();
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+
+    feed.forEach((item) => {
+      const project = projects.find((proj) => proj.id === item.projectId);
+      if (!project?.public_id) return;
+      const key = project.public_id;
+      const current = map.get(key) || { hasNew: false, actions: 0, risk: "low" as const };
+      const createdAt = item.created_at ? new Date(item.created_at).getTime() : 0;
+      const hasNew = current.hasNew || (createdAt > 0 && now - createdAt <= dayMs);
+      const actions = current.actions + (item.action_items_count || 0);
+      const nextRisk =
+        item.safety_label === "unsafe"
+          ? "high"
+          : item.safety_label === "review" && current.risk !== "high"
+            ? "medium"
+            : current.risk;
+      map.set(key, { hasNew, actions, risk: nextRisk });
+    });
+
+    return map;
+  }, [feed, projects]);
+
+  const statusLabelByKey = React.useMemo(
+    () => ({
+      [PROJECT_STATUS.OPEN]: t.home.carousel.statusOpen,
+      [PROJECT_STATUS.IN_PROGRESS]: t.home.carousel.statusInProgress,
+      [PROJECT_STATUS.COMPLETED]: t.home.carousel.statusCompleted,
+      [PROJECT_STATUS.PAUSED]: t.home.carousel.statusPaused,
+      [PROJECT_STATUS.ARCHIVED]: t.home.carousel.statusArchived,
+    }),
+    [t]
+  );
   const resolvedTitle = title ?? t.home.carousel.recentProjectsTitle;
   const resolvedEmptyMessage = emptyMessage ?? t.home.carousel.emptyProjects;
   const resolvedEmptyAction = emptyActionText ?? t.home.carousel.emptyProjectsAction;
@@ -169,6 +193,76 @@ export default function ProjectsCarousel({
                   ? t.home.carousel.methodologyScrum
                   : t.home.carousel.methodologyKanban;
               const updatedAt = formatDate(project.lastModified);
+              const signal = signalsByProjectPublicId.get(project.public_id || "");
+              const accentColor =
+                project.color && /^#[0-9A-Fa-f]{3,8}$/i.test(project.color) ? project.color : null;
+
+              const counterParts: string[] = [];
+              if ((project.subprojectsCount ?? 0) > 0) {
+                counterParts.push(
+                  t.home.carousel.subprojectsCount.replace(
+                    "{count}",
+                    String(project.subprojectsCount)
+                  )
+                );
+              }
+              if ((project.stagesCount ?? 0) > 0) {
+                counterParts.push(
+                  t.home.carousel.columnsCount.replace("{count}", String(project.stagesCount))
+                );
+              }
+
+              const weaveParts: React.ReactNode[] = [];
+              if (signal?.risk === "high") {
+                weaveParts.push(
+                  <span
+                    key="risk-high"
+                    className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-red-500"
+                    title={t.home.carousel.riskHigh}
+                  />
+                );
+              } else if (signal?.risk === "medium") {
+                weaveParts.push(
+                  <span
+                    key="risk-medium"
+                    className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500"
+                    title={t.home.carousel.riskMedium}
+                  />
+                );
+              }
+              if (signal?.actions) {
+                weaveParts.push(
+                  <span
+                    key="actions"
+                    className="font-normal text-brand-primary-700 dark:text-brand-primary-400"
+                  >
+                    {t.home.carousel.suggestedActions.replace("{count}", String(signal.actions))}
+                  </span>
+                );
+              }
+              if (signal?.hasNew) {
+                weaveParts.push(
+                  <span
+                    key="new"
+                    className="font-normal text-brand-primary-700 dark:text-brand-primary-400"
+                  >
+                    {t.home.carousel.newInsight}
+                  </span>
+                );
+              }
+
+              const metaLine = [
+                methodologyLabel,
+                updatedAt
+                  ? `${t.home.carousel.updated}: ${updatedAt.toLocaleDateString(dateLocale, {
+                      day: "2-digit",
+                      month: "short",
+                      year: "2-digit",
+                    })}`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ");
 
               return (
                 <Link
@@ -176,211 +270,175 @@ export default function ProjectsCarousel({
                   href={`/projects/${project.public_id || project.id}`}
                   className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center sm:w-[220px] sm:snap-start"
                 >
-                  <div className="group flex min-h-[176px] flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:border-surface-dark-border-strong dark:hover:shadow-surface-dark-md">
-                    <div className="mb-1.5 flex flex-shrink-0 items-start justify-between gap-1.5">
-                      <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                        {project.icon && (
-                          <span className="flex-shrink-0 text-xs">{project.icon}</span>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <h3 className="line-clamp-1 text-xs leading-tight font-semibold text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-white dark:group-hover:text-yellow-400">
+                  <div
+                    className={`group flex min-h-[148px] flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2.5 font-normal transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:border-surface-dark-border-strong dark:hover:shadow-surface-dark-md ${accentColor ? "border-l-2" : ""}`}
+                    style={accentColor ? { borderLeftColor: accentColor } : undefined}
+                  >
+                    <div className="flex flex-1 flex-col">
+                      <div className="mb-1.5 flex flex-shrink-0 items-start justify-between gap-1.5">
+                        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                          <ProjectIcon icon={project.icon} color={project.color} size="xs" />
+                          <h3 className="line-clamp-1 text-xs leading-tight font-normal text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-white dark:group-hover:text-yellow-400">
                             {project.title}
                           </h3>
                         </div>
+                        {project.priority && (
+                          <div
+                            className={`flex h-4 w-4 flex-shrink-0 items-center justify-center ${
+                              project.priority === "alta"
+                                ? "text-red-600 dark:text-red-400"
+                                : project.priority === "media"
+                                  ? "text-yellow-600 dark:text-yellow-400"
+                                  : "text-blue-600 dark:text-blue-400"
+                            }`}
+                            title={`Prioridade: ${project.priority}`}
+                          >
+                            <AlertCircle className="h-3 w-3" />
+                          </div>
+                        )}
                       </div>
-                      {project.priority && (
-                        <div
-                          className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-[2px] ${
-                            project.priority === "alta"
-                              ? "text-red-600 dark:text-red-400"
-                              : project.priority === "media"
-                                ? "text-yellow-600 dark:text-yellow-400"
-                                : "text-blue-600 dark:text-blue-400"
-                          }`}
-                          title={`Prioridade: ${project.priority}`}
-                        >
-                          <AlertCircle className="h-3 w-3" />
-                        </div>
-                      )}
-                    </div>
 
-                    <div className="mb-1.5 flex flex-shrink-0 items-center justify-between gap-1 text-[8px] text-neutral-500 dark:text-neutral-400">
-                      <span className="shrink-0 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-[1px] font-semibold text-neutral-700 dark:border-surface-dark-border-strong dark:bg-neutral-800/80 dark:text-neutral-200">
-                        {methodologyLabel}
-                      </span>
-                      {updatedAt ? (
-                        <span className="flex min-w-0 items-center gap-0.5 truncate">
-                          <Calendar className="h-2.5 w-2.5 shrink-0 text-neutral-400" />
-                          <span className="truncate">
-                            {t.home.carousel.updated}:{" "}
-                            {updatedAt.toLocaleDateString(dateLocale, {
-                              day: "2-digit",
-                              month: "short",
-                              year: "2-digit",
-                            })}
-                          </span>
-                        </span>
-                      ) : null}
-                    </div>
+                      <p className="mb-1.5 truncate text-[8px] font-normal text-neutral-500 dark:text-neutral-400">
+                        {metaLine}
+                      </p>
 
-                    <div className="mb-1.5 min-h-0 flex-1">
                       {project.description && (
-                        <p className="line-clamp-2 text-[10px] leading-relaxed text-neutral-500 dark:text-neutral-400">
+                        <p className="mb-1.5 line-clamp-2 text-[10px] leading-relaxed font-normal text-neutral-500 dark:text-neutral-400">
                           {project.description}
                         </p>
                       )}
-                    </div>
 
-                    {project.tags && project.tags.length > 0 && (
-                      <div className="mb-1.5 flex flex-shrink-0 flex-wrap gap-1">
-                        {project.tags.slice(0, 3).map((tag, idx) => {
-                          const tagColor = getTagColor(tag);
-                          return (
-                            <span
-                              key={idx}
-                              className={`inline-flex items-center gap-1 rounded border px-1.5 py-[1px] text-[8px] font-medium ${tagColor.bg} ${tagColor.text} ${tagColor.border}`}
-                            >
-                              {tag}
-                            </span>
-                          );
-                        })}
-                        {project.tags.length > 3 && (
-                          <span className="inline-flex items-center rounded border border-neutral-200 bg-neutral-100 px-1.5 py-[1px] text-[8px] font-medium text-neutral-500 dark:border-surface-dark-border-strong dark:bg-neutral-800/70 dark:text-neutral-400">
-                            +{project.tags.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                      {project.tags && project.tags.length > 0 && (
+                        <p className="mb-1.5 flex flex-wrap items-center gap-x-1 text-[8px] font-normal">
+                          {project.tags.slice(0, 2).map((tag, idx) => {
+                            const tagColor = getTagColor(tag);
+                            return (
+                              <React.Fragment key={idx}>
+                                {idx > 0 && (
+                                  <span className="text-neutral-400 dark:text-neutral-500">·</span>
+                                )}
+                                <span className={tagColor.text}>{tag}</span>
+                              </React.Fragment>
+                            );
+                          })}
+                        </p>
+                      )}
 
-                    {(project.complexity || project.estimatedTime) && (
-                      <div className="mb-1.5 flex w-full items-center justify-between border-t border-neutral-100 pt-1.5 dark:border-surface-dark-border-muted">
-                        {project.complexity && (
-                          <div className="flex items-center gap-1">
-                            <Zap
-                              className={`h-2.5 w-2.5 ${
-                                project.complexity === "alta"
-                                  ? "text-red-500 dark:text-red-400"
-                                  : project.complexity === "media"
-                                    ? "text-brand-primary-500 dark:text-yellow-400"
-                                    : "text-green-500 dark:text-green-400"
-                              }`}
-                            />
-                            <span className="text-[8px] font-medium text-neutral-500 capitalize dark:text-neutral-400">
+                      {(project.complexity || project.estimatedTime) && (
+                        <p className="mb-1.5 flex items-center justify-between text-[8px] font-normal text-neutral-500 dark:text-neutral-400">
+                          {project.complexity ? (
+                            <span className="inline-flex items-center gap-1 capitalize">
+                              <Zap
+                                className={`h-2.5 w-2.5 ${
+                                  project.complexity === "alta"
+                                    ? "text-red-500 dark:text-red-400"
+                                    : project.complexity === "media"
+                                      ? "text-brand-primary-500 dark:text-yellow-400"
+                                      : "text-green-500 dark:text-green-400"
+                                }`}
+                              />
                               {project.complexity}
                             </span>
-                          </div>
-                        )}
-
-                        {project.estimatedTime && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-2.5 w-2.5 text-neutral-400 dark:text-neutral-500" />
-                            <span className="text-[8px] font-medium text-neutral-500 dark:text-neutral-400">
+                          ) : (
+                            <span />
+                          )}
+                          {project.estimatedTime ? (
+                            <span className="inline-flex items-center gap-1">
+                              <Clock className="h-2.5 w-2.5 text-neutral-400 dark:text-neutral-500" />
                               {project.estimatedTime}
                             </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          ) : null}
+                        </p>
+                      )}
 
-                    {(project.subprojectsCount ?? 0) > 0 || (project.stagesCount ?? 0) > 0 ? (
-                      <div className="mb-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[7px] font-medium text-neutral-500 dark:text-neutral-400">
-                        {(project.subprojectsCount ?? 0) > 0 ? (
-                          <span>
-                            {t.home.carousel.subprojectsCount.replace(
-                              "{count}",
-                              String(project.subprojectsCount)
-                            )}
-                          </span>
-                        ) : null}
-                        {(project.stagesCount ?? 0) > 0 ? (
-                          <span>
-                            {t.home.carousel.columnsCount.replace(
-                              "{count}",
-                              String(project.stagesCount)
-                            )}
-                          </span>
-                        ) : null}
-                      </div>
-                    ) : null}
-
-                    <div className="mb-1.5 flex-shrink-0">
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-[8px] font-medium text-neutral-500 dark:text-neutral-500">
-                          {t.home.carousel.progress}
-                        </span>
-                        <span className="text-[8px] font-bold text-neutral-700 dark:text-neutral-400">
-                          {project.progress ?? 0}%
-                        </span>
-                      </div>
-                      <div className="h-1 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{
-                            width: `${project.progress ?? 0}%`,
-                            backgroundColor: project.color || "#eab308",
-                          }}
-                        />
-                      </div>
+                      <p className="mb-1.5 text-[8px] font-normal text-neutral-500 dark:text-neutral-400">
+                        {t.home.carousel.progress} {project.progress ?? 0}%
+                      </p>
                     </div>
 
-                    <div className="flex flex-shrink-0 items-center justify-between gap-1.5">
-                      <div className="flex min-w-0 items-center gap-1">
-                        {statusConfig && StatusIcon && (
-                          <div
-                            className={`inline-flex shrink-0 items-center gap-1 rounded border px-1.5 py-[1px] ${statusConfig.bg} ${statusConfig.border}`}
-                          >
-                            <StatusIcon className={`h-2.5 w-2.5 ${statusConfig.color}`} />
-                            <span className={`text-[8px] font-medium ${statusConfig.color}`}>
-                              {statusConfig.label}
+                    <div className="mt-auto">
+                      {(counterParts.length > 0 || weaveParts.length > 0) && (
+                        <p className="mb-1 flex flex-wrap items-center gap-x-1.5 text-[7px] font-normal text-neutral-500 dark:text-neutral-400">
+                          {counterParts.map((part, index) => (
+                            <React.Fragment key={`counter-${index}`}>
+                              {index > 0 && (
+                                <span className="text-neutral-400 dark:text-neutral-500">·</span>
+                              )}
+                              <span>{part}</span>
+                            </React.Fragment>
+                          ))}
+                          {counterParts.length > 0 && weaveParts.length > 0 && (
+                            <span className="text-neutral-400 dark:text-neutral-500">·</span>
+                          )}
+                          {weaveParts.map((part, index) => (
+                            <React.Fragment key={`weave-${index}`}>
+                              {index > 0 && (
+                                <span className="text-neutral-400 dark:text-neutral-500">·</span>
+                              )}
+                              {part}
+                            </React.Fragment>
+                          ))}
+                        </p>
+                      )}
+
+                      <div className="flex flex-shrink-0 items-center justify-between gap-1.5 pt-1">
+                        <div className="flex min-w-0 items-center gap-1">
+                          {statusConfig && StatusIcon && (
+                            <span
+                              className={`inline-flex shrink-0 items-center gap-1 text-[8px] font-normal ${statusConfig.color}`}
+                            >
+                              <StatusIcon className="h-2.5 w-2.5" />
+                              {statusLabelByKey[project.status as keyof typeof statusLabelByKey] ||
+                                project.status}
                             </span>
-                          </div>
-                        )}
-                        {project.owner_name ? (
-                          <div
-                            className="flex shrink-0 items-center gap-0.5"
-                            title={`${t.home.carousel.ownerTitle}: ${project.owner_name}`}
-                          >
-                            {project.owner_avatar_url ? (
-                              <div className="relative h-4 w-4 overflow-hidden rounded-full border border-neutral-200 dark:border-surface-dark-border-strong">
-                                <Image
-                                  src={project.owner_avatar_url}
-                                  alt={project.owner_name}
-                                  width={16}
-                                  height={16}
-                                  className="h-full w-full object-cover"
-                                />
-                              </div>
-                            ) : (
-                              <span className="flex h-4 w-4 items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 text-[6px] font-bold text-neutral-600 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-300">
-                                {project.owner_name.charAt(0).toUpperCase()}
+                          )}
+                          {project.owner_name ? (
+                            <div
+                              className="flex shrink-0 items-center gap-0.5"
+                              title={`${t.home.carousel.ownerTitle}: ${project.owner_name}`}
+                            >
+                              {project.owner_avatar_url ? (
+                                <div className="relative h-4 w-4 overflow-hidden rounded-full">
+                                  <Image
+                                    src={project.owner_avatar_url}
+                                    alt={project.owner_name}
+                                    width={16}
+                                    height={16}
+                                    className="h-full w-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <span className="flex h-4 w-4 items-center justify-center text-[6px] font-normal text-neutral-600 dark:text-neutral-300">
+                                  {project.owner_name.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {project.notesCount > 0 && (
+                            <div
+                              className="flex items-center gap-0.5 text-neutral-400 dark:text-neutral-500"
+                              title={`${project.notesCount} tarefa(s)`}
+                            >
+                              <FileText className="h-2.5 w-2.5" />
+                              <span className="text-[8px] font-normal">{project.notesCount}</span>
+                            </div>
+                          )}
+
+                          {project.collaboratorsCount > 0 && (
+                            <div
+                              className="flex items-center gap-0.5 text-neutral-400 dark:text-neutral-500"
+                              title={`${project.collaboratorsCount} colaborador(es)`}
+                            >
+                              <Users className="h-2.5 w-2.5" />
+                              <span className="text-[8px] font-normal">
+                                {project.collaboratorsCount}
                               </span>
-                            )}
-                          </div>
-                        ) : null}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {project.notesCount > 0 && (
-                          <div
-                            className="flex items-center gap-0.5 text-neutral-400 dark:text-neutral-500"
-                            title={`${project.notesCount} tarefa(s)`}
-                          >
-                            <FileText className="h-2.5 w-2.5" />
-                            <span className="text-[8px] font-medium">{project.notesCount}</span>
-                          </div>
-                        )}
-
-                        {project.collaboratorsCount > 0 && (
-                          <div
-                            className="flex items-center gap-0.5 text-neutral-400 dark:text-neutral-500"
-                            title={`${project.collaboratorsCount} colaborador(es)`}
-                          >
-                            <Users className="h-2.5 w-2.5" />
-                            <span className="text-[8px] font-medium">
-                              {project.collaboratorsCount}
-                            </span>
-                          </div>
-                        )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -283,7 +283,7 @@ class PlansCycleProcessor {
 
     const { rows: subsRows } = await client.query(
       `
-        SELECT plan_id
+        SELECT plan_id, cancel_at_period_end, status
         FROM subscriptions
         WHERE subscriber_type = $1
           AND subscriber_id = $2
@@ -294,7 +294,48 @@ class PlansCycleProcessor {
       [subscriberType, subscriberId]
     );
 
-    const planId = subsRows[0]?.plan_id || currentPlanId;
+    const sub = subsRows[0];
+    if (sub?.cancel_at_period_end) {
+      logger.info("Subscription cancel_at_period_end triggered", {
+        subscriberType,
+        subscriberId,
+      });
+      const freePlan = await this.getDefaultFreePlan(client);
+
+      await client.query(
+        `UPDATE subscriptions
+         SET status = 'canceled', plan_id = $3, cancel_at_period_end = false, updated_at = NOW()
+         WHERE subscriber_type = $1 AND subscriber_id = $2
+           AND status IN ('active', 'past_due', 'trialing')`,
+        [subscriberType, subscriberId, freePlan.plan_id]
+      );
+
+      if (subscriberType === "user") {
+        await client.query(
+          `UPDATE users SET plan_id = $1, updated_at = NOW() WHERE user_id = $2`,
+          [freePlan.plan_id, subscriberId]
+        );
+      } else {
+        await client.query(
+          `UPDATE organizations SET plan_id = $1, updated_at = NOW() WHERE id = $2`,
+          [freePlan.plan_id, subscriberId]
+        );
+      }
+
+      const override = await this.getPlanOverride(client, {
+        planId: freePlan.plan_id,
+        subscriberId,
+        subscriberType,
+      });
+      const snapshot = this.mergeDeep(freePlan.details || {}, override || {});
+      return {
+        planId: freePlan.plan_id,
+        snapshot,
+        version: freePlan.plan_version || 1,
+      };
+    }
+
+    const planId = sub?.plan_id || currentPlanId;
     const plan = await this.getPlanById(client, planId);
     const override = await this.getPlanOverride(client, {
       planId,
@@ -308,6 +349,26 @@ class PlansCycleProcessor {
       snapshot,
       version: plan.plan_version || 1,
     };
+  }
+
+  async getDefaultFreePlan(client) {
+    const { rows } = await client.query(`
+      SELECT plan_id, details, plan_version
+      FROM plans
+      WHERE deleted = FALSE AND is_active = TRUE
+        AND COALESCE((details #>> '{metadata,is_signup_default}')::boolean, false) = true
+      ORDER BY COALESCE(plan_value, 0) ASC
+      LIMIT 1
+    `);
+    if (rows[0]) return rows[0];
+    const { rows: fallback } = await client.query(`
+      SELECT plan_id, details, plan_version
+      FROM plans
+      WHERE deleted = FALSE AND is_active = TRUE
+      ORDER BY COALESCE(plan_value, 0) ASC
+      LIMIT 1
+    `);
+    return fallback[0] || { plan_id: null, details: {}, plan_version: 1 };
   }
 
   async getPlanById(client, planId) {

@@ -278,7 +278,7 @@ export function FilterSearchInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="w-24 min-w-0 bg-transparent py-px pr-5 pl-5 text-[10px] font-medium placeholder:text-neutral-400 focus:outline-none dark:placeholder:text-neutral-500"
+        className="w-full min-w-0 bg-transparent py-px pr-5 pl-5 text-[10px] font-medium placeholder:text-neutral-400 focus:outline-none dark:placeholder:text-neutral-500"
       />
       {isActive && onClear && (
         <button

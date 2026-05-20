@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { AlertTriangle, Download, Trash2, Loader2, X } from "lucide-react";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useBackup } from "@/app/_contexts/backup-context";
+import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
 import { SettingsPageShell } from "@/app/(protected)/settings/_components/settings-page-shell";
 
 // --- Sub-componente Interno de Modal (Ajustado para a nova escala) ---
@@ -152,12 +153,17 @@ export const SettingsDangerZone: React.FC<any> = ({
 export default function DangerZonePage() {
   const { deleteUserPermanently } = useAuth();
   const { requestBackup, getBackupStatus } = useBackup();
+  const { canExportBackup } = usePlanUsage();
   const [backupMessage, setBackupMessage] = useState("");
   const [backupError, setBackupError] = useState("");
   const [backupLoading, setBackupLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleCreateBackup = async () => {
+    if (!canExportBackup) {
+      setBackupError("Monthly backup limit reached for your current plan.");
+      return;
+    }
     try {
       setBackupLoading(true);
       setBackupError("");

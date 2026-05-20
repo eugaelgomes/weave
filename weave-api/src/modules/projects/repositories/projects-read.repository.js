@@ -376,6 +376,11 @@ class ProjectsReadRepository {
         o.org_name as organization_name,
         o.unique_name as organization_unique_name,
         o.logo_url as organization_logo_url,
+        (
+          SELECT COUNT(*)::int
+          FROM project_stages ps
+          WHERE ps.project_id = p.id
+        ) AS stages_count,
         COALESCE(
           jsonb_agg(
             DISTINCT jsonb_build_object(

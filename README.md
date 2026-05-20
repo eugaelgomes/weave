@@ -10,6 +10,8 @@ For deeper front-end or API-only notes, see [weave-app/README.md](weave-app/READ
 
 ## Architecture
 
+Diagramas: [ARCHITECTURE.md](ARCHITECTURE.md).
+
 The browser talks to **weave-api** over HTTPS (often via **Caddy**). The API validates auth, applies tenancy and RBAC, reads/writes **PostgreSQL**, and **pushes jobs to Redis** (plan usage, embeddings, email, backups, domain checks, AI triggers, and LLM requests). **weave-engine** consumes LLM and proactive reasoning queues, calls **Google Generative AI**, and uses PostgreSQL where wired. **weave-worker** runs long-running queue processors and interval-based jobs (plan cycles, due-date reminders). The API also runs **in-process Redis consumers** so proactive AI can be assembled in the API (context build), sent to the engine, and responses persisted (see `weave-api/src/services/reasoning/`).
 
 ```mermaid

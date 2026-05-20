@@ -35,6 +35,7 @@ import {
   updateReasoningInteraction as updateReasoningInteractionService,
   updateReasoningActionItem as updateReasoningActionItemService,
   type Project,
+  type ProjectProperties,
   type SubProject,
   type CreateProjectData,
   type UpdateProjectData,
@@ -121,7 +122,7 @@ export interface ProjectOverview {
   notesCount: number;
   collaboratorsCount: number;
   color?: string;
-  icon?: string;
+  icon?: ProjectProperties["icon"];
   priority?: string;
   complexity?: string;
   estimatedTime?: string;
@@ -133,6 +134,9 @@ export interface ProjectOverview {
   /** Present when list/detail includes `stages`; root list often omits stages. */
   stagesCount?: number;
   subprojectsCount?: number;
+  organization_id?: string;
+  organization_name?: string;
+  organization_logo_url?: string;
 }
 
 export interface ProjectsStats {
@@ -322,7 +326,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
           ? project.collaborators.filter((c) => !c.removed).length
           : 0,
         color: project.properties?.color ?? undefined,
-        icon: typeof project.properties?.icon === 'string' ? project.properties.icon : undefined, // Corrige o tipo de 'icon' para garantir compatibilidade
+        icon: project.properties?.icon,
         priority: project.properties?.priority ?? undefined,
         complexity: project.properties?.complexity ?? undefined,
         estimatedTime: project.properties?.estimated_time ?? undefined,
@@ -331,8 +335,16 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         subprojects: project.subprojects ?? [],
         owner_name: project.owner?.name || project.owner?.username,
         owner_avatar_url: getStorageUrl(project.owner?.avatar_url || ""),
-        stagesCount: Array.isArray(project.stages) ? project.stages.length : 0,
+        stagesCount:
+          typeof project.stages_count === "number"
+            ? project.stages_count
+            : Array.isArray(project.stages)
+              ? project.stages.length
+              : 0,
         subprojectsCount: Array.isArray(project.subprojects) ? project.subprojects.length : 0,
+        organization_id: project.organization?.id ?? project.org_id ?? undefined,
+        organization_name: project.organization?.name ?? undefined,
+        organization_logo_url: getStorageUrl(project.organization?.logo_url || ""),
       }));
 
       setProjectsOverview(overview);

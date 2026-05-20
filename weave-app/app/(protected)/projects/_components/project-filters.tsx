@@ -187,14 +187,18 @@ export function ProjectFilters({
   }));
 
   return (
-    <div className="flex flex-shrink-0 flex-wrap items-center gap-1 px-2 py-1">
-      <FilterSearchInput
-        value={searchInput}
-        onChange={setSearchInput}
-        onClear={clearSearch}
-        placeholder="Buscar..."
-      />
+    <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 px-2 py-1">
+      <div className="flex shrink-0 items-center">
+        <FilterSearchInput
+          value={searchInput}
+          onChange={setSearchInput}
+          onClear={clearSearch}
+          placeholder="Buscar..."
+          className="w-36 sm:w-44"
+        />
+      </div>
 
+      <div className="flex flex-wrap items-center justify-end gap-1">
       <FilterSelect
         icon={Clock}
         accent="amber"
@@ -269,12 +273,13 @@ export function ProjectFilters({
         <button
           type="button"
           onClick={handleClear}
-          className="ml-auto flex items-center gap-0.5 rounded-full border border-neutral-200 px-2 py-px text-[10px] font-medium text-neutral-500 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-red-600/50 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+          className="flex items-center gap-0.5 rounded-full border border-neutral-200 px-2 py-px text-[10px] font-medium text-neutral-500 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-red-600/50 dark:hover:bg-red-950/40 dark:hover:text-red-400"
         >
           <X className="h-2 w-2" />
           <span>Limpar ({activeCount})</span>
         </button>
       )}
+      </div>
     </div>
   );
 }

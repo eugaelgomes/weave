@@ -9,10 +9,12 @@ import { Plus, Search } from "lucide-react";
 import { WorkspaceHeader } from "@/app/(protected)/_components/ui/headers/workspace-header";
 import { MemberWorkspaceRoleBadge } from "@/app/(protected)/organization/members/_components/member-workspace-role-badge";
 import { OrganizationInviteModal } from "@/app/(protected)/organization/members/_components/organization-invite-modal";
+import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
 
 export default function InvitesPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { canInviteTeamMember } = usePlanUsage();
   const {
     hasOrganization,
     invites,
@@ -42,6 +44,10 @@ export default function InvitesPage() {
   }, [showInviteModal, fetchAreas]);
 
   const handleInvite = async (payload: InviteMemberData) => {
+    if (!canInviteTeamMember) {
+      showFeedback("error", "Team member limit reached for your current plan.");
+      return;
+    }
     setLoadingAction(true);
     try {
       const result = await inviteMember(payload);

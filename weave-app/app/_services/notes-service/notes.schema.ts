@@ -18,11 +18,16 @@ export const CollaboratorSchema = z.union([z.string(), CollaboratorObjectSchema]
 
 // --- Properties ---
 export const NotePropertiesSchema = z.object({
-  icon: z.object({
-    path: z.string(),
-    name: z.string(),
-    type: z.string(),
-  }).optional(),
+    icon: z
+      .union([
+        z.string(),
+        z.object({
+          path: z.string(),
+          name: z.string(),
+          type: z.string(),
+        }),
+      ])
+      .optional(),
   urls: z.array(z.string()).optional(),
   color: z.string().optional(),
   files: z.array(z.object({
@@ -157,6 +162,16 @@ export const NoteSchema = z.object({
     unique_name: z.string().nullable().optional(),
     logo_url: z.string().nullable().optional(),
   }).nullable().optional(),
+
+  resolved_tags: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        color: z.string(),
+      })
+    )
+    .optional(),
 
   // Computed / Unified properties
   owner_name: z.string().nullable().optional(),

@@ -76,7 +76,7 @@ export function buildUserPatchFromPlanMe(payload: PlanMeResponse): Partial<User>
     },
   };
 
-  return {
+  const patch: Partial<User> = {
     plan_id: payload.plan.id,
     plan_name: payload.plan.name,
     plan_client_type: payload.plan.client_type ?? undefined,
@@ -85,6 +85,12 @@ export function buildUserPatchFromPlanMe(payload: PlanMeResponse): Partial<User>
     usage_period_end: payload.usage_period.period_end ?? undefined,
     usage_details,
   };
+
+  if (payload.plan_details) {
+    patch.plan_details = payload.plan_details as User["plan_details"];
+  }
+
+  return patch;
 }
 
 export async function fetchPlanUsageMe(): Promise<PlanMeResponse> {

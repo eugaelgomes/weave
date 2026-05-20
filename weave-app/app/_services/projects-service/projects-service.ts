@@ -239,6 +239,13 @@ export interface Project {
   notes?: ProjectNote[];
   stages?: ProjectStage[];
   subprojects?: SubProject[];
+  stages_count?: number;
+  organization?: {
+    id: string;
+    name: string;
+    unique_name?: string | null;
+    logo_url?: string | null;
+  } | null;
 }
 
 export interface ProjectsResponse {
@@ -473,6 +480,7 @@ export interface AiReportConfigUpsertPayload {
   channels?: Array<"in_app" | "email">;
   recipient_scope?: "owner_only" | "all_members" | "custom";
   custom_recipients?: unknown;
+  reasoning_instructions?: import("./reasoning-instructions.schema").ReasoningInstructions;
 }
 
 export const putProjectAiReportConfig = async (
@@ -668,6 +676,7 @@ export interface AiReportConfig {
   channels: Array<"in_app" | "email">;
   recipient_scope: "owner_only" | "all_members" | "custom";
   custom_recipients?: unknown;
+  reasoning_instructions?: import("./reasoning-instructions.schema").ReasoningInstructions;
   created_at?: string;
   updated_at?: string;
 }

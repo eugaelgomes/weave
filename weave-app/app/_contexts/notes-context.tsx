@@ -66,6 +66,11 @@ export interface NoteOverview {
   project_name?: string | null;
   stage_id?: string | null;
   stage_name?: string | null;
+  parent_id?: string | null;
+  organization_id?: string | null;
+  organization_name?: string | null;
+  organization_logo_url?: string | null;
+  resolved_tags?: { id: string; name: string; color: string }[];
   /** Task-level done flag when API sends it (list may omit). */
   done?: boolean;
 }
@@ -227,6 +232,17 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
         project_name: assoc?.name ?? note.project_name ?? null,
         stage_id: assoc?.stage_id ?? null,
         stage_name: assoc?.stage_name ?? null,
+        parent_id: note.parent_id ?? null,
+        organization_id: note.associated_organization?.id ?? null,
+        organization_name: note.associated_organization?.name ?? null,
+        organization_logo_url: getStorageUrl(note.associated_organization?.logo_url || ""),
+        resolved_tags: Array.isArray(note.resolved_tags)
+          ? note.resolved_tags.map((tag) => ({
+              id: String(tag.id),
+              name: tag.name,
+              color: tag.color,
+            }))
+          : [],
         done: note.done === true,
       };
     },

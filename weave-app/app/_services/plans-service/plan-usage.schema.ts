@@ -37,6 +37,7 @@ export const PlanMeResponseSchema = z.object({
     weave_ai_messages_monthly: PlanGateSchema,
     storage_upload_mb_monthly: PlanGateSchema,
   }),
+  plan_details: z.record(z.string(), z.unknown()).optional(),
   as_of: z.string(),
 });
 

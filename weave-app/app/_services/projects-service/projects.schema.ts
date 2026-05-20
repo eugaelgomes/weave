@@ -128,8 +128,8 @@ export const ProjectSchema = z
     properties: z.union([z.string(), ProjectPropertiesSchema]).optional(),
     status: projectStatus,
     methodology: z
-      .string()
-      .transform((v: string) => v.toLowerCase())
+      .union([z.string(), z.undefined()])
+      .transform((v) => (typeof v === "string" && v.length > 0 ? v.toLowerCase() : "kanban"))
       .pipe(z.enum(["scrum", "kanban"])),
     created_at: z.string(),
     updated_at: z.string(),
@@ -140,6 +140,16 @@ export const ProjectSchema = z
     notes: z.array(ProjectNoteSchema).optional(),
     stages: z.array(ProjectStageSchema).optional(),
     subprojects: z.array(SubProjectSchema).optional(),
+    stages_count: z.number().optional(),
+    organization: z
+      .object({
+        id: z.string(),
+        name: z.string(),
+        unique_name: z.string().nullable().optional(),
+        logo_url: z.string().nullable().optional(),
+      })
+      .nullable()
+      .optional(),
   })
   .passthrough();
 
@@ -216,6 +226,7 @@ export const AiReportConfigSchema = z.object({
   channels: z.array(z.enum(["in_app", "email"])),
   recipient_scope: z.enum(["owner_only", "all_members", "custom"]),
   custom_recipients: z.unknown().optional(),
+  reasoning_instructions: z.unknown().optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
 });

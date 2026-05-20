@@ -42,7 +42,7 @@ class ReportConfigRepository {
         enable_sprint_kickoff, enable_daily_standup, enable_sprint_review,
         report_time_utc,
         channels, recipient_scope, custom_recipients,
-        current_sprint_id, next_report_at
+        current_sprint_id, next_report_at, reasoning_instructions
       )
       VALUES (
         $1, $2, $3,
@@ -50,7 +50,7 @@ class ReportConfigRepository {
         $7, $8, $9,
         $10,
         $11, $12, $13,
-        $14, $15
+        $14, $15, COALESCE($16, '{}'::jsonb)
       )
       ON CONFLICT (project_id)
       DO UPDATE SET
@@ -68,6 +68,10 @@ class ReportConfigRepository {
         custom_recipients = EXCLUDED.custom_recipients,
         current_sprint_id = COALESCE(EXCLUDED.current_sprint_id, project_ai_report_configs.current_sprint_id),
         next_report_at = EXCLUDED.next_report_at,
+        reasoning_instructions = COALESCE(
+          EXCLUDED.reasoning_instructions,
+          project_ai_report_configs.reasoning_instructions
+        ),
         updated_at = NOW()
       RETURNING *
     `;
@@ -88,6 +92,9 @@ class ReportConfigRepository {
       JSON.stringify(config.custom_recipients || []),
       config.current_sprint_id || null,
       config.next_report_at || null,
+      config.reasoning_instructions !== undefined
+        ? JSON.stringify(config.reasoning_instructions)
+        : null,
     ]);
     return result.rows[0];
   }

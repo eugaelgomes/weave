@@ -54,7 +54,7 @@ const ProjectsPage = () => {
         duration: 6000,
         action: {
           label: "Ver Planos",
-          onClick: () => router.push("/settings?tab=plan"),
+          onClick: () => router.push("/settings/plans"),
         },
       });
       return;

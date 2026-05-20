@@ -1378,6 +1378,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
         channels,
         recipient_scope,
         custom_recipients,
+        reasoning_instructions,
       } = req.body;
 
       // Validate report_time_utc format
@@ -1415,6 +1416,19 @@ class ProjectsUpdateController extends ProjectsCoreController {
         }
       }
 
+      let normalizedReasoningInstructions;
+      if (reasoning_instructions !== undefined) {
+        try {
+          const { normalizeReasoningInstructions } = require("@/utils/reasoning-instructions");
+          normalizedReasoningInstructions = normalizeReasoningInstructions(reasoning_instructions);
+        } catch (normalizeErr) {
+          if (normalizeErr?.statusCode === 400) {
+            return res.status(400).json({ error: normalizeErr.message });
+          }
+          throw normalizeErr;
+        }
+      }
+
       const config = await reportConfigRepository.upsert(projectId, userId, {
         enabled,
         default_sprint_duration_days,
@@ -1427,6 +1441,9 @@ class ProjectsUpdateController extends ProjectsCoreController {
         channels,
         recipient_scope,
         custom_recipients,
+        ...(normalizedReasoningInstructions !== undefined
+          ? { reasoning_instructions: normalizedReasoningInstructions }
+          : {}),
       });
 
       // If enabled and no current sprint, calculate next_report_at based on active sprint

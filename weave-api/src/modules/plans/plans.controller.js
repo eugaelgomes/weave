@@ -79,12 +79,13 @@ class PlanUsageManager {
   }
 
   /**
-   *  Delete Note
+   * @param {string} usageId
+   * @param {number} [amount=1] - Number of notes deleted (supports bulk)
    */
-  async decrementNoteUsage(usageId) {
+  async decrementNoteUsage(usageId, amount = 1) {
     return enqueuePlanUsageJob({
       operation: "consume_note_creation",
-      payload: { amount: -1 },
+      payload: { amount: -Math.abs(amount) },
       usageId,
     });
   }
@@ -100,12 +101,13 @@ class PlanUsageManager {
   }
 
   /**
-   * Decrementa o total de projetos
+   * @param {string} usageId
+   * @param {number} [amount=1] - Number of projects deleted (supports bulk)
    */
-  async decrementProjectUsage(usageId) {
+  async decrementProjectUsage(usageId, amount = 1) {
     return enqueuePlanUsageJob({
       operation: "consume_project_creation",
-      payload: { amount: -1 },
+      payload: { amount: -Math.abs(amount) },
       usageId,
     });
   }

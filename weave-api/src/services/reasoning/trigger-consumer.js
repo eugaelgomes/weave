@@ -5,6 +5,10 @@ const {
   getReasoningTriggerQueueRedisKey,
 } = require("@/services/queue/queue-keys");
 const sprintContextBuilder = require("./sprint-context-builder");
+const {
+  appendInstructionBlock,
+  resolveInstructionAppends,
+} = require("@/utils/reasoning-instructions");
 
 class ReasoningTriggerConsumer {
   constructor() {
@@ -52,8 +56,15 @@ class ReasoningTriggerConsumer {
       // 1. Build context (Data fetching happens here in the API)
       const context = await sprintContextBuilder.build(config);
       const normalizedType = this._normalizeReportType(reportType || trigger.reasoningType);
-      const prompt = this._buildPrompt(normalizedType, context);
-      const systemMessage = this._buildSystemMessage(normalizedType);
+      const customAppends = resolveInstructionAppends(
+        config?.reasoning_instructions,
+        normalizedType
+      );
+      const prompt = this._buildPrompt(normalizedType, context, customAppends.promptAppend);
+      const systemMessage = this._buildSystemMessage(
+        normalizedType,
+        customAppends.systemAppend
+      );
       const sprintId = trigger.sprintId || config?.current_sprint_id || config?.sprint_id || null;
 
       // 2. Prepare Engine Job
@@ -121,7 +132,7 @@ class ReasoningTriggerConsumer {
    * @param {{ fullContext?: string, stats?: object }} context
    * @returns {string}
    */
-  _buildPrompt(reportType, context) {
+  _buildPrompt(reportType, context, customAppend = "") {
     const baseContext =
       typeof context?.fullContext === "string" && context.fullContext.trim().length > 0
         ? context.fullContext.trim()
@@ -140,7 +151,7 @@ class ReasoningTriggerConsumer {
         "Create an operational project analysis highlighting key signals, risk areas and next actions.",
     };
 
-    return [
+    const base = [
       intentByType[reportType] || intentByType.analysis,
       "",
       "Use concise markdown with these sections:",
@@ -152,14 +163,16 @@ class ReasoningTriggerConsumer {
       "Project context:",
       baseContext,
     ].join("\n");
+
+    return appendInstructionBlock(base, customAppend);
   }
 
   /**
    * @param {string} reportType
    * @returns {string}
    */
-  _buildSystemMessage(reportType) {
-    return [
+  _buildSystemMessage(reportType, customAppend = "") {
+    const base = [
       "You are Weave Engine, the proactive operational intelligence core for project execution.",
       `Report type: ${reportType}.`,
       "Write professional markdown in pt-BR.",
@@ -167,6 +180,8 @@ class ReasoningTriggerConsumer {
       "Never invent data that is not present in the provided context.",
       "Always include at least three actionable recommendations.",
     ].join(" ");
+
+    return appendInstructionBlock(base, customAppend);
   }
 
   /**

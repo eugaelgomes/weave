@@ -6,15 +6,26 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "../../_contexts/auth-context";
 import { useProjects } from "../../_contexts/projects-context";
 import { useWeaveEngine } from "@/app/_contexts/weave-engine-context";
-import {
-  Folder,
-  ChevronRight,
-  FolderOpen,
-  LayoutDashboard,
-  ChevronDown,
-} from "lucide-react";
+import { ChevronRight, LayoutDashboard, ChevronDown } from "lucide-react";
 import { ProjectsHeader } from "../_components/ui/headers/projects-header";
 import GlobalLoading from "@/app/_components/ui/global-loading";
+import { ProjectIcon } from "./_components/project-icon";
+import type {
+  SubProject,
+  ProjectProperties,
+} from "@/app/_services/projects-service/projects-service";
+
+function subprojectProperties(sub: SubProject): ProjectProperties | undefined {
+  if (!sub.properties) return undefined;
+  if (typeof sub.properties === "string") {
+    try {
+      return JSON.parse(sub.properties) as ProjectProperties;
+    } catch {
+      return undefined;
+    }
+  }
+  return sub.properties;
+}
 
 export default function ProjectsLayout({ children }: { children: React.ReactNode }) {
   const { authenticated, loading: authLoading } = useAuth();
@@ -143,11 +154,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                   }`}
                 >
                   <div className="flex min-w-0 items-center gap-1.5">
-                    <Folder
-                      className={`h-3.5 w-3.5 flex-shrink-0 ${
-                        isActive ? "text-brand-primary-500" : "text-neutral-400"
-                      }`}
-                    />
+                    <ProjectIcon icon={project.icon} color={project.color} size="xs" />
                     <span className="truncate">{project.title}</span>
                     {signal?.risk === "high" ? (
                       <span className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" title="Risco alto" />
@@ -173,6 +180,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                 <ul className="relative mt-1 ml-[17px] flex flex-col">
                   {project.subprojects?.map((sub, index) => {
                     const isSubActive = currentProjectId === sub.public_id;
+                    const subProps = subprojectProperties(sub);
 
                     const isLast = index === project.subprojects!.length - 1;
 
@@ -195,10 +203,10 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                               : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-300"
                           }`}
                         >
-                          <FolderOpen
-                            className={`h-3 w-3 flex-shrink-0 ${
-                              isSubActive ? "text-brand-primary-500" : "text-neutral-400"
-                            }`}
+                          <ProjectIcon
+                            icon={subProps?.icon}
+                            color={subProps?.color}
+                            size="xs"
                           />
                           <span className="truncate">{sub.title}</span>
                         </Link>

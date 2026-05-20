@@ -27,6 +27,11 @@ type PlanUsageContextValue = {
   refreshPlanUsage: () => Promise<void>;
   canCreateNote: boolean;
   canCreateProject: boolean;
+  canSendAiMessage: boolean;
+  canExportNote: boolean;
+  canExportBackup: boolean;
+  canUploadStorage: boolean;
+  canInviteTeamMember: boolean;
 };
 
 const PlanUsageContext = createContext<PlanUsageContextValue | undefined>(undefined);
@@ -101,6 +106,11 @@ export function PlanUsageProvider({ children }: { children: React.ReactNode }) {
 
   const canCreateNote = gates?.notes.allowed !== false;
   const canCreateProject = gates?.projects.allowed !== false;
+  const canSendAiMessage = gates?.weave_ai_messages_monthly.allowed !== false;
+  const canExportNote = gates?.exports_notes_monthly.allowed !== false;
+  const canExportBackup = gates?.backups_monthly.allowed !== false;
+  const canUploadStorage = gates?.storage_upload_mb_monthly.allowed !== false;
+  const canInviteTeamMember = gates?.team_members.allowed !== false;
 
   const value = useMemo(
     () => ({
@@ -110,8 +120,13 @@ export function PlanUsageProvider({ children }: { children: React.ReactNode }) {
       refreshPlanUsage,
       canCreateNote,
       canCreateProject,
+      canSendAiMessage,
+      canExportNote,
+      canExportBackup,
+      canUploadStorage,
+      canInviteTeamMember,
     }),
-    [gates, lastSyncedAt, isRefreshing, refreshPlanUsage, canCreateNote, canCreateProject]
+    [gates, lastSyncedAt, isRefreshing, refreshPlanUsage, canCreateNote, canCreateProject, canSendAiMessage, canExportNote, canExportBackup, canUploadStorage, canInviteTeamMember]
   );
 
   return <PlanUsageContext.Provider value={value}>{children}</PlanUsageContext.Provider>;

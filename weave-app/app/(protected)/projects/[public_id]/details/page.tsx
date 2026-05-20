@@ -17,6 +17,7 @@ import {
   FaFlag,
 } from "react-icons/fa";
 import Image from "next/image";
+import Link from "next/link";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { useNotes } from "@/app/_contexts/notes-context";
@@ -96,7 +97,6 @@ export default function ProjectDetailsPage() {
     getReasonings,
     getReasoningById,
     getReasoningActionItems,
-    createReasoning,
     updateReasoningInteraction,
     updateReasoningActionItem,
   } = useProjects();
@@ -155,10 +155,6 @@ export default function ProjectDetailsPage() {
   const [reasonings, setReasonings] = useState<any[]>([]);
   const [selectedReasoning, setSelectedReasoning] = useState<any>(null);
   const [reasoningActionItems, setReasoningActionItems] = useState<any[]>([]);
-  const [showCreateReasoning, setShowCreateReasoning] = useState(false);
-  const [reasoningForm, setReasoningForm] = useState({ title: "", reasoningType: "general", content: "" });
-  const [creatingReasoning, setCreatingReasoning] = useState(false);
-
   const loadAllData = useCallback(async () => {
     if (!projectId) return;
     setLoading(true);
@@ -583,29 +579,6 @@ export default function ProjectDetailsPage() {
       console.error("Erro ao salvar config de relatório:", error);
     } finally {
       setSavingReport(false);
-    }
-  };
-
-  // --- Reasoning handlers ---
-  const handleCreateReasoning = async () => {
-    if (!reasoningForm.title.trim()) return;
-    setCreatingReasoning(true);
-    try {
-      const reasoning = await createReasoning(projectId, {
-        title: reasoningForm.title,
-        reasoningType: reasoningForm.reasoningType || undefined,
-        content: reasoningForm.content || undefined,
-        sprintId: activeSprint?.id,
-      });
-      if (reasoning) {
-        setReasonings((prev) => [reasoning, ...prev]);
-        setShowCreateReasoning(false);
-        setReasoningForm({ title: "", reasoningType: "general", content: "" });
-      }
-    } catch (error) {
-      console.error("Erro ao criar reasoning:", error);
-    } finally {
-      setCreatingReasoning(false);
     }
   };
 
@@ -1497,68 +1470,22 @@ export default function ProjectDetailsPage() {
               Análises IA ({reasonings.length})
             </h2>
             {canEdit && (
-              <button
-                type="button"
-                onClick={() => setShowCreateReasoning(!showCreateReasoning)}
-                className={btnPrimaryCls}
-              >
-                <FaPlus className="size-2" /> Solicitar análise
-              </button>
-            )}
-          </div>
-
-          {showCreateReasoning && canEdit && (
-            <div className="mb-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
-              <div className="grid gap-1.5 sm:grid-cols-2">
-                <label>
-                  <span className="mb-0.5 block text-[10px] text-neutral-500">Título *</span>
-                  <input
-                    value={reasoningForm.title}
-                    onChange={(e) => setReasoningForm((f) => ({ ...f, title: e.target.value }))}
-                    placeholder="Ex: Análise de velocidade do time"
-                    className={inputCls}
-                  />
-                </label>
-                <label>
-                  <span className="mb-0.5 block text-[10px] text-neutral-500">Tipo</span>
-                  <select
-                    value={reasoningForm.reasoningType}
-                    onChange={(e) => setReasoningForm((f) => ({ ...f, reasoningType: e.target.value }))}
-                    className={selectCls}
-                  >
-                    <option value="general">Geral</option>
-                    <option value="sprint_review">Review de Sprint</option>
-                    <option value="daily_standup">Daily Standup</option>
-                    <option value="sprint_kickoff">Kickoff</option>
-                    <option value="retrospective">Retrospetiva</option>
-                  </select>
-                </label>
-                <label className="sm:col-span-2">
-                  <span className="mb-0.5 block text-[10px] text-neutral-500">Conteúdo / contexto adicional</span>
-                  <textarea
-                    value={reasoningForm.content}
-                    onChange={(e) => setReasoningForm((f) => ({ ...f, content: e.target.value }))}
-                    placeholder="Opcional: descreva o que deseja analisar..."
-                    rows={2}
-                    className={`${inputCls} resize-none`}
-                  />
-                </label>
-              </div>
-              <div className="mt-2 flex justify-end gap-1.5">
-                <button type="button" onClick={() => setShowCreateReasoning(false)} className={btnSecondaryCls}>
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCreateReasoning}
-                  disabled={creatingReasoning || !reasoningForm.title.trim()}
+              <div className="flex flex-wrap gap-1.5">
+                <Link
+                  href={`/weave-engine/compose/insight?projectId=${projectId}&from=project`}
                   className={btnPrimaryCls}
                 >
-                  {creatingReasoning ? <FaSpinner className="size-2.5 animate-spin" /> : "Criar"}
-                </button>
+                  <FaPlus className="size-2" /> Publicar insight
+                </Link>
+                <Link
+                  href={`/weave-engine/compose/instructions?projectId=${projectId}&from=project`}
+                  className={btnSecondaryCls}
+                >
+                  Instruções do engine
+                </Link>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {selectedReasoning && (
             <div className="mb-2 rounded-md border border-indigo-200 bg-indigo-50 p-2 dark:border-indigo-900/50 dark:bg-indigo-900/10">

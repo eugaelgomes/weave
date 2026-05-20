@@ -183,6 +183,7 @@ class PlansMeController {
         usage_period,
         usage_summary,
         gates,
+        plan_details: planDetails,
         as_of: new Date().toISOString(),
       });
     } catch (err) {

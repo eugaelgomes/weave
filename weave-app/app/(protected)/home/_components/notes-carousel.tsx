@@ -3,13 +3,21 @@
 import React, { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { FileText, ChevronLeft, ChevronRight, Calendar, FolderKanban, CircleCheck } from "lucide-react";
+import {
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  CircleCheck,
+  GitBranch,
+} from "lucide-react";
 
 import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/_utils/collaborators";
 import { getTagColor } from "@/app/_utils/tag-colors";
-import getStorageUrl from "@/app/_utils/get-storage-url";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useTaskNoteModal } from "@/app/(protected)/_components/task-note-modal";
+import { ProjectIcon } from "@/app/(protected)/projects/_components/project-icon";
+import type { ProjectProperties } from "@/app/_services/projects-service/projects-service";
 
 import type { NoteOverview } from "@/app/_contexts/notes-context";
 
@@ -119,16 +127,65 @@ export default function NotesCarousel({
                 ? new Date(note.created_at).getTime() > Date.now() - 86400000
                 : false;
 
-              const hasIcon = Boolean(note.properties?.icon?.path);
-              const hasColor = Boolean(note.properties?.color);
-              const baseColor =
-                hasColor && note.properties?.color?.startsWith("#") ? note.properties.color : null;
-
               const hasProjectContext = Boolean(note.project_name || note.stage_name);
               const priorityHex =
                 note.priority_color && /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(note.priority_color)
                   ? note.priority_color
                   : null;
+              const noteIcon = note.properties?.icon as ProjectProperties["icon"] | undefined;
+              const tagItems =
+                note.resolved_tags && note.resolved_tags.length > 0
+                  ? note.resolved_tags
+                  : (note.tags || []).map((name) => ({ id: name, name, color: "" }));
+
+              const metaParts: React.ReactNode[] = [];
+              if (note.priority_name) {
+                metaParts.push(
+                  <span
+                    key="priority"
+                    className="truncate font-normal"
+                    style={{ color: priorityHex || undefined }}
+                  >
+                    {note.priority_name}
+                  </span>
+                );
+              }
+              if (dueDate) {
+                metaParts.push(
+                  <span key="due" className="inline-flex items-center gap-0.5 font-normal">
+                    <Calendar className="h-2.5 w-2.5 shrink-0" />
+                    {dueDate.toLocaleDateString(dateLocale, { day: "2-digit", month: "short" })}
+                  </span>
+                );
+              }
+              if (note.parent_id) {
+                metaParts.push(
+                  <span
+                    key="subtask"
+                    className="inline-flex items-center gap-0.5 font-normal text-violet-600 dark:text-violet-400"
+                    title={t.home.carousel.subtask}
+                  >
+                    <GitBranch className="h-2.5 w-2.5" />
+                    {t.home.carousel.subtask}
+                  </span>
+                );
+              }
+              tagItems.slice(0, 2).forEach((tag) => {
+                const hex =
+                  tag.color && /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(tag.color)
+                    ? tag.color
+                    : null;
+                const fallback = getTagColor(tag.name);
+                metaParts.push(
+                  <span
+                    key={tag.id}
+                    className={`truncate font-normal ${hex ? "" : fallback.text}`}
+                    style={hex ? { color: hex } : undefined}
+                  >
+                    {tag.name}
+                  </span>
+                );
+              });
 
               return (
                 <button
@@ -138,28 +195,20 @@ export default function NotesCarousel({
                   className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center text-left sm:w-[220px] sm:snap-start"
                 >
                   <div
-                    className={`group flex min-h-[176px] flex-col justify-between rounded-md border border-neutral-200 bg-neutral-50 p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:border-surface-dark-border-strong dark:hover:shadow-surface-dark-md ${note.done ? "opacity-90" : ""}`}
-                    style={{
-                      backgroundColor: baseColor ? `${baseColor}40` : undefined,
-                      boxShadow: baseColor ? `0 2px 8px 0 ${baseColor}15` : undefined,
-                    }}
+                    className={`group flex min-h-[148px] flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2.5 font-normal transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:border-surface-dark-border-strong dark:hover:shadow-surface-dark-md ${note.done ? "opacity-90" : ""}`}
                   >
-                    <div>
+                    <div className="flex flex-1 flex-col">
                       <div className="mb-1.5 flex items-start justify-between gap-1.5">
                         <div className="flex min-w-0 items-center gap-1.5">
-                          {hasIcon && (
-                            <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center overflow-hidden rounded-[2px]">
-                              <Image
-                                src={getStorageUrl(note.properties!.icon!.path)}
-                                alt={`Ícone de ${note.title}`}
-                                width={16}
-                                height={16}
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                          )}
+                          {noteIcon ? (
+                            <ProjectIcon
+                              icon={noteIcon}
+                              color={note.properties?.color}
+                              size="xs"
+                            />
+                          ) : null}
                           <h2
-                            className={`dark:group-hover:text-brand-primary-500 line-clamp-2 text-xs leading-tight font-semibold text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-100 ${note.done ? "line-through opacity-80" : ""}`}
+                            className={`dark:group-hover:text-brand-primary-500 line-clamp-2 text-xs leading-tight font-normal text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-100 ${note.done ? "line-through opacity-80" : ""}`}
                           >
                             {note.title || t.common.untitled}
                           </h2>
@@ -167,100 +216,49 @@ export default function NotesCarousel({
 
                         <div className="flex flex-shrink-0 items-center gap-1">
                           {note.done && (
-                            <span
-                              className="inline-flex items-center gap-0.5 rounded border border-green-200 bg-green-50 px-1 py-0.5 text-[7px] font-semibold text-green-700 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-400"
-                              title={t.home.carousel.completed}
-                            >
-                              <CircleCheck className="h-2.5 w-2.5" />
+                            <span title={t.home.carousel.completed}>
+                              <CircleCheck className="h-3 w-3 text-green-600 dark:text-green-400" />
                             </span>
                           )}
                           {isNew && (
                             <span
-                              className="bg-brand-primary-500 flex h-1.5 w-1.5 rounded-full shadow-sm"
+                              className="bg-brand-primary-500 flex h-1.5 w-1.5 rounded-full"
                               title={t.home.carousel.newBadge}
                             />
                           )}
                         </div>
                       </div>
 
-                      {hasProjectContext && (
-                        <div className="mb-1.5 flex items-start gap-1 text-[9px] leading-tight text-neutral-600 dark:text-neutral-400">
-                          <FolderKanban className="mt-0.5 h-3 w-3 flex-shrink-0 text-neutral-400" />
-                          <p className="line-clamp-2 min-w-0">
-                            {note.project_name && (
-                              <span className="font-medium text-neutral-700 dark:text-neutral-300">
-                                {note.project_name}
-                              </span>
-                            )}
-                            {note.project_name && note.stage_name && (
-                              <span className="text-neutral-400 dark:text-neutral-500"> · </span>
-                            )}
-                            {note.stage_name && (
-                              <span className="text-neutral-600 dark:text-neutral-300">
-                                {note.stage_name}
-                              </span>
-                            )}
-                          </p>
-                        </div>
+                      {metaParts.length > 0 && (
+                        <p className="mb-1.5 flex flex-wrap items-center gap-x-1 text-[8px] text-neutral-600 dark:text-neutral-400">
+                          {metaParts.map((part, index) => (
+                            <React.Fragment key={index}>
+                              {index > 0 && (
+                                <span className="text-neutral-400 dark:text-neutral-500">·</span>
+                              )}
+                              {part}
+                            </React.Fragment>
+                          ))}
+                        </p>
                       )}
 
-                      <div className="mb-1.5 flex flex-wrap items-center gap-1">
-                        {note.priority_name && (
-                          <span
-                            className="inline-flex max-w-full truncate rounded border px-1.5 py-[1px] text-[8px] font-semibold"
-                            style={{
-                              borderColor: priorityHex || undefined,
-                              color: priorityHex || undefined,
-                              backgroundColor: priorityHex ? `${priorityHex}18` : undefined,
-                            }}
-                          >
-                            {note.priority_name}
-                          </span>
-                        )}
-                        {dueDate && (
-                          <span className="inline-flex items-center gap-0.5 rounded border border-neutral-200 bg-neutral-100/80 px-1.5 py-[1px] text-[8px] font-medium text-neutral-600 dark:border-surface-dark-border-strong dark:bg-neutral-800/80 dark:text-neutral-300">
-                            <Calendar className="h-2.5 w-2.5 shrink-0" />
-                            {dueDate.toLocaleDateString(dateLocale, {
-                              day: "2-digit",
-                              month: "short",
-                            })}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-1.5 mb-2">
-                        <p className="line-clamp-2 text-[10px] leading-relaxed text-neutral-500 dark:text-neutral-400">
-                          {note.preview || t.home.carousel.noDescription}
-                        </p>
-                      </div>
+                      <p className="mb-2 line-clamp-2 text-[10px] leading-relaxed font-normal text-neutral-500 dark:text-neutral-400">
+                        {note.preview || t.home.carousel.noDescription}
+                      </p>
                     </div>
 
-                    <div>
-                      {note.tags && note.tags.length > 0 && (
-                        <div className="mb-2 flex flex-wrap gap-1">
-                          {note.tags.slice(0, 3).map((tag, i) => {
-                            const colors = getTagColor(tag);
-                            return (
-                              <span
-                                key={i}
-                                className={`inline-flex items-center rounded border px-1.5 py-[1px] text-[8px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
-                              >
-                                {tag}
-                              </span>
-                            );
-                          })}
-                          {(note.tags?.length || 0) > 3 && (
-                            <span className="inline-flex items-center rounded border border-neutral-200 bg-neutral-100 px-1.5 py-[1px] text-[8px] font-medium text-neutral-500 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400">
-                              +{note.tags!.length - 3}
-                            </span>
-                          )}
-                        </div>
+                    <div className="mt-auto">
+                      {hasProjectContext && (
+                        <p className="mb-1 truncate text-[9px] font-normal text-neutral-500 dark:text-neutral-500">
+                          {note.project_name}
+                          {note.stage_name ? ` · ${note.stage_name}` : ""}
+                        </p>
                       )}
 
-                      <div className="flex items-center justify-between border-t border-neutral-100 pt-2 dark:border-surface-dark-border-strong">
+                      <div className="flex items-center justify-between pt-1">
                         <div className="flex -space-x-1.5">
                           <div
-                            className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full border border-neutral-900 bg-neutral-100 dark:border-neutral-200 dark:bg-neutral-800"
+                            className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full"
                             title={note.owner_name || t.home.carousel.ownerTitle}
                           >
                             {note.owner_avatar_url ? (
@@ -272,7 +270,7 @@ export default function NotesCarousel({
                                 className="h-full w-full object-cover"
                               />
                             ) : (
-                              <span className="text-[6px] font-bold text-yellow-600 dark:text-yellow-400">
+                              <span className="text-[6px] font-normal text-yellow-600 dark:text-yellow-400">
                                 {note.owner_name ? note.owner_name.charAt(0).toUpperCase() : "?"}
                               </span>
                             )}
@@ -285,7 +283,7 @@ export default function NotesCarousel({
                                 return (
                                   <div
                                     key={i}
-                                    className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full border border-neutral-900 bg-neutral-100 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:ring-neutral-900"
+                                    className="relative flex h-4 w-4 items-center justify-center overflow-hidden rounded-full"
                                     title={name}
                                   >
                                     {avatar ? (
@@ -297,7 +295,7 @@ export default function NotesCarousel({
                                         className="h-full w-full object-cover"
                                       />
                                     ) : (
-                                      <span className="text-[6px] font-bold text-neutral-500 dark:text-neutral-400">
+                                      <span className="text-[6px] font-normal text-neutral-500 dark:text-neutral-400">
                                         {name ? name.charAt(0).toUpperCase() : "?"}
                                       </span>
                                     )}
@@ -305,7 +303,7 @@ export default function NotesCarousel({
                                 );
                               })}
                               {note.collaborators.length > 3 && (
-                                <div className="relative flex h-4 w-4 items-center justify-center rounded-full border border-white bg-neutral-200 text-[6px] font-bold text-neutral-600 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-400">
+                                <div className="relative flex h-4 w-4 items-center justify-center text-[6px] font-normal text-neutral-600 dark:text-neutral-400">
                                   +{note.collaborators.length - 3}
                                 </div>
                               )}
@@ -313,20 +311,18 @@ export default function NotesCarousel({
                           )}
                         </div>
 
-                        <div className="flex flex-col items-end text-[8px] font-medium text-neutral-700 dark:text-neutral-400">
-                          <div className="flex items-center gap-0.5">
-                            <Calendar size={8} className="text-neutral-400" />
-                            <span>
-                              {t.home.carousel.updated}:{" "}
-                              {validUpdated
-                                ? validUpdated.toLocaleDateString(dateLocale, {
-                                    day: "2-digit",
-                                    month: "short",
-                                    year: "2-digit",
-                                  })
-                                : "--"}
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-0.5 text-[8px] font-normal text-neutral-700 dark:text-neutral-400">
+                          <Calendar size={8} className="text-neutral-400" />
+                          <span>
+                            {t.home.carousel.updated}:{" "}
+                            {validUpdated
+                              ? validUpdated.toLocaleDateString(dateLocale, {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "2-digit",
+                                })
+                              : "--"}
+                          </span>
                         </div>
                       </div>
                     </div>

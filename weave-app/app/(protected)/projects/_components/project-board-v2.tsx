@@ -15,16 +15,16 @@ import {
 import {
   Calendar,
   CheckCircle2,
-  ExternalLink,
   Flag,
   LayoutGrid,
   ListPlus,
-  MessageSquare,
-  MoreHorizontal,
   Paperclip,
   Plus,
+  Tags,
   Trash2,
+  Unlink,
   UserCircle2,
+  Users,
 } from "lucide-react";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { useTheme } from "@/app/_contexts/theme-context";
@@ -33,9 +33,41 @@ import { plainTextPreview } from "@/app/_utils/note-text-preview";
 import type { PatchProjectTaskData } from "@/app/_services/projects-service/projects-service";
 import type { TaskPriority } from "@/app/_services/projects-service/project-taxonomy.schema";
 import { CompactTaskModal } from "@/app/(protected)/projects/_components/compact-task-modal";
+import {
+  TaskCardCollaboratorsPicker,
+  TaskCardTagsPicker,
+  normalizeNoteCollaboratorIds,
+  normalizeNoteTagIds,
+  type ProjectCollaboratorOption,
+  type ProjectTagOption,
+} from "@/app/(protected)/projects/_components/task-card-meta-pickers";
 import { useTaskNoteModal } from "@/app/(protected)/_components/task-note-modal";
 
 const COLUMN_WIDTH_CLASS = "w-[232px]";
+
+const TASK_CARD_FOOTER_ACTION = {
+  attachments: { icon: "text-sky-500", active: "bg-sky-500/10" },
+  tags: { icon: "text-amber-500", active: "bg-amber-500/10" },
+  collaborators: { icon: "text-violet-500", active: "bg-violet-500/10" },
+  date: { icon: "text-emerald-500", active: "bg-brand-primary-500/15 text-brand-primary-500" },
+  priority: { icon: "text-orange-500", active: "" },
+} as const;
+
+function footerActionButtonClass(
+  action: keyof typeof TASK_CARD_FOOTER_ACTION,
+  opts: { disabled?: boolean; active?: boolean; extra?: string }
+): string {
+  const palette = TASK_CARD_FOOTER_ACTION[action];
+  const useActiveStyle = Boolean(opts.active && palette.active);
+  return [
+    "inline-flex items-center gap-0.5 rounded-md p-0.5 transition-colors",
+    opts.disabled ? "cursor-not-allowed opacity-40" : "hover:bg-neutral-100 dark:hover:bg-neutral-800",
+    useActiveStyle ? palette.active : palette.icon,
+    opts.extra ?? "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
 const DRAG_OVERLAY_CARD_CLASS = "w-[208px]";
 
 type DropTargetData =
@@ -140,19 +172,13 @@ function isDescendantNote(
   return false;
 }
 
-type TaskModalKind =
-  | "comments"
-  | "attachments"
-  | "date"
-  | "priority"
-  | "tags"
-  | "collaborators"
-  | "remove";
+type TaskModalKind = "attachments" | "date" | "priority" | "tags" | "collaborators";
 
 interface ProjectBoardProps {
   stages: any[];
   projectNotes: any[];
-  projectTags: any[];
+  projectTags: ProjectTagOption[];
+  projectCollaborators: ProjectCollaboratorOption[];
   taskPriorities: TaskPriority[];
   onNoteStageChange?: (noteId: string, newStageId: string) => void;
   onAddCard?: (stageId: string) => void;
@@ -164,7 +190,8 @@ interface ProjectBoardProps {
 function NoteCard({
   note,
   getTagMeta,
-  onRemoveNote,
+  projectTags,
+  projectCollaborators,
   onOpenNote,
   onPatchTask,
   taskPriorities,
@@ -174,7 +201,8 @@ function NoteCard({
 }: {
   note: any;
   getTagMeta: (tag: string) => { label: string; color: string };
-  onRemoveNote: () => void;
+  projectTags: ProjectTagOption[];
+  projectCollaborators: ProjectCollaboratorOption[];
   onOpenNote: () => void;
   onPatchTask?: (noteId: string, patch: PatchProjectTaskData) => Promise<void>;
   taskPriorities: TaskPriority[];
@@ -182,12 +210,8 @@ function NoteCard({
   onAddSubtask?: (parentNoteId: string, stageId: string, parentTitle: string) => void;
   isDragging?: boolean;
 }) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<TaskModalKind | null>(null);
-  const [tagDraft, setTagDraft] = useState("");
-  const [collabDraft, setCollabDraft] = useState("");
   const [dateDraft, setDateDraft] = useState("");
-  const [priorityDraft, setPriorityDraft] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const attachments = Array.isArray(note.properties?.files) ? note.properties.files : [];
@@ -210,26 +234,24 @@ function NoteCard({
     return sortedPriorities.find((p) => p.id === note.priority_id) ?? null;
   }, [note.priority_id, sortedPriorities]);
 
+  const selectedTagIds = useMemo(
+    () => normalizeNoteTagIds(note.tags, projectTags),
+    [note.tags, projectTags]
+  );
+
+  const selectedCollaboratorIds = useMemo(
+    () => normalizeNoteCollaboratorIds(collaboratorList),
+    [collaboratorList]
+  );
+
+  const hasTags = selectedTagIds.size > 0;
+  const hasCollaborators = selectedCollaboratorIds.size > 0;
+
   const stopDrag = (event: React.SyntheticEvent) => event.stopPropagation();
 
   const openModal = (kind: TaskModalKind) => {
-    setMenuOpen(false);
-    if (kind === "tags") {
-      setTagDraft((Array.isArray(note.tags) ? note.tags : []).join(", "));
-    }
-    if (kind === "collaborators") {
-      setCollabDraft(
-        collaboratorList
-          .map((c: { user_id?: string; id?: string }) => c.user_id || c.id)
-          .filter(Boolean)
-          .join(", ")
-      );
-    }
     if (kind === "date") {
       setDateDraft(toDateInputValue(dueDate));
-    }
-    if (kind === "priority") {
-      setPriorityDraft(note.priority_id ?? null);
     }
     setActiveModal(kind);
   };
@@ -239,30 +261,37 @@ function NoteCard({
     setSaving(false);
   };
 
-  const saveTags = async () => {
+  const handleToggleTag = async (tagId: string, selected: boolean) => {
     if (!onPatchTask) return;
     setSaving(true);
     try {
-      const set_tags = tagDraft
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
-      await onPatchTask(note.id, { set_tags });
-      closeModal();
+      await onPatchTask(
+        note.id,
+        selected ? { remove_tags: [tagId] } : { add_tags: [tagId] }
+      );
     } finally {
       setSaving(false);
     }
   };
 
-  const saveCollaborators = async () => {
+  const handleToggleCollaborator = async (userId: string, selected: boolean) => {
     if (!onPatchTask) return;
     setSaving(true);
     try {
-      const set_collaborators = collabDraft
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
-      await onPatchTask(note.id, { set_collaborators });
+      await onPatchTask(
+        note.id,
+        selected ? { remove_collaborators: [userId] } : { add_collaborators: [userId] }
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const applyPriority = async (priorityId: string | null) => {
+    if (!onPatchTask) return;
+    setSaving(true);
+    try {
+      await onPatchTask(note.id, { priority_id: priorityId });
       closeModal();
     } finally {
       setSaving(false);
@@ -279,17 +308,6 @@ function NoteCard({
           ? null
           : new Date(`${dateDraft}T12:00:00.000Z`).toISOString();
       await onPatchTask(note.id, { due_date });
-      closeModal();
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const savePriority = async () => {
-    if (!onPatchTask) return;
-    setSaving(true);
-    try {
-      await onPatchTask(note.id, { priority_id: priorityDraft });
       closeModal();
     } finally {
       setSaving(false);
@@ -328,8 +346,41 @@ function NoteCard({
             : "hover:border-neutral-300 hover:shadow-md dark:hover:border-surface-dark-border-strong"
         }`}
       >
-        <div className="mb-1.5 flex items-start justify-between gap-2">
-          <div className="flex flex-wrap gap-1">
+        {(onAddSubtask && stageId) || (note.parent_id && canWrite) ? (
+          <div className="absolute top-1 right-1 z-10 flex items-center gap-0.5">
+            {note.parent_id && canWrite ? (
+              <button
+                type="button"
+                onPointerDown={stopDrag}
+                onClick={(event) => {
+                  stopDrag(event);
+                  void onPatchTask?.(note.id, { parent_id: null });
+                }}
+                title="Tornar tarefa principal"
+                className="rounded-md bg-white/90 p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:bg-[#121214]/90 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+              >
+                <Unlink className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
+            {onAddSubtask && stageId ? (
+              <button
+                type="button"
+                onPointerDown={stopDrag}
+                onClick={(event) => {
+                  stopDrag(event);
+                  onAddSubtask(note.id, stageId, String(note.title ?? ""));
+                }}
+                title="Adicionar subtarefa"
+                className="rounded-md bg-white/90 p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:bg-[#121214]/90 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+              >
+                <ListPlus className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {(note.tags?.length ?? 0) > 0 ? (
+          <div className="mb-1 flex flex-wrap gap-1 pr-14">
             {(note.tags || []).slice(0, 3).map((tag: string, index: number) => {
               const tagMeta = getTagMeta(tag);
               return (
@@ -347,104 +398,21 @@ function NoteCard({
               );
             })}
           </div>
-          <div className="relative flex shrink-0 items-center gap-0.5">
-            {onAddSubtask && stageId ? (
-              <button
-                type="button"
-                onPointerDown={stopDrag}
-                onClick={(event) => {
-                  stopDrag(event);
-                  onAddSubtask(note.id, stageId, String(note.title ?? ""));
-                }}
-                title="Adicionar subtarefa"
-                className="rounded-md p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-              >
-                <ListPlus className="h-3.5 w-3.5" />
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onPointerDown={stopDrag}
-              onClick={(event) => {
-                stopDrag(event);
-                setMenuOpen((prev) => !prev);
-              }}
-              title="Abrir ações da tarefa"
-              className="rounded-md p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-            >
-              <MoreHorizontal className="h-3.5 w-3.5" />
-            </button>
-            {menuOpen && (
-              <div
-                onPointerDown={stopDrag}
-                className="absolute top-7 right-0 z-20 flex w-44 flex-col rounded-md border border-neutral-200 bg-white p-1 shadow-md dark:border-surface-dark-border dark:bg-[#171717]"
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onOpenNote();
-                  }}
-                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Abrir nota
-                </button>
-                {canWrite && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => openModal("tags")}
-                      className="rounded-md px-2 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
-                    >
-                      Editar tags
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openModal("collaborators")}
-                      className="rounded-md px-2 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
-                    >
-                      Editar colaboradores
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openModal("attachments")}
-                      className="rounded-md px-2 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
-                    >
-                      Anexos
-                    </button>
-                    {note.parent_id ? (
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          setMenuOpen(false);
-                          await onPatchTask?.(note.id, { parent_id: null });
-                        }}
-                        className="rounded-md px-2 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
-                      >
-                        Tornar tarefa principal
-                      </button>
-                    ) : null}
-                  </>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    openModal("remove");
-                  }}
-                  className="rounded-md px-2 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
-                >
-                  Remover do projeto
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        ) : null}
 
-        <p className="mb-1 text-xs leading-snug text-neutral-800 dark:text-neutral-100">
+        <button
+          type="button"
+          onPointerDown={stopDrag}
+          onClick={(event) => {
+            stopDrag(event);
+            onOpenNote();
+          }}
+          className={`mb-1 w-full cursor-pointer text-left text-xs leading-snug text-neutral-800 transition-colors hover:text-brand-primary-500 hover:underline dark:text-neutral-100 dark:hover:text-brand-primary-500 ${
+            (onAddSubtask && stageId) || (note.parent_id && canWrite) ? "pr-14" : ""
+          }`}
+        >
           {note.title}
-        </p>
+        </button>
 
         {contentSnippet ? (
           <p className="mb-1.5 line-clamp-3 text-xs leading-snug text-neutral-500 dark:text-neutral-400">
@@ -453,44 +421,59 @@ function NoteCard({
         ) : null}
 
         <div className="flex flex-wrap items-center justify-between gap-1 border-t border-neutral-100 pt-1.5 dark:border-surface-dark-border">
-          <div className="flex flex-wrap items-center gap-1 text-[10px] text-neutral-500 dark:text-neutral-300">
-            <button
-              type="button"
-              onPointerDown={stopDrag}
-              onClick={() => openModal("comments")}
-              className="inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              title="Comentários"
-            >
-              <MessageSquare className="h-3 w-3 shrink-0" />
-              {typeof note.comments_count === "number" ? note.comments_count : "—"}
-            </button>
+          <div className="flex flex-wrap items-center gap-0.5 text-[9px] text-neutral-500 dark:text-neutral-300">
             <button
               type="button"
               onPointerDown={stopDrag}
               onClick={() => openModal("attachments")}
-              className={`inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
-                !canWrite ? "cursor-default opacity-80" : ""
-              }`}
               title="Anexos"
+              className={footerActionButtonClass("attachments", {
+                disabled: !canWrite,
+                active: attachments.length > 0,
+              })}
             >
-              <Paperclip className="h-3 w-3 shrink-0" />
-              {attachments.length}
+              <Paperclip className="h-2.5 w-2.5 shrink-0" />
+              <span className="tabular-nums">{attachments.length}</span>
+            </button>
+            <button
+              type="button"
+              onPointerDown={stopDrag}
+              onClick={() => canWrite && openModal("tags")}
+              disabled={!canWrite}
+              title="Tags"
+              className={footerActionButtonClass("tags", {
+                disabled: !canWrite,
+                active: hasTags,
+              })}
+            >
+              <Tags className="h-2.5 w-2.5 shrink-0" />
+            </button>
+            <button
+              type="button"
+              onPointerDown={stopDrag}
+              onClick={() => canWrite && openModal("collaborators")}
+              disabled={!canWrite}
+              title="Colaboradores"
+              className={footerActionButtonClass("collaborators", {
+                disabled: !canWrite,
+                active: hasCollaborators,
+              })}
+            >
+              <Users className="h-2.5 w-2.5 shrink-0" />
             </button>
             <button
               type="button"
               onPointerDown={stopDrag}
               onClick={() => canWrite && openModal("date")}
               disabled={!canWrite}
-              className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 transition-colors ${
-                !canWrite ? "cursor-not-allowed opacity-50" : ""
-              } ${
-                dueDate
-                  ? "bg-brand-primary-500/15 text-brand-primary-500"
-                  : "bg-neutral-100 text-neutral-500 hover:text-neutral-700 dark:bg-[#1d1d1b] dark:text-neutral-300"
-              }`}
+              title="Data de vencimento"
+              className={footerActionButtonClass("date", {
+                disabled: !canWrite,
+                active: Boolean(dueDate),
+              })}
             >
-              <Calendar className="h-3 w-3 shrink-0" />
-              <span>
+              <Calendar className="h-2.5 w-2.5 shrink-0" />
+              <span className="text-[9px]">
                 {dueDate
                   ? new Date(dueDate).toLocaleDateString("pt-BR", {
                       day: "2-digit",
@@ -505,13 +488,10 @@ function NoteCard({
               onClick={() => canWrite && openModal("priority")}
               disabled={!canWrite}
               title={activePriorityMeta?.name || "Prioridade"}
-              className={`inline-flex items-center justify-center rounded-md p-1 transition-colors ${
-                !canWrite ? "cursor-not-allowed opacity-50" : ""
-              } ${
-                activePriorityMeta?.color_hex
-                  ? "text-neutral-800 dark:text-neutral-100"
-                  : "bg-neutral-100 text-neutral-500 hover:text-neutral-700 dark:bg-[#1d1d1b] dark:text-neutral-300"
-              }`}
+              className={footerActionButtonClass("priority", {
+                disabled: !canWrite,
+                active: Boolean(activePriorityMeta),
+              })}
               style={
                 activePriorityMeta?.color_hex
                   ? {
@@ -521,7 +501,7 @@ function NoteCard({
                   : undefined
               }
             >
-              <Flag className="h-3 w-3" />
+              <Flag className="h-2.5 w-2.5 shrink-0" />
             </button>
           </div>
 
@@ -548,26 +528,6 @@ function NoteCard({
           </div>
         </div>
       </div>
-
-      {activeModal === "comments" && (
-        <CompactTaskModal title="Comentários" onClose={closeModal}>
-          <p className="mb-3 text-neutral-600 dark:text-neutral-400">
-            {typeof note.comments_count === "number"
-              ? `${note.comments_count} comentário(s) nesta tarefa.`
-              : "Ver e escrever comentários na nota."}
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              closeModal();
-              onOpenNote();
-            }}
-            className="bg-brand-primary-500 w-full rounded-md py-2 text-neutral-900 transition-opacity hover:opacity-90"
-          >
-            Abrir nota
-          </button>
-        </CompactTaskModal>
-      )}
 
       {activeModal === "attachments" && (
         <CompactTaskModal title="Anexos" onClose={closeModal}>
@@ -653,13 +613,17 @@ function NoteCard({
 
       {activeModal === "priority" && canWrite && (
         <CompactTaskModal title="Prioridade" onClose={closeModal}>
-          <div className="mb-3 max-h-48 space-y-1.5 overflow-y-auto">
-            <label className="flex cursor-pointer items-center gap-2 rounded-md border border-transparent px-1 py-0.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/80">
+          <div className="max-h-48 space-y-1.5 overflow-y-auto">
+            <label
+              className={`flex cursor-pointer items-center gap-2 rounded-md border border-transparent px-1 py-0.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/80 ${
+                saving ? "pointer-events-none opacity-50" : ""
+              }`}
+            >
               <input
                 type="radio"
                 name={`pri-${note.id}`}
-                checked={priorityDraft === null}
-                onChange={() => setPriorityDraft(null)}
+                checked={!note.priority_id}
+                onChange={() => void applyPriority(null)}
                 className="accent-brand-primary-500"
               />
               <span>Nenhuma</span>
@@ -667,104 +631,57 @@ function NoteCard({
             {sortedPriorities.map((p) => (
               <label
                 key={p.id}
-                className="flex cursor-pointer items-center gap-2 rounded-md border border-transparent px-1 py-0.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/80"
+                className={`flex cursor-pointer items-center gap-2 rounded-md border border-transparent px-1 py-0.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/80 ${
+                  saving ? "pointer-events-none opacity-50" : ""
+                }`}
               >
                 <input
                   type="radio"
                   name={`pri-${note.id}`}
-                  checked={priorityDraft === p.id}
-                  onChange={() => setPriorityDraft(p.id)}
+                  checked={note.priority_id === p.id}
+                  onChange={() => void applyPriority(p.id)}
                   className="accent-brand-primary-500"
                 />
                 <span
                   className="inline-flex items-center gap-1"
                   style={{ color: p.color_hex || undefined }}
                 >
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color_hex || "#737373" }} />
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: p.color_hex || "#737373" }}
+                  />
                   {p.name}
                 </span>
               </label>
             ))}
           </div>
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => void savePriority()}
-            className="bg-brand-primary-500 w-full rounded-md py-2 text-neutral-900 disabled:opacity-50"
-          >
-            Guardar
-          </button>
         </CompactTaskModal>
       )}
 
       {activeModal === "tags" && canWrite && (
-        <CompactTaskModal title="Tags" onClose={closeModal}>
-          <p className="mb-1 text-neutral-500 dark:text-neutral-400">IDs das tags (separados por vírgula)</p>
-          <textarea
-            value={tagDraft}
-            onChange={(e) => setTagDraft(e.target.value)}
-            rows={3}
-            className="mb-2 w-full resize-none rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-neutral-800 dark:border-surface-dark-border dark:bg-[#121214] dark:text-neutral-100"
+        <CompactTaskModal title="Tags" onClose={closeModal} size="md">
+          <TaskCardTagsPicker
+            projectTags={projectTags}
+            selectedTagIds={selectedTagIds}
+            disabled={!canWrite}
+            saving={saving}
+            onToggle={handleToggleTag}
           />
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => void saveTags()}
-            className="bg-brand-primary-500 w-full rounded-md py-2 text-neutral-900 disabled:opacity-50"
-          >
-            Guardar
-          </button>
         </CompactTaskModal>
       )}
 
       {activeModal === "collaborators" && canWrite && (
-        <CompactTaskModal title="Colaboradores" onClose={closeModal}>
-          <p className="mb-1 text-neutral-500 dark:text-neutral-400">
-            IDs de utilizadores (separados por vírgula)
-          </p>
-          <textarea
-            value={collabDraft}
-            onChange={(e) => setCollabDraft(e.target.value)}
-            rows={3}
-            className="mb-2 w-full resize-none rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-neutral-800 dark:border-surface-dark-border dark:bg-[#121214] dark:text-neutral-100"
+        <CompactTaskModal title="Colaboradores" onClose={closeModal} size="md">
+          <TaskCardCollaboratorsPicker
+            projectCollaborators={projectCollaborators}
+            selectedUserIds={selectedCollaboratorIds}
+            disabled={!canWrite}
+            saving={saving}
+            onToggle={handleToggleCollaborator}
           />
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => void saveCollaborators()}
-            className="bg-brand-primary-500 w-full rounded-md py-2 text-neutral-900 disabled:opacity-50"
-          >
-            Guardar
-          </button>
         </CompactTaskModal>
       )}
 
-      {activeModal === "remove" && (
-        <CompactTaskModal title="Remover do projeto" onClose={closeModal}>
-          <p className="mb-3 text-neutral-600 dark:text-neutral-400">
-            Esta tarefa deixa de estar associada a este projeto. Continuar?
-          </p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={closeModal}
-              className="flex-1 rounded-md border border-neutral-200 py-2 dark:border-surface-dark-border"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                closeModal();
-                onRemoveNote();
-              }}
-              className="flex-1 rounded-md bg-red-500 py-2 text-white hover:bg-red-600"
-            >
-              Remover
-            </button>
-          </div>
-        </CompactTaskModal>
-      )}
     </>
   );
 }
@@ -773,7 +690,8 @@ function TaskBranch({
   note,
   childrenMap,
   getTagMeta,
-  handleRemoveNote,
+  projectTags,
+  projectCollaborators,
   onOpenNote,
   onPatchTask,
   taskPriorities,
@@ -786,7 +704,8 @@ function TaskBranch({
   note: any;
   childrenMap: Record<string, any[]>;
   getTagMeta: (tag: string) => { label: string; color: string };
-  handleRemoveNote: (projectId: string, noteId: string) => void;
+  projectTags: ProjectTagOption[];
+  projectCollaborators: ProjectCollaboratorOption[];
   onOpenNote: (noteId: string) => void;
   onPatchTask?: (noteId: string, patch: PatchProjectTaskData) => Promise<void>;
   taskPriorities: TaskPriority[];
@@ -813,9 +732,8 @@ function TaskBranch({
       <DraggableNoteCard
         note={note}
         getTagMeta={getTagMeta}
-        onRemoveNote={() =>
-          handleRemoveNote(note.project_id || note.properties?.project_id, note.id)
-        }
+        projectTags={projectTags}
+        projectCollaborators={projectCollaborators}
         onOpenNote={() => onOpenNote(note.id)}
         onPatchTask={onPatchTask}
         taskPriorities={taskPriorities}
@@ -829,7 +747,8 @@ function TaskBranch({
           note={sub}
           childrenMap={childrenMap}
           getTagMeta={getTagMeta}
-          handleRemoveNote={handleRemoveNote}
+          projectTags={projectTags}
+          projectCollaborators={projectCollaborators}
           onOpenNote={onOpenNote}
           onPatchTask={onPatchTask}
           taskPriorities={taskPriorities}
@@ -847,7 +766,8 @@ function TaskBranch({
 function DraggableNoteCard({
   note,
   getTagMeta,
-  onRemoveNote,
+  projectTags,
+  projectCollaborators,
   onOpenNote,
   onPatchTask,
   taskPriorities,
@@ -857,7 +777,8 @@ function DraggableNoteCard({
 }: {
   note: any;
   getTagMeta: (tag: string) => { label: string; color: string };
-  onRemoveNote: () => void;
+  projectTags: ProjectTagOption[];
+  projectCollaborators: ProjectCollaboratorOption[];
   onOpenNote: () => void;
   onPatchTask?: (noteId: string, patch: PatchProjectTaskData) => Promise<void>;
   taskPriorities: TaskPriority[];
@@ -899,7 +820,8 @@ function DraggableNoteCard({
       <NoteCard
         note={note}
         getTagMeta={getTagMeta}
-        onRemoveNote={onRemoveNote}
+        projectTags={projectTags}
+        projectCollaborators={projectCollaborators}
         onOpenNote={onOpenNote}
         onPatchTask={onPatchTask}
         taskPriorities={taskPriorities}
@@ -945,11 +867,11 @@ function DroppableStageColumn({
             className="h-2 w-2 shrink-0 rounded-full"
             style={{ backgroundColor: stage.color || "#A3A3A3" }}
           />
-          <h3 className="truncate text-xs text-neutral-800 dark:text-neutral-200">
+          <h3 className="truncate text-[10px] font-medium text-neutral-800 dark:text-neutral-200">
             {stage.name}
           </h3>
-          {isDoneStage && <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />}
-          <span className="ml-0.5 flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-neutral-200/50 px-1.5 text-[10px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
+          {isDoneStage && <CheckCircle2 className="h-2.5 w-2.5 shrink-0 text-emerald-500" />}
+          <span className="ml-0.5 flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-neutral-200/50 px-1 text-[9px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
             {count}
           </span>
         </div>
@@ -961,7 +883,7 @@ function DroppableStageColumn({
               event.stopPropagation();
               onAddCard(stage.id);
             }}
-            className="bg-brand-primary-500 inline-flex shrink-0 items-center justify-center rounded-md p-1 text-neutral-900 transition-opacity hover:opacity-90"
+            className="inline-flex shrink-0 items-center justify-center rounded-md p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
             title="Criar tarefa neste estágio"
           >
             <Plus className="h-3 w-3" />
@@ -980,6 +902,7 @@ export default function ProjectBoardV2({
   stages,
   projectNotes,
   projectTags,
+  projectCollaborators,
   taskPriorities,
   onNoteStageChange,
   onAddCard,
@@ -988,7 +911,7 @@ export default function ProjectBoardV2({
   onPatchTask,
 }: ProjectBoardProps) {
   const { openModal: openTaskModal } = useTaskNoteModal();
-  const { removeNoteFromProject, updateProjectNoteStage } = useProjects();
+  const { updateProjectNoteStage } = useProjects();
   const [activeNote, setActiveNote] = useState<any>(null);
 
   const handleOpenNote = useCallback(
@@ -1011,13 +934,6 @@ export default function ProjectBoardV2({
       };
     },
     [projectTags]
-  );
-
-  const handleRemoveNote = useCallback(
-    async (projectId: string, noteId: string) => {
-      await removeNoteFromProject(projectId, noteId);
-    },
-    [removeNoteFromProject]
   );
 
   const sortedStages = useMemo(
@@ -1150,7 +1066,8 @@ export default function ProjectBoardV2({
                     note={note}
                     childrenMap={childrenMap}
                     getTagMeta={getTagMeta}
-                    handleRemoveNote={handleRemoveNote}
+                    projectTags={projectTags}
+                    projectCollaborators={projectCollaborators}
                     onOpenNote={handleOpenNote}
                     onPatchTask={onPatchTask}
                     taskPriorities={taskPriorities}
@@ -1173,7 +1090,8 @@ export default function ProjectBoardV2({
             <NoteCard
               note={activeNote}
               getTagMeta={getTagMeta}
-              onRemoveNote={() => {}}
+              projectTags={projectTags}
+              projectCollaborators={projectCollaborators}
               onOpenNote={() => {}}
               taskPriorities={taskPriorities}
               isDragging

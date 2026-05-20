@@ -11,6 +11,9 @@ const {
 } = require("@/modules/notes/block-normalizer");
 const { enqueueNoteEmbeddingJob } = require("@/services/queue/queue-controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
+const PlanUsageManager = require("@/modules/plans/plans.controller");
+const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
+const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
 const projectsUpdateRepository = require("@/modules/projects/repositories/projects-update.repository");
 const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
 const {
@@ -1077,6 +1080,27 @@ class ChatController {
       let resourceAccess = {};
       const planUsageContext = await this._buildPlanUsageContext(userId, organizationId);
 
+      const usageRecord = await PlanUsageManager.managePlanUsage(userId, organizationId).catch(() => null);
+      if (usageRecord && planUsageContext) {
+        const effectivePlan = await PlansRepository.getEffectivePlanByUserId(userId);
+        const planDetails = effectivePlan?.plan_details;
+        if (planDetails) {
+          const allowed = PlanUsageManager.checkLimit(
+            planDetails,
+            usageRecord.usage_details,
+            USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT,
+            PLAN_PATHS.WEAVE_AI.CONFIG.MONTHLY_MESSAGES
+          );
+          if (!allowed) {
+            return sendPlanLimitExceeded(res, {
+              resource: "weave_ai",
+              limit_key: "weave_ai.config.monthly_messages",
+              message: "Monthly AI message limit reached for your current plan.",
+            });
+          }
+        }
+      }
+
       if (payload.agentId) {
         selectedAgent = await agentsRepository.getAgentByIdWithAccess(
           payload.agentId,
@@ -1276,6 +1300,15 @@ class ChatController {
           requestId,
         },
       });
+
+      if (usageRecord?.id) {
+        PlanUsageManager.consumeAiMessage(usageRecord.id, tokenUsage.totalTokens || 0).catch((err) => {
+          console.error("[weave-ai/chat] failed to enqueue AI usage consumption", {
+            usageId: usageRecord.id,
+            error: err?.message || String(err),
+          });
+        });
+      }
 
       return res.json({
         success: true,

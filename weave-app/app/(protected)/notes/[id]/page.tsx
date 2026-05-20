@@ -55,6 +55,7 @@ import {
   type ProjectStage,
   type TaskPriority,
 } from "@/app/_contexts/projects-context";
+import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
 import { useNoteCommentsPanel } from "@/app/_contexts/note-comments-panel-context";
 import { NoteCommentsProvider } from "@/app/_contexts/note-comments-context";
 import {
@@ -76,6 +77,10 @@ import getStorageUrl from "@/app/_utils/get-storage-url";
 import { NoteBlockEditor } from "@/app/(protected)/notes/[id]/_components/note-block-editor";
 import { NoteTiptapEditor } from "@/app/(protected)/notes/[id]/_components/note-tiptap-editor";
 import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema";
+import {
+  resolveProjectIcon,
+  ProjectIcon,
+} from "@/app/(protected)/projects/_components/project-icon";
 import { ApiError } from "@/app/_services/api-methods";
 
 // =================== BLOCO SORTABLE (Markdown / tipos) ===================
@@ -308,6 +313,7 @@ const NoteDetail = () => {
   const [showShareModal, setShowShareModal] = useState(false);
   const { commentsPanelOpen: commentsSidebarOpen, setCommentsPanelOpen: setCommentsSidebarOpen } =
     useNoteCommentsPanel();
+  const { canExportNote } = usePlanUsage();
 
   const [showTagModal, setShowTagModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -414,6 +420,10 @@ const NoteDetail = () => {
 
   const handleExportNote = async () => {
     if (!note || isExporting) return;
+    if (!canExportNote) {
+      window.alert("Monthly note export limit reached for your current plan.");
+      return;
+    }
 
     setIsExporting(true);
     try {
@@ -1625,13 +1635,17 @@ const NoteDetail = () => {
     await flushAllBlockTextSaves();
   };
 
-  const IconPropsToolbar = () => (
+  const IconPropsToolbar = () => {
+    const noteIconResolved = resolveProjectIcon(note.properties?.icon);
+    const hasNoteIconImage = noteIconResolved?.kind === "image";
+
+    return (
     <div className="group/props mb-3 flex flex-wrap items-center gap-2">
-      {note.properties?.icon?.path ? (
+      {hasNoteIconImage ? (
         <div className="group relative">
           <div className="h-14 w-14 overflow-hidden rounded-md border-2 border-white bg-white shadow-md dark:shadow-surface-dark-md dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
             <Image
-              src={getStorageUrl(note.properties.icon.path)}
+              src={noteIconResolved.url}
               alt="Ícone"
               width={56}
               height={56}
@@ -1661,7 +1675,7 @@ const NoteDetail = () => {
       {note.access?.canEdit && (
         <div
           className={`flex flex-wrap items-center gap-1 transition-opacity ${
-            note.properties?.icon?.path && note.properties?.banner?.path
+            hasNoteIconImage && note.properties?.banner?.path
               ? "opacity-0 group-hover/props:opacity-100"
               : ""
           }`}
@@ -1674,7 +1688,7 @@ const NoteDetail = () => {
             <FileText size={12} />
             Arquivos
           </button>
-          {!note.properties?.icon?.path && (
+          {!hasNoteIconImage && (
             <button
               onClick={() => iconInputRef.current?.click()}
               className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:border-surface-dark-border-muted dark:text-neutral-500 dark:hover:border-yellow-500/50"
@@ -1713,7 +1727,8 @@ const NoteDetail = () => {
         </div>
       )}
     </div>
-  );
+    );
+  };
 
   return (
     <NoteCommentsProvider noteId={note.id}>
@@ -2268,15 +2283,11 @@ const NoteDetail = () => {
                                   onClick={() => router.push(`/notes/${relNote!.id}`)}
                                   className="inline-flex items-center gap-1.5 truncate"
                                 >
-                                  {relNote!.properties?.icon?.path ? (
-                                    <Image
-                                      src={getStorageUrl(relNote!.properties.icon.path)}
-                                      alt=""
-                                      width={12}
-                                      height={12}
-                                      className="flex-shrink-0 rounded"
-                                    />
-                                  ) : null}
+                                  <ProjectIcon
+                                    icon={relNote!.properties?.icon}
+                                    color={relNote!.properties?.color}
+                                    size="xs"
+                                  />
                                   <span className="max-w-[120px] truncate">
                                     {relNote!.title || "Tarefa sem título"}
                                   </span>

@@ -1,11 +1,10 @@
 "use client";
 
-import Image from "next/image";
-import { CheckSquare, Link, Search, Type, X } from "lucide-react";
+import { CheckSquare, Link, Search, X } from "lucide-react";
 
 import { type Note, type NoteOverview } from "@/app/_contexts/notes-context";
 import { getTagColor } from "@/app/_utils/tag-colors";
-import getStorageUrl from "@/app/_utils/get-storage-url";
+import { ProjectIcon } from "@/app/(protected)/projects/_components/project-icon";
 
 interface NoteRelationsModalProps {
   filteredRelationNotes: NoteOverview[];
@@ -90,19 +89,11 @@ export function NoteRelationsModal({
                       {isSelected ? <CheckSquare size={10} /> : null}
                     </div>
                     <div className="flex min-w-0 flex-1 items-center gap-2">
-                      {relNote.properties?.icon?.path ? (
-                        <Image
-                          src={getStorageUrl(relNote.properties.icon.path)}
-                          alt=""
-                          width={20}
-                          height={20}
-                          className="flex-shrink-0 rounded"
-                        />
-                      ) : (
-                        <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded bg-neutral-100 dark:bg-neutral-800">
-                          <Type size={10} className="text-neutral-400" />
-                        </div>
-                      )}
+                      <ProjectIcon
+                        icon={relNote.properties?.icon}
+                        color={relNote.properties?.color}
+                        size="xs"
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
                           {relNote.title || "Tarefa sem título"}

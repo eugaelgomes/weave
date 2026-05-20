@@ -100,7 +100,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
     }
 
     const nextPath = consumeInvitePostLoginPath();
-    router.push(nextPath || "/home");
+    router.push(nextPath || "/weave-engine");
     setIsLoading(false);
   };
 
