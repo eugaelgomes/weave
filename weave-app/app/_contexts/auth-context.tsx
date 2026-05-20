@@ -25,6 +25,7 @@ import {
 import { setUnauthorizedHandler } from "../_services/session-invalidation";
 import { ApiError } from "../_services/api-error";
 import { mergeUsageDetails } from "../_services/plans-service/plan-usage-service";
+import { logClientError } from "../_utils/client-logger";
 import { useTheme } from "./theme-context";
 
 /** Consumer-facing user model — import from this module in UI; do not import auth-service types directly. */
@@ -102,11 +103,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTheme(profileThemeMode);
       }
       return profileData;
-    } catch {
-      setUser(null);
-      return null;
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        return null;
+      }
+      logClientError("auth.refreshUser", error);
+      return user;
     }
-  }, [setTheme]);
+  }, [setTheme, user]);
 
   const mergeUser = useCallback((patch: Partial<User> | ((prev: User) => Partial<User>)) => {
     setUser((prev) => {
@@ -264,7 +268,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // O logout avisa o backend para invalidar a sessão e limpar o cookie (Set-Cookie: expires=1970)
       await logoutService();
     } catch (error) {
-      console.error("Erro ao notificar logout no servidor", error);
+      logClientError("auth.logout", error);
     } finally {
       // Limpa estado local independentemente do sucesso da chamada de rede
       setUser(null);
@@ -337,7 +341,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await updatePassword(currentPassword, newPassword);
       return { success: true };
     } catch (error) {
-      console.error("Erro ao atualizar senha:", error);
+      logClientError("auth.updatePassword", error);
       return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
     }
   };
@@ -366,7 +370,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await logout(); // Logout automático após deletar
       return { success: true };
     } catch (error) {
-      console.error("Erro ao deletar usuário:", error);
+      logClientError("auth.deleteUser", error);
       return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
     }
   };

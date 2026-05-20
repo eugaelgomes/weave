@@ -1,4 +1,4 @@
-import { apiClient, API_ENDPOINTS } from "@/app/_services/api-methods";
+import { apiClient, API_ENDPOINTS, handleResponse } from "@/app/_services/api-methods";
 import { z } from "zod";
 import {
   GoogleCalendarEventSchema,
@@ -37,10 +37,13 @@ export type {
 };
 
 export async function fetchGoogleCalendarStatus(): Promise<{ connected: boolean }> {
-  const res = await apiClient.get(API_ENDPOINTS.GOOGLE_CALENDAR_STATUS);
-  if (!res.ok) return { connected: false };
-  const raw = await res.json();
-  return z.object({ connected: z.boolean() }).parse(raw);
+  try {
+    const res = await apiClient.get(API_ENDPOINTS.GOOGLE_CALENDAR_STATUS);
+    const raw = await handleResponse<unknown>(res);
+    return z.object({ connected: z.boolean() }).parse(raw);
+  } catch {
+    return { connected: false };
+  }
 }
 
 export function connectGoogleCalendar() {
@@ -49,11 +52,7 @@ export function connectGoogleCalendar() {
 
 export async function disconnectGoogleCalendar(): Promise<{ success: boolean; message?: string }> {
   const res = await apiClient.delete(API_ENDPOINTS.GOOGLE_CALENDAR_DISCONNECT);
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Falha ao desconectar Google Calendar");
-  }
-  return res.json();
+  return await handleResponse<{ success: boolean; message?: string }>(res);
 }
 
 export async function fetchGoogleCalendarEvents(
@@ -65,15 +64,17 @@ export async function fetchGoogleCalendarEvents(
   if (timeMax) params.set("timeMax", timeMax);
 
   const query = params.toString() ? `?${params.toString()}` : "";
-  const res = await apiClient.get(`${API_ENDPOINTS.GOOGLE_CALENDAR_EVENTS}${query}`);
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    return { connected: body.connected ?? false, events: [] };
+  try {
+    const res = await apiClient.get(`${API_ENDPOINTS.GOOGLE_CALENDAR_EVENTS}${query}`);
+    const rawData = await handleResponse<unknown>(res);
+    return CalendarEventsResponseSchema.parse(rawData);
+  } catch (error) {
+    return {
+      connected: false,
+      events: [],
+      error: error instanceof Error ? error.message : undefined,
+    };
   }
-  
-  const rawData = await res.json();
-  return CalendarEventsResponseSchema.parse(rawData);
 }
 
 export function subscribeGoogleCalendarUpdates(onUpdate: () => void): () => void {
@@ -107,13 +108,7 @@ export async function fetchInternalCalendarEvents(
 
   const query = params.toString() ? `?${params.toString()}` : "";
   const res = await apiClient.get(`${API_ENDPOINTS.CALENDAR_EVENTS}${query}`);
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Falha ao buscar eventos internos");
-  }
-
-  const data = await res.json();
+  const data = await handleResponse<unknown>(res);
   const parsedData = z.object({ events: z.array(InternalCalendarEventSchema).optional() }).parse(data);
   return parsedData.events || [];
 }
@@ -121,14 +116,9 @@ export async function fetchInternalCalendarEvents(
 export async function createInternalCalendarEvent(
   payload: CreateInternalCalendarEventPayload
 ): Promise<InternalCalendarEvent> {
-  const res = await apiClient.post(API_ENDPOINTS.CALENDAR_EVENTS, payload);
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Falha ao criar evento");
-  }
-
-  const data = await res.json();
+  const validPayload = CreateInternalCalendarEventPayloadSchema.parse(payload);
+  const res = await apiClient.post(API_ENDPOINTS.CALENDAR_EVENTS, validPayload);
+  const data = await handleResponse<unknown>(res);
   const parsedData = z.object({ event: InternalCalendarEventSchema }).parse(data);
   return parsedData.event;
 }
@@ -137,14 +127,9 @@ export async function updateInternalCalendarEvent(
   eventId: string,
   payload: Partial<CreateInternalCalendarEventPayload>
 ): Promise<InternalCalendarEvent> {
-  const res = await apiClient.patch(API_ENDPOINTS.CALENDAR_EVENT_BY_ID(eventId), payload);
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Falha ao atualizar evento");
-  }
-
-  const data = await res.json();
+  const validPayload = CreateInternalCalendarEventPayloadSchema.partial().parse(payload);
+  const res = await apiClient.patch(API_ENDPOINTS.CALENDAR_EVENT_BY_ID(eventId), validPayload);
+  const data = await handleResponse<unknown>(res);
   const parsedData = z.object({ event: InternalCalendarEventSchema }).parse(data);
   return parsedData.event;
 }
@@ -153,21 +138,13 @@ export async function fetchGoogleCalendarSettings(): Promise<{
   settings: GoogleCalendarSetting[];
 }> {
   const res = await apiClient.get(API_ENDPOINTS.GOOGLE_CALENDAR_SETTINGS);
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Falha ao buscar configurações do Google Calendar");
-  }
-  const data = await res.json();
+  const data = await handleResponse<unknown>(res);
   return z.object({ settings: z.array(GoogleCalendarSettingSchema) }).parse(data);
 }
 
 export async function fetchGoogleCalendarsList(): Promise<{ calendars: GoogleCalendar[] }> {
   const res = await apiClient.get(API_ENDPOINTS.GOOGLE_CALENDAR_LIST);
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Falha ao buscar calendários do Google");
-  }
-  const data = await res.json();
+  const data = await handleResponse<unknown>(res);
   return z.object({ calendars: z.array(GoogleCalendarSchema) }).parse(data);
 }
 
@@ -181,21 +158,13 @@ export async function fetchGoogleFreeBusy(
     timeMax,
     items,
   });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Falha ao verificar disponibilidade (Free/Busy)");
-  }
-  const data = await res.json();
+  const data = await handleResponse<unknown>(res);
   return z.object({ freebusy: FreeBusyResponseSchema }).parse(data);
 }
 
 export async function fetchEventInvites(eventId: string): Promise<InternalCalendarEventInvite[]> {
   const res = await apiClient.get(API_ENDPOINTS.CALENDAR_EVENT_INVITES(eventId));
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Falha ao buscar convites do evento");
-  }
-  const data = await res.json();
+  const data = await handleResponse<unknown>(res);
   return z.array(InternalCalendarEventInviteSchema).parse(data);
 }
 
@@ -203,12 +172,9 @@ export async function createEventInvite(
   eventId: string,
   payload: CreateCalendarEventInvitePayload
 ): Promise<InternalCalendarEventInvite> {
-  const res = await apiClient.post(API_ENDPOINTS.CALENDAR_EVENT_INVITES(eventId), payload);
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Falha ao criar convite do evento");
-  }
-  const data = await res.json();
+  const validPayload = CreateCalendarEventInvitePayloadSchema.parse(payload);
+  const res = await apiClient.post(API_ENDPOINTS.CALENDAR_EVENT_INVITES(eventId), validPayload);
+  const data = await handleResponse<unknown>(res);
   return InternalCalendarEventInviteSchema.parse(data);
 }
 
@@ -217,22 +183,16 @@ export async function updateEventInvite(
   inviteId: string,
   payload: UpdateCalendarEventInvitePayload
 ): Promise<InternalCalendarEventInvite> {
+  const validPayload = UpdateCalendarEventInvitePayloadSchema.parse(payload);
   const res = await apiClient.patch(
     API_ENDPOINTS.CALENDAR_EVENT_INVITE_BY_ID(eventId, inviteId),
-    payload
+    validPayload
   );
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Falha ao atualizar convite do evento");
-  }
-  const data = await res.json();
+  const data = await handleResponse<unknown>(res);
   return InternalCalendarEventInviteSchema.parse(data);
 }
 
 export async function deleteEventInvite(eventId: string, inviteId: string): Promise<void> {
   const res = await apiClient.delete(API_ENDPOINTS.CALENDAR_EVENT_INVITE_BY_ID(eventId, inviteId));
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Falha ao deletar convite do evento");
-  }
+  await handleResponse<void>(res);
 }

@@ -1,7 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 import { API_BASE_URL, API_ENDPOINTS } from "../api-methods";
 import { apiClient, handleResponse } from "../api-methods";
-import { notifyUnauthorized } from "../session-invalidation";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { emailLocalPartContainsPlus } from "@/app/_utils/email-rules";
 import {
@@ -278,17 +277,9 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
 
 export const getUserData = async (): Promise<User> => {
   const response = await apiClient.get(API_ENDPOINTS.ME);
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      notifyUnauthorized();
-      throw new Error("Unauthorized");
-    }
-    if (response.status === 404) throw new Error("Usuário não encontrado");
-    throw new Error("Erro ao buscar dados do usuário");
-  }
-
-  const rawData = await handleResponse<unknown>(response);
+  const rawData = await handleResponse<unknown>(response, {
+    invalidateSessionOn401: true,
+  });
   const parsed = BackendMeResponseSchema.safeParse(rawData);
   if (!parsed.success) {
     if (process.env.NODE_ENV === "development") {

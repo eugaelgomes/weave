@@ -1,4 +1,4 @@
-import { ApiError } from "./api-error";
+import { ApiError, buildApiError, getSafeApiErrorMessage } from "./api-error";
 import {
   clearInternalChallengeCache,
   getInternalChallengeHeaders,
@@ -297,7 +297,11 @@ class ApiClient {
       return response;
     } catch (error) {
       throw new ApiError(
-        `Network error: ${error instanceof Error ? error.message : "Unknown error"}`,
+        getSafeApiErrorMessage(
+          0,
+          `Network error: ${error instanceof Error ? error.message : "Unknown error"}`,
+          true
+        ),
         0
       );
     }
@@ -347,8 +351,13 @@ class ApiClient {
 }
 
 export type HandleResponseOptions = {
-  /** When true, 401 does not run the global session invalidation handler (e.g. failed login). */
+  /**
+   * @deprecated Use `invalidateSessionOn401`.
+   * When true, 401 does not run the global session invalidation handler.
+   */
   skipSessionInvalidationOn401?: boolean;
+  /** When true, 401 runs the global session invalidation handler. Defaults to false. */
+  invalidateSessionOn401?: boolean;
 };
 
 export async function handleResponse<T = unknown>(
@@ -358,11 +367,13 @@ export async function handleResponse<T = unknown>(
   const contentType = response.headers.get("content-type");
 
   if (!response.ok) {
-    if (response.status === 401 && !options?.skipSessionInvalidationOn401) {
+    const shouldInvalidateSession = options?.invalidateSessionOn401 ?? false;
+
+    if (response.status === 401 && shouldInvalidateSession) {
       notifyUnauthorized();
     }
-    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
     let errorData: unknown;
+    let textPayload: string | undefined;
 
     try {
       if (contentType?.includes("application/json")) {
@@ -379,23 +390,17 @@ export async function handleResponse<T = unknown>(
           ) {
             notifyPlanLimitExceededSync();
           }
-          if (typeof obj.message === "string") {
-            errorMessage = obj.message;
-          } else if (typeof obj.error === "string") {
-            errorMessage = obj.error;
-          } else if (
-            obj.error &&
-            typeof obj.error === "object" &&
-            typeof (obj.error as { message?: unknown }).message === "string"
-          ) {
-            errorMessage = String((obj.error as { message?: unknown }).message);
-          }
         }
       } else {
-        errorMessage = (await response.text()) || errorMessage;
+        textPayload = await response.text();
       }
     } catch {}
-    throw new ApiError(errorMessage, response.status, errorData);
+    throw buildApiError({
+      status: response.status,
+      statusText: response.statusText,
+      data: errorData,
+      textPayload,
+    });
   }
 
   if (response.status === 204 || response.headers.get("content-length") === "0") {
@@ -410,7 +415,11 @@ export async function handleResponse<T = unknown>(
     }
   } catch (error) {
     throw new ApiError(
-      `Failed to parse response: ${error instanceof Error ? error.message : "Unknown error"}`,
+      getSafeApiErrorMessage(
+        response.status,
+        `Failed to parse response: ${error instanceof Error ? error.message : "Unknown error"}`,
+        true
+      ),
       response.status
     );
   }

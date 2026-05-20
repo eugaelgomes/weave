@@ -40,7 +40,7 @@ const ProjectsPage = () => {
   const { canCreateProject } = usePlanUsage();
   const { loading, getRecentProjects } = useProjects();
   const { triggerReasoningNow } = useWeaveEngine();
-  const projects = getRecentProjects();
+  const projects = useMemo(() => getRecentProjects(), [getRecentProjects]);
   const [signalsLoading, setSignalsLoading] = useState(true);
   const [signalsError, setSignalsError] = useState<string | null>(null);
   const [signalsByProjectId, setSignalsByProjectId] = useState<

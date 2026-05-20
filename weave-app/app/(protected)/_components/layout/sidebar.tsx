@@ -27,11 +27,11 @@ import {
   Calendar,
   Settings,
   Sparkles,
-  BrainCircuit,
   Workflow,
   CircleHelp,
   type LucideIcon,
 } from "lucide-react";
+import { WeaveEngineIcon } from "@/app/(protected)/_components/layout/icons/weave-engine-icon";
 
 const SUPPORT_URL = `${process.env.NEXT_PUBLIC_APP_URL || "https://weavenotes.app"}/support/`;
 
@@ -47,7 +47,7 @@ interface SidebarProps {
 
 interface NavigationItem {
   path: string;
-  icon: LucideIcon;
+  icon: LucideIcon | React.ComponentType<React.SVGProps<SVGSVGElement>>;
   label: string;
   subItems?: NavigationItem[];
   badge?: number;
@@ -408,7 +408,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
     },
     {
       path: "/weave-engine",
-      icon: BrainCircuit,
+      icon: WeaveEngineIcon,
       label: t.nav.weaveEngine,
       badge: unreadCount > 0 ? unreadCount : undefined,
     },
