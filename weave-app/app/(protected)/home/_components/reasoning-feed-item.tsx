@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import {
   engineFeedItemClass,
   engineIconActionClass,
-} from "@/app/(protected)/home/_components/engine-styles";
+} from "@/app/(protected)/weave-engine/_components/engine-styles";
 import {
   formatRelativeTime,
   getReasoningTypeLabel,

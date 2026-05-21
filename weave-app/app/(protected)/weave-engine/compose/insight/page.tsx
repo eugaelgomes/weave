@@ -1,19 +1,24 @@
 "use client";
 
-import React, { Suspense } from "react";
-import { Loader2 } from "lucide-react";
-import { InsightWizard } from "@/app/(protected)/weave-engine/compose/_components/insight-wizard";
+import { Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function ComposeInsightPage() {
+function RedirectBody() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const qs = searchParams.toString();
+    router.replace(`/weave-engine/compose${qs ? `?${qs}` : ""}`);
+  }, [router, searchParams]);
+
+  return null;
+}
+
+export default function ComposeInsightRedirectPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-[40vh] items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
-        </div>
-      }
-    >
-      <InsightWizard />
+    <Suspense fallback={null}>
+      <RedirectBody />
     </Suspense>
   );
 }

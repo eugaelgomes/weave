@@ -12,6 +12,10 @@ const {
   processThinkingPhase,
 } = require("../core/orchestration/reasoning.engine");
 const { callAIProvider } = require("../core/providers/llm-provider.client");
+const {
+  isEngineComposeSurface,
+  buildEngineComposePromptOverlay,
+} = require("./compose-prompt");
 
 const RESPONSE_TTL_SECONDS = 60;
 const CHAT_HISTORY_MAX_MESSAGES = Number.parseInt(
@@ -413,6 +417,13 @@ class LlmQueueProcessor {
     const conversationHistoryBlock =
       this.serializeConversationHistory(conversationHistory);
 
+    const composeOverlay =
+      isEngineComposeSurface(payload.context) ||
+      payload.useCase === "engine_compose" ||
+      payload.context?.useCase === "engine_compose"
+        ? `\n\n${buildEngineComposePromptOverlay(payload.context || {})}`
+        : "";
+
     const fileSummary =
       files.length === 0
         ? "No files attached."
@@ -423,7 +434,7 @@ class LlmQueueProcessor {
             )
             .join("\n");
 
-    return `${baseMessage}
+    return `${baseMessage}${composeOverlay}
 
 ## Context received from Server (v2)
 - userId: ${payload.userId || "unknown"}

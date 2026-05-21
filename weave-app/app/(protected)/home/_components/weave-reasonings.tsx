@@ -19,7 +19,7 @@ import {
   engineShellClass,
   engineShellPageClass,
   engineTextLinkClass,
-} from "@/app/(protected)/home/_components/engine-styles";
+} from "@/app/(protected)/weave-engine/_components/engine-styles";
 import { interpolate } from "@/app/(protected)/home/_components/engine-utils";
 
 export type WeaveEngineDashboardProps = {

@@ -9,7 +9,7 @@ import {
   engineModalPanelClass,
   engineTextLinkClass,
   engineIconActionClass,
-} from "@/app/(protected)/home/_components/engine-styles";
+} from "@/app/(protected)/weave-engine/_components/engine-styles";
 import { formatRelativeTime, getReasoningTypeLabel } from "@/app/(protected)/home/_components/engine-utils";
 import { cn } from "@/lib/utils";
 
