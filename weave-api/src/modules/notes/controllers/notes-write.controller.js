@@ -1,4 +1,5 @@
 const NotesBaseController = require("./base.controller");
+const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
 const taskPrioritiesRepository = require("@/modules/task_priorities/repositories/task-priorities.repository");
@@ -473,7 +474,19 @@ class NotesWriteController extends NotesBaseController {
         updateData.project_id = nextProjectId;
         const prevProjectId = note.project_id ? String(note.project_id) : null;
         if (nextProjectId !== prevProjectId) {
-          updateData.project_stage_id = null;
+          if (nextProjectId) {
+            const firstStageId =
+              await projectsRepository.getFirstProjectStageId(nextProjectId);
+            if (!firstStageId) {
+              return res.status(400).json({
+                error:
+                  "O projeto não possui estágios. Crie pelo menos um estágio antes de associar tarefas.",
+              });
+            }
+            updateData.project_stage_id = firstStageId;
+          } else {
+            updateData.project_stage_id = null;
+          }
         }
       }
       if (priority_id !== undefined) {

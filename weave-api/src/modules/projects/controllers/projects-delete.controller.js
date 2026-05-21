@@ -156,7 +156,7 @@ class ProjectsDeleteController extends ProjectsCoreController {
 
   /**
    * DELETE /api/projects/:id/stages/:stageId
-   * Remove o estágio; notas associadas ficam com project_stage_id nulo.
+   * Remove o estágio; notas associadas migram para o primeiro estágio restante.
    */
   async deleteProjectStage(req, res, next) {
     try {
@@ -166,6 +166,14 @@ class ProjectsDeleteController extends ProjectsCoreController {
       if (!userId) return;
 
       const ctx = await this._getProjectOwnershipContext(id, userId);
+
+      const stages = await this.projectsRepository.getProjectStages(id);
+      if (!stages || stages.length <= 1) {
+        return res.status(400).json({
+          error:
+            "Não é possível remover o último estágio do projeto. Crie outro estágio antes de excluir este.",
+        });
+      }
 
       const result = ctx.orgWide
         ? await this.projectsRepository.deleteProjectStageInOrganization(

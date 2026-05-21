@@ -1989,10 +1989,13 @@ const NoteDetail = () => {
                                         <select
                                           aria-label="Estágio da tarefa no projeto"
                                           className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 shadow-none ring-0 ring-offset-0 transition-colors outline-none hover:bg-neutral-100 focus:bg-neutral-100 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75 dark:focus:bg-neutral-800/75"
-                                          value={note.associated_project.stage_id ?? ""}
+                                          value={
+                                            note.associated_project.stage_id ??
+                                            projectStages[0]?.id ??
+                                            ""
+                                          }
                                           onChange={(e) => void handleStageChange(e.target.value)}
                                         >
-                                          <option value="">Escolha o estágio</option>
                                           {note.associated_project.stage_id &&
                                             !projectStages.some(
                                               (s) => s.id === note.associated_project?.stage_id

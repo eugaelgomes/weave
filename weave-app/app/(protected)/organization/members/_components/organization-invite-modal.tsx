@@ -122,9 +122,9 @@ export function OrganizationInviteModal({
     setName("");
     setEmail("");
     setRole("MEMBER");
-    setAreaId("");
+    setAreaId(areas[0]?.id ?? "");
     setProjectMemberRole("CONTRIBUTOR");
-  }, [isOpen]);
+  }, [isOpen, areas]);
 
   useEffect(() => {
     if (!workspaceRoleOptions.includes(role)) {
@@ -137,22 +137,24 @@ export function OrganizationInviteModal({
     const trimmedName = name.trim();
     if (!trimmedEmail || !trimmedName) return;
     if (emailLocalPartContainsPlus(trimmedEmail)) return;
+    if (!areaId) return;
     const payload: InviteMemberData = {
       email: trimmedEmail,
       name: trimmedName,
       role,
+      area_id: areaId,
     };
-    if (areaId) {
-      payload.area_id = areaId;
-      if (!skipProjectMemberRole) {
-        payload.project_member_role = projectMemberRole;
-      }
+    if (!skipProjectMemberRole) {
+      payload.project_member_role = projectMemberRole;
     }
     onInvite(payload);
   };
 
+  const hasAreas = areas.length > 0;
   const canSubmit =
-    Boolean(email.trim() && name.trim()) && !emailLocalPartContainsPlus(email.trim());
+    hasAreas &&
+    Boolean(email.trim() && name.trim() && areaId) &&
+    !emailLocalPartContainsPlus(email.trim());
 
   const inviteEmailPlusError =
     email.trim().length > 0 && emailLocalPartContainsPlus(email) ? t.organizationMembers.inviteEmailPlusAliasNotAllowed : null;
@@ -242,25 +244,30 @@ export function OrganizationInviteModal({
         </div>
         <div>
           <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-            {t.organizationMembers.areaOptional}
+            {t.organizationMembers.areaRequired}
           </label>
-          <div className="relative">
-            <Layers3 className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-            <select
-              value={areaId}
-              onChange={(e) => setAreaId(e.target.value)}
-              aria-label={t.organizationMembers.areaOptional}
-              className={`${inputClass} appearance-none py-1.5 pr-8 pl-8`}
-            >
-              <option value="">{t.organizationMembers.areaNone}</option>
-              {areas.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.area_name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-          </div>
+          {hasAreas ? (
+            <div className="relative">
+              <Layers3 className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+              <select
+                value={areaId}
+                onChange={(e) => setAreaId(e.target.value)}
+                aria-label={t.organizationMembers.areaRequired}
+                className={`${inputClass} appearance-none py-1.5 pr-8 pl-8`}
+              >
+                {areas.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.area_name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+            </div>
+          ) : (
+            <p className="text-[10px] font-medium text-amber-700 dark:text-amber-400">
+              {t.organizationMembers.areaInviteNoAreas}
+            </p>
+          )}
         </div>
         {areaId && !skipProjectMemberRole ? (
           <div>

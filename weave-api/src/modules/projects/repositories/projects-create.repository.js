@@ -188,11 +188,20 @@ class ProjectsCreateRepository {
   }
   async addNoteToProject(projectId, noteId, userId) {
     const query = `
-      WITH updated_note AS (
+      WITH first_stage AS (
+        SELECT id FROM project_stages
+        WHERE project_id = $1::uuid
+        ORDER BY "position" ASC
+        LIMIT 1
+      ),
+      updated_note AS (
         UPDATE notes
-        SET project_id = $1::uuid, project_stage_id = NULL, updated_at = NOW()
+        SET project_id = $1::uuid,
+            project_stage_id = (SELECT id FROM first_stage),
+            updated_at = NOW()
         WHERE id = $2::uuid
           AND project_id IS DISTINCT FROM $1::uuid
+          AND EXISTS (SELECT 1 FROM first_stage)
           AND (user_id = $3::uuid OR EXISTS (
             SELECT 1 FROM note_collaborators nc 
             WHERE nc.note_id = $2::uuid AND nc.user_id = $3::uuid AND nc.removed = false
@@ -268,11 +277,20 @@ class ProjectsCreateRepository {
     organizationId
   ) {
     const query = `
-      WITH updated_note AS (
+      WITH first_stage AS (
+        SELECT id FROM project_stages
+        WHERE project_id = $1::uuid
+        ORDER BY "position" ASC
+        LIMIT 1
+      ),
+      updated_note AS (
         UPDATE notes
-        SET project_id = $1::uuid, project_stage_id = NULL, updated_at = NOW()
+        SET project_id = $1::uuid,
+            project_stage_id = (SELECT id FROM first_stage),
+            updated_at = NOW()
         WHERE id = $2::uuid
           AND project_id IS DISTINCT FROM $1::uuid
+          AND EXISTS (SELECT 1 FROM first_stage)
           AND (user_id = $3::uuid OR EXISTS (
             SELECT 1 FROM note_collaborators nc 
             WHERE nc.note_id = $2::uuid AND nc.user_id = $3::uuid AND nc.removed = false

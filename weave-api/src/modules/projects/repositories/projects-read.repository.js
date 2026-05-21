@@ -752,6 +752,24 @@ class ProjectsReadRepository {
     `;
     return executeQuery(query, [userId]);
   }
+  /**
+   * Returns the first stage id for a project (lowest position).
+   *
+   * @param {string} projectId
+   * @returns {Promise<string|null>}
+   */
+  async getFirstProjectStageId(projectId) {
+    const query = `
+      SELECT id::text
+      FROM project_stages
+      WHERE project_id = $1::uuid
+      ORDER BY "position" ASC
+      LIMIT 1;
+    `;
+    const rows = await executeQuery(query, [projectId]);
+    return rows?.[0]?.id ? String(rows[0].id) : null;
+  }
+
   async getProjectStages(projectId) {
     const query = `
       SELECT 

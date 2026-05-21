@@ -806,7 +806,27 @@ class ChatController {
         const noteId = createdNote.id || createdNote.note_id;
 
         const updateData = {};
-        if (args.stageId) updateData.project_stage_id = args.stageId;
+        if (args.projectId) {
+          let resolvedStageId = args.stageId ? String(args.stageId) : null;
+          if (!resolvedStageId) {
+            resolvedStageId = await projectsReadRepository.getFirstProjectStageId(
+              String(args.projectId)
+            );
+            if (!resolvedStageId) {
+              throw new Error(
+                "O projeto não possui estágios. Crie pelo menos um estágio antes de associar tarefas."
+              );
+            }
+          } else {
+            const stages = await projectsReadRepository.getProjectStages(
+              String(args.projectId)
+            );
+            if (!stages.some((s) => String(s.id) === resolvedStageId)) {
+              throw new Error("Estágio não encontrado para este projeto.");
+            }
+          }
+          updateData.project_stage_id = resolvedStageId;
+        }
         if (args.dueDate) {
           try {
             const normalizedDueDate = new Date(String(args.dueDate)).toISOString();
@@ -927,15 +947,32 @@ class ChatController {
         };
       }
       case "update_note_stage": {
-        await this._assertNoteMutationAccess(
-          userId,
-          String(args.noteId || ""),
-          organizationId
-        );
-        const result = await notesRepository.updateNoteById(args.noteId, {
-          project_stage_id: args.stageId || null,
+        const noteId = String(args.noteId || "");
+        await this._assertNoteMutationAccess(userId, noteId, organizationId);
+        const note = await notesRepository.getNoteById(noteId);
+        if (!note?.project_id) {
+          throw new Error(
+            "A nota não está associada a um projeto. Associe a nota a um projeto antes de alterar o estágio."
+          );
+        }
+        const projectId = String(note.project_id);
+        const parsedStageId =
+          args.stageId === undefined || args.stageId === null || args.stageId === ""
+            ? null
+            : String(args.stageId);
+        if (!parsedStageId) {
+          throw new Error(
+            "Estágio é obrigatório. Informe um stageId válido para esta tarefa."
+          );
+        }
+        const stages = await projectsReadRepository.getProjectStages(projectId);
+        if (!stages.some((s) => String(s.id) === parsedStageId)) {
+          throw new Error("Estágio não encontrado para este projeto.");
+        }
+        const result = await notesRepository.updateNoteById(noteId, {
+          project_stage_id: parsedStageId,
         });
-        return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
+        return { name, result: { noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_priority": {
         await this._assertNoteMutationAccess(

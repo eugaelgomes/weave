@@ -291,8 +291,8 @@ export interface InviteMemberData {
   role: OrgWorkspaceRole;
   name: string;
   username?: string;
-  /** Organization area the invitee is linked to when accepting */
-  area_id?: string | null;
+  /** Organization area the invitee is linked to when accepting (required) */
+  area_id: string;
   /** Stored on invite; maps to area membership on accept (API: project_member_role) */
   project_member_role?: ProjectMemberRoleForInvite | null;
 }
@@ -789,11 +789,9 @@ export const inviteMember = async (
     userId,
   };
   if (inviteData.username !== undefined) payload.username = inviteData.username;
-  if (inviteData.area_id) {
-    payload.area_id = inviteData.area_id;
-    if (inviteData.project_member_role) {
-      payload.project_member_role = inviteData.project_member_role;
-    }
+  payload.area_id = inviteData.area_id;
+  if (inviteData.project_member_role) {
+    payload.project_member_role = inviteData.project_member_role;
   }
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_INVITES, payload);
   const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));

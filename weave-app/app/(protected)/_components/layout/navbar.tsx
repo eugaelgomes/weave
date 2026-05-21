@@ -301,7 +301,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 <div className="hidden items-center gap-2 sm:flex self-center">
                   <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-800 self-center" aria-hidden="true" />
                   <Link
-                    href={`/organization/about/${user.org_unique_name}`}
+                    href="/organization/editor"
                     className="flex min-w-0 items-center gap-1.5 rounded-md transition-opacity hover:opacity-80 self-center"
                   >
                     <figure className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded self-center">

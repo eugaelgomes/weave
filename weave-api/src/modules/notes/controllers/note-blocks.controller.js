@@ -1,6 +1,7 @@
 const NotesBaseController = require("./base.controller");
 const { normalizeBlocksTree, flattenBlocksForInsert } = require("../block-normalizer");
 const { getConnection } = require("@/database/connection");
+const spacesService = require("@/services/storage");
 
 /**
  * CRUD e reordenação de blocos (`note_blocks`).
@@ -15,6 +16,45 @@ class NoteBlocksController extends NotesBaseController {
       throw new Error(`${fieldName} inválido`);
     }
     return parsed;
+  }
+
+  async _processExternalMedia(tree, noteId, userId) {
+    for (const block of tree) {
+      if ((block.type === "image" || block.type === "video") && block.properties?.attrs?.src) {
+        const src = block.properties.attrs.src;
+        // Detecta se é um link externo (http/https) que não é do nosso storage ou se é base64/data URI
+        const isExternalHttp = /^https?:\/\//i.test(src) && !src.includes("/notes/") && !src.includes("upload://");
+        const isDataUri = /^data:(image|video)\/[a-zA-Z0-9+.-]+;base64,/i.test(src);
+
+        if (isExternalHttp || isDataUri) {
+          try {
+            console.info(`[notes.blocks.sync] Processando mídia para upload...`);
+            const resp = await fetch(src);
+            if (resp.ok) {
+              const contentType = resp.headers.get("content-type");
+              if (contentType && (contentType.startsWith("image/") || contentType.startsWith("video/"))) {
+                const buffer = Buffer.from(await resp.arrayBuffer());
+                const newUrl = await spacesService.uploadNoteDocumentImage(
+                  buffer,
+                  contentType,
+                  noteId,
+                  userId,
+                  isDataUri ? "pasted-media" : "external-media"
+                );
+                block.properties.attrs.src = newUrl;
+                console.info(`[notes.blocks.sync] Mídia salva no storage: ${newUrl}`);
+              }
+            }
+          } catch (e) {
+            console.error(`[notes.blocks.sync] Falha ao processar mídia (${isDataUri ? "data-uri" : src}):`, e.message);
+            // Continua com a url original, o validador decidirá se passa
+          }
+        }
+      }
+      if (Array.isArray(block.children) && block.children.length > 0) {
+        await this._processExternalMedia(block.children, noteId, userId);
+      }
+    }
   }
 
   /**
@@ -234,6 +274,8 @@ class NoteBlocksController extends NotesBaseController {
       if (!Array.isArray(tree)) {
         return res.status(400).json({ error: "blocks deve ser array" });
       }
+
+      await this._processExternalMedia(tree, noteId, userId);
       normalizeBlocksTree(tree);
 
       let nextRevision = null;

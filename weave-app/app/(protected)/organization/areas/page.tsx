@@ -19,7 +19,6 @@ import {
   UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
-import { WorkspaceHeader } from "@/app/(protected)/_components/ui/headers/workspace-header";
 import {
   useOrganization,
   type OrganizationArea,
@@ -28,6 +27,8 @@ import {
   type OrganizationAreaMemberRole,
 } from "@/app/_contexts/organization-context";
 import getStorageUrl from "@/app/_utils/get-storage-url";
+import { useLanguage } from "@/app/_contexts/language-context";
+import { WorkspacePageShell } from "@/app/(protected)/organization/_components/workspace-page-shell";
 
 // --- Types & Data Structures ---
 
@@ -118,6 +119,7 @@ const createEmptyMemberForm = (): AddMemberFormState => ({
 // --- Page Component ---
 
 export default function AreasPage() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -417,24 +419,25 @@ export default function AreasPage() {
 
   if (!hasOrganization) {
     return (
-      <div className="mx-auto flex h-[calc(100vh-4rem)] w-full max-w-2xl flex-col items-center justify-center gap-2 p-2 text-center">
-        <div className="flex flex-col items-center gap-2 rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-          <Layers3 className="h-10 w-10 text-neutral-300 dark:text-neutral-700" />
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
-            Estrutura não encontrada
-          </h2>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            Configure a sua organização para visualizar o mapa de squads.
-          </p>
+      <WorkspacePageShell description={t.organizationAreas.description}>
+        <div className="mx-auto flex min-h-0 flex-1 w-full max-w-2xl flex-col items-center justify-center gap-2 text-center">
+          <div className="flex flex-col items-center gap-2 rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+            <Layers3 className="h-10 w-10 text-neutral-300 dark:text-neutral-700" />
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
+              {t.organizationAreas.emptyTitle}
+            </h2>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              {t.organizationAreas.emptyBody}
+            </p>
+          </div>
         </div>
-      </div>
+      </WorkspacePageShell>
     );
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-4rem)] w-full flex-col gap-2">
-      <WorkspaceHeader />
-
+    <WorkspacePageShell description={t.organizationAreas.description}>
+    <div className="mx-auto flex min-h-0 flex-1 w-full flex-col gap-2">
       {areasError && (
         <div className="flex-shrink-0 rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-700 dark:border-red-900/30 dark:bg-red-900/10 dark:text-red-400">
           {areasError}
@@ -445,7 +448,7 @@ export default function AreasPage() {
         <div className="flex flex-1 items-center justify-center rounded-md border border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
           <div className="flex flex-col items-center gap-2 text-neutral-500 dark:text-neutral-400">
             <Loader2 className="h-5 w-5 animate-spin" />
-            <p className="text-xs font-medium">A mapear hierarquia...</p>
+            <p className="text-xs font-medium">{t.organizationAreas.loadingMap}</p>
           </div>
         </div>
       ) : !areas.length ? (
@@ -569,6 +572,7 @@ export default function AreasPage() {
         onConfirm={handleDeleteArea}
       />
     </div>
+    </WorkspacePageShell>
   );
 }
 

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import {
   Globe,
@@ -9,6 +11,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/app/_contexts/language-context";
 import {
   fetchDomains,
   createDomain,
@@ -16,12 +19,13 @@ import {
   deleteDomain,
   type OrganizationDomain,
 } from "@/app/_services/organization";
-import { Badge } from "./form-primitives";
+import { Badge } from "@/app/(protected)/organization/general/_components/form-primitives";
 
 const domainInputFocus =
   "outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:focus:border-yellow-500/50";
 
 export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
+  const { t } = useLanguage();
   const [domains, setDomains] = useState<OrganizationDomain[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
@@ -34,8 +38,8 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
       setLoading(true);
       const data = await fetchDomains();
       setDomains(data);
-    } catch (error) {
-      toast.error("Erro ao carregar domínios");
+    } catch {
+      toast.error(t.organizationIntegrations.domainsLoadError);
     } finally {
       setLoading(false);
     }
@@ -52,11 +56,12 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
     try {
       setIsAdding(true);
       const created = await createDomain(newDomain);
-      toast.success("Domínio adicionado! Configure o DNS para verificar.");
+      toast.success(t.organizationIntegrations.domainAdded);
       setDomains([...domains, created]);
       setNewDomain("");
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao adicionar domínio");
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : t.organizationIntegrations.domainAddError;
+      toast.error(msg);
     } finally {
       setIsAdding(false);
     }
@@ -70,26 +75,27 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
       setDomains(domains.map((d) => (d.id === domain.id ? updated : d)));
 
       if (updated.status === "VERIFIED") {
-        toast.success("Domínio verificado com sucesso!");
+        toast.success(t.organizationIntegrations.domainVerified);
       } else {
-        toast.error("Verificação falhou. Verifique os registros DNS.");
+        toast.error(t.organizationIntegrations.domainVerifyFailed);
       }
-    } catch (error: any) {
-      toast.error(error.message || "Erro na verificação");
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : t.organizationIntegrations.domainVerifyError;
+      toast.error(msg);
     } finally {
       setVerifyingId(null);
     }
   };
 
   const handleDelete = async (domainId: string) => {
-    if (!confirm("Tem certeza que deseja remover este domínio?")) return;
+    if (!confirm(t.organizationIntegrations.domainDeleteConfirm)) return;
     try {
       setDeletingId(domainId);
       await deleteDomain(domainId);
       setDomains(domains.filter((d) => d.id !== domainId));
-      toast.success("Domínio removido");
-    } catch (error: any) {
-      toast.error("Erro ao remover domínio");
+      toast.success(t.organizationIntegrations.domainRemoved);
+    } catch {
+      toast.error(t.organizationIntegrations.domainRemoveError);
     } finally {
       setDeletingId(null);
     }
@@ -97,7 +103,7 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success("Copiado para a área de transferência");
+    toast.success(t.organizationIntegrations.copied);
   };
 
   return (
@@ -105,28 +111,28 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
       <div className="mb-6 flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
           <Globe className="h-5 w-5 text-neutral-500" />
-          Domínios Customizados
+          {t.organizationIntegrations.domainsTitle}
         </h2>
-        {userIsOwner && (
+        {userIsOwner ? (
           <button
             type="button"
             onClick={loadDomains}
             className="rounded-full p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-            title="Recarregar"
+            title={t.organizationIntegrations.reloadDomains}
           >
             <RefreshCw className={`h-4 w-4 text-neutral-500 ${loading ? "animate-spin" : ""}`} />
           </button>
-        )}
+        ) : null}
       </div>
 
       <div className="space-y-6">
-        {userIsOwner && (
+        {userIsOwner ? (
           <form onSubmit={handleAddDomain} className="flex gap-2">
             <input
               type="text"
               value={newDomain}
               onChange={(e) => setNewDomain(e.target.value)}
-              placeholder="exemplo.com"
+              placeholder={t.organizationIntegrations.domainPlaceholder}
               className={`flex-1 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-100 ${domainInputFocus}`}
               disabled={isAdding}
             />
@@ -140,15 +146,15 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
               ) : (
                 <Plus className="h-4 w-4" />
               )}
-              Adicionar
+              {t.organizationIntegrations.addDomain}
             </button>
           </form>
-        )}
+        ) : null}
 
         <div className="space-y-4">
           {domains.length === 0 && !loading ? (
             <p className="py-4 text-center text-sm text-neutral-500 italic">
-              Nenhum domínio configurado.
+              {t.organizationIntegrations.domainsEmpty}
             </p>
           ) : (
             domains.map((domain) => (
@@ -163,28 +169,33 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
                         {domain.domain_name}
                       </h3>
                       {domain.status === "VERIFIED" ? (
-                        <Badge color="green">Verificado</Badge>
+                        <Badge color="green">{t.organizationIntegrations.statusVerified}</Badge>
                       ) : (
-                        <Badge color="yellow">Pendente</Badge>
+                        <Badge color="yellow">{t.organizationIntegrations.statusPending}</Badge>
                       )}
                     </div>
                     <p className="mt-1 text-xs text-neutral-500">
-                      Adicionado em {new Date(domain.created_at).toLocaleDateString()}
+                      {t.organizationIntegrations.addedOn.replace(
+                        "{date}",
+                        new Date(domain.created_at).toLocaleDateString(),
+                      )}
                     </p>
                   </div>
 
-                  {userIsOwner && (
+                  {userIsOwner ? (
                     <div className="flex items-center gap-2">
-                      {domain.status !== "VERIFIED" && (
+                      {domain.status !== "VERIFIED" ? (
                         <button
                           type="button"
                           onClick={() => handleVerify(domain)}
                           disabled={verifyingId === domain.id}
                           className="text-xs font-medium text-neutral-600 underline hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
                         >
-                          {verifyingId === domain.id ? "Verificando..." : "Verificar DNS"}
+                          {verifyingId === domain.id
+                            ? t.organizationIntegrations.verifying
+                            : t.organizationIntegrations.verifyDns}
                         </button>
-                      )}
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => handleDelete(domain.id)}
@@ -198,29 +209,26 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
                         )}
                       </button>
                     </div>
-                  )}
+                  ) : null}
                 </div>
 
-                {domain.status !== "VERIFIED" && domain.verification_token && (
+                {domain.status !== "VERIFIED" && domain.verification_token ? (
                   <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/30 dark:bg-amber-950/20">
                     <div className="mb-2 flex items-start gap-2 text-xs text-amber-800 dark:text-amber-200">
                       <AlertCircle className="h-4 w-4 shrink-0" />
-                      <p>
-                        Adicione um registro <strong>TXT</strong> ao seu DNS para verificar a
-                        propriedade.
-                      </p>
+                      <p>{t.organizationIntegrations.dnsHint}</p>
                     </div>
                     <div className="grid gap-2 text-xs md:grid-cols-2">
                       <div className="rounded-md bg-white p-2 dark:bg-black/20">
                         <span className="mb-1 block text-[10px] text-neutral-500 uppercase">
-                          Host / Name
+                          {t.organizationIntegrations.dnsHostLabel}
                         </span>
                         <div className="flex items-center justify-between font-mono font-medium">
                           <span>_weave-challenge</span>
                           <button
                             type="button"
                             onClick={() => copyToClipboard("_weave-challenge")}
-                            aria-label="Copiar host"
+                            aria-label={t.organizationIntegrations.copyHost}
                           >
                             <Copy className="h-3 w-3 text-neutral-400 hover:text-neutral-600" />
                           </button>
@@ -228,14 +236,14 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
                       </div>
                       <div className="rounded-md bg-white p-2 dark:bg-black/20">
                         <span className="mb-1 block text-[10px] text-neutral-500 uppercase">
-                          Value / Content
+                          {t.organizationIntegrations.dnsValueLabel}
                         </span>
                         <div className="flex items-center justify-between truncate font-mono font-medium">
                           <span className="mr-2 truncate">{domain.verification_token}</span>
                           <button
                             type="button"
                             onClick={() => copyToClipboard(domain.verification_token)}
-                            aria-label="Copiar valor de verificação"
+                            aria-label={t.organizationIntegrations.copyValue}
                           >
                             <Copy className="h-3 w-3 text-neutral-400 hover:text-neutral-600" />
                           </button>
@@ -243,7 +251,7 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
                       </div>
                     </div>
                   </div>
-                )}
+                ) : null}
               </div>
             ))
           )}

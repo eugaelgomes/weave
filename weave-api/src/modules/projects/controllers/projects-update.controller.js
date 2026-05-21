@@ -671,6 +671,16 @@ class ProjectsUpdateController extends ProjectsCoreController {
       }
 
       if (!result || result.length === 0) {
+        if (action === "add") {
+          const firstStageId =
+            await this.projectsRepository.getFirstProjectStageId(projectId);
+          if (!firstStageId) {
+            return res.status(400).json({
+              error:
+                "O projeto não possui estágios. Crie pelo menos um estágio antes de associar tarefas.",
+            });
+          }
+        }
         throw new Error(
           "Falha ao gerenciar nota. Verifique se você tem permissão"
         );
@@ -732,6 +742,14 @@ class ProjectsUpdateController extends ProjectsCoreController {
             );
 
       if (!result || result.length === 0) {
+        const firstStageId =
+          await this.projectsRepository.getFirstProjectStageId(projectId);
+        if (!firstStageId) {
+          return res.status(400).json({
+            error:
+              "O projeto não possui estágios. Crie pelo menos um estágio antes de associar tarefas.",
+          });
+        }
         throw new Error(
           "Falha ao adicionar nota. Verifique se você tem permissão ou se a nota já está associada"
         );
@@ -1085,7 +1103,20 @@ class ProjectsUpdateController extends ProjectsCoreController {
       }
 
       if (stage_id !== undefined) {
-        updateData.project_stage_id = this._parseNullableField(stage_id);
+        const parsedStageId = this._parseNullableField(stage_id);
+        if (!parsedStageId) {
+          return res.status(400).json({
+            error:
+              "Estágio é obrigatório. Não é permitido remover o estágio da tarefa.",
+          });
+        }
+        const stages = await this.projectsRepository.getProjectStages(projectId);
+        if (!stages.some((stage) => String(stage.id) === String(parsedStageId))) {
+          return res.status(404).json({
+            error: "Estágio não encontrado para este projeto.",
+          });
+        }
+        updateData.project_stage_id = parsedStageId;
       }
 
       const resolvedParentId = await this._resolveParentIdForPatchTask(
@@ -1214,13 +1245,17 @@ class ProjectsUpdateController extends ProjectsCoreController {
         stageId === undefined || stageId === null || stageId === ""
           ? null
           : String(stageId);
-      if (parsedStageId) {
-        const stages = await this.projectsRepository.getProjectStages(projectId);
-        if (!stages.some((stage) => String(stage.id) === parsedStageId)) {
-          return res.status(404).json({
-            error: "Estágio não encontrado para este projeto.",
-          });
-        }
+      if (!parsedStageId) {
+        return res.status(400).json({
+          error:
+            "Estágio é obrigatório. Selecione um estágio válido para esta tarefa.",
+        });
+      }
+      const stages = await this.projectsRepository.getProjectStages(projectId);
+      if (!stages.some((stage) => String(stage.id) === parsedStageId)) {
+        return res.status(404).json({
+          error: "Estágio não encontrado para este projeto.",
+        });
       }
 
       // Validação de segurança: O usuário tem acesso ao projeto?

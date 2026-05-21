@@ -19,6 +19,8 @@ const ALLOWED_DOCUMENT_VIDEO_TYPES = [
   "video/webm",
   "video/quicktime",
   "video/ogg",
+  "video/x-msvideo", // avi
+  "video/x-matroska", // mkv
 ];
 
 const ALLOWED_DOCUMENT_MEDIA_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOCUMENT_VIDEO_TYPES];
@@ -26,6 +28,16 @@ const ALLOWED_DOCUMENT_MEDIA_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOCUMEN
 const ALLOWED_FILE_TYPES = [
   // Imagens
   ...ALLOWED_IMAGE_TYPES,
+  // Vídeos
+  ...ALLOWED_DOCUMENT_VIDEO_TYPES,
+  // Áudio
+  "audio/mpeg",
+  "audio/wav",
+  "audio/ogg",
+  "audio/flac",
+  "audio/webm",
+  "audio/aac",
+  "audio/mp4",
   // Documentos
   "application/pdf",
   "application/msword",
@@ -34,16 +46,26 @@ const ALLOWED_FILE_TYPES = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "application/vnd.ms-powerpoint",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/rtf",
+  "application/epub+zip",
+  // Texto e Código
   "text/plain",
   "text/csv",
   "text/markdown",
+  "text/html",
+  "text/css",
+  "text/javascript",
+  "application/javascript",
+  "application/typescript",
+  "application/json",
+  "application/xml",
+  "text/xml",
   // Arquivos compactados
   "application/zip",
   "application/x-rar-compressed",
   "application/gzip",
-  // Outros
-  "application/json",
-  "application/xml",
+  "application/x-7z-compressed",
+  "application/x-tar",
 ];
 
 /**
@@ -85,7 +107,7 @@ const noteUpdateUpload = multer({
       if (!ALLOWED_DOCUMENT_MEDIA_TYPES.includes(file.mimetype)) {
         return cb(
           new Error(
-            "Formato de média do documento não permitido. Imagens: PNG, JPEG, WEBP, GIF ou SVG. Vídeos: MP4, WebM, MOV ou OGG."
+            "Formato de média do documento não permitido. Imagens: PNG, JPEG, WEBP, GIF ou SVG. Vídeos: MP4, WebM, MOV, OGG, AVI ou MKV."
           ),
           false
         );

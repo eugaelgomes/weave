@@ -254,14 +254,26 @@ class ProjectsDeleteRepository {
           AND ps.project_id = $1::uuid
           AND p.user_id = $2::uuid
           AND p.deleted = false
+          AND (
+            SELECT COUNT(*)::int FROM project_stages ps2
+            WHERE ps2.project_id = $1::uuid
+          ) > 1
+      ),
+      fallback_stage AS (
+        SELECT id FROM project_stages
+        WHERE project_id = $1::uuid
+          AND id <> $3::uuid
+        ORDER BY "position" ASC
+        LIMIT 1
       ),
       notes_upd AS (
         UPDATE notes n
-        SET project_stage_id = NULL, updated_at = NOW()
+        SET project_stage_id = (SELECT id FROM fallback_stage), updated_at = NOW()
         WHERE n.project_id = $1::uuid
           AND n.project_stage_id = $3::uuid
           AND n.deleted = false
           AND EXISTS (SELECT 1 FROM auth)
+          AND EXISTS (SELECT 1 FROM fallback_stage)
         RETURNING n.id
       ),
       del AS (
@@ -324,14 +336,26 @@ class ProjectsDeleteRepository {
           AND ps.project_id = $1::uuid
           AND p.organization_id = $2::uuid
           AND p.deleted = false
+          AND (
+            SELECT COUNT(*)::int FROM project_stages ps2
+            WHERE ps2.project_id = $1::uuid
+          ) > 1
+      ),
+      fallback_stage AS (
+        SELECT id FROM project_stages
+        WHERE project_id = $1::uuid
+          AND id <> $3::uuid
+        ORDER BY "position" ASC
+        LIMIT 1
       ),
       notes_upd AS (
         UPDATE notes n
-        SET project_stage_id = NULL, updated_at = NOW()
+        SET project_stage_id = (SELECT id FROM fallback_stage), updated_at = NOW()
         WHERE n.project_id = $1::uuid
           AND n.project_stage_id = $3::uuid
           AND n.deleted = false
           AND EXISTS (SELECT 1 FROM auth)
+          AND EXISTS (SELECT 1 FROM fallback_stage)
         RETURNING n.id
       ),
       del AS (

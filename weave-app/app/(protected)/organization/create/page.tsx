@@ -242,7 +242,7 @@ export default function OrganizationCreatePage() {
       await refreshOrganization();
       toast.success("Etapa 1 concluida");
       setStepOneCompleted(true);
-      router.push("/organization/settings");
+      router.push("/organization/general");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao concluir etapa 1");
     } finally {

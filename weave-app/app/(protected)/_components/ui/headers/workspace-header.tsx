@@ -4,8 +4,27 @@ import React from "react";
 import { BaseHeader } from "./base-header";
 import { AnimatedGreeting } from "./animated-greeting";
 
-export function WorkspaceHeader() {
+export type WorkspaceHeaderType =
+  | "workspace"
+  | "workspaceSettings"
+  | "workspaceMembers"
+  | "workspaceInvites"
+  | "workspaceAreas"
+  | "workspaceProjects"
+  | "workspacePlans"
+  | "workspaceIntegrations"
+  | "workspaceEditor";
+
+interface WorkspaceHeaderProps {
+  className?: string;
+  type?: WorkspaceHeaderType;
+}
+
+export function WorkspaceHeader({ className, type = "workspace" }: WorkspaceHeaderProps) {
   return (
-    <BaseHeader leftContent={<AnimatedGreeting type="workspace" />} />
+    <BaseHeader
+      className={className}
+      leftContent={<AnimatedGreeting type={type} />}
+    />
   );
 }

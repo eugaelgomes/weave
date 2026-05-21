@@ -36,7 +36,7 @@ export default function WorkspaceSettingsPage() {
               </h3>
               {user?.org_id && (
                 <Link
-                  href="/organization/settings"
+                  href="/organization/general"
                   className="flex items-center gap-1 text-[10px] font-bold text-amber-600 transition-colors hover:text-amber-700"
                 >
                   Gerenciar <ExternalLink size={10} />

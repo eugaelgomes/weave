@@ -66,6 +66,9 @@ export function TaskNoteModalMeta({
 
   const currentProjectId = note?.associated_project?.id ?? initialProjectId ?? "";
   const currentStageId = note?.associated_project?.stage_id ?? initialStageId ?? "";
+  const effectiveStageId =
+    currentStageId ||
+    (note?.associated_project && projectStages[0] ? projectStages[0].id : "");
 
   const formatDateForInput = useCallback((dateStr: string | null | undefined): string => {
     if (!dateStr) return "";
@@ -185,15 +188,14 @@ export function TaskNoteModalMeta({
                   className="h-3 w-3 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
                   style={{
                     backgroundColor:
-                      projectStages.find((s) => s.id === currentStageId)?.color || "#a3a3a3",
+                      projectStages.find((s) => s.id === effectiveStageId)?.color || "#a3a3a3",
                   }}
                 />
                 <select
-                  value={currentStageId}
+                  value={effectiveStageId}
                   onChange={(e) => void onStageChange(e.target.value)}
                   className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 outline-none transition-colors hover:bg-neutral-100 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75"
                 >
-                  <option value="">Escolha o estágio</option>
                   {projectStages.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
@@ -207,7 +209,7 @@ export function TaskNoteModalMeta({
                   className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
                   style={{
                     backgroundColor:
-                      projectStages.find((s) => s.id === currentStageId)?.color || "#a3a3a3",
+                      projectStages.find((s) => s.id === effectiveStageId)?.color || "#a3a3a3",
                   }}
                 />
                 {note.associated_project.stage_name || "—"}

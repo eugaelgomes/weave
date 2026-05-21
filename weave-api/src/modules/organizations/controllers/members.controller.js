@@ -344,10 +344,16 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return;
       }
 
+      const trimmedAreaId =
+        typeof area_id === "string" ? area_id.trim() : "";
+      if (!trimmedAreaId) {
+        return res.status(400).json({ error: "area_id is required" });
+      }
+
       let resolvedProjectMemberRole = null;
-      if (area_id) {
+      if (trimmedAreaId) {
         const area = await this.areasRepository.getAreaById(
-          area_id,
+          trimmedAreaId,
           currentOrg.id
         );
         if (!area) return res.status(404).json({ error: "Area not found" });
@@ -404,7 +410,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         authUserId,
         usedName,
         username || null,
-        area_id || null,
+        trimmedAreaId,
         resolvedProjectMemberRole
       );
 

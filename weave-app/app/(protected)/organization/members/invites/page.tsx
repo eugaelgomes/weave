@@ -6,7 +6,7 @@ import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import type { InviteMemberData } from "@/app/_services/organization";
 import { Plus, Search } from "lucide-react";
-import { WorkspaceHeader } from "@/app/(protected)/_components/ui/headers/workspace-header";
+import { WorkspacePageShell } from "@/app/(protected)/organization/_components/workspace-page-shell";
 import { MemberWorkspaceRoleBadge } from "@/app/(protected)/organization/members/_components/member-workspace-role-badge";
 import { OrganizationInviteModal } from "@/app/(protected)/organization/members/_components/organization-invite-modal";
 import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
@@ -104,9 +104,8 @@ export default function InvitesPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-white shadow-sm dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
-      <WorkspaceHeader />
-      <div className="mx-auto w-full min-h-0 flex-1 space-y-3 px-3 pb-6 sm:px-4">
+    <WorkspacePageShell description={t.organizationMembers.invitesPageDescription}>
+      <div className="mx-auto w-full min-h-0 flex-1 space-y-3">
         {status ? (
           <div
             role="status"
@@ -119,15 +118,6 @@ export default function InvitesPage() {
             {status.message}
           </div>
         ) : null}
-
-        <div className="shrink-0 border-b border-neutral-200 px-0 py-2.5 dark:border-surface-dark-border">
-          <h1 className="text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-            {t.organizationMembers.invitesPageTitle}
-          </h1>
-          <p className="mt-0.5 text-[11px] text-neutral-500 dark:text-neutral-400">
-            {t.organizationMembers.invitesPageDescription}
-          </p>
-        </div>
 
         <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white px-3 py-2.5 shadow-sm sm:px-4 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
@@ -234,6 +224,6 @@ export default function InvitesPage() {
         areas={areas}
         showSuperAdminWorkspaceRole={showSuperAdminWorkspaceRole}
       />
-    </div>
+    </WorkspacePageShell>
   );
 }

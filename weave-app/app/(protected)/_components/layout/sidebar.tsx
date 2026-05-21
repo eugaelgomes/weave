@@ -20,14 +20,12 @@ import {
   ChevronRight,
   Bot,
   Users,
-  UsersRound,
   ChevronsLeft,
   ChevronsRight,
   Waypoints,
   Calendar,
   Settings,
   Sparkles,
-  Workflow,
   CircleHelp,
   type LucideIcon,
 } from "lucide-react";
@@ -362,11 +360,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
     if (isCollapsed) return;
 
     const newExpandedState: Record<string, boolean> = {};
-    const itemsWithSubs = [
-      { path: "/weave-ai/chat", checkPath: "/weave-ai" },
-      { path: "/organization", checkPath: "/organization" },
-      { path: "/organization/members", checkPath: "/organization/members" },
-    ];
+    const itemsWithSubs = [{ path: "/weave-ai/chat", checkPath: "/weave-ai" }];
 
     itemsWithSubs.forEach(({ path, checkPath }) => {
       if (pathname.startsWith(checkPath)) {
@@ -434,31 +428,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
     },
     { path: "/settings", icon: Settings, label: t.nav.settingsLabel },
     ...(hasOrg
-      ? [
-          {
-            path: "/organization",
-            icon: Users,
-            label: t.nav.workspace,
-            subItems: [
-              { path: "/organization/settings", icon: Settings, label: t.nav.settingsLabel },
-              {
-                path: "/organization/members",
-                icon: UsersRound,
-                label: t.nav.members,
-                subItems: [
-                  { path: "/organization/members/list", icon: Users, label: t.nav.list },
-                  {
-                    path: "/organization/members/invites",
-                    icon: MessageSquare,
-                    label: t.nav.invites,
-                  },
-                ],
-              },
-              { path: "/organization/areas", icon: Workflow, label: t.nav.areas },
-              { path: "/organization/projects", icon: Network, label: t.nav.projects },
-            ],
-          },
-        ]
+      ? [{ path: "/organization/general", icon: Users, label: t.nav.workspace }]
       : []),
   ];
 

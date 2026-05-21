@@ -88,7 +88,9 @@ const isStorageImageSource = (value) => {
   if (!src) return false;
   if (src.startsWith("upload://")) return true;
   if (src.startsWith("notes/") || src.startsWith("weave-notes/notes/")) return true;
-  if (/^https?:\/\//i.test(src) && src.includes("/notes/")) return true;
+  if (/^https?:\/\//i.test(src)) return true;
+  if (/^data:(image|video)\//i.test(src)) return true;
+  if (/^blob:/i.test(src)) return true;
   return false;
 };
 
@@ -186,7 +188,7 @@ const validateAttrsForBlockType = (blockType, attrs, path) => {
         throw new Error(`${path}: image exige attrs.src`);
       }
       if (!isStorageImageSource(attrs.src)) {
-        throw new Error(`${path}: image attrs.src deve apontar para arquivo no storage`);
+        throw new Error(`${path}: image attrs.src deve ser uma URL de imagem válida (http, https, blob, data ou storage)`);
       }
       if (attrs.alt !== undefined && typeof attrs.alt !== "string") {
         throw new Error(`${path}: image attrs.alt deve ser string`);
@@ -201,7 +203,7 @@ const validateAttrsForBlockType = (blockType, attrs, path) => {
         throw new Error(`${path}: video exige attrs.src`);
       }
       if (!isStorageImageSource(attrs.src)) {
-        throw new Error(`${path}: video attrs.src deve apontar para arquivo no storage`);
+        throw new Error(`${path}: video attrs.src deve ser uma URL de vídeo válida (http, https, blob, data ou storage)`);
       }
       if (attrs.title !== undefined && typeof attrs.title !== "string") {
         throw new Error(`${path}: video attrs.title deve ser string`);

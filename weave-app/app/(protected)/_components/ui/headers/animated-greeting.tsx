@@ -30,6 +30,14 @@ interface AnimatedGreetingProps {
     | "weave-ai"
     | "weave-engine"
     | "workspace"
+    | "workspaceSettings"
+    | "workspaceMembers"
+    | "workspaceInvites"
+    | "workspaceAreas"
+    | "workspaceProjects"
+    | "workspacePlans"
+    | "workspaceIntegrations"
+    | "workspaceEditor"
     | "plans"
     | "security"
     | "integrations"
@@ -66,6 +74,22 @@ export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
         return <span className="text-brand-primary-500 font-semibold">{t.nav.settings}</span>;
       case "workspace":
         return <span className="text-brand-primary-500 font-semibold">{t.nav.workspace}</span>;
+      case "workspaceSettings":
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.general}</span>;
+      case "workspaceMembers":
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.members}</span>;
+      case "workspaceInvites":
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.invites}</span>;
+      case "workspaceAreas":
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.areas}</span>;
+      case "workspaceProjects":
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.projects}</span>;
+      case "workspacePlans":
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.plans}</span>;
+      case "workspaceIntegrations":
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.integrations}</span>;
+      case "workspaceEditor":
+        return <span className="text-brand-primary-500 font-semibold">{t.nav.editor}</span>;
       case "plans":
         return <span className="text-brand-primary-500 font-semibold">{t.nav.plans}</span>;
       case "security":
@@ -105,6 +129,22 @@ export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
         return t.headers.settings;
       case "workspace":
         return t.headers.workspace;
+      case "workspaceSettings":
+        return t.headers.workspace;
+      case "workspaceMembers":
+        return t.headers.workspaceMembers;
+      case "workspaceInvites":
+        return t.headers.workspaceInvites;
+      case "workspaceAreas":
+        return t.headers.workspaceAreas;
+      case "workspaceProjects":
+        return t.headers.workspaceProjects;
+      case "workspacePlans":
+        return t.headers.workspacePlans;
+      case "workspaceIntegrations":
+        return t.headers.workspaceIntegrations;
+      case "workspaceEditor":
+        return t.headers.workspaceEditor;
       case "plans":
         return t.headers.plans;
       case "security":

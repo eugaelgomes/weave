@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { WorkspaceHeader } from "@/app/(protected)/_components/ui/headers/workspace-header";
+import { WorkspacePageShell } from "@/app/(protected)/organization/_components/workspace-page-shell";
+import { useLanguage } from "@/app/_contexts/language-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { Project } from "@/app/_services/projects-service/projects-service";
 import {
@@ -41,6 +42,7 @@ const statusColors: Record<string, string> = {
 };
 
 const ProjectsManagementPage = () => {
+  const { t } = useLanguage();
   const { projects = [], loading: isLoading } = useProjects();
 
   // Estados de Filtro
@@ -76,41 +78,29 @@ const ProjectsManagementPage = () => {
   }, [projects, searchTerm, statusFilter, priorityFilter]);
 
   return (
-    <div className="animate-in fade-in flex h-full flex-col bg-neutral-50 duration-200 dark:bg-[#1d1d1b]">
-      <WorkspaceHeader />
-
-      {/* Header Analítico - Compacto */}
-      <div className="border-b border-neutral-200 bg-white px-4 py-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-brand-primary-500/10 rounded p-1.5">
-              <BarChart3 className="text-brand-primary-500 h-4 w-4" />
-            </div>
-            <div>
-              <h1 className="text-sm leading-tight font-semibold text-neutral-900 dark:text-neutral-100">
-                Gestão de Portfólio
-              </h1>
-              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                Visão consolidada da organização
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <button className="flex h-7 items-center justify-center gap-1.5 rounded border border-neutral-300 bg-white px-2.5 text-[11px] font-medium text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-800">
-              <Download className="h-3 w-3" />
-              <span>Exportar</span>
-            </button>
-            <button className="bg-brand-primary-500 flex h-7 items-center justify-center gap-1.5 rounded px-2.5 text-[11px] font-medium text-white transition-colors hover:bg-yellow-600">
-              <Plus className="h-3 w-3" />
-              <span>Novo Projeto</span>
-            </button>
-          </div>
+    <WorkspacePageShell
+      description={t.organizationProjects.description}
+      rightContent={
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            className="flex h-7 items-center justify-center gap-1.5 rounded border border-neutral-300 bg-white px-2.5 text-[11px] font-medium text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-800"
+          >
+            <Download className="h-3 w-3" />
+            <span>Exportar</span>
+          </button>
+          <button
+            type="button"
+            className="bg-brand-primary-500 flex h-7 items-center justify-center gap-1.5 rounded px-2.5 text-[11px] font-medium text-white transition-colors hover:bg-yellow-600"
+          >
+            <Plus className="h-3 w-3" />
+            <span>Novo Projeto</span>
+          </button>
         </div>
-
-        {/* Micro KPI Cards */}
-        {!isLoading && (
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      }
+    >
+      {!isLoading ? (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-surface-dark-border">
               <div>
                 <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
@@ -165,13 +155,11 @@ const ProjectsManagementPage = () => {
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : null}
 
-      {/* Toolbar & Tabela de Dados */}
-      <div className="flex flex-1 flex-col overflow-hidden p-4">
-        <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
           {/* Toolbar de Controles */}
           <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center">
             {/* Search */}
@@ -308,7 +296,7 @@ const ProjectsManagementPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </WorkspacePageShell>
   );
 };
 
