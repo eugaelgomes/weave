@@ -36,6 +36,9 @@ async function bootstrap() {
   registerShutdownHandler("database", async () => {
     await closeDatabase();
   });
+  registerShutdownHandler("sentry", async () => {
+    await require("@sentry/node").close(2000);
+  });
 
   logger.info("weave-engine ready");
 }

@@ -1,3 +1,4 @@
+const Sentry = require("@sentry/node");
 const { env } = require("../config/env");
 
 const LOG_LEVELS = {
@@ -24,6 +25,14 @@ const logger = {
 
   error(message, meta) {
     console.error(formatMessage("error", message, meta));
+    if (!env.isProduction) {
+      return;
+    }
+    if (meta && meta.error instanceof Error) {
+      Sentry.captureException(meta.error, { extra: meta });
+    } else {
+      Sentry.captureMessage(message, { extra: meta, level: "error" });
+    }
   },
 
   info(message, meta) {

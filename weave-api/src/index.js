@@ -1,5 +1,7 @@
 require("module-alias/register");
 require("dotenv").config();
+require("./instrument");
+const Sentry = require("@sentry/node");
 const http = require("http");
 const { app } = require("@/app");
 const { pool } = require("@/database/connection");
@@ -87,10 +89,13 @@ const gracefulShutdown = async (signal) => {
     console.log("Database connections closed");
 
     clearTimeout(shutdownTimeout);
+    await Sentry.close(2000);
     process.exit(0);
   } catch (error) {
     console.error("Error during graceful shutdown:", error);
     clearTimeout(shutdownTimeout);
+    Sentry.captureException(error);
+    await Sentry.close(2000);
     process.exit(1);
   }
 };
@@ -99,12 +104,16 @@ const gracefulShutdown = async (signal) => {
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
-process.on("uncaughtException", (error) => {
+process.on("uncaughtException", async (error) => {
   console.error("Uncaught Exception thrown:", error);
+  Sentry.captureException(error);
+  await Sentry.close(2000);
   process.exit(1);
 });
 
-process.on("unhandledRejection", (reason, promise) => {
+process.on("unhandledRejection", async (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  Sentry.captureException(reason);
+  await Sentry.close(2000);
   process.exit(1);
 });

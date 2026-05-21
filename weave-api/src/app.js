@@ -1,4 +1,5 @@
 const express = require("express");
+const Sentry = require("@sentry/node");
 const {
   configureGlobalMiddlewares,
 } = require("@/middlewares/http/apply-http-middleware");
@@ -48,6 +49,7 @@ registerApiRoutes(app, { version: "v1" });
 /**
  * 4. Error Handling & Fallbacks (404 / 500)
  */
+Sentry.setupExpressErrorHandler(app);
 app.use(errorHandler.notFoundHandler);
 app.use(errorHandler.globalErrorHandler);
 

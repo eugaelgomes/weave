@@ -41,15 +41,12 @@ function setupGracefulShutdown() {
   process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
   process.on("uncaughtException", (error) => {
-    logger.error("Uncaught exception", {
-      error: error.message,
-      stack: error.stack,
-    });
+    logger.error("Uncaught exception", { error });
     gracefulShutdown("uncaughtException");
   });
 
   process.on("unhandledRejection", (reason) => {
-    logger.error("Unhandled rejection", { reason: String(reason) });
+    logger.error("Unhandled rejection", { error: reason });
   });
 }
 
