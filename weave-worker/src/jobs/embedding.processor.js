@@ -1,11 +1,16 @@
 const redis = require("../config/redis");
 const { executeQuery } = require("../database/connection");
+const { getNoteEmbeddingsQueueRedisKey } = require("../config/redis-queue-keys");
+const { extractPlainTextFromBlockRows } = require("../services/note-blocks-text");
 const { logger } = require("../lib");
+
+const MAX_RETRIES = 3;
+const EMBEDDING_MODEL = "text-embedding-3-small";
 
 class EmbeddingProcessor {
   constructor() {
     this.isRunning = false;
-    this.queueName = "queue:note-embeddings";
+    this.queueName = getNoteEmbeddingsQueueRedisKey();
   }
 
   async start() {
@@ -14,15 +19,14 @@ class EmbeddingProcessor {
 
     logger.info("Embedding processor started", {
       queue: this.queueName,
+      hasOpenAiKey: Boolean(process.env.OPENAI_API_KEY),
     });
 
     while (this.isRunning) {
       try {
-        // logger.debug("Polling queue", { queue: this.queueName });
         const result = await redis.blpop(this.queueName, 5);
         if (!result) continue;
 
-        logger.info("Job received from queue", { queue: this.queueName, result });
         const [, payload] = result;
         const job = JSON.parse(payload);
         await this.processJob(job);
@@ -37,25 +41,80 @@ class EmbeddingProcessor {
 
   /**
    * @param {string} errText
-   * @returns {{ status: number | null, code: string | null, type: string | null }}
+   * @returns {{ status: number | null, code: string | null, type: string | null, pgCode: string | null }}
    */
-  parseOpenAiError(errText) {
-    const statusMatch = errText.match(/OpenAI API error: (\d+)/);
+  parseError(errText) {
+    const statusMatch = String(errText).match(/OpenAI API error: (\d+)/);
     const status = statusMatch ? Number(statusMatch[1]) : null;
+    const pgCodeMatch = String(errText).match(/code: (\d{5})/);
+    const pgCode = pgCodeMatch ? pgCodeMatch[1] : null;
+
     try {
-      const jsonStart = errText.indexOf("{");
-      if (jsonStart === -1) return { code: null, status, type: null };
-      const body = JSON.parse(errText.slice(jsonStart));
+      const jsonStart = String(errText).indexOf("{");
+      if (jsonStart === -1) return { code: null, status, type: null, pgCode };
+      const body = JSON.parse(String(errText).slice(jsonStart));
       return {
         code: body?.error?.code ?? null,
         status,
         type: body?.error?.type ?? null,
+        pgCode,
       };
     } catch {
-      return { code: null, status, type: null };
+      return { code: null, status, type: null, pgCode };
     }
   }
 
+  /**
+   * @param {number | null} httpStatus
+   * @param {string} message
+   * @returns {boolean}
+   */
+  isRetryableFailure(httpStatus, message) {
+    if (httpStatus === 429 || (httpStatus !== null && httpStatus >= 500)) {
+      return true;
+    }
+    const lower = message.toLowerCase();
+    if (
+      lower.includes("timeout") ||
+      lower.includes("econnreset") ||
+      lower.includes("connection")
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * @param {object} job
+   * @returns {Promise<void>}
+   */
+  async scheduleRetry(job) {
+    const retryCount = Number(job.retryCount || 0);
+    if (retryCount >= MAX_RETRIES) {
+      logger.error("Embedding job dropped after max retries", {
+        noteId: job.noteId,
+        retryCount,
+      });
+      return;
+    }
+
+    const nextJob = {
+      ...job,
+      retryCount: retryCount + 1,
+      lastFailedAt: new Date().toISOString(),
+    };
+
+    await redis.rpush(this.queueName, JSON.stringify(nextJob));
+    logger.warn("Embedding job requeued", {
+      noteId: job.noteId,
+      retryCount: nextJob.retryCount,
+    });
+  }
+
+  /**
+   * @param {object} job
+   * @returns {Promise<void>}
+   */
   async processJob(job) {
     const noteId = job?.noteId;
 
@@ -64,26 +123,6 @@ class EmbeddingProcessor {
       return;
     }
 
-    // #region agent log
-    fetch("http://127.0.0.1:7701/ingest/2f9d05dd-4fb3-4892-84ba-05df7854fb8b", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "be6aa6" },
-      body: JSON.stringify({
-        sessionId: "be6aa6",
-        runId: "pre-fix",
-        hypothesisId: "D",
-        location: "embedding.processor.js:processJob:entry",
-        message: "Embedding job started",
-        data: {
-          noteId,
-          queuedAt: job?.queuedAt ?? null,
-          hasApiKey: Boolean(process.env.OPENAI_API_KEY),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-
     try {
       const note = await this.findNoteById(noteId);
       if (!note) {
@@ -91,9 +130,15 @@ class EmbeddingProcessor {
         return;
       }
 
-      // Format text for embedding
-      const documentText = this.extractTextFromDocument(note.document);
-      const textToEmbed = `Title: ${note.title || ""}\nDescription: ${note.description || ""}\nContent: ${documentText}`;
+      const blockRows = await this.findBlockRowsByNoteId(noteId);
+      const blocksText = extractPlainTextFromBlockRows(blockRows);
+      const textToEmbed = [
+        `Title: ${note.title || ""}`,
+        `Description: ${note.description || ""}`,
+        blocksText ? `Content: ${blocksText}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
 
       if (textToEmbed.trim().length === 0) {
         logger.debug("Note is empty, skipping embedding", { noteId });
@@ -109,120 +154,86 @@ class EmbeddingProcessor {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "text-embedding-3-small",
+          model: EMBEDDING_MODEL,
           input: textToEmbed,
         }),
       });
 
       if (!response.ok) {
         const errText = await response.text();
-        const parsed = this.parseOpenAiError(
-          `OpenAI API error: ${response.status} - ${errText}`,
-        );
-        // #region agent log
-        fetch("http://127.0.0.1:7701/ingest/2f9d05dd-4fb3-4892-84ba-05df7854fb8b", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "be6aa6" },
-          body: JSON.stringify({
-            sessionId: "be6aa6",
-            runId: "pre-fix",
-            hypothesisId: "A",
-            location: "embedding.processor.js:processJob:openai-response",
-            message: "OpenAI embeddings API non-OK",
-            data: {
-              noteId,
-              httpStatus: response.status,
-              errorCode: parsed.code,
-              errorType: parsed.type,
-            },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
         throw new Error(`OpenAI API error: ${response.status} - ${errText}`);
       }
 
       const data = await response.json();
-      const embeddingArray = data.data[0].embedding;
+      const embeddingArray = data?.data?.[0]?.embedding;
+      if (!Array.isArray(embeddingArray) || embeddingArray.length === 0) {
+        throw new Error("OpenAI embeddings response missing vector data");
+      }
 
       await this.saveEmbedding(noteId, embeddingArray);
-      
-      logger.info("Generated and saved embedding", { noteId });
-      // #region agent log
-      fetch("http://127.0.0.1:7701/ingest/2f9d05dd-4fb3-4892-84ba-05df7854fb8b", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "be6aa6" },
-        body: JSON.stringify({
-          sessionId: "be6aa6",
-          runId: "pre-fix",
-          hypothesisId: "A",
-          location: "embedding.processor.js:processJob:success",
-          message: "Embedding saved",
-          data: { noteId },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
 
+      logger.info("Generated and saved embedding", {
+        noteId,
+        dimensions: embeddingArray.length,
+      });
     } catch (error) {
-      const parsed = this.parseOpenAiError(error.message);
-      // #region agent log
-      fetch("http://127.0.0.1:7701/ingest/2f9d05dd-4fb3-4892-84ba-05df7854fb8b", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "be6aa6" },
-        body: JSON.stringify({
-          sessionId: "be6aa6",
-          runId: "pre-fix",
-          hypothesisId: "C",
-          location: "embedding.processor.js:processJob:catch",
-          message: "Embedding job failed",
-          data: {
-            noteId,
-            httpStatus: parsed.status,
-            errorCode: parsed.code,
-            errorType: parsed.type,
-            willRequeue: false,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
+      const parsed = this.parseError(error.message);
       logger.error("Failed to process embedding job", {
         noteId,
         error: error.message,
+        httpStatus: parsed.status,
+        errorCode: parsed.code,
+        pgCode: parsed.pgCode,
       });
-      // Em um cenário real de produção, adicionaríamos a uma fila de DLQ (Dead Letter Queue) ou Retry
+
+      if (this.isRetryableFailure(parsed.status, error.message)) {
+        await this.scheduleRetry(job);
+      }
     }
   }
 
-  extractTextFromDocument(document) {
-    if (!document || !Array.isArray(document.blocks)) return "";
-    return document.blocks
-      .filter((b) => b && typeof b.text === "string")
-      .map((b) => b.text)
-      .join("\n")
-      .slice(0, 8000); // Evitar estourar limite de tokens da OpenAI em notas massivas
-  }
-
+  /**
+   * @param {string} noteId
+   * @returns {Promise<object | null>}
+   */
   async findNoteById(noteId) {
     const query = `
-      SELECT id, title, description, document
+      SELECT id, title, description
       FROM notes
-      WHERE id = $1 AND deleted = false
+      WHERE id = $1::uuid AND deleted = false
       LIMIT 1;
     `;
     const results = await executeQuery(query, [noteId]);
     return results[0] || null;
   }
 
+  /**
+   * @param {string} noteId
+   * @returns {Promise<object[]>}
+   */
+  async findBlockRowsByNoteId(noteId) {
+    const query = `
+      SELECT type, properties, position
+      FROM note_blocks
+      WHERE note_id = $1::uuid AND deleted = false
+      ORDER BY parent_id NULLS FIRST, position ASC, created_at ASC;
+    `;
+    return executeQuery(query, [noteId]);
+  }
+
+  /**
+   * @param {string} noteId
+   * @param {number[]} embeddingArray
+   * @returns {Promise<void>}
+   */
   async saveEmbedding(noteId, embeddingArray) {
     const query = `
       UPDATE notes
       SET embedding = $1::vector
-      WHERE id = $2;
+      WHERE id = $2::uuid;
     `;
     await executeQuery(query, [JSON.stringify(embeddingArray), noteId]);
   }

@@ -20,7 +20,8 @@
     "format": "prettier --write \"src/**/*.js\"",
     "format:check": "prettier --check \"src/**/*.js\"",
     "check": "npm run lint",
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "echo \"No tests yet\" && exit 0",
+    "diagnose:embeddings": "node scripts/diagnose-embeddings.js"
   },
   "keywords": [
     "worker",

@@ -10,6 +10,7 @@ const DEFAULT_DOMAIN_VERIFY_DELAYED_QUEUE_KEY = "weave:domains:verify:delayed";
 const DEFAULT_PLAN_USAGE_QUEUE_KEY = "weave:plans:usage:queue";
 const DEFAULT_PLAN_USAGE_DELAYED_QUEUE_KEY = "weave:plans:usage:delayed";
 const DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY = "weave:ai-reports:delivery";
+const DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY = "queue:note-embeddings";
 
 const DOMAIN_VERIFY_RETRY_INTERVAL_MS = 30 * 60 * 1000;
 const PLAN_USAGE_RETRY_INTERVAL_MS = 5 * 60 * 1000;
@@ -76,6 +77,16 @@ function getAiReportDeliveryQueueRedisKey() {
   );
 }
 
+/**
+ * List key for note embedding jobs (must match weave-api queue-keys.js).
+ * @returns {string}
+ */
+function getNoteEmbeddingsQueueRedisKey() {
+  return (
+    process.env.REDIS_NOTE_EMBEDDINGS_QUEUE_KEY || DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY
+  );
+}
+
 module.exports = {
   DEFAULT_DOMAIN_VERIFY_DELAYED_QUEUE_KEY,
   DEFAULT_DOMAIN_VERIFY_QUEUE_KEY,
@@ -84,6 +95,7 @@ module.exports = {
   DEFAULT_PLAN_USAGE_DELAYED_QUEUE_KEY,
   DEFAULT_PLAN_USAGE_QUEUE_KEY,
   DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY,
+  DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY,
   DOMAIN_VERIFY_RETRY_INTERVAL_MS,
   PLAN_USAGE_RETRY_INTERVAL_MS,
   getDomainVerifyDelayedQueueRedisKey,
@@ -93,4 +105,5 @@ module.exports = {
   getPlanUsageDelayedQueueRedisKey,
   getPlanUsageQueueRedisKey,
   getAiReportDeliveryQueueRedisKey,
+  getNoteEmbeddingsQueueRedisKey,
 };
