@@ -1,5 +1,6 @@
 const { randomUUID } = require("crypto");
 const redis = require("./connection");
+const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
 const {
   getBackupExportQueueRedisKey,
   getDomainVerifyQueueRedisKey,
@@ -111,14 +112,21 @@ async function enqueueBackupExportJob({ jobId, userId }) {
 }
 
 /**
- * Enqueue note embedding job.
+ * Enqueue note embedding job (always stores internal UUID).
  *
- * @param {string} noteId
- * @returns {Promise<{ success: true, queued: true }>}
+ * @param {string} noteId - Internal UUID or public_note_id
+ * @returns {Promise<{ success: boolean, queued: boolean }>}
  */
 async function enqueueNoteEmbeddingJob(noteId) {
+  const internalId = await resolveNoteIdToUuid(noteId);
+  if (!internalId) {
+    // eslint-disable-next-line no-console -- queue infra failure diagnostics
+    console.warn("[QueueController] Skipping embedding job for unresolved noteId:", noteId);
+    return { queued: false, success: false };
+  }
+
   await enqueueRedisListJob(getNoteEmbeddingsQueueRedisKey(), {
-    noteId,
+    noteId: internalId,
     queuedAt: new Date().toISOString(),
   });
   return { queued: true, success: true };

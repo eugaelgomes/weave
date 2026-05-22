@@ -2,6 +2,7 @@ const redis = require("../config/redis");
 const { executeQuery } = require("../database/connection");
 const { getNoteEmbeddingsQueueRedisKey } = require("../config/redis-queue-keys");
 const { extractPlainTextFromBlockRows } = require("../services/note-blocks-text");
+const { resolveNoteIdToUuid } = require("../utils/note-id-lookup");
 const { logger } = require("../lib");
 
 const MAX_RETRIES = 3;
@@ -116,12 +117,14 @@ class EmbeddingProcessor {
    * @returns {Promise<void>}
    */
   async processJob(job) {
-    const noteId = job?.noteId;
+    const rawNoteId = job?.noteId;
 
-    if (!noteId) {
+    if (!rawNoteId) {
       logger.warn("Skipping embedding job without noteId");
       return;
     }
+
+    const noteId = (await resolveNoteIdToUuid(rawNoteId)) || rawNoteId;
 
     try {
       const note = await this.findNoteById(noteId);

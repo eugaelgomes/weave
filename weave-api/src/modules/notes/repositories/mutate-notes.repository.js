@@ -89,15 +89,19 @@ class MutateNotesRepository extends BaseRepository {
   async bumpRevisionById(noteId, baseRevision = null) {
     const values = [noteId];
     let revisionFilter = "";
+    let revisionParamIndex = 2;
     if (baseRevision !== null && baseRevision !== undefined) {
       values.push(Number(baseRevision));
-      revisionFilter = `AND revision = $2`;
+      revisionFilter = `AND revision = $${revisionParamIndex}`;
+      revisionParamIndex += 1;
     }
+
+    const noteIdWhere = buildNoteIdWhereClause("notes", 1, noteId);
 
     const query = `
       UPDATE notes
       SET revision = revision + 1, updated_at = NOW()
-      WHERE id = $1::uuid
+      WHERE ${noteIdWhere}
       ${revisionFilter}
       RETURNING id, revision, updated_at
     `;

@@ -20,3 +20,4 @@ Centraliza as chaves Redis usadas nas filas de background e no fluxo com o engin
 - Definicao das filas de email, exportacao de backup, verificacao de dominio, uso de plano e **note embeddings** (`REDIS_NOTE_EMBEDDINGS_QUEUE_KEY`, default `queue:note-embeddings`).
 - Integracao assíncrona com requests/responses de LLM no engine.
 - O consumer de embeddings roda apenas no **weave-worker** (`embedding.processor.js`); requer `OPENAI_API_KEY` e migration `2026-05-22_notes_embedding_vector.sql`.
+- Jobs na fila de embeddings devem carregar sempre o **UUID interno** (`notes.id`). `enqueueNoteEmbeddingJob` em `queue-controller.js` resolve `public_note_id` antes do `LPUSH`; o worker também resolve por segurança.

@@ -27,6 +27,7 @@ const {
 const { resolveNoteTitle } = require("@/modules/notes/utils/derive-note-title");
 const redis = require("@/services/queue/consumer-connection");
 const { getReasoningTriggerQueueRedisKey } = require("@/services/queue/queue-keys");
+const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
 
 class ProjectsUpdateController extends ProjectsCoreController {
   /**
@@ -600,6 +601,11 @@ class ProjectsUpdateController extends ProjectsCoreController {
         throw new Error("ID da nota é obrigatório");
       }
 
+      const internalNoteId = await resolveNoteIdToUuid(noteId);
+      if (!internalNoteId) {
+        return res.status(404).json({ error: "Nota não encontrada" });
+      }
+
       const membership =
         await organizationsRepository.getActiveOrganizationWithMembership(
           userId
@@ -623,13 +629,13 @@ class ProjectsUpdateController extends ProjectsCoreController {
             orgWide && membership.id
               ? await this.projectsRepository.addNoteToProjectWithOrgScope(
                   projectId,
-                  noteId,
+                  internalNoteId,
                   userId,
                   membership.id
                 )
               : await this.projectsRepository.addNoteToProject(
                   projectId,
-                  noteId,
+                  internalNoteId,
                   userId
                 );
           message = "Nota adicionada ao projeto com sucesso";
@@ -640,13 +646,13 @@ class ProjectsUpdateController extends ProjectsCoreController {
             orgWide && membership.id
               ? await this.projectsRepository.updateNoteInProjectWithOrgScope(
                   projectId,
-                  noteId,
+                  internalNoteId,
                   userId,
                   membership.id
                 )
               : await this.projectsRepository.updateNoteInProject(
                   projectId,
-                  noteId,
+                  internalNoteId,
                   userId
                 );
           message = "Nota sincronizada com sucesso";
@@ -657,13 +663,13 @@ class ProjectsUpdateController extends ProjectsCoreController {
             orgWide && membership.id
               ? await this.projectsRepository.removeNoteFromProjectWithOrgScope(
                   projectId,
-                  noteId,
+                  internalNoteId,
                   userId,
                   membership.id
                 )
               : await this.projectsRepository.removeNoteFromProject(
                   projectId,
-                  noteId,
+                  internalNoteId,
                   userId
                 );
           message = "Nota removida do projeto com sucesso";
@@ -713,6 +719,11 @@ class ProjectsUpdateController extends ProjectsCoreController {
         throw new Error("ID da nota é obrigatório");
       }
 
+      const internalNoteId = await resolveNoteIdToUuid(noteId);
+      if (!internalNoteId) {
+        return res.status(404).json({ error: "Nota não encontrada" });
+      }
+
       const membership =
         await organizationsRepository.getActiveOrganizationWithMembership(
           userId
@@ -731,13 +742,13 @@ class ProjectsUpdateController extends ProjectsCoreController {
         orgWide && membership.id
           ? await this.projectsRepository.addNoteToProjectWithOrgScope(
               projectId,
-              noteId,
+              internalNoteId,
               userId,
               membership.id
             )
           : await this.projectsRepository.addNoteToProject(
               projectId,
-              noteId,
+              internalNoteId,
               userId
             );
 

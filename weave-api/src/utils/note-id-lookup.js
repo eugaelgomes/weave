@@ -1,3 +1,5 @@
+const { executeQuery } = require("@/database/connection");
+
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -78,10 +80,73 @@ function buildNotesBulkDeleteWhere(identifiers) {
   return { sql: parts.join(" OR "), params };
 }
 
+/**
+ * Resolves a note route/body identifier to the internal UUID string.
+ *
+ * @param {unknown} noteId
+ * @returns {Promise<string|null>}
+ */
+async function resolveNoteIdToUuid(noteId) {
+  if (noteId === undefined || noteId === null || noteId === "") {
+    return null;
+  }
+  const id = String(noteId).trim();
+  if (!id) return null;
+  if (isUuidNoteId(id)) return id;
+  if (!isPublicNoteId(id)) return null;
+
+  const rows = await executeQuery(
+    `
+      SELECT id::text
+      FROM notes
+      WHERE public_note_id = $1 AND deleted = false
+      LIMIT 1
+    `,
+    [id]
+  );
+  return rows[0]?.id ? String(rows[0].id) : null;
+}
+
+/**
+ * Resolves mixed UUID / public_note_id identifiers to unique internal UUIDs.
+ *
+ * @param {unknown} identifiers
+ * @returns {Promise<string[]>}
+ */
+async function resolveNoteIdsToUuids(identifiers) {
+  if (!Array.isArray(identifiers) || identifiers.length === 0) {
+    return [];
+  }
+
+  const { uuidIds, publicIds } = splitNoteIdentifiers(
+    identifiers.map((v) => String(v).trim()).filter(Boolean)
+  );
+  const resolved = new Set(uuidIds);
+
+  if (publicIds.length > 0) {
+    const rows = await executeQuery(
+      `
+        SELECT id::text
+        FROM notes
+        WHERE public_note_id = ANY($1::varchar[])
+          AND deleted = false
+      `,
+      [publicIds]
+    );
+    for (const row of rows) {
+      if (row?.id) resolved.add(String(row.id));
+    }
+  }
+
+  return [...resolved];
+}
+
 module.exports = {
   buildNoteIdWhereClause,
   buildNotesBulkDeleteWhere,
   isPublicNoteId,
   isUuidNoteId,
+  resolveNoteIdToUuid,
+  resolveNoteIdsToUuids,
   splitNoteIdentifiers,
 };

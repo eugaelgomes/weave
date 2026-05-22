@@ -1,4 +1,5 @@
 const { rowCount } = require("@/database/connection");
+const { buildNoteIdWhereClause } = require("@/utils/note-id-lookup");
 
 class StorageAccessError extends Error {
   constructor(
@@ -114,15 +115,17 @@ const parseResourceDescriptor = (key) => {
 const hasNoteAccess = async (userId, noteId) => {
   if (!userId || !noteId) return false;
 
+  const noteIdWhere = buildNoteIdWhereClause("n", 1, String(noteId));
+
   const query = `
     SELECT 1
     FROM notes n
-    WHERE n.id = $1
+    WHERE ${noteIdWhere}
       AND (
-        n.user_id = $2 OR EXISTS (
+        n.user_id = $2::uuid OR EXISTS (
           SELECT 1 FROM ${NOTE_COLLAB_TABLE} nc
           WHERE nc.note_id = n.id
-            AND nc.user_id = $2
+            AND nc.user_id = $2::uuid
             AND (nc.removed IS NULL OR nc.removed = false)
         )
       )

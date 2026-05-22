@@ -6,6 +6,19 @@ const isValidUUID = (value) => {
   return !!value && UUID_REGEX.test(value);
 };
 
+/**
+ * UUID or 12-char public id (notes/projects).
+ *
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+const isValidPublicOrUuid = (value) => {
+  if (!value || typeof value !== "string") return false;
+  const trimmed = value.trim();
+  if (UUID_REGEX.test(trimmed)) return true;
+  return trimmed.length === 12 && !trimmed.includes("-");
+};
+
 const parseDate = (value) => {
   if (!value) {
     return null;
@@ -151,11 +164,11 @@ const validateCreatePayload = (payload) => {
     return "organization_id invalido";
   }
 
-  if (payload.noteId && !isValidUUID(payload.noteId)) {
+  if (payload.noteId && !isValidPublicOrUuid(payload.noteId)) {
     return "note_id invalido";
   }
 
-  if (payload.projectId && !isValidUUID(payload.projectId)) {
+  if (payload.projectId && !isValidPublicOrUuid(payload.projectId)) {
     return "project_id invalido";
   }
 
@@ -377,11 +390,11 @@ const validateUpdateFields = (fields) => {
     return "organization_id invalido";
   }
 
-  if (fields.note_id && !isValidUUID(fields.note_id)) {
+  if (fields.note_id && !isValidPublicOrUuid(fields.note_id)) {
     return "note_id invalido";
   }
 
-  if (fields.project_id && !isValidUUID(fields.project_id)) {
+  if (fields.project_id && !isValidPublicOrUuid(fields.project_id)) {
     return "project_id invalido";
   }
 

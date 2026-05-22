@@ -90,7 +90,7 @@ export const API_ENDPOINTS = {
   // Notes
   NOTES: "/notes",
   NOTES_STATS: "/notes/stats",
-  /** Accepts note public_id (12-char) or internal UUID. */
+  /** GET note: accepts public_id (12-char) or internal UUID. Mutations (PUT/blocks/etc.) should use internal UUID via getNoteApiId(). */
   NOTES_BY_ID: (id: string) => `/notes/${id}`,
   NOTES_COMMENTS: (noteId: string) => `/notes/${noteId}/comments`,
   NOTES_COMMENT_ATTACHMENTS: (noteId: string) => `/notes/${noteId}/comments/attachments`,

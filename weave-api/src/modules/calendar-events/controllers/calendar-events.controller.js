@@ -13,6 +13,8 @@ const {
   normalizeUpdateFields,
   validateUpdateFields,
 } = require("../normalizer");
+const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
+const { resolveProjectIdToUuid } = require("@/utils/project-id-lookup");
 
 class CalendarEventsController {
   constructor() {
@@ -88,6 +90,21 @@ class CalendarEventsController {
       const error = validateCreatePayload(payload);
       if (error) {
         return res.status(400).json({ error });
+      }
+
+      if (payload.noteId) {
+        const resolvedNoteId = await resolveNoteIdToUuid(payload.noteId);
+        if (!resolvedNoteId) {
+          return res.status(404).json({ error: "Nota não encontrada" });
+        }
+        payload.noteId = resolvedNoteId;
+      }
+      if (payload.projectId) {
+        const resolvedProjectId = await resolveProjectIdToUuid(payload.projectId);
+        if (!resolvedProjectId) {
+          return res.status(404).json({ error: "Projeto não encontrado" });
+        }
+        payload.projectId = resolvedProjectId;
       }
 
       if (payload.syncWithGoogle) {
@@ -201,6 +218,21 @@ class CalendarEventsController {
         return res.status(400).json({
           error: "Nenhum campo valido foi informado para atualizacao",
         });
+      }
+
+      if (fields.note_id) {
+        const resolvedNoteId = await resolveNoteIdToUuid(fields.note_id);
+        if (!resolvedNoteId) {
+          return res.status(404).json({ error: "Nota não encontrada" });
+        }
+        fields.note_id = resolvedNoteId;
+      }
+      if (fields.project_id) {
+        const resolvedProjectId = await resolveProjectIdToUuid(fields.project_id);
+        if (!resolvedProjectId) {
+          return res.status(404).json({ error: "Projeto não encontrado" });
+        }
+        fields.project_id = resolvedProjectId;
       }
 
       const current = await this.calendarEventsRepository.getEventById({

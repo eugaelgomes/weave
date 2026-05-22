@@ -45,6 +45,104 @@ function normalizeOptionalUuid(value) {
 }
 
 /**
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+function isPublicId12(value) {
+  return typeof value === "string" && value.length === 12 && !value.includes("-");
+}
+
+/**
+ * Resolves note identifiers (UUID or public_note_id) to internal UUIDs.
+ *
+ * @param {unknown} value
+ * @returns {Promise<string[]>}
+ */
+async function resolveNoteIdsFromPayload(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const uuidIds = [];
+  const publicIds = [];
+  const seen = new Set();
+
+  for (const item of value) {
+    if (typeof item !== "string") continue;
+    const normalized = item.trim();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    if (UUID_REGEX.test(normalized)) {
+      uuidIds.push(normalized);
+    } else if (isPublicId12(normalized)) {
+      publicIds.push(normalized);
+    }
+  }
+
+  if (publicIds.length > 0) {
+    const { rows } = await pool.query(
+      `
+        SELECT id::text
+        FROM notes
+        WHERE public_note_id = ANY($1::varchar[])
+          AND deleted = false
+      `,
+      [publicIds]
+    );
+    for (const row of rows) {
+      if (row?.id) uuidIds.push(String(row.id));
+    }
+  }
+
+  return [...new Set(uuidIds)];
+}
+
+/**
+ * Resolves project identifiers (UUID or public_project_id) to internal UUIDs.
+ *
+ * @param {unknown} value
+ * @returns {Promise<string[]>}
+ */
+async function resolveProjectIdsFromPayload(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const uuidIds = [];
+  const publicIds = [];
+  const seen = new Set();
+
+  for (const item of value) {
+    if (typeof item !== "string") continue;
+    const normalized = item.trim();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    if (UUID_REGEX.test(normalized)) {
+      uuidIds.push(normalized);
+    } else if (isPublicId12(normalized)) {
+      publicIds.push(normalized);
+    }
+  }
+
+  if (publicIds.length > 0) {
+    const { rows } = await pool.query(
+      `
+        SELECT id::text
+        FROM projects
+        WHERE public_project_id = ANY($1::varchar[])
+          AND deleted = false
+      `,
+      [publicIds]
+    );
+    for (const row of rows) {
+      if (row?.id) uuidIds.push(String(row.id));
+    }
+  }
+
+  return [...new Set(uuidIds)];
+}
+
+/**
  * Loads accessible notes for the given IDs.
  *
  * @param {string[]} noteIds
@@ -225,8 +323,8 @@ async function loadAccessibleProjects(
  */
 async function buildEntityContext(payload = {}) {
   const userId = typeof payload.userId === "string" ? payload.userId : "";
-  const noteIds = normalizeUuidList(payload.noteIds);
-  const projectIds = normalizeUuidList(payload.projectIds);
+  const noteIds = await resolveNoteIdsFromPayload(payload.noteIds);
+  const projectIds = await resolveProjectIdsFromPayload(payload.projectIds);
   const organizationId = normalizeOptionalUuid(payload.organizationId);
 
   const [indexedNotes, indexedProjects] = await Promise.all([
@@ -244,4 +342,6 @@ module.exports = {
   buildEntityContext,
   normalizeOptionalUuid,
   normalizeUuidList,
+  resolveNoteIdsFromPayload,
+  resolveProjectIdsFromPayload,
 };

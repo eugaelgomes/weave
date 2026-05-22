@@ -12,6 +12,7 @@ const { normalizeBlocksTree } = require("../block-normalizer");
 const { resolveNoteTitle, deriveTitleFromBlocks } = require("@/modules/notes/utils/derive-note-title");
 const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
 const { PLAN_PATHS } = require("@/services/plans/plan-paths");
+const { resolveProjectIdToUuid } = require("@/utils/project-id-lookup");
 
 /**
  * Criação, atualização e exclusão de notas.
@@ -468,10 +469,17 @@ class NotesWriteController extends NotesBaseController {
       if (status !== undefined) updateData.status = normalizeNoteStatus(status);
       if (deleted !== undefined) updateData.deleted = deleted;
       if (project_id !== undefined) {
-        const nextProjectId =
+        let nextProjectId =
           project_id === null || project_id === undefined || project_id === ""
             ? null
             : String(project_id);
+        if (nextProjectId) {
+          const resolvedProjectId = await resolveProjectIdToUuid(nextProjectId);
+          if (!resolvedProjectId) {
+            return res.status(404).json({ error: "Projeto não encontrado" });
+          }
+          nextProjectId = resolvedProjectId;
+        }
         updateData.project_id = nextProjectId;
         const prevProjectId = note.project_id ? String(note.project_id) : null;
         if (nextProjectId !== prevProjectId) {

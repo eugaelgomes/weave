@@ -1,27 +1,42 @@
 const BaseRepository = require("./base.repository");
+const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
 
 /**
  * Colaboradores em notas.
  */
 class NoteCollaboratorsRepository extends BaseRepository {
+  /**
+   * @param {string} noteId
+   * @returns {Promise<string|null>}
+   */
+  async _resolveInternalNoteId(noteId) {
+    return resolveNoteIdToUuid(noteId);
+  }
+
   async addCollaborator(noteId, userId) {
+    const internalNoteId = await this._resolveInternalNoteId(noteId);
+    if (!internalNoteId) return null;
+
     const checkQuery = `
       SELECT removed FROM note_collaborators
-      WHERE note_id = $1 AND user_id = $2
+      WHERE note_id = $1::uuid AND user_id = $2::uuid
       LIMIT 1;
     `;
-    const existing = await this.executeQuery(checkQuery, [noteId, userId]);
+    const existing = await this.executeQuery(checkQuery, [
+      internalNoteId,
+      userId,
+    ]);
 
     if (existing.length > 0) {
       if (existing[0].removed) {
         const reactivateQuery = `
           UPDATE note_collaborators
           SET removed = false, removed_at = NULL, removed_by = NULL, added_at = NOW()
-          WHERE note_id = $1 AND user_id = $2
+          WHERE note_id = $1::uuid AND user_id = $2::uuid
           RETURNING *;
         `;
         const results = await this.executeQuery(reactivateQuery, [
-          noteId,
+          internalNoteId,
           userId,
         ]);
         return results[0];
@@ -31,10 +46,13 @@ class NoteCollaboratorsRepository extends BaseRepository {
 
     const insertQuery = `
       INSERT INTO note_collaborators (note_id, user_id)
-      VALUES ($1, $2)
+      VALUES ($1::uuid, $2::uuid)
       RETURNING *;
     `;
-    const results = await this.executeQuery(insertQuery, [noteId, userId]);
+    const results = await this.executeQuery(insertQuery, [
+      internalNoteId,
+      userId,
+    ]);
     return results[0];
   }
 
@@ -45,12 +63,15 @@ class NoteCollaboratorsRepository extends BaseRepository {
    * @returns {Object} - Resultado da operação
    */
   async removeCollaborator(noteId, userId) {
+    const internalNoteId = await this._resolveInternalNoteId(noteId);
+    if (!internalNoteId) return { rowCount: 0 };
+
     const query = `
       UPDATE note_collaborators 
       SET removed_at = NOW(), removed = true, removed_by = 'owner'
-      WHERE note_id = $1 AND user_id = $2 AND removed = false;
+      WHERE note_id = $1::uuid AND user_id = $2::uuid AND removed = false;
     `;
-    const count = await this.rowCount(query, [noteId, userId]);
+    const count = await this.rowCount(query, [internalNoteId, userId]);
     return { rowCount: count };
   }
 
@@ -61,17 +82,20 @@ class NoteCollaboratorsRepository extends BaseRepository {
    * @returns {Object} - Objeto com rowCount para checar operação
    */
   async recuseCollaboration(noteId, userId) {
+    const internalNoteId = await this._resolveInternalNoteId(noteId);
+    if (!internalNoteId) return { rowCount: 0 };
+
     const query = `
     UPDATE note_collaborators
     SET removed_at = NOW(),
         removed = true,
         removed_by = 'itself'
-    WHERE note_id = $1
-      AND user_id = $2
+    WHERE note_id = $1::uuid
+      AND user_id = $2::uuid
       AND removed = false
-      AND user_id <> (SELECT user_id FROM notes WHERE id = $1);
+      AND user_id <> (SELECT user_id FROM notes WHERE id = $1::uuid);
   `;
-    const count = await this.rowCount(query, [noteId, userId]);
+    const count = await this.rowCount(query, [internalNoteId, userId]);
     return { rowCount: count };
   }
 
@@ -81,6 +105,9 @@ class NoteCollaboratorsRepository extends BaseRepository {
    * @returns {Array} - Lista de colaboradores
    */
   async getCollaboratorsByNoteId(noteId) {
+    const internalNoteId = await this._resolveInternalNoteId(noteId);
+    if (!internalNoteId) return [];
+
     const query = `
     SELECT 
       nc.user_id::text,
@@ -94,10 +121,10 @@ class NoteCollaboratorsRepository extends BaseRepository {
     FROM note_collaborators nc
     INNER JOIN notes n ON nc.note_id = n.id
     INNER JOIN users u ON nc.user_id = u.user_id
-    WHERE nc.note_id = $1
+    WHERE nc.note_id = $1::uuid
     ORDER BY nc.added_at ASC;
     `;
-    const results = await this.executeQuery(query, [noteId]);
+    const results = await this.executeQuery(query, [internalNoteId]);
     return results;
   }
 
@@ -108,12 +135,15 @@ class NoteCollaboratorsRepository extends BaseRepository {
    * @returns {boolean} - True se for colaborador
    */
   async isCollaborator(noteId, userId) {
+    const internalNoteId = await resolveNoteIdToUuid(noteId);
+    if (!internalNoteId) return false;
+
     const query = `
       SELECT 1 FROM note_collaborators
-      WHERE note_id = $1 AND user_id = $2 AND removed = false
+      WHERE note_id = $1::uuid AND user_id = $2::uuid AND removed = false
       LIMIT 1;
     `;
-    const results = await this.executeQuery(query, [noteId, userId]);
+    const results = await this.executeQuery(query, [internalNoteId, userId]);
     return results.length > 0;
   }
 
@@ -124,16 +154,19 @@ class NoteCollaboratorsRepository extends BaseRepository {
    * @returns {Promise<Array<{ email: string; name: string | null }>>}
    */
   async getActiveCollaboratorEmails(noteId) {
+    const internalNoteId = await this._resolveInternalNoteId(noteId);
+    if (!internalNoteId) return [];
+
     const query = `
       SELECT DISTINCT u.email, u.name
       FROM note_collaborators nc
       INNER JOIN users u ON nc.user_id = u.user_id
-      WHERE nc.note_id = $1
+      WHERE nc.note_id = $1::uuid
         AND nc.removed = false
         AND u.email IS NOT NULL
         AND btrim(u.email) <> '';
     `;
-    return await this.executeQuery(query, [noteId]);
+    return await this.executeQuery(query, [internalNoteId]);
   }
 }
 

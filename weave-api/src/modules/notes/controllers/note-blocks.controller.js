@@ -2,6 +2,11 @@ const NotesBaseController = require("./base.controller");
 const { normalizeBlocksTree, flattenBlocksForInsert } = require("../block-normalizer");
 const { getConnection } = require("@/database/connection");
 const spacesService = require("@/services/storage");
+const { enqueueNoteEmbeddingJob } = require("@/services/queue/queue-controller");
+const {
+  resolveNoteIdToUuid,
+  buildNoteIdWhereClause,
+} = require("@/utils/note-id-lookup");
 
 /**
  * CRUD e reordenação de blocos (`note_blocks`).
@@ -257,9 +262,12 @@ class NoteBlocksController extends NotesBaseController {
    */
   async putSync(req, res, next) {
     try {
-      const { noteId } = req.params;
+      const { noteId: noteIdParam } = req.params;
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
+
+      const noteId =
+        (await resolveNoteIdToUuid(noteIdParam)) || noteIdParam;
 
       await this._validateNoteAccess(noteId, userId);
       const baseRevision = this._parsePositiveInt(
@@ -282,11 +290,12 @@ class NoteBlocksController extends NotesBaseController {
       const client = await getConnection();
       try {
         await client.query("BEGIN");
+        const noteIdWhere = buildNoteIdWhereClause("notes", 1, noteId);
         const noteResult = await client.query(
           `
             UPDATE notes
             SET revision = revision + 1, updated_at = NOW()
-            WHERE id = $1::uuid AND revision = $2
+            WHERE ${noteIdWhere} AND revision = $2
             RETURNING revision
           `,
           [noteId, baseRevision]
@@ -357,6 +366,8 @@ class NoteBlocksController extends NotesBaseController {
       const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
         noteId
       );
+      await enqueueNoteEmbeddingJob(noteId).catch(() => {});
+
       return res.status(200).json({ blocks, revision: nextRevision });
     } catch (error) {
       this._handleError(error, res, next);

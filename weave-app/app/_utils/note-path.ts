@@ -1,4 +1,11 @@
 /**
+ * Internal UUID for API mutations (never use route public_id segment).
+ */
+export function getNoteApiId(note: { id: string }): string {
+  return note.id;
+}
+
+/**
  * Public note URL segment (12-char) or legacy UUID fallback.
  */
 export function getNotePath(note: { public_id?: string | null; id: string }): string {

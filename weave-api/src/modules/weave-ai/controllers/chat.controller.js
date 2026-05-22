@@ -28,6 +28,11 @@ const {
 const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
 const workspaceUserScopeRepository = require("@/modules/users/repositories/workspace-user-scope.repository");
 const { WORKSPACE_SHARE_DENIED } = require("@/utils/workspace-share-guard");
+const {
+  resolveNoteIdToUuid,
+  resolveNoteIdsToUuids,
+} = require("@/utils/note-id-lookup");
+const { resolveProjectIdsToUuids } = require("@/utils/project-id-lookup");
 const { fromUnknown } = require("@/errors");
 
 const ENGINE_CHAT_TIMEOUT_SECONDS = Number.parseInt(
@@ -296,9 +301,9 @@ class ChatController {
 
   /**
    * @param {string} userId
-   * @param {string} noteId
+   * @param {string} noteId - Internal UUID or public_note_id
    * @param {string|null} organizationId
-   * @returns {Promise<void>}
+   * @returns {Promise<string>} Internal note UUID
    */
   async _assertNoteMutationAccess(userId, noteId, organizationId = null) {
     if (!noteId) {
@@ -308,7 +313,15 @@ class ChatController {
       throw error;
     }
 
-    const summary = await notesRepository.getNoteAccessSummary(noteId);
+    const internalNoteId = await resolveNoteIdToUuid(noteId);
+    if (!internalNoteId) {
+      const error = new Error("Nota não encontrada");
+      error.code = "CHAT_NOTE_NOT_FOUND";
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const summary = await notesRepository.getNoteAccessSummary(internalNoteId);
     if (!summary) {
       const error = new Error("Nota não encontrada");
       error.code = "CHAT_NOTE_NOT_FOUND";
@@ -317,12 +330,15 @@ class ChatController {
     }
 
     if (String(summary.user_id) === String(userId)) {
-      return;
+      return internalNoteId;
     }
 
-    const isCollaborator = await notesRepository.isCollaborator(noteId, userId);
+    const isCollaborator = await notesRepository.isCollaborator(
+      internalNoteId,
+      userId
+    );
     if (isCollaborator) {
-      return;
+      return internalNoteId;
     }
 
     if (organizationId && summary.project_id) {
@@ -331,7 +347,7 @@ class ChatController {
         organizationId
       );
       if (Array.isArray(scopedProjectRows) && scopedProjectRows.length > 0) {
-        return;
+        return internalNoteId;
       }
     }
 
@@ -897,22 +913,26 @@ class ChatController {
         return { name, result: { noteId, created: true }, success: true };
       }
       case "update_note_title": {
-        await this._assertNoteMutationAccess(
+        const noteId = await this._assertNoteMutationAccess(
           userId,
           String(args.noteId || ""),
           organizationId
         );
-        const result = await notesRepository.updateNoteById(args.noteId, {
+        const result = await notesRepository.updateNoteById(noteId, {
           title: args.title,
         });
-        return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
+        return { name, result: { noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_content": {
-        const noteId = String(args.noteId || "");
-        if (!noteId) {
+        const rawNoteId = String(args.noteId || "");
+        if (!rawNoteId) {
           throw new Error("update_note_content requer noteId");
         }
-        await this._assertNoteMutationAccess(userId, noteId, organizationId);
+        const noteId = await this._assertNoteMutationAccess(
+          userId,
+          rawNoteId,
+          organizationId
+        );
 
         let tree;
         if (Array.isArray(args.blocks) && args.blocks.length > 0) {
@@ -954,8 +974,11 @@ class ChatController {
         };
       }
       case "update_note_stage": {
-        const noteId = String(args.noteId || "");
-        await this._assertNoteMutationAccess(userId, noteId, organizationId);
+        const noteId = await this._assertNoteMutationAccess(
+          userId,
+          String(args.noteId || ""),
+          organizationId
+        );
         const note = await notesRepository.getNoteById(noteId);
         if (!note?.project_id) {
           throw new Error(
@@ -982,42 +1005,42 @@ class ChatController {
         return { name, result: { noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_priority": {
-        await this._assertNoteMutationAccess(
+        const noteId = await this._assertNoteMutationAccess(
           userId,
           String(args.noteId || ""),
           organizationId
         );
-        const result = await notesRepository.updateNoteById(args.noteId, {
+        const result = await notesRepository.updateNoteById(noteId, {
           priority_id: args.priorityId || null,
         });
-        return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
+        return { name, result: { noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_due_date": {
-        await this._assertNoteMutationAccess(
+        const noteId = await this._assertNoteMutationAccess(
           userId,
           String(args.noteId || ""),
           organizationId
         );
         const normalizedDueDate = args.dueDate ? new Date(String(args.dueDate)).toISOString() : null;
-        const result = await notesRepository.updateNoteById(args.noteId, {
+        const result = await notesRepository.updateNoteById(noteId, {
           due_date: normalizedDueDate,
         });
-        return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
+        return { name, result: { noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_tags": {
-        await this._assertNoteMutationAccess(
+        const noteId = await this._assertNoteMutationAccess(
           userId,
           String(args.noteId || ""),
           organizationId
         );
         const tags = Array.isArray(args.tags) ? args.tags : [];
-        const result = await notesRepository.updateNoteById(args.noteId, {
+        const result = await notesRepository.updateNoteById(noteId, {
           tags,
         });
-        return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
+        return { name, result: { noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_collaborator_add": {
-        await this._assertNoteMutationAccess(
+        const noteId = await this._assertNoteMutationAccess(
           userId,
           String(args.noteId || ""),
           organizationId
@@ -1038,25 +1061,22 @@ class ChatController {
           err.code = "WORKSPACE_SHARE_DENIED";
           throw err;
         }
-        const result = await notesRepository.addCollaborator(
-          args.noteId,
-          collabUid
-        );
-        return { name, result: { noteId: args.noteId, updated: Boolean(result) }, success: true };
+        const result = await notesRepository.addCollaborator(noteId, collabUid);
+        return { name, result: { noteId, updated: Boolean(result) }, success: true };
       }
       case "update_note_collaborator_remove": {
-        await this._assertNoteMutationAccess(
+        const noteId = await this._assertNoteMutationAccess(
           userId,
           String(args.noteId || ""),
           organizationId
         );
         const result = await notesRepository.removeCollaborator(
-          args.noteId,
+          noteId,
           args.collaboratorUserId
         );
         return {
           name,
-          result: { noteId: args.noteId, rowCount: Number(result?.rowCount || 0) },
+          result: { noteId, rowCount: Number(result?.rowCount || 0) },
           success: true,
         };
       }
@@ -1248,17 +1268,21 @@ class ChatController {
         }
       }
 
+      const resolvedNoteIds = await resolveNoteIdsToUuids(
+        Array.isArray(payload.noteIds) ? payload.noteIds : []
+      );
+      const resolvedProjectIds = await resolveProjectIdsToUuids(
+        Array.isArray(payload.projectIds) ? payload.projectIds : []
+      );
+
       try {
         const authorization = await resolveAuthorizedFunctions({
           allowEdit: payload.allowEdit,
           context: {
             planUsageContext,
-            noteId: Array.isArray(payload.noteIds) && payload.noteIds.length > 0
-              ? payload.noteIds[0]
-              : null,
-            projectId: Array.isArray(payload.projectIds) && payload.projectIds.length > 0
-              ? payload.projectIds[0]
-              : null,
+            noteId: resolvedNoteIds.length > 0 ? resolvedNoteIds[0] : null,
+            projectId:
+              resolvedProjectIds.length > 0 ? resolvedProjectIds[0] : null,
           },
           userId,
         });
@@ -1289,9 +1313,9 @@ class ChatController {
         functions: authorizedFunctions,
         message: payload.message,
         model: this._resolveModelForEngine(payload.model),
-        noteIds: Array.isArray(payload.noteIds) ? payload.noteIds : [],
+        noteIds: resolvedNoteIds,
         organizationId,
-        projectIds: Array.isArray(payload.projectIds) ? payload.projectIds : [],
+        projectIds: resolvedProjectIds,
         conversationHistory,
         sessionId,
         user_id: userId,
