@@ -72,8 +72,8 @@ const jsonLd = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
   title: {
-    default: siteTitle,
-    template: "%s | Weave - Plataforma Proativa de Projetos",
+    default: "Weave - Proative Projects Plataform",
+    template: "Weave - %s",
   },
   description: siteDescription,
   keywords: [
