@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/app/(protected)/organization/general/_components/form-primitives";
 
 const domainInputFocus =
-  "outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:focus:border-yellow-500/50";
+  "outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500";
 
 export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
   const { t } = useLanguage();
@@ -101,10 +101,10 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
   };
 
   return (
-    <section className="dark:border-surface-dark-border dark:shadow-surface-dark-sm rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:bg-[#1d1d1b]">
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
-          <Globe className="h-5 w-5 text-neutral-500" />
+    <section className="dark:border-surface-dark-border rounded-md border border-neutral-100 bg-neutral-50/30 p-5 dark:bg-[#1d1d1b]/20">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-[10px] font-bold tracking-wider text-neutral-900 uppercase dark:text-neutral-100">
+          <Globe className="h-4 w-4 text-amber-500" />
           {t.organizationIntegrations.domainsTitle}
         </h2>
         {userIsOwner ? (
@@ -127,13 +127,13 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
               value={newDomain}
               onChange={(e) => setNewDomain(e.target.value)}
               placeholder={t.organizationIntegrations.domainPlaceholder}
-              className={`dark:border-surface-dark-border flex-1 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 dark:bg-[#1d1d1b] dark:text-neutral-100 ${domainInputFocus}`}
+              className={`dark:border-surface-dark-border flex-1 rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-[12px] font-medium h-8 transition-all text-neutral-900 dark:bg-[#1d1d1b] dark:text-neutral-200 ${domainInputFocus}`}
               disabled={isAdding}
             />
             <button
               type="submit"
               disabled={isAdding || !newDomain}
-              className="bg-brand-primary-500 flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white hover:bg-yellow-600 disabled:opacity-50 dark:hover:bg-yellow-600"
+              className="bg-brand-primary-500 flex items-center gap-2 rounded-md px-4 h-8 text-[11px] font-bold text-white hover:bg-amber-600 disabled:opacity-50 dark:hover:bg-amber-600"
             >
               {isAdding ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -154,7 +154,7 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
             domains.map((domain) => (
               <div
                 key={domain.id}
-                className="dark:border-surface-dark-border-strong rounded-md border border-neutral-100 bg-neutral-50/50 p-4 dark:bg-[#1d1d1b]/30"
+                className="dark:border-surface-dark-border-strong rounded-md border border-neutral-200 bg-white p-4 dark:bg-[#1d1d1b]"
               >
                 <div className="flex items-start justify-between">
                   <div>

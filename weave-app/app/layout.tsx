@@ -20,8 +20,8 @@ const fredoka = Fredoka({
 
 const siteOrigin = getSiteOrigin();
 
-const siteTitle = "Weave - Intelligent Workspace";
-const siteDescription = "Intelligent workspace for intelligent teams.";
+const siteTitle = "Weave";
+const siteDescription = "Weave é uma plataforma proativa de gestão de projetos que usa inteligência artificial para ajudar equipes a organizar, acompanhar e entregar projetos de forma mais inteligente e eficiente.";
 
 const ogImages: Array<{ url: string; width: number; height: number; alt: string; type: string }> = [
   {
@@ -73,7 +73,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
   title: {
     default: siteTitle,
-    template: "%s | Weave - Intelligent Workspace",
+    template: "%s | Weave - Plataforma Proativa de Projetos",
   },
   description: siteDescription,
   keywords: [
@@ -96,7 +96,7 @@ export const metadata: Metadata = {
   ],
   creator: "Gael Renê Gomes",
   publisher: "Gael Renê Gomes",
-  applicationName: "Weave - Intelligent Workspace",
+  applicationName: "Weave - Plataforma Proativa de Projetos",
   alternates: {
     canonical: "/",
     languages: {

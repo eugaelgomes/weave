@@ -23,7 +23,7 @@ const PagesFooter = () => {
           rel="noopener noreferrer"
           className="text-brand-yellow hover:text-brand-orange dark:text-brand-yellow dark:hover:text-brand-orange font-bold drop-shadow-[0_0.5px_0_rgba(8,61,119,0.35)] transition-colors dark:drop-shadow-none"
         >
-          Weave Notes
+          Weave
         </a>
       </div>
 

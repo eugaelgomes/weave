@@ -18,9 +18,9 @@ export function IntegrationsSection({ organization }: IntegrationsSectionProps) 
   const integrationEntries = Object.entries(integrations);
 
   return (
-    <section className="dark:border-surface-dark-border dark:shadow-surface-dark-sm rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:bg-[#1d1d1b]">
-      <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
-        <Puzzle className="h-5 w-5 text-neutral-500" />
+    <section className="dark:border-surface-dark-border rounded-md border border-neutral-100 bg-neutral-50/30 p-5 dark:bg-[#1d1d1b]/20">
+      <h2 className="mb-4 flex items-center gap-2 text-[10px] font-bold tracking-wider text-neutral-900 uppercase dark:text-neutral-100">
+        <Puzzle className="h-4 w-4 text-amber-500" />
         {t.organizationIntegrations.sectionTitle}
       </h2>
 
@@ -29,7 +29,7 @@ export function IntegrationsSection({ organization }: IntegrationsSectionProps) 
           {integrationEntries.map(([key]) => (
             <div
               key={key}
-              className="dark:border-surface-dark-border flex items-center justify-between rounded-md border border-neutral-100 p-3"
+              className="dark:border-surface-dark-border flex items-center justify-between rounded-md border border-neutral-200 bg-white p-3 dark:bg-[#1d1d1b]"
             >
               <div className="font-medium capitalize">{key}</div>
               <div className="flex items-center gap-2">

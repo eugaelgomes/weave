@@ -108,8 +108,8 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
   };
 
   return (
-    <div className="flex w-full flex-col px-6 py-4 sm:px-8">
-      <div className="mt-2 space-y-4">
+    <div className="flex w-full flex-col px-6 py-2 sm:px-8">
+      <div className="mt-1.5 space-y-2.5">
         <div className="text-center">
           <h2 className="text-brand-secondary-900 text-xl font-bold tracking-tight">
             {profileT.title}
@@ -117,8 +117,8 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
           <p className="text-brand-secondary-500 mt-1 text-sm">{profileT.subtitle}</p>
         </div>
 
-        <div className="border-brand-secondary-200 space-y-4 rounded-xl border bg-white p-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="border-brand-secondary-200/60 space-y-3 rounded-xl border bg-white p-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div>
               <label
                 htmlFor="theme-mode"
@@ -130,7 +130,7 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
                 id="theme-mode"
                 value={themeMode}
                 onChange={(e) => setThemeMode(e.target.value as "LIGHT" | "DARK")}
-                className="border-brand-secondary-200 text-brand-secondary-900 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white px-3 py-2 text-sm transition-colors focus:ring-2 focus:outline-none"
+                className="border-brand-secondary-200 text-brand-secondary-900 focus:ring-brand-primary-700 w-full rounded-md border bg-white px-3 py-1.5 text-sm transition-colors focus:ring-2 focus:outline-none"
               >
                 <option value="LIGHT">{profileT.themeOptions.light}</option>
                 <option value="DARK">{profileT.themeOptions.dark}</option>
@@ -148,7 +148,7 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
                 id="interface-language"
                 value={interfaceLanguage}
                 onChange={(e) => setInterfaceLanguage(e.target.value)}
-                className="border-brand-secondary-200 text-brand-secondary-900 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white px-3 py-2 text-sm transition-colors focus:ring-2 focus:outline-none"
+                className="border-brand-secondary-200 text-brand-secondary-900 focus:ring-brand-primary-700 w-full rounded-md border bg-white px-3 py-1.5 text-sm transition-colors focus:ring-2 focus:outline-none"
               >
                 <option value="pt-BR">{profileT.interfaceLanguageOptions["pt-BR"]}</option>
                 <option value="en-US">{profileT.interfaceLanguageOptions["en-US"]}</option>
@@ -169,7 +169,7 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
                 onChange={(e) =>
                   setDensity(e.target.value as "compact" | "comfortable" | "spacious")
                 }
-                className="border-brand-secondary-200 text-brand-secondary-900 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white px-3 py-2 text-sm transition-colors focus:ring-2 focus:outline-none"
+                className="border-brand-secondary-200 text-brand-secondary-900 focus:ring-brand-primary-700 w-full rounded-md border bg-white px-3 py-1.5 text-sm transition-colors focus:ring-2 focus:outline-none"
               >
                 <option value="compact">{profileT.densityOptions.compact}</option>
                 <option value="comfortable">{profileT.densityOptions.comfortable}</option>
@@ -190,7 +190,7 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
             </div>
           </div>
 
-          <div className="border-brand-secondary-100 mt-1 border-t pt-4">
+          <div className="border-brand-secondary-100 mt-0.5 border-t pt-2.5">
             <p className="text-brand-secondary-700 mb-2 text-xs font-semibold">
               {profileT.aiSection}
             </p>
@@ -216,7 +216,7 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
             </div>
           </div>
 
-          <div className="border-brand-secondary-100 mt-1 border-t pt-4">
+          <div className="border-brand-secondary-100 mt-0.5 border-t pt-2.5">
             <p className="text-brand-secondary-700 mb-2 text-xs font-semibold">
               {profileT.notificationsSection}
             </p>
@@ -267,13 +267,20 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
           </div>
         </div>
 
-        {error && <p className="text-center text-sm text-red-600">{error}</p>}
+        {error && (
+          <div className="animate-in fade-in slide-in-from-top-4 fixed top-4 right-4 z-[999] flex max-w-sm items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <p>{error}</p>
+          </div>
+        )}
 
-        <div className="mt-1 flex flex-col justify-between gap-2 sm:flex-row">
+        <div className="mt-1 flex flex-col justify-between gap-1.5 sm:flex-row">
           <button
             type="button"
             onClick={onSkip}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:bg-brand-secondary-100 w-full rounded-md border-2 bg-white px-4 py-2 text-sm font-medium transition-colors sm:w-auto"
+            className="border-brand-secondary-200 text-brand-secondary-700 hover:bg-brand-secondary-100 w-full rounded-md border bg-white px-4 py-1.5 text-sm font-medium transition-colors sm:w-auto"
           >
             {profileT.skip}
           </button>
@@ -281,7 +288,7 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
             type="button"
             onClick={handleSave}
             disabled={isLoading}
-            className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 w-full rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
+            className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 w-full rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
           >
             {isLoading ? profileT.saving : profileT.save}
           </button>
@@ -304,7 +311,7 @@ function ToggleButton({ label, checked, onChange, disabled = false }: ToggleButt
       type="button"
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className="border-brand-secondary-200 text-brand-secondary-700 hover:bg-brand-secondary-100 flex w-full items-center justify-between rounded-md border bg-white px-3 py-2 text-xs leading-tight transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+      className="border-brand-secondary-200 text-brand-secondary-700 hover:bg-brand-secondary-100 flex w-full items-center justify-between rounded-md border bg-white px-3 py-1.5 text-xs leading-tight transition-colors disabled:cursor-not-allowed disabled:opacity-60"
     >
       <span className="truncate pr-1 text-left">{label}</span>
       <span

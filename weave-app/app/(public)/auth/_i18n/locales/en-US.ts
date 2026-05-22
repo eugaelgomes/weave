@@ -1,7 +1,7 @@
 export const enUS = {
   signIn: {
-    title: "Welcome Back!",
-    subtitle: "Workspace intelligent for those who think big!",
+    title: "We are about to enter Weave",
+    subtitle: "Proactive Projects Platform",
     usernamePlaceholder: "Username or Email",
     passwordPlaceholder: "Password",
     forgotPassword: "Forgot Password?",
@@ -17,7 +17,7 @@ export const enUS = {
   },
   signUp: {
     title: "Create Account",
-    subtitle: "Join Weave Notes and start organizing your thoughts today!",
+    subtitle: "Join Weave and start managing your projects proactively today!",
     namePlaceholder: "Name",
     usernamePlaceholder: "Username",
     passwordPlaceholder: "Password",
@@ -168,5 +168,17 @@ export const enUS = {
     successMessage:
       "Your password has been successfully reset. You can now log in with your new password.",
     loginNow: "Go to login",
+  },
+  authHeader: {
+    preTitle: {
+      signin: "Welcome back to",
+      signup: "You will evolve with",
+      forgot: "Recover your access to",
+      confirm: "We are almost there in",
+      "reset-password": "Reset the password for",
+      "profile-settings": "Prepare your",
+      "accept-invite": "You have been invited to",
+      default: "We are about to enter",
+    },
   },
 };

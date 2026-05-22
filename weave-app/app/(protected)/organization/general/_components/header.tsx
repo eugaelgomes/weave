@@ -5,7 +5,7 @@ import { Input } from "./form-primitives";
 import type { WorkspaceOverviewProps } from "./settings-types";
 
 const textareaFocus =
-  "w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-100 dark:focus:border-yellow-500/50";
+  "w-full rounded-md text-[12px] font-medium transition-all outline-none py-1.5 border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200";
 
 const OrganizationHeroCard = ({
   workspace,
@@ -20,7 +20,7 @@ const OrganizationHeroCard = ({
   onEditBanner: () => void;
   onOpenEditModal: () => void;
 }) => (
-  <div className="group dark:border-surface-dark-border dark:shadow-surface-dark-sm relative overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:bg-[#1d1d1b]">
+  <div className="group relative overflow-hidden rounded-md border border-neutral-100 bg-white dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]">
     <div className="relative h-48 w-full bg-neutral-100 dark:bg-[#1d1d1b]">
       {workspace?.banner_url ? (
         <img
@@ -46,7 +46,7 @@ const OrganizationHeroCard = ({
     <div className="px-6 pb-6">
       <div className="relative -mt-12 mb-4 flex items-end justify-between">
         <div className="relative">
-          <div className="dark:border-surface-dark-border-strong dark:shadow-surface-dark-md h-24 w-24 overflow-hidden rounded-md border-4 border-white bg-neutral-50 shadow-md dark:bg-[#1d1d1b]">
+          <div className="dark:border-surface-dark-border-strong h-24 w-24 overflow-hidden rounded-md border-4 border-white bg-neutral-50 shadow-sm dark:bg-[#1d1d1b]">
             {workspace?.logo_url ? (
               <img
                 src={getStorageUrl(workspace.logo_url)}
@@ -86,17 +86,17 @@ const OrganizationHeroCard = ({
 
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="flex items-center gap-2 text-xl font-bold text-neutral-900 dark:text-white">
+          <h1 className="flex items-center gap-2 text-lg font-bold text-neutral-900 dark:text-white">
             {workspace?.org_name}
             {workspace?.unique_name && (
-              <span className="text-sm font-normal text-neutral-400">@{workspace.unique_name}</span>
+              <span className="text-xs font-medium text-neutral-400">@{workspace.unique_name}</span>
             )}
           </h1>
-          <p className="mt-1 max-w-2xl text-xs text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1 max-w-2xl text-[11px] text-neutral-500 dark:text-neutral-400">
             {workspace?.description || "Sem slogan definido."}
           </p>
 
-          <div className="mt-4 flex flex-wrap gap-4 text-xs text-neutral-500 dark:text-neutral-500">
+          <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-bold text-neutral-400 dark:text-neutral-500">
             <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
               Criado em{" "}
@@ -163,10 +163,10 @@ const EditOrganizationInfoModal = ({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
-        className="dark:border-surface-dark-border dark:shadow-surface-dark-xl w-full max-w-md rounded-md border border-neutral-200 bg-white p-6 shadow-2xl dark:bg-[#1d1d1b]"
+        className="dark:border-surface-dark-border-strong w-full max-w-md rounded-md border border-neutral-200 bg-white p-5 shadow-xl dark:bg-[#1d1d1b]"
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 id={titleId} className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+          <h2 id={titleId} className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
             Editar Informações
           </h2>
           <button
@@ -196,10 +196,10 @@ const EditOrganizationInfoModal = ({
             onChange={(value) => setFormData((current) => ({ ...current, unique_name: value }))}
             placeholder="Ex: acme-corp"
           />
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label
               htmlFor={sloganId}
-              className="text-xs font-medium text-neutral-500 dark:text-neutral-400"
+              className="text-[10px] font-bold tracking-[0.12em] text-neutral-400 dark:text-neutral-500 mb-1 block uppercase"
             >
               Slogan
             </label>
@@ -219,13 +219,13 @@ const EditOrganizationInfoModal = ({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md px-4 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
+              className="rounded-md px-4 py-1.5 text-[11px] font-bold text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="bg-brand-primary-500 rounded-md px-4 py-2 text-sm font-medium text-white hover:bg-yellow-600 dark:hover:bg-yellow-600"
+              className="bg-brand-primary-500 rounded-md px-4 py-1.5 text-[11px] font-bold text-white hover:bg-amber-600 dark:hover:bg-amber-600"
             >
               Salvar
             </button>

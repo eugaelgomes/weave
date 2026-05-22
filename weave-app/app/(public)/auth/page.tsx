@@ -7,11 +7,13 @@ import { SignIn } from "@/app/(public)/auth/_components/SignIn";
 import { SignUp } from "@/app/(public)/auth/_components/SignUp";
 import { ForgotPassword } from "@/app/(public)/auth/_components/ForgotPassword";
 import { ResetPassword } from "@/app/(public)/auth/_components/ResetPassword";
-import { AuthMarketing } from "@/app/(public)/auth/_components/AuthMarketing";
 import { ConfirmCreateAccount } from "@/app/(public)/auth/_components/ConfirmCreateAccount";
 import { AcceptOrganizationInviteModal } from "@/app/(public)/auth/_components/AcceptOrganizationInviteModal";
+import { WeaveEngineIcon } from "@/app/(protected)/_components/layout/icons/weave-engine-icon";
 import { Fredoka } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/app/_contexts/language-context";
+import { getTranslations } from "@/app/(public)/auth/_i18n";
 
 const fredoka = Fredoka({
   subsets: ["latin"],
@@ -34,6 +36,8 @@ export interface PendingAuthData {
 }
 
 export default function AuthPage() {
+  const { locale } = useLanguage();
+  const authT = getTranslations(locale.toLowerCase() as any);
   const router = useRouter();
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get("invite_token");
@@ -105,58 +109,52 @@ export default function AuthPage() {
   }, [searchParams]);
 
   return (
-    <div className="relative flex h-[100dvh] w-full flex-col text-slate-950 lg:flex-row">
-      <div className="border-brand-secondary-300/10 relative z-10 hidden overflow-hidden rounded-r-md border-r shadow-xl lg:flex lg:w-[45%] xl:w-1/2">
-        <AuthMarketing />
+    <div className="relative flex min-h-[100dvh] w-full items-center justify-center bg-white p-4 text-slate-950 sm:p-8 overflow-hidden">
+      {/* Background Art com o Engine */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none flex items-center justify-center">
+        {/* Composição minimalista: do meio para o canto superior direito */}
+        <WeaveEngineIcon className="absolute -right-50 -top-20 h-[900px] w-[900px] opacity-15 rotate-12" />
       </div>
 
-      <div className="flex w-full flex-1 items-center justify-center bg-white p-4 sm:p-8 lg:w-1/2">
-        <div className="relative z-10 w-full max-w-[440px] overflow-hidden">
-          <div className="mt-4 flex h-6 items-center justify-center gap-2 text-xl font-bold sm:text-xl">
-            <div className="relative h-12 w-12 shrink-0">
-              <Image
-                src="/weave-notes-nobg.png"
-                alt="Logo Weave Notes"
-                fill
-                className="object-contain"
-                priority
-              />
-            </div>
-            <span
-              className={cn(
-                "text-2xl font-semibold tracking-tight text-neutral-800",
-                fredoka.className
-              )}
-            >
-              Weave Notes
-            </span>
-          </div>
+      <div className="relative z-10 w-full max-w-[440px] overflow-hidden">
+        <div className="mb-2 flex flex-col items-center justify-center text-center">
+          <span className="text-xs font-bold tracking-wide text-neutral-500">
+            {(authT.authHeader.preTitle as any)[currentView] || (authT.authHeader.preTitle as any).default}
+          </span>
+          <span
+            className={cn(
+              "text-brand-yellow mt-0.5 text-4xl font-extrabold tracking-tight",
+              fredoka.className
+            )}
+          >
+            Weave
+          </span>
+        </div>
 
-          <div className="w-full">
-            {currentView === "signin" && <SignIn onNavigate={handleNavigate} />}
-            {currentView === "signup" && <SignUp onNavigate={handleNavigate} />}
-            {currentView === "forgot" && <ForgotPassword onNavigate={handleNavigate} />}
-            {currentView === "reset-password" && (
-              <ResetPassword
-                onNavigate={handleNavigate}
-                token={searchParams.get("token") || searchParams.get("reset_token") || ""}
-              />
-            )}
-            {currentView === "accept-invite" && (
-              <AcceptOrganizationInviteModal
-                isOpen={!!inviteToken}
-                token={inviteToken ?? ""}
-                onClose={() => router.replace("/auth/")}
-              />
-            )}
-            {currentView === "confirm" && (
-              <ConfirmCreateAccount
-                onNavigate={handleNavigate}
-                email={pendingLogin ?? undefined}
-                pendingAuth={pendingAuth}
-              />
-            )}
-          </div>
+        <div className="w-full">
+          {currentView === "signin" && <SignIn onNavigate={handleNavigate} />}
+          {currentView === "signup" && <SignUp onNavigate={handleNavigate} />}
+          {currentView === "forgot" && <ForgotPassword onNavigate={handleNavigate} />}
+          {currentView === "reset-password" && (
+            <ResetPassword
+              onNavigate={handleNavigate}
+              token={searchParams.get("token") || searchParams.get("reset_token") || ""}
+            />
+          )}
+          {currentView === "accept-invite" && (
+            <AcceptOrganizationInviteModal
+              isOpen={!!inviteToken}
+              token={inviteToken ?? ""}
+              onClose={() => router.replace("/auth/")}
+            />
+          )}
+          {currentView === "confirm" && (
+            <ConfirmCreateAccount
+              onNavigate={handleNavigate}
+              email={pendingLogin ?? undefined}
+              pendingAuth={pendingAuth}
+            />
+          )}
         </div>
       </div>
     </div>

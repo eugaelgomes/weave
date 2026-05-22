@@ -1,7 +1,7 @@
 import React from "react";
 
 const inputFocusClasses =
-  "focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:focus:border-yellow-500/50";
+  "focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none dark:focus:border-amber-500/50";
 
 export const Badge = ({
   children,
@@ -42,37 +42,29 @@ export const Toggle = ({
   description?: string;
   disabled?: boolean;
 }) => (
-  <div className="flex items-center justify-between py-3">
+  <label className={`flex cursor-pointer items-center justify-between gap-3 rounded-md py-2 transition-all ${disabled ? "cursor-not-allowed opacity-50" : "group"}`}>
     <div className="flex flex-col">
-      <span
-        className={`text-sm font-medium ${disabled ? "text-neutral-400" : "text-neutral-900 dark:text-neutral-100"}`}
-      >
+      <span className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
         {label}
       </span>
       {description && (
-        <span className="text-xs text-neutral-500 dark:text-neutral-400">{description}</span>
+        <span className="text-[10px] text-neutral-500 dark:text-neutral-500 mt-0.5">
+          {description}
+        </span>
       )}
     </div>
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => !disabled && onChange(!checked)}
-      disabled={disabled}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2 focus-visible:outline-none dark:focus-visible:ring-offset-neutral-950 ${
-        checked
-          ? "bg-brand-primary-500 dark:bg-brand-primary-500"
-          : "bg-neutral-200 dark:bg-neutral-700"
-      } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
-    >
-      <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-          checked ? "translate-x-6" : "translate-x-1"
-        }`}
+    <div className="relative flex items-center shrink-0">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => !disabled && onChange(e.target.checked)}
+        className="peer sr-only"
+        disabled={disabled}
       />
-    </button>
-  </div>
+      <div className="h-4 w-7 rounded-full bg-neutral-300 transition-colors peer-checked:bg-amber-500 dark:bg-neutral-700"></div>
+      <div className="absolute top-0.5 left-0.5 h-3 w-3 transform rounded-full bg-white transition-transform peer-checked:translate-x-3"></div>
+    </div>
+  </label>
 );
 
 export const Select = ({
@@ -90,10 +82,10 @@ export const Select = ({
 }) => {
   const selectId = React.useId();
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       <label
         htmlFor={selectId}
-        className="text-xs font-medium text-neutral-500 dark:text-neutral-400"
+        className="text-[10px] font-bold tracking-[0.12em] text-neutral-400 dark:text-neutral-500 mb-1 block uppercase"
       >
         {label}
       </label>
@@ -103,7 +95,7 @@ export const Select = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
-          className={`dark:border-surface-dark-border w-full appearance-none rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 disabled:opacity-50 dark:bg-[#1d1d1b] dark:text-neutral-100 ${inputFocusClasses}`}
+          className={`w-full rounded-md text-[12px] font-medium transition-all outline-none py-1.5 h-8 border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200 disabled:opacity-50 appearance-none`}
         >
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -138,10 +130,10 @@ export const Input = ({
 }) => {
   const inputId = React.useId();
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       <label
         htmlFor={inputId}
-        className="text-xs font-medium text-neutral-500 dark:text-neutral-400"
+        className="text-[10px] font-bold tracking-[0.12em] text-neutral-400 dark:text-neutral-500 mb-1 block uppercase"
       >
         {label}
       </label>
@@ -152,7 +144,7 @@ export const Input = ({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         placeholder={placeholder}
-        className={`dark:border-surface-dark-border w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 disabled:opacity-50 dark:bg-[#1d1d1b] dark:text-neutral-100 ${inputFocusClasses}`}
+        className={`w-full rounded-md text-[12px] font-medium transition-all outline-none py-1.5 h-8 border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200 disabled:opacity-50`}
       />
     </div>
   );

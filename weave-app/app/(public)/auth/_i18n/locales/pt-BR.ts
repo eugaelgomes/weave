@@ -1,7 +1,7 @@
 export const ptBR = {
   signIn: {
-    title: "Bem-vindo de volta!",
-    subtitle: "Workspace inteligente para equipes inteligentes!",
+    title: "Estamos prestes a entrar no Weave",
+    subtitle: "Plataforma Proativa de Projetos",
     usernamePlaceholder: "Usuário ou E-mail",
     passwordPlaceholder: "Senha",
     forgotPassword: "Esqueceu a senha?",
@@ -18,7 +18,7 @@ export const ptBR = {
   signUp: {
     title: "Criar Conta",
     subtitle:
-      "Crie sua conta no Weave Notes e comece a organizar suas ideias de forma inteligente!",
+      "Crie sua conta no Weave e comece a gerenciar seus projetos de forma proativa!",
     namePlaceholder: "Nome",
     usernamePlaceholder: "Usuário",
     passwordPlaceholder: "Senha",
@@ -168,5 +168,17 @@ export const ptBR = {
     successTitle: "Senha alterada!",
     successMessage: "Sua senha foi redefinida com sucesso. Você já pode entrar com a nova senha.",
     loginNow: "Ir para o login",
+  },
+  authHeader: {
+    preTitle: {
+      signin: "Bem-vindo de volta ao",
+      signup: "Você irá evoluir com o",
+      forgot: "Recupere o acesso ao seu",
+      confirm: "Estamos quase lá no",
+      "reset-password": "Redefina a senha do",
+      "profile-settings": "Prepare seu",
+      "accept-invite": "Você foi convidado para o",
+      default: "Estamos prestes a entrar no",
+    },
   },
 };

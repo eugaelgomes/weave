@@ -1,7 +1,7 @@
 export const esES = {
   signIn: {
-    title: "¡Bienvenido de nuevo!",
-    subtitle: "¡Workspace inteligente para quienes piensan en grande!",
+    title: "Estamos a punto de entrar en Weave",
+    subtitle: "Plataforma Proactiva de Proyectos",
     usernamePlaceholder: "Usuario o Correo",
     passwordPlaceholder: "Contraseña",
     forgotPassword: "¿Olvidaste tu contraseña?",
@@ -17,7 +17,7 @@ export const esES = {
   },
   signUp: {
     title: "Crear Cuenta",
-    subtitle: "¡Únete a Weave Notes y comienza a organizar tus pensamientos hoy!",
+    subtitle: "¡Únete a Weave y comienza a gestionar tus proyectos proactivamente hoy!",
     namePlaceholder: "Nombre",
     usernamePlaceholder: "Usuario",
     passwordPlaceholder: "Contraseña",
@@ -170,5 +170,17 @@ export const esES = {
     successMessage:
       "Tu contraseña ha sido restablecida con éxito. Ya puedes iniciar sesión con tu nueva contraseña.",
     loginNow: "Ir al inicio de sesión",
+  },
+  authHeader: {
+    preTitle: {
+      signin: "Bienvenido de nuevo a",
+      signup: "Evolucionarás con",
+      forgot: "Recupera tu acceso a",
+      confirm: "Casi estamos listos en",
+      "reset-password": "Restablece la contraseña de",
+      "profile-settings": "Prepara tu",
+      "accept-invite": "Has sido invitado a",
+      default: "Estamos a punto de entrar en",
+    },
   },
 };

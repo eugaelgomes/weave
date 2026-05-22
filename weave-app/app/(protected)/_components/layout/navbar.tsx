@@ -289,7 +289,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 </span>
                 {/* <Image
                   src="/weave-notes-nobg.png"
-                  alt="Weave Notes"
+                  alt="Weave"
                   width={24}
                   height={24}
                   className="object-contain"

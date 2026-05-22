@@ -97,7 +97,7 @@ const FilterSelect = ({
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
         className={cn(
-          "dark:border-surface-dark-border-strong w-full min-w-0 cursor-pointer appearance-none rounded-md border border-neutral-200 bg-white py-1.5 pr-8 text-xs font-medium text-neutral-700 transition-all outline-none hover:bg-neutral-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-800/50",
+          "dark:border-surface-dark-border-strong w-full min-w-0 cursor-pointer appearance-none rounded-md border border-neutral-200 bg-white py-1.5 pr-8 text-[12px] font-medium text-neutral-700 transition-all outline-none hover:bg-neutral-50 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:bg-[#1d1d1b] dark:text-neutral-200 dark:hover:bg-neutral-800/50 h-8",
           Icon ? "pl-8" : "pl-3"
         )}
       >
@@ -167,21 +167,21 @@ const ModalBase = ({ isOpen, onClose, title, children, footer }: ModalBaseProps)
   return (
     <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/40 p-4 backdrop-blur-sm duration-300">
       <div className="absolute inset-0" onClick={onClose} />
-      <div className="dark:border-surface-dark-border dark:shadow-surface-dark-xl relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-md border border-t-4 border-neutral-200 border-t-yellow-500 bg-white shadow-2xl dark:bg-[#1d1d1b]">
+      <div className="dark:border-surface-dark-border-strong relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-md border border-t-4 border-neutral-200 border-t-amber-500 bg-white shadow-xl dark:bg-[#1d1d1b]">
         <button
           onClick={onClose}
           title="Fechar modal"
           aria-label="Fechar modal"
-          className="dark:hover:text-brand-primary-500 absolute top-4 right-4 z-10 rounded-md p-1.5 text-neutral-500 hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-900/20"
+          className="dark:hover:text-amber-500 absolute top-4 right-4 z-10 rounded-md p-1.5 text-neutral-500 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20"
         >
           <X className="h-4 w-4" />
         </button>
-        <div className="p-5 pb-2">
-          <h2 className="text-base leading-tight font-bold text-neutral-900 dark:text-white">
+        <div className="p-4 pb-2">
+          <h2 className="text-xs leading-tight font-bold text-neutral-900 dark:text-white">
             {title}
           </h2>
         </div>
-        <div className="flex-1 overflow-y-auto p-5 pt-2 text-xs">{children}</div>
+        <div className="flex-1 overflow-y-auto p-4 pt-2 text-xs">{children}</div>
         {footer ? (
           <div className="dark:border-surface-dark-border flex justify-end gap-2 border-t border-neutral-100 bg-neutral-50/50 p-3 dark:bg-[#1d1d1b]/50">
             {footer}
@@ -226,7 +226,7 @@ const RoleManageModal = ({
   }, [currentMember, roleOptions]);
 
   const inputClass =
-    "w-full appearance-none rounded-md border border-neutral-200 px-3 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-white";
+    "w-full appearance-none rounded-md border border-neutral-200 px-3 py-1.5 text-[12px] font-medium h-8 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200";
 
   const workspaceRoleLabel = (r: OrgWorkspaceRole): string => {
     const o = t.organizationMembers;
@@ -266,7 +266,7 @@ const RoleManageModal = ({
             type="button"
             onClick={() => onUpdate(currentMember.id, role)}
             disabled={loading || role === currentMember.membership.role}
-            className="bg-brand-primary-500 rounded-md px-3 py-1.5 text-xs font-semibold text-black hover:bg-yellow-600 disabled:opacity-50"
+            className="bg-brand-primary-500 rounded-md px-3 py-1.5 text-[11px] font-bold text-black hover:bg-amber-600 disabled:opacity-50"
           >
             {loading ? t.organizationMembers.saving : t.organizationMembers.saveChanges}
           </button>
@@ -503,7 +503,7 @@ export default function MembersPage() {
   };
 
   const searchInputClass =
-    "w-full rounded-md border border-neutral-200 bg-transparent py-1.5 pr-3 pl-8 text-xs transition-all outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:text-white";
+    "w-full rounded-md border border-neutral-200 bg-transparent py-1.5 pr-3 pl-8 text-[12px] font-medium h-8 transition-all outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-surface-dark-border-strong dark:text-neutral-200";
 
   return (
     <WorkspacePageShell description={t.organizationMembers.description}>
@@ -521,7 +521,7 @@ export default function MembersPage() {
           </div>
         ) : null}
 
-        <div className="dark:border-surface-dark-border dark:shadow-surface-dark-sm flex flex-col gap-3 rounded-md border border-neutral-200 bg-white px-3 py-2.5 shadow-sm sm:px-4 dark:bg-[#1d1d1b]">
+        <div className="dark:border-surface-dark-border flex flex-col gap-3 rounded-md border border-neutral-100 bg-white px-3 py-2.5 dark:bg-[#1d1d1b]">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
             <div className="min-w-[200px] flex-1">
               <label className="mb-1.5 block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
@@ -607,7 +607,7 @@ export default function MembersPage() {
           ) : null}
         </div>
 
-        <div className="dark:border-surface-dark-border dark:shadow-surface-dark-sm flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:bg-[#1d1d1b]">
+        <div className="dark:border-surface-dark-border-muted flex flex-col overflow-hidden rounded-md border border-neutral-100 bg-white shadow-sm dark:bg-[#1d1d1b]">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-neutral-50/50 dark:bg-[#1d1d1b]/50">

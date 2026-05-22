@@ -445,7 +445,7 @@ export default function AreasPage() {
         )}
 
         {areasLoading ? (
-          <div className="dark:shadow-surface-dark-sm dark:border-surface-dark-border flex flex-1 items-center justify-center rounded-md border border-neutral-200 bg-white shadow-sm dark:bg-[#1d1d1b]">
+          <div className="dark:border-surface-dark-border flex flex-1 items-center justify-center rounded-md border border-neutral-100 bg-white shadow-sm dark:bg-[#1d1d1b]">
             <div className="flex flex-col items-center gap-2 text-neutral-500 dark:text-neutral-400">
               <Loader2 className="h-5 w-5 animate-spin" />
               <p className="text-xs font-medium">{t.organizationAreas.loadingMap}</p>
@@ -462,7 +462,7 @@ export default function AreasPage() {
           <section className="grid min-h-0 flex-1 items-stretch gap-2 px-1 sm:px-0 lg:grid-cols-[minmax(0,1fr)_280px]">
             {/* MAPA TOPOLÓGICO COM DRAG AND DROP */}
             <div
-              className="dark:border-surface-dark-border dark:shadow-surface-dark-sm flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:bg-[#1d1d1b]"
+              className="dark:border-surface-dark-border-muted flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-neutral-100 bg-white shadow-sm dark:bg-[#1d1d1b]"
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 // Permite arrastar para o fundo da lista para transformar numa área "raiz"
@@ -794,7 +794,7 @@ const DetailPanel = ({
 }: DetailPanelProps) => {
   if (!area) {
     return (
-      <aside className="dark:shadow-surface-dark-sm dark:border-surface-dark-border h-full rounded-md border border-neutral-200 bg-white p-2 shadow-sm dark:bg-[#1d1d1b]">
+      <aside className="dark:border-surface-dark-border-muted h-full rounded-md border border-neutral-100 bg-white p-2 shadow-sm dark:bg-[#1d1d1b]">
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
           Selecione uma área no mapa para detalhes.
         </p>

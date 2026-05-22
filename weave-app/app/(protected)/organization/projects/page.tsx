@@ -84,14 +84,14 @@ const ProjectsManagementPage = () => {
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            className="dark:border-surface-dark-border-strong flex h-7 items-center justify-center gap-1.5 rounded border border-neutral-300 bg-white px-2.5 text-[11px] font-medium text-neutral-700 transition-colors hover:bg-neutral-50 dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-800"
+            className="dark:border-surface-dark-border-strong flex h-7 items-center justify-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-[11px] font-medium text-neutral-700 transition-colors hover:bg-neutral-50 dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-800"
           >
             <Download className="h-3 w-3" />
             <span>Exportar</span>
           </button>
           <button
             type="button"
-            className="bg-brand-primary-500 flex h-7 items-center justify-center gap-1.5 rounded px-2.5 text-[11px] font-medium text-white transition-colors hover:bg-yellow-600"
+            className="bg-brand-primary-500 flex h-7 items-center justify-center gap-1.5 rounded-md px-2.5 text-[11px] font-bold text-white transition-colors hover:bg-amber-600"
           >
             <Plus className="h-3 w-3" />
             <span>Novo Projeto</span>
@@ -101,21 +101,21 @@ const ProjectsManagementPage = () => {
     >
       {!isLoading ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <div className="dark:border-surface-dark-border flex items-center justify-between rounded border border-neutral-200 p-2">
+          <div className="dark:border-surface-dark-border flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50/30 p-3 dark:bg-[#1d1d1b]/20">
             <div>
-              <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+              <p className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                 Total
               </p>
               <p className="text-lg leading-none font-bold text-neutral-900 dark:text-neutral-100">
                 {metrics.total}
               </p>
             </div>
-            <Layers className="h-4 w-4 text-neutral-300 dark:text-neutral-600" />
+            <Layers className="h-4 w-4 text-amber-500" />
           </div>
 
-          <div className="dark:border-surface-dark-border flex items-center justify-between rounded border border-neutral-200 p-2">
+          <div className="dark:border-surface-dark-border flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50/30 p-3 dark:bg-[#1d1d1b]/20">
             <div>
-              <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+              <p className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                 Ativos
               </p>
               <p className="text-lg leading-none font-bold text-neutral-900 dark:text-neutral-100">
@@ -125,22 +125,22 @@ const ProjectsManagementPage = () => {
             <TrendingUp className="h-4 w-4 text-blue-500/70" />
           </div>
 
-          <div className="dark:border-surface-dark-border flex items-center justify-between rounded border border-neutral-200 p-2">
+          <div className="dark:border-surface-dark-border flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50/30 p-3 dark:bg-[#1d1d1b]/20">
             <div>
-              <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+              <p className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                 Risco
               </p>
               <p className="text-lg leading-none font-bold text-neutral-900 dark:text-neutral-100">
                 {metrics.pausedOrBlocked}
               </p>
             </div>
-            <AlertCircle className="text-brand-primary-500/70 h-4 w-4" />
+            <AlertCircle className="text-red-500/70 h-4 w-4" />
           </div>
 
-          <div className="dark:border-surface-dark-border flex items-center justify-between rounded border border-neutral-200 p-2">
+          <div className="dark:border-surface-dark-border flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50/30 p-3 dark:bg-[#1d1d1b]/20">
             <div className="w-full">
               <div className="mb-1 flex items-center justify-between">
-                <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                <p className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                   Progresso
                 </p>
                 <p className="text-[10px] font-bold text-neutral-900 dark:text-neutral-100">
@@ -170,7 +170,7 @@ const ProjectsManagementPage = () => {
                 placeholder="Buscar (ex: nome, metodologia)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="dark:border-surface-dark-border-strong h-8 w-full rounded border border-neutral-300 bg-white pr-3 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-100"
+                className="dark:border-surface-dark-border-strong h-8 w-full rounded-md border border-neutral-200 bg-white pr-3 pl-8 text-[12px] font-medium focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-200 transition-all"
               />
             </div>
 
@@ -179,7 +179,7 @@ const ProjectsManagementPage = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="dark:border-surface-dark-border-strong h-8 appearance-none rounded border border-neutral-300 bg-white pr-8 pl-2.5 text-xs text-neutral-700 focus:border-yellow-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-300"
+                className="dark:border-surface-dark-border-strong h-8 appearance-none rounded-md border border-neutral-200 bg-white pr-8 pl-2.5 text-[12px] font-medium text-neutral-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-200 transition-all"
               >
                 <option value="all">Todos os Status</option>
                 <option value={PROJECT_STATUS.OPEN}>Abertos</option>
@@ -196,7 +196,7 @@ const ProjectsManagementPage = () => {
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="dark:border-surface-dark-border-strong h-8 appearance-none rounded border border-neutral-300 bg-white pr-8 pl-2.5 text-xs text-neutral-700 focus:border-yellow-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-300"
+                className="dark:border-surface-dark-border-strong h-8 appearance-none rounded-md border border-neutral-200 bg-white pr-8 pl-2.5 text-[12px] font-medium text-neutral-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-200 transition-all"
               >
                 <option value="all">Qualquer Prioridade</option>
                 <option value="alta">Alta</option>
@@ -208,10 +208,10 @@ const ProjectsManagementPage = () => {
           </div>
 
           {/* Tabela */}
-          <div className="dark:border-surface-dark-border flex-1 overflow-auto rounded border border-neutral-200 bg-white dark:bg-[#1d1d1b]">
+          <div className="dark:border-surface-dark-border-muted flex-1 overflow-auto rounded-md border border-neutral-100 bg-white shadow-sm dark:bg-[#1d1d1b]">
             {isLoading ? (
               <div className="flex h-full items-center justify-center">
-                <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-yellow-500" />
+                <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-amber-500" />
               </div>
             ) : (
               <table className="min-w-full text-left text-xs whitespace-nowrap">

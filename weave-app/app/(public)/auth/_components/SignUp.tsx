@@ -198,7 +198,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
   const shouldShowError = (fieldName: string) => showFieldErrors || touchedFields[fieldName];
 
   const getInputClassName = (hasError: boolean, withRightPadding = false) =>
-    `text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 ${withRightPadding ? "pr-10" : "pr-4"} pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
+    `text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1.5 ${withRightPadding ? "pr-10" : "pr-4"} pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
       hasError ? "border-red-400 focus:ring-red-500" : "border-brand-secondary-200"
     }`;
 
@@ -254,22 +254,22 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
   };
 
   return (
-    <div className="flex w-full flex-col px-6 py-4 sm:px-8">
+    <div className="flex w-full flex-col px-6 py-2 sm:px-8">
       <TermsModal
         isOpen={showTermsModal}
         onClose={() => setShowTermsModal(false)}
         onAccept={() => setAcceptTerms(true)}
         locale={locale}
       />
-      <div className="mt-2">
-        <div className="mb-6 flex flex-col gap-1.5 text-center">
+      <div className="mt-1">
+        <div className="mb-4 flex flex-col gap-1.5 text-center">
           {/*<h1 className="text-xl font-bold tracking-tight text-neutral-800 sm:text-2xl">
             {t.signIn.title}
           </h1>*/}
           <p className="text-brand-secondary-500 text-sm font-medium">{t.signUp.subtitle}</p>
         </div>
 
-        <form className="space-y-2" onSubmit={handleSubmit} autoComplete="off">
+        <form className="space-y-1.5" onSubmit={handleSubmit} autoComplete="off">
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
               <User className="text-brand-secondary-400 h-4 w-4" />
@@ -404,7 +404,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <p className="px-1 text-xs text-red-600">{confirmPasswordError}</p>
           )}
 
-          <div className="mt-2 flex flex-col justify-between gap-4 sm:mt-4 sm:flex-row sm:items-center">
+          <div className="mt-1.5 flex flex-col justify-between gap-3 sm:mt-2.5 sm:flex-row sm:items-center">
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -435,22 +435,25 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <button
               type="submit"
               disabled={isLoading || hasFieldErrors}
-              className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-[150px]"
+              className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-[150px]"
             >
               {isLoading ? "Criando..." : t.signUp.submitButton}
             </button>
           </div>
 
           {error && (
-            <p className="animate-in fade-in slide-in-from-top-1 mt-4 text-center text-xs font-semibold text-red-500">
-              {error}
-            </p>
+            <div className="animate-in fade-in slide-in-from-top-4 fixed top-4 right-4 z-[999] flex max-w-sm items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <p>{error}</p>
+            </div>
           )}
         </form>
       </div>
 
-      <div className="mt-8 flex flex-col items-center">
-        <div className="relative mb-6 w-full">
+      <div className="mt-5 flex flex-col items-center">
+        <div className="relative mb-3.5 w-full">
           <div className="absolute inset-0 flex items-center">
             <div className="border-brand-secondary-200 w-full border-t"></div>
           </div>
@@ -461,11 +464,11 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
           </div>
         </div>
 
-        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3">
           <button
             type="button"
             onClick={loginWithGoogle}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
           >
             <GoogleIcon className="h-4 w-4" />
             Google
@@ -474,7 +477,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
           <button
             type="button"
             onClick={loginWithGithub}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
           >
             <GitHubIcon className="h-4 w-4" />
             GitHub
@@ -483,7 +486,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
           <button
             type="button"
             onClick={loginWithMicrosoft}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border-2 bg-white py-2 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
           >
             <MicrosoftIcon className="h-4 w-4" />
             Microsoft
@@ -492,7 +495,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
 
         <button
           onClick={() => onNavigate("signin")}
-          className="text-brand-secondary-500 hover:text-brand-secondary-700 mt-8 text-xs font-medium transition-colors duration-200"
+          className="text-brand-secondary-500 hover:text-brand-secondary-700 mt-5 text-xs font-medium transition-colors duration-200"
         >
           {t.signUp.alreadyHaveAccount}{" "}
           <span className="text-brand-primary-500 hover:text-brand-primary-500 font-semibold transition-colors">

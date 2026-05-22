@@ -39,9 +39,9 @@ export function SettingsForm({
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
-        <section className="dark:border-surface-dark-border dark:shadow-surface-dark-sm h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:bg-[#1d1d1b]">
-          <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
-            <Settings className="h-5 w-5 text-neutral-500" />
+        <section className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/20">
+          <h2 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2">
+            <Settings size={12} className="text-amber-500" />
             {t.organizationGeneral.settingsSectionTitle}
           </h2>
 
@@ -80,12 +80,12 @@ export function SettingsForm({
           </div>
         </section>
 
-        <section className="dark:border-surface-dark-border dark:shadow-surface-dark-sm h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:bg-[#1d1d1b]">
-          <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
-            <MapPin className="h-5 w-5 text-neutral-500" />
+        <section className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/20">
+          <h2 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2">
+            <MapPin size={12} className="text-amber-500" />
             {t.organizationGeneral.locationSectionTitle}
           </h2>
-          <div className="space-y-4 text-xs text-neutral-500">
+          <div className="space-y-3 text-[11px] text-neutral-500">
             {address ? (
               <>
                 <div className="dark:border-surface-dark-border-strong flex justify-between border-b border-neutral-100 py-2">
@@ -110,7 +110,7 @@ export function SettingsForm({
             ) : (
               <p className="italic">{t.organizationGeneral.noAddress}</p>
             )}
-            <div className="mt-4 rounded-md bg-neutral-50 p-3 text-xs dark:bg-[#1d1d1b]">
+            <div className="mt-3 rounded-md bg-neutral-100/50 p-2.5 text-[10px] dark:bg-[#1d1d1b]/50">
               {t.organizationGeneral.addressBillingHint}
             </div>
           </div>
@@ -118,12 +118,12 @@ export function SettingsForm({
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <section className="dark:border-surface-dark-border dark:shadow-surface-dark-sm h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:bg-[#1d1d1b]">
-          <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
-            <Layers className="h-5 w-5 text-neutral-500" />
+        <section className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/20">
+          <h2 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2">
+            <Layers size={12} className="text-amber-500" />
             {t.organizationGeneral.featuresSectionTitle}
           </h2>
-          <div className="space-y-2 divide-y divide-neutral-100 dark:divide-neutral-800">
+          <div className="space-y-1 divide-y divide-neutral-100/50 dark:divide-neutral-800/50">
             <Toggle
               label={t.organizationGeneral.featureAiAgent}
               description={t.organizationGeneral.featureAiAgentHint}
@@ -150,13 +150,13 @@ export function SettingsForm({
           </div>
         </section>
 
-        <section className="dark:border-surface-dark-border dark:shadow-surface-dark-sm h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:bg-[#1d1d1b]">
-          <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
-            <Bell className="h-5 w-5 text-neutral-500" />
+        <section className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/20">
+          <h2 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2">
+            <Bell size={12} className="text-amber-500" />
             {t.organizationGeneral.notificationsSectionTitle}
           </h2>
-          <div className="space-y-4">
-            <div className="space-y-2 divide-y divide-neutral-100 dark:divide-neutral-800">
+          <div className="space-y-3">
+            <div className="space-y-1 divide-y divide-neutral-100/50 dark:divide-neutral-800/50">
               <Toggle
                 label={t.organizationGeneral.notificationEmail}
                 checked={localProps?.notifications?.email || false}
@@ -190,27 +190,29 @@ export function SettingsForm({
       </div>
 
       {userIsOwner ? (
-        <section className="rounded-md border border-red-200 bg-red-50 p-6 dark:border-red-900/30 dark:bg-red-950/10">
-          <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-red-900 dark:text-red-100">
-            <ShieldAlert className="h-5 w-5" />
-            {t.organizationGeneral.dangerZoneTitle}
-          </h2>
-          <p className="mb-6 text-xs text-red-700 dark:text-red-300">
-            {t.organizationGeneral.dangerZoneHint}
-          </p>
+        <section className="space-y-3 rounded-md border border-red-100 bg-red-50/20 p-4 dark:border-red-900/20 dark:bg-red-950/10">
+          <div className="mb-2">
+            <h2 className="text-[10px] font-bold tracking-wider text-red-600 dark:text-red-400 flex items-center gap-1.5 mb-1">
+              <ShieldAlert size={12} />
+              {t.organizationGeneral.dangerZoneTitle}
+            </h2>
+            <p className="text-[11px] text-red-500/80 dark:text-red-400/80">
+              {t.organizationGeneral.dangerZoneHint}
+            </p>
+          </div>
 
-          <div className="flex items-center justify-between rounded-md border border-red-200 bg-white p-4 dark:border-red-900/30 dark:bg-[#1d1d1b]">
+          <div className="flex items-center justify-between rounded-md border border-red-200/50 bg-white/50 p-3 dark:border-red-900/30 dark:bg-[#1d1d1b]/50">
             <div>
-              <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              <h4 className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200">
                 {t.organizationGeneral.deleteOrgTitle}
               </h4>
-              <p className="text-[11px] text-neutral-500">{t.organizationGeneral.deleteOrgHint}</p>
+              <p className="text-[10px] text-neutral-500">{t.organizationGeneral.deleteOrgHint}</p>
             </div>
             <button
               type="button"
               onClick={handleDeleteOrganization}
               disabled={isDeleting}
-              className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+              className="rounded-md bg-red-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-red-700 disabled:opacity-50"
             >
               {isDeleting ? t.organizationGeneral.deleting : t.organizationGeneral.deleteOrgButton}
             </button>

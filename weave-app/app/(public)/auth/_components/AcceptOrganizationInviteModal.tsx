@@ -211,7 +211,12 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
               )}
 
               {formError && (
-                <p className="mb-2 text-center text-sm leading-snug text-red-600">{formError}</p>
+                <div className="animate-in fade-in slide-in-from-top-4 fixed top-4 right-4 z-[999] flex max-w-sm items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <p>{formError}</p>
+                </div>
               )}
 
               {preview.has_account ? (
@@ -255,7 +260,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
                       placeholder={t.acceptOrganizationInvite.fullNamePlaceholder}
                       autoComplete="name"
                       disabled={submitting}
-                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60"
+                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1.5 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60"
                     />
                   </div>
                   <div className="relative">
@@ -269,7 +274,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
                       placeholder={t.acceptOrganizationInvite.usernamePlaceholder}
                       autoComplete="username"
                       disabled={submitting}
-                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60"
+                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1.5 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60"
                     />
                   </div>
                   <div className="relative">
@@ -283,7 +288,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
                       placeholder={t.acceptOrganizationInvite.passwordPlaceholder}
                       autoComplete="new-password"
                       disabled={submitting}
-                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60"
+                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1.5 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60"
                     />
                     <button
                       type="button"
@@ -302,7 +307,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-60"
+                    className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center gap-2 rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-60"
                   >
                     {submitting ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

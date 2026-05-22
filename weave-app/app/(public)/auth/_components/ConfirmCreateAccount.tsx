@@ -155,26 +155,26 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
   const isCodeComplete = codeArray.join("").length === 6;
 
   return (
-    <div className="flex w-full flex-col items-center justify-center px-6 py-4 sm:px-8">
+    <div className="flex w-full flex-col items-center justify-center px-6 py-2 sm:px-8">
       <div className="flex w-full max-w-sm flex-col items-center text-center">
-        <div className="bg-brand-secondary-100 text-brand-primary-500 mb-6 flex h-12 w-12 items-center justify-center rounded-xl">
+        <div className="bg-brand-secondary-100 text-brand-primary-500 mb-4 flex h-12 w-12 items-center justify-center rounded-xl">
           <MailCheck className="h-7 w-7" />
         </div>
 
-        <h1 className="text-brand-secondary-900 mb-2 text-xl font-bold tracking-tight sm:text-2xl">
+        <h1 className="text-brand-secondary-900 mb-1.5 text-xl font-bold tracking-tight sm:text-2xl">
           {confirmT.title}
         </h1>
 
-        <p className="text-brand-secondary-500 mb-6 text-sm leading-relaxed">{confirmT.subtitle}</p>
+        <p className="text-brand-secondary-500 mb-4 text-sm leading-relaxed">{confirmT.subtitle}</p>
 
         {!successMessage ? (
-          <div className="border-brand-secondary-200 w-full rounded-xl border bg-white p-5 shadow-sm sm:p-6">
-            <div className="text-brand-secondary-800 mb-5 flex items-center gap-2 text-sm font-semibold">
+          <div className="border-brand-secondary-200/60 w-full rounded-xl border bg-white p-4 shadow-sm sm:p-4">
+            <div className="text-brand-secondary-800 mb-3 flex items-center gap-2 text-sm font-semibold">
               <KeyRound className="text-brand-secondary-500 h-4 w-4" />
               <span>{confirmT.sectionTitle}</span>
             </div>
 
-            <div className="flex flex-col gap-5 text-left">
+            <div className="flex flex-col gap-3.5 text-left">
               {!initialEmail && (
                 <div className="space-y-1.5">
                   <label className="text-brand-secondary-600 text-xs font-medium">E-mail</label>
@@ -183,7 +183,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
                     onChange={(e) => setVerificationEmail(e.target.value)}
                     placeholder={confirmT.emailPlaceholder}
                     type="email"
-                    className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white px-3 py-2 text-sm transition-colors focus:ring-2 focus:outline-none"
+                    className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white px-3 py-1.5 text-sm transition-colors focus:ring-2 focus:outline-none"
                     disabled={isLoading}
                   />
                 </div>
@@ -207,19 +207,26 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
                       onChange={(e) => handleCodeChange(index, e.target.value)}
                       onKeyDown={(e) => handleCodeKeyDown(index, e)}
                       disabled={isLoading}
-                      className="border-brand-secondary-200 text-brand-secondary-900 focus:ring-brand-primary-700 h-10 w-10 rounded-md border-2 bg-white text-center text-base font-bold transition-all focus:ring-2 focus:outline-none disabled:opacity-50 sm:h-11 sm:w-11 sm:text-lg"
+                      className="border-brand-secondary-200 text-brand-secondary-900 focus:ring-brand-primary-700 h-9 w-9 rounded-md border bg-white text-center text-base font-bold transition-all focus:ring-2 focus:outline-none disabled:opacity-50 sm:h-10 sm:w-10 sm:text-lg"
                     />
                   ))}
                 </div>
               </div>
 
-              {error && <p className="mt-1 text-sm font-medium text-red-600">{error}</p>}
+              {error && (
+                <div className="animate-in fade-in slide-in-from-top-4 fixed top-4 right-4 z-[999] flex max-w-sm items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <p>{error}</p>
+                </div>
+              )}
 
               <button
                 type="button"
                 onClick={() => void handleActivation()}
                 disabled={isLoading || !isCodeComplete}
-                className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 mt-2 w-full rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 mt-2 w-full rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
               >
                 {isLoading ? confirmT.validating : confirmT.confirmButton}
               </button>
@@ -227,23 +234,23 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
           </div>
         ) : (
           <div className="w-full">
-            <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm font-medium text-emerald-800 shadow-sm">
+            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800 shadow-sm">
               {successMessage}
             </div>
 
             {canSetupProfile && (
-              <div className="flex w-full flex-col gap-3">
+              <div className="flex w-full flex-col gap-2">
                 <button
                   type="button"
                   onClick={() => setShowProfileSetup(true)}
-                  className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 w-full rounded-md px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95"
+                  className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 w-full rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95"
                 >
                   {confirmT.setupProfile}
                 </button>
                 <button
                   type="button"
                   onClick={() => router.push("/home")}
-                  className="border-brand-secondary-200 text-brand-secondary-700 hover:bg-brand-secondary-100 w-full rounded-md border-2 bg-white px-4 py-2 text-sm font-medium transition-colors"
+                  className="border-brand-secondary-200 text-brand-secondary-700 hover:bg-brand-secondary-100 w-full rounded-md border bg-white px-4 py-1.5 text-sm font-medium transition-colors"
                 >
                   {confirmT.skipAndEnter}
                 </button>
@@ -256,7 +263,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
           type="button"
           onClick={() => onNavigate("signin")}
           disabled={isLoading}
-          className="text-brand-secondary-500 hover:text-brand-secondary-700 group mt-8 flex items-center gap-2 text-xs font-medium transition-colors"
+          className="text-brand-secondary-500 hover:text-brand-secondary-700 group mt-5 flex items-center gap-2 text-xs font-medium transition-colors"
         >
           {t.signUp.loginNowCta}
           <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
