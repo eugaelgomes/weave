@@ -110,12 +110,12 @@ class UserDataController extends BaseController {
    * @param {import('express').Response} res
    * @returns {Promise<void>}
    */
-  async getProfileImage(req, res) {
+  async getProfileImage(req, res, next) {
     try {
       // Usa userId do usuário logado
       const userId = req.user.userId;
 
-      this._validateAuthentication(req, res);
+      this._validateAuthentication(req, res, next);
 
       const user = await UserDataRepository.getProfileImage(userId);
 
@@ -127,7 +127,7 @@ class UserDataController extends BaseController {
       return res.redirect(user.avatar_url);
     } catch (error) {
       console.error("Error retrieving profile image:", error);
-      this._handleError(error, res);
+      this._handleError(error, res, next);
     }
   }
 
@@ -138,11 +138,11 @@ class UserDataController extends BaseController {
    * @param {import('express').Response} res
    * @returns {Promise<void>}
    */
-  async getProfileImageInfo(req, res) {
+  async getProfileImageInfo(req, res, next) {
     try {
       const userId = req.user.userId;
 
-      this._validateAuthentication(req, res);
+      this._validateAuthentication(req, res, next);
 
       const user = await UserDataRepository.getProfileImage(userId);
 
@@ -164,7 +164,7 @@ class UserDataController extends BaseController {
       });
     } catch (error) {
       console.error("Error retrieving profile image info:", error);
-      this._handleError(error, res);
+      this._handleError(error, res, next);
     }
   }
 
@@ -175,9 +175,9 @@ class UserDataController extends BaseController {
    * @param {import('express').Response} res
    * @returns {Promise<void>}
    */
-  async getProfile(req, res) {
+  async getProfile(req, res, next) {
     try {
-      this._validateAuthentication(req, res);
+      this._validateAuthentication(req, res, next);
 
       const user = await this.signinRepository.findUserByUsername(
         req.user.username
@@ -245,7 +245,7 @@ class UserDataController extends BaseController {
       });
     } catch (error) {
       console.error("Erro ao buscar perfil:", error);
-      this._handleError(error, res);
+      this._handleError(error, res, next);
     }
   }
 
@@ -256,7 +256,7 @@ class UserDataController extends BaseController {
    * @param {import('express').Response} res
    * @returns {Promise<void>}
    */
-  async checkAvailability(req, res) {
+  async checkAvailability(req, res, next) {
     try {
       this._validateAuthentication(req);
 
@@ -274,7 +274,7 @@ class UserDataController extends BaseController {
       });
     } catch (error) {
       console.error("Error checking user unique availability:", error);
-      this._handleError(error, res);
+      this._handleError(error, res, next);
     }
   }
 
@@ -285,7 +285,7 @@ class UserDataController extends BaseController {
    * @param {import('express').Response} res
    * @returns {Promise<void>}
    */
-  async updateProfile(req, res) {
+  async updateProfile(req, res, next) {
     const {
       name,
       username,
@@ -566,7 +566,7 @@ class UserDataController extends BaseController {
         }
       );
 
-      this._handleError(error, res);
+      this._handleError(error, res, next);
     }
   }
 }

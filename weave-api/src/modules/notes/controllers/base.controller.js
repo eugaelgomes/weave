@@ -5,6 +5,7 @@ const {
   orgRoleHasPermission,
   ORG_PERMISSIONS,
 } = require("@/modules/organizations/organization-role-policy");
+const { AppError, fromUnknown, ERROR_CODES } = require("@/errors");
 /**
  * Base dos controllers de notas: autenticação, acesso e formatação.
  */
@@ -17,7 +18,7 @@ class NotesBaseController {
     const userId = req.user?.userId;
 
     if (!userId) {
-      res.status(401).json({ error: "Usuário não autenticado" });
+      res.status(401).json({ error: "Authentication required" });
       return null;
     }
 
@@ -70,13 +71,13 @@ class NotesBaseController {
    */
   async _validateNoteAccess(noteId, userId) {
     if (!noteId) {
-      throw new Error("ID da nota é obrigatório");
+      throw AppError.badRequest("Note ID is required");
     }
 
     const note = await this.notesRepository.getNoteById(noteId);
 
     if (!note) {
-      throw new Error("Nota não encontrada");
+      throw AppError.notFound("Note not found", ERROR_CODES.NOTE_NOT_FOUND);
     }
 
     const isOwner = note.user_id === userId;
@@ -108,7 +109,7 @@ class NotesBaseController {
       };
     }
 
-    throw new Error("Acesso negado");
+    throw AppError.forbidden("Access denied");
   }
 
   /**
@@ -120,12 +121,12 @@ class NotesBaseController {
    */
   async _validateNoteAccessLightweight(noteId, userId) {
     if (!noteId) {
-      throw new Error("ID da nota é obrigatório");
+      throw AppError.badRequest("Note ID is required");
     }
 
     const note = await this.notesRepository.getNoteAccessSummary(noteId);
     if (!note) {
-      throw new Error("Nota não encontrada");
+      throw AppError.notFound("Note not found", ERROR_CODES.NOTE_NOT_FOUND);
     }
 
     const isOwner = note.user_id === userId;
@@ -158,7 +159,7 @@ class NotesBaseController {
       };
     }
 
-    throw new Error("Acesso negado");
+    throw AppError.forbidden("Access denied");
   }
 
   /**
@@ -170,13 +171,13 @@ class NotesBaseController {
    */
   async _validateNoteOwnership(noteId, userId) {
     if (!noteId) {
-      throw new Error("ID da nota é obrigatório");
+      throw AppError.badRequest("Note ID is required");
     }
 
     const note = await this.notesRepository.getNoteById(noteId);
 
     if (!note) {
-      throw new Error("Nota não encontrada");
+      throw AppError.notFound("Note not found", ERROR_CODES.NOTE_NOT_FOUND);
     }
 
     if (note.user_id === userId) {
@@ -191,7 +192,7 @@ class NotesBaseController {
       return note;
     }
 
-    throw new Error("Acesso negado");
+    throw AppError.forbidden("Access denied");
   }
 
   /**
@@ -245,29 +246,7 @@ class NotesBaseController {
    * @param {Function} next
    */
   _handleError(error, res, next) {
-    const errorMessage = error.message;
-
-    if (errorMessage.includes("obrigatório")) {
-      return res.status(400).json({ error: errorMessage });
-    }
-
-    if (
-      errorMessage.includes("inválido") ||
-      errorMessage.includes("Nenhum campo") ||
-      errorMessage.includes("Nenhum arquivo")
-    ) {
-      return res.status(400).json({ error: errorMessage });
-    }
-
-    if (
-      errorMessage.includes("não encontrada") ||
-      errorMessage.includes("não encontrado") ||
-      errorMessage.includes("Acesso negado")
-    ) {
-      return res.status(404).json({ error: errorMessage });
-    }
-
-    next(error);
+    return next(fromUnknown(error));
   }
 }
 

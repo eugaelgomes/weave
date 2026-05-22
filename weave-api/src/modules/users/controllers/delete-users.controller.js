@@ -20,7 +20,7 @@ class DeleteUsersController extends BaseController {
    * @param {import('express').Response} res
    * @returns {Promise<void>}
    */
-  async requestDeleteUser(req, res) {
+  async requestDeleteUser(req, res, next) {
     try {
       const userId = req.user.userId;
 
@@ -70,7 +70,7 @@ class DeleteUsersController extends BaseController {
       }
     } catch (error) {
       console.error("Erro ao solicitar exclusão da conta:", error);
-      this._handleError(error, res);
+      this._handleError(error, res, next);
     }
   }
 
@@ -81,7 +81,7 @@ class DeleteUsersController extends BaseController {
    * @param {import('express').Response} res
    * @returns {Promise<void>}
    */
-  async confirmDeleteUser(req, res) {
+  async confirmDeleteUser(req, res, next) {
     try {
       const { token } = req.body;
 
@@ -144,7 +144,7 @@ class DeleteUsersController extends BaseController {
       }
     } catch (error) {
       console.error("Erro ao confirmar exclusão da conta:", error);
-      this._handleError(error, res);
+      this._handleError(error, res, next);
     }
   }
 }

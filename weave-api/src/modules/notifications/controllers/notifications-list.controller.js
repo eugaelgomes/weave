@@ -1,3 +1,4 @@
+const { fromUnknown } = require("@/errors");
 const NotificationsRepository = require("@/modules/notifications/repositories/notifications.repository");
 const NotificationsBaseController = require("@/modules/notifications/controllers/base.controller");
 
@@ -67,7 +68,7 @@ class NotificationsListController extends NotificationsBaseController {
         },
       });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 }

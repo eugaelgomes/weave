@@ -1,3 +1,4 @@
+const { fromUnknown } = require("@/errors");
 const MutateApiTokensRepository = require("@/modules/api-tokens/repositories/mutate-api-tokens.repository");
 
 /**
@@ -20,14 +21,14 @@ class MutateApiTokensController {
       if (!revoked) {
         return res
           .status(404)
-          .json({ error: "Token não encontrado ou já deletado." });
+          .json({ error: "Token not found or already revoked." });
       }
 
       res
         .status(200)
-        .json({ message: "Token revogado com sucesso.", record: revoked });
+        .json({ message: "Token revoked successfully.", record: revoked });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -45,12 +46,12 @@ class MutateApiTokensController {
       const deleted = await MutateApiTokensRepository.deleteToken(id, userId);
 
       if (!deleted) {
-        return res.status(404).json({ error: "Token não encontrado." });
+        return res.status(404).json({ error: "Token not found." });
       }
 
-      res.status(200).json({ message: "Token deletado com sucesso." });
+      res.status(200).json({ message: "Token deleted successfully." });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 }

@@ -1,3 +1,4 @@
+const { fromUnknown } = require("@/errors");
 const calendarEventsRepository = require("@/modules/calendar-events/repositories/calendar-events.repository");
 const GoogleOauthTokensRepository = require("@/modules/webhooks/repositories/google-oauth-tokens.repository");
 const googleService = require("@/hooks/google/google-calendar");
@@ -108,7 +109,7 @@ class CalendarEventsController {
       const event = await this.calendarEventsRepository.createEvent(payload);
       return res.status(201).json({ event });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -151,7 +152,7 @@ class CalendarEventsController {
 
       return res.status(200).json({ events });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -176,7 +177,7 @@ class CalendarEventsController {
 
       return res.status(200).json({ event });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -243,7 +244,7 @@ class CalendarEventsController {
 
       return res.status(200).json({ event });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -268,7 +269,7 @@ class CalendarEventsController {
 
       return res.status(200).json({ success: true });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -293,7 +294,7 @@ class CalendarEventsController {
       const { data } = await calendar.settings.list();
       return res.status(200).json({ settings: data.items });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -318,7 +319,7 @@ class CalendarEventsController {
       const { data } = await calendar.calendarList.list();
       return res.status(200).json({ calendars: data.items });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -350,7 +351,7 @@ class CalendarEventsController {
       });
       return res.status(200).json({ freebusy: data.calendars });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 }

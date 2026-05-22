@@ -9,6 +9,7 @@ const {
   projectRoleHasPermission,
   PROJECT_PERMISSIONS,
 } = require("@/modules/projects/project-role-policy");
+const { fromUnknown } = require("@/errors");
 
 class ProjectsCoreController extends ProjectsBaseController {
   constructor() {
@@ -302,23 +303,7 @@ class ProjectsCoreController extends ProjectsBaseController {
    * @param {Function} next - Next middleware function
    */
   _handleError(error, res, next) {
-    const errorMessage = error.message;
-
-    // Erros de validação (400 Bad Request)
-    if (errorMessage.includes("obrigatório")) {
-      return res.status(400).json({ error: errorMessage });
-    }
-
-    // Erros de autorização e não encontrado (404 Not Found)
-    if (
-      errorMessage.includes("não encontrado") ||
-      errorMessage.includes("Acesso negado")
-    ) {
-      return res.status(404).json({ error: errorMessage });
-    }
-
-    // Outros erros passam para o middleware de erro global
-    next(error);
+    return next(fromUnknown(error));
   }
 }
 

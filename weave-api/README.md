@@ -170,7 +170,11 @@ Besides `Origin` checks, internal routes use [`src/middlewares/security/internal
 
 ### Errors
 
-Global handler: [`src/middlewares/errors/error-handler.js`](src/middlewares/errors/error-handler.js). Prefer `next(err)` or controlled error objects; do not leak stack traces in production.
+- Global handler: [`src/middlewares/errors/error-handler.js`](src/middlewares/errors/error-handler.js)
+- Taxonomy and helpers: [`src/errors/`](src/errors/) (`AppError`, `fromUnknown`, Postgres mapper)
+- Contract and PR checklist: [`documents/middlewares/error-handler.md`](documents/middlewares/error-handler.md)
+
+Use `next(fromUnknown(err))` or `throw AppError.*` for operational failures. Public API error messages are **English only**. Never return raw Postgres messages, stack traces, or internal exception text to clients in production. Run `npm run audit:errors` before opening a PR.
 
 ### SQL conventions
 

@@ -4,6 +4,7 @@
  * @typedef {import('./base-controller').AuthenticatedRequest} AuthenticatedRequest
  */
 
+const { fromUnknown } = require("@/errors");
 const OrganizationsBaseController = require("./base-controller");
 const CreateUsersRepository = require("@/modules/users/repositories/create-users.repository");
 const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
@@ -148,7 +149,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
    * @param {Response} res
    * @returns {Promise<void|Response>}
    */
-  async removeMember(req, res) {
+  async removeMember(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -191,10 +192,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("Error removing member:", error);
-      res.status(400).json({
-        success: false,
-        error: error.message || "Error removing member",
-      });
+      return next(fromUnknown(error));
     }
   }
 

@@ -12,6 +12,7 @@ const {
   ORG_PERMISSIONS,
 } = require("@/modules/organizations/organization-role-policy");
 const { strictLimiter } = require("@/middlewares/security/request-limiters");
+const { ERROR_CODES } = require("@/errors/codes");
 
 const router = express.Router();
 
@@ -74,7 +75,7 @@ const chatUpload = multer({
     if (!allowedRule) {
       return callback(
         new Error(
-          `Arquivo "${file.originalname}" rejeitado: formato inválido. Formatos aceitos: PNG, JPG, PDF, CSV, XLS.`
+          `File "${file.originalname}" rejected: invalid format. Allowed formats: PNG, JPG, PDF, CSV, XLS.`
         )
       );
     }
@@ -87,7 +88,7 @@ const chatUpload = multer({
     ) {
       return callback(
         new Error(
-          `Arquivo "${file.originalname}" rejeitado: tipo MIME inválido para ${allowedRule.label}.`
+          `File "${file.originalname}" rejected: invalid MIME type for ${allowedRule.label}.`
         )
       );
     }
@@ -110,14 +111,16 @@ function handleChatFilesUpload(req, res, next) {
       if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
         return res.status(400).json({
           success: false,
+          code: ERROR_CODES.FILE_TOO_LARGE,
           error:
-            "Arquivo rejeitado: tamanho máximo permitido é 5MB para imagens e 10MB para documentos.",
+            "Attached file exceeds the allowed size (5MB for images, 10MB for documents).",
         });
       }
 
       return res.status(400).json({
         success: false,
-        error: error.message || "Falha ao validar arquivos anexados.",
+        code: ERROR_CODES.INVALID_FILE_TYPE,
+        error: "Failed to validate attached files.",
       });
     }
 
@@ -128,7 +131,8 @@ function handleChatFilesUpload(req, res, next) {
       if (!allowedRule) {
         return res.status(400).json({
           success: false,
-          error: `Arquivo "${file.originalname}" rejeitado: formato inválido.`,
+          code: ERROR_CODES.INVALID_FILE_TYPE,
+          error: `File "${file.originalname}" rejected: invalid format.`,
         });
       }
 
@@ -136,7 +140,8 @@ function handleChatFilesUpload(req, res, next) {
         const maxSizeMb = allowedRule.maxSizeBytes / (1024 * 1024);
         return res.status(400).json({
           success: false,
-          error: `Arquivo "${file.originalname}" rejeitado: tamanho máximo para ${allowedRule.label} é ${maxSizeMb}MB.`,
+          code: ERROR_CODES.FILE_TOO_LARGE,
+          error: `File "${file.originalname}" rejected: maximum size for ${allowedRule.label} is ${maxSizeMb}MB.`,
         });
       }
     }

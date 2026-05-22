@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const { getClientIp } = require("./ip-address");
 const { sessionMiddleware } = require("./session");
 const { makeCorsOptions } = require("./cors");
+const { requestIdMiddleware } = require("@/middlewares/request-id");
 
 /**
  * Captures the raw request body for Slack signature verification (`req.rawBody`).
@@ -17,6 +18,7 @@ function captureRawBody(req, _res, buf) {
 }
 
 function configureGlobalMiddlewares(app) {
+  app.use(requestIdMiddleware);
   app.use(cookieParser());
   app.use(sessionMiddleware);
 

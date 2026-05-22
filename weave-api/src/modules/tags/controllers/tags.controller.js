@@ -1,3 +1,4 @@
+const { fromUnknown } = require("@/errors");
 const TagsRepository = require("@/modules/tags/repositories/tags.repository");
 const TagsBaseController = require("@/modules/tags/controllers/base.controller");
 
@@ -18,7 +19,7 @@ class TagsController extends TagsBaseController {
       const { name, color } = req.body;
 
       if (!name) {
-        return res.status(400).json({ error: "Nome da tag é obrigatório" });
+        return res.status(400).json({ error: "Tag name is required" });
       }
 
       const tag = await TagsRepository.createTag({
@@ -30,7 +31,7 @@ class TagsController extends TagsBaseController {
       });
       res.status(201).json(tag);
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -50,7 +51,7 @@ class TagsController extends TagsBaseController {
       });
       res.status(200).json(tags);
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -72,12 +73,12 @@ class TagsController extends TagsBaseController {
         updates: { name, color },
       });
       if (!tag) {
-        return res.status(404).json({ error: "Tag não encontrada" });
+        return res.status(404).json({ error: "Tag not found" });
       }
 
       res.status(200).json(tag);
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -103,12 +104,12 @@ class TagsController extends TagsBaseController {
       if (!tag) {
         return res
           .status(404)
-          .json({ error: "Tag não encontrada ou já deletada" });
+          .json({ error: "Tag not found or already deleted" });
       }
 
-      res.status(200).json({ message: "Tag deletada com sucesso" });
+      res.status(200).json({ message: "Tag deleted successfully" });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 }

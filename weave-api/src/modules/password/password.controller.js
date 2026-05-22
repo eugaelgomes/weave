@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const { validationResult } = require("express-validator");
+const { fromUnknown } = require("@/errors");
 const PasswordRepository = require("@/modules/password/password.repository");
 const {
   mail_rescue_pass,
@@ -71,7 +72,7 @@ class PasswordController {
   }
 
   // RESERT PASSWORD
-  async resetPassword(req, res) {
+  async resetPassword(req, res, next) {
     const { token, password: newPassword } = req.body;
 
     if (!token || !newPassword) {
@@ -118,10 +119,7 @@ class PasswordController {
         message: "Password updated successfully!",
       });
     } catch (error) {
-      return res.status(500).json({
-        message: "Error processing request",
-        error: error.message,
-      });
+      return next(fromUnknown(error));
     }
   }
 }

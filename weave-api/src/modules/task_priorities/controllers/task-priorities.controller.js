@@ -1,3 +1,4 @@
+const { fromUnknown } = require("@/errors");
 const TaskPrioritiesRepository = require("@/modules/task_priorities/repositories/task-priorities.repository");
 const TaskPrioritiesBaseController = require("@/modules/task_priorities/controllers/base.controller");
 
@@ -31,7 +32,7 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
       });
       res.status(201).json(priority);
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -51,7 +52,7 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
       });
       res.status(200).json(priorities);
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -81,7 +82,7 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
 
       res.status(200).json(priority);
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -115,7 +116,7 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
 
       res.status(200).json({ message: "Prioridade deletada com sucesso" });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 }

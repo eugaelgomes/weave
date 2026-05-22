@@ -1,3 +1,4 @@
+const { fromUnknown } = require("@/errors");
 const NotificationsRepository = require("@/modules/notifications/repositories/notifications.repository");
 const NotificationsBaseController = require("@/modules/notifications/controllers/base.controller");
 
@@ -24,7 +25,7 @@ class NotificationsDeleteController extends NotificationsBaseController {
 
       res.status(200).json({ success: true });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 }

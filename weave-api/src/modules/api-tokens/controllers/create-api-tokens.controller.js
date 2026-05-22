@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 
+const { fromUnknown } = require("@/errors");
 const CreateApiTokensRepository = require("@/modules/api-tokens/repositories/create-api-tokens.repository");
 const ApiTokensNormalizer = require("@/modules/api-tokens/normalizer");
 const {
@@ -28,7 +29,7 @@ class CreateApiTokensController {
       if (!name || name.trim() === "") {
         return res
           .status(400)
-          .json({ error: "O nome do token é obrigatório." });
+          .json({ error: "Token name is required." });
       }
 
       const rawPrefix = crypto.randomBytes(6).toString("hex");
@@ -44,7 +45,7 @@ class CreateApiTokensController {
       } else if (!ApiTokensNormalizer.areScopesValid(scopes)) {
         return res
           .status(400)
-          .json({ error: "Um ou mais escopos fornecidos são inválidos." });
+          .json({ error: "One or more provided scopes are invalid." });
       }
 
       const isOrgScope = cleanScopes.some(
@@ -58,7 +59,7 @@ class CreateApiTokensController {
         if (!organizationId) {
           return res.status(400).json({
             error:
-              "O ID da organização é obrigatório para gerar tokens que interagem com dados da organização (Organizações, Projetos ou Calendários).",
+              "Organization ID is required for tokens that access organization, project, or calendar data.",
           });
         }
 
@@ -70,7 +71,7 @@ class CreateApiTokensController {
         if (role !== ORG_ROLES.SUPER_ADMIN) {
           return res.status(403).json({
             error:
-              "Apenas super administradores podem criar tokens de API com permissões organizacionais.",
+              "Only super administrators can create API tokens with organization-level permissions.",
           });
         }
       }
@@ -86,12 +87,12 @@ class CreateApiTokensController {
       });
 
       res.status(201).json({
-        message: "Token gerado com sucesso.",
+        message: "Token created successfully.",
         token: plainToken,
         record: tokenRecord,
       });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 }

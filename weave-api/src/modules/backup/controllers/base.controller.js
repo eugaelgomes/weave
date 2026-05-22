@@ -1,5 +1,7 @@
+const { AppError, fromUnknown } = require("@/errors");
+
 /**
- * Utilitários partilhados dos controllers de backup (auth, erros, CSV).
+ * Shared utilities for backup controllers (auth, errors, CSV).
  */
 class BackupBaseController {
   /**
@@ -12,8 +14,8 @@ class BackupBaseController {
     if (!userId) {
       res.status(401).json({
         status: "Unauthorized",
-        error: "Autenticação necessária",
-        message: "Usuário não autenticado",
+        error: "Authentication required",
+        message: "User is not authenticated",
       });
       return null;
     }
@@ -42,39 +44,35 @@ class BackupBaseController {
   _handleError(error, res, next) {
     const { message } = error;
 
-    if (message.includes("obrigatório") || message.includes("inválido")) {
-      return res.status(400).json({
-        status: "Bad Request",
-        error: message,
-      });
+    if (/required|invalid/i.test(message)) {
+      return next(AppError.badRequest(message));
     }
 
-    if (
-      message.includes("não encontrada") ||
-      message.includes("Acesso negado")
-    ) {
-      return res.status(404).json({
-        status: "Not Found",
-        error: message,
-      });
+    if (/not found|access denied/i.test(message)) {
+      return next(AppError.notFound(message));
     }
 
-    if (message.includes("Muitos dados")) {
-      return res.status(413).json({
-        status: "Payload Too Large",
-        error: message,
-        message: "Volume de dados excede o limite suportado",
-      });
+    if (/too much data|payload too large/i.test(message)) {
+      return next(
+        new AppError(
+          "PAYLOAD_TOO_LARGE",
+          "Data volume exceeds the supported limit.",
+          413
+        )
+      );
     }
 
-    if (message.includes("limite") || message.includes("Limite")) {
-      return res.status(429).json({
-        status: "Too Many Requests",
-        error: message,
-      });
+    if (/limit/i.test(message)) {
+      return next(
+        new AppError(
+          "RATE_LIMIT_EXCEEDED",
+          "Too many requests. Please try again later.",
+          429
+        )
+      );
     }
 
-    next(error);
+    return next(fromUnknown(error));
   }
 
   /**

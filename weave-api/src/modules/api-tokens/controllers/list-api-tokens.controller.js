@@ -1,3 +1,4 @@
+const { fromUnknown } = require("@/errors");
 const ListApiTokensRepository = require("@/modules/api-tokens/repositories/list-api-tokens.repository");
 
 /**
@@ -18,7 +19,7 @@ class ListApiTokensController {
 
       res.status(200).json(tokens);
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 }

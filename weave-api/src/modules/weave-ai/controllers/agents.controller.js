@@ -8,6 +8,7 @@ const {
 } = require("@/modules/weave-ai/normalize");
 const { getProvidersWithModels } = require("@/modules/weave-ai/llm-catalog");
 const spacesService = require("@/services/storage");
+const { AppError } = require("@/errors");
 
 /**
  * Controller for User Agent management in Weave AI.
@@ -109,7 +110,10 @@ class AgentsController {
       });
     } catch (error) {
       if (error.statusCode === 401) {
-        return res.status(401).json({ success: false, error: error.message });
+        return res.status(401).json({
+          success: false,
+          error: AppError.unauthorized().message,
+        });
       }
       console.error("Erro ao criar agente:", error);
       res.status(500).json({
@@ -221,7 +225,10 @@ class AgentsController {
       res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
     } catch (error) {
       if (error.statusCode === 401) {
-        return res.status(401).json({ success: false, error: error.message });
+        return res.status(401).json({
+          success: false,
+          error: AppError.unauthorized().message,
+        });
       }
       console.error("Erro ao atualizar agente:", error);
       res
@@ -242,7 +249,10 @@ class AgentsController {
       res.json({ success: true, message: "Agente removido com sucesso" });
     } catch (error) {
       if (error.statusCode === 401) {
-        return res.status(401).json({ success: false, error: error.message });
+        return res.status(401).json({
+          success: false,
+          error: AppError.unauthorized().message,
+        });
       }
       console.error("Erro ao deletar agente:", error);
       res.status(500).json({ success: false, error: "Erro ao deletar agente" });
@@ -280,7 +290,10 @@ class AgentsController {
       res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
     } catch (error) {
       if (error.statusCode === 401) {
-        return res.status(401).json({ success: false, error: error.message });
+        return res.status(401).json({
+          success: false,
+          error: AppError.unauthorized().message,
+        });
       }
       console.error("Erro ao compartilhar agente:", error);
       res
@@ -317,7 +330,10 @@ class AgentsController {
       });
     } catch (error) {
       if (error.statusCode === 401) {
-        return res.status(401).json({ success: false, error: error.message });
+        return res.status(401).json({
+          success: false,
+          error: AppError.unauthorized().message,
+        });
       }
       console.error("Erro ao buscar agentes:", error);
       res.status(500).json({
@@ -345,7 +361,10 @@ class AgentsController {
       res.json({ success: true, agent: formatAgentResponse(agent) });
     } catch (error) {
       if (error.statusCode === 401) {
-        return res.status(401).json({ success: false, error: error.message });
+        return res.status(401).json({
+          success: false,
+          error: AppError.unauthorized().message,
+        });
       }
       console.error("Erro ao buscar agente:", error);
       res.status(500).json({
@@ -387,7 +406,10 @@ class AgentsController {
       res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
     } catch (error) {
       if (error.statusCode === 401) {
-        return res.status(401).json({ success: false, error: error.message });
+        return res.status(401).json({
+          success: false,
+          error: AppError.unauthorized().message,
+        });
       }
       console.error("Erro ao vincular agente ao projeto:", error);
       res
@@ -416,7 +438,10 @@ class AgentsController {
       res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
     } catch (error) {
       if (error.statusCode === 401) {
-        return res.status(401).json({ success: false, error: error.message });
+        return res.status(401).json({
+          success: false,
+          error: AppError.unauthorized().message,
+        });
       }
       console.error("Erro ao desvincular agente do projeto:", error);
       res.status(500).json({
@@ -458,7 +483,10 @@ class AgentsController {
       res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
     } catch (error) {
       if (error.statusCode === 401) {
-        return res.status(401).json({ success: false, error: error.message });
+        return res.status(401).json({
+          success: false,
+          error: AppError.unauthorized().message,
+        });
       }
       console.error("Erro ao alternar estado do agente:", error);
       res
@@ -487,7 +515,10 @@ class AgentsController {
       res.json({ success: true, agent: formatAgentResponse(duplicated) });
     } catch (error) {
       if (error.statusCode === 401) {
-        return res.status(401).json({ success: false, error: error.message });
+        return res.status(401).json({
+          success: false,
+          error: AppError.unauthorized().message,
+        });
       }
       console.error("Erro ao duplicar agente:", error);
       res

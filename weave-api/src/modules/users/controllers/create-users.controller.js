@@ -213,7 +213,7 @@ class CreateUsersController extends BaseController {
    * @param {import('express').Response} res
    * @returns {Promise<void>}
    */
-  async activateAccount(req, res) {
+  async activateAccount(req, res, next) {
     const { token, code, email } = req.body;
 
     if (!token && (!code || !email)) {
@@ -265,7 +265,7 @@ class CreateUsersController extends BaseController {
       });
     } catch (error) {
       console.error("Erro ao ativar conta:", error);
-      this._handleError(error, res);
+      this._handleError(error, res, next);
     }
   }
 }

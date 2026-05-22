@@ -140,7 +140,7 @@ class NotesWriteController extends NotesBaseController {
           }
           normalizedBlocks = normalizeBlocksTree(blocksPayload);
         } catch (error) {
-          return res.status(400).json({ error: error.message });
+          return this._handleError(error, res, next);
         }
       }
 
@@ -262,7 +262,7 @@ class NotesWriteController extends NotesBaseController {
           }
           normalizedBlocks = normalizeBlocksTree(blocksPayload);
         } catch (error) {
-          return res.status(400).json({ error: error.message });
+          return this._handleError(error, res, next);
         }
       }
 

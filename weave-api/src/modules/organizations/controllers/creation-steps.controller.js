@@ -1,3 +1,4 @@
+const { fromUnknown } = require("@/errors");
 const OrganizationsBaseController = require("./base-controller");
 const areasRepository = require("@/modules/organizations/repositories/areas.repository");
 const {
@@ -113,7 +114,7 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
    * @param {Response} res
    * @returns {Promise<void|Response>}
    */
-  async saveStepOne(req, res) {
+  async saveStepOne(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -178,10 +179,7 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
         },
       });
     } catch (error) {
-      return res.status(400).json({
-        success: false,
-        error: error.message || "Error saving organization creation step 1",
-      });
+      return next(fromUnknown(error));
     }
   }
 
@@ -191,7 +189,7 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
    * @param {Response} res
    * @returns {Promise<void|Response>}
    */
-  async completeStepOne(req, res) {
+  async completeStepOne(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -254,10 +252,7 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
         },
       });
     } catch (error) {
-      return res.status(400).json({
-        success: false,
-        error: error.message || "Error completing organization creation step 1",
-      });
+      return next(fromUnknown(error));
     }
   }
 }

@@ -1,3 +1,4 @@
+const { fromUnknown } = require("@/errors");
 const OrganizationsBaseController = require("./base-controller");
 const areasRepository = require("@/modules/organizations/repositories/areas.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
@@ -100,12 +101,12 @@ class OrganizationAreasController extends OrganizationsBaseController {
       organizationId
     );
     if (!parent) {
-      throw new Error("Área pai não encontrada");
+      throw new Error("Parent area not found");
     }
     return parent;
   }
 
-  async listAreas(req, res) {
+  async listAreas(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -114,7 +115,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const areas = await this.areasRepository.listOrganizationAreas(
@@ -128,14 +129,12 @@ class OrganizationAreasController extends OrganizationsBaseController {
         data: areas,
       });
     } catch (error) {
-      console.error("Erro ao listar áreas:", error);
-      res
-        .status(500)
-        .json({ success: false, error: "Erro ao listar áreas da organização" });
+      console.error("Error listing areas:", error);
+      return next(fromUnknown(error));
     }
   }
 
-  async getArea(req, res) {
+  async getArea(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -144,7 +143,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const { areaId } = req.params;
@@ -156,19 +155,17 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!area) {
         return res
           .status(404)
-          .json({ success: false, error: "Área não encontrada" });
+          .json({ success: false, error: "Area not found" });
       }
 
       res.status(200).json({ status: "OK", data: area });
     } catch (error) {
-      console.error("Erro ao buscar área:", error);
-      res
-        .status(500)
-        .json({ success: false, error: "Erro ao buscar dados da área" });
+      console.error("Error fetching area:", error);
+      return next(fromUnknown(error));
     }
   }
 
-  async createArea(req, res) {
+  async createArea(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -177,7 +174,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const {
@@ -202,7 +199,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!area_name || typeof area_name !== "string") {
         return res.status(400).json({
           success: false,
-          error: "area_name é obrigatório e deve ser uma string",
+          error: "area_name is required and must be a string",
         });
       }
 
@@ -252,19 +249,16 @@ class OrganizationAreasController extends OrganizationsBaseController {
 
       res.status(201).json({
         status: "OK",
-        message: "Área criada com sucesso",
+        message: "Area created successfully",
         data: newArea,
       });
     } catch (error) {
-      console.error("Erro ao criar área:", error);
-      res.status(400).json({
-        success: false,
-        error: error.message || "Erro ao criar área",
-      });
+      console.error("Error creating area:", error);
+      return next(fromUnknown(error));
     }
   }
 
-  async updateArea(req, res) {
+  async updateArea(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -273,7 +267,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const { areaId } = req.params;
@@ -285,7 +279,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!existingArea) {
         return res
           .status(404)
-          .json({ success: false, error: "Área não encontrada" });
+          .json({ success: false, error: "Area not found" });
       }
 
       if (
@@ -382,15 +376,12 @@ class OrganizationAreasController extends OrganizationsBaseController {
         data: updatedArea,
       });
     } catch (error) {
-      console.error("Erro ao atualizar área:", error);
-      res.status(400).json({
-        success: false,
-        error: error.message || "Erro ao atualizar área",
-      });
+      console.error("Error updating area:", error);
+      return next(fromUnknown(error));
     }
   }
 
-  async deleteArea(req, res) {
+  async deleteArea(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -399,7 +390,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const { areaId } = req.params;
@@ -410,7 +401,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!area) {
         return res
           .status(404)
-          .json({ success: false, error: "Área não encontrada" });
+          .json({ success: false, error: "Area not found" });
       }
 
       if (
@@ -430,12 +421,12 @@ class OrganizationAreasController extends OrganizationsBaseController {
         data: deletedArea,
       });
     } catch (error) {
-      console.error("Erro ao remover área:", error);
-      res.status(400).json({ success: false, error: "Erro ao remover área" });
+      console.error("Error deleting area:", error);
+      return next(fromUnknown(error));
     }
   }
 
-  async listAreaMembers(req, res) {
+  async listAreaMembers(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -444,7 +435,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const { areaId } = req.params;
@@ -455,7 +446,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!area) {
         return res
           .status(404)
-          .json({ success: false, error: "Área não encontrada" });
+          .json({ success: false, error: "Area not found" });
       }
 
       const members = await this.areasRepository.listAreaMembers(
@@ -470,15 +461,12 @@ class OrganizationAreasController extends OrganizationsBaseController {
         members,
       });
     } catch (error) {
-      console.error("Erro ao listar membros da área:", error);
-      res.status(500).json({
-        success: false,
-        error: "Erro ao listar membros da área",
-      });
+      console.error("Error listing area members:", error);
+      return next(fromUnknown(error));
     }
   }
 
-  async addAreaMember(req, res) {
+  async addAreaMember(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -487,7 +475,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const { areaId } = req.params;
@@ -498,7 +486,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!area) {
         return res
           .status(404)
-          .json({ success: false, error: "Área não encontrada" });
+          .json({ success: false, error: "Area not found" });
       }
 
       if (
@@ -511,7 +499,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!user_id) {
         return res
           .status(400)
-          .json({ success: false, error: "user_id é obrigatório" });
+          .json({ success: false, error: "user_id is required" });
       }
       const normalizedRole =
         typeof role === "string" ? role.trim().toUpperCase() : "";
@@ -526,7 +514,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!targetUser) {
         return res
           .status(404)
-          .json({ success: false, error: "Usuário não encontrado" });
+          .json({ success: false, error: "User not found" });
       }
 
       const isMember = await this.organizationsRepository.isMember(
@@ -566,15 +554,12 @@ class OrganizationAreasController extends OrganizationsBaseController {
         data: member,
       });
     } catch (error) {
-      console.error("Erro ao adicionar membro à área:", error);
-      res.status(400).json({
-        success: false,
-        error: error.message || "Erro ao adicionar membro",
-      });
+      console.error("Error adding area member:", error);
+      return next(fromUnknown(error));
     }
   }
 
-  async updateAreaMember(req, res) {
+  async updateAreaMember(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -583,7 +568,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const { areaId, memberId } = req.params;
@@ -605,7 +590,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!area) {
         return res
           .status(404)
-          .json({ success: false, error: "Área não encontrada" });
+          .json({ success: false, error: "Area not found" });
       }
 
       if (
@@ -622,7 +607,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!existingMember) {
         return res
           .status(404)
-          .json({ success: false, error: "Membro não encontrado na área" });
+          .json({ success: false, error: "Area member not found" });
       }
 
       const updated = await this.areasRepository.updateAreaMemberRole(
@@ -639,15 +624,12 @@ class OrganizationAreasController extends OrganizationsBaseController {
         data: updated,
       });
     } catch (error) {
-      console.error("Erro ao atualizar membro da área:", error);
-      res.status(400).json({
-        success: false,
-        error: error.message || "Erro ao atualizar membro",
-      });
+      console.error("Error updating area member:", error);
+      return next(fromUnknown(error));
     }
   }
 
-  async removeAreaMember(req, res) {
+  async removeAreaMember(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -656,7 +638,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organização não encontrada" });
+          .json({ success: false, error: "Organization not found" });
       }
 
       const { areaId, memberId } = req.params;
@@ -668,7 +650,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!area) {
         return res
           .status(404)
-          .json({ success: false, error: "Área não encontrada" });
+          .json({ success: false, error: "Area not found" });
       }
 
       if (
@@ -685,7 +667,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!existingMember) {
         return res
           .status(404)
-          .json({ success: false, error: "Membro não encontrado" });
+          .json({ success: false, error: "Member not found" });
       }
 
       const removed = await this.areasRepository.removeAreaMember(
@@ -701,11 +683,8 @@ class OrganizationAreasController extends OrganizationsBaseController {
         data: removed,
       });
     } catch (error) {
-      console.error("Erro ao remover membro da área:", error);
-      res.status(400).json({
-        success: false,
-        error: error.message || "Erro ao remover membro",
-      });
+      console.error("Error removing area member:", error);
+      return next(fromUnknown(error));
     }
   }
 }

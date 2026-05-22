@@ -1,3 +1,4 @@
+const { AppError, fromUnknown, ERROR_CODES } = require("@/errors");
 const OrganizationsBaseController = require("./base-controller");
 const spacesService = require("@/services/storage");
 const areasRepository = require("@/modules/organizations/repositories/areas.repository");
@@ -98,7 +99,7 @@ class OrganizationsController extends OrganizationsBaseController {
    * @param {Object} res - Express response object
    * @returns {Object} JSON response with created organization data or error
    */
-  async createOrganization(req, res) {
+  async createOrganization(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -165,10 +166,7 @@ class OrganizationsController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("Error creating organization:", error);
-      res.status(400).json({
-        success: false,
-        error: error.message || "Error creating organization",
-      });
+      return next(fromUnknown(error));
     }
   }
 
@@ -235,7 +233,7 @@ class OrganizationsController extends OrganizationsBaseController {
    * @param {Object} res - Express response object
    * @returns {Object} JSON response with updated organization data or error
    */
-  async updateOrganization(req, res) {
+  async updateOrganization(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -327,17 +325,15 @@ class OrganizationsController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("Error updating organization:", error);
-      const statusCode =
-        error.message.includes("not found") ||
-        error.message.includes("nao encontrada") ||
-        error.message.includes("não encontrada")
-          ? 404
-          : 400;
-
-      res.status(statusCode).json({
-        success: false,
-        error: error.message || "Error updating organization",
-      });
+      if (
+        error instanceof Error &&
+        /not found/i.test(error.message)
+      ) {
+        return next(
+          AppError.notFound("Organization not found", ERROR_CODES.RESOURCE_NOT_FOUND)
+        );
+      }
+      return next(fromUnknown(error));
     }
   }
 

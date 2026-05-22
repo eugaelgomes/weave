@@ -28,6 +28,7 @@ const {
 const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
 const workspaceUserScopeRepository = require("@/modules/users/repositories/workspace-user-scope.repository");
 const { WORKSPACE_SHARE_DENIED } = require("@/utils/workspace-share-guard");
+const { fromUnknown } = require("@/errors");
 
 const ENGINE_CHAT_TIMEOUT_SECONDS = Number.parseInt(
   process.env.WEAVE_ENGINE_CHAT_TIMEOUT_SECONDS || "75",
@@ -587,19 +588,25 @@ class ChatController {
    * @returns {{ code: string, message: string, statusCode: number }}
    */
   _normalizeApiError(error, fallback) {
+    const mapped = fromUnknown(error, fallback.code);
+    const isProduction = process.env.NODE_ENV === "production";
+
+    if (
+      isProduction ||
+      !mapped.isOperational ||
+      mapped.statusCode >= 500
+    ) {
+      return {
+        code: fallback.code,
+        message: fallback.message,
+        statusCode: fallback.statusCode || 500,
+      };
+    }
+
     return {
-      code:
-        typeof error?.code === "string" && error.code
-          ? error.code
-          : fallback.code,
-      message:
-        typeof error?.message === "string" && error.message
-          ? error.message
-          : fallback.message,
-      statusCode:
-        typeof error?.statusCode === "number" && error.statusCode
-          ? error.statusCode
-          : fallback.statusCode || 500,
+      code: mapped.code || fallback.code,
+      message: mapped.message || fallback.message,
+      statusCode: mapped.statusCode || fallback.statusCode || 500,
     };
   }
 
@@ -1363,7 +1370,7 @@ class ChatController {
     } catch (error) {
       const normalizedError = this._normalizeApiError(error, {
         code: "CHAT_PROCESSING_FAILED",
-        message: "Erro ao processar chat",
+        message: "Failed to process chat request",
         statusCode: 500,
       });
       const cause = error?.cause;
@@ -1431,7 +1438,7 @@ class ChatController {
     } catch (error) {
       const normalizedError = this._normalizeApiError(error, {
         code: "CHAT_HISTORY_FETCH_FAILED",
-        message: "Erro ao buscar histórico do chat",
+        message: "Failed to fetch chat history",
         statusCode: 500,
       });
       console.error("[weave-ai/chat-history] request failed", {
@@ -1489,7 +1496,7 @@ class ChatController {
     } catch (error) {
       const normalizedError = this._normalizeApiError(error, {
         code: "CHAT_SESSION_DELETE_FAILED",
-        message: "Erro ao excluir sessão do chat",
+        message: "Failed to delete chat session",
         statusCode: 500,
       });
       return res.status(normalizedError.statusCode).json({
@@ -1521,7 +1528,7 @@ class ChatController {
     } catch (error) {
       const normalizedError = this._normalizeApiError(error, {
         code: "CHAT_MODELS_FETCH_FAILED",
-        message: "Erro ao obter modelos disponíveis",
+        message: "Failed to fetch available models",
         statusCode: 500,
       });
       console.error("[weave-ai/models] request failed", {

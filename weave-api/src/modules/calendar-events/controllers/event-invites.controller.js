@@ -1,3 +1,4 @@
+const { fromUnknown } = require("@/errors");
 const eventInvitesRepository = require("../repositories/event-invites.repository");
 const calendarEventsRepository = require("../repositories/calendar-events.repository");
 
@@ -43,12 +44,12 @@ class EventInvitesController {
         // unique violation
         return res
           .status(409)
-          .json({ error: "Este email já foi convidado para o evento." });
+          .json({ error: "This email has already been invited to the event." });
       }
-      if (error.message.includes("E-mail é obrigatório")) {
-        return res.status(400).json({ error: error.message });
+      if (error.message.includes("E-mail") || error.message.includes("email")) {
+        return res.status(400).json({ error: "Email is required." });
       }
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -70,7 +71,7 @@ class EventInvitesController {
       const invites = await eventInvitesRepository.listInvitesByEvent(eventId);
       return res.status(200).json(invites);
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -106,7 +107,7 @@ class EventInvitesController {
 
       return res.status(200).json(updatedInvite);
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
@@ -135,7 +136,7 @@ class EventInvitesController {
       await eventInvitesRepository.deleteInvite(inviteId);
       return res.status(204).send();
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 }
