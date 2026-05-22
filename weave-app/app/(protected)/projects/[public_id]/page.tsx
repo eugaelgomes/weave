@@ -11,8 +11,8 @@ import { updateProject as updateProjectService } from "@/app/_services/projects-
 import ProjectHeader from "@/app/(protected)/projects/_components/project-header";
 import ProjectBoard from "@/app/(protected)/projects/_components/project-board-v2";
 import AddCollaboratorModal from "@/app/(protected)/projects/_components/modals/add-collaborator-modal";
-import AddNoteModal from "@/app/(protected)/projects/_components/modals/add-note-modal";
 import { ProjectFilters } from "@/app/(protected)/projects/_components/project-filters";
+import { useTaskNoteModal } from "@/app/(protected)/_components/task-note-modal";
 
 export default function ProjectViewPage() {
   const router = useRouter();
@@ -34,6 +34,7 @@ export default function ProjectViewPage() {
   } = useProjects();
 
   const { notes } = useNotes();
+  const { openModal: openTaskNoteModal } = useTaskNoteModal();
 
   const [project, setProject] = useState<any>(null);
   const [collaborators, setCollaborators] = useState<any[]>([]);
@@ -45,10 +46,6 @@ export default function ProjectViewPage() {
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<"board" | "list">("board");
   const [showAddCollaborator, setShowAddCollaborator] = useState(false);
-  const [showAddNote, setShowAddNote] = useState(false);
-  const [addTaskStageId, setAddTaskStageId] = useState<string | null>(null);
-  const [addTaskParentNoteId, setAddTaskParentNoteId] = useState<string | null>(null);
-  const [addTaskParentTitle, setAddTaskParentTitle] = useState<string | null>(null);
 
   const [noteFilters, setNoteFilters] = useState<ProjectNotesListFilters>({});
   const filtersRef = useRef(noteFilters);
@@ -118,6 +115,21 @@ export default function ProjectViewPage() {
   const refetchNotes = useCallback(() => {
     void loadNotes(filtersRef.current);
   }, [loadNotes]);
+
+  const openCreateTaskModal = useCallback(
+    (stageId: string, parentNoteId?: string | null) => {
+      openTaskNoteModal("create", {
+        projectId,
+        projectPublicId: project?.public_id || projectId,
+        stageId,
+        parentNoteId: parentNoteId ?? undefined,
+        onNoteCreated: () => {
+          refetchNotes();
+        },
+      });
+    },
+    [openTaskNoteModal, projectId, project?.public_id, refetchNotes]
+  );
 
   const handleProjectIconChange = useCallback(
     async (file: File) => {
@@ -205,24 +217,10 @@ export default function ProjectViewPage() {
                 projectTags={projectTags}
                 projectCollaborators={collaborators}
                 taskPriorities={taskPriorities}
-                onAddCard={
-                  canEdit
-                    ? (stageId) => {
-                        setAddTaskStageId(stageId);
-                        setAddTaskParentNoteId(null);
-                        setAddTaskParentTitle(null);
-                        setShowAddNote(true);
-                      }
-                    : undefined
-                }
+                onAddCard={canEdit ? (stageId) => openCreateTaskModal(stageId) : undefined}
                 onAddSubtask={
                   canEdit
-                    ? (parentNoteId, stageId, parentTitle) => {
-                        setAddTaskStageId(stageId);
-                        setAddTaskParentNoteId(parentNoteId);
-                        setAddTaskParentTitle(parentTitle ?? null);
-                        setShowAddNote(true);
-                      }
+                    ? (parentNoteId, stageId) => openCreateTaskModal(stageId, parentNoteId)
                     : undefined
                 }
                 onProjectNotesReplaced={(next) => setProjectNotes(next)}
@@ -263,30 +261,6 @@ export default function ProjectViewPage() {
         />
       )}
 
-      {showAddNote && (
-        <AddNoteModal
-          projectId={projectId}
-          stageId={addTaskStageId}
-          parentNoteId={addTaskParentNoteId}
-          parentTitle={addTaskParentTitle}
-          projectTags={projectTags}
-          projectCollaborators={collaborators}
-          taskPriorities={taskPriorities}
-          onClose={() => {
-            setShowAddNote(false);
-            setAddTaskStageId(null);
-            setAddTaskParentNoteId(null);
-            setAddTaskParentTitle(null);
-          }}
-          onSuccess={() => {
-            refetchNotes();
-            setShowAddNote(false);
-            setAddTaskStageId(null);
-            setAddTaskParentNoteId(null);
-            setAddTaskParentTitle(null);
-          }}
-        />
-      )}
     </div>
   );
 }

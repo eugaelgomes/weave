@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import type { Note, Block } from "@/app/_contexts/notes-context";
 import type { TaskNoteModalMode } from "./use-task-note-modal";
 import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema";
+import { RichTextEditor } from "@/app/(protected)/_components/rich-editor/rich-editor";
 
 const NoteTiptapEditor = dynamic(
   () =>
@@ -33,6 +34,8 @@ interface TaskNoteModalContentProps {
   onTitleChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onBlocksSave: (blocks: CreateBlockData[]) => Promise<void>;
+  createBlocks?: CreateBlockData[];
+  onCreateBlocksChange?: (blocks: CreateBlockData[]) => void;
 }
 
 export function TaskNoteModalContent({
@@ -45,6 +48,8 @@ export function TaskNoteModalContent({
   onTitleChange,
   onDescriptionChange,
   onBlocksSave,
+  createBlocks = [],
+  onCreateBlocksChange,
 }: TaskNoteModalContentProps) {
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -117,11 +122,16 @@ export function TaskNoteModalContent({
         </div>
       )}
 
-      {mode === "create" && (
-        <div className="dark:border-surface-dark-border flex-1 rounded-lg border border-dashed border-neutral-200 p-4">
-          <p className="text-center text-xs text-neutral-400 dark:text-neutral-500">
-            Após criar a tarefa, você poderá adicionar conteúdo rico com o editor.
-          </p>
+      {mode === "create" && onCreateBlocksChange && (
+        <div className="min-h-0 flex-1">
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <RichTextEditor
+              initialBlocks={createBlocks}
+              editable
+              onChange={onCreateBlocksChange}
+              autosave={false}
+            />
+          </div>
         </div>
       )}
     </div>

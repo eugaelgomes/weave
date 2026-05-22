@@ -43,7 +43,13 @@ export interface TaskNoteModalContextType {
   closeModal: () => void;
   viewNote: (noteId: string) => void;
   editNote: (noteId: string) => void;
-  createNote: (options?: { projectId?: string; stageId?: string; parentNoteId?: string }) => void;
+  createNote: (options?: {
+    projectId?: string;
+    projectPublicId?: string;
+    stageId?: string;
+    parentNoteId?: string;
+    onNoteCreated?: (note: Note) => void;
+  }) => void;
 }
 
 const TaskNoteModalContext = createContext<TaskNoteModalContextType | undefined>(undefined);
@@ -104,7 +110,13 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
   );
 
   const createNote = useCallback(
-    (options?: { projectId?: string; stageId?: string; parentNoteId?: string }) => {
+    (options?: {
+      projectId?: string;
+      projectPublicId?: string;
+      stageId?: string;
+      parentNoteId?: string;
+      onNoteCreated?: (note: Note) => void;
+    }) => {
       openModal("create", options);
     },
     [openModal]

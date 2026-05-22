@@ -409,13 +409,13 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   const hasOrg = !!authData.user.org_id;
 
   const navigationItems: NavigationItem[] = [
+    { path: "/home", icon: Home, label: t.nav.home },
     {
       path: "/weave-engine",
       icon: WeaveEngineIcon,
       label: t.nav.weaveEngine,
       badge: unreadCount > 0 ? unreadCount : undefined,
     },
-    { path: "/home", icon: Home, label: t.nav.home },
     {
       path: "/projects",
       icon: Network,

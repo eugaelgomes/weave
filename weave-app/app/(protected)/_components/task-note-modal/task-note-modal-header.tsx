@@ -44,6 +44,10 @@ interface TaskNoteModalHeaderProps {
   onColorChange: (color: string) => void;
   onToggleComments: () => void;
   onCreateNote?: () => void;
+  createDisabled?: boolean;
+  parentNoteId?: string;
+  draftColor?: string;
+  onDraftColorChange?: (color: string) => void;
 }
 
 export function TaskNoteModalHeader({
@@ -60,6 +64,10 @@ export function TaskNoteModalHeader({
   onColorChange,
   onToggleComments,
   onCreateNote,
+  createDisabled = false,
+  parentNoteId,
+  draftColor,
+  onDraftColorChange,
 }: TaskNoteModalHeaderProps) {
   const router = useRouter();
 
@@ -82,7 +90,9 @@ export function TaskNoteModalHeader({
             className="text-sm font-semibold text-neutral-800 dark:text-neutral-100"
           >
             {mode === "create"
-              ? "Nova Tarefa"
+              ? parentNoteId
+                ? "Nova subtarefa"
+                : "Nova tarefa"
               : mode === "edit"
                 ? "Editar Tarefa"
                 : "Visualizar Tarefa"}
@@ -225,9 +235,48 @@ export function TaskNoteModalHeader({
 
           {mode === "create" && onCreateNote && (
             <>
+              {onDraftColorChange && (
+                <div className="relative">
+                  <button
+                    onClick={onToggleColorPicker}
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-yellow-500"
+                    title="Cor"
+                  >
+                    <Palette size={15} />
+                  </button>
+                  {showColorPicker && (
+                    <div className="dark:border-surface-dark-border-strong absolute top-full right-0 z-20 mt-1 w-56 rounded-md border border-neutral-200 bg-white p-3 shadow-xl dark:bg-[#1d1d1b]">
+                      <div className="mb-2 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                        Escolha uma cor
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {COLOR_PRESETS.map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => {
+                              onDraftColorChange(c);
+                              if (showColorPicker) onToggleColorPicker();
+                            }}
+                            className={`h-6 w-6 rounded-full border-2 transition-all hover:scale-110 ${
+                              draftColor === c
+                                ? "border-neutral-900 dark:border-white"
+                                : "border-transparent hover:border-neutral-400 dark:hover:border-neutral-500"
+                            }`}
+                            style={{ backgroundColor: c }}
+                            title={c}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <button
                 onClick={onCreateNote}
-                disabled={isSaving}
+                disabled={isSaving || createDisabled}
+                title="Criar tarefa"
+                aria-label="Criar tarefa"
                 className="flex items-center gap-1.5 rounded-md bg-yellow-500 px-3 py-1.5 text-xs font-semibold text-neutral-900 transition-colors hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}

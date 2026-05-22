@@ -146,8 +146,8 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
     return (
       <SetProfileSettings
         locale={locale}
-        onSkip={() => router.push("/weave-engine")}
-        onComplete={() => router.push("/weave-engine")}
+        onSkip={() => router.push("/home")}
+        onComplete={() => router.push("/home")}
       />
     );
   }
@@ -242,7 +242,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
                 </button>
                 <button
                   type="button"
-                  onClick={() => router.push("/weave-engine")}
+                  onClick={() => router.push("/home")}
                   className="border-brand-secondary-200 text-brand-secondary-700 hover:bg-brand-secondary-100 w-full rounded-md border-2 bg-white px-4 py-2 text-sm font-medium transition-colors"
                 >
                   {confirmT.skipAndEnter}

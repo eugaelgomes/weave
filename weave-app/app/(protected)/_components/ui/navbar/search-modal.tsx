@@ -58,7 +58,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   }, [onClose]);
 
   const places: SearchResult[] = [
-    { id: "1", title: searchT.placeHome, type: "page", icon: Home, href: "/weave-engine" },
+    { id: "1", title: searchT.placeHome, type: "page", icon: Home, href: "/home" },
     {
       id: "2",
       title: searchT.placeExplore,

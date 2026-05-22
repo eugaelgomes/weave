@@ -275,7 +275,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               )}
 
               <Link
-                href={authenticated ? "/weave-engine" : "/"}
+                href={authenticated ? "/home" : "/"}
                 className="flex min-w-0 items-center self-center"
                 aria-label={t.nav.backToHome}
               >

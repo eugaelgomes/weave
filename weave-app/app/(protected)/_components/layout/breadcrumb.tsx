@@ -66,7 +66,7 @@ const Breadcrumb = () => {
     >
       {/* Home Link */}
       <Link
-        href="/weave-engine"
+        href="/home"
         className="group hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md px-2 py-1 text-neutral-400 transition-all hover:bg-neutral-800/50"
         aria-label={t.nav.breadcrumbHome}
       >

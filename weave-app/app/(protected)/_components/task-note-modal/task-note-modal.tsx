@@ -22,6 +22,11 @@ import { useTaskNoteModal, type TaskNoteModalMode } from "./use-task-note-modal"
 import { TaskNoteModalHeader } from "./task-note-modal-header";
 import { TaskNoteModalMeta } from "./task-note-modal-meta";
 import { TaskNoteModalContent } from "./task-note-modal-content";
+import { emptyCreateTaskDraft, type CreateTaskDraft } from "./create-task-draft";
+import type {
+  ProjectCollaboratorOption,
+  ProjectTagOption,
+} from "@/app/(protected)/projects/_components/task-card-meta-pickers";
 import { ApiError } from "@/app/_services/api-methods";
 import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema";
 import type { NoteCommentsEmbeddableFile } from "@/app/(protected)/notes/_components/note-comments-sidebar";
@@ -34,8 +39,8 @@ type NoteConflictState = {
 };
 
 export function TaskNoteModal() {
-  const { state, callbacks, closeModal } = useTaskNoteModal();
-  const { isOpen, mode, noteId, projectId, stageId, parentNoteId } = state;
+  const { state, callbacks, closeModal, openModal } = useTaskNoteModal();
+  const { isOpen, mode, noteId, projectId, projectPublicId, stageId, parentNoteId } = state;
 
   const {
     getNoteById,
@@ -56,6 +61,8 @@ export function TaskNoteModal() {
     addNoteToProject,
     updateProjectNoteStage,
     createTaskInStage,
+    getProjectTags,
+    getCollaborators,
   } = useProjects();
 
   const [mounted, setMounted] = useState(false);
@@ -71,6 +78,12 @@ export function TaskNoteModal() {
   const [taskPriorities, setTaskPriorities] = useState<TaskPriority[]>([]);
   const [projectStages, setProjectStages] = useState<ProjectStage[]>([]);
   const [noteConflict, setNoteConflict] = useState<NoteConflictState | null>(null);
+  const [createDraft, setCreateDraft] = useState<CreateTaskDraft>(emptyCreateTaskDraft);
+  const [createStageId, setCreateStageId] = useState("");
+  const [projectTagsForCreate, setProjectTagsForCreate] = useState<ProjectTagOption[]>([]);
+  const [projectCollaboratorsForCreate, setProjectCollaboratorsForCreate] = useState<
+    ProjectCollaboratorOption[]
+  >([]);
 
   const noteRevisionRef = useRef<number>(1);
   const noteSaveQueueRef = useRef<Promise<unknown>>(Promise.resolve());
@@ -224,20 +237,54 @@ export function TaskNoteModal() {
     setBlocks([]);
     setEditingTitle("");
     setEditingDescription("");
+    setCreateDraft(emptyCreateTaskDraft());
+    setCreateStageId(stageId || "");
     noteRevisionRef.current = 1;
 
     if (projectId) {
-      const stages = await getProjectStages(projectId);
+      const [stages, tags, collabs] = await Promise.all([
+        getProjectStages(projectId),
+        getProjectTags(projectId).catch(() => []),
+        getCollaborators(projectId).catch(() => []),
+      ]);
       setProjectStages(stages || []);
+      setProjectTagsForCreate(
+        (tags || []).map((t) => ({
+          id: t.id,
+          name: t.name,
+          color_hex: t.color_hex,
+        }))
+      );
+      setProjectCollaboratorsForCreate(
+        (collabs || []).map((c) => ({
+          user_id: c.user_id,
+          username: c.username,
+          name: c.name,
+        }))
+      );
     } else {
       setProjectStages([]);
+      setProjectTagsForCreate([]);
+      setProjectCollaboratorsForCreate([]);
     }
 
     await loadTaskPriorities({
       projectId: projectId || undefined,
       orgId: organization?.id,
     });
-  }, [projectId, organization?.id, getProjectStages, loadTaskPriorities]);
+  }, [
+    projectId,
+    stageId,
+    organization?.id,
+    getProjectStages,
+    getProjectTags,
+    getCollaborators,
+    loadTaskPriorities,
+  ]);
+
+  const patchCreateDraft = useCallback((patch: Partial<CreateTaskDraft>) => {
+    setCreateDraft((prev) => ({ ...prev, ...patch }));
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -248,6 +295,10 @@ export function TaskNoteModal() {
       setShowColorPicker(false);
       setShowCommentsPanel(false);
       setNoteConflict(null);
+      setCreateDraft(emptyCreateTaskDraft());
+      setCreateStageId("");
+      setProjectTagsForCreate([]);
+      setProjectCollaboratorsForCreate([]);
       noteRevisionRef.current = 1;
       return;
     }
@@ -321,29 +372,59 @@ export function TaskNoteModal() {
   );
 
   const handleCreateNote = useCallback(async () => {
+    const effectiveStageId = createStageId || stageId;
+    if (projectId && !effectiveStageId) return;
+
     setIsSaving(true);
     try {
       let createdNote: Note | null = null;
+      const title = editingTitle.trim() || "Nova Tarefa";
+      const description = editingDescription.trim() || undefined;
+      const properties = createDraft.color ? { color: createDraft.color } : undefined;
 
-      if (projectId && stageId) {
-        const notes = await createTaskInStage(projectId, stageId, {
-          title: editingTitle.trim() || "Nova Tarefa",
-          description: editingDescription.trim() || undefined,
+      if (projectId && effectiveStageId) {
+        const notes = await createTaskInStage(projectId, effectiveStageId, {
+          title,
+          description,
           parent_id: parentNoteId || undefined,
+          tags: createDraft.tagIds.length > 0 ? createDraft.tagIds : undefined,
+          priority_id: createDraft.priorityId || null,
+          due_date: createDraft.dueDate,
+          collaborator_ids:
+            createDraft.collaboratorIds.length > 0 ? createDraft.collaboratorIds : undefined,
+          files: createDraft.pendingFiles.length > 0 ? createDraft.pendingFiles : undefined,
+          properties,
         });
         if (notes && notes.length > 0) {
           createdNote = notes[notes.length - 1] as Note;
         }
       } else {
         createdNote = await createNoteService({
-          title: editingTitle.trim() || "Nova Tarefa",
-          description: editingDescription.trim() || undefined,
+          title,
+          description,
         });
       }
 
       if (createdNote) {
+        if (createDraft.blocks.length > 0) {
+          try {
+            const result = await putNoteBlocksSync(createdNote.id, createDraft.blocks, 1);
+            if (result.blocks) {
+              createdNote = { ...createdNote, blocks: result.blocks as Note["blocks"] };
+            }
+          } catch (err) {
+            console.error("Error saving blocks on create:", err);
+          }
+        }
+
         callbacks.onNoteCreated?.(createdNote);
-        closeModal();
+        openModal("edit", {
+          noteId: createdNote.id,
+          projectId,
+          projectPublicId,
+          onNoteUpdated: callbacks.onNoteUpdated,
+          onNoteDeleted: callbacks.onNoteDeleted,
+        });
       }
     } catch (err) {
       console.error("Error creating note:", err);
@@ -353,13 +434,17 @@ export function TaskNoteModal() {
   }, [
     projectId,
     stageId,
+    createStageId,
     parentNoteId,
+    projectPublicId,
     editingTitle,
     editingDescription,
+    createDraft,
     createTaskInStage,
     createNoteService,
+    putNoteBlocksSync,
     callbacks,
-    closeModal,
+    openModal,
   ]);
 
   const handleDelete = useCallback(async () => {
@@ -535,6 +620,10 @@ export function TaskNoteModal() {
               onColorChange={handleColorChange}
               onToggleComments={() => setShowCommentsPanel((v) => !v)}
               onCreateNote={mode === "create" ? handleCreateNote : undefined}
+              createDisabled={Boolean(projectId && !(createStageId || stageId))}
+              parentNoteId={parentNoteId}
+              draftColor={createDraft.color}
+              onDraftColorChange={(color) => patchCreateDraft({ color })}
             />
 
             <div className="flex min-h-0 flex-1 overflow-hidden">
@@ -560,13 +649,19 @@ export function TaskNoteModal() {
                   projectStages={projectStages}
                   taskPriorities={taskPriorities}
                   initialProjectId={projectId}
-                  initialStageId={stageId}
+                  initialStageId={createStageId || stageId}
                   canEdit={canEdit}
                   onProjectChange={handleProjectChange}
                   onStageChange={handleStageChange}
                   onPriorityChange={handlePriorityChange}
                   onDueDateChange={handleDueDateChange}
                   onSaveAndApply={saveAndApply}
+                  projectTags={projectTagsForCreate}
+                  projectCollaborators={projectCollaboratorsForCreate}
+                  createDraft={mode === "create" ? createDraft : undefined}
+                  createStageId={createStageId}
+                  onCreateStageChange={setCreateStageId}
+                  onCreateDraftChange={patchCreateDraft}
                 />
 
                 <TaskNoteModalContent
@@ -579,6 +674,8 @@ export function TaskNoteModal() {
                   onTitleChange={handleTitleChange}
                   onDescriptionChange={handleDescriptionChange}
                   onBlocksSave={handleBlocksSave}
+                  createBlocks={createDraft.blocks}
+                  onCreateBlocksChange={(blocks) => patchCreateDraft({ blocks })}
                 />
               </div>
 
