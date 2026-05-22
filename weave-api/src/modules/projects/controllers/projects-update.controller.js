@@ -366,7 +366,8 @@ class ProjectsUpdateController extends ProjectsCoreController {
                 addedCollaborator.email,
                 projectWithOwner[0].title,
                 projectId,
-                projectWithOwner[0].owner_name
+                projectWithOwner[0].owner_name,
+                projectWithOwner[0].public_id
               ).catch((err) => {
                 console.error(
                   "❌ [EMAIL DEBUG] Erro ao enviar email de convite:",

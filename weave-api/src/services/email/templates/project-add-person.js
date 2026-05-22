@@ -19,11 +19,13 @@ async function inviteProjectMember(
   email,
   projectName,
   projectId,
-  addedByName
+  addedByName,
+  projectPublicId = null
 ) {
   const locale = await getUserEmailLocale({ email });
   const firstName = (nome || "").split(" ")[0] || t(locale, "common.greetingFallback");
-  const projectUrl = `${frontendUrl}/app/home`;
+  const targetId = projectPublicId || projectId;
+  const projectUrl = `${frontendUrl}/auth/?redirect=${encodeURIComponent(`/app/projects/${targetId}`)}`;
 
   const safeProjectName = projectName || t(locale, "project.untitled");
 

@@ -119,13 +119,20 @@ export function OrganizationInviteModal({
   const skipProjectMemberRole = role === "ADMIN" || role === "SUPER_ADMIN";
 
   useEffect(() => {
-    if (!isOpen) return;
-    setName("");
-    setEmail("");
-    setRole("MEMBER");
-    setAreaId(areas[0]?.id ?? "");
-    setProjectMemberRole("CONTRIBUTOR");
-  }, [isOpen, areas]);
+    if (!isOpen) {
+      setName("");
+      setEmail("");
+      setRole("MEMBER");
+      setAreaId("");
+      setProjectMemberRole("CONTRIBUTOR");
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && !areaId && areas.length > 0) {
+      setAreaId(areas[0].id);
+    }
+  }, [isOpen, areaId, areas]);
 
   useEffect(() => {
     if (!workspaceRoleOptions.includes(role)) {
@@ -202,8 +209,9 @@ export function OrganizationInviteModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t.organizationMembers.inviteNamePlaceholder}
-              autoComplete="name"
+              autoComplete="off"
               className={`${inputClass} pr-2 pl-8`}
+              data-1p-ignore
             />
           </div>
         </div>
@@ -218,7 +226,9 @@ export function OrganizationInviteModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t.organizationMembers.inviteEmailPlaceholder}
+              autoComplete="off"
               className={`${inputClass} pr-2 pl-8`}
+              data-1p-ignore
             />
           </div>
           {inviteEmailPlusError ? (

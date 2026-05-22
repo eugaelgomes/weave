@@ -58,6 +58,7 @@ class AiReportDeliveryProcessor {
           projectTitle,
           outputMarkdown,
           projectId,
+          projectPublicId: recipient.project_public_id || projectId,
           reasoningId,
           recipientName: recipient.name,
         });
@@ -87,7 +88,7 @@ class AiReportDeliveryProcessor {
   async _getRecipients(projectId, scope, customIds) {
     if (scope === "owner_only") {
       return executeQuery(
-        `SELECT u.email, u.name, u.user_preference FROM users u 
+        `SELECT u.email, u.name, u.user_preference, p.public_id as project_public_id FROM users u 
          INNER JOIN projects p ON p.user_id = u.user_id 
          WHERE p.id = $1`,
         [projectId]
@@ -96,20 +97,25 @@ class AiReportDeliveryProcessor {
 
     if (scope === "custom" && Array.isArray(customIds) && customIds.length > 0) {
       return executeQuery(
-        `SELECT u.email, u.name, u.user_preference FROM users u WHERE u.user_id = ANY($1::uuid[])`,
-        [customIds]
+        `SELECT DISTINCT u.email, u.name, u.user_preference, p.public_id as project_public_id 
+         FROM users u 
+         LEFT JOIN project_members pm ON pm.user_id = u.user_id AND pm.project_id = $2
+         LEFT JOIN projects p ON p.id = $2
+         WHERE u.user_id = ANY($1::uuid[])`,
+        [customIds, projectId]
       );
     }
 
     return executeQuery(
-      `SELECT DISTINCT u.email, u.name, u.user_preference
+      `SELECT DISTINCT u.email, u.name, u.user_preference, p.public_id as project_public_id
       FROM project_members pm
       INNER JOIN users u ON u.user_id = pm.user_id
+      INNER JOIN projects p ON p.id = pm.project_id
       WHERE pm.project_id = $1
         AND pm.deleted = false
         AND pm.suspended = false
       UNION
-      SELECT u.email, u.name, u.user_preference
+      SELECT u.email, u.name, u.user_preference, p.public_id as project_public_id
       FROM users u
       INNER JOIN projects p ON p.user_id = u.user_id
       WHERE p.id = $1 AND p.deleted = false`,

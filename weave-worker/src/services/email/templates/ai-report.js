@@ -18,6 +18,7 @@ function buildAiReportEmail({
   sprintNumber,
   outputMarkdown,
   projectId,
+  projectPublicId,
   reasoningId,
   recipientName,
 }) {
@@ -31,9 +32,10 @@ function buildAiReportEmail({
   const subject = `${typeLabel} — ${projectTitle}${sprintSuffix}`;
 
   const appUrl = env.appUrl || process.env.APP_URL || "https://app.weavenotes.com";
+  const targetId = projectPublicId || projectId;
   const ctaUrl = reasoningId
-    ? `${appUrl}/projects/${projectId}/reasonings/${reasoningId}`
-    : `${appUrl}/projects/${projectId}`;
+    ? `${appUrl}/projects/${targetId}/reasonings/${reasoningId}`
+    : `${appUrl}/projects/${targetId}`;
 
   const contentHtml = markdownToHtml(outputMarkdown || "");
 
