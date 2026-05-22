@@ -1,26 +1,52 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import {
+  resolveLegacyAuthInviteRedirect,
+  resolveOrganizationAcceptInviteRedirect,
+} from "@/lib/invite-auth-redirects";
+
+function applyInviteRedirect(
+  request: NextRequest,
+  redirect: { pathname: string; inviteToken: string | null; deleteToken: boolean }
+): NextResponse {
+  const url = request.nextUrl.clone();
+  url.pathname = redirect.pathname;
+  if (redirect.deleteToken) {
+    url.searchParams.delete("token");
+  }
+  if (redirect.inviteToken) {
+    url.searchParams.set("invite_token", redirect.inviteToken);
+  } else {
+    url.searchParams.delete("invite_token");
+  }
+  return NextResponse.redirect(url);
+}
 
 /**
- * Convites antigos usavam /organization/accept-invite/?token=...
- * Redireciona para /auth/?invite_token=... (sem pasta app/organization).
+ * Legacy org invites used /organization/accept-invite/?token=...
+ * Redirects to /auth/?invite_token=... (canonical accept-invite landing).
  */
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname.replace(/\/$/, "") || "/";
 
-  // Redireciona convites de organização
-  if (pathname === "/organization/accept-invite") {
-    const token = request.nextUrl.searchParams.get("token");
-    const url = request.nextUrl.clone();
-    url.pathname = "/auth/";
-    url.searchParams.delete("token");
-    if (token) {
-      url.searchParams.set("invite_token", token);
-    }
-    return NextResponse.redirect(url);
+  const orgInviteRedirect = resolveOrganizationAcceptInviteRedirect(
+    pathname,
+    request.nextUrl.searchParams.get("token")
+  );
+  if (orgInviteRedirect) {
+    return applyInviteRedirect(request, orgInviteRedirect);
   }
 
-  // Redireciona links de redefinição de senha
+  const legacyAuthRedirect = resolveLegacyAuthInviteRedirect({
+    pathname,
+    token: request.nextUrl.searchParams.get("token"),
+    inviteToken: request.nextUrl.searchParams.get("invite_token"),
+    view: request.nextUrl.searchParams.get("view"),
+  });
+  if (legacyAuthRedirect) {
+    return applyInviteRedirect(request, legacyAuthRedirect);
+  }
+
   if (pathname === "/auth/reset-password") {
     const resetToken = request.nextUrl.searchParams.get("reset_token");
     const url = request.nextUrl.clone();
@@ -40,6 +66,8 @@ export const config = {
   matcher: [
     "/organization/accept-invite",
     "/organization/accept-invite/",
+    "/auth",
+    "/auth/",
     "/auth/reset-password",
     "/auth/reset-password/",
   ],

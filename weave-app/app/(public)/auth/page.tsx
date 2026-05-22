@@ -76,6 +76,7 @@ export default function AuthPage() {
   };
 
   useEffect(() => {
+    // Org invites use invite_token. Account activation uses view=confirm&token=...
     const invite = searchParams.get("invite_token");
     if (invite) {
       setCurrentView("accept-invite");

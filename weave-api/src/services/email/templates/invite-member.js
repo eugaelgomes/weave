@@ -4,6 +4,7 @@ const {
   escapeHtml,
 } = require("@/services/email/mail-template");
 const { getRoleLabel, resolveEmailLocale, t } = require("@/services/email/i18n");
+const { buildAuthInviteUrl } = require("@/utils/frontend-url");
 
 /**
  * @param {string} invitedEmail
@@ -22,8 +23,7 @@ async function send_organization_invite(
   inviterLocale
 ) {
   const locale = resolveEmailLocale(inviterLocale);
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-  const acceptInviteLink = `${frontendUrl}/auth?invite_token=${inviteToken}`;
+  const acceptInviteLink = buildAuthInviteUrl(inviteToken);
   const translatedRole = getRoleLabel(locale, role);
 
   try {

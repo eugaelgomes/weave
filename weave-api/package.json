@@ -7,7 +7,7 @@
     "@": "src"
   },
   "scripts": {
-    "test": "jest",
+    "test": "node --test src/**/*.test.js",
     "start": "node dist/index.js --ignore-scripts",
     "dev": "nodemon --exec ts-node src/index.js --ignore-scripts",
     "dev:doppler": "doppler run --project weave-api --config dev -- npm run dev --ignore-scripts",

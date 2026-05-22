@@ -8,6 +8,7 @@ import {
   previewOrganizationInvite,
   type OrganizationInvitePreview,
 } from "@/app/_services/organization";
+import { ApiError } from "@/app/_services/api-error";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import type { TranslationKeys } from "@/app/_i18n";
@@ -25,6 +26,24 @@ function inviteDisplayName(preview: OrganizationInvitePreview): string | null {
   const local = preview.email?.split("@")[0]?.trim();
   if (!local) return null;
   return local.split("+")[0]?.trim() || null;
+}
+
+function formatInviteLoadError(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[AcceptOrganizationInvite] preview failed", {
+        status: error.status,
+        code: error.code,
+        data: error.data,
+      });
+      return error.userMessage || error.message || fallback;
+    }
+    console.warn("[AcceptOrganizationInvite] preview failed", error.status, error.code);
+  }
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+  return fallback;
 }
 
 function buildInviteGreeting(t: TranslationKeys, preview: OrganizationInvitePreview): string {
@@ -76,7 +95,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
       } catch (e) {
         if (!cancelled) {
           setLoadError(
-            e instanceof Error ? e.message : t.acceptOrganizationInvite.loadErrorDefault
+            formatInviteLoadError(e, t.acceptOrganizationInvite.loadErrorDefault)
           );
         }
       } finally {

@@ -848,7 +848,14 @@ export const previewOrganizationInvite = async (
   );
   const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
   if (!data.data) {
-    throw new Error("Resposta inválida do servidor");
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[previewOrganizationInvite] Missing data in OK response", data);
+    }
+    throw new Error(
+      process.env.NODE_ENV === "development"
+        ? "Invalid server response: invite preview payload is missing."
+        : "Resposta inválida do servidor"
+    );
   }
   
   const previewData = data.data as any;
