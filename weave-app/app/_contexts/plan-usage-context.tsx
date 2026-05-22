@@ -126,7 +126,19 @@ export function PlanUsageProvider({ children }: { children: React.ReactNode }) {
       canUploadStorage,
       canInviteTeamMember,
     }),
-    [gates, lastSyncedAt, isRefreshing, refreshPlanUsage, canCreateNote, canCreateProject, canSendAiMessage, canExportNote, canExportBackup, canUploadStorage, canInviteTeamMember]
+    [
+      gates,
+      lastSyncedAt,
+      isRefreshing,
+      refreshPlanUsage,
+      canCreateNote,
+      canCreateProject,
+      canSendAiMessage,
+      canExportNote,
+      canExportBackup,
+      canUploadStorage,
+      canInviteTeamMember,
+    ]
   );
 
   return <PlanUsageContext.Provider value={value}>{children}</PlanUsageContext.Provider>;

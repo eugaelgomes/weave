@@ -31,7 +31,10 @@ export function formatPercentage(value: number | null | undefined): string {
   return `${value.toFixed(1)}%`;
 }
 
-export function formatPeriodLabel(start: string | null | undefined, end: string | null | undefined): string {
+export function formatPeriodLabel(
+  start: string | null | undefined,
+  end: string | null | undefined
+): string {
   if (!start && !end) return "Período não definido";
   return `${formatDate(start ?? "")} – ${formatDate(end ?? "")}`;
 }

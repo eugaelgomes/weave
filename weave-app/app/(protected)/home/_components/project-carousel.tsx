@@ -79,7 +79,10 @@ export default function ProjectsCarousel({
   const dateLocale = locale === "en-US" ? "en-US" : locale === "es-ES" ? "es-ES" : "pt-BR";
 
   const signalsByProjectPublicId = React.useMemo(() => {
-    const map = new Map<string, { hasNew: boolean; actions: number; risk: "low" | "medium" | "high" }>();
+    const map = new Map<
+      string,
+      { hasNew: boolean; actions: number; risk: "low" | "medium" | "high" }
+    >();
     const now = Date.now();
     const dayMs = 24 * 60 * 60 * 1000;
 
@@ -134,7 +137,7 @@ export default function ProjectsCarousel({
   };
 
   return (
-    <div className="rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md">
+    <div className="dark:border-surface-dark-border dark:shadow-surface-dark-md rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:p-3 dark:bg-[#1d1d1b]">
       <div className="mb-2 flex items-center justify-between gap-2">
         <h3 className="text-xs font-semibold text-neutral-500 sm:text-sm dark:text-neutral-100">
           {resolvedTitle}
@@ -234,7 +237,7 @@ export default function ProjectsCarousel({
                 weaveParts.push(
                   <span
                     key="actions"
-                    className="font-normal text-brand-primary-700 dark:text-brand-primary-400"
+                    className="text-brand-primary-700 dark:text-brand-primary-400 font-normal"
                   >
                     {t.home.carousel.suggestedActions.replace("{count}", String(signal.actions))}
                   </span>
@@ -244,7 +247,7 @@ export default function ProjectsCarousel({
                 weaveParts.push(
                   <span
                     key="new"
-                    className="font-normal text-brand-primary-700 dark:text-brand-primary-400"
+                    className="text-brand-primary-700 dark:text-brand-primary-400 font-normal"
                   >
                     {t.home.carousel.newInsight}
                   </span>
@@ -271,7 +274,7 @@ export default function ProjectsCarousel({
                   className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center sm:w-[220px] sm:snap-start"
                 >
                   <div
-                    className={`group flex min-h-[148px] flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2.5 font-normal transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:border-surface-dark-border-strong dark:hover:shadow-surface-dark-md ${accentColor ? "border-l-2" : ""}`}
+                    className={`group dark:border-surface-dark-border dark:hover:border-surface-dark-border-strong dark:hover:shadow-surface-dark-md flex min-h-[148px] flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2.5 font-normal transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:bg-[#1d1d1b] ${accentColor ? "border-l-2" : ""}`}
                     style={accentColor ? { borderLeftColor: accentColor } : undefined}
                   >
                     <div className="flex flex-1 flex-col">

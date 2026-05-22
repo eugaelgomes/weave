@@ -42,9 +42,7 @@ export default function ChatWidget({
         const availableModels = await fetchAvailableModels();
         setModels(availableModels);
       } catch (loadError) {
-        setError(
-          loadError instanceof Error ? loadError.message : "Erro ao carregar modelos"
-        );
+        setError(loadError instanceof Error ? loadError.message : "Erro ao carregar modelos");
       }
     };
     loadModels();
@@ -142,10 +140,10 @@ export default function ChatWidget({
 
   return (
     <div
-      className={`flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-md dark:shadow-surface-dark-md dark:border-surface-dark-border dark:bg-[#1d1d1b] ${className}`}
+      className={`dark:shadow-surface-dark-md dark:border-surface-dark-border flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-md dark:bg-[#1d1d1b] ${className}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+      <div className="dark:border-surface-dark-border flex items-center justify-between border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:bg-[#1d1d1b]">
         <div className="flex items-center gap-2">
           <div className="bg-brand-primary-500/10 flex h-6 w-6 items-center justify-center rounded-md text-yellow-600">
             <Sparkles className="h-4 w-4" />
@@ -198,7 +196,7 @@ export default function ChatWidget({
                   className={`max-w-[85%] rounded-lg px-3 py-1.5 text-xs shadow-sm ${
                     msg.role === "user"
                       ? "bg-neutral-900 text-white dark:bg-neutral-50 dark:text-neutral-900"
-                      : "border border-neutral-200 bg-white text-neutral-800 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-200"
+                      : "dark:border-surface-dark-border border border-neutral-200 bg-white text-neutral-800 dark:bg-[#1d1d1b] dark:text-neutral-200"
                   }`}
                 >
                   <div className="prose prose-invert max-w-none leading-relaxed text-inherit">
@@ -217,7 +215,7 @@ export default function ChatWidget({
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-teal-500 text-white">
                   <Bot className="h-3 w-3" />
                 </div>
-                <div className="flex items-center gap-1 rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+                <div className="dark:border-surface-dark-border flex items-center gap-1 rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1 dark:bg-[#1d1d1b]">
                   <span className="h-1 w-1 animate-bounce rounded-full bg-neutral-400" />
                   <span className="h-1 w-1 animate-bounce rounded-full bg-neutral-400 [animation-delay:0.2s]" />
                   <span className="h-1 w-1 animate-bounce rounded-full bg-neutral-400 [animation-delay:0.4s]" />
@@ -230,7 +228,7 @@ export default function ChatWidget({
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-neutral-200 bg-neutral-50 p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+      <div className="dark:border-surface-dark-border border-t border-neutral-200 bg-neutral-50 p-3 dark:bg-[#1d1d1b]">
         <div className="flex items-end gap-2">
           <textarea
             ref={textareaRef}
@@ -244,7 +242,7 @@ export default function ChatWidget({
               }
             }}
             placeholder="Perguntar..."
-            className="max-h-24 min-h-[36px] flex-1 resize-none rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs transition-all focus:border-yellow-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:focus:border-yellow-600"
+            className="dark:border-surface-dark-border-strong max-h-24 min-h-[36px] flex-1 resize-none rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs transition-all focus:border-yellow-500 focus:outline-none dark:bg-[#1d1d1b] dark:focus:border-yellow-600"
           />
           <button
             onClick={handleSend}

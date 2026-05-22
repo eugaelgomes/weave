@@ -86,7 +86,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
                 onClick={closeSidebar}
               />
 
-              <div className="relative z-[101] flex h-[85vh] min-h-0 w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl ring-1 ring-black/5 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-xl dark:ring-white/10">
+              <div className="dark:border-surface-dark-border dark:shadow-surface-dark-xl relative z-[101] flex h-[85vh] min-h-0 w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl ring-1 ring-black/5 dark:bg-[#1d1d1b] dark:ring-white/10">
                 <Sidebar
                   onLinkClick={closeSidebar}
                   isCollapsed={false}
@@ -96,26 +96,26 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
             </div>
           )}
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden gap-1 md:mr-1.5 md:mb-1">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-hidden md:mr-1.5 md:mb-1">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
               {/* Mobile: navbar scrolls with main; desktop: already rendered above. */}
               {!isLg ? <Navbar onToggleSidebar={toggleSidebar} /> : null}
 
               <div
                 className={cn(
-                  "flex w-full min-w-0 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white p-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.04] dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md dark:ring-white/[0.08]",
+                  "dark:border-surface-dark-border dark:shadow-surface-dark-md flex w-full min-w-0 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white p-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.04] dark:bg-[#1d1d1b] dark:ring-white/[0.08]",
                   isLg ? "min-h-0 flex-1" : "shrink-0"
                 )}
               >
                 <div
                   className={cn(
-                    "flex min-h-0 min-w-0 w-full flex-col overflow-hidden",
+                    "flex min-h-0 w-full min-w-0 flex-col overflow-hidden",
                     isLg ? "flex-1" : "max-lg:flex-none"
                   )}
                 >
                   <div
                     className={cn(
-                      "flex min-h-0 min-w-0 w-full flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500",
+                      "animate-in fade-in slide-in-from-bottom-2 flex min-h-0 w-full min-w-0 flex-col gap-2 duration-500",
                       isLg ? "flex-1" : "max-lg:min-h-[calc(100dvh-9rem)] max-lg:flex-none"
                     )}
                   >

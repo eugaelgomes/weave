@@ -15,10 +15,7 @@ export type IconFieldValue =
 
 type ProjectIconValue = ProjectProperties["icon"] | IconFieldValue;
 
-type ResolvedProjectIcon =
-  | { kind: "emoji"; value: string }
-  | { kind: "image"; url: string }
-  | null;
+type ResolvedProjectIcon = { kind: "emoji"; value: string } | { kind: "image"; url: string } | null;
 
 /**
  * Normalizes project icon from properties (emoji string or storage object).
@@ -109,7 +106,7 @@ export function ProjectIconEditable({
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
         title="Alterar ícone do projeto"
-        className={`group/icon relative shrink-0 rounded-md transition-opacity hover:ring-2 hover:ring-brand-primary-500/40 disabled:cursor-wait ${
+        className={`group/icon hover:ring-brand-primary-500/40 relative shrink-0 rounded-md transition-opacity hover:ring-2 disabled:cursor-wait ${
           uploading ? "opacity-60" : ""
         }`}
       >
@@ -133,12 +130,7 @@ export function ProjectIconEditable({
   );
 }
 
-export function ProjectIcon({
-  icon,
-  color,
-  size = "sm",
-  className = "",
-}: ProjectIconProps) {
+export function ProjectIcon({ icon, color, size = "sm", className = "" }: ProjectIconProps) {
   const resolved = useMemo(() => resolveProjectIcon(icon), [icon]);
   const dims = sizeMap[size];
   const accent = color && /^#[0-9A-Fa-f]{3,8}$/i.test(color) ? color : "#a3a3a3";
@@ -157,7 +149,7 @@ export function ProjectIcon({
   if (resolved?.kind === "image") {
     return (
       <div
-        className={`relative ${dims.box} shrink-0 overflow-hidden rounded-md border border-neutral-200/80 dark:border-surface-dark-border ${className}`}
+        className={`relative ${dims.box} dark:border-surface-dark-border shrink-0 overflow-hidden rounded-md border border-neutral-200/80 ${className}`}
       >
         <Image src={resolved.url} alt="" fill className="object-cover" sizes="24px" />
       </div>
@@ -166,11 +158,14 @@ export function ProjectIcon({
 
   return (
     <div
-      className={`flex ${dims.box} shrink-0 items-center justify-center rounded-md border border-neutral-200/60 dark:border-surface-dark-border ${className}`}
+      className={`flex ${dims.box} dark:border-surface-dark-border shrink-0 items-center justify-center rounded-md border border-neutral-200/60 ${className}`}
       style={{ backgroundColor: `${accent}22` }}
       aria-hidden
     >
-      <FolderKanban className={`${dims.lucide} text-neutral-500 dark:text-neutral-400`} style={{ color: accent }} />
+      <FolderKanban
+        className={`${dims.lucide} text-neutral-500 dark:text-neutral-400`}
+        style={{ color: accent }}
+      />
     </div>
   );
 }

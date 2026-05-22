@@ -155,23 +155,21 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
   const trimmedUsername = username.trim();
   const trimmedEmail = email.trim();
 
-  const nameError =
-    !trimmedName
-      ? "Nome é obrigatório."
-      : !NAME_REGEX.test(trimmedName)
-        ? "Apenas letras e espaços são permitidos."
-        : trimmedName.length > 100
-          ? "O nome não pode estar vazio ou ser muito longo."
-          : "";
+  const nameError = !trimmedName
+    ? "Nome é obrigatório."
+    : !NAME_REGEX.test(trimmedName)
+      ? "Apenas letras e espaços são permitidos."
+      : trimmedName.length > 100
+        ? "O nome não pode estar vazio ou ser muito longo."
+        : "";
 
-  const usernameError =
-    !trimmedUsername
-      ? "Nome de usuário é obrigatório."
-      : !USERNAME_REGEX.test(trimmedUsername)
-        ? "Apenas letras, números, ., - ou _ são permitidos."
-        : trimmedUsername.length < 6 || trimmedUsername.length > 18
-          ? "O nome de usuário deve ter entre 6 e 18 caracteres."
-          : "";
+  const usernameError = !trimmedUsername
+    ? "Nome de usuário é obrigatório."
+    : !USERNAME_REGEX.test(trimmedUsername)
+      ? "Apenas letras, números, ., - ou _ são permitidos."
+      : trimmedUsername.length < 6 || trimmedUsername.length > 18
+        ? "O nome de usuário deve ter entre 6 e 18 caracteres."
+        : "";
 
   const emailError = !trimmedEmail
     ? "E-mail é obrigatório."
@@ -201,9 +199,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
 
   const getInputClassName = (hasError: boolean, withRightPadding = false) =>
     `text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border-2 bg-white py-2 ${withRightPadding ? "pr-10" : "pr-4"} pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
-      hasError
-        ? "border-red-400 focus:ring-red-500"
-        : "border-brand-secondary-200"
+      hasError ? "border-red-400 focus:ring-red-500" : "border-brand-secondary-200"
     }`;
 
   const handleBlur = (fieldName: string) => {
@@ -354,7 +350,10 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
               onBlur={() => handleBlur("password")}
               placeholder={t.signUp.passwordPlaceholder}
               autoComplete="new-password"
-              className={getInputClassName(Boolean(shouldShowError("password") && passwordError), true)}
+              className={getInputClassName(
+                Boolean(shouldShowError("password") && passwordError),
+                true
+              )}
               disabled={isLoading}
             />
             <button
@@ -443,7 +442,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
           </div>
 
           {error && (
-            <p className="mt-4 text-center text-xs font-semibold text-red-500 animate-in fade-in slide-in-from-top-1">
+            <p className="animate-in fade-in slide-in-from-top-1 mt-4 text-center text-xs font-semibold text-red-500">
               {error}
             </p>
           )}
@@ -456,7 +455,9 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <div className="border-brand-secondary-200 w-full border-t"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="text-brand-secondary-500 bg-white px-2">{t.signUp.orRegisterWith}</span>
+            <span className="text-brand-secondary-500 bg-white px-2">
+              {t.signUp.orRegisterWith}
+            </span>
           </div>
         </div>
 

@@ -20,7 +20,9 @@ export function CalendarPageViewProvider({ children }: { children: React.ReactNo
     [currentDate, selectedDate]
   );
 
-  return <CalendarPageViewContext.Provider value={value}>{children}</CalendarPageViewContext.Provider>;
+  return (
+    <CalendarPageViewContext.Provider value={value}>{children}</CalendarPageViewContext.Provider>
+  );
 }
 
 export function useOptionalCalendarPageView(): CalendarPageViewContextValue | null {

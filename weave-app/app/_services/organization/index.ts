@@ -355,8 +355,6 @@ const parseOrganizationProperties = (org: Organization): Organization => {
     }
   }
 
-
-
   return org;
 };
 
@@ -486,7 +484,10 @@ export const saveOrganizationCreationStepOne = async (
 
 export const completeOrganizationCreationStepOne =
   async (): Promise<OrganizationStepOneResponse> => {
-    const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_CREATION_STEP_ONE_COMPLETE, {});
+    const response = await apiClient.post(
+      API_ENDPOINTS.ORGANIZATIONS_CREATION_STEP_ONE_COMPLETE,
+      {}
+    );
     const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
     if ((data.status === "OK" || data.success) && data.data) {
@@ -746,9 +747,9 @@ export const fetchOrganizationMembers = async (
         count_by_role: recordNumbers(data.count_by_role),
         count_by_status: recordNumbers(data.count_by_status),
         count_by_suspended: recordNumbers(data.count_by_suspended),
-        list_org_members: (
-          data.list_org_members as Array<{ member_data: OrganizationMember }>
-        ).map((item) => item.member_data),
+        list_org_members: (data.list_org_members as Array<{ member_data: OrganizationMember }>).map(
+          (item) => item.member_data
+        ),
       };
     }
     return null;

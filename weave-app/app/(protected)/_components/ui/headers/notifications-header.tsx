@@ -11,9 +11,6 @@ interface NotificationsHeaderProps {
 
 export function NotificationsHeader({ className }: NotificationsHeaderProps) {
   return (
-    <BaseHeader
-      className={className}
-      leftContent={<AnimatedGreeting type="notifications" />}
-    />
+    <BaseHeader className={className} leftContent={<AnimatedGreeting type="notifications" />} />
   );
 }

@@ -1,6 +1,14 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useProjects } from "@/app/_contexts/projects-context";
 import type { ProjectOverview } from "@/app/_contexts/projects-context";
 import type {
@@ -48,12 +56,18 @@ type WeaveEngineContextValue = {
     nextCompleted: boolean
   ) => Promise<void>;
 
-  createReasoningFromMarkdown: (projectId: string, payload: {
-    reasoningType: string;
-    title: string;
-    outputMarkdown: string;
-  }) => Promise<void>;
-  triggerReasoningNow: (projectId: string, payload?: { reasoningType?: string; title?: string }) => Promise<void>;
+  createReasoningFromMarkdown: (
+    projectId: string,
+    payload: {
+      reasoningType: string;
+      title: string;
+      outputMarkdown: string;
+    }
+  ) => Promise<void>;
+  triggerReasoningNow: (
+    projectId: string,
+    payload?: { reasoningType?: string; title?: string }
+  ) => Promise<void>;
 };
 
 const WeaveEngineContext = createContext<WeaveEngineContextValue | undefined>(undefined);
@@ -75,9 +89,9 @@ export function WeaveEngineProvider({ children }: { children: React.ReactNode })
 
   const actionItemsCacheRef = useRef<Map<string, ReasoningActionItem[]>>(new Map());
   const contentCacheRef = useRef<Map<string, ReasoningContent>>(new Map());
-  const [actionItemsByReasoningId, setActionItemsByReasoningId] = useState<Map<string, ReasoningActionItem[]>>(
-    new Map()
-  );
+  const [actionItemsByReasoningId, setActionItemsByReasoningId] = useState<
+    Map<string, ReasoningActionItem[]>
+  >(new Map());
   const [contentByReasoningId, setContentByReasoningId] = useState<Map<string, ReasoningContent>>(
     new Map()
   );
@@ -145,44 +159,63 @@ export function WeaveEngineProvider({ children }: { children: React.ReactNode })
     return content;
   }, []);
 
-  const togglePinned = useCallback(async (projectId: string, reasoningId: string, nextPinned: boolean) => {
-    await updateReasoningInteraction(projectId, reasoningId, { isPinned: nextPinned });
-    await refreshFeed();
-  }, [refreshFeed]);
+  const togglePinned = useCallback(
+    async (projectId: string, reasoningId: string, nextPinned: boolean) => {
+      await updateReasoningInteraction(projectId, reasoningId, { isPinned: nextPinned });
+      await refreshFeed();
+    },
+    [refreshFeed]
+  );
 
-  const dismiss = useCallback(async (projectId: string, reasoningId: string) => {
-    await updateReasoningInteraction(projectId, reasoningId, { isDismissed: true });
-    await refreshFeed();
-  }, [refreshFeed]);
+  const dismiss = useCallback(
+    async (projectId: string, reasoningId: string) => {
+      await updateReasoningInteraction(projectId, reasoningId, { isDismissed: true });
+      await refreshFeed();
+    },
+    [refreshFeed]
+  );
 
-  const markRead = useCallback(async (projectId: string, reasoningId: string) => {
-    await updateReasoningInteraction(projectId, reasoningId, { isRead: true });
-    await refreshFeed();
-  }, [refreshFeed]);
+  const markRead = useCallback(
+    async (projectId: string, reasoningId: string) => {
+      await updateReasoningInteraction(projectId, reasoningId, { isRead: true });
+      await refreshFeed();
+    },
+    [refreshFeed]
+  );
 
   const toggleActionItemCompleted = useCallback(
     async (projectId: string, reasoningId: string, itemId: string, nextCompleted: boolean) => {
-      await updateReasoningActionItem(projectId, reasoningId, itemId, { isCompleted: nextCompleted });
+      await updateReasoningActionItem(projectId, reasoningId, itemId, {
+        isCompleted: nextCompleted,
+      });
       const current = actionItemsCacheRef.current.get(reasoningId) || [];
-      const next = current.map((it) => (it.id === itemId ? { ...it, is_completed: nextCompleted } : it));
+      const next = current.map((it) =>
+        it.id === itemId ? { ...it, is_completed: nextCompleted } : it
+      );
       setActionItemsLocal(reasoningId, next);
     },
     [setActionItemsLocal]
   );
 
-  const createReasoningFromMarkdown = useCallback(async (projectId: string, payload: { reasoningType: string; title: string; outputMarkdown: string }) => {
-    const sprint = await fetchActiveSprint(projectId);
-    if (!sprint?.id) {
-      throw new Error("Sem sprint ativo para este projeto.");
-    }
-    await createReasoning(projectId, {
-      sprintId: sprint.id,
-      reasoningType: payload.reasoningType,
-      title: payload.title,
-      content: { outputMarkdown: payload.outputMarkdown },
-    });
-    await refreshFeed();
-  }, [refreshFeed]);
+  const createReasoningFromMarkdown = useCallback(
+    async (
+      projectId: string,
+      payload: { reasoningType: string; title: string; outputMarkdown: string }
+    ) => {
+      const sprint = await fetchActiveSprint(projectId);
+      if (!sprint?.id) {
+        throw new Error("Sem sprint ativo para este projeto.");
+      }
+      await createReasoning(projectId, {
+        sprintId: sprint.id,
+        reasoningType: payload.reasoningType,
+        title: payload.title,
+        content: { outputMarkdown: payload.outputMarkdown },
+      });
+      await refreshFeed();
+    },
+    [refreshFeed]
+  );
 
   const triggerReasoningNow = useCallback(
     async (projectId: string, payload: { reasoningType?: string; title?: string } = {}) => {
@@ -245,4 +278,3 @@ export function useWeaveEngine() {
   if (!ctx) throw new Error("useWeaveEngine must be used within WeaveEngineProvider");
   return ctx;
 }
-

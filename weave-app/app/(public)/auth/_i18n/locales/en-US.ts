@@ -165,7 +165,8 @@ export const enUS = {
     confirmPasswordPlaceholder: "Confirm new password",
     submitButton: "Change password",
     successTitle: "Password changed!",
-    successMessage: "Your password has been successfully reset. You can now log in with your new password.",
+    successMessage:
+      "Your password has been successfully reset. You can now log in with your new password.",
     loginNow: "Go to login",
   },
 };

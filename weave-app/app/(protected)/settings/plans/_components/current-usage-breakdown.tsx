@@ -20,8 +20,8 @@ function progressWidth(percentage: number | null): string {
 
 export function CurrentUsageBreakdown({ metrics }: CurrentUsageBreakdownProps) {
   return (
-    <div className="flex flex-col overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm transition-all dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
-      <div className="flex items-center justify-between border-b border-neutral-100/60 px-4 py-2.5 dark:border-surface-dark-border-muted">
+    <div className="dark:border-surface-dark-border dark:shadow-surface-dark-sm flex flex-col overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm transition-all dark:bg-[#1d1d1b]">
+      <div className="dark:border-surface-dark-border-muted flex items-center justify-between border-b border-neutral-100/60 px-4 py-2.5">
         <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
           <Zap size={13} className="text-amber-500" />
           Consumo Atual Detalhado
@@ -35,7 +35,7 @@ export function CurrentUsageBreakdown({ metrics }: CurrentUsageBreakdownProps) {
           return (
             <article
               key={key}
-              className="rounded-md border border-neutral-100 bg-neutral-50/70 p-3 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/30"
+              className="dark:border-surface-dark-border-muted rounded-md border border-neutral-100 bg-neutral-50/70 p-3 dark:bg-[#1d1d1b]/30"
             >
               <div className="mb-2 flex items-center justify-between text-[10px] font-bold tracking-wider text-neutral-500 uppercase">
                 <span className="flex items-center gap-1.5">

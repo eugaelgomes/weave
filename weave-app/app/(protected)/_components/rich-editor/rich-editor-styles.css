@@ -209,7 +209,7 @@
   width: 1em;
   height: 1em;
   cursor: pointer;
-  accent-color: #FACC15;
+  accent-color: #facc15;
 }
 
 .tiptap-editor .tiptap-task-item > div {
@@ -342,7 +342,10 @@
   border-radius: 4px;
   cursor: grab;
   color: #d4d4d4;
-  transition: opacity 120ms ease, color 120ms ease, background-color 120ms ease;
+  transition:
+    opacity 120ms ease,
+    color 120ms ease,
+    background-color 120ms ease;
   z-index: 50;
   user-select: none;
   padding-top: 2px;

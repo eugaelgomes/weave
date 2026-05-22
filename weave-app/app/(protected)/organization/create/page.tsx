@@ -132,9 +132,7 @@ export default function OrganizationCreatePage() {
         const availableRoles = (response.role_options || response.available_roles || []).filter(
           (role): role is OrganizationBusinessRole => FALLBACK_ROLE_OPTIONS.includes(role)
         );
-        const resolvedRoleOptions = availableRoles.length
-          ? availableRoles
-          : FALLBACK_ROLE_OPTIONS;
+        const resolvedRoleOptions = availableRoles.length ? availableRoles : FALLBACK_ROLE_OPTIONS;
 
         setRoleOptions(resolvedRoleOptions);
         const completedSteps = organization?.settings?.creation_steps?.completed_steps || [];
@@ -262,7 +260,7 @@ export default function OrganizationCreatePage() {
     <div className="animate-in fade-in flex min-h-screen w-full flex-col gap-4 bg-neutral-50 px-4 pb-8 duration-200 dark:bg-[#1d1d1b]">
       <WorkspaceHeader />
       <div className="mx-auto grid w-full max-w-6xl gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+        <aside className="dark:border-surface-dark-border dark:shadow-surface-dark-sm rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:bg-[#1d1d1b]">
           <div className="mb-3 flex items-center gap-1.5 text-xs font-semibold text-neutral-800 dark:text-neutral-100">
             <Sparkles className="h-3.5 w-3.5 text-neutral-500" />
             Workspace creation steps
@@ -276,8 +274,8 @@ export default function OrganizationCreatePage() {
                   key={step.key}
                   className={`rounded-md border p-3 ${
                     isCurrent
-                      ? "border-brand-primary-500 bg-brand-primary-500 text-white dark:border-brand-primary-500 dark:bg-brand-primary-500"
-                      : "border-neutral-200 bg-neutral-50 text-neutral-700 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300"
+                      ? "border-brand-primary-500 bg-brand-primary-500 dark:border-brand-primary-500 dark:bg-brand-primary-500 text-white"
+                      : "dark:border-surface-dark-border border-neutral-200 bg-neutral-50 text-neutral-700 dark:bg-[#1d1d1b] dark:text-neutral-300"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1">
@@ -300,8 +298,8 @@ export default function OrganizationCreatePage() {
           </div>
         </aside>
 
-        <section className="rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
-          <div className="mb-4 border-b border-neutral-200 pb-3 dark:border-surface-dark-border">
+        <section className="dark:border-surface-dark-border dark:shadow-surface-dark-sm rounded-md border border-neutral-200 bg-white p-4 shadow-sm dark:bg-[#1d1d1b]">
+          <div className="dark:border-surface-dark-border mb-4 border-b border-neutral-200 pb-3">
             <h1 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
               Step 1 - Basic information
             </h1>
@@ -339,8 +337,8 @@ export default function OrganizationCreatePage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-start gap-3 rounded-md border border-neutral-200 p-3 dark:border-surface-dark-border">
-              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+            <div className="dark:border-surface-dark-border flex flex-wrap items-start gap-3 rounded-md border border-neutral-200 p-3">
+              <div className="dark:border-surface-dark-border relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 dark:bg-[#1d1d1b]">
                 {organization?.logo_url ? (
                   <img
                     src={getStorageUrl(organization.logo_url)}
@@ -369,7 +367,7 @@ export default function OrganizationCreatePage() {
                   type="button"
                   disabled={logoUploading || !organization?.id}
                   onClick={() => logoInputRef.current?.click()}
-                  className="inline-flex w-fit items-center gap-1 rounded-md border border-neutral-300 px-2 py-2 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-surface-dark-border-strong dark:text-neutral-200 dark:hover:bg-neutral-800"
+                  className="dark:border-surface-dark-border-strong inline-flex w-fit items-center gap-1 rounded-md border border-neutral-300 px-2 py-2 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
                 >
                   {logoUploading ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -458,7 +456,7 @@ export default function OrganizationCreatePage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200 pt-3 dark:border-surface-dark-border">
+            <div className="dark:border-surface-dark-border flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200 pt-3">
               <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
                 Next steps are optional and can be completed later.
               </p>
@@ -466,7 +464,7 @@ export default function OrganizationCreatePage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex items-center gap-1 rounded-md border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-60 dark:border-surface-dark-border-strong dark:text-neutral-200 dark:hover:bg-neutral-800"
+                  className="dark:border-surface-dark-border-strong inline-flex items-center gap-1 rounded-md border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-60 dark:text-neutral-200 dark:hover:bg-neutral-800"
                 >
                   {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   {saving ? "Saving..." : "Save step 1"}
@@ -475,7 +473,7 @@ export default function OrganizationCreatePage() {
                   type="button"
                   onClick={handleComplete}
                   disabled={completing || saving || !canComplete}
-                  className="inline-flex items-center gap-1 rounded-md bg-brand-primary-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-yellow-600 disabled:opacity-50 dark:hover:bg-yellow-600"
+                  className="bg-brand-primary-500 inline-flex items-center gap-1 rounded-md px-3 py-2 text-xs font-medium text-white transition hover:bg-yellow-600 disabled:opacity-50 dark:hover:bg-yellow-600"
                 >
                   {completing ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />

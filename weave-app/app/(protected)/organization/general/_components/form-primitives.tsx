@@ -11,8 +11,7 @@ export const Badge = ({
   color?: string;
 }) => {
   const colors: Record<string, string> = {
-    neutral:
-      "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300",
+    neutral: "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300",
     zinc: "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300",
     green: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
     yellow: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
@@ -23,7 +22,7 @@ export const Badge = ({
 
   return (
     <span
-      className={`rounded-md px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${colors[color] || colors.neutral}`}
+      className={`rounded-md px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase ${colors[color] || colors.neutral}`}
     >
       {children}
     </span>
@@ -104,7 +103,7 @@ export const Select = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
-          className={`w-full appearance-none rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-100 ${inputFocusClasses}`}
+          className={`dark:border-surface-dark-border w-full appearance-none rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 disabled:opacity-50 dark:bg-[#1d1d1b] dark:text-neutral-100 ${inputFocusClasses}`}
         >
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -153,7 +152,7 @@ export const Input = ({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         placeholder={placeholder}
-        className={`w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-100 ${inputFocusClasses}`}
+        className={`dark:border-surface-dark-border w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 disabled:opacity-50 dark:bg-[#1d1d1b] dark:text-neutral-100 ${inputFocusClasses}`}
       />
     </div>
   );

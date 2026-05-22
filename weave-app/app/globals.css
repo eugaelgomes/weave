@@ -3,7 +3,7 @@
 @theme {
   --color-brand-navy: #083d77;
   --color-brand-beige: #ebebd3;
-  --color-brand-yellow: #FFD500;
+  --color-brand-yellow: #ffd500;
   --color-brand-orange: #ee964b;
   --color-brand-red: #f95738;
 
@@ -12,7 +12,7 @@
   --color-brand-primary-200: #ffee86;
   --color-brand-primary-300: #ffdd41;
   --color-brand-primary-400: #ffca0d;
-  --color-brand-primary-500: #FDC700;
+  --color-brand-primary-500: #fdc700;
   --color-brand-primary-600: #d18900;
   --color-brand-primary-700: #ffd500;
   --color-brand-primary-800: #894b0a;
@@ -41,11 +41,13 @@
   --color-surface-dark-border-muted: rgb(255 255 255 / 0.06);
   --color-surface-dark-border-strong: rgb(255 255 255 / 0.16);
 
-  --shadow-surface-dark-sm: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 2px 8px rgb(0 0 0 / 0.4),
-    0 8px 24px rgb(0 0 0 / 0.35);
-  --shadow-surface-dark-md: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 4px 12px rgb(0 0 0 / 0.45),
+  --shadow-surface-dark-sm:
+    inset 0 1px 0 rgb(255 255 255 / 0.06), 0 2px 8px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.35);
+  --shadow-surface-dark-md:
+    inset 0 1px 0 rgb(255 255 255 / 0.07), 0 4px 12px rgb(0 0 0 / 0.45),
     0 12px 32px rgb(0 0 0 / 0.4);
-  --shadow-surface-dark-xl: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 8px 24px rgb(0 0 0 / 0.5),
+  --shadow-surface-dark-xl:
+    inset 0 1px 0 rgb(255 255 255 / 0.08), 0 8px 24px rgb(0 0 0 / 0.5),
     0 24px 56px rgb(0 0 0 / 0.48);
 }
 
@@ -124,7 +126,7 @@ body {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #FFD500 transparent;
+  scrollbar-color: #ffd500 transparent;
 }
 
 ::-webkit-scrollbar {
@@ -137,7 +139,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #FFD500;
+  background: #ffd500;
   border-radius: 4px;
 }
 

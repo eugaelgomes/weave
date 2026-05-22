@@ -12,8 +12,7 @@ export function MemberWorkspaceRoleBadge({ role }: Props) {
     super_admin:
       "bg-brand-primary-500/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-400",
     admin: "bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400",
-    billing_manager:
-      "bg-amber-500/10 text-amber-800 border-amber-500/25 dark:text-amber-300",
+    billing_manager: "bg-amber-500/10 text-amber-800 border-amber-500/25 dark:text-amber-300",
     member: "bg-neutral-500/10 text-neutral-700 border-neutral-500/20 dark:text-neutral-300",
     guest:
       "bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-neutral-800/50 dark:border-surface-dark-border",

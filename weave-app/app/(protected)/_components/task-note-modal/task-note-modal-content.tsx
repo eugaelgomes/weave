@@ -10,7 +10,7 @@ import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema
 
 const NoteTiptapEditor = dynamic(
   () =>
-    import("@/app/(protected)/notes/[id]/_components/note-tiptap-editor").then(
+    import("@/app/(protected)/notes/[public_id]/_components/note-tiptap-editor").then(
       (mod) => mod.NoteTiptapEditor
     ),
   {
@@ -79,7 +79,7 @@ export function TaskNoteModalContent({
           placeholder="Título da tarefa..."
           rows={1}
           readOnly={!canEdit}
-          className={`w-full resize-none overflow-hidden bg-transparent text-lg font-bold text-neutral-900 placeholder-neutral-300 outline-none transition-colors dark:text-neutral-100 dark:placeholder-neutral-600 ${
+          className={`w-full resize-none overflow-hidden bg-transparent text-lg font-bold text-neutral-900 placeholder-neutral-300 transition-colors outline-none dark:text-neutral-100 dark:placeholder-neutral-600 ${
             canEdit
               ? "focus:placeholder-neutral-400 dark:focus:placeholder-neutral-500"
               : "cursor-default"
@@ -96,7 +96,7 @@ export function TaskNoteModalContent({
           placeholder="Adicionar descrição..."
           rows={1}
           readOnly={!canEdit}
-          className={`w-full resize-none overflow-hidden bg-transparent text-xs text-neutral-600 placeholder-neutral-300 outline-none transition-colors dark:text-neutral-400 dark:placeholder-neutral-600 ${
+          className={`w-full resize-none overflow-hidden bg-transparent text-xs text-neutral-600 placeholder-neutral-300 transition-colors outline-none dark:text-neutral-400 dark:placeholder-neutral-600 ${
             canEdit
               ? "focus:placeholder-neutral-400 dark:focus:placeholder-neutral-500"
               : "cursor-default"
@@ -118,7 +118,7 @@ export function TaskNoteModalContent({
       )}
 
       {mode === "create" && (
-        <div className="flex-1 rounded-lg border border-dashed border-neutral-200 p-4 dark:border-surface-dark-border">
+        <div className="dark:border-surface-dark-border flex-1 rounded-lg border border-dashed border-neutral-200 p-4">
           <p className="text-center text-xs text-neutral-400 dark:text-neutral-500">
             Após criar a tarefa, você poderá adicionar conteúdo rico com o editor.
           </p>

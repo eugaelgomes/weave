@@ -190,14 +190,14 @@ const esES: TranslationKeys = {
     conversation: {
       openerMessage:
         "Hola {name}, ¿qué hacemos hoy en el Engine? Tenemos varios caminos — ¿cuál seguimos?",
-      openerWithProject:
-        "Hola {name}. ¿Seguimos en el proyecto {project}? ¿Qué hacemos?",
+      openerWithProject: "Hola {name}. ¿Seguimos en el proyecto {project}? ¿Qué hacemos?",
       askWhichPath: "¿Qué camino seguimos?",
       optionPublishInsight: "Publicar insight manual",
       optionTuneInstructions: "Ajustar instrucciones del engine",
       optionBackToFeed: "Volver al feed",
       userChoseInsight: "Perfecto — usa el panel de abajo para redactar y publicar el insight.",
-      userChoseInstructions: "De acuerdo — ajusta las instrucciones del engine en el panel de abajo.",
+      userChoseInstructions:
+        "De acuerdo — ajusta las instrucciones del engine en el panel de abajo.",
       inputPlaceholder: "Habla con el Engine…",
       send: "Enviar",
       thinking: "Pensando…",
@@ -270,8 +270,7 @@ const esES: TranslationKeys = {
       reviewType: "Tipo",
       successSave: "Instrucciones guardadas",
       errorSave: "Error al guardar instrucciones",
-      scopeHintDetail:
-        "Global aplica a todos los tipos; por tipo solo sustituye ese informe.",
+      scopeHintDetail: "Global aplica a todos los tipos; por tipo solo sustituye ese informe.",
       typeDescriptions: {
         analysis: "Análisis operacional",
         daily_standup: "Dailies automáticas",
@@ -550,8 +549,7 @@ const esES: TranslationKeys = {
     membershipStatusSuspended: "Suspendido",
     suspendedBadge: "Suspendido",
     removeAccessConfirmButton: "Confirmar suspensión o eliminación",
-    removeAccessQuestion:
-      "¿Seguro que deseas suspender o revocar el acceso de {name}?",
+    removeAccessQuestion: "¿Seguro que deseas suspender o revocar el acceso de {name}?",
     banSuspendTitle: "Suspender o eliminar",
     inviteNamePlaceholder: "Nombre",
     inviteEmailPlaceholder: "correo@ejemplo.com",

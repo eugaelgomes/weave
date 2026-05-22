@@ -10,10 +10,5 @@ interface ProjectsHeaderProps {
 }
 
 export function ProjectsHeader({ className }: ProjectsHeaderProps) {
-  return (
-    <BaseHeader
-      className={className}
-      leftContent={<AnimatedGreeting type="projects" />}
-    />
-  );
+  return <BaseHeader className={className} leftContent={<AnimatedGreeting type="projects" />} />;
 }

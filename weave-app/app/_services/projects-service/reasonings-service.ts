@@ -96,10 +96,7 @@ export async function createReasoning(projectId: string, payload: CreateReasonin
   return ReasoningCreateEnvelopeSchema.parse(raw);
 }
 
-export async function triggerReasoning(
-  projectId: string,
-  payload: TriggerReasoningPayload = {}
-) {
+export async function triggerReasoning(projectId: string, payload: TriggerReasoningPayload = {}) {
   const response = await apiClient.post(
     API_ENDPOINTS.PROJECTS_REASONINGS_TRIGGER(projectId),
     payload
@@ -133,4 +130,3 @@ export async function updateReasoningActionItem(
   const raw = await handleResponse<unknown>(response);
   return ReasoningActionItemEnvelopeSchema.parse(raw);
 }
-

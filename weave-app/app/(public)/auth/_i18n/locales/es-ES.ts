@@ -167,7 +167,8 @@ export const esES = {
     confirmPasswordPlaceholder: "Confirmar nueva contraseña",
     submitButton: "Cambiar contraseña",
     successTitle: "¡Contraseña cambiada!",
-    successMessage: "Tu contraseña ha sido restablecida con éxito. Ya puedes iniciar sesión con tu nueva contraseña.",
+    successMessage:
+      "Tu contraseña ha sido restablecida con éxito. Ya puedes iniciar sesión con tu nueva contraseña.",
     loginNow: "Ir al inicio de sesión",
   },
 };

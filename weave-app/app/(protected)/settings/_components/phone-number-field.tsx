@@ -62,7 +62,7 @@ export function PhoneNumberField({
           onClick={() => setIsOpen((prev) => !prev)}
           aria-label="Selecionar país e DDI"
           aria-expanded={isOpen}
-          className="flex shrink-0 items-center gap-1 border-r border-neutral-200 px-2 text-[11px] font-medium text-neutral-600 transition-colors hover:bg-neutral-50 disabled:opacity-50 dark:border-surface-dark-border-strong dark:text-neutral-300 dark:hover:bg-neutral-800/40"
+          className="dark:border-surface-dark-border-strong flex shrink-0 items-center gap-1 border-r border-neutral-200 px-2 text-[11px] font-medium text-neutral-600 transition-colors hover:bg-neutral-50 disabled:opacity-50 dark:text-neutral-300 dark:hover:bg-neutral-800/40"
         >
           <span className="text-sm leading-none" aria-hidden>
             {selected.flag}
@@ -104,7 +104,7 @@ export function PhoneNumberField({
                 <span className="min-w-0 flex-1 truncate text-neutral-700 dark:text-neutral-300">
                   {country.name}
                 </span>
-                <span className="shrink-0 tabular-nums text-neutral-400">+{country.dialCode}</span>
+                <span className="shrink-0 text-neutral-400 tabular-nums">+{country.dialCode}</span>
               </button>
             </li>
           ))}

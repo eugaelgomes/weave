@@ -14,6 +14,7 @@ import {
 import { useRouter } from "next/navigation";
 
 import type { Note } from "@/app/_contexts/notes-context";
+import { getNotePath } from "@/app/_utils/note-path";
 import type { TaskNoteModalMode } from "./use-task-note-modal";
 
 const COLOR_PRESETS = [
@@ -65,7 +66,7 @@ export function TaskNoteModalHeader({
   const handleOpenFullPage = () => {
     if (note) {
       onClose();
-      router.push(`/notes/${note.id}`);
+      router.push(getNotePath(note));
     }
   };
 
@@ -73,7 +74,7 @@ export function TaskNoteModalHeader({
   const showActions = mode !== "create";
 
   return (
-    <div className="flex-shrink-0 border-b border-neutral-200 bg-white px-4 py-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+    <div className="dark:border-surface-dark-border flex-shrink-0 border-b border-neutral-200 bg-white px-4 py-3 dark:bg-[#1d1d1b]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2
@@ -90,7 +91,7 @@ export function TaskNoteModalHeader({
           {isSaving && (
             <div className="flex items-center gap-1.5 rounded-full border border-yellow-500/20 bg-yellow-500/10 px-2.5 py-1">
               <Loader2 size={12} className="animate-spin text-yellow-600 dark:text-yellow-500" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-yellow-700 dark:text-yellow-500">
+              <span className="text-[10px] font-semibold tracking-wider text-yellow-700 uppercase dark:text-yellow-500">
                 Salvando
               </span>
             </div>
@@ -136,8 +137,8 @@ export function TaskNoteModalHeader({
                 </button>
 
                 {showColorPicker && (
-                  <div className="absolute right-0 top-full z-20 mt-1 w-56 rounded-md border border-neutral-200 bg-white p-3 shadow-xl dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
-                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                  <div className="dark:border-surface-dark-border-strong absolute top-full right-0 z-20 mt-1 w-56 rounded-md border border-neutral-200 bg-white p-3 shadow-xl dark:bg-[#1d1d1b]">
+                    <div className="mb-2 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                       Escolha uma cor
                     </div>
                     <div className="flex flex-wrap gap-1.5">
@@ -155,8 +156,8 @@ export function TaskNoteModalHeader({
                         />
                       ))}
                     </div>
-                    <div className="mt-2.5 border-t border-neutral-100 pt-2.5 dark:border-surface-dark-border">
-                      <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    <div className="dark:border-surface-dark-border mt-2.5 border-t border-neutral-100 pt-2.5">
+                      <div className="mb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                         Cor personalizada
                       </div>
                       <div className="flex items-center gap-2">
@@ -164,11 +165,11 @@ export function TaskNoteModalHeader({
                           type="color"
                           value={note?.properties?.color || "#F6821F"}
                           onChange={(e) => onColorChange(e.target.value)}
-                          className="h-8 w-8 cursor-pointer rounded border border-neutral-200 bg-transparent p-0.5 dark:border-surface-dark-border-strong"
+                          className="dark:border-surface-dark-border-strong h-8 w-8 cursor-pointer rounded border border-neutral-200 bg-transparent p-0.5"
                           title="Escolher cor"
                         />
                         <div className="relative flex-1">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-medium text-neutral-400 dark:text-neutral-500">
+                          <span className="absolute top-1/2 left-2 -translate-y-1/2 text-xs font-medium text-neutral-400 dark:text-neutral-500">
                             #
                           </span>
                           <input
@@ -186,7 +187,7 @@ export function TaskNoteModalHeader({
                               const val = e.target.value.trim();
                               if (/^[0-9A-Fa-f]{3,6}$/.test(val)) onColorChange(`#${val}`);
                             }}
-                            className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-1.5 pl-5 pr-2 font-mono text-xs uppercase text-neutral-700 placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                            className="dark:border-surface-dark-border-strong w-full rounded-md border border-neutral-200 bg-neutral-50 py-1.5 pr-2 pl-5 font-mono text-xs text-neutral-700 uppercase placeholder-neutral-400 outline-none focus:border-yellow-500 dark:bg-neutral-800 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
                           />
                         </div>
                       </div>
@@ -229,11 +230,7 @@ export function TaskNoteModalHeader({
                 disabled={isSaving}
                 className="flex items-center gap-1.5 rounded-md bg-yellow-500 px-3 py-1.5 text-xs font-semibold text-neutral-900 transition-colors hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSaving ? (
-                  <Loader2 size={12} className="animate-spin" />
-                ) : (
-                  <Plus size={12} />
-                )}
+                {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
                 Criar
               </button>
               <div className="mx-1 h-4 w-px bg-neutral-200 dark:bg-neutral-700" />

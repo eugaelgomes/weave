@@ -29,7 +29,7 @@ export function NoteRelationsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
+      <div className="animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 dark:border-surface-dark-border-strong w-full max-w-md rounded-t-xl border border-neutral-200 bg-white p-5 shadow-2xl duration-200 sm:rounded-md sm:p-6 dark:bg-[#1d1d1b]">
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-300 sm:hidden dark:bg-neutral-600" />
         <div className="mb-5 flex items-center justify-between">
           <h3 className="flex items-center gap-2.5 text-base font-semibold text-neutral-900 sm:text-lg dark:text-neutral-100">
@@ -53,13 +53,16 @@ export function NoteRelationsModal({
               Buscar tarefas
             </label>
             <div className="relative">
-              <Search className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-400" size={15} />
+              <Search
+                className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-400"
+                size={15}
+              />
               <input
                 type="text"
                 value={relationSearchTerm}
                 onChange={(e) => onRelationSearchTermChange(e.target.value)}
                 placeholder="Pesquisar por título..."
-                className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-3 pr-4 pl-10 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                className="dark:border-surface-dark-border-strong w-full rounded-md border border-neutral-200 bg-neutral-50 py-3 pr-4 pl-10 text-sm text-neutral-900 placeholder-neutral-400 transition-all focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:py-2.5 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
                 autoFocus
               />
             </div>
@@ -83,7 +86,7 @@ export function NoteRelationsModal({
                       className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-all ${
                         isSelected
                           ? "bg-brand-primary-500 border-yellow-500 text-white"
-                          : "border-neutral-300 dark:border-surface-dark-border-muted"
+                          : "dark:border-surface-dark-border-muted border-neutral-300"
                       }`}
                     >
                       {isSelected ? <CheckSquare size={10} /> : null}
@@ -125,7 +128,7 @@ export function NoteRelationsModal({
             )}
           </div>
 
-          <div className="flex justify-end border-t border-neutral-100 pt-4 dark:border-surface-dark-border">
+          <div className="dark:border-surface-dark-border flex justify-end border-t border-neutral-100 pt-4">
             <button
               onClick={onClose}
               className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 sm:py-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"

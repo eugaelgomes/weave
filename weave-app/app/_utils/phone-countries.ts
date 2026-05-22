@@ -36,10 +36,7 @@ const PHONE_COUNTRIES_BY_DIAL_CODE = [...PHONE_COUNTRIES].sort(
   (a, b) => b.dialCode.length - a.dialCode.length
 );
 
-export const buildInternationalPhone = (
-  countryIso: CountryCode,
-  localNumber: string
-): string => {
+export const buildInternationalPhone = (countryIso: CountryCode, localNumber: string): string => {
   const country = PHONE_COUNTRY_BY_ISO.get(countryIso);
   if (!country) return "";
 

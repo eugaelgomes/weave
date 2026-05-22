@@ -102,4 +102,3 @@ export const ReasoningCreateEnvelopeSchema = z.object({
 export type ReasoningLean = z.infer<typeof ReasoningLeanSchema>;
 export type ReasoningContent = z.infer<typeof ReasoningContentSchema>;
 export type ReasoningActionItem = z.infer<typeof ReasoningActionItemSchema>;
-

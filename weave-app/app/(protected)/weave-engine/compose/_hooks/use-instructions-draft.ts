@@ -49,7 +49,9 @@ export function useInstructionsDraft(
   const [reportConfigLoaded, setReportConfigLoaded] = useState(false);
   const [hasReportConfig, setHasReportConfig] = useState(false);
   const [baseConfig, setBaseConfig] = useState<Awaited<ReturnType<typeof getAiReportConfig>>>(null);
-  const [instructions, setInstructions] = useState<ReasoningInstructions>(emptyReasoningInstructions());
+  const [instructions, setInstructions] = useState<ReasoningInstructions>(
+    emptyReasoningInstructions()
+  );
   const [scope, setScope] = useState<InstructionScope>("global");
   const [instructionType, setInstructionType] = useState<InstructionType>("analysis");
   const [systemBlocks, setSystemBlocks] = useState<CreateBlockData[]>([]);

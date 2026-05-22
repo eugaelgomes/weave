@@ -12,6 +12,7 @@ import {
   useNoteCommentsPanel,
 } from "../../_contexts/note-comments-panel-context";
 import GlobalLoading from "@/app/_components/ui/global-loading";
+import { getNotePath } from "@/app/_utils/note-path";
 
 function NotesLayoutContent({ children }: { children: React.ReactNode }) {
   const { loading: notesLoading, getRecentNotes } = useNotes();
@@ -27,7 +28,9 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
   const base = pathname.replace(/\/+$/, "");
   const isDashboard = base === "/notes";
   const currentNoteId =
-    base.startsWith("/notes/") && base !== "/notes" ? base.split("/notes/")[1]?.split("/")[0] ?? null : null;
+    base.startsWith("/notes/") && base !== "/notes"
+      ? (base.split("/notes/")[1]?.split("/")[0] ?? null)
+      : null;
 
   const sidebarContent = (
     <div className="p-2.5">
@@ -64,13 +67,13 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
 
       <ul className="space-y-0.5">
         {recentNotes.map((note) => {
-          const isActive = currentNoteId === note.id;
+          const isActive = currentNoteId === note.public_id || currentNoteId === note.id;
 
           return (
             <li key={note.id} className="flex flex-col">
               <div className="flex w-full min-w-0 items-center">
                 <Link
-                  href={`/notes/${note.id}`}
+                  href={getNotePath(note)}
                   className={`group flex min-w-0 flex-1 items-center justify-between rounded-md px-2 py-1.5 text-xs transition-all ${
                     isActive
                       ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
@@ -106,7 +109,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
         <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
           {/* SIDEBAR LATERAL — Altura dinâmica da Viewport + Sticky + Overflow */}
           <div
-            className={`hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-md md:sticky md:h-[calc(100vh-auto)] dark:border-surface-dark-border dark:bg-[#1d1d1b]/50 ${
+            className={`dark:border-surface-dark-border hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-md md:sticky md:h-[calc(100vh-auto)] dark:bg-[#1d1d1b]/50 ${
               commentsPanelOpen ? "md:hidden" : "md:block md:w-[180px]"
             }`}
           >
@@ -114,7 +117,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* CONTEÚDO PRINCIPAL (Detail) */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:shadow-surface-dark-sm dark:bg-[#1d1d1b] md:dark:border-surface-dark-border">
+          <div className="dark:shadow-surface-dark-sm md:dark:border-surface-dark-border flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:bg-[#1d1d1b]">
             {children}
           </div>
         </div>

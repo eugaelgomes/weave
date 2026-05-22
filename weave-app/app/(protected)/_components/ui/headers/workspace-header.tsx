@@ -21,10 +21,5 @@ interface WorkspaceHeaderProps {
 }
 
 export function WorkspaceHeader({ className, type = "workspace" }: WorkspaceHeaderProps) {
-  return (
-    <BaseHeader
-      className={className}
-      leftContent={<AnimatedGreeting type={type} />}
-    />
-  );
+  return <BaseHeader className={className} leftContent={<AnimatedGreeting type={type} />} />;
 }

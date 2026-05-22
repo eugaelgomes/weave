@@ -1,8 +1,5 @@
 import { ApiError, buildApiError, getSafeApiErrorMessage } from "./api-error";
-import {
-  clearInternalChallengeCache,
-  getInternalChallengeHeaders,
-} from "./internal-challenge";
+import { clearInternalChallengeCache, getInternalChallengeHeaders } from "./internal-challenge";
 import { notifyUnauthorized } from "./session-invalidation";
 import { notifyPlanLimitExceededSync } from "./plan-limit-sync";
 
@@ -93,6 +90,7 @@ export const API_ENDPOINTS = {
   // Notes
   NOTES: "/notes",
   NOTES_STATS: "/notes/stats",
+  /** Accepts note public_id (12-char) or internal UUID. */
   NOTES_BY_ID: (id: string) => `/notes/${id}`,
   NOTES_COMMENTS: (noteId: string) => `/notes/${noteId}/comments`,
   NOTES_COMMENT_ATTACHMENTS: (noteId: string) => `/notes/${noteId}/comments/attachments`,
@@ -101,8 +99,7 @@ export const API_ENDPOINTS = {
   NOTES_SEARCH: "/notes/search",
   NOTES_EXPORT: "/notes/export",
   NOTES_BLOCKS: (noteId: string) => `/notes/${noteId}/blocks`,
-  NOTES_BLOCK_BY_ID: (noteId: string, blockId: string) =>
-    `/notes/${noteId}/blocks/${blockId}`,
+  NOTES_BLOCK_BY_ID: (noteId: string, blockId: string) => `/notes/${noteId}/blocks/${blockId}`,
   NOTES_BLOCKS_REORDER: (noteId: string) => `/notes/${noteId}/blocks/reorder`,
   NOTES_DOCUMENT_IMAGES: (noteId: string) => `/notes/${noteId}/document-images`,
 
@@ -114,8 +111,7 @@ export const API_ENDPOINTS = {
   PROJECTS_STAGES: (projectId: string) => `/projects/${projectId}/stages`,
   PROJECTS_STAGE_BY_ID: (projectId: string, stageId: string) =>
     `/projects/${projectId}/stages/${stageId}`,
-  PROJECTS_AI_REPORT_CONFIG: (projectId: string) =>
-    `/projects/${projectId}/ai-report-config`,
+  PROJECTS_AI_REPORT_CONFIG: (projectId: string) => `/projects/${projectId}/ai-report-config`,
   PROJECTS_COLLABORATORS: (projectId: string) => `/projects/${projectId}/collaborators`,
   PROJECTS_NOTES: (projectId: string) => `/projects/${projectId}/notes`,
   PROJECTS_NOTE_STAGE: (projectId: string, noteId: string) =>
@@ -384,10 +380,7 @@ export async function handleResponse<T = unknown>(
             message?: unknown;
             error?: unknown;
           };
-          if (
-            response.status === 403 &&
-            obj.code === "PLAN_LIMIT_EXCEEDED"
-          ) {
+          if (response.status === 403 && obj.code === "PLAN_LIMIT_EXCEEDED") {
             notifyPlanLimitExceededSync();
           }
         }

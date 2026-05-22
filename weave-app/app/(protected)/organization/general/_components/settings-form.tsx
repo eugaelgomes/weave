@@ -1,16 +1,10 @@
 import React from "react";
-import {
-  type Organization,
-  type OrganizationProperties,
-} from "@/app/_services/organization";
+import { type Organization, type OrganizationProperties } from "@/app/_services/organization";
 import { type OrganizationStats } from "@/app/_contexts/organization-context";
 import { Settings, Bell, Layers, ShieldAlert, MapPin } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { Toggle, Select } from "./form-primitives";
-import {
-  type OnDirectPropertyChange,
-  type OnNestedPropertyChange,
-} from "./settings-types";
+import { type OnDirectPropertyChange, type OnNestedPropertyChange } from "./settings-types";
 
 interface SettingsFormProps {
   localProps: OrganizationProperties;
@@ -45,7 +39,7 @@ export function SettingsForm({
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
-        <section className="h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+        <section className="dark:border-surface-dark-border dark:shadow-surface-dark-sm h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:bg-[#1d1d1b]">
           <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
             <Settings className="h-5 w-5 text-neutral-500" />
             {t.organizationGeneral.settingsSectionTitle}
@@ -86,7 +80,7 @@ export function SettingsForm({
           </div>
         </section>
 
-        <section className="h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+        <section className="dark:border-surface-dark-border dark:shadow-surface-dark-sm h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:bg-[#1d1d1b]">
           <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
             <MapPin className="h-5 w-5 text-neutral-500" />
             {t.organizationGeneral.locationSectionTitle}
@@ -94,19 +88,19 @@ export function SettingsForm({
           <div className="space-y-4 text-xs text-neutral-500">
             {address ? (
               <>
-                <div className="flex justify-between border-b border-neutral-100 py-2 dark:border-surface-dark-border-strong">
+                <div className="dark:border-surface-dark-border-strong flex justify-between border-b border-neutral-100 py-2">
                   <span>{t.organizationGeneral.addressLabel}</span>
                   <span className="font-medium text-neutral-900 dark:text-neutral-100">
                     {address.street || "-"}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-neutral-100 py-2 dark:border-surface-dark-border-strong">
+                <div className="dark:border-surface-dark-border-strong flex justify-between border-b border-neutral-100 py-2">
                   <span>{t.organizationGeneral.cityStateLabel}</span>
                   <span className="font-medium text-neutral-900 dark:text-neutral-100">
                     {address.city ? `${address.city}, ${address.state}` : "-"}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-neutral-100 py-2 dark:border-surface-dark-border-strong">
+                <div className="dark:border-surface-dark-border-strong flex justify-between border-b border-neutral-100 py-2">
                   <span>{t.organizationGeneral.countryLabel}</span>
                   <span className="font-medium text-neutral-900 dark:text-neutral-100">
                     {address.country || "-"}
@@ -124,7 +118,7 @@ export function SettingsForm({
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <section className="h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+        <section className="dark:border-surface-dark-border dark:shadow-surface-dark-sm h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:bg-[#1d1d1b]">
           <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
             <Layers className="h-5 w-5 text-neutral-500" />
             {t.organizationGeneral.featuresSectionTitle}
@@ -156,7 +150,7 @@ export function SettingsForm({
           </div>
         </section>
 
-        <section className="h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+        <section className="dark:border-surface-dark-border dark:shadow-surface-dark-sm h-full rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:bg-[#1d1d1b]">
           <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
             <Bell className="h-5 w-5 text-neutral-500" />
             {t.organizationGeneral.notificationsSectionTitle}
@@ -166,7 +160,9 @@ export function SettingsForm({
               <Toggle
                 label={t.organizationGeneral.notificationEmail}
                 checked={localProps?.notifications?.email || false}
-                onChange={(checked) => handleNestedPropertyChange("notifications", "email", checked)}
+                onChange={(checked) =>
+                  handleNestedPropertyChange("notifications", "email", checked)
+                }
                 disabled={!userIsOwner}
               />
               <Toggle

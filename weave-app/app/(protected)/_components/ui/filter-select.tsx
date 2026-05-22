@@ -18,11 +18,20 @@ export type FilterAccent =
 
 const accentClasses: Record<
   FilterAccent,
-  { pill: string; pillActive: string; icon: string; iconActive: string; dropdown: string; itemHover: string; itemActive: string }
+  {
+    pill: string;
+    pillActive: string;
+    icon: string;
+    iconActive: string;
+    dropdown: string;
+    itemHover: string;
+    itemActive: string;
+  }
 > = {
   amber: {
     pill: "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-600/50 dark:bg-amber-950/60 dark:text-amber-300",
-    pillActive: "border-amber-400 bg-amber-100 text-amber-800 ring-1 ring-amber-300/50 dark:border-amber-500 dark:bg-amber-900/70 dark:text-amber-200",
+    pillActive:
+      "border-amber-400 bg-amber-100 text-amber-800 ring-1 ring-amber-300/50 dark:border-amber-500 dark:bg-amber-900/70 dark:text-amber-200",
     icon: "text-amber-500 dark:text-amber-400",
     iconActive: "text-amber-600 dark:text-amber-300",
     dropdown: "border-amber-200 dark:border-amber-700/60",
@@ -31,7 +40,8 @@ const accentClasses: Record<
   },
   orange: {
     pill: "border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-600/50 dark:bg-orange-950/60 dark:text-orange-300",
-    pillActive: "border-orange-400 bg-orange-100 text-orange-800 ring-1 ring-orange-300/50 dark:border-orange-500 dark:bg-orange-900/70 dark:text-orange-200",
+    pillActive:
+      "border-orange-400 bg-orange-100 text-orange-800 ring-1 ring-orange-300/50 dark:border-orange-500 dark:bg-orange-900/70 dark:text-orange-200",
     icon: "text-orange-500 dark:text-orange-400",
     iconActive: "text-orange-600 dark:text-orange-300",
     dropdown: "border-orange-200 dark:border-orange-700/60",
@@ -40,7 +50,8 @@ const accentClasses: Record<
   },
   blue: {
     pill: "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-600/50 dark:bg-blue-950/60 dark:text-blue-300",
-    pillActive: "border-blue-400 bg-blue-100 text-blue-800 ring-1 ring-blue-300/50 dark:border-blue-500 dark:bg-blue-900/70 dark:text-blue-200",
+    pillActive:
+      "border-blue-400 bg-blue-100 text-blue-800 ring-1 ring-blue-300/50 dark:border-blue-500 dark:bg-blue-900/70 dark:text-blue-200",
     icon: "text-blue-500 dark:text-blue-400",
     iconActive: "text-blue-600 dark:text-blue-300",
     dropdown: "border-blue-200 dark:border-blue-700/60",
@@ -49,7 +60,8 @@ const accentClasses: Record<
   },
   rose: {
     pill: "border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-600/50 dark:bg-rose-950/60 dark:text-rose-300",
-    pillActive: "border-rose-400 bg-rose-100 text-rose-800 ring-1 ring-rose-300/50 dark:border-rose-500 dark:bg-rose-900/70 dark:text-rose-200",
+    pillActive:
+      "border-rose-400 bg-rose-100 text-rose-800 ring-1 ring-rose-300/50 dark:border-rose-500 dark:bg-rose-900/70 dark:text-rose-200",
     icon: "text-rose-500 dark:text-rose-400",
     iconActive: "text-rose-600 dark:text-rose-300",
     dropdown: "border-rose-200 dark:border-rose-700/60",
@@ -58,7 +70,8 @@ const accentClasses: Record<
   },
   purple: {
     pill: "border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-600/50 dark:bg-purple-950/60 dark:text-purple-300",
-    pillActive: "border-purple-400 bg-purple-100 text-purple-800 ring-1 ring-purple-300/50 dark:border-purple-500 dark:bg-purple-900/70 dark:text-purple-200",
+    pillActive:
+      "border-purple-400 bg-purple-100 text-purple-800 ring-1 ring-purple-300/50 dark:border-purple-500 dark:bg-purple-900/70 dark:text-purple-200",
     icon: "text-purple-500 dark:text-purple-400",
     iconActive: "text-purple-600 dark:text-purple-300",
     dropdown: "border-purple-200 dark:border-purple-700/60",
@@ -67,7 +80,8 @@ const accentClasses: Record<
   },
   emerald: {
     pill: "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-600/50 dark:bg-emerald-950/60 dark:text-emerald-300",
-    pillActive: "border-emerald-400 bg-emerald-100 text-emerald-800 ring-1 ring-emerald-300/50 dark:border-emerald-500 dark:bg-emerald-900/70 dark:text-emerald-200",
+    pillActive:
+      "border-emerald-400 bg-emerald-100 text-emerald-800 ring-1 ring-emerald-300/50 dark:border-emerald-500 dark:bg-emerald-900/70 dark:text-emerald-200",
     icon: "text-emerald-500 dark:text-emerald-400",
     iconActive: "text-emerald-600 dark:text-emerald-300",
     dropdown: "border-emerald-200 dark:border-emerald-700/60",
@@ -76,7 +90,8 @@ const accentClasses: Record<
   },
   sky: {
     pill: "border-sky-300 bg-sky-50 text-sky-700 dark:border-sky-600/50 dark:bg-sky-950/60 dark:text-sky-300",
-    pillActive: "border-sky-400 bg-sky-100 text-sky-800 ring-1 ring-sky-300/50 dark:border-sky-500 dark:bg-sky-900/70 dark:text-sky-200",
+    pillActive:
+      "border-sky-400 bg-sky-100 text-sky-800 ring-1 ring-sky-300/50 dark:border-sky-500 dark:bg-sky-900/70 dark:text-sky-200",
     icon: "text-sky-500 dark:text-sky-400",
     iconActive: "text-sky-600 dark:text-sky-300",
     dropdown: "border-sky-200 dark:border-sky-700/60",
@@ -85,7 +100,8 @@ const accentClasses: Record<
   },
   neutral: {
     pill: "border-neutral-200 bg-neutral-50 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-neutral-400",
-    pillActive: "border-brand-yellow bg-brand-yellow/20 text-brand-navy ring-1 ring-brand-yellow/40 dark:border-brand-yellow/70 dark:bg-brand-yellow/15 dark:text-brand-beige",
+    pillActive:
+      "border-brand-yellow bg-brand-yellow/20 text-brand-navy ring-1 ring-brand-yellow/40 dark:border-brand-yellow/70 dark:bg-brand-yellow/15 dark:text-brand-beige",
     icon: "text-neutral-400 dark:text-neutral-500",
     iconActive: "text-brand-navy dark:text-brand-yellow",
     dropdown: "border-neutral-200 dark:border-neutral-700",
@@ -401,8 +417,18 @@ export function FilterPeopleSelect({
           )
         ) : (
           <span className="flex h-3.5 w-3.5 items-center justify-center">
-            <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            <svg
+              className="h-2.5 w-2.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
             </svg>
           </span>
         )}
@@ -484,9 +510,7 @@ export function FilterPeopleSelect({
                         {getInitials(collab.name, collab.username)}
                       </span>
                     )}
-                    <span className="truncate">
-                      {isMe ? "Eu" : collab.name || collab.username}
-                    </span>
+                    <span className="truncate">{isMe ? "Eu" : collab.name || collab.username}</span>
                     {isMe && (
                       <span className="ml-auto rounded bg-sky-100 px-1 py-0.5 text-[8px] text-sky-600 dark:bg-sky-900/50 dark:text-sky-400">
                         você

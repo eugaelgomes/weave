@@ -42,6 +42,7 @@ import {
   type ProjectTagOption,
 } from "@/app/(protected)/projects/_components/task-card-meta-pickers";
 import { useTaskNoteModal } from "@/app/(protected)/_components/task-note-modal";
+import { syncProjectTaskUrl } from "@/app/_utils/note-path";
 
 const COLUMN_WIDTH_CLASS = "w-[232px]";
 
@@ -61,7 +62,9 @@ function footerActionButtonClass(
   const useActiveStyle = Boolean(opts.active && palette.active);
   return [
     "inline-flex items-center gap-0.5 rounded-md p-0.5 transition-colors",
-    opts.disabled ? "cursor-not-allowed opacity-40" : "hover:bg-neutral-100 dark:hover:bg-neutral-800",
+    opts.disabled
+      ? "cursor-not-allowed opacity-40"
+      : "hover:bg-neutral-100 dark:hover:bg-neutral-800",
     useActiveStyle ? palette.active : palette.icon,
     opts.extra ?? "",
   ]
@@ -115,12 +118,8 @@ type StageTree = { roots: any[]; childrenMap: Record<string, any[]>; count: numb
 function buildStageTree(stageId: string, allNotes: any[]): StageTree {
   const inStage = allNotes.filter((n) => n.project_stage_id === stageId);
   const inStageIds = new Set(inStage.map((n) => String(n.id)));
-  const roots = inStage.filter(
-    (n) => !n.parent_id || !inStageIds.has(String(n.parent_id))
-  );
-  roots.sort(
-    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-  );
+  const roots = inStage.filter((n) => !n.parent_id || !inStageIds.has(String(n.parent_id)));
+  roots.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
   const childrenMap: Record<string, any[]> = {};
   for (const n of inStage) {
     const pid = n.parent_id != null ? String(n.parent_id) : "";
@@ -152,11 +151,7 @@ function getDropTargetData(data: unknown): DropTargetData | null {
   return null;
 }
 
-function isDescendantNote(
-  notes: any[],
-  ancestorId: string,
-  possibleDescendantId: string
-): boolean {
+function isDescendantNote(notes: any[], ancestorId: string, possibleDescendantId: string): boolean {
   const notesById = new Map(notes.map((note) => [String(note.id), note]));
   let current = notesById.get(possibleDescendantId);
   const visited = new Set<string>();
@@ -177,6 +172,8 @@ type TaskModalKind = "attachments" | "date" | "priority" | "tags" | "collaborato
 interface ProjectBoardProps {
   stages: any[];
   projectNotes: any[];
+  /** Project public id for shareable /projects/.../tasks/... URLs. */
+  projectPublicId?: string;
   projectTags: ProjectTagOption[];
   projectCollaborators: ProjectCollaboratorOption[];
   taskPriorities: TaskPriority[];
@@ -220,7 +217,8 @@ function NoteCard({
   const canWrite = Boolean(onPatchTask);
 
   const contentSnippet = useMemo(() => {
-    const raw = (note.description as string | undefined) || (note.preview as string | undefined) || "";
+    const raw =
+      (note.description as string | undefined) || (note.preview as string | undefined) || "";
     return plainTextPreview(raw, 120);
   }, [note.description, note.preview]);
 
@@ -265,10 +263,7 @@ function NoteCard({
     if (!onPatchTask) return;
     setSaving(true);
     try {
-      await onPatchTask(
-        note.id,
-        selected ? { remove_tags: [tagId] } : { add_tags: [tagId] }
-      );
+      await onPatchTask(note.id, selected ? { remove_tags: [tagId] } : { add_tags: [tagId] });
     } finally {
       setSaving(false);
     }
@@ -304,9 +299,7 @@ function NoteCard({
     setSaving(true);
     try {
       const due_date =
-        clear || !dateDraft
-          ? null
-          : new Date(`${dateDraft}T12:00:00.000Z`).toISOString();
+        clear || !dateDraft ? null : new Date(`${dateDraft}T12:00:00.000Z`).toISOString();
       await onPatchTask(note.id, { due_date });
       closeModal();
     } finally {
@@ -340,10 +333,10 @@ function NoteCard({
   return (
     <>
       <div
-        className={`group relative rounded-md border border-neutral-200 bg-white p-2.5 shadow-sm transition-all dark:border-surface-dark-border dark:bg-[#121214] ${
+        className={`group dark:border-surface-dark-border relative rounded-md border border-neutral-200 bg-white p-2.5 shadow-sm transition-all dark:bg-[#121214] ${
           isDragging
-            ? "rotate-[2deg] scale-105 shadow-lg ring-2 ring-brand-primary-500/40"
-            : "hover:border-neutral-300 hover:shadow-md dark:hover:border-surface-dark-border-strong"
+            ? "ring-brand-primary-500/40 scale-105 rotate-[2deg] shadow-lg ring-2"
+            : "dark:hover:border-surface-dark-border-strong hover:border-neutral-300 hover:shadow-md"
         }`}
       >
         {(onAddSubtask && stageId) || (note.parent_id && canWrite) ? (
@@ -407,7 +400,7 @@ function NoteCard({
             stopDrag(event);
             onOpenNote();
           }}
-          className={`mb-1 w-full cursor-pointer text-left text-xs leading-snug text-neutral-800 transition-colors hover:text-brand-primary-500 hover:underline dark:text-neutral-100 dark:hover:text-brand-primary-500 ${
+          className={`hover:text-brand-primary-500 dark:hover:text-brand-primary-500 mb-1 w-full cursor-pointer text-left text-xs leading-snug text-neutral-800 transition-colors hover:underline dark:text-neutral-100 ${
             (onAddSubtask && stageId) || (note.parent_id && canWrite) ? "pr-14" : ""
           }`}
         >
@@ -420,7 +413,7 @@ function NoteCard({
           </p>
         ) : null}
 
-        <div className="flex flex-wrap items-center justify-between gap-1 border-t border-neutral-100 pt-1.5 dark:border-surface-dark-border">
+        <div className="dark:border-surface-dark-border flex flex-wrap items-center justify-between gap-1 border-t border-neutral-100 pt-1.5">
           <div className="flex flex-wrap items-center gap-0.5 text-[9px] text-neutral-500 dark:text-neutral-300">
             <button
               type="button"
@@ -524,7 +517,9 @@ function NoteCard({
                 </div>
               );
             })}
-            {collaboratorList.length === 0 && <UserCircle2 className="h-3.5 w-3.5 text-neutral-400" />}
+            {collaboratorList.length === 0 && (
+              <UserCircle2 className="h-3.5 w-3.5 text-neutral-400" />
+            )}
           </div>
         </div>
       </div>
@@ -546,7 +541,7 @@ function NoteCard({
               {attachments.map((file: { id: string; name?: string }) => (
                 <li
                   key={file.id}
-                  className="flex items-center justify-between gap-2 rounded border border-neutral-100 px-2 py-1 dark:border-surface-dark-border"
+                  className="dark:border-surface-dark-border flex items-center justify-between gap-2 rounded border border-neutral-100 px-2 py-1"
                 >
                   <span className="min-w-0 truncate text-neutral-700 dark:text-neutral-200">
                     {file.name || file.id}
@@ -587,7 +582,7 @@ function NoteCard({
               type="date"
               value={dateDraft}
               onChange={(e) => setDateDraft(e.target.value)}
-              className="w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-neutral-800 dark:border-surface-dark-border dark:bg-[#121214] dark:text-neutral-100"
+              className="dark:border-surface-dark-border w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-neutral-800 dark:bg-[#121214] dark:text-neutral-100"
             />
           </label>
           <div className="flex gap-2">
@@ -595,7 +590,7 @@ function NoteCard({
               type="button"
               disabled={saving}
               onClick={() => void saveDate(true)}
-              className="flex-1 rounded-md border border-neutral-200 py-2 dark:border-surface-dark-border"
+              className="dark:border-surface-dark-border flex-1 rounded-md border border-neutral-200 py-2"
             >
               Limpar
             </button>
@@ -681,7 +676,6 @@ function NoteCard({
           />
         </CompactTaskModal>
       )}
-
     </>
   );
 }
@@ -726,7 +720,7 @@ function TaskBranch({
       className={
         depth === 0
           ? "flex flex-col gap-1.5"
-          : "ml-1.5 flex flex-col gap-1.5 border-l border-neutral-200 pl-2 dark:border-surface-dark-border"
+          : "dark:border-surface-dark-border ml-1.5 flex flex-col gap-1.5 border-l border-neutral-200 pl-2"
       }
     >
       <DraggableNoteCard
@@ -792,7 +786,11 @@ function DraggableNoteCard({
   });
   const { setNodeRef: setDroppableNodeRef, isOver } = useDroppable({
     id: `task:${note.id}`,
-    data: { type: "task", noteId: String(note.id), stageId: stageId ?? "" } satisfies DropTargetData,
+    data: {
+      type: "task",
+      noteId: String(note.id),
+      stageId: stageId ?? "",
+    } satisfies DropTargetData,
     disabled: !stageId,
   });
 
@@ -813,7 +811,7 @@ function DraggableNoteCard({
         isDragging ? "opacity-30" : ""
       } ${
         isOver && canAcceptDrop
-          ? "ring-2 ring-brand-primary-500/50 ring-offset-2 ring-offset-white dark:ring-offset-[#121214]"
+          ? "ring-brand-primary-500/50 ring-2 ring-offset-2 ring-offset-white dark:ring-offset-[#121214]"
           : ""
       }`}
     >
@@ -856,9 +854,7 @@ function DroppableStageColumn({
       ref={setNodeRef}
       style={columnTintStyle}
       className={`flex h-full min-h-0 ${COLUMN_WIDTH_CLASS} flex-shrink-0 flex-col rounded-md transition-colors ${
-        isOver
-          ? "bg-brand-primary-500/10 ring-2 ring-inset ring-brand-primary-500/30"
-          : ""
+        isOver ? "bg-brand-primary-500/10 ring-brand-primary-500/30 ring-2 ring-inset" : ""
       }`}
     >
       <div className="flex items-center justify-between p-2.5">
@@ -901,6 +897,7 @@ function DroppableStageColumn({
 export default function ProjectBoardV2({
   stages,
   projectNotes,
+  projectPublicId,
   projectTags,
   projectCollaborators,
   taskPriorities,
@@ -916,14 +913,16 @@ export default function ProjectBoardV2({
 
   const handleOpenNote = useCallback(
     (noteId: string) => {
-      openTaskModal("edit", { noteId });
+      const note = projectNotes.find((item) => item.id === noteId);
+      if (projectPublicId && note) {
+        syncProjectTaskUrl(projectPublicId, note, false);
+      }
+      openTaskModal("edit", { noteId, projectPublicId });
     },
-    [openTaskModal]
+    [openTaskModal, projectNotes, projectPublicId]
   );
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const getTagMeta = useCallback(
     (tagValue: string) => {
@@ -936,10 +935,7 @@ export default function ProjectBoardV2({
     [projectTags]
   );
 
-  const sortedStages = useMemo(
-    () => [...stages].sort((a, b) => a.position - b.position),
-    [stages]
-  );
+  const sortedStages = useMemo(() => [...stages].sort((a, b) => a.position - b.position), [stages]);
 
   const stageTrees = useMemo(() => {
     const map: Record<string, StageTree> = {};
@@ -1019,13 +1015,7 @@ export default function ProjectBoardV2({
         onNoteStageChange?.(noteId, note.project_stage_id);
       }
     },
-    [
-      projectNotes,
-      updateProjectNoteStage,
-      onNoteStageChange,
-      onProjectNotesReplaced,
-      onPatchTask,
-    ]
+    [projectNotes, updateProjectNoteStage, onNoteStageChange, onProjectNotesReplaced, onPatchTask]
   );
 
   if (stages.length === 0) {
@@ -1049,15 +1039,12 @@ export default function ProjectBoardV2({
           const tree = stageTrees[stage.id] ?? { roots: [], childrenMap: {}, count: 0 };
           const { roots, childrenMap, count } = tree;
           return (
-            <DroppableStageColumn
-              key={stage.id}
-              stage={stage}
-              count={count}
-              onAddCard={onAddCard}
-            >
+            <DroppableStageColumn key={stage.id} stage={stage} count={count} onAddCard={onAddCard}>
               {roots.length === 0 ? (
-                <div className="flex items-center justify-center rounded-md border border-dashed border-neutral-300 bg-transparent py-8 dark:border-surface-dark-border">
-                  <span className="text-xs text-neutral-400">Solte aqui para tornar tarefa principal</span>
+                <div className="dark:border-surface-dark-border flex items-center justify-center rounded-md border border-dashed border-neutral-300 bg-transparent py-8">
+                  <span className="text-xs text-neutral-400">
+                    Solte aqui para tornar tarefa principal
+                  </span>
                 </div>
               ) : (
                 roots.map((note) => (

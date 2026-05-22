@@ -11,7 +11,10 @@ import { blocksToMarkdown, hasMarkdownContent } from "@/app/_utils/blocks-to-mar
 import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema";
 import { fetchActiveSprint } from "@/app/_services/projects-service/projects-service";
 import { ApiError } from "@/app/_services/api-error";
-import { getReasoningTypeLabel, interpolate } from "@/app/(protected)/home/_components/engine-utils";
+import {
+  getReasoningTypeLabel,
+  interpolate,
+} from "@/app/(protected)/home/_components/engine-utils";
 import {
   buildInsightTemplateBlocks,
   INSIGHT_TYPE_OPTIONS,

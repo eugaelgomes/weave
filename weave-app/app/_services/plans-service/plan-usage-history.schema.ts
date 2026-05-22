@@ -28,7 +28,9 @@ export const PlanUsageHistoryItemSchema = z.object({
   period_end: z.string().nullable(),
   closed_at: z.string().nullable(),
   plan: z.object({
-    id: z.union([z.string(), z.number(), z.null()]).transform((v) => (v == null ? null : String(v))),
+    id: z
+      .union([z.string(), z.number(), z.null()])
+      .transform((v) => (v == null ? null : String(v))),
     name: z.string().nullable(),
   }),
   metrics: UsageMetricsSchema,
@@ -47,7 +49,9 @@ export const PlanUsageCurrentPeriodSchema = z.object({
   period_start: z.string().nullable(),
   period_end: z.string().nullable(),
   plan: z.object({
-    id: z.union([z.string(), z.number(), z.null()]).transform((v) => (v == null ? null : String(v))),
+    id: z
+      .union([z.string(), z.number(), z.null()])
+      .transform((v) => (v == null ? null : String(v))),
     name: z.string().nullable(),
     client_type: z.string().nullable(),
   }),

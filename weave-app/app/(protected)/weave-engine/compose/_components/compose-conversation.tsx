@@ -10,7 +10,10 @@ import { useLanguage } from "@/app/_contexts/language-context";
 import { cn } from "@/lib/utils";
 import { engineTextLinkClass } from "@/app/(protected)/weave-engine/_components/engine-styles";
 import { ComposeOptionChips } from "@/app/(protected)/weave-engine/compose/_components/compose-option-chips";
-import type { ComposeChipId, ComposeMessage } from "@/app/(protected)/weave-engine/compose/_utils/compose-utils";
+import type {
+  ComposeChipId,
+  ComposeMessage,
+} from "@/app/(protected)/weave-engine/compose/_utils/compose-utils";
 
 export type ComposeConversationProps = {
   messages: ComposeMessage[];
@@ -64,14 +67,11 @@ export function ComposeConversation({
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={cn(
-              "flex flex-col",
-              msg.role === "user" ? "items-end" : "items-start"
-            )}
+            className={cn("flex flex-col", msg.role === "user" ? "items-end" : "items-start")}
           >
             <div
               className={cn(
-                "max-w-[92%] rounded-lg px-3 py-2 text-[12px] font-normal leading-relaxed",
+                "max-w-[92%] rounded-lg px-3 py-2 text-[12px] leading-relaxed font-normal",
                 msg.role === "user"
                   ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
                   : "bg-neutral-100 text-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-100"
@@ -106,7 +106,7 @@ export function ComposeConversation({
 
       <form
         onSubmit={handleSubmit}
-        className="sticky bottom-0 border-t border-neutral-100 bg-white/90 py-3 backdrop-blur-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]/90"
+        className="dark:border-surface-dark-border sticky bottom-0 border-t border-neutral-100 bg-white/90 py-3 backdrop-blur-sm dark:bg-[#1d1d1b]/90"
       >
         <div className="flex items-end gap-2">
           <textarea
@@ -114,7 +114,7 @@ export function ComposeConversation({
             onChange={(e) => setInput(e.target.value)}
             rows={1}
             placeholder={conv.inputPlaceholder}
-            className="max-h-28 min-h-[36px] flex-1 resize-none rounded-md border border-neutral-200 bg-white px-3 py-2 text-[12px] font-normal text-neutral-900 outline-none focus-visible:border-neutral-400 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-100"
+            className="dark:border-surface-dark-border max-h-28 min-h-[36px] flex-1 resize-none rounded-md border border-neutral-200 bg-white px-3 py-2 text-[12px] font-normal text-neutral-900 outline-none focus-visible:border-neutral-400 dark:bg-[#1d1d1b] dark:text-neutral-100"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();

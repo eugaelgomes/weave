@@ -3,12 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Building2,
-  Users,
-  ExternalLink,
-  LayoutTemplate,
-} from "lucide-react";
+import { Building2, Users, ExternalLink, LayoutTemplate } from "lucide-react";
 import { formatDate, formatRoleName } from "@/app/_utils/format";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { SettingsPageShell } from "@/app/(protected)/settings/_components/settings-page-shell";
@@ -48,7 +43,7 @@ export default function WorkspaceSettingsPage() {
               {user?.org_id ? (
                 <>
                   <div className="flex items-center gap-3">
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-neutral-100 dark:border-surface-dark-border">
+                    <div className="dark:border-surface-dark-border relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-neutral-100">
                       {user.org_logo_url ? (
                         <Image src={user.org_logo_url} alt="Logo" fill className="object-cover" />
                       ) : (

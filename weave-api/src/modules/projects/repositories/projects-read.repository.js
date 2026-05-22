@@ -260,6 +260,7 @@ class ProjectsReadRepository {
           (SELECT jsonb_agg(
             jsonb_build_object(
               'id', n.id::text,
+              'public_id', n.public_note_id,
               'title', n.title,
               'description', n.description,
               'tags', n.tags,
@@ -401,6 +402,7 @@ class ProjectsReadRepository {
           (SELECT jsonb_agg(
             jsonb_build_object(
               'id', n.id::text,
+              'public_id', n.public_note_id,
               'title', n.title,
               'description', n.description,
               'tags', n.tags,
@@ -524,6 +526,7 @@ class ProjectsReadRepository {
           (SELECT jsonb_agg(
             jsonb_build_object(
               'id', n.id::text,
+              'public_id', n.public_note_id,
               'title', n.title,
               'description', n.description,
               'tags', n.tags,
@@ -609,6 +612,7 @@ class ProjectsReadRepository {
           (SELECT jsonb_agg(
             jsonb_build_object(
               'id', n.id::text,
+              'public_id', n.public_note_id,
               'title', n.title,
               'description', n.description,
               'tags', n.tags,
@@ -701,6 +705,7 @@ class ProjectsReadRepository {
           (SELECT jsonb_agg(
             jsonb_build_object(
               'id', n.id::text,
+              'public_id', n.public_note_id,
               'title', n.title,
               'description', n.description,
               'tags', n.tags,
@@ -1021,6 +1026,7 @@ class ProjectsReadRepository {
     const query = `
       SELECT 
         n.id::text,
+        n.public_note_id AS public_id,
         n.user_id::text,
         n.project_id::text,
         n.title,
@@ -1070,6 +1076,7 @@ class ProjectsReadRepository {
     const query = `
       SELECT 
         n.id::text,
+        n.public_note_id AS public_id,
         n.user_id::text,
         n.project_id::text,
         n.title,
@@ -1284,6 +1291,7 @@ class ProjectsReadRepository {
     const query = `
       SELECT 
         n.id::text,
+        n.public_note_id AS public_id,
         n.user_id::text,
         n.project_id::text,
         n.title,

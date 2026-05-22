@@ -11,8 +11,9 @@ export default function WeaveFlowPage() {
             Weave Flow
           </h1>
           <p className="text-sm leading-relaxed text-neutral-500 md:text-base dark:text-neutral-400">
-            A Weave apresenta macro-projetos e épicos em um canvas infinito para acompanhar o fluxo de valor — Discovery,
-            Design, validação, execução e rollout — sem micro-gerir tarefas operacionais.
+            A Weave apresenta macro-projetos e épicos em um canvas infinito para acompanhar o fluxo
+            de valor — Discovery, Design, validação, execução e rollout — sem micro-gerir tarefas
+            operacionais.
           </p>
         </div>
       </header>

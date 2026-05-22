@@ -25,20 +25,13 @@ export interface NavigableItem {
  * isPathActive("/home",      "/notes")          // false
  * isPathActive("/weave-ai/chat/1", "/weave-ai/chat", ["/weave-ai/agent"]) // true
  */
-export function isPathActive(
-  pathname: string,
-  itemPath: string,
-  subPaths?: string[],
-): boolean {
+export function isPathActive(pathname: string, itemPath: string, subPaths?: string[]): boolean {
   if (pathname === itemPath || pathname === `${itemPath}/`) return true;
   if (pathname.startsWith(`${itemPath}/`)) return true;
 
   if (subPaths) {
     return subPaths.some(
-      (sub) =>
-        pathname === sub ||
-        pathname === `${sub}/` ||
-        pathname.startsWith(`${sub}/`),
+      (sub) => pathname === sub || pathname === `${sub}/` || pathname.startsWith(`${sub}/`)
     );
   }
 

@@ -1,0 +1,54 @@
+/**
+ * Public note URL segment (12-char) or legacy UUID fallback.
+ */
+export function getNotePath(note: { public_id?: string | null; id: string }): string {
+  return `/notes/${note.public_id || note.id}`;
+}
+
+/**
+ * Project-scoped task URL (alias); falls back to note path when public_id is missing.
+ */
+export function getProjectTaskPath(
+  projectPublicId: string,
+  note: { public_id?: string | null; id: string }
+): string {
+  if (note.public_id) {
+    return `/projects/${projectPublicId}/tasks/${note.public_id}`;
+  }
+  return getNotePath(note);
+}
+
+/**
+ * Updates browser URL for an open project task modal without a full navigation.
+ */
+export function syncProjectTaskUrl(
+  projectPublicId: string | undefined,
+  note: { public_id?: string | null; id: string } | null,
+  clear: boolean
+): void {
+  if (typeof window === "undefined" || !projectPublicId) return;
+
+  const projectBase = `/projects/${projectPublicId}`;
+
+  if (clear) {
+    if (window.location.pathname.includes("/tasks/")) {
+      window.history.replaceState(null, "", projectBase);
+    }
+    return;
+  }
+
+  if (note?.public_id) {
+    window.history.replaceState(null, "", getProjectTaskPath(projectPublicId, note));
+  }
+}
+
+/**
+ * Whether a loaded note matches the dynamic route segment (public id or UUID).
+ */
+export function isSameNoteRoute(
+  note: { public_id?: string | null; id: string },
+  routeNoteId: string
+): boolean {
+  if (!routeNoteId) return false;
+  return note.id === routeNoteId || note.public_id === routeNoteId;
+}

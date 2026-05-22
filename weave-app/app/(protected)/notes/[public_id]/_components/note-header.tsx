@@ -45,7 +45,7 @@ export function NoteDetailHeader({
   showColorPicker,
 }: NoteDetailHeaderProps) {
   return (
-    <div className="flex-shrink-0 border-b border-neutral-200 bg-white px-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+    <div className="dark:border-surface-dark-border flex-shrink-0 border-b border-neutral-200 bg-white px-1.5 dark:bg-[#1d1d1b]">
       <div className="mx-auto flex w-full items-center justify-between">
         <button
           onClick={onBack}
@@ -106,7 +106,7 @@ export function NoteDetailHeader({
               <Palette size={15} />
             </button>
             {showColorPicker ? (
-              <div className="absolute top-full right-0 z-20 mt-1 w-56 rounded-md border border-neutral-200 bg-white p-3 shadow-xl dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
+              <div className="dark:border-surface-dark-border-strong absolute top-full right-0 z-20 mt-1 w-56 rounded-md border border-neutral-200 bg-white p-3 shadow-xl dark:bg-[#1d1d1b]">
                 <div className="mb-2 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                   Escolha uma cor
                 </div>
@@ -125,7 +125,7 @@ export function NoteDetailHeader({
                     />
                   ))}
                 </div>
-                <div className="mt-2.5 border-t border-neutral-100 pt-2.5 dark:border-surface-dark-border">
+                <div className="dark:border-surface-dark-border mt-2.5 border-t border-neutral-100 pt-2.5">
                   <div className="mb-1.5 text-[10px] font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                     Cor personalizada
                   </div>
@@ -134,7 +134,7 @@ export function NoteDetailHeader({
                       type="color"
                       value={note.properties?.color || "#F6821F"}
                       onChange={(e) => onChangeColor(e.target.value)}
-                      className="h-8 w-8 cursor-pointer rounded border border-neutral-200 bg-transparent p-0.5 dark:border-surface-dark-border-strong"
+                      className="dark:border-surface-dark-border-strong h-8 w-8 cursor-pointer rounded border border-neutral-200 bg-transparent p-0.5"
                       title="Escolher cor"
                     />
                     <div className="relative flex-1">
@@ -156,7 +156,7 @@ export function NoteDetailHeader({
                           const val = e.target.value.trim();
                           if (/^[0-9A-Fa-f]{3,6}$/.test(val)) onChangeColor(`#${val}`);
                         }}
-                        className="w-full rounded-md border border-neutral-200 bg-neutral-50 py-1.5 pr-2 pl-5 font-mono text-xs text-neutral-700 uppercase placeholder-neutral-400 outline-none focus:border-yellow-500 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
+                        className="dark:border-surface-dark-border-strong w-full rounded-md border border-neutral-200 bg-neutral-50 py-1.5 pr-2 pl-5 font-mono text-xs text-neutral-700 uppercase placeholder-neutral-400 outline-none focus:border-yellow-500 dark:bg-neutral-800 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:border-yellow-500/50"
                       />
                     </div>
                   </div>
@@ -175,7 +175,11 @@ export function NoteDetailHeader({
               className="dark:hover:text-brand-primary-500 flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-yellow-600 disabled:cursor-not-allowed disabled:opacity-60 dark:text-neutral-400 dark:hover:bg-neutral-800"
               title="Exportar tarefa"
             >
-              {isExporting ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+              {isExporting ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <Download size={15} />
+              )}
             </button>
           </div>
         </div>

@@ -34,13 +34,12 @@ type WorkspaceNavItem = WorkspaceNavLeaf & {
 
 function isStandaloneOrganizationPath(pathname: string): boolean {
   return (
-    pathname.startsWith("/organization/create") ||
-    pathname.startsWith("/organization/dashboard")
+    pathname.startsWith("/organization/create") || pathname.startsWith("/organization/dashboard")
   );
 }
 
 function collectPathMatchers(
-  items: WorkspaceNavItem[],
+  items: WorkspaceNavItem[]
 ): { prefix: string; leaf: WorkspaceNavLeaf }[] {
   const matchers: { prefix: string; leaf: WorkspaceNavLeaf }[] = [];
 
@@ -163,7 +162,7 @@ function OrganizationLayoutContent({ children }: { children: React.ReactNode }) 
         type: "workspaceEditor",
       },
     ],
-    [t],
+    [t]
   );
 
   const activeLeaf = useMemo(() => {
@@ -177,9 +176,7 @@ function OrganizationLayoutContent({ children }: { children: React.ReactNode }) 
 
   const isLeafActive = (leaf: WorkspaceNavLeaf) => {
     const prefixes = [leaf.href, ...(leaf.matchPaths ?? [])];
-    return prefixes.some(
-      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-    );
+    return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   };
 
   const isGroupActive = (item: WorkspaceNavItem) =>

@@ -55,7 +55,10 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
 
   const recentProjects = getRecentProjects();
   const signalsByProjectPublicId = React.useMemo(() => {
-    const map = new Map<string, { hasNew: boolean; actions: number; risk: "low" | "medium" | "high" }>();
+    const map = new Map<
+      string,
+      { hasNew: boolean; actions: number; risk: "low" | "medium" | "high" }
+    >();
     const now = Date.now();
     const dayMs = 24 * 60 * 60 * 1000;
 
@@ -83,7 +86,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
   const isDashboard = base === "/projects";
   const currentProjectId =
     base.startsWith("/projects/") && base !== "/projects"
-      ? base.split("/projects/")[1]?.split("/")[0] ?? null
+      ? (base.split("/projects/")[1]?.split("/")[0] ?? null)
       : null;
 
   const sidebarContent = (
@@ -157,17 +160,23 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
                     <ProjectIcon icon={project.icon} color={project.color} size="xs" />
                     <span className="truncate">{project.title}</span>
                     {signal?.risk === "high" ? (
-                      <span className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" title="Risco alto" />
+                      <span
+                        className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-red-500"
+                        title="Risco alto"
+                      />
                     ) : signal?.risk === "medium" ? (
-                      <span className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" title="Risco médio" />
+                      <span
+                        className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500"
+                        title="Risco médio"
+                      />
                     ) : null}
                     {signal?.actions ? (
-                      <span className="rounded-full bg-brand-primary-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-brand-primary-700 dark:text-brand-primary-400">
+                      <span className="bg-brand-primary-500/15 text-brand-primary-700 dark:text-brand-primary-400 rounded-full px-1.5 py-0.5 text-[9px] font-semibold">
                         {signal.actions}
                       </span>
                     ) : null}
                     {signal?.hasNew ? (
-                      <span className="rounded-full border border-brand-primary-500/50 px-1.5 py-0.5 text-[9px] font-semibold text-brand-primary-700 dark:text-brand-primary-400">
+                      <span className="border-brand-primary-500/50 text-brand-primary-700 dark:text-brand-primary-400 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold">
                         Novo
                       </span>
                     ) : null}
@@ -196,18 +205,13 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
 
                         <Link
                           href={`/projects/${sub.public_id}`}
-
                           className={`group mb-0.5 ml-1 flex items-center gap-1.5 rounded-md px-4 py-1 text-[11px] transition-all ${
                             isSubActive
                               ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
                               : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-300"
                           }`}
                         >
-                          <ProjectIcon
-                            icon={subProps?.icon}
-                            color={subProps?.color}
-                            size="xs"
-                          />
+                          <ProjectIcon icon={subProps?.icon} color={subProps?.color} size="xs" />
                           <span className="truncate">{sub.title}</span>
                         </Link>
                       </li>
@@ -236,12 +240,12 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
         {/* Layout Flexbox com Gap (Desktop) */}
         <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
           {/* SIDEBAR LATERAL — Altura dinâmica da Viewport + Sticky + Overflow interno */}
-          <div className="hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-sm md:sticky md:block md:h-[calc(100vh-auto)] md:w-[180px] dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+          <div className="dark:border-surface-dark-border hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-sm md:sticky md:block md:h-[calc(100vh-auto)] md:w-[180px] dark:bg-[#1d1d1b]/50">
             {sidebarContent}
           </div>
 
           {/* CONTEÚDO PRINCIPAL (Detail) */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:shadow-surface-dark-sm dark:bg-[#1d1d1b] md:dark:border-surface-dark-border">
+          <div className="dark:shadow-surface-dark-sm md:dark:border-surface-dark-border flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:bg-[#1d1d1b]">
             {children}
           </div>
         </div>

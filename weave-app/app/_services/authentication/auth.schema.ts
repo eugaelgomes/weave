@@ -10,75 +10,108 @@ export const EmailNoPlusAliasSchema = z
   });
 
 // Zod schema for UserPreferences
-export const UserPreferencesSchema = z.object({
-  Display: z.object({
-  }).passthrough().optional(),
-  language: z.object({
-    interface: z.string().optional(),
-  }).passthrough().optional(),
-}).catchall(z.unknown()).optional();
+export const UserPreferencesSchema = z
+  .object({
+    Display: z.object({}).passthrough().optional(),
+    language: z
+      .object({
+        interface: z.string().optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .catchall(z.unknown())
+  .optional();
 
-export const PlanDetailsSchema = z.object({
-  limits: z.object({
-    max_notes: z.number().optional(),
-    max_projects: z.number().optional(),
-    max_team_members: z.number().optional(),
-    exports: z.object({
-      notes_monthly: z.number().optional(),
-      backups_monthly: z.number().optional(),
-    }).optional(),
-    storage: z.object({
-      retention_days: z.number().nullable().optional(),
-      max_file_size_mb: z.number().optional(),
-      total_monthly_upload_mb: z.number().optional(),
-    }).optional(),
-  }).optional(),
-  features: z.record(z.string(), z.boolean().optional()).optional(),
-  metadata: z.object({
-    version: z.string().optional(),
-    plan_tier: z.string().optional(),
-    is_trial_available: z.boolean().optional(),
-  }).optional(),
-  weave_ai: z.object({
-    enabled: z.boolean().optional(),
-    features: z.array(z.string()).optional(),
-    config: z.object({
-      default_model: z.string().optional(),
-      available_models: z.array(z.string()).optional(),
-      monthly_messages: z.number().optional(),
-      max_tokens_per_message: z.number().optional(),
-      context_window_messages: z.number().optional(),
-    }).optional(),
-  }).optional(),
-}).optional();
+export const PlanDetailsSchema = z
+  .object({
+    limits: z
+      .object({
+        max_notes: z.number().optional(),
+        max_projects: z.number().optional(),
+        max_team_members: z.number().optional(),
+        exports: z
+          .object({
+            notes_monthly: z.number().optional(),
+            backups_monthly: z.number().optional(),
+          })
+          .optional(),
+        storage: z
+          .object({
+            retention_days: z.number().nullable().optional(),
+            max_file_size_mb: z.number().optional(),
+            total_monthly_upload_mb: z.number().optional(),
+          })
+          .optional(),
+      })
+      .optional(),
+    features: z.record(z.string(), z.boolean().optional()).optional(),
+    metadata: z
+      .object({
+        version: z.string().optional(),
+        plan_tier: z.string().optional(),
+        is_trial_available: z.boolean().optional(),
+      })
+      .optional(),
+    weave_ai: z
+      .object({
+        enabled: z.boolean().optional(),
+        features: z.array(z.string()).optional(),
+        config: z
+          .object({
+            default_model: z.string().optional(),
+            available_models: z.array(z.string()).optional(),
+            monthly_messages: z.number().optional(),
+            max_tokens_per_message: z.number().optional(),
+            context_window_messages: z.number().optional(),
+          })
+          .optional(),
+      })
+      .optional(),
+  })
+  .optional();
 
-export const UsageDetailsSchema = z.object({
-  monthly_cycle: z.object({
-    exports: z.object({
-      notes_count: z.number().optional(),
-      backups_count: z.number().optional(),
-    }).optional(),
-    storage: z.object({
-      files_count: z.number().optional(),
-      total_uploaded_mb: z.number().optional(),
-    }).optional(),
-    weave_ai: z.object({
-      messages_sent: z.number().optional(),
-      tokens_estimated: z.number().optional(),
-    }).optional(),
-    current_period_end: z.string().optional(),
-    current_period_start: z.string().optional(),
-  }).optional(),
-  usage_summary: z.object({
-    notes_total: z.number().optional(),
-    projects_total: z.number().optional(),
-    team_members_total: z.number().optional(),
-  }).optional(),
-  history_metadata: z.object({
-    last_activity_at: z.string().optional(),
-    usage_percentage_total: z.number().optional(),
-  }).optional(),
-}).optional();
+export const UsageDetailsSchema = z
+  .object({
+    monthly_cycle: z
+      .object({
+        exports: z
+          .object({
+            notes_count: z.number().optional(),
+            backups_count: z.number().optional(),
+          })
+          .optional(),
+        storage: z
+          .object({
+            files_count: z.number().optional(),
+            total_uploaded_mb: z.number().optional(),
+          })
+          .optional(),
+        weave_ai: z
+          .object({
+            messages_sent: z.number().optional(),
+            tokens_estimated: z.number().optional(),
+          })
+          .optional(),
+        current_period_end: z.string().optional(),
+        current_period_start: z.string().optional(),
+      })
+      .optional(),
+    usage_summary: z
+      .object({
+        notes_total: z.number().optional(),
+        projects_total: z.number().optional(),
+        team_members_total: z.number().optional(),
+      })
+      .optional(),
+    history_metadata: z
+      .object({
+        last_activity_at: z.string().optional(),
+        usage_percentage_total: z.number().optional(),
+      })
+      .optional(),
+  })
+  .optional();
 
 /** Matches `mapDefaultAreaInfo` in weave-api `user-data.controller.js` / auth controllers. */
 export const BackendOrgDefaultAreaFieldsSchema = z.object({
@@ -107,13 +140,15 @@ export const UserSchema = z.object({
   phone_number: z.string().optional(),
   public_id: z.string().optional(),
 
-
   org_id: z.string().nullable().optional(),
   org_public_id: z.string().nullable().optional(),
   org_name: z.string().nullable().optional(),
   org_unique_name: z.string().nullable().optional(),
   org_logo_url: z.string().nullable().optional(),
-  org_member_role: z.union([z.string(), z.array(z.string())]).nullable().optional(),
+  org_member_role: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
   logo_url: z.string().nullable().optional(),
   org_member_since: z.string().nullable().optional(),
 
@@ -153,7 +188,6 @@ export const BackendProfileSchema = z.object({
   public_id: z.string().optional(),
 });
 
-
 export const BackendSettingsSchema = z.object({
   theme_mode: z.string().nullable().optional(),
   private_profile: z.boolean().nullable().optional(),
@@ -167,17 +201,25 @@ export const BackendOrganizationSchema = z.object({
   id: z.string().nullable().optional(),
   unique_name: z.string().nullable().optional(),
   name: z.string().nullable().optional(), // Login response and Me response slightly differ
-  org_name: z.string().nullable().optional(), 
+  org_name: z.string().nullable().optional(),
   logo_url: z.string().nullable().optional(),
   org_logo_url: z.string().nullable().optional(),
-  role: z.union([z.string(), z.array(z.string())]).nullable().optional(),
-  member_role: z.union([z.string(), z.array(z.string())]).nullable().optional(),
-  org_member_role: z.union([z.string(), z.array(z.string())]).nullable().optional(),
+  role: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
+  member_role: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
+  org_member_role: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
   member_since: z.string().nullable().optional(),
   org_member_since: z.string().nullable().optional(),
   public_id: z.string().nullable().optional(),
 });
-
 
 export const BackendAuthResponseSchema = z.object({
   status: z.string(),
@@ -201,12 +243,14 @@ export const BackendAuthResponseSchema = z.object({
         id: z.string().nullable().optional(),
         unique_name: z.string().nullable().optional(),
         name: z.string().nullable().optional(),
-        role: z.union([z.string(), z.array(z.string())]).nullable().optional(),
+        role: z
+          .union([z.string(), z.array(z.string())])
+          .nullable()
+          .optional(),
         logo_url: z.string().nullable().optional(),
         member_since: z.string().nullable().optional(),
         public_id: z.string().nullable().optional(),
         default_area: BackendOrgDefaultAreaSchema,
-
       })
       .optional()
       .nullable(),
@@ -233,7 +277,10 @@ export const BackendMeResponseSchema = z.object({
         unique_name: z.string().nullable().optional(),
         name: z.string().nullable().optional(),
         logo_url: z.string().nullable().optional(),
-        member_role: z.union([z.string(), z.array(z.string())]).nullable().optional(),
+        member_role: z
+          .union([z.string(), z.array(z.string())])
+          .nullable()
+          .optional(),
         member_since: z.string().nullable().optional(),
         public_id: z.string().nullable().optional(),
         default_area: BackendOrgDefaultAreaSchema,

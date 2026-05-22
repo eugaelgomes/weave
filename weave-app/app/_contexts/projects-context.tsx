@@ -258,21 +258,46 @@ export interface ProjectsContextType {
 
   // AI Report Config
   getAiReportConfig: (projectId: string) => Promise<AiReportConfig | null>;
-  updateAiReportConfig: (projectId: string, payload: AiReportConfigUpsertPayload) => Promise<boolean>;
+  updateAiReportConfig: (
+    projectId: string,
+    payload: AiReportConfigUpsertPayload
+  ) => Promise<boolean>;
 
   // Sprints
   getSprints: (projectId: string, limit?: number) => Promise<Sprint[]>;
   getActiveSprint: (projectId: string) => Promise<Sprint | null>;
   createSprint: (projectId: string, payload: CreateSprintPayload) => Promise<Sprint | null>;
-  completeSprint: (projectId: string, sprintId: string, payload?: CompleteSprintPayload) => Promise<{ completed_sprint: Sprint; next_sprint?: Sprint | null } | null>;
+  completeSprint: (
+    projectId: string,
+    sprintId: string,
+    payload?: CompleteSprintPayload
+  ) => Promise<{ completed_sprint: Sprint; next_sprint?: Sprint | null } | null>;
 
   // Reasonings
-  getReasonings: (projectId: string, params?: { sprintId?: string; reasoningType?: string; limit?: number }) => Promise<Reasoning[]>;
+  getReasonings: (
+    projectId: string,
+    params?: { sprintId?: string; reasoningType?: string; limit?: number }
+  ) => Promise<Reasoning[]>;
   getReasoningById: (projectId: string, reasoningId: string) => Promise<Reasoning | null>;
-  getReasoningActionItems: (projectId: string, reasoningId: string) => Promise<ReasoningActionItem[]>;
-  createReasoning: (projectId: string, payload: CreateReasoningPayload) => Promise<Reasoning | null>;
-  updateReasoningInteraction: (projectId: string, reasoningId: string, payload: UpdateReasoningInteractionPayload) => Promise<boolean>;
-  updateReasoningActionItem: (projectId: string, reasoningId: string, itemId: string, payload: UpdateReasoningActionItemPayload) => Promise<ReasoningActionItem | null>;
+  getReasoningActionItems: (
+    projectId: string,
+    reasoningId: string
+  ) => Promise<ReasoningActionItem[]>;
+  createReasoning: (
+    projectId: string,
+    payload: CreateReasoningPayload
+  ) => Promise<Reasoning | null>;
+  updateReasoningInteraction: (
+    projectId: string,
+    reasoningId: string,
+    payload: UpdateReasoningInteractionPayload
+  ) => Promise<boolean>;
+  updateReasoningActionItem: (
+    projectId: string,
+    reasoningId: string,
+    itemId: string,
+    payload: UpdateReasoningActionItemPayload
+  ) => Promise<ReasoningActionItem | null>;
 }
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -427,7 +452,10 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
 
   // 3. ATUALIZAR PROJETO (UPDATE)
   const updateProject = useCallback(
-    async (projectId: string, projectData: UpdateProjectData | FormData): Promise<Project | null> => {
+    async (
+      projectId: string,
+      projectData: UpdateProjectData | FormData
+    ): Promise<Project | null> => {
       if (!user?.id) return null;
 
       setLoading(true);
@@ -496,7 +524,9 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     const completedProjects = projectsOverview.filter(
       (p) => p.status === PROJECT_STATUS.COMPLETED
     ).length;
-    const pausedProjects = projectsOverview.filter((p) => p.status === PROJECT_STATUS.PAUSED).length;
+    const pausedProjects = projectsOverview.filter(
+      (p) => p.status === PROJECT_STATUS.PAUSED
+    ).length;
     const archivedProjects = projectsOverview.filter(
       (p) => p.status === PROJECT_STATUS.ARCHIVED
     ).length;
@@ -956,7 +986,11 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateProjectNoteStage = useCallback(
-    async (projectId: string, noteId: string, stageId: string): Promise<NoteStageUpdateResult | null> => {
+    async (
+      projectId: string,
+      noteId: string,
+      stageId: string
+    ): Promise<NoteStageUpdateResult | null> => {
       if (!user?.id) return null;
 
       try {
@@ -1053,7 +1087,11 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   );
 
   const completeSprintFn = useCallback(
-    async (projectId: string, sprintId: string, payload?: CompleteSprintPayload): Promise<{ completed_sprint: Sprint; next_sprint?: Sprint | null } | null> => {
+    async (
+      projectId: string,
+      sprintId: string,
+      payload?: CompleteSprintPayload
+    ): Promise<{ completed_sprint: Sprint; next_sprint?: Sprint | null } | null> => {
       if (!user?.id) return null;
       try {
         return await completeSprintService(projectId, sprintId, payload);
@@ -1067,7 +1105,10 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
 
   // --- REASONINGS ---
   const getReasonings = useCallback(
-    async (projectId: string, params?: { sprintId?: string; reasoningType?: string; limit?: number }): Promise<Reasoning[]> => {
+    async (
+      projectId: string,
+      params?: { sprintId?: string; reasoningType?: string; limit?: number }
+    ): Promise<Reasoning[]> => {
       if (!user?.id) return [];
       try {
         return await fetchReasoningsService(projectId, params);
@@ -1119,7 +1160,11 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateReasoningInteractionFn = useCallback(
-    async (projectId: string, reasoningId: string, payload: UpdateReasoningInteractionPayload): Promise<boolean> => {
+    async (
+      projectId: string,
+      reasoningId: string,
+      payload: UpdateReasoningInteractionPayload
+    ): Promise<boolean> => {
       if (!user?.id) return false;
       try {
         await updateReasoningInteractionService(projectId, reasoningId, payload);
@@ -1133,7 +1178,12 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateReasoningActionItemFn = useCallback(
-    async (projectId: string, reasoningId: string, itemId: string, payload: UpdateReasoningActionItemPayload): Promise<ReasoningActionItem | null> => {
+    async (
+      projectId: string,
+      reasoningId: string,
+      itemId: string,
+      payload: UpdateReasoningActionItemPayload
+    ): Promise<ReasoningActionItem | null> => {
       if (!user?.id) return null;
       try {
         return await updateReasoningActionItemService(projectId, reasoningId, itemId, payload);

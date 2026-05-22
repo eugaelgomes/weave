@@ -199,86 +199,86 @@ export function ProjectFilters({
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-1">
-      <FilterSelect
-        icon={Clock}
-        accent="amber"
-        placeholder="Vencimento"
-        title="Filtrar por vencimento"
-        value={duePreset}
-        onChange={(v) => handleDuePreset(v as DueDatePreset)}
-        onClear={clearDue}
-        options={[...DATE_PRESET_OPTIONS]}
-      />
-
-      <FilterSelect
-        icon={Calendar}
-        accent="blue"
-        placeholder="Criação"
-        title="Filtrar por data de criação"
-        value={createdPreset}
-        onChange={(v) => handleCreatedPreset(v as CreatedDatePreset)}
-        onClear={clearCreated}
-        options={[...DATE_PRESET_OPTIONS]}
-      />
-
-      {taskPriorities.length > 0 && (
         <FilterSelect
-          icon={Flag}
-          accent="rose"
-          placeholder="Prioridade"
-          title="Filtrar por prioridade"
-          value={filters.priority_id?.[0] ?? "all"}
-          onChange={handlePriority}
-          onClear={clearPriority}
-          options={taskPriorities.map((p) => ({ value: p.id, label: p.name }))}
+          icon={Clock}
+          accent="amber"
+          placeholder="Vencimento"
+          title="Filtrar por vencimento"
+          value={duePreset}
+          onChange={(v) => handleDuePreset(v as DueDatePreset)}
+          onClear={clearDue}
+          options={[...DATE_PRESET_OPTIONS]}
         />
-      )}
 
-      {stages.length > 0 && (
         <FilterSelect
-          icon={Columns3}
-          accent="purple"
-          placeholder="Estágio"
-          title="Filtrar por estágio"
-          value={filters.stage_id?.[0] ?? "all"}
-          onChange={handleStage}
-          onClear={clearStage}
-          options={stages.map((s) => ({ value: s.id, label: s.name }))}
+          icon={Calendar}
+          accent="blue"
+          placeholder="Criação"
+          title="Filtrar por data de criação"
+          value={createdPreset}
+          onChange={(v) => handleCreatedPreset(v as CreatedDatePreset)}
+          onClear={clearCreated}
+          options={[...DATE_PRESET_OPTIONS]}
         />
-      )}
 
-      {projectTags.length > 0 && (
-        <FilterSelect
-          icon={Tags}
-          accent="emerald"
-          placeholder="Tags"
-          title="Filtrar por tag"
-          value={filters.tags?.[0] ?? "all"}
-          onChange={handleTag}
-          onClear={clearTag}
-          options={projectTags.map((t) => ({ value: t.id, label: t.name }))}
+        {taskPriorities.length > 0 && (
+          <FilterSelect
+            icon={Flag}
+            accent="rose"
+            placeholder="Prioridade"
+            title="Filtrar por prioridade"
+            value={filters.priority_id?.[0] ?? "all"}
+            onChange={handlePriority}
+            onClear={clearPriority}
+            options={taskPriorities.map((p) => ({ value: p.id, label: p.name }))}
+          />
+        )}
+
+        {stages.length > 0 && (
+          <FilterSelect
+            icon={Columns3}
+            accent="purple"
+            placeholder="Estágio"
+            title="Filtrar por estágio"
+            value={filters.stage_id?.[0] ?? "all"}
+            onChange={handleStage}
+            onClear={clearStage}
+            options={stages.map((s) => ({ value: s.id, label: s.name }))}
+          />
+        )}
+
+        {projectTags.length > 0 && (
+          <FilterSelect
+            icon={Tags}
+            accent="emerald"
+            placeholder="Tags"
+            title="Filtrar por tag"
+            value={filters.tags?.[0] ?? "all"}
+            onChange={handleTag}
+            onClear={clearTag}
+            options={projectTags.map((t) => ({ value: t.id, label: t.name }))}
+          />
+        )}
+
+        <FilterPeopleSelect
+          value={filters.collaborator_user_id?.[0] ?? null}
+          onChange={handlePerson}
+          collaborators={collaboratorsList}
+          currentUserId={user?.id}
+          placeholder="Pessoas"
+          onClear={clearPerson}
         />
-      )}
 
-      <FilterPeopleSelect
-        value={filters.collaborator_user_id?.[0] ?? null}
-        onChange={handlePerson}
-        collaborators={collaboratorsList}
-        currentUserId={user?.id}
-        placeholder="Pessoas"
-        onClear={clearPerson}
-      />
-
-      {activeCount > 0 && (
-        <button
-          type="button"
-          onClick={handleClear}
-          className="flex items-center gap-0.5 rounded-full border border-neutral-200 px-2 py-px text-[10px] font-medium text-neutral-500 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-red-600/50 dark:hover:bg-red-950/40 dark:hover:text-red-400"
-        >
-          <X className="h-2 w-2" />
-          <span>Limpar ({activeCount})</span>
-        </button>
-      )}
+        {activeCount > 0 && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="flex items-center gap-0.5 rounded-full border border-neutral-200 px-2 py-px text-[10px] font-medium text-neutral-500 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-red-600/50 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+          >
+            <X className="h-2 w-2" />
+            <span>Limpar ({activeCount})</span>
+          </button>
+        )}
       </div>
     </div>
   );

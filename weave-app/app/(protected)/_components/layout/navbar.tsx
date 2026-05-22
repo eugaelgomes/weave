@@ -96,7 +96,7 @@ const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "xs" | "sm" | "m
           src={user.avatar_url}
           alt={t.navbar.avatarOf.replace("{name}", user.user_name || t.common.user)}
           fill
-          className="object-cover rounded-full"
+          className="rounded-full object-cover"
           sizes={size === "xs" ? "28px" : size === "sm" ? "32px" : size === "md" ? "40px" : "48px"}
         />
       ) : (
@@ -125,8 +125,10 @@ const NotificationsLink = ({
       href="/notifications"
       className={cn(
         surface === "desktop" ? navbarElevatedSurfaceClass : navIconMobileShellClass,
-        "relative flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50",
-        surface === "desktop" ? "h-4 w-4 rounded-full p-1 text-gray-700 dark:text-white md:h-6 md:w-6" : "",
+        "focus-visible:ring-brand-yellow/50 relative flex items-center justify-center transition-colors focus-visible:ring-2 focus-visible:outline-none",
+        surface === "desktop"
+          ? "h-4 w-4 rounded-full p-1 text-gray-700 md:h-6 md:w-6 dark:text-white"
+          : "",
         className
       )}
       aria-label={ariaLabel}
@@ -134,7 +136,7 @@ const NotificationsLink = ({
     >
       <Bell className="h-4 w-4" strokeWidth={1.75} />
       {unreadCount > 0 && (
-        <span className="bg-brand-primary-500 absolute -top-0.5 -right-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full border-2 border-white px-0.5 text-[7px] font-bold text-white dark:border-surface-dark-border-strong md:h-4 md:min-w-[16px] md:text-[8px]">
+        <span className="bg-brand-primary-500 dark:border-surface-dark-border-strong absolute -top-0.5 -right-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full border-2 border-white px-0.5 text-[7px] font-bold text-white md:h-4 md:min-w-[16px] md:text-[8px]">
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}
@@ -151,10 +153,10 @@ interface UserMenuProps {
 
 const UserMenuContent = ({ user, t, onClose, onLogout }: UserMenuProps) => (
   <nav aria-label={t.navbar.userMenuNav} className="flex flex-col overflow-hidden">
-    <header className="flex items-center gap-3 border-b border-gray-200 bg-brand-yellow/5 px-4 py-3 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
+    <header className="bg-brand-yellow/5 dark:border-surface-dark-border-strong flex items-center gap-3 border-b border-gray-200 px-4 py-3 dark:bg-[#1d1d1b]">
       <UserAvatar user={user} size="md" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-bold text-gray-900 dark:text-brand-yellow">
+        <p className="dark:text-brand-yellow truncate text-sm font-bold text-gray-900">
           {user?.user_name || t.common.user}
         </p>
         <p className="truncate text-[9px] font-medium text-gray-500 dark:text-gray-400">
@@ -174,8 +176,6 @@ const UserMenuContent = ({ user, t, onClose, onLogout }: UserMenuProps) => (
         </Link>
       </li>
 
-
-
       <li>
         <a
           href={process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app/about"}
@@ -188,7 +188,7 @@ const UserMenuContent = ({ user, t, onClose, onLogout }: UserMenuProps) => (
         </a>
       </li>
 
-      <hr className="my-1 border-t border-gray-200 dark:border-surface-dark-border" />
+      <hr className="dark:border-surface-dark-border my-1 border-t border-gray-200" />
 
       <li>
         <button
@@ -266,7 +266,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 <button
                   type="button"
                   onClick={onToggleSidebar}
-                  className={cn(navIconMobileShellClass, "lg:hidden self-center")}
+                  className={cn(navIconMobileShellClass, "self-center lg:hidden")}
                   aria-label={t.nav.openSidebar}
                   title={t.nav.openSidebar}
                 >
@@ -281,7 +281,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               >
                 <span
                   className={cn(
-                    "truncate text-sm font-bold text-brand-yellow sm:text-base leading-none",
+                    "text-brand-yellow truncate text-sm leading-none font-bold sm:text-base",
                     fredoka.className
                   )}
                 >
@@ -298,22 +298,25 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
               </Link>
 
               {user?.org_id && (
-                <div className="hidden items-center gap-2 sm:flex self-center">
-                  <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-800 self-center" aria-hidden="true" />
+                <div className="hidden items-center gap-2 self-center sm:flex">
+                  <div
+                    className="h-4 w-px self-center bg-neutral-200 dark:bg-neutral-800"
+                    aria-hidden="true"
+                  />
                   <Link
                     href="/organization/editor"
-                    className="flex min-w-0 items-center gap-1.5 rounded-md transition-opacity hover:opacity-80 self-center"
+                    className="flex min-w-0 items-center gap-1.5 self-center rounded-md transition-opacity hover:opacity-80"
                   >
-                    <figure className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded self-center">
+                    <figure className="flex h-4 w-4 shrink-0 items-center justify-center self-center overflow-hidden rounded">
                       <Image
                         src={user.org_logo_url || "/default-org-icon.png"}
                         alt={t.navbar.logoOf.replace("{name}", user.org_name || "")}
                         width={16}
                         height={16}
-                        className="object-contain self-center"
+                        className="self-center object-contain"
                       />
                     </figure>
-                    <span className="max-w-[180px] truncate text-xs font-medium text-gray-900 dark:text-gray-100 leading-none self-center">
+                    <span className="max-w-[180px] self-center truncate text-xs leading-none font-medium text-gray-900 dark:text-gray-100">
                       {user.org_name}
                     </span>
                   </Link>
@@ -323,7 +326,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
             {/* Centro: respiro no mobile (1fr); busca + notificações no desktop */}
             {authenticated && user ? (
-              <section className="flex w-full min-h-0 min-w-0 items-center justify-center px-1 md:px-2">
+              <section className="flex min-h-0 w-full min-w-0 items-center justify-center px-1 md:px-2">
                 <div className="hidden w-full max-w-md items-center gap-2 md:flex">
                   <button
                     type="button"
@@ -336,13 +339,13 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                     title={t.navbar.searchSystem}
                   >
                     <Search
-                      className="h-3.5 w-3.5 text-gray-500 transition-colors group-hover:text-brand-yellow dark:text-gray-500"
+                      className="group-hover:text-brand-yellow h-3.5 w-3.5 text-gray-500 transition-colors dark:text-gray-500"
                       strokeWidth={1.75}
                     />
                     <span className="flex-1 text-left text-[11px] text-gray-500 dark:text-gray-400">
                       {t.navbar.searchPlaceholder}
                     </span>
-                    <kbd className="flex items-bottom gap-1 px-1.5 font-sans text-[10px] font-medium text-gray-500 dark:border-surface-dark-border dark:text-gray-500">
+                    <kbd className="items-bottom dark:border-surface-dark-border flex gap-1 px-1.5 font-sans text-[10px] font-medium text-gray-500 dark:text-gray-500">
                       <span>⌘</span>K
                     </kbd>
                   </button>
@@ -367,14 +370,18 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                     <Search className="h-4 w-4" strokeWidth={1.75} />
                   </button>
 
-                  <NotificationsLink ariaLabel={t.nav.notifications} className="md:hidden" surface="mobile" />
+                  <NotificationsLink
+                    ariaLabel={t.nav.notifications}
+                    className="md:hidden"
+                    surface="mobile"
+                  />
 
                   <button
                     type="button"
                     onClick={handleThemeToggle}
                     className={cn(
                       navbarElevatedSurfaceClass,
-                      "flex h-6 w-6 items-center justify-center rounded-full text-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50 dark:text-white md:h-6 md:w-6"
+                      "focus-visible:ring-brand-yellow/50 flex h-6 w-6 items-center justify-center rounded-full text-gray-700 transition-colors focus-visible:ring-2 focus-visible:outline-none md:h-6 md:w-6 dark:text-white"
                     )}
                     aria-label={t.navbar.theme}
                     title={t.navbar.theme}
@@ -392,8 +399,8 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                       title={t.navbar.openUserMenu}
                       className={cn(
                         navbarElevatedSurfaceClass,
-                        "flex shrink-0 items-center justify-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50",
-                        "h-7 w-7 max-h-8 rounded-full p-px text-gray-700 dark:text-white",
+                        "focus-visible:ring-brand-yellow/50 flex shrink-0 items-center justify-center gap-1 transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                        "h-7 max-h-8 w-7 rounded-full p-px text-gray-700 dark:text-white",
                         "max-lg:active:bg-neutral-100 dark:max-lg:active:bg-neutral-900",
                         "md:h-fit md:max-h-8 md:w-auto md:rounded-full md:py-0.5 md:pr-0.5 md:pl-2",
                         isMenuOpen ? "bg-neutral-100 dark:bg-neutral-900" : ""
@@ -412,7 +419,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
                     {isMenuOpen && (
                       <div className="absolute top-full right-0 z-50 mt-2 hidden w-72 origin-top-right sm:block">
-                        <div className="overflow-hidden rounded-md border border-gray-200/60 bg-white dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
+                        <div className="dark:border-surface-dark-border-strong overflow-hidden rounded-md border border-gray-200/60 bg-white dark:bg-[#1d1d1b]">
                           <UserMenuContent
                             user={user}
                             t={t}
@@ -446,7 +453,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
             <dialog
               ref={mobileMenuRef}
               open
-              className="relative z-[111] m-0 flex w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
+              className="dark:border-surface-dark-border-strong relative z-[111] m-0 flex w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white dark:bg-[#1d1d1b]"
             >
               <div className="max-h-[75vh] overflow-y-auto">
                 <UserMenuContent
@@ -457,7 +464,7 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 />
               </div>
 
-              <footer className="border-t border-neutral-200 bg-white p-3 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
+              <footer className="dark:border-surface-dark-border-strong border-t border-neutral-200 bg-white p-3 dark:bg-[#1d1d1b]">
                 <button
                   onClick={() => setIsMenuOpen(false)}
                   className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-200/50 py-2.5 text-xs font-bold text-neutral-900 active:scale-95 dark:bg-neutral-800 dark:text-neutral-100"

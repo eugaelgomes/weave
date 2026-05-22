@@ -23,24 +23,30 @@ const BackupContext = createContext<BackupContextValue | undefined>(undefined);
 export function BackupProvider({ children }: { children: React.ReactNode }) {
   const { authenticated } = useAuth();
 
-  const requestBackup = useCallback(async (options?: BackupOptions) => {
-    if (!authenticated) {
-      throw new Error("Unauthorized");
-    }
-    const res = await requestBackupService(options);
-    return {
-      jobId: res.job_id,
-      message: res.message,
-      estimatedTime: res.estimated_time,
-    };
-  }, [authenticated]);
+  const requestBackup = useCallback(
+    async (options?: BackupOptions) => {
+      if (!authenticated) {
+        throw new Error("Unauthorized");
+      }
+      const res = await requestBackupService(options);
+      return {
+        jobId: res.job_id,
+        message: res.message,
+        estimatedTime: res.estimated_time,
+      };
+    },
+    [authenticated]
+  );
 
-  const getBackupStatus = useCallback(async (jobId: string) => {
-    if (!authenticated) {
-      throw new Error("Unauthorized");
-    }
-    return await getBackupStatusService(jobId);
-  }, [authenticated]);
+  const getBackupStatus = useCallback(
+    async (jobId: string) => {
+      if (!authenticated) {
+        throw new Error("Unauthorized");
+      }
+      return await getBackupStatusService(jobId);
+    },
+    [authenticated]
+  );
 
   return (
     <BackupContext.Provider value={{ requestBackup, getBackupStatus }}>
@@ -54,4 +60,3 @@ export function useBackup() {
   if (!ctx) throw new Error("useBackup must be used within BackupProvider");
   return ctx;
 }
-

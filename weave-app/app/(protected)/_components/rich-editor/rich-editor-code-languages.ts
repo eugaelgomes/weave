@@ -43,9 +43,7 @@ const LABEL_PT: Record<string, string> = {
 };
 
 function fallbackLabel(id: string): string {
-  return id
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+  return id.replace(/-/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
 }
 
 /** Languages registered via `lowlight` common bundle (same as CodeBlockLowlight). */

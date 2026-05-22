@@ -42,12 +42,7 @@ const INLINE_IMAGE_TYPES = new Set([
 ]);
 
 const INLINE_VIDEO_MAX_BYTES = 25 * 1024 * 1024;
-const INLINE_VIDEO_TYPES = new Set([
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
-  "video/ogg",
-]);
+const INLINE_VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime", "video/ogg"]);
 
 export interface RichEditorFormatToolbarProps {
   editor: Editor;
@@ -69,7 +64,14 @@ interface MenuButtonProps {
   compact?: boolean;
 }
 
-export function MenuButton({ onClick, isActive, disabled, title, children, compact }: MenuButtonProps) {
+export function MenuButton({
+  onClick,
+  isActive,
+  disabled,
+  title,
+  children,
+  compact,
+}: MenuButtonProps) {
   return (
     <button
       type="button"
@@ -81,8 +83,8 @@ export function MenuButton({ onClick, isActive, disabled, title, children, compa
         "flex items-center justify-center rounded-md transition-colors",
         compact ? "h-7 w-7" : "h-8 w-8",
         "hover:bg-neutral-100 dark:hover:bg-neutral-700",
-        "disabled:opacity-50 disabled:cursor-not-allowed",
-        isActive && "bg-neutral-200 dark:bg-neutral-600 text-neutral-900 dark:text-white"
+        "disabled:cursor-not-allowed disabled:opacity-50",
+        isActive && "bg-neutral-200 text-neutral-900 dark:bg-neutral-600 dark:text-white"
       )}
     >
       {children}
@@ -91,7 +93,14 @@ export function MenuButton({ onClick, isActive, disabled, title, children, compa
 }
 
 export function ToolbarDivider({ compact }: { compact?: boolean }) {
-  return <div className={clsx("bg-neutral-300 dark:bg-neutral-600 mx-0.5", compact ? "h-4 w-px" : "h-5 w-px")} />;
+  return (
+    <div
+      className={clsx(
+        "mx-0.5 bg-neutral-300 dark:bg-neutral-600",
+        compact ? "h-4 w-px" : "h-5 w-px"
+      )}
+    />
+  );
 }
 
 export function RichEditorFormatToolbar({
@@ -270,7 +279,8 @@ export function RichEditorFormatToolbar({
 
   const barClass = clsx(
     "rounded-lg border border-neutral-200 bg-white shadow-lg dark:border-surface-dark-border-strong dark:bg-neutral-800",
-    variant === "slash" && "max-w-[min(100vw-1rem,42rem)] flex flex-wrap items-center gap-0.5 px-1 py-1",
+    variant === "slash" &&
+      "max-w-[min(100vw-1rem,42rem)] flex flex-wrap items-center gap-0.5 px-1 py-1",
     variant !== "slash" && "flex items-center gap-0.5 px-1.5 py-1",
     compact && variant !== "slash" && "gap-0 px-1 py-0.5"
   );
@@ -294,7 +304,7 @@ export function RichEditorFormatToolbar({
           }}
           placeholder="https://..."
           autoFocus
-          className="h-7 min-w-0 flex-1 rounded border border-neutral-300 bg-transparent px-2 text-sm outline-none focus:border-yellow-500 dark:border-surface-dark-border-muted"
+          className="dark:border-surface-dark-border-muted h-7 min-w-0 flex-1 rounded border border-neutral-300 bg-transparent px-2 text-sm outline-none focus:border-yellow-500"
         />
         <button
           type="button"
@@ -322,7 +332,9 @@ export function RichEditorFormatToolbar({
   const iconSize = compact ? 15 : 16;
   const codeBlockLanguage =
     (editor.getAttributes("codeBlock").language as string | undefined) || "plaintext";
-  const codeLanguageSelectOptions = CODE_BLOCK_LANGUAGE_OPTIONS.some((o) => o.value === codeBlockLanguage)
+  const codeLanguageSelectOptions = CODE_BLOCK_LANGUAGE_OPTIONS.some(
+    (o) => o.value === codeBlockLanguage
+  )
     ? CODE_BLOCK_LANGUAGE_OPTIONS
     : [{ value: codeBlockLanguage, label: codeBlockLanguage }, ...CODE_BLOCK_LANGUAGE_OPTIONS];
 
@@ -489,7 +501,7 @@ export function RichEditorFormatToolbar({
           title="Linguagem do código"
           aria-label="Linguagem do código"
           className={clsx(
-            "shrink-0 cursor-pointer rounded-md border border-neutral-300 bg-white px-1 text-xs text-neutral-800 outline-none dark:border-surface-dark-border-muted dark:bg-[#1d1d1b] dark:text-neutral-100",
+            "dark:border-surface-dark-border-muted shrink-0 cursor-pointer rounded-md border border-neutral-300 bg-white px-1 text-xs text-neutral-800 outline-none dark:bg-[#1d1d1b] dark:text-neutral-100",
             compact ? "h-7 max-w-[6.5rem]" : "h-8 max-w-[9rem]"
           )}
         >
@@ -529,7 +541,11 @@ export function RichEditorFormatToolbar({
           uploadDocumentImages ? "Carregar imagem do computador" : "Carregar imagem (indisponível)"
         }
       >
-        {imageUploading ? <Loader2 size={iconSize} className="animate-spin" /> : <Upload size={iconSize} />}
+        {imageUploading ? (
+          <Loader2 size={iconSize} className="animate-spin" />
+        ) : (
+          <Upload size={iconSize} />
+        )}
       </MenuButton>
 
       <MenuButton

@@ -82,4 +82,3 @@ export type CreateProjectWizardStepProps = {
   actions: CreateProjectWizardActions;
   projectStages?: ProjectStage[] | null;
 };
-

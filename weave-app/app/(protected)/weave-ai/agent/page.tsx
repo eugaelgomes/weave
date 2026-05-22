@@ -81,12 +81,12 @@ function AgentCard({ agent, onOpen }: { agent: Agent; onOpen: () => void }) {
               {meta.label}
             </span>
             {agent.is_active === false && (
-              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-600 ring-1 ring-inset ring-neutral-500/20 dark:bg-neutral-800/50 dark:text-neutral-400">
+              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-600 ring-1 ring-neutral-500/20 ring-inset dark:bg-neutral-800/50 dark:text-neutral-400">
                 Inativo
               </span>
             )}
             {agent.project_id && (
-              <span className="inline-flex items-center rounded-full bg-brand-primary-50 px-2 py-0.5 text-[10px] font-semibold text-brand-primary-700 ring-1 ring-inset ring-brand-primary-500/20 dark:bg-brand-primary-500/10 dark:text-brand-primary-400">
+              <span className="bg-brand-primary-50 text-brand-primary-700 ring-brand-primary-500/20 dark:bg-brand-primary-500/10 dark:text-brand-primary-400 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset">
                 Projeto
               </span>
             )}
@@ -120,7 +120,7 @@ function AgentCard({ agent, onOpen }: { agent: Agent; onOpen: () => void }) {
         ) : null}
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3 dark:border-surface-dark-border">
+      <div className="dark:border-surface-dark-border mt-4 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3">
         <span className="min-w-0 truncate text-[11px] text-neutral-400 dark:text-neutral-500">
           {tagLine || "Sem tags"}
         </span>
@@ -165,7 +165,7 @@ export default function AgentsOverviewPage() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 shadow-sm xl:flex-row xl:items-center xl:justify-between dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+      <div className="dark:border-surface-dark-border flex flex-col gap-3 rounded-md border border-neutral-200 bg-white p-2 shadow-sm xl:flex-row xl:items-center xl:justify-between dark:bg-[#1d1d1b]">
         <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
           <div className="relative w-full sm:max-w-xs">
             <Search className="absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
@@ -173,7 +173,7 @@ export default function AgentsOverviewPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar agente..."
-              className="focus:border-brand-primary-500 focus:ring-brand-primary-500/50 h-8 w-full rounded-md border border-neutral-200 bg-neutral-50/50 pr-3 pl-8 text-xs text-neutral-900 placeholder:text-neutral-400 focus:ring-1 focus:outline-none dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-100"
+              className="focus:border-brand-primary-500 focus:ring-brand-primary-500/50 dark:border-surface-dark-border h-8 w-full rounded-md border border-neutral-200 bg-neutral-50/50 pr-3 pl-8 text-xs text-neutral-900 placeholder:text-neutral-400 focus:ring-1 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-100"
             />
           </div>
 
@@ -201,10 +201,10 @@ export default function AgentsOverviewPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 border-t border-neutral-100 pt-2 xl:border-0 xl:pt-0 dark:border-surface-dark-border">
+        <div className="dark:border-surface-dark-border flex items-center gap-1.5 border-t border-neutral-100 pt-2 xl:border-0 xl:pt-0">
           <button
             type="button"
-            className="flex h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-900 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+            className="dark:border-surface-dark-border flex h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-900 disabled:opacity-50 dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
             title="Desativar agentes selecionados"
           >
             <Ban className="h-3.5 w-3.5" />
@@ -213,7 +213,7 @@ export default function AgentsOverviewPage() {
 
           <button
             type="button"
-            className="flex h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-red-600 transition hover:border-red-200 hover:bg-red-50 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-red-400 dark:hover:border-red-900/50 dark:hover:bg-red-900/20"
+            className="dark:border-surface-dark-border flex h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-red-600 transition hover:border-red-200 hover:bg-red-50 disabled:opacity-50 dark:bg-[#1d1d1b] dark:text-red-400 dark:hover:border-red-900/50 dark:hover:bg-red-900/20"
             title="Deletar agentes selecionados"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -234,7 +234,7 @@ export default function AgentsOverviewPage() {
       </div>
 
       {filteredAgents.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center rounded-md border border-dashed border-neutral-300 bg-white px-6 py-16 text-center dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+        <div className="dark:border-surface-dark-border flex flex-1 flex-col items-center justify-center rounded-md border border-dashed border-neutral-300 bg-white px-6 py-16 text-center dark:bg-[#1d1d1b]">
           <div className="flex h-12 w-12 items-center justify-center rounded-md bg-neutral-100 text-neutral-400 dark:bg-[#1d1d1b] dark:text-neutral-500">
             <Search className="h-5 w-5" />
           </div>

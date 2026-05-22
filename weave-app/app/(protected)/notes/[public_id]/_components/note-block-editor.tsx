@@ -161,8 +161,7 @@ export function NoteBlockEditor({
     prevPlain.current = plainSource;
 
     const hasLocalDraft = localText !== previousPlain;
-    const shouldPreserveLocalDraft =
-      isFocused || (coalescedTextSave && hasLocalDraft);
+    const shouldPreserveLocalDraft = isFocused || (coalescedTextSave && hasLocalDraft);
 
     if (shouldPreserveLocalDraft) return;
     setLocalText(plainSource);
@@ -258,9 +257,7 @@ export function NoteBlockEditor({
   };
 
   const showMarkdownToolbar =
-    canEdit &&
-    isFocused &&
-    ["paragraph", "quote", "table"].includes(block.type);
+    canEdit && isFocused && ["paragraph", "quote", "table"].includes(block.type);
 
   const markdownEnabled = block.type !== "code";
 
@@ -287,7 +284,7 @@ export function NoteBlockEditor({
         "w-full resize-none overflow-hidden bg-transparent text-[16px] leading-7 outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500",
         block.type === "code" && "min-h-[12rem] font-mono text-[13px] leading-relaxed",
         block.type === "heading" && HEADING_CLASS[headingLevel(block)],
-        block.type === "quote" && "italic text-neutral-700 dark:text-neutral-300",
+        block.type === "quote" && "text-neutral-700 italic dark:text-neutral-300",
         !["heading", "code"].includes(block.type) && "text-neutral-800 dark:text-neutral-200"
       )}
       placeholder={
@@ -304,12 +301,7 @@ export function NoteBlockEditor({
   let editArea: React.ReactNode;
   if (!canEdit) {
     editArea = (
-      <NoteRichContent
-        text={localText}
-        marks={marks}
-        markdown={markdownEnabled}
-        tight={false}
-      />
+      <NoteRichContent text={localText} marks={marks} markdown={markdownEnabled} tight={false} />
     );
   } else if (!isFocused && localText.trim().length > 0) {
     editArea = (
@@ -323,12 +315,7 @@ export function NoteBlockEditor({
           requestAnimationFrame(() => textareaRef.current?.focus());
         }}
       >
-        <NoteRichContent
-          text={localText}
-          marks={marks}
-          markdown={markdownEnabled}
-          tight={false}
-        />
+        <NoteRichContent text={localText} marks={marks} markdown={markdownEnabled} tight={false} />
       </button>
     );
   } else {
@@ -344,8 +331,10 @@ export function NoteBlockEditor({
 
   const contentShellClass = clsx(
     "rounded-md px-1.5 py-0",
-    isDragging && "bg-neutral-100 shadow-lg ring-2 ring-yellow-500/20 dark:bg-neutral-800 dark:ring-yellow-500/40",
-    block.type === "quote" && "border-l-4 border-neutral-300 pl-3 italic dark:border-surface-dark-border-muted"
+    isDragging &&
+      "bg-neutral-100 shadow-lg ring-2 ring-yellow-500/20 dark:bg-neutral-800 dark:ring-yellow-500/40",
+    block.type === "quote" &&
+      "border-l-4 border-neutral-300 pl-3 italic dark:border-surface-dark-border-muted"
   );
 
   /* -------- Tipos especiais -------- */
@@ -354,18 +343,14 @@ export function NoteBlockEditor({
     return (
       <div className={shellClass}>
         <DragHandle dragHandleProps={dragHandleProps} />
-        <hr className="my-6 border-neutral-200 dark:border-surface-dark-border-strong" />
+        <hr className="dark:border-surface-dark-border-strong my-6 border-neutral-200" />
       </div>
     );
   }
 
   if (block.type === "image") {
     const src =
-      typeof attrs.src === "string"
-        ? attrs.src
-        : typeof block.text === "string"
-          ? block.text
-          : "";
+      typeof attrs.src === "string" ? attrs.src : typeof block.text === "string" ? block.text : "";
     const alt = typeof attrs.alt === "string" ? attrs.alt : "";
     const resolved = src ? getStorageUrl(src) : "";
 
@@ -390,11 +375,7 @@ export function NoteBlockEditor({
 
   if (block.type === "video") {
     const src =
-      typeof attrs.src === "string"
-        ? attrs.src
-        : typeof block.text === "string"
-          ? block.text
-          : "";
+      typeof attrs.src === "string" ? attrs.src : typeof block.text === "string" ? block.text : "";
     const resolved = src ? getStorageUrl(src) : "";
 
     return (
@@ -431,7 +412,7 @@ export function NoteBlockEditor({
             onChange={(e) => {
               void onUpdate(block.id, { done: e.target.checked });
             }}
-            className="mt-1.5 h-4 w-4 shrink-0 rounded border-neutral-300 text-brand-primary-600 accent-brand-primary-500 dark:border-surface-dark-border-muted"
+            className="text-brand-primary-600 accent-brand-primary-500 dark:border-surface-dark-border-muted mt-1.5 h-4 w-4 shrink-0 rounded border-neutral-300"
           />
           <div className="min-w-0 flex-1">{editArea}</div>
         </div>
@@ -542,7 +523,7 @@ export function NoteBlockEditor({
       <div className={contentShellClass}>{editArea}</div>
 
       {block.children && block.children.length > 0 ? (
-        <div className="mt-0.5 ml-6 border-l-2 border-neutral-200 pl-4 dark:border-surface-dark-border">
+        <div className="dark:border-surface-dark-border mt-0.5 ml-6 border-l-2 border-neutral-200 pl-4">
           {block.children.map((child: Block & { children?: Block[] }) => (
             <NoteBlockEditor
               key={child.id}

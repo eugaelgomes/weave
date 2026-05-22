@@ -77,7 +77,8 @@ export async function fetchNotes(params: FetchNotesParams = {}): Promise<NotesRe
     return NotesResponseSchema.parse(rawData);
   }
 
-  const notesRaw = rawData && typeof rawData === "object" && "notes" in rawData ? (rawData as any).notes : rawData;
+  const notesRaw =
+    rawData && typeof rawData === "object" && "notes" in rawData ? (rawData as any).notes : rawData;
   const parsedNotes = z.array(NoteSchema).parse(notesRaw);
 
   if (params.page || params.limit) {
@@ -87,7 +88,9 @@ export async function fetchNotes(params: FetchNotesParams = {}): Promise<NotesRe
         currentPage: Number(params.page) || 1,
         limit: Number(params.limit) || parsedNotes.length,
         total: parsedNotes.length,
-        totalPages: Math.ceil(parsedNotes.length / (Number(params.limit) || parsedNotes.length || 1)),
+        totalPages: Math.ceil(
+          parsedNotes.length / (Number(params.limit) || parsedNotes.length || 1)
+        ),
         hasMore: false,
       },
     };
@@ -99,12 +102,12 @@ export async function fetchNotes(params: FetchNotesParams = {}): Promise<NotesRe
 export async function fetchNoteById(noteId: string): Promise<Note> {
   const response = await apiClient.get(API_ENDPOINTS.NOTES_BY_ID(noteId));
   const rawData = await handleResponse<unknown>(response);
-  
+
   if (rawData && typeof rawData === "object" && "data" in rawData) {
     const parsed = NoteDataResponseSchema.parse(rawData);
     if (parsed.data) return parsed.data;
   }
-  
+
   return NoteSchema.parse(rawData);
 }
 
@@ -196,7 +199,9 @@ const UploadedDocumentImagesResponseSchema = z.object({
   ),
 });
 
-export type UploadedDocumentImage = z.infer<typeof UploadedDocumentImagesResponseSchema>["files"][number];
+export type UploadedDocumentImage = z.infer<
+  typeof UploadedDocumentImagesResponseSchema
+>["files"][number];
 
 /**
  * POST /notes/:noteId/document-images — uploads body media (images or short videos for Tiptap) to object storage.
@@ -256,10 +261,7 @@ export async function updateNoteBlock(
   if (patch.properties !== undefined) body.properties = patch.properties;
   if (patch.expectedVersion !== undefined) body.expectedVersion = patch.expectedVersion;
 
-  const response = await apiClient.patch(
-    API_ENDPOINTS.NOTES_BLOCK_BY_ID(noteId, blockId),
-    body
-  );
+  const response = await apiClient.patch(API_ENDPOINTS.NOTES_BLOCK_BY_ID(noteId, blockId), body);
   return BlockSchema.parse(await handleResponse(response));
 }
 

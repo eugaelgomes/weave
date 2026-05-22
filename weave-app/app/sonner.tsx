@@ -17,7 +17,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
         classNames: {
           toast:
             "group toast gap-3 rounded-lg border border-neutral-200 bg-white p-4 font-sans text-sm text-neutral-900 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-50 dark:shadow-surface-dark-md",
-          title: "text-[0.9375rem] font-semibold leading-snug text-neutral-900 dark:text-neutral-50",
+          title:
+            "text-[0.9375rem] font-semibold leading-snug text-neutral-900 dark:text-neutral-50",
           description: "text-[0.8125rem] leading-relaxed text-neutral-600 dark:text-neutral-400",
           icon: "text-neutral-500 dark:text-neutral-400",
           content: "gap-1",
@@ -33,8 +34,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md border-l-[3px] border-l-red-500/80 text-neutral-900 dark:text-neutral-50 [&_.description]:text-neutral-600 dark:[&_.description]:text-neutral-400",
           warning:
             "border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md border-l-[3px] border-l-amber-500/80 text-neutral-900 dark:text-neutral-50 [&_.description]:text-neutral-600 dark:[&_.description]:text-neutral-400",
-          info:
-            "border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md border-l-[3px] border-l-sky-500/80 text-neutral-900 dark:text-neutral-50 [&_.description]:text-neutral-600 dark:[&_.description]:text-neutral-400",
+          info: "border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md border-l-[3px] border-l-sky-500/80 text-neutral-900 dark:text-neutral-50 [&_.description]:text-neutral-600 dark:[&_.description]:text-neutral-400",
           loading:
             "border-neutral-200 bg-neutral-50 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]/80 dark:shadow-surface-dark-sm",
         },

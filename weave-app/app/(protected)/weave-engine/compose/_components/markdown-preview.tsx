@@ -17,7 +17,7 @@ export function MarkdownPreview({ markdown, emptyLabel, className }: MarkdownPre
     <div
       className={
         className ??
-        "prose prose-sm dark:prose-invert max-w-none rounded-md border border-neutral-200 bg-neutral-50/80 p-3 text-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]/60"
+        "prose prose-sm dark:prose-invert dark:border-surface-dark-border max-w-none rounded-md border border-neutral-200 bg-neutral-50/80 p-3 text-sm dark:bg-[#1d1d1b]/60"
       }
     >
       {trimmed ? (

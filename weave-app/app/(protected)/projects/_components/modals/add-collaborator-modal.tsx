@@ -72,7 +72,7 @@ export default function AddCollaboratorModal({
       {/* Overlay invisível para fechar ao clicar fora */}
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
 
-      <div className="relative z-10 w-full max-w-md rounded-xl border border-neutral-200 bg-white p-5 shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+      <div className="dark:shadow-surface-dark-xl dark:border-surface-dark-border relative z-10 w-full max-w-md rounded-xl border border-neutral-200 bg-white p-5 shadow-2xl dark:bg-[#1d1d1b]">
         <header className="mb-4 flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-sm font-bold text-neutral-800 dark:text-neutral-100">
             <FaUserPlus className="h-4 w-4 text-purple-500" />
@@ -93,7 +93,7 @@ export default function AddCollaboratorModal({
             value={collaboratorSearch}
             onChange={(e) => setCollaboratorSearch(e.target.value)}
             placeholder="Procurar por nome ou email..."
-            className="w-full rounded-lg border border-neutral-300 bg-neutral-50 py-2.5 pr-3 pl-9 text-xs text-neutral-900 transition-colors placeholder:text-neutral-400 focus:border-purple-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100 dark:placeholder:text-neutral-600"
+            className="dark:border-surface-dark-border-strong w-full rounded-lg border border-neutral-300 bg-neutral-50 py-2.5 pr-3 pl-9 text-xs text-neutral-900 transition-colors placeholder:text-neutral-400 focus:border-purple-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-100 dark:placeholder:text-neutral-600"
             autoFocus
           />
         </div>
@@ -110,7 +110,7 @@ export default function AddCollaboratorModal({
               {searchResults.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between rounded-lg border border-neutral-100 bg-neutral-50 p-2.5 transition-all hover:border-neutral-200 hover:shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]/50"
+                  className="dark:shadow-surface-dark-sm dark:border-surface-dark-border flex items-center justify-between rounded-lg border border-neutral-100 bg-neutral-50 p-2.5 transition-all hover:border-neutral-200 hover:shadow-sm dark:bg-[#1d1d1b]/50"
                 >
                   <div className="flex items-center gap-2.5">
                     {user.avatar_url ? (
@@ -155,12 +155,12 @@ export default function AddCollaboratorModal({
               ))}
             </div>
           ) : collaboratorSearch.length >= 2 ? (
-            <div className="flex h-[150px] flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 dark:border-surface-dark-border">
+            <div className="dark:border-surface-dark-border flex h-[150px] flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300">
               <Users className="mb-2 h-6 w-6 text-neutral-300 dark:text-neutral-700" />
               <p className="text-xs text-neutral-500">Nenhum utilizador encontrado.</p>
             </div>
           ) : (
-            <div className="flex h-[150px] flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 dark:border-surface-dark-border">
+            <div className="dark:border-surface-dark-border flex h-[150px] flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300">
               <FaSearch className="mb-2 h-5 w-5 text-neutral-300 dark:text-neutral-700" />
               <p className="text-xs text-neutral-500">
                 Digite pelo menos 2 caracteres para procurar.

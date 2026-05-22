@@ -39,11 +39,11 @@ export default function NotificationsPage() {
 
   if ((initialLoading && notifications.length === 0) || (loading && notifications.length === 0)) {
     return (
-      <div className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <div className="border-b border-neutral-100 px-4 py-4 dark:border-surface-dark-border">
+      <div className="dark:shadow-surface-dark-sm dark:border-surface-dark-border overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:bg-[#1d1d1b]">
+        <div className="dark:border-surface-dark-border border-b border-neutral-100 px-4 py-4">
           <div className="h-4 w-32 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800"></div>
         </div>
-        <div className="divide-y divide-neutral-100 dark:divide-surface-dark-border-muted">
+        <div className="dark:divide-surface-dark-border-muted divide-y divide-neutral-100">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex animate-pulse items-start gap-4 p-4">
               <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-100 dark:bg-[#1d1d1b]"></div>
@@ -81,8 +81,8 @@ export default function NotificationsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <div className="flex flex-col gap-3 border-b border-neutral-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-surface-dark-border">
+      <div className="dark:shadow-surface-dark-sm dark:border-surface-dark-border overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:bg-[#1d1d1b]">
+        <div className="dark:border-surface-dark-border flex flex-col gap-3 border-b border-neutral-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Bell size={14} className="text-amber-500" />
             <h2 className="text-[12px] font-bold tracking-[0.1em] text-neutral-800 uppercase dark:text-neutral-200">
@@ -96,7 +96,7 @@ export default function NotificationsPage() {
                 <button
                   onClick={handleMarkAllRead}
                   disabled={loading}
-                  className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-[10px] font-bold text-neutral-600 transition-all hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  className="dark:border-surface-dark-border-strong flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-[10px] font-bold text-neutral-600 transition-all hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50 dark:bg-[#1d1d1b] dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                   title="Marcar todas as listadas como lidas"
                 >
                   {loading ? (
@@ -121,7 +121,7 @@ export default function NotificationsPage() {
             <NotificationList notifications={notifications} />
           ) : (
             <div className="flex h-64 flex-col items-center justify-center text-center">
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-neutral-100 bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+              <div className="dark:border-surface-dark-border mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-neutral-100 bg-neutral-50 dark:bg-[#1d1d1b]">
                 <Bell size={20} className="text-neutral-300 dark:text-neutral-600" />
               </div>
               <h3 className="text-[13px] font-bold text-neutral-900 dark:text-neutral-100">

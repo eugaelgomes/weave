@@ -21,8 +21,8 @@ const ConfirmationModal = ({
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-[320px] overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]">
-        <div className="flex items-center justify-between border-b border-neutral-100 px-3 py-2 dark:border-surface-dark-border-strong">
+      <div className="dark:shadow-surface-dark-xl dark:border-surface-dark-border w-full max-w-[320px] overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl dark:bg-[#1d1d1b]">
+        <div className="dark:border-surface-dark-border-strong flex items-center justify-between border-b border-neutral-100 px-3 py-2">
           <span className="text-[10px] font-bold tracking-widest text-neutral-400">
             Verificação
           </span>
@@ -41,7 +41,7 @@ const ConfirmationModal = ({
             {description}
           </p>
         </div>
-        <div className="flex items-center justify-end gap-2 border-t border-neutral-100 bg-neutral-50 px-3 py-2.5 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/50">
+        <div className="dark:border-surface-dark-border-strong flex items-center justify-end gap-2 border-t border-neutral-100 bg-neutral-50 px-3 py-2.5 dark:bg-[#1d1d1b]/50">
           <button onClick={onClose} className="px-3 py-1 text-[11px] font-medium text-neutral-500">
             Cancelar
           </button>
@@ -98,7 +98,7 @@ export const SettingsDangerZone: React.FC<any> = ({
           </div>
           <button
             onClick={() => setModalBackup(true)}
-            className={`${btnBase} border border-neutral-200 text-neutral-700 hover:bg-neutral-50 dark:border-surface-dark-border dark:text-neutral-300`}
+            className={`${btnBase} dark:border-surface-dark-border border border-neutral-200 text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300`}
           >
             <Download size={13} /> Exportar Dados
           </button>

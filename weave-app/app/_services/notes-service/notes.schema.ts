@@ -18,29 +18,35 @@ export const CollaboratorSchema = z.union([z.string(), CollaboratorObjectSchema]
 
 // --- Properties ---
 export const NotePropertiesSchema = z.object({
-    icon: z
-      .union([
-        z.string(),
-        z.object({
-          path: z.string(),
-          name: z.string(),
-          type: z.string(),
-        }),
-      ])
-      .optional(),
+  icon: z
+    .union([
+      z.string(),
+      z.object({
+        path: z.string(),
+        name: z.string(),
+        type: z.string(),
+      }),
+    ])
+    .optional(),
   urls: z.array(z.string()).optional(),
   color: z.string().optional(),
-  files: z.array(z.object({
-    id: z.string(),
-    path: z.string(),
-    name: z.string(),
-    type: z.string(),
-  })).optional(),
-  banner: z.object({
-    path: z.string(),
-    name: z.string(),
-    type: z.string(),
-  }).optional(),
+  files: z
+    .array(
+      z.object({
+        id: z.string(),
+        path: z.string(),
+        name: z.string(),
+        type: z.string(),
+      })
+    )
+    .optional(),
+  banner: z
+    .object({
+      path: z.string(),
+      name: z.string(),
+      type: z.string(),
+    })
+    .optional(),
   relations: z.array(z.string()).optional(),
   priority: z.string().optional(),
   due_date: z.string().optional(),
@@ -75,22 +81,24 @@ export const TaskPrioritySchema = z.object({
 });
 
 // --- Blocks (API note_blocks + árvore em memória) ---
-export const BlockSchema: z.ZodType<any> = z.lazy(() => z.object({
-  id: z.string(),
-  type: z.string(),
-  text: z.string().nullable().optional(),
-  properties: z.record(z.string(), z.unknown()).nullable().optional(),
-  done: z.boolean().nullable().optional(),
-  parentId: z.string().nullable().optional(),
-  parent_id: z.string().nullable().optional(),
-  position: z.number().nullable().optional(),
-  note_id: z.string().nullable().optional(),
-  version: z.number().nullable().optional(),
-  level: z.number().nullable().optional(),
-  created_at: z.string().nullable().optional(),
-  updated_at: z.string().nullable().optional(),
-  children: z.array(BlockSchema).nullable().optional(),
-}));
+export const BlockSchema: z.ZodType<any> = z.lazy(() =>
+  z.object({
+    id: z.string(),
+    type: z.string(),
+    text: z.string().nullable().optional(),
+    properties: z.record(z.string(), z.unknown()).nullable().optional(),
+    done: z.boolean().nullable().optional(),
+    parentId: z.string().nullable().optional(),
+    parent_id: z.string().nullable().optional(),
+    position: z.number().nullable().optional(),
+    note_id: z.string().nullable().optional(),
+    version: z.number().nullable().optional(),
+    level: z.number().nullable().optional(),
+    created_at: z.string().nullable().optional(),
+    updated_at: z.string().nullable().optional(),
+    children: z.array(BlockSchema).nullable().optional(),
+  })
+);
 
 // --- Users (Search & Collaborators) ---
 export const NotesUserSchema = z.object({
@@ -133,36 +141,48 @@ export const NoteSchema = z.object({
   project_id: z.string().nullable().optional(),
   parent_id: z.string().nullable().optional(),
   project_name: z.string().nullable().optional(),
-  
-  author: z.object({
-    id: z.string(),
-    name: z.string().nullable().optional(),
-    username: z.string().nullable().optional(),
-    email: z.string().nullable().optional(),
-    avatar_url: z.string().nullable().optional(),
-  }).nullable().optional(),
 
-  access: z.object({
-    isOwner: z.boolean(),
-    isCollaborator: z.boolean(),
-    canEdit: z.boolean(),
-    canDelete: z.boolean(),
-    canShare: z.boolean(),
-  }).nullable().optional(),
+  author: z
+    .object({
+      id: z.string(),
+      name: z.string().nullable().optional(),
+      username: z.string().nullable().optional(),
+      email: z.string().nullable().optional(),
+      avatar_url: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
 
-  associated_project: z.object({
-    id: z.string(),
-    name: z.string(),
-    stage_id: z.string().nullable().optional(),
-    stage_name: z.string().nullable().optional(),
-  }).nullable().optional(),
+  access: z
+    .object({
+      isOwner: z.boolean(),
+      isCollaborator: z.boolean(),
+      canEdit: z.boolean(),
+      canDelete: z.boolean(),
+      canShare: z.boolean(),
+    })
+    .nullable()
+    .optional(),
 
-  associated_organization: z.object({
-    id: z.string(),
-    name: z.string(),
-    unique_name: z.string().nullable().optional(),
-    logo_url: z.string().nullable().optional(),
-  }).nullable().optional(),
+  associated_project: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      stage_id: z.string().nullable().optional(),
+      stage_name: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
+
+  associated_organization: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      unique_name: z.string().nullable().optional(),
+      logo_url: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
 
   resolved_tags: z
     .array(
@@ -182,23 +202,27 @@ export const NoteSchema = z.object({
 // --- API Responses ---
 export const NotesResponseSchema = z.object({
   notes: z.array(NoteSchema),
-  pagination: z.object({
-    currentPage: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
-    hasMore: z.boolean(),
-  }).optional(),
+  pagination: z
+    .object({
+      currentPage: z.number(),
+      limit: z.number(),
+      total: z.number(),
+      totalPages: z.number(),
+      hasMore: z.boolean(),
+    })
+    .optional(),
 });
 
 export const NotesStatsResponseSchema = z.object({
   totalNotes: z.number(),
   totalTags: z.number(),
   statusDistribution: z.record(z.string(), z.number()),
-  mostUsedTags: z.array(z.object({
-    tag: z.string(),
-    count: z.number(),
-  })),
+  mostUsedTags: z.array(
+    z.object({
+      tag: z.string(),
+      count: z.number(),
+    })
+  ),
 });
 
 export const NoteDataResponseSchema = z.object({

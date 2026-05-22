@@ -134,7 +134,11 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
           actions.setSetupStatus("icon", "done");
         } catch (err) {
           console.error("Project icon upload failed:", err);
-          actions.setSetupStatus("icon", "error", "Falhou ao enviar ícone. Pode configurar mais tarde.");
+          actions.setSetupStatus(
+            "icon",
+            "error",
+            "Falhou ao enviar ícone. Pode configurar mais tarde."
+          );
         }
       }
 
@@ -145,8 +149,8 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
   };
 
   return (
-    <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
-      <h2 className="mb-4 text-xs font-bold uppercase tracking-wider text-neutral-400">
+    <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
+      <h2 className="mb-4 text-xs font-bold tracking-wider text-neutral-400 uppercase">
         Informações básicas
       </h2>
 
@@ -159,7 +163,10 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
 
       <div className="space-y-2">
         <div className="space-y-1.5">
-          <label htmlFor="proj-title" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <label
+            htmlFor="proj-title"
+            className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+          >
             Título <span className="text-red-500">*</span>
           </label>
           <input
@@ -170,12 +177,15 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
             placeholder="Ex: Redesign do App, Lançamento Q3..."
             value={state.draft.basic.title}
             onChange={(e) => actions.setBasicDraft("title", e.target.value)}
-            className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm outline-none transition placeholder:text-neutral-400 focus:border-brand-primary-500 focus:ring-2 focus:ring-brand-primary-500/20 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-100"
+            className="focus:border-brand-primary-500 focus:ring-brand-primary-500/20 dark:border-surface-dark-border-strong w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm transition outline-none placeholder:text-neutral-400 focus:ring-2 dark:bg-neutral-800 dark:text-neutral-100"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="proj-description" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <label
+            htmlFor="proj-description"
+            className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+          >
             Descrição
           </label>
           <textarea
@@ -185,12 +195,14 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
             placeholder="Qual o objetivo deste projeto?"
             value={state.draft.basic.description}
             onChange={(e) => actions.setBasicDraft("description", e.target.value)}
-            className="w-full resize-none rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm outline-none transition placeholder:text-neutral-400 focus:border-brand-primary-500 focus:ring-2 focus:ring-brand-primary-500/20 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-100"
+            className="focus:border-brand-primary-500 focus:ring-brand-primary-500/20 dark:border-surface-dark-border-strong w-full resize-none rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm transition outline-none placeholder:text-neutral-400 focus:ring-2 dark:bg-neutral-800 dark:text-neutral-100"
           />
         </div>
 
-        <div className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30">
-          <h3 className="mb-1 text-xs font-bold uppercase tracking-wider text-neutral-400">Metodologia</h3>
+        <div className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/30">
+          <h3 className="mb-1 text-xs font-bold tracking-wider text-neutral-400 uppercase">
+            Metodologia
+          </h3>
           <p className="mb-2 text-xs text-neutral-500 dark:text-neutral-500">
             Define as etapas iniciais do quadro. Pode renomeá-las a seguir.
           </p>
@@ -202,8 +214,8 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
                 onClick={() => actions.setBasicDraft("methodology", m.id!)}
                 className={`flex items-start gap-2 rounded-md border p-2 text-left transition ${
                   state.draft.basic.methodology === m.id
-                    ? "border-brand-primary-500 bg-brand-primary-500/5 ring-1 ring-brand-primary-500"
-                    : "border-neutral-200 hover:border-neutral-300 dark:border-surface-dark-border-strong dark:hover:border-neutral-600"
+                    ? "border-brand-primary-500 bg-brand-primary-500/5 ring-brand-primary-500 ring-1"
+                    : "dark:border-surface-dark-border-strong border-neutral-200 hover:border-neutral-300 dark:hover:border-neutral-600"
                 }`}
               >
                 <span
@@ -225,8 +237,11 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
         </div>
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <div className="space-y-2 rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30">
-            <label htmlFor="project-color-native" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <div className="dark:border-surface-dark-border space-y-2 rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/30">
+            <label
+              htmlFor="project-color-native"
+              className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            >
               Cor do projeto
             </label>
             <p className="text-xs text-neutral-500 dark:text-neutral-500">
@@ -239,7 +254,7 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
                 aria-label="Escolher cor"
                 value={hexForColorInput(state.draft.basic.color, "#eab308")}
                 onChange={(e) => actions.setBasicDraft("color", e.target.value.toLowerCase())}
-                className="h-10 w-14 shrink-0 cursor-pointer overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 p-1 dark:border-surface-dark-border-strong dark:bg-neutral-800"
+                className="dark:border-surface-dark-border-strong h-10 w-14 shrink-0 cursor-pointer overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 p-1 dark:bg-neutral-800"
               />
               <input
                 id="project-color-hex"
@@ -253,21 +268,23 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
                 placeholder="#eab308"
                 maxLength={7}
                 spellCheck={false}
-                className="min-w-[7.5rem] flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 font-mono text-sm outline-none transition placeholder:text-neutral-400 focus:border-brand-primary-500 focus:ring-2 focus:ring-brand-primary-500/20 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-100"
+                className="focus:border-brand-primary-500 focus:ring-brand-primary-500/20 dark:border-surface-dark-border-strong min-w-[7.5rem] flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 font-mono text-sm transition outline-none placeholder:text-neutral-400 focus:ring-2 dark:bg-neutral-800 dark:text-neutral-100"
               />
               <span
-                className="h-9 w-9 shrink-0 rounded-md border border-neutral-200 dark:border-surface-dark-border-strong"
+                className="dark:border-surface-dark-border-strong h-9 w-9 shrink-0 rounded-md border border-neutral-200"
                 style={{ backgroundColor: hexForColorInput(state.draft.basic.color, "#eab308") }}
                 aria-hidden
               />
             </div>
           </div>
 
-          <div className="space-y-2 rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30">
+          <div className="dark:border-surface-dark-border space-y-2 rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/30">
             <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
               Ícone do projeto
             </label>
-            <p className="text-xs text-neutral-500 dark:text-neutral-500">Imagem guardada no storage.</p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-500">
+              Imagem guardada no storage.
+            </p>
             <input
               ref={iconFileInputRef}
               type="file"
@@ -277,7 +294,7 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
               onChange={(e) => onPickIconFile(e.target.files)}
             />
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 dark:border-surface-dark-border-strong dark:bg-neutral-800">
+              <div className="dark:border-surface-dark-border-strong flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 dark:bg-neutral-800">
                 {iconPreviewUrl ? (
                   <Image
                     src={iconPreviewUrl}
@@ -295,7 +312,7 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
                 <button
                   type="button"
                   onClick={() => iconFileInputRef.current?.click()}
-                  className="inline-flex items-center justify-center gap-2 rounded-md border border-neutral-200 bg-white px-2 py-2 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b] dark:text-neutral-100 dark:hover:bg-neutral-800"
+                  className="dark:border-surface-dark-border-muted inline-flex items-center justify-center gap-2 rounded-md border border-neutral-200 bg-white px-2 py-2 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50 dark:bg-[#1d1d1b] dark:text-neutral-100 dark:hover:bg-neutral-800"
                 >
                   <Upload className="h-3.5 w-3.5" aria-hidden />
                   Escolher imagem
@@ -320,12 +337,12 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-neutral-200 pt-2 dark:border-surface-dark-border">
+        <div className="dark:border-surface-dark-border flex items-center justify-end gap-2 border-t border-neutral-200 pt-2">
           <button
             type="button"
             disabled={!canCreate}
             onClick={handleCreate}
-            className="flex items-center gap-2 rounded-md bg-brand-primary-500 px-2 py-2 text-sm font-bold text-neutral-950 transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-brand-primary-500 flex items-center gap-2 rounded-md px-2 py-2 text-sm font-bold text-neutral-950 transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy || loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
             {hasCreated ? "Projeto criado" : busy || loading ? "A criar…" : "Criar projeto"}
@@ -335,4 +352,3 @@ export function BasicStep({ state, actions }: CreateProjectWizardStepProps) {
     </section>
   );
 }
-

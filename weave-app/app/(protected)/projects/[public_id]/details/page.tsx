@@ -141,7 +141,13 @@ export default function ProjectDetailsPage() {
   const [sprints, setSprints] = useState<any[]>([]);
   const [activeSprint, setActiveSprint] = useState<any>(null);
   const [showCreateSprint, setShowCreateSprint] = useState(false);
-  const [sprintForm, setSprintForm] = useState({ title: "", goal: "", start_date: "", end_date: "", activate: true });
+  const [sprintForm, setSprintForm] = useState({
+    title: "",
+    goal: "",
+    start_date: "",
+    end_date: "",
+    activate: true,
+  });
   const [creatingSprint, setCreatingSprint] = useState(false);
 
   // AI Report Config state
@@ -159,14 +165,13 @@ export default function ProjectDetailsPage() {
     if (!projectId) return;
     setLoading(true);
     try {
-      const [projectData, collabData, stagesData, tagsData, prioritiesData] =
-        await Promise.all([
-          getProjectById(projectId),
-          getCollaborators(projectId),
-          getProjectStages(projectId).catch(() => []),
-          getProjectTags(projectId).catch(() => []),
-          getTaskPriorities(projectId).catch(() => []),
-        ]);
+      const [projectData, collabData, stagesData, tagsData, prioritiesData] = await Promise.all([
+        getProjectById(projectId),
+        getCollaborators(projectId),
+        getProjectStages(projectId).catch(() => []),
+        getProjectTags(projectId).catch(() => []),
+        getTaskPriorities(projectId).catch(() => []),
+      ]);
 
       if (!projectData) return;
       setProject(projectData);
@@ -268,7 +273,7 @@ export default function ProjectDetailsPage() {
     setSaving(true);
     try {
       const currentDataSnapshot = JSON.stringify(formData);
-      
+
       const properties: any = {
         ...project.properties,
         color: formData.color,
@@ -537,7 +542,11 @@ export default function ProjectDetailsPage() {
       const result = await completeSprint(projectId, sprintId);
       if (result) {
         setSprints((prev) =>
-          prev.map((s) => (s.id === sprintId ? { ...s, status: "completed", completed_at: new Date().toISOString() } : s))
+          prev.map((s) =>
+            s.id === sprintId
+              ? { ...s, status: "completed", completed_at: new Date().toISOString() }
+              : s
+          )
         );
         if (result.next_sprint) {
           setSprints((prev) => [result.next_sprint!, ...prev]);
@@ -553,18 +562,22 @@ export default function ProjectDetailsPage() {
 
   // --- AI Report Config handlers ---
   const handleEditReport = () => {
-    setReportForm(reportConfig ? { ...reportConfig } : {
-      enabled: true,
-      report_time_utc: "09:00",
-      channels: ["in_app"],
-      recipient_scope: "all_members",
-      default_sprint_duration_days: 14,
-      default_workable_days: [1, 2, 3, 4, 5],
-      auto_create_next_sprint: false,
-      enable_sprint_kickoff: true,
-      enable_daily_standup: false,
-      enable_sprint_review: true,
-    });
+    setReportForm(
+      reportConfig
+        ? { ...reportConfig }
+        : {
+            enabled: true,
+            report_time_utc: "09:00",
+            channels: ["in_app"],
+            recipient_scope: "all_members",
+            default_sprint_duration_days: 14,
+            default_workable_days: [1, 2, 3, 4, 5],
+            auto_create_next_sprint: false,
+            enable_sprint_kickoff: true,
+            enable_daily_standup: false,
+            enable_sprint_review: true,
+          }
+    );
     setEditingReport(true);
   };
 
@@ -598,7 +611,11 @@ export default function ProjectDetailsPage() {
     }
   };
 
-  const handleToggleActionItem = async (reasoningId: string, itemId: string, currentCompleted: boolean) => {
+  const handleToggleActionItem = async (
+    reasoningId: string,
+    itemId: string,
+    currentCompleted: boolean
+  ) => {
     try {
       const updated = await updateReasoningActionItem(projectId, reasoningId, itemId, {
         isCompleted: !currentCompleted,
@@ -615,7 +632,7 @@ export default function ProjectDetailsPage() {
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-[#FAFAFA] dark:bg-[#0E0E11]">
-      <div className="flex h-10 flex-none items-center justify-between border-b border-neutral-200 bg-white px-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+      <div className="dark:border-surface-dark-border flex h-10 flex-none items-center justify-between border-b border-neutral-200 bg-white px-2 dark:bg-[#1d1d1b]">
         <button
           type="button"
           onClick={() => router.push(`/projects/${projectId}`)}
@@ -624,15 +641,13 @@ export default function ProjectDetailsPage() {
           <FaArrowLeft className="size-2.5" />
           Voltar ao board
         </button>
-        <span className="text-[11px] font-medium text-neutral-500">
-          Detalhes: {project.title}
-        </span>
+        <span className="text-[11px] font-medium text-neutral-500">Detalhes: {project.title}</span>
       </div>
 
       <div className="mx-auto flex w-full flex-col gap-2">
         {/* Seção: Geral */}
         <div className="bg-white p-3 dark:bg-[#1d1d1b]">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+          <h2 className="mb-2 text-xs font-semibold tracking-wide text-neutral-600 uppercase dark:text-neutral-400">
             Geral
           </h2>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -736,7 +751,7 @@ export default function ProjectDetailsPage() {
                 type="color"
                 value={formData.color}
                 onChange={(e) => handleChange("color", e.target.value)}
-                className="h-8 w-full rounded-md border border-neutral-200 bg-white px-1 py-0.5 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
+                className="dark:border-surface-dark-border-strong h-8 w-full rounded-md border border-neutral-200 bg-white px-1 py-0.5 dark:bg-[#1d1d1b]"
                 disabled={!canEdit}
               />
             </label>
@@ -745,18 +760,22 @@ export default function ProjectDetailsPage() {
               <span className="mb-1 block text-[10px] text-neutral-500">Ícone do Projeto</span>
               <div className="flex items-center gap-3">
                 {iconPreview ? (
-                  <div className="relative h-12 w-12 overflow-hidden rounded-md border border-neutral-200 dark:border-surface-dark-border-strong">
+                  <div className="dark:border-surface-dark-border-strong relative h-12 w-12 overflow-hidden rounded-md border border-neutral-200">
                     <img
-                      src={iconPreview.startsWith("http") || iconPreview.startsWith("blob") ? iconPreview : `https://spaces.weavenotes.com/${iconPreview}`}
+                      src={
+                        iconPreview.startsWith("http") || iconPreview.startsWith("blob")
+                          ? iconPreview
+                          : `https://spaces.weavenotes.com/${iconPreview}`
+                      }
                       alt="Ícone do Projeto"
                       className="h-full w-full object-cover"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/default-project-icon.png';
+                        (e.target as HTMLImageElement).src = "/default-project-icon.png";
                       }}
                     />
                   </div>
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 text-neutral-400 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
+                  <div className="dark:border-surface-dark-border-strong flex h-12 w-12 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 text-neutral-400 dark:bg-[#1d1d1b]">
                     <FaArrowLeft className="size-4 opacity-0" />
                   </div>
                 )}
@@ -775,7 +794,7 @@ export default function ProjectDetailsPage() {
                       <button
                         type="button"
                         onClick={handleRemoveIcon}
-                        className="rounded-md border border-red-200 bg-red-50 text-red-600 px-3 py-1.5 text-[11px] font-medium hover:bg-red-100 dark:border-red-900/50 dark:bg-red-900/10 dark:hover:bg-red-900/20"
+                        className="rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-[11px] font-medium text-red-600 hover:bg-red-100 dark:border-red-900/50 dark:bg-red-900/10 dark:hover:bg-red-900/20"
                       >
                         Remover
                       </button>
@@ -794,20 +813,16 @@ export default function ProjectDetailsPage() {
                   disabled={!canEdit}
                   className="peer sr-only"
                 />
-                <div className="h-5 w-9 rounded-full bg-neutral-200 transition-colors peer-checked:bg-brand-primary-500 peer-disabled:opacity-50 dark:bg-neutral-700"></div>
-                <div className="absolute left-[2px] top-[2px] h-4 w-4 rounded-full bg-white transition-all peer-checked:translate-x-full"></div>
+                <div className="peer-checked:bg-brand-primary-500 h-5 w-9 rounded-full bg-neutral-200 transition-colors peer-disabled:opacity-50 dark:bg-neutral-700"></div>
+                <div className="absolute top-[2px] left-[2px] h-4 w-4 rounded-full bg-white transition-all peer-checked:translate-x-full"></div>
               </div>
               <span className="text-xs text-neutral-600 dark:text-neutral-300">Projeto ativo</span>
             </label>
           </div>
 
-          <div className="mt-2 flex items-center justify-between border-t border-neutral-200 pt-2 dark:border-surface-dark-border">
+          <div className="dark:border-surface-dark-border mt-2 flex items-center justify-between border-t border-neutral-200 pt-2">
             {isOwner && (
-              <button
-                type="button"
-                onClick={handleDeleteProject}
-                className={btnDangerCls}
-              >
+              <button type="button" onClick={handleDeleteProject} className={btnDangerCls}>
                 <FaTrash className="size-2.5" /> Eliminar
               </button>
             )}
@@ -815,7 +830,7 @@ export default function ProjectDetailsPage() {
               <div className="ml-auto flex items-center gap-2 text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
                 {saving ? (
                   <>
-                    <FaSpinner className="size-3 animate-spin text-brand-primary-500" />
+                    <FaSpinner className="text-brand-primary-500 size-3 animate-spin" />
                     <span>Salvando...</span>
                   </>
                 ) : isDirty ? (
@@ -834,13 +849,13 @@ export default function ProjectDetailsPage() {
         {/* Seção: Tags */}
         <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+            <h2 className="text-xs font-semibold tracking-wide text-neutral-600 uppercase dark:text-neutral-400">
               Tags ({projectTags.length})
             </h2>
           </div>
 
           {canEdit && (
-            <div className="flex items-end gap-1.5 pb-2 border-b border-neutral-100 dark:border-surface-dark-border">
+            <div className="dark:border-surface-dark-border flex items-end gap-1.5 border-b border-neutral-100 pb-2">
               <label className="flex-1">
                 <span className="mb-0.5 block text-[10px] text-neutral-500">Nova Tag</span>
                 <input
@@ -856,7 +871,7 @@ export default function ProjectDetailsPage() {
                   type="color"
                   value={newTagColor}
                   onChange={(e) => setNewTagColor(e.target.value)}
-                  className="h-7 w-8 rounded-md border border-neutral-200 bg-white p-0 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
+                  className="dark:border-surface-dark-border-strong h-7 w-8 rounded-md border border-neutral-200 bg-white p-0 dark:bg-[#1d1d1b]"
                 />
               </label>
               <button
@@ -874,7 +889,7 @@ export default function ProjectDetailsPage() {
             {projectTags.map((tag) => (
               <div
                 key={tag.id}
-                className="flex items-center gap-1.5 rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50"
+                className="dark:border-surface-dark-border flex items-center gap-1.5 rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:bg-[#1d1d1b]/50"
               >
                 {editingTagId === tag.id ? (
                   <>
@@ -890,8 +905,12 @@ export default function ProjectDetailsPage() {
                       className={`${inputCls} flex-1 py-1`}
                       autoFocus
                     />
-                    <button onClick={() => handleUpdateTag(tag.id)} className="text-green-600"><FaCheck className="size-2.5" /></button>
-                    <button onClick={() => setEditingTagId(null)} className="text-neutral-400"><FaTimes className="size-2.5" /></button>
+                    <button onClick={() => handleUpdateTag(tag.id)} className="text-green-600">
+                      <FaCheck className="size-2.5" />
+                    </button>
+                    <button onClick={() => setEditingTagId(null)} className="text-neutral-400">
+                      <FaTimes className="size-2.5" />
+                    </button>
                   </>
                 ) : (
                   <>
@@ -906,14 +925,22 @@ export default function ProjectDetailsPage() {
                       <>
                         <button
                           type="button"
-                          onClick={() => { setEditingTagId(tag.id); setEditingTagName(tag.name); setEditingTagColor(tag.color_hex || "#6366f1"); }}
+                          onClick={() => {
+                            setEditingTagId(tag.id);
+                            setEditingTagName(tag.name);
+                            setEditingTagColor(tag.color_hex || "#6366f1");
+                          }}
                           className="text-neutral-400 hover:text-neutral-600"
-                        ><FaPen className="size-2" /></button>
+                        >
+                          <FaPen className="size-2" />
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteTag(tag.id)}
                           className="text-neutral-400 hover:text-red-500"
-                        ><FaTrash className="size-2" /></button>
+                        >
+                          <FaTrash className="size-2" />
+                        </button>
                       </>
                     )}
                   </>
@@ -926,13 +953,13 @@ export default function ProjectDetailsPage() {
         {/* Seção: Prioridades */}
         <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+            <h2 className="text-xs font-semibold tracking-wide text-neutral-600 uppercase dark:text-neutral-400">
               Prioridades ({taskPriorities.length})
             </h2>
           </div>
 
           {canEdit && (
-            <div className="flex items-end gap-1.5 pb-2 border-b border-neutral-100 dark:border-surface-dark-border">
+            <div className="dark:border-surface-dark-border flex items-end gap-1.5 border-b border-neutral-100 pb-2">
               <label className="flex-1">
                 <span className="mb-0.5 block text-[10px] text-neutral-500">Nova Prioridade</span>
                 <input
@@ -948,7 +975,7 @@ export default function ProjectDetailsPage() {
                   type="color"
                   value={newPriorityColor}
                   onChange={(e) => setNewPriorityColor(e.target.value)}
-                  className="h-7 w-8 rounded-md border border-neutral-200 bg-white p-0 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
+                  className="dark:border-surface-dark-border-strong h-7 w-8 rounded-md border border-neutral-200 bg-white p-0 dark:bg-[#1d1d1b]"
                 />
               </label>
               <label>
@@ -975,7 +1002,7 @@ export default function ProjectDetailsPage() {
             {taskPriorities.map((priority) => (
               <div
                 key={priority.id}
-                className="flex items-center gap-1.5 rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50"
+                className="dark:border-surface-dark-border flex items-center gap-1.5 rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:bg-[#1d1d1b]/50"
               >
                 {editingPriorityId === priority.id ? (
                   <>
@@ -997,8 +1024,15 @@ export default function ProjectDetailsPage() {
                       onChange={(e) => setEditingPriorityLevel(Number(e.target.value))}
                       className={`${inputCls} w-10 py-1`}
                     />
-                    <button onClick={() => handleUpdatePriority(priority.id)} className="text-green-600"><FaCheck className="size-2.5" /></button>
-                    <button onClick={() => setEditingPriorityId(null)} className="text-neutral-400"><FaTimes className="size-2.5" /></button>
+                    <button
+                      onClick={() => handleUpdatePriority(priority.id)}
+                      className="text-green-600"
+                    >
+                      <FaCheck className="size-2.5" />
+                    </button>
+                    <button onClick={() => setEditingPriorityId(null)} className="text-neutral-400">
+                      <FaTimes className="size-2.5" />
+                    </button>
                   </>
                 ) : (
                   <>
@@ -1013,13 +1047,22 @@ export default function ProjectDetailsPage() {
                     {canEdit && (
                       <>
                         <button
-                          onClick={() => { setEditingPriorityId(priority.id); setEditingPriorityName(priority.name); setEditingPriorityColor(priority.color_hex || "#ef4444"); setEditingPriorityLevel(priority.sort_order ?? 0); }}
+                          onClick={() => {
+                            setEditingPriorityId(priority.id);
+                            setEditingPriorityName(priority.name);
+                            setEditingPriorityColor(priority.color_hex || "#ef4444");
+                            setEditingPriorityLevel(priority.sort_order ?? 0);
+                          }}
                           className="text-neutral-400 hover:text-neutral-600"
-                        ><FaPen className="size-2" /></button>
+                        >
+                          <FaPen className="size-2" />
+                        </button>
                         <button
                           onClick={() => handleDeletePriority(priority.id)}
                           className="text-neutral-400 hover:text-red-500"
-                        ><FaTrash className="size-2" /></button>
+                        >
+                          <FaTrash className="size-2" />
+                        </button>
                       </>
                     )}
                   </>
@@ -1032,7 +1075,7 @@ export default function ProjectDetailsPage() {
         {/* Seção: Etapas */}
         <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <div className="mb-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+            <h2 className="text-xs font-semibold tracking-wide text-neutral-600 uppercase dark:text-neutral-400">
               Etapas do Board ({stages.length})
             </h2>
           </div>
@@ -1043,7 +1086,7 @@ export default function ProjectDetailsPage() {
               .map((stage) => (
                 <div
                   key={stage.id}
-                  className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50"
+                  className="dark:border-surface-dark-border flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:bg-[#1d1d1b]/50"
                 >
                   <div className="flex items-center gap-1.5">
                     <span
@@ -1074,12 +1117,12 @@ export default function ProjectDetailsPage() {
 
         {/* Seção: Colaboradores */}
         <div className="bg-white p-3 dark:bg-[#1d1d1b]">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+          <h2 className="mb-2 text-xs font-semibold tracking-wide text-neutral-600 uppercase dark:text-neutral-400">
             Colaboradores ({collaborators.length})
           </h2>
 
           {canEdit && (
-            <div className="mb-2 border-b border-neutral-100 pb-2 dark:border-surface-dark-border">
+            <div className="dark:border-surface-dark-border mb-2 border-b border-neutral-100 pb-2">
               <div className="relative">
                 <FaSearch className="absolute top-1/2 left-2 size-2.5 -translate-y-1/2 text-neutral-400" />
                 <input
@@ -1091,13 +1134,13 @@ export default function ProjectDetailsPage() {
               </div>
 
               {searchingUsers && (
-               <div className="mt-1 flex items-center gap-1 text-[10px] text-neutral-400">
-                 <FaSpinner className="size-2.5 animate-spin" /> Buscando...
-               </div>
+                <div className="mt-1 flex items-center gap-1 text-[10px] text-neutral-400">
+                  <FaSpinner className="size-2.5 animate-spin" /> Buscando...
+                </div>
               )}
 
               {searchResults.length > 0 && (
-                <div className="mt-1 max-h-32 space-y-1 overflow-y-auto rounded-md border border-neutral-200 p-1 dark:border-surface-dark-border">
+                <div className="dark:border-surface-dark-border mt-1 max-h-32 space-y-1 overflow-y-auto rounded-md border border-neutral-200 p-1">
                   {searchResults.map((u) => (
                     <div
                       key={u.id}
@@ -1118,14 +1161,14 @@ export default function ProjectDetailsPage() {
                         <button
                           onClick={() => handleAddCollaborator(u.id, "viewer")}
                           disabled={addingCollab === u.id}
-                          className="rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] hover:bg-neutral-100 dark:border-surface-dark-border-strong dark:hover:bg-neutral-800"
+                          className="dark:border-surface-dark-border-strong rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] hover:bg-neutral-100 dark:hover:bg-neutral-800"
                         >
                           Leitor
                         </button>
                         <button
                           onClick={() => handleAddCollaborator(u.id, "admin")}
                           disabled={addingCollab === u.id}
-                          className="rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] hover:bg-neutral-100 dark:border-surface-dark-border-strong dark:hover:bg-neutral-800"
+                          className="dark:border-surface-dark-border-strong rounded border border-neutral-200 px-1.5 py-0.5 text-[9px] hover:bg-neutral-100 dark:hover:bg-neutral-800"
                         >
                           Admin
                         </button>
@@ -1141,7 +1184,7 @@ export default function ProjectDetailsPage() {
             {collaborators.map((collab) => (
               <div
                 key={collab.user_id}
-                className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50"
+                className="dark:border-surface-dark-border flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:bg-[#1d1d1b]/50"
               >
                 <div className="flex items-center gap-1.5 overflow-hidden">
                   <div className="flex size-6 flex-shrink-0 items-center justify-center rounded bg-neutral-200 text-[10px] font-bold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
@@ -1154,7 +1197,7 @@ export default function ProjectDetailsPage() {
                     <p className="truncate text-[9px] text-neutral-400">{collab.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
+                <div className="flex flex-shrink-0 items-center gap-1.5">
                   {canEdit ? (
                     <select
                       value={collab.permission}
@@ -1164,7 +1207,7 @@ export default function ProjectDetailsPage() {
                           e.target.value as "admin" | "viewer"
                         )
                       }
-                      className="rounded border border-neutral-200 bg-white px-1 py-0.5 text-[10px] focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]"
+                      className="dark:border-surface-dark-border-strong rounded border border-neutral-200 bg-white px-1 py-0.5 text-[10px] focus:outline-none dark:bg-[#1d1d1b]"
                     >
                       <option value="viewer">Leitor</option>
                       <option value="admin">Admin</option>
@@ -1191,7 +1234,7 @@ export default function ProjectDetailsPage() {
         {/* Seção: Sprints */}
         <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+            <h2 className="text-xs font-semibold tracking-wide text-neutral-600 uppercase dark:text-neutral-400">
               Sprints ({sprints.length})
             </h2>
             {canEdit && (
@@ -1230,13 +1273,15 @@ export default function ProjectDetailsPage() {
                 <span>Fim: {new Date(activeSprint.end_date).toLocaleDateString("pt-BR")}</span>
               </div>
               {activeSprint.goal && (
-                <p className="mt-1 text-[10px] text-green-600 dark:text-green-400/80">{activeSprint.goal}</p>
+                <p className="mt-1 text-[10px] text-green-600 dark:text-green-400/80">
+                  {activeSprint.goal}
+                </p>
               )}
             </div>
           )}
 
           {showCreateSprint && canEdit && (
-            <div className="mb-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+            <div className="dark:border-surface-dark-border mb-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:bg-[#1d1d1b]/50">
               <div className="grid gap-1.5 sm:grid-cols-2">
                 <label>
                   <span className="mb-0.5 block text-[10px] text-neutral-500">Título</span>
@@ -1286,7 +1331,11 @@ export default function ProjectDetailsPage() {
                   Ativar imediatamente
                 </label>
                 <div className="flex gap-1.5">
-                  <button type="button" onClick={() => setShowCreateSprint(false)} className={btnSecondaryCls}>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateSprint(false)}
+                    className={btnSecondaryCls}
+                  >
                     Cancelar
                   </button>
                   <button
@@ -1308,24 +1357,36 @@ export default function ProjectDetailsPage() {
             <div className="grid gap-1.5">
               {sprints
                 .filter((s) => s.id !== activeSprint?.id)
-                .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .sort(
+                  (a: any, b: any) =>
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                )
                 .map((sprint: any) => (
                   <div
                     key={sprint.id}
-                    className="flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50"
+                    className="dark:border-surface-dark-border flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50 px-2 py-1.5 dark:bg-[#1d1d1b]/50"
                   >
                     <div className="flex items-center gap-1.5">
-                      <span className={`size-2 rounded-full ${sprint.status === "completed" ? "bg-green-500" : sprint.status === "active" ? "bg-blue-500" : "bg-neutral-400"}`} />
+                      <span
+                        className={`size-2 rounded-full ${sprint.status === "completed" ? "bg-green-500" : sprint.status === "active" ? "bg-blue-500" : "bg-neutral-400"}`}
+                      />
                       <span className="text-[11px] font-medium text-neutral-700 dark:text-neutral-200">
                         {sprint.title || `Sprint ${sprint.sprint_number}`}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[9px] text-neutral-400">
-                        {new Date(sprint.start_date).toLocaleDateString("pt-BR")} - {new Date(sprint.end_date).toLocaleDateString("pt-BR")}
+                        {new Date(sprint.start_date).toLocaleDateString("pt-BR")} -{" "}
+                        {new Date(sprint.end_date).toLocaleDateString("pt-BR")}
                       </span>
-                      <span className={`rounded px-1 py-0.5 text-[8px] font-semibold ${sprint.status === "completed" ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400" : sprint.status === "active" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400" : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"}`}>
-                        {sprint.status === "completed" ? "Concluída" : sprint.status === "active" ? "Ativa" : "Planeada"}
+                      <span
+                        className={`rounded px-1 py-0.5 text-[8px] font-semibold ${sprint.status === "completed" ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400" : sprint.status === "active" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400" : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"}`}
+                      >
+                        {sprint.status === "completed"
+                          ? "Concluída"
+                          : sprint.status === "active"
+                            ? "Ativa"
+                            : "Planeada"}
                       </span>
                     </div>
                   </div>
@@ -1337,7 +1398,7 @@ export default function ProjectDetailsPage() {
         {/* Seção: AI Report Config */}
         <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+            <h2 className="text-xs font-semibold tracking-wide text-neutral-600 uppercase dark:text-neutral-400">
               Relatórios & IA
             </h2>
             {canEdit && !editingReport && (
@@ -1352,26 +1413,35 @@ export default function ProjectDetailsPage() {
               <FaSpinner className="size-2.5 animate-spin" /> A carregar...
             </div>
           ) : editingReport && reportForm ? (
-            <div className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+            <div className="dark:border-surface-dark-border space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:bg-[#1d1d1b]/50">
               <div className="grid gap-1.5 sm:grid-cols-2">
                 <label>
                   <span className="mb-0.5 block text-[10px] text-neutral-500">Hora (UTC)</span>
                   <input
                     type="text"
                     value={reportForm.report_time_utc ?? "09:00"}
-                    onChange={(e) => setReportForm((f: any) => ({ ...f, report_time_utc: e.target.value }))}
+                    onChange={(e) =>
+                      setReportForm((f: any) => ({ ...f, report_time_utc: e.target.value }))
+                    }
                     placeholder="HH:mm"
                     className={inputCls}
                   />
                 </label>
                 <label>
-                  <span className="mb-0.5 block text-[10px] text-neutral-500">Duração sprint (dias)</span>
+                  <span className="mb-0.5 block text-[10px] text-neutral-500">
+                    Duração sprint (dias)
+                  </span>
                   <input
                     type="number"
                     min={1}
                     max={90}
                     value={reportForm.default_sprint_duration_days ?? 14}
-                    onChange={(e) => setReportForm((f: any) => ({ ...f, default_sprint_duration_days: Number(e.target.value) || 14 }))}
+                    onChange={(e) =>
+                      setReportForm((f: any) => ({
+                        ...f,
+                        default_sprint_duration_days: Number(e.target.value) || 14,
+                      }))
+                    }
                     className={inputCls}
                   />
                 </label>
@@ -1379,7 +1449,10 @@ export default function ProjectDetailsPage() {
                   <span className="mb-0.5 block text-[10px] text-neutral-500">Canais</span>
                   <div className="flex gap-3">
                     {(["in_app", "email"] as const).map((ch) => (
-                      <label key={ch} className="flex items-center gap-1 text-[10px] text-neutral-600 dark:text-neutral-300">
+                      <label
+                        key={ch}
+                        className="flex items-center gap-1 text-[10px] text-neutral-600 dark:text-neutral-300"
+                      >
                         <input
                           type="checkbox"
                           checked={(reportForm.channels ?? []).includes(ch)}
@@ -1400,7 +1473,9 @@ export default function ProjectDetailsPage() {
                   <span className="mb-0.5 block text-[10px] text-neutral-500">Destinatários</span>
                   <select
                     value={reportForm.recipient_scope ?? "all_members"}
-                    onChange={(e) => setReportForm((f: any) => ({ ...f, recipient_scope: e.target.value }))}
+                    onChange={(e) =>
+                      setReportForm((f: any) => ({ ...f, recipient_scope: e.target.value }))
+                    }
                     className={selectCls}
                   >
                     <option value="owner_only">Apenas dono</option>
@@ -1410,39 +1485,61 @@ export default function ProjectDetailsPage() {
                 </label>
               </div>
               <div className="flex flex-wrap gap-3">
-                {([
-                  ["enable_sprint_kickoff", "Kickoff de sprint"],
-                  ["enable_daily_standup", "Daily standup"],
-                  ["enable_sprint_review", "Review de sprint"],
-                  ["auto_create_next_sprint", "Criar próxima sprint automaticamente"],
-                ] as const).map(([key, label]) => (
-                  <label key={key} className="flex items-center gap-1 text-[10px] text-neutral-600 dark:text-neutral-300">
+                {(
+                  [
+                    ["enable_sprint_kickoff", "Kickoff de sprint"],
+                    ["enable_daily_standup", "Daily standup"],
+                    ["enable_sprint_review", "Review de sprint"],
+                    ["auto_create_next_sprint", "Criar próxima sprint automaticamente"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label
+                    key={key}
+                    className="flex items-center gap-1 text-[10px] text-neutral-600 dark:text-neutral-300"
+                  >
                     <input
                       type="checkbox"
                       checked={Boolean(reportForm[key])}
-                      onChange={(e) => setReportForm((f: any) => ({ ...f, [key]: e.target.checked }))}
+                      onChange={(e) =>
+                        setReportForm((f: any) => ({ ...f, [key]: e.target.checked }))
+                      }
                       className="rounded border-neutral-300"
                     />
                     {label}
                   </label>
                 ))}
               </div>
-              <div className="flex items-center justify-between border-t border-neutral-200 pt-2 dark:border-surface-dark-border">
+              <div className="dark:border-surface-dark-border flex items-center justify-between border-t border-neutral-200 pt-2">
                 <label className="flex items-center gap-1.5 text-[10px] text-neutral-600 dark:text-neutral-300">
                   <input
                     type="checkbox"
                     checked={reportForm.enabled ?? true}
-                    onChange={(e) => setReportForm((f: any) => ({ ...f, enabled: e.target.checked }))}
+                    onChange={(e) =>
+                      setReportForm((f: any) => ({ ...f, enabled: e.target.checked }))
+                    }
                     className="rounded border-neutral-300"
                   />
                   Relatórios ativos
                 </label>
                 <div className="flex gap-1.5">
-                  <button type="button" onClick={() => setEditingReport(false)} className={btnSecondaryCls}>
+                  <button
+                    type="button"
+                    onClick={() => setEditingReport(false)}
+                    className={btnSecondaryCls}
+                  >
                     Cancelar
                   </button>
-                  <button type="button" onClick={handleSaveReport} disabled={savingReport} className={btnPrimaryCls}>
-                    {savingReport ? <FaSpinner className="size-2.5 animate-spin" /> : <FaCheck className="size-2" />}
+                  <button
+                    type="button"
+                    onClick={handleSaveReport}
+                    disabled={savingReport}
+                    className={btnPrimaryCls}
+                  >
+                    {savingReport ? (
+                      <FaSpinner className="size-2.5 animate-spin" />
+                    ) : (
+                      <FaCheck className="size-2" />
+                    )}
                     Guardar
                   </button>
                 </div>
@@ -1451,22 +1548,41 @@ export default function ProjectDetailsPage() {
           ) : reportConfig ? (
             <div className="space-y-1 text-[10px] text-neutral-600 dark:text-neutral-400">
               <div className="flex items-center gap-2">
-                <span className={`size-2 rounded-full ${reportConfig.enabled ? "bg-green-500" : "bg-neutral-400"}`} />
+                <span
+                  className={`size-2 rounded-full ${reportConfig.enabled ? "bg-green-500" : "bg-neutral-400"}`}
+                />
                 <span>{reportConfig.enabled ? "Relatórios ativos" : "Relatórios desativados"}</span>
               </div>
-              <p>Hora UTC: {reportConfig.report_time_utc || "09:00"} | Sprint: {reportConfig.default_sprint_duration_days || 14} dias</p>
-              <p>Canais: {(reportConfig.channels || []).map((c: string) => c === "in_app" ? "Na app" : "Email").join(", ") || "Nenhum"}</p>
-              <p>Destinatários: {reportConfig.recipient_scope === "owner_only" ? "Apenas dono" : reportConfig.recipient_scope === "all_members" ? "Todos os membros" : "Personalizado"}</p>
+              <p>
+                Hora UTC: {reportConfig.report_time_utc || "09:00"} | Sprint:{" "}
+                {reportConfig.default_sprint_duration_days || 14} dias
+              </p>
+              <p>
+                Canais:{" "}
+                {(reportConfig.channels || [])
+                  .map((c: string) => (c === "in_app" ? "Na app" : "Email"))
+                  .join(", ") || "Nenhum"}
+              </p>
+              <p>
+                Destinatários:{" "}
+                {reportConfig.recipient_scope === "owner_only"
+                  ? "Apenas dono"
+                  : reportConfig.recipient_scope === "all_members"
+                    ? "Todos os membros"
+                    : "Personalizado"}
+              </p>
             </div>
           ) : (
-            <p className="text-[10px] text-neutral-400">Nenhuma configuração de relatório. Clique em Configurar para ativar.</p>
+            <p className="text-[10px] text-neutral-400">
+              Nenhuma configuração de relatório. Clique em Configurar para ativar.
+            </p>
           )}
         </div>
 
         {/* Seção: AI Reasonings */}
         <div className="bg-white p-3 dark:bg-[#1d1d1b]">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+            <h2 className="text-xs font-semibold tracking-wide text-neutral-600 uppercase dark:text-neutral-400">
               Análises IA ({reasonings.length})
             </h2>
             {canEdit && (
@@ -1495,20 +1611,25 @@ export default function ProjectDetailsPage() {
                 </span>
                 <button
                   type="button"
-                  onClick={() => { setSelectedReasoning(null); setReasoningActionItems([]); }}
+                  onClick={() => {
+                    setSelectedReasoning(null);
+                    setReasoningActionItems([]);
+                  }}
                   className="text-indigo-400 hover:text-indigo-600"
                 >
                   <FaTimes className="size-2.5" />
                 </button>
               </div>
               {selectedReasoning.content && (
-                <p className="mb-2 whitespace-pre-wrap text-[10px] leading-relaxed text-indigo-600 dark:text-indigo-300/80">
+                <p className="mb-2 text-[10px] leading-relaxed whitespace-pre-wrap text-indigo-600 dark:text-indigo-300/80">
                   {selectedReasoning.content}
                 </p>
               )}
               {reasoningActionItems.length > 0 && (
                 <div className="space-y-1 border-t border-indigo-200 pt-1.5 dark:border-indigo-800">
-                  <span className="text-[9px] font-semibold uppercase tracking-wider text-indigo-500">Itens de ação</span>
+                  <span className="text-[9px] font-semibold tracking-wider text-indigo-500 uppercase">
+                    Itens de ação
+                  </span>
                   {reasoningActionItems.map((item: any) => (
                     <label
                       key={item.id}
@@ -1517,7 +1638,9 @@ export default function ProjectDetailsPage() {
                       <input
                         type="checkbox"
                         checked={item.is_completed}
-                        onChange={() => handleToggleActionItem(selectedReasoning.id, item.id, item.is_completed)}
+                        onChange={() =>
+                          handleToggleActionItem(selectedReasoning.id, item.id, item.is_completed)
+                        }
                         className="mt-0.5 rounded border-indigo-300"
                       />
                       <span className={item.is_completed ? "line-through opacity-60" : ""}>
@@ -1528,7 +1651,9 @@ export default function ProjectDetailsPage() {
                 </div>
               )}
               <div className="mt-1.5 text-[9px] text-indigo-400">
-                {selectedReasoning.reasoning_type && <span className="mr-2">Tipo: {selectedReasoning.reasoning_type}</span>}
+                {selectedReasoning.reasoning_type && (
+                  <span className="mr-2">Tipo: {selectedReasoning.reasoning_type}</span>
+                )}
                 Criado em: {new Date(selectedReasoning.created_at).toLocaleDateString("pt-BR")}
               </div>
             </div>
@@ -1546,13 +1671,11 @@ export default function ProjectDetailsPage() {
                   className={`flex items-center justify-between rounded-md border px-2 py-1.5 text-left transition-colors ${
                     selectedReasoning?.id === reasoning.id
                       ? "border-indigo-300 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/20"
-                      : "border-neutral-100 bg-neutral-50 hover:border-neutral-200 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50 dark:hover:border-surface-dark-border-strong"
+                      : "dark:border-surface-dark-border dark:hover:border-surface-dark-border-strong border-neutral-100 bg-neutral-50 hover:border-neutral-200 dark:bg-[#1d1d1b]/50"
                   }`}
                 >
                   <div className="flex items-center gap-1.5">
-                    {!reasoning.is_read && (
-                      <span className="size-1.5 rounded-full bg-indigo-500" />
-                    )}
+                    {!reasoning.is_read && <span className="size-1.5 rounded-full bg-indigo-500" />}
                     <span className="text-[11px] font-medium text-neutral-700 dark:text-neutral-200">
                       {reasoning.title}
                     </span>

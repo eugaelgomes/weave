@@ -15,13 +15,13 @@ const PagesFooter = () => {
   return (
     <div className="flex flex-col items-center justify-between gap-4 rounded-md bg-white/20 px-4 py-1 shadow-sm sm:flex-row">
       {/* Copyright & Brand — yellow is primary brand accent */}
-      <div className="text-[9px] font-medium text-white dark:text-brand-beige">
+      <div className="dark:text-brand-beige text-[9px] font-medium text-white">
         &copy; {currentYear}{" "}
         <a
           href={blogUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-bold text-brand-yellow drop-shadow-[0_0.5px_0_rgba(8,61,119,0.35)] transition-colors hover:text-brand-orange dark:drop-shadow-none dark:text-brand-yellow dark:hover:text-brand-orange"
+          className="text-brand-yellow hover:text-brand-orange dark:text-brand-yellow dark:hover:text-brand-orange font-bold drop-shadow-[0_0.5px_0_rgba(8,61,119,0.35)] transition-colors dark:drop-shadow-none"
         >
           Weave Notes
         </a>

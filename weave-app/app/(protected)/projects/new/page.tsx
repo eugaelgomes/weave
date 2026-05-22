@@ -6,4 +6,3 @@ import { CreateProjectWizard } from "./_components/CreateProjectWizard";
 export default function NewProjectPage() {
   return <CreateProjectWizard />;
 }
-

@@ -79,7 +79,7 @@ export default function AddNoteModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity dark:bg-black/70">
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
 
-      <div className="relative z-10 w-full max-w-xl rounded-md border border-neutral-200 bg-white p-5 shadow-2xl dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-xl">
+      <div className="dark:border-surface-dark-border dark:shadow-surface-dark-xl relative z-10 w-full max-w-xl rounded-md border border-neutral-200 bg-white p-5 shadow-2xl dark:bg-[#1d1d1b]">
         <header className="mb-4 flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-sm font-bold text-neutral-800 dark:text-neutral-100">
             <FileText className="text-brand-primary-500 h-4 w-4" />
@@ -103,7 +103,7 @@ export default function AddNoteModal({
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder="Título (opcional; se vazio, usa a primeira linha da descrição)"
-            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none focus:border-brand-primary-500 dark:border-surface-dark-border dark:bg-[#141414] dark:text-neutral-200"
+            className="focus:border-brand-primary-500 dark:border-surface-dark-border w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none dark:bg-[#141414] dark:text-neutral-200"
           />
 
           <textarea
@@ -111,14 +111,14 @@ export default function AddNoteModal({
             onChange={(event) => setDescription(event.target.value)}
             placeholder="Descrição (opcional)"
             rows={3}
-            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none focus:border-brand-primary-500 dark:border-surface-dark-border dark:bg-[#141414] dark:text-neutral-200"
+            className="focus:border-brand-primary-500 dark:border-surface-dark-border w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none dark:bg-[#141414] dark:text-neutral-200"
           />
 
           <select
             value={priorityId}
             onChange={(event) => setPriorityId(event.target.value)}
             aria-label="Selecionar prioridade da tarefa"
-            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700 outline-none focus:border-brand-primary-500 dark:border-surface-dark-border dark:bg-[#141414] dark:text-neutral-200"
+            className="focus:border-brand-primary-500 dark:border-surface-dark-border w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700 outline-none dark:bg-[#141414] dark:text-neutral-200"
           >
             <option value="">Sem prioridade</option>
             {taskPriorities.map((priority) => (
@@ -128,8 +128,10 @@ export default function AddNoteModal({
             ))}
           </select>
 
-          <div className="rounded-md border border-neutral-200 p-2 dark:border-surface-dark-border">
-            <p className="mb-1 text-xs font-semibold text-neutral-600 dark:text-neutral-300">Tags</p>
+          <div className="dark:border-surface-dark-border rounded-md border border-neutral-200 p-2">
+            <p className="mb-1 text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+              Tags
+            </p>
             <div className="flex flex-wrap gap-2">
               {projectTags.map((tag) => (
                 <button
@@ -139,7 +141,7 @@ export default function AddNoteModal({
                   className={`rounded-md border px-2 py-1 text-[11px] ${
                     selectedTagIds.includes(tag.id)
                       ? "border-brand-primary-500 bg-brand-primary-500/10 text-brand-primary-500"
-                      : "border-neutral-200 text-neutral-500 dark:border-surface-dark-border dark:text-neutral-300"
+                      : "dark:border-surface-dark-border border-neutral-200 text-neutral-500 dark:text-neutral-300"
                   }`}
                 >
                   {tag.name}
@@ -148,7 +150,7 @@ export default function AddNoteModal({
             </div>
           </div>
 
-          <div className="rounded-md border border-neutral-200 p-2 dark:border-surface-dark-border">
+          <div className="dark:border-surface-dark-border rounded-md border border-neutral-200 p-2">
             <p className="mb-1 text-xs font-semibold text-neutral-600 dark:text-neutral-300">
               Colaboradores
             </p>
@@ -167,7 +169,7 @@ export default function AddNoteModal({
                   className={`rounded-md border px-2 py-1 text-[11px] ${
                     selectedCollaborators.includes(collaborator.user_id)
                       ? "border-brand-primary-500 bg-brand-primary-500/10 text-brand-primary-500"
-                      : "border-neutral-200 text-neutral-500 dark:border-surface-dark-border dark:text-neutral-300"
+                      : "dark:border-surface-dark-border border-neutral-200 text-neutral-500 dark:text-neutral-300"
                   }`}
                 >
                   {collaborator.name || collaborator.username}
@@ -176,9 +178,11 @@ export default function AddNoteModal({
             </div>
           </div>
 
-          <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-neutral-300 px-3 py-2 text-xs text-neutral-500 transition-colors hover:border-brand-primary-500 hover:text-brand-primary-500 dark:border-surface-dark-border dark:text-neutral-300">
+          <label className="hover:border-brand-primary-500 hover:text-brand-primary-500 dark:border-surface-dark-border flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-neutral-300 px-3 py-2 text-xs text-neutral-500 transition-colors dark:text-neutral-300">
             <Paperclip className="h-3.5 w-3.5" />
-            <span>{files.length > 0 ? `${files.length} arquivo(s) selecionado(s)` : "Anexar arquivos"}</span>
+            <span>
+              {files.length > 0 ? `${files.length} arquivo(s) selecionado(s)` : "Anexar arquivos"}
+            </span>
             <input
               type="file"
               multiple
@@ -191,7 +195,7 @@ export default function AddNoteModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-neutral-200 px-3 py-2 text-xs font-medium text-neutral-500 hover:bg-neutral-100 dark:border-surface-dark-border dark:text-neutral-300 dark:hover:bg-neutral-800"
+              className="dark:border-surface-dark-border rounded-md border border-neutral-200 px-3 py-2 text-xs font-medium text-neutral-500 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
             >
               Cancelar
             </button>

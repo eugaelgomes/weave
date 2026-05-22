@@ -25,7 +25,7 @@ function ProjectNodeComponent({ data }: NodeProps<Node<ProjectNodeData>>) {
   return (
     <div
       className={cn(
-        "relative flex min-w-[min(18rem,calc(100vw-4rem))] max-w-xs flex-col gap-3 rounded-xl border px-4 py-4 backdrop-blur-md transition-shadow duration-300 ease-out",
+        "relative flex max-w-xs min-w-[min(18rem,calc(100vw-4rem))] flex-col gap-3 rounded-xl border px-4 py-4 backdrop-blur-md transition-shadow duration-300 ease-out",
         "bg-white/75 ring-1 ring-neutral-950/[0.06] dark:bg-neutral-950/55 dark:ring-white/[0.08]",
         isAtRisk
           ? "border-orange-500/25 shadow-lg shadow-orange-500/20 ring-orange-500/10"
@@ -47,7 +47,9 @@ function ProjectNodeComponent({ data }: NodeProps<Node<ProjectNodeData>>) {
         </h3>
       </div>
 
-      <p className="text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">{data.description}</p>
+      <p className="text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+        {data.description}
+      </p>
 
       {showAiMessage ? (
         <div
@@ -55,7 +57,9 @@ function ProjectNodeComponent({ data }: NodeProps<Node<ProjectNodeData>>) {
           role="status"
           aria-live="polite"
         >
-          <p className="text-sm leading-relaxed text-neutral-800 dark:text-neutral-200">{data.aiStatus.message}</p>
+          <p className="text-sm leading-relaxed text-neutral-800 dark:text-neutral-200">
+            {data.aiStatus.message}
+          </p>
         </div>
       ) : null}
 

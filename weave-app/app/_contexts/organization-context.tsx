@@ -433,34 +433,37 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  const updateMemberRole = useCallback(async (memberId: string, role: OrgWorkspaceRole): Promise<boolean> => {
-    setLoading(true);
-    try {
-      const updatedMember = await updateMemberRoleService(memberId, role);
+  const updateMemberRole = useCallback(
+    async (memberId: string, role: OrgWorkspaceRole): Promise<boolean> => {
+      setLoading(true);
+      try {
+        const updatedMember = await updateMemberRoleService(memberId, role);
 
-      setMembers((prev) =>
-        prev.map((member) =>
-          member.id === memberId
-            ? {
-                ...member,
-                membership: {
-                  ...member.membership,
-                  role: updatedMember.membership.role,
-                  updated_at: updatedMember.membership.updated_at,
-                },
-              }
-            : member
-        )
-      );
+        setMembers((prev) =>
+          prev.map((member) =>
+            member.id === memberId
+              ? {
+                  ...member,
+                  membership: {
+                    ...member.membership,
+                    role: updatedMember.membership.role,
+                    updated_at: updatedMember.membership.updated_at,
+                  },
+                }
+              : member
+          )
+        );
 
-      return true;
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erro ao atualizar função do membro");
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        return true;
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Erro ao atualizar função do membro");
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   // 6.1 GESTÃO DE ÁREAS
   const fetchAreas = useCallback(

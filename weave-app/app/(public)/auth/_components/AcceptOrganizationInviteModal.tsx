@@ -54,10 +54,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const greeting = useMemo(
-    () => (preview ? buildInviteGreeting(t, preview) : ""),
-    [preview, t]
-  );
+  const greeting = useMemo(() => (preview ? buildInviteGreeting(t, preview) : ""), [preview, t]);
 
   useEffect(() => {
     if (!isOpen || !token) return;
@@ -92,9 +89,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
   }, [isOpen, token, t]);
 
   const postLoginAreasPath = (areaId?: string | null) =>
-    areaId
-      ? `/organization/areas?areaId=${encodeURIComponent(areaId)}`
-      : "/organization/areas";
+    areaId ? `/organization/areas?areaId=${encodeURIComponent(areaId)}` : "/organization/areas";
 
   const handleAcceptExisting = async () => {
     setFormError(null);
@@ -145,7 +140,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
       <button
         type="button"
         onClick={onClose}
-        className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute top-2 right-2 z-10 rounded-full p-1 transition-colors hover:bg-brand-secondary-100"
+        className="text-brand-secondary-400 hover:text-brand-secondary-600 hover:bg-brand-secondary-100 absolute top-2 right-2 z-10 rounded-full p-1 transition-colors"
         aria-label={t.acceptOrganizationInvite.close}
       >
         <X className="h-3.5 w-3.5" />
@@ -182,7 +177,9 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
           {loading && (
             <div className="flex flex-col items-center gap-2 py-3">
               <Loader2 className="text-brand-primary-600 h-5 w-5 animate-spin" />
-              <p className="text-brand-secondary-500 text-sm">{t.acceptOrganizationInvite.loading}</p>
+              <p className="text-brand-secondary-500 text-sm">
+                {t.acceptOrganizationInvite.loading}
+              </p>
             </div>
           )}
 
@@ -240,7 +237,9 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
                     onClick={onClose}
                     className="text-brand-secondary-600 hover:bg-brand-secondary-100 w-full rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
                   >
-                    {success ? t.acceptOrganizationInvite.closeAfterSuccess : t.acceptOrganizationInvite.enterOtherAccount}
+                    {success
+                      ? t.acceptOrganizationInvite.closeAfterSuccess
+                      : t.acceptOrganizationInvite.enterOtherAccount}
                   </button>
                 </div>
               ) : (
@@ -291,7 +290,11 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
                       tabIndex={-1}
                       onClick={() => setShowPassword((v) => !v)}
                       className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
-                      aria-label={showPassword ? t.acceptOrganizationInvite.hidePassword : t.acceptOrganizationInvite.showPassword}
+                      aria-label={
+                        showPassword
+                          ? t.acceptOrganizationInvite.hidePassword
+                          : t.acceptOrganizationInvite.showPassword
+                      }
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>

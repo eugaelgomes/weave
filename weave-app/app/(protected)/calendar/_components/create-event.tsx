@@ -605,7 +605,7 @@ export default function CreateEventModal({
 
           <div className="custom-scrollbar mt-2 flex-1 space-y-4 overflow-y-auto px-5 pb-5">
             {/* Bloco Unificado de Data e Hora - Compacto */}
-            <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-surface-dark-border dark:bg-neutral-800/30">
+            <div className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:bg-neutral-800/30">
               {/* Toggle Dia Inteiro */}
               <div className="flex items-center justify-between px-2 py-1">
                 <div className="flex items-center gap-2 text-xs font-medium text-neutral-700 dark:text-neutral-300">
@@ -629,7 +629,7 @@ export default function CreateEventModal({
                     type="date"
                     value={form.startDate}
                     onChange={(event) => handleStartChange("startDate", event.target.value)}
-                    className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-700 transition-colors focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200"
+                    className="dark:border-surface-dark-border-strong rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-700 transition-colors focus:border-blue-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-200"
                     disabled={isSaving}
                     required
                   />
@@ -638,7 +638,7 @@ export default function CreateEventModal({
                       type="time"
                       value={form.startTime}
                       onChange={(event) => handleStartChange("startTime", event.target.value)}
-                      className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-700 transition-colors focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200"
+                      className="dark:border-surface-dark-border-strong rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-700 transition-colors focus:border-blue-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-200"
                       disabled={isSaving}
                       required
                     />
@@ -654,7 +654,7 @@ export default function CreateEventModal({
                     type="date"
                     value={form.endDate}
                     onChange={(event) => handleEndChange("endDate", event.target.value)}
-                    className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-700 transition-colors focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200"
+                    className="dark:border-surface-dark-border-strong rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-700 transition-colors focus:border-blue-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-200"
                     disabled={isSaving}
                     required
                   />
@@ -663,7 +663,7 @@ export default function CreateEventModal({
                       type="time"
                       value={form.endTime}
                       onChange={(event) => handleEndChange("endTime", event.target.value)}
-                      className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-700 transition-colors focus:border-blue-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200"
+                      className="dark:border-surface-dark-border-strong rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-700 transition-colors focus:border-blue-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-200"
                       disabled={isSaving}
                       required
                     />
@@ -673,7 +673,7 @@ export default function CreateEventModal({
             </div>
 
             {/* Integração Google */}
-            <div className="flex flex-col gap-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-surface-dark-border dark:bg-neutral-800/30">
+            <div className="dark:border-surface-dark-border flex flex-col gap-2 rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:bg-neutral-800/30">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
                   <Users size={14} className="text-neutral-500" />
@@ -683,7 +683,7 @@ export default function CreateEventModal({
                 </div>
                 {/* Input de Convidados */}
                 <div className="relative">
-                  <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-neutral-300 bg-neutral-50 p-1 focus-within:border-blue-500 focus-within:bg-white focus-within:ring-1 focus-within:ring-blue-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:focus-within:bg-neutral-900">
+                  <div className="dark:border-surface-dark-border-strong flex flex-wrap items-center gap-1.5 rounded-md border border-neutral-300 bg-neutral-50 p-1 focus-within:border-blue-500 focus-within:bg-white focus-within:ring-1 focus-within:ring-blue-500 dark:bg-[#1d1d1b] dark:focus-within:bg-neutral-900">
                     {selectedAttendees.map((email) => (
                       <span
                         key={email}
@@ -716,7 +716,7 @@ export default function CreateEventModal({
 
                   {/* Autocomplete Dropdown */}
                   {attendeeResults.length > 0 && (
-                    <ul className="absolute top-full left-0 z-50 mt-1 max-h-40 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white py-1 shadow-lg dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
+                    <ul className="dark:border-surface-dark-border-strong absolute top-full left-0 z-50 mt-1 max-h-40 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white py-1 shadow-lg dark:bg-[#1d1d1b]">
                       {attendeeResults.map((user) => (
                         <li
                           key={user.id}
@@ -753,9 +753,9 @@ export default function CreateEventModal({
               </div>
 
               {/* Header de Integração */}
-              <div className="mt-2 flex items-center justify-between border-t border-neutral-200 p-1 pt-2 dark:border-surface-dark-border">
+              <div className="dark:border-surface-dark-border mt-2 flex items-center justify-between border-t border-neutral-200 p-1 pt-2">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-white dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
+                  <div className="dark:border-surface-dark-border-strong flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-white dark:bg-[#1d1d1b]">
                     <GoogleLogoIcon />
                   </div>
                   <div>
@@ -791,7 +791,7 @@ export default function CreateEventModal({
                 }`}
               >
                 <div className="overflow-hidden">
-                  <div className="flex flex-col gap-2 rounded-md border border-neutral-200 bg-white p-2.5 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]">
+                  <div className="dark:shadow-surface-dark-sm dark:border-surface-dark-border-strong flex flex-col gap-2 rounded-md border border-neutral-200 bg-white p-2.5 shadow-sm dark:bg-[#1d1d1b]">
                     <div
                       className={
                         form.syncWithGoogle && googleConnected ? "flex flex-col gap-1.5" : "hidden"
@@ -818,7 +818,7 @@ export default function CreateEventModal({
                         value={form.googleCalendarId}
                         onChange={(e) => handleChange("googleCalendarId", e.target.value)}
                         disabled={isSaving || !googleConnected || availableCalendars.length === 0}
-                        className="w-full rounded-md border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-xs text-neutral-800 transition-colors focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200 dark:focus:bg-neutral-900"
+                        className="dark:border-surface-dark-border-strong w-full rounded-md border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-xs text-neutral-800 transition-colors focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#1d1d1b] dark:text-neutral-200 dark:focus:bg-neutral-900"
                       >
                         {availableCalendars.length === 0 ? (
                           <option value="primary">Carregando calendários...</option>
@@ -931,7 +931,7 @@ export default function CreateEventModal({
           </div>
 
           {/* Call-to-action (Footer Padrão) */}
-          <div className="flex shrink-0 items-center justify-end gap-2 rounded-b-md border-t border-neutral-200 bg-neutral-50 px-5 py-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+          <div className="dark:border-surface-dark-border flex shrink-0 items-center justify-end gap-2 rounded-b-md border-t border-neutral-200 bg-neutral-50 px-5 py-3 dark:bg-[#1d1d1b]/50">
             <button
               type="button"
               onClick={onClose}

@@ -105,7 +105,7 @@ export default function InvitesPage() {
 
   return (
     <WorkspacePageShell description={t.organizationMembers.invitesPageDescription}>
-      <div className="mx-auto w-full min-h-0 flex-1 space-y-3">
+      <div className="mx-auto min-h-0 w-full flex-1 space-y-3">
         {status ? (
           <div
             role="status"
@@ -119,7 +119,7 @@ export default function InvitesPage() {
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-3 rounded-md border border-neutral-200 bg-white px-3 py-2.5 shadow-sm sm:px-4 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+        <div className="dark:border-surface-dark-border dark:shadow-surface-dark-sm flex flex-col gap-3 rounded-md border border-neutral-200 bg-white px-3 py-2.5 shadow-sm sm:px-4 dark:bg-[#1d1d1b]">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
             <div className="min-w-[200px] flex-1">
               <label className="mb-1.5 block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
@@ -153,7 +153,7 @@ export default function InvitesPage() {
             {t.organizationMembers.invitesPendingSection}
           </p>
 
-          <div className="overflow-hidden rounded-md border border-neutral-200 dark:border-surface-dark-border">
+          <div className="dark:border-surface-dark-border overflow-hidden rounded-md border border-neutral-200">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-neutral-50/50 dark:bg-[#1d1d1b]/50">
@@ -169,7 +169,7 @@ export default function InvitesPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-200 dark:divide-surface-dark-border">
+                <tbody className="dark:divide-surface-dark-border divide-y divide-neutral-200">
                   {filteredInvites.length === 0 ? (
                     <tr>
                       <td

@@ -43,9 +43,9 @@ const ProjectsPage = () => {
   const projects = useMemo(() => getRecentProjects(), [getRecentProjects]);
   const [signalsLoading, setSignalsLoading] = useState(true);
   const [signalsError, setSignalsError] = useState<string | null>(null);
-  const [signalsByProjectId, setSignalsByProjectId] = useState<
-    Map<string, ProjectEngineSignal>
-  >(new Map());
+  const [signalsByProjectId, setSignalsByProjectId] = useState<Map<string, ProjectEngineSignal>>(
+    new Map()
+  );
 
   const handleCreateProject = () => {
     if (!canCreateProject) {
@@ -77,20 +77,13 @@ const ProjectsPage = () => {
           const newest = reasonings[0];
           const hasHighRisk = reasonings.some((item) => item.safety_label === "unsafe");
           const hasMediumRisk = reasonings.some((item) => item.safety_label === "review");
-          const riskLevel: RiskLevel = hasHighRisk
-            ? "high"
-            : hasMediumRisk
-              ? "medium"
-              : "low";
+          const riskLevel: RiskLevel = hasHighRisk ? "high" : hasMediumRisk ? "medium" : "low";
           const suggestedActions = reasonings.reduce(
             (acc, item) => acc + (item.action_items_count || 0),
             0
           );
-          const newestTimestamp = newest?.created_at
-            ? new Date(newest.created_at).getTime()
-            : 0;
-          const hasNewBriefing =
-            newestTimestamp > 0 && Date.now() - newestTimestamp <= dayMs;
+          const newestTimestamp = newest?.created_at ? new Date(newest.created_at).getTime() : 0;
+          const hasNewBriefing = newestTimestamp > 0 && Date.now() - newestTimestamp <= dayMs;
 
           return [
             project.id,
@@ -126,10 +119,7 @@ const ProjectsPage = () => {
       const timestamp = new Date(value.lastBriefingAt).getTime();
       return !Number.isNaN(timestamp) && Date.now() - timestamp <= weekMs;
     }).length;
-    const suggestedActions = values.reduce(
-      (acc, value) => acc + value.suggestedActions,
-      0
-    );
+    const suggestedActions = values.reduce((acc, value) => acc + value.suggestedActions, 0);
     return { risksHigh, recentBriefings, suggestedActions };
   }, [signalsByProjectId]);
 
@@ -156,7 +146,7 @@ const ProjectsPage = () => {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-1 dark:border-surface-dark-border">
+      <div className="dark:border-surface-dark-border flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-1">
         <div className="flex min-w-0 items-center gap-2">
           <h1 className="truncate text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
             Overview dos Projetos
@@ -182,7 +172,7 @@ const ProjectsPage = () => {
       </div>
 
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-2 sm:p-3">
-        <section className="rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+        <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:bg-[#1d1d1b]">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div>
               <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
@@ -194,7 +184,7 @@ const ProjectsPage = () => {
             </div>
             <Link
               href="/weave-engine"
-              className="inline-flex items-center gap-1 rounded-md bg-brand-primary-500 px-2 py-1 text-[11px] font-semibold text-neutral-900 hover:brightness-95"
+              className="bg-brand-primary-500 inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-neutral-900 hover:brightness-95"
             >
               <BrainCircuit className="h-3.5 w-3.5" />
               Abrir Weave Engine
@@ -202,7 +192,7 @@ const ProjectsPage = () => {
           </div>
 
           <div className="grid gap-2 sm:grid-cols-3">
-            <div className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+            <div className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]">
               <div className="text-[10px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400">
                 Resumo da semana
               </div>
@@ -213,7 +203,7 @@ const ProjectsPage = () => {
                 briefings recentes
               </div>
             </div>
-            <div className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+            <div className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]">
               <div className="text-[10px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400">
                 Riscos críticos
               </div>
@@ -224,7 +214,7 @@ const ProjectsPage = () => {
                 projetos com risco alto
               </div>
             </div>
-            <div className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+            <div className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]">
               <div className="text-[10px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400">
                 Ações recomendadas
               </div>
@@ -245,7 +235,7 @@ const ProjectsPage = () => {
         ) : null}
 
         {projects.length === 0 ? (
-          <section className="rounded-md border border-neutral-200 bg-white p-4 text-center dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+          <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-4 text-center dark:bg-[#1d1d1b]">
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
               Você ainda não tem projetos para gerar insights do Weave Engine.
             </p>
@@ -253,7 +243,7 @@ const ProjectsPage = () => {
               type="button"
               onClick={handleCreateProject}
               disabled={!canCreateProject}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-brand-primary-500 px-2 py-1 text-[11px] font-semibold text-neutral-900 disabled:cursor-not-allowed disabled:opacity-40"
+              className="bg-brand-primary-500 mt-3 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold text-neutral-900 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Plus className="h-3 w-3" />
               Criar primeiro projeto
@@ -279,7 +269,7 @@ const ProjectsPage = () => {
               return (
                 <article
                   key={project.id}
-                  className="rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]"
+                  className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:bg-[#1d1d1b]"
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
@@ -288,7 +278,7 @@ const ProjectsPage = () => {
                           {project.title}
                         </h3>
                         {signal?.hasNewBriefing ? (
-                          <span className="rounded-full border border-brand-primary-500/50 px-1.5 py-0.5 text-[9px] font-semibold text-brand-primary-700 dark:text-brand-primary-400">
+                          <span className="border-brand-primary-500/50 text-brand-primary-700 dark:text-brand-primary-400 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold">
                             Novo briefing
                           </span>
                         ) : null}
@@ -310,14 +300,14 @@ const ProjectsPage = () => {
                       <button
                         type="button"
                         onClick={() => void handleGenerateBriefing(project.id)}
-                        className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] font-medium text-neutral-700 hover:bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-200 dark:hover:bg-neutral-900"
+                        className="dark:border-surface-dark-border inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] font-medium text-neutral-700 hover:bg-neutral-50 dark:bg-[#1d1d1b] dark:text-neutral-200 dark:hover:bg-neutral-900"
                       >
                         <BrainCircuit className="h-3.5 w-3.5" />
                         Abrir briefing
                       </button>
                       <Link
                         href={`/weave-engine?projectId=${project.id}&view=risks`}
-                        className="inline-flex items-center gap-1 rounded-md bg-brand-primary-500 px-2 py-1 text-[11px] font-semibold text-neutral-900 hover:brightness-95"
+                        className="bg-brand-primary-500 inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-neutral-900 hover:brightness-95"
                       >
                         <AlertTriangle className="h-3.5 w-3.5" />
                         Ver riscos
@@ -331,7 +321,7 @@ const ProjectsPage = () => {
         )}
 
         {!signalsLoading && projects.length > 0 && signalsByProjectId.size === 0 ? (
-          <section className="rounded-md border border-neutral-200 bg-white p-3 text-xs text-neutral-500 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400">
+          <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-3 text-xs text-neutral-500 dark:bg-[#1d1d1b] dark:text-neutral-400">
             <div className="flex items-center gap-2">
               <FileWarning className="h-4 w-4" />
               Nenhum insight disponível por enquanto. Gere um briefing para iniciar o contexto.

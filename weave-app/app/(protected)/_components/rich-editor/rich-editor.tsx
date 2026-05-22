@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useEffect, useCallback, useRef, useState, useImperativeHandle, forwardRef } from "react";
+import React, {
+  useEffect,
+  useCallback,
+  useRef,
+  useState,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import type { Editor } from "@tiptap/react";
 import type { JSONContent } from "@tiptap/core";
@@ -328,7 +335,13 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     }
 
     return (
-      <div className={className ? `tiptap-editor-wrapper relative ${className}` : "tiptap-editor-wrapper relative"}>
+      <div
+        className={
+          className
+            ? `tiptap-editor-wrapper relative ${className}`
+            : "tiptap-editor-wrapper relative"
+        }
+      >
         {editable && <RichEditorBubbleMenu editor={editor} />}
         {editable && <RichEditorFloatingMenu editor={editor} />}
         {editable && <TiptapDragHandle editor={editor} />}

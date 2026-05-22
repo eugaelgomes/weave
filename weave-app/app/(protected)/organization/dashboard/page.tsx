@@ -20,9 +20,12 @@ const statusLabels: Record<string, string> = {
 const statusColors: Record<string, string> = {
   [PROJECT_STATUS.OPEN]: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
   [PROJECT_STATUS.IN_PROGRESS]: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  [PROJECT_STATUS.PAUSED]: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  [PROJECT_STATUS.COMPLETED]: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  [PROJECT_STATUS.ARCHIVED]: "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400",
+  [PROJECT_STATUS.PAUSED]:
+    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+  [PROJECT_STATUS.COMPLETED]:
+    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  [PROJECT_STATUS.ARCHIVED]:
+    "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400",
 };
 
 const priorityLabels: Record<string, string> = {
@@ -49,7 +52,7 @@ const ProjectsPage = () => {
       <WorkspaceHeader />
 
       {/* Page Header */}
-      <div className="border-b border-neutral-200 bg-neutral-50 p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+      <div className="dark:border-surface-dark-border border-b border-neutral-200 bg-neutral-50 p-6 dark:bg-[#1d1d1b]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-brand-primary-500/10 rounded-lg p-2">
@@ -73,7 +76,7 @@ const ProjectsPage = () => {
                 placeholder="Buscar projetos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-10 w-full rounded-md border border-neutral-300 bg-white pr-4 pl-9 text-sm focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:w-64 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
+                className="dark:border-surface-dark-border-strong h-10 w-full rounded-md border border-neutral-300 bg-white pr-4 pl-9 text-sm focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none sm:w-64 dark:bg-[#1d1d1b] dark:text-neutral-100"
               />
             </div>
             <button className="bg-brand-primary-500 flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium text-white transition-colors hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:outline-none dark:focus:ring-offset-neutral-950">
@@ -93,7 +96,7 @@ const ProjectsPage = () => {
             </div>
           ) : filteredProjects.length === 0 ? (
             /* Empty State */
-            <div className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-12 text-center dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+            <div className="dark:border-surface-dark-border rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-12 text-center dark:bg-[#1d1d1b]/50">
               <Folder className="mx-auto mb-4 h-12 w-12 text-neutral-400" />
               <h2 className="mb-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                 {searchTerm ? "Nenhum projeto encontrado" : "Nenhum projeto criado"}
@@ -117,7 +120,7 @@ const ProjectsPage = () => {
                 <Link
                   href={`/projects/${project.public_id}`}
                   key={project.id}
-                  className="group flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-5 transition-all hover:border-yellow-500 hover:shadow-md dark:shadow-surface-dark-md dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:border-yellow-500"
+                  className="group dark:shadow-surface-dark-md dark:border-surface-dark-border flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-5 transition-all hover:border-yellow-500 hover:shadow-md dark:bg-[#1d1d1b] dark:hover:border-yellow-500"
                 >
                   <div>
                     <div className="mb-4 flex items-start justify-between gap-4">
@@ -161,12 +164,12 @@ const ProjectsPage = () => {
                     </div>
                   </div>
 
-                  <div className="mt-auto flex items-center justify-between border-t border-neutral-100 pt-4 dark:border-surface-dark-border">
+                  <div className="dark:border-surface-dark-border mt-auto flex items-center justify-between border-t border-neutral-100 pt-4">
                     <div className="flex -space-x-2">
                       {/* Avatar placeholder - idealmente viria dos membros do projeto */}
-                      <div className="h-7 w-7 rounded-full border-2 border-white bg-neutral-200 dark:border-surface-dark-border-strong dark:bg-neutral-700" />
-                      <div className="h-7 w-7 rounded-full border-2 border-white bg-neutral-300 dark:border-surface-dark-border-strong dark:bg-neutral-600" />
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-neutral-100 text-[10px] font-medium text-neutral-600 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-300">
+                      <div className="dark:border-surface-dark-border-strong h-7 w-7 rounded-full border-2 border-white bg-neutral-200 dark:bg-neutral-700" />
+                      <div className="dark:border-surface-dark-border-strong h-7 w-7 rounded-full border-2 border-white bg-neutral-300 dark:bg-neutral-600" />
+                      <div className="dark:border-surface-dark-border-strong flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-neutral-100 text-[10px] font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
                         +3
                       </div>
                     </div>

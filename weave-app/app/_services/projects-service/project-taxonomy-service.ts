@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { apiClient, handleResponse, API_ENDPOINTS } from "../api-methods";
-import { ProjectTagSchema, TaskPrioritySchema, type ProjectTag, type TaskPriority } from "./project-taxonomy.schema";
+import {
+  ProjectTagSchema,
+  TaskPrioritySchema,
+  type ProjectTag,
+  type TaskPriority,
+} from "./project-taxonomy.schema";
 
 export type { ProjectTag, TaskPriority };
 

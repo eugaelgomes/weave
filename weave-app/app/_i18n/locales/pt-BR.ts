@@ -188,8 +188,7 @@ const ptBR = {
     conversation: {
       openerMessage:
         "Olá {name}, o que vamos fazer no Engine hoje? Temos alguns caminhos — qual seguimos?",
-      openerWithProject:
-        "Olá {name}. Continuamos no projeto {project}? O que vamos fazer?",
+      openerWithProject: "Olá {name}. Continuamos no projeto {project}? O que vamos fazer?",
       askWhichPath: "Qual caminho seguimos?",
       optionPublishInsight: "Publicar insight manual",
       optionTuneInstructions: "Ajustar instruções do engine",
@@ -395,8 +394,7 @@ const ptBR = {
     digestWeekly: "Semanal",
     digestMonthly: "Mensal",
     dangerZoneTitle: "Zona de Perigo",
-    dangerZoneHint:
-      "Ações nesta área podem ser irreversíveis ou causar perda de dados temporária.",
+    dangerZoneHint: "Ações nesta área podem ser irreversíveis ou causar perda de dados temporária.",
     deleteOrgTitle: "Deletar Organização",
     deleteOrgHint: "Isso marcará a organização para exclusão em 30 dias.",
     deleteOrgButton: "Deletar",
@@ -547,8 +545,7 @@ const ptBR = {
     membershipStatusSuspended: "Suspenso",
     suspendedBadge: "Suspenso",
     removeAccessConfirmButton: "Confirmar suspensão ou remoção",
-    removeAccessQuestion:
-      "Tem certeza de que deseja suspender ou revogar o acesso de {name}?",
+    removeAccessQuestion: "Tem certeza de que deseja suspender ou revogar o acesso de {name}?",
     banSuspendTitle: "Suspender ou remover",
     inviteNamePlaceholder: "Nome",
     inviteEmailPlaceholder: "email@exemplo.com",
@@ -591,7 +588,8 @@ const ptBR = {
     hidePassword: "Ocultar senha",
     successExisting:
       "Convite aceito! Enviamos um e-mail de confirmação. Entre com o e-mail convidado e sua senha — você será levado às áreas da organização.",
-    successCreatedLoginElse: "Conta criada e convite aceito. Entre com seu usuário e senha na próxima tela.",
+    successCreatedLoginElse:
+      "Conta criada e convite aceito. Entre com seu usuário e senha na próxima tela.",
     acceptError: "Erro ao aceitar convite.",
   },
   headers: {

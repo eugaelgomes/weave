@@ -11,14 +11,7 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import {
-  MoreHorizontal,
-  LayoutGrid,
-  CheckCircle2,
-  Calendar,
-  Flag,
-  Plus,
-} from "lucide-react";
+import { MoreHorizontal, LayoutGrid, CheckCircle2, Calendar, Flag, Plus } from "lucide-react";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { useNotes } from "@/app/_contexts/notes-context";
 
@@ -46,10 +39,10 @@ function NoteCard({
 }) {
   return (
     <div
-      className={`group relative rounded-md border border-neutral-200 bg-white p-2 shadow-sm transition-all dark:border-surface-dark-border dark:bg-[#121214] ${
+      className={`group dark:border-surface-dark-border relative rounded-md border border-neutral-200 bg-white p-2 shadow-sm transition-all dark:bg-[#121214] ${
         isDragging
-          ? "rotate-[2deg] scale-105 shadow-lg ring-2 ring-yellow-400/50"
-          : "hover:border-neutral-300 hover:shadow-md dark:hover:border-surface-dark-border-strong"
+          ? "scale-105 rotate-[2deg] shadow-lg ring-2 ring-yellow-400/50"
+          : "dark:hover:border-surface-dark-border-strong hover:border-neutral-300 hover:shadow-md"
       }`}
     >
       <div className="mb-1.5 flex items-start justify-between gap-1.5">
@@ -88,7 +81,7 @@ function NoteCard({
         </div>
       )}
 
-      <div className="flex items-center justify-between border-t border-neutral-100 pt-2 dark:border-surface-dark-border">
+      <div className="dark:border-surface-dark-border flex items-center justify-between border-t border-neutral-100 pt-2">
         <div className="flex items-center gap-1.5">
           <button
             onClick={onSetDueDate}
@@ -133,7 +126,7 @@ function NoteCard({
 
         <div className="flex items-center">
           <button
-            className="flex h-4 w-4 items-center justify-center rounded-full border border-dashed border-neutral-300 bg-neutral-50 text-neutral-400 transition-colors hover:border-neutral-400 hover:text-neutral-600 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:hover:text-neutral-300"
+            className="dark:border-surface-dark-border-strong flex h-4 w-4 items-center justify-center rounded-full border border-dashed border-neutral-300 bg-neutral-50 text-neutral-400 transition-colors hover:border-neutral-400 hover:text-neutral-600 dark:bg-[#1d1d1b] dark:hover:text-neutral-300"
             title="Em breve: Atribuir pessoa"
           >
             <Plus className="h-2.5 w-2.5 bg-transparent" />
@@ -197,7 +190,7 @@ function DroppableStageColumn({
       ref={setNodeRef}
       className={`flex h-full min-h-0 w-[280px] flex-shrink-0 flex-col rounded-md transition-colors ${
         isOver
-          ? "bg-yellow-50/60 ring-2 ring-inset ring-yellow-400/40 dark:bg-yellow-500/5 dark:ring-yellow-500/30"
+          ? "bg-yellow-50/60 ring-2 ring-yellow-400/40 ring-inset dark:bg-yellow-500/5 dark:ring-yellow-500/30"
           : "bg-neutral-50/50 dark:bg-[#1d1d1b]/30"
       }`}
     >
@@ -218,9 +211,7 @@ function DroppableStageColumn({
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 pb-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-200 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-800">
-        <div className="flex flex-col gap-2">
-          {children}
-        </div>
+        <div className="flex flex-col gap-2">{children}</div>
       </div>
     </div>
   );
@@ -236,9 +227,7 @@ export default function ProjectBoard({
   const { updateNote } = useNotes();
   const [activeNote, setActiveNote] = useState<any>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const getTagMeta = useCallback(
     (tagValue: string) => {
@@ -285,10 +274,7 @@ export default function ProjectBoard({
     [removeNoteFromProject]
   );
 
-  const sortedStages = useMemo(
-    () => [...stages].sort((a, b) => a.position - b.position),
-    [stages]
-  );
+  const sortedStages = useMemo(() => [...stages].sort((a, b) => a.position - b.position), [stages]);
 
   const notesByStage = useMemo(() => {
     const map: Record<string, any[]> = {};
@@ -353,13 +339,9 @@ export default function ProjectBoard({
         {sortedStages.map((stage) => {
           const stageNotes = notesByStage[stage.id] ?? [];
           return (
-            <DroppableStageColumn
-              key={stage.id}
-              stage={stage}
-              count={stageNotes.length}
-            >
+            <DroppableStageColumn key={stage.id} stage={stage} count={stageNotes.length}>
               {stageNotes.length === 0 ? (
-                <div className="flex items-center justify-center rounded-md border border-dashed border-neutral-300 bg-transparent py-8 dark:border-surface-dark-border">
+                <div className="dark:border-surface-dark-border flex items-center justify-center rounded-md border border-dashed border-neutral-300 bg-transparent py-8">
                   <span className="text-xs text-neutral-400">Solte os cards aqui</span>
                 </div>
               ) : (
@@ -368,15 +350,10 @@ export default function ProjectBoard({
                     key={note.id}
                     note={note}
                     getTagMeta={getTagMeta}
-                    onCyclePriority={() =>
-                      handleCyclePriority(note.id, note.properties?.priority)
-                    }
+                    onCyclePriority={() => handleCyclePriority(note.id, note.properties?.priority)}
                     onSetDueDate={() => handleSetMockDueDate(note.id)}
                     onRemoveNote={() =>
-                      handleRemoveNote(
-                        note.project_id || note.properties?.project_id,
-                        note.id
-                      )
+                      handleRemoveNote(note.project_id || note.properties?.project_id, note.id)
                     }
                   />
                 ))

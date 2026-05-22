@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 
 import type { Note } from "@/app/_contexts/notes-context";
+import { syncProjectTaskUrl } from "@/app/_utils/note-path";
 
 export type TaskNoteModalMode = "view" | "create" | "edit";
 
@@ -11,6 +12,8 @@ export interface TaskNoteModalState {
   mode: TaskNoteModalMode;
   noteId?: string;
   projectId?: string;
+  /** Project public id for URL sync on the board (/projects/.../tasks/...). */
+  projectPublicId?: string;
   stageId?: string;
   parentNoteId?: string;
 }
@@ -29,6 +32,7 @@ export interface TaskNoteModalContextType {
     options?: {
       noteId?: string;
       projectId?: string;
+      projectPublicId?: string;
       stageId?: string;
       parentNoteId?: string;
       onNoteCreated?: (note: Note) => void;
@@ -39,11 +43,7 @@ export interface TaskNoteModalContextType {
   closeModal: () => void;
   viewNote: (noteId: string) => void;
   editNote: (noteId: string) => void;
-  createNote: (options?: {
-    projectId?: string;
-    stageId?: string;
-    parentNoteId?: string;
-  }) => void;
+  createNote: (options?: { projectId?: string; stageId?: string; parentNoteId?: string }) => void;
 }
 
 const TaskNoteModalContext = createContext<TaskNoteModalContextType | undefined>(undefined);
@@ -53,6 +53,7 @@ const initialState: TaskNoteModalState = {
   mode: "view",
   noteId: undefined,
   projectId: undefined,
+  projectPublicId: undefined,
   stageId: undefined,
   parentNoteId: undefined,
 };
@@ -61,27 +62,30 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
   const [state, setState] = useState<TaskNoteModalState>(initialState);
   const [callbacks, setCallbacks] = useState<TaskNoteModalCallbacks>({});
 
-  const openModal = useCallback<TaskNoteModalContextType["openModal"]>(
-    (mode, options = {}) => {
-      setState({
-        isOpen: true,
-        mode,
-        noteId: options.noteId,
-        projectId: options.projectId,
-        stageId: options.stageId,
-        parentNoteId: options.parentNoteId,
-      });
-      setCallbacks({
-        onNoteCreated: options.onNoteCreated,
-        onNoteUpdated: options.onNoteUpdated,
-        onNoteDeleted: options.onNoteDeleted,
-      });
-    },
-    []
-  );
+  const openModal = useCallback<TaskNoteModalContextType["openModal"]>((mode, options = {}) => {
+    setState({
+      isOpen: true,
+      mode,
+      noteId: options.noteId,
+      projectId: options.projectId,
+      projectPublicId: options.projectPublicId,
+      stageId: options.stageId,
+      parentNoteId: options.parentNoteId,
+    });
+    setCallbacks({
+      onNoteCreated: options.onNoteCreated,
+      onNoteUpdated: options.onNoteUpdated,
+      onNoteDeleted: options.onNoteDeleted,
+    });
+  }, []);
 
   const closeModal = useCallback(() => {
-    setState(initialState);
+    setState((prev) => {
+      if (prev.projectPublicId) {
+        syncProjectTaskUrl(prev.projectPublicId, null, true);
+      }
+      return initialState;
+    });
     setCallbacks({});
   }, []);
 
@@ -119,11 +123,7 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
     [state, callbacks, openModal, closeModal, viewNote, editNote, createNote]
   );
 
-  return (
-    <TaskNoteModalContext.Provider value={value}>
-      {children}
-    </TaskNoteModalContext.Provider>
-  );
+  return <TaskNoteModalContext.Provider value={value}>{children}</TaskNoteModalContext.Provider>;
 }
 
 export function useTaskNoteModal(): TaskNoteModalContextType {

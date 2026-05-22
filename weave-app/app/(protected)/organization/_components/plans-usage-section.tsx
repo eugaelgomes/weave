@@ -4,10 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { CreditCard } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
-import {
-  type Organization,
-  type OrganizationProperties,
-} from "@/app/_services/organization";
+import { type Organization, type OrganizationProperties } from "@/app/_services/organization";
 import { type OrganizationStats } from "@/app/_contexts/organization-context";
 
 type PlansUsageSectionProps = {
@@ -28,7 +25,8 @@ export function PlansUsageSection({
   const planValue = organization?.plan_value || 0;
   const currency = organization?.currency || "BRL";
 
-  const memberLimit = localProps.maxMembers && localProps.maxMembers > 0 ? localProps.maxMembers : 50;
+  const memberLimit =
+    localProps.maxMembers && localProps.maxMembers > 0 ? localProps.maxMembers : 50;
   const projectLimit =
     localProps.maxProjects && localProps.maxProjects > 0 ? localProps.maxProjects : 100;
   const memberPercent = Math.min((stats.totalMembers / memberLimit) * 100, 100);
@@ -40,13 +38,13 @@ export function PlansUsageSection({
       : t.organizationPlans.billingYearly;
 
   return (
-    <section className="rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+    <section className="dark:border-surface-dark-border dark:shadow-surface-dark-sm rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:bg-[#1d1d1b]">
       <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
         <CreditCard className="h-5 w-5 text-neutral-500" />
         {t.organizationPlans.sectionTitle}
       </h2>
 
-      <div className="mb-6 rounded-md border border-neutral-100 bg-neutral-50 p-4 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/50">
+      <div className="dark:border-surface-dark-border-strong mb-6 rounded-md border border-neutral-100 bg-neutral-50 p-4 dark:bg-[#1d1d1b]/50">
         <div className="flex items-center justify-between">
           <div>
             <p className="font-semibold text-neutral-900 dark:text-neutral-100">
@@ -64,7 +62,7 @@ export function PlansUsageSection({
           {userIsOwner ? (
             <Link
               href="/settings/plans"
-              className="rounded-md bg-brand-yellow px-3 py-1.5 text-xs font-semibold text-brand-navy transition-colors hover:bg-brand-orange"
+              className="bg-brand-yellow text-brand-navy hover:bg-brand-orange rounded-md px-3 py-1.5 text-xs font-semibold transition-colors"
             >
               {t.organizationPlans.manageSubscription}
             </Link>

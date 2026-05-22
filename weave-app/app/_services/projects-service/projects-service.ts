@@ -358,9 +358,7 @@ export const fetchProjectById = async (projectId: string): Promise<Project> => {
   return parseProjectProperties(project as Project);
 };
 
-export const getMyProjectView = async (
-  projectId: string
-): Promise<"board" | "list"> => {
+export const getMyProjectView = async (projectId: string): Promise<"board" | "list"> => {
   const response = await apiClient.get(API_ENDPOINTS.PROJECTS_MY_VIEW_PREF(projectId));
   const raw = await handleResponse<unknown>(response);
   const data = ProjectViewPreferenceSchema.parse(raw);
@@ -487,10 +485,7 @@ export const putProjectAiReportConfig = async (
   projectId: string,
   body: AiReportConfigUpsertPayload
 ): Promise<{ message?: string; config?: unknown }> => {
-  const response = await apiClient.put(
-    API_ENDPOINTS.PROJECTS_AI_REPORT_CONFIG(projectId),
-    body
-  );
+  const response = await apiClient.put(API_ENDPOINTS.PROJECTS_AI_REPORT_CONFIG(projectId), body);
   const raw = await handleResponse<unknown>(response);
   return PutAiReportConfigResponseSchema.parse(raw);
 };
@@ -540,9 +535,11 @@ export const fetchProjectNotes = async (
   projectId: string,
   filters?: ProjectNotesListFilters
 ): Promise<ProjectNote[]> => {
-  const hasFilters = filters && Object.values(filters).some((v) =>
-    Array.isArray(v) ? v.length > 0 : v !== undefined && v !== "" && v !== null
-  );
+  const hasFilters =
+    filters &&
+    Object.values(filters).some((v) =>
+      Array.isArray(v) ? v.length > 0 : v !== undefined && v !== "" && v !== null
+    );
   let url = API_ENDPOINTS.PROJECTS_NOTES(projectId);
   if (hasFilters) url += `?${buildNotesQueryString(filters)}`;
 
@@ -599,7 +596,10 @@ export const createTaskInStage = async (
     taskData.files.forEach((file) => formData.append("files", file));
   }
 
-  const response = await apiClient.post(API_ENDPOINTS.PROJECTS_STAGE_TASKS(projectId, stageId), formData);
+  const response = await apiClient.post(
+    API_ENDPOINTS.PROJECTS_STAGE_TASKS(projectId, stageId),
+    formData
+  );
   const raw = await handleResponse<unknown>(response);
   const data = TaskMutationResponseSchema.parse(raw);
   return data.notes as ProjectNote[];
@@ -618,8 +618,10 @@ export const patchProjectTask = async (
   if (taskData.due_date !== undefined) formData.append("due_date", taskData.due_date ?? "");
   if (taskData.stage_id !== undefined) formData.append("stage_id", taskData.stage_id ?? "");
   if (taskData.parent_id !== undefined) formData.append("parent_id", taskData.parent_id ?? "");
-  if (taskData.set_tags !== undefined) formData.append("set_tags", JSON.stringify(taskData.set_tags));
-  if (taskData.add_tags !== undefined) formData.append("add_tags", JSON.stringify(taskData.add_tags));
+  if (taskData.set_tags !== undefined)
+    formData.append("set_tags", JSON.stringify(taskData.set_tags));
+  if (taskData.add_tags !== undefined)
+    formData.append("add_tags", JSON.stringify(taskData.add_tags));
   if (taskData.remove_tags !== undefined)
     formData.append("remove_tags", JSON.stringify(taskData.remove_tags));
   if (taskData.set_collaborators !== undefined) {
@@ -641,7 +643,10 @@ export const patchProjectTask = async (
     taskData.files.forEach((file) => formData.append("files", file));
   }
 
-  const response = await apiClient.patch(API_ENDPOINTS.PROJECTS_TASK_BY_ID(projectId, noteId), formData);
+  const response = await apiClient.patch(
+    API_ENDPOINTS.PROJECTS_TASK_BY_ID(projectId, noteId),
+    formData
+  );
   const raw = await handleResponse<unknown>(response);
   const data = TaskMutationResponseSchema.parse(raw);
   return data.notes as ProjectNote[];
@@ -653,9 +658,7 @@ export const deleteProjectStage = async (
   projectId: string,
   stageId: string
 ): Promise<{ message: string }> => {
-  const response = await apiClient.delete(
-    API_ENDPOINTS.PROJECTS_STAGE_BY_ID(projectId, stageId)
-  );
+  const response = await apiClient.delete(API_ENDPOINTS.PROJECTS_STAGE_BY_ID(projectId, stageId));
   const raw = await handleResponse<unknown>(response);
   return MessageOnlySchema.parse(raw);
 };
@@ -681,9 +684,7 @@ export interface AiReportConfig {
   updated_at?: string;
 }
 
-export const fetchAiReportConfig = async (
-  projectId: string
-): Promise<AiReportConfig | null> => {
+export const fetchAiReportConfig = async (projectId: string): Promise<AiReportConfig | null> => {
   const response = await apiClient.get(API_ENDPOINTS.PROJECTS_AI_REPORT_CONFIG(projectId));
   const raw = await handleResponse<unknown>(response);
   const data = AiReportConfigEnvelopeSchema.parse(raw);
@@ -723,10 +724,7 @@ export interface CompleteSprintPayload {
   metrics?: Record<string, unknown>;
 }
 
-export const fetchSprints = async (
-  projectId: string,
-  limit = 20
-): Promise<Sprint[]> => {
+export const fetchSprints = async (projectId: string, limit = 20): Promise<Sprint[]> => {
   const endpoint = `${API_ENDPOINTS.PROJECTS_SPRINTS(projectId)}?limit=${limit}`;
   const response = await apiClient.get(endpoint);
   const raw = await handleResponse<unknown>(response);
@@ -734,9 +732,7 @@ export const fetchSprints = async (
   return data.sprints as Sprint[];
 };
 
-export const fetchActiveSprint = async (
-  projectId: string
-): Promise<Sprint | null> => {
+export const fetchActiveSprint = async (projectId: string): Promise<Sprint | null> => {
   const response = await apiClient.get(API_ENDPOINTS.PROJECTS_SPRINT_ACTIVE(projectId));
   const raw = await handleResponse<unknown>(response);
   const data = ActiveSprintEnvelopeSchema.parse(raw);
@@ -866,10 +862,7 @@ export const createReasoning = async (
   projectId: string,
   payload: CreateReasoningPayload
 ): Promise<Reasoning> => {
-  const response = await apiClient.post(
-    API_ENDPOINTS.PROJECTS_REASONINGS(projectId),
-    payload
-  );
+  const response = await apiClient.post(API_ENDPOINTS.PROJECTS_REASONINGS(projectId), payload);
   const raw = await handleResponse<unknown>(response);
   const data = ReasoningEnvelopeSchema.parse(raw);
   return data.reasoning as Reasoning;

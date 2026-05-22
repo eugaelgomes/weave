@@ -38,7 +38,7 @@ export function AuthMarketing() {
 
         if (distance < maxDistance) {
           // Quanto mais perto, mais forte a linha
-          const lineOpacity = 1 - distance / maxDistance; 
+          const lineOpacity = 1 - distance / maxDistance;
           connections.push({ from: i, to: j, opacity: lineOpacity });
         }
       }
@@ -49,10 +49,13 @@ export function AuthMarketing() {
 
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-black px-10">
-      
       {/* Background: Conexões de Pontos e Linhas */}
       <div className="absolute inset-0 z-0 opacity-30">
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full text-brand-primary-500">
+        <svg
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          className="text-brand-primary-500 h-full w-full"
+        >
           <g stroke="currentColor" strokeWidth="0.1">
             {network.connections.map((conn, i) => (
               <line
@@ -75,7 +78,7 @@ export function AuthMarketing() {
 
       {/* Texto limpo */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center">
-        <p className="text-4xl font-semibold leading-tight tracking-tight text-brand-secondary-500 drop-shadow-md">
+        <p className="text-brand-secondary-500 text-4xl leading-tight font-semibold tracking-tight drop-shadow-md">
           Faça o melhor por{" "}
         </p>
 
@@ -83,10 +86,8 @@ export function AuthMarketing() {
           {audiences.map((audience, index) => (
             <span
               key={audience}
-              className={`absolute inset-0 text-center text-3xl font-bold leading-tight tracking-tight text-brand-primary-500 drop-shadow-lg transition-all duration-500 ${
-                index === activeAudience
-                  ? "translate-y-0 opacity-100"
-                  : "translate-y-2 opacity-0"
+              className={`text-brand-primary-500 absolute inset-0 text-center text-3xl leading-tight font-bold tracking-tight drop-shadow-lg transition-all duration-500 ${
+                index === activeAudience ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
               }`}
             >
               {audience}!

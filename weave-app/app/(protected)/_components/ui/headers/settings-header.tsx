@@ -11,10 +11,5 @@ interface SettingsHeaderProps {
 }
 
 export function SettingsHeader({ className, type = "settings" }: SettingsHeaderProps) {
-  return (
-    <BaseHeader
-      className={className}
-      leftContent={<AnimatedGreeting type={type} />}
-    />
-  );
+  return <BaseHeader className={className} leftContent={<AnimatedGreeting type={type} />} />;
 }

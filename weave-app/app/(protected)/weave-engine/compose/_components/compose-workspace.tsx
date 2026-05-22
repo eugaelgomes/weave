@@ -64,7 +64,7 @@ function ProjectPicker({
             "rounded-full border px-2.5 py-1 text-[11px] font-normal transition-colors",
             projectId === p.id
               ? "border-neutral-800 bg-neutral-900 text-white dark:border-neutral-200 dark:bg-neutral-100 dark:text-neutral-900"
-              : "border-neutral-200 text-neutral-600 hover:bg-neutral-50 dark:border-surface-dark-border dark:text-neutral-400 dark:hover:bg-neutral-900/50"
+              : "dark:border-surface-dark-border border-neutral-200 text-neutral-600 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-900/50"
           )}
         >
           {p.title}
@@ -86,7 +86,9 @@ function InsightWorkspace({
   return (
     <div className="space-y-4">
       <div>
-        <p className="mb-1.5 text-[10px] uppercase tracking-wide text-neutral-400">{draft.copy.projectHint}</p>
+        <p className="mb-1.5 text-[10px] tracking-wide text-neutral-400 uppercase">
+          {draft.copy.projectHint}
+        </p>
         <ProjectPicker
           projects={draft.projects}
           projectId={draft.projectId}
@@ -104,7 +106,9 @@ function InsightWorkspace({
       </div>
 
       <div>
-        <p className="mb-1.5 text-[10px] uppercase tracking-wide text-neutral-400">{draft.copy.typeHint}</p>
+        <p className="mb-1.5 text-[10px] tracking-wide text-neutral-400 uppercase">
+          {draft.copy.typeHint}
+        </p>
         <div className="flex flex-wrap gap-1.5">
           {draft.typeOptions.map((type) => (
             <button
@@ -115,7 +119,7 @@ function InsightWorkspace({
                 "rounded-full border px-2.5 py-1 text-[11px] font-normal transition-colors",
                 draft.reasoningType === type
                   ? "border-neutral-800 bg-neutral-50 dark:border-neutral-200 dark:bg-neutral-900"
-                  : "border-neutral-200 dark:border-surface-dark-border"
+                  : "dark:border-surface-dark-border border-neutral-200"
               )}
             >
               {getReasoningTypeLabel(type, draft.engineTypes)}
@@ -125,7 +129,9 @@ function InsightWorkspace({
       </div>
 
       <div>
-        <p className="mb-1.5 text-[10px] uppercase tracking-wide text-neutral-400">{draft.copy.titleHint}</p>
+        <p className="mb-1.5 text-[10px] tracking-wide text-neutral-400 uppercase">
+          {draft.copy.titleHint}
+        </p>
         <input
           value={draft.title}
           onChange={(e) => draft.setTitle(e.target.value)}
@@ -148,7 +154,9 @@ function InsightWorkspace({
 
       <div>
         <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[10px] uppercase tracking-wide text-neutral-400">{draft.copy.contentHint}</p>
+          <p className="text-[10px] tracking-wide text-neutral-400 uppercase">
+            {draft.copy.contentHint}
+          </p>
           <div className="flex gap-2">
             <button type="button" onClick={draft.insertTemplate} className={engineTextLinkClass}>
               {draft.copy.insertTemplate}
@@ -178,7 +186,7 @@ function InsightWorkspace({
         )}
       </div>
 
-      <footer className="sticky bottom-0 border-t border-neutral-100 bg-white py-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+      <footer className="dark:border-surface-dark-border sticky bottom-0 border-t border-neutral-100 bg-white py-3 dark:bg-[#1d1d1b]">
         <button
           type="button"
           onClick={() => void draft.publish()}
@@ -204,7 +212,9 @@ function InstructionsWorkspace({
   return (
     <div className="space-y-4">
       <div>
-        <p className="mb-1.5 text-[10px] uppercase tracking-wide text-neutral-400">{draft.copy.projectHint}</p>
+        <p className="mb-1.5 text-[10px] tracking-wide text-neutral-400 uppercase">
+          {draft.copy.projectHint}
+        </p>
         <ProjectPicker
           projects={draft.projects}
           projectId={draft.projectId}
@@ -215,7 +225,10 @@ function InstructionsWorkspace({
           <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-[11px] dark:border-amber-900/50 dark:bg-amber-950/30">
             <p className="text-amber-900 dark:text-amber-100">{draft.copy.noReportConfig}</p>
             {draft.projectSettingsLink ? (
-              <Link href={draft.projectSettingsLink} className={cn(engineTextLinkClass, "mt-2 inline-block")}>
+              <Link
+                href={draft.projectSettingsLink}
+                className={cn(engineTextLinkClass, "mt-2 inline-block")}
+              >
                 {draft.copy.openProjectSettings}
               </Link>
             ) : null}
@@ -224,8 +237,12 @@ function InstructionsWorkspace({
       </div>
 
       <div>
-        <p className="mb-1 text-[10px] uppercase tracking-wide text-neutral-400">{draft.copy.scopeHint}</p>
-        <p className="mb-2 text-[11px] text-neutral-500 dark:text-neutral-400">{draft.copy.scopeHintDetail}</p>
+        <p className="mb-1 text-[10px] tracking-wide text-neutral-400 uppercase">
+          {draft.copy.scopeHint}
+        </p>
+        <p className="mb-2 text-[11px] text-neutral-500 dark:text-neutral-400">
+          {draft.copy.scopeHintDetail}
+        </p>
         <div className="flex flex-wrap gap-1.5">
           <button
             type="button"
@@ -234,7 +251,7 @@ function InstructionsWorkspace({
               "rounded-full border px-2.5 py-1 text-[11px] font-normal",
               draft.scope === "global"
                 ? "border-neutral-800 bg-neutral-50 dark:border-neutral-200 dark:bg-neutral-900"
-                : "border-neutral-200 dark:border-surface-dark-border"
+                : "dark:border-surface-dark-border border-neutral-200"
             )}
           >
             {draft.copy.scopeGlobal}
@@ -246,7 +263,7 @@ function InstructionsWorkspace({
               "rounded-full border px-2.5 py-1 text-[11px] font-normal",
               draft.scope === "byType"
                 ? "border-neutral-800 bg-neutral-50 dark:border-neutral-200 dark:bg-neutral-900"
-                : "border-neutral-200 dark:border-surface-dark-border"
+                : "dark:border-surface-dark-border border-neutral-200"
             )}
           >
             {draft.copy.scopeByType}
@@ -263,7 +280,7 @@ function InstructionsWorkspace({
                   "rounded-full border px-2.5 py-1 text-[11px] font-normal",
                   draft.instructionType === type
                     ? "border-neutral-800 bg-neutral-50 dark:border-neutral-200 dark:bg-neutral-900"
-                    : "border-neutral-200 dark:border-surface-dark-border"
+                    : "dark:border-surface-dark-border border-neutral-200"
                 )}
               >
                 {getReasoningTypeLabel(type, draft.engineTypes)}
@@ -275,7 +292,9 @@ function InstructionsWorkspace({
 
       <div>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[10px] uppercase tracking-wide text-neutral-400">{draft.copy.contentHint}</p>
+          <p className="text-[10px] tracking-wide text-neutral-400 uppercase">
+            {draft.copy.contentHint}
+          </p>
           <button type="button" onClick={draft.insertTemplate} className={engineTextLinkClass}>
             {draft.copy.insertTemplate}
           </button>
@@ -311,7 +330,7 @@ function InstructionsWorkspace({
         </div>
       </div>
 
-      <footer className="sticky bottom-0 border-t border-neutral-100 bg-white py-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+      <footer className="dark:border-surface-dark-border sticky bottom-0 border-t border-neutral-100 bg-white py-3 dark:bg-[#1d1d1b]">
         <button
           type="button"
           onClick={() => void draft.save()}
@@ -335,8 +354,10 @@ export function ComposeWorkspace({ intent, projectId, onProjectIdChange }: Compo
       : t.reasoningComposer.instructions.workspaceLabel;
 
   return (
-    <section className="mx-auto w-full max-w-2xl border-t border-neutral-100 pt-6 dark:border-surface-dark-border">
-      <h2 className="mb-4 text-[11px] font-normal uppercase tracking-wide text-neutral-400">{label}</h2>
+    <section className="dark:border-surface-dark-border mx-auto w-full max-w-2xl border-t border-neutral-100 pt-6">
+      <h2 className="mb-4 text-[11px] font-normal tracking-wide text-neutral-400 uppercase">
+        {label}
+      </h2>
       {intent === "insight" ? (
         <InsightWorkspace projectId={projectId} onProjectIdChange={onProjectIdChange} />
       ) : (

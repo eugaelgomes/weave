@@ -83,7 +83,7 @@ export const OrganizationImageEditModal = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="w-full max-w-sm rounded-md border border-neutral-200 bg-white p-5 shadow-2xl dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-xl"
+        className="dark:border-surface-dark-border dark:shadow-surface-dark-xl w-full max-w-sm rounded-md border border-neutral-200 bg-white p-5 shadow-2xl dark:bg-[#1d1d1b]"
       >
         <div className="mb-4 flex items-center justify-between">
           <h3 id={titleId} className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
@@ -100,7 +100,7 @@ export const OrganizationImageEditModal = ({
           </button>
         </div>
 
-        <div className="relative mb-4 flex h-32 items-center justify-center overflow-hidden rounded-md border border-dashed border-neutral-200 bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+        <div className="dark:border-surface-dark-border relative mb-4 flex h-32 items-center justify-center overflow-hidden rounded-md border border-dashed border-neutral-200 bg-neutral-50 dark:bg-[#1d1d1b]/50">
           {preview ? (
             <img
               src={preview}
@@ -135,13 +135,9 @@ export const OrganizationImageEditModal = ({
             type="button"
             onClick={handleSave}
             disabled={loading || !file}
-            className="flex items-center gap-2 rounded-md bg-brand-primary-500 px-4 py-2 text-xs font-medium text-white hover:bg-yellow-600 disabled:opacity-50 dark:hover:bg-yellow-600"
+            className="bg-brand-primary-500 flex items-center gap-2 rounded-md px-4 py-2 text-xs font-medium text-white hover:bg-yellow-600 disabled:opacity-50 dark:hover:bg-yellow-600"
           >
-            {loading ? (
-              <Activity className="h-3 w-3 animate-spin" />
-            ) : (
-              <Save className="h-3 w-3" />
-            )}
+            {loading ? <Activity className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
             Salvar
           </button>
         </div>

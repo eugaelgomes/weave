@@ -21,7 +21,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
 
   if (!state.created.projectId) {
     return (
-      <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+      <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
         <div className="flex items-start gap-2 text-sm text-neutral-700 dark:text-neutral-200">
           <AlertCircle className="mt-0.5 h-4 w-4 text-neutral-400" aria-hidden />
           Crie o projeto no passo “Básico” para convidar pessoas.
@@ -127,13 +127,14 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
   };
 
   return (
-    <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+    <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
       <div className="mb-2 flex items-start gap-2">
         <Users className="mt-0.5 h-4 w-4 text-neutral-400" aria-hidden />
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">Pessoas</h2>
+          <h2 className="text-xs font-bold tracking-wider text-neutral-400 uppercase">Pessoas</h2>
           <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
-            Pesquise por nome ou email e adicione à lista. Os convites são enviados ao aplicar este passo.
+            Pesquise por nome ou email e adicione à lista. Os convites são enviados ao aplicar este
+            passo.
           </p>
         </div>
       </div>
@@ -147,7 +148,10 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
       <div className="mt-3 space-y-2">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <div className="min-w-0 flex-1 space-y-1.5">
-            <label htmlFor="collab-search" className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+            <label
+              htmlFor="collab-search"
+              className="text-xs font-medium text-neutral-600 dark:text-neutral-400"
+            >
               Procurar
             </label>
             <input
@@ -156,18 +160,21 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
               value={collabSearch}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCollabSearch(e.target.value)}
               placeholder="Nome ou email (mín. 2 caracteres)…"
-              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm outline-none transition placeholder:text-neutral-400 focus:border-brand-primary-500 focus:ring-2 focus:ring-brand-primary-500/20 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-100"
+              className="focus:border-brand-primary-500 focus:ring-brand-primary-500/20 dark:border-surface-dark-border-strong w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm transition outline-none placeholder:text-neutral-400 focus:ring-2 dark:bg-neutral-800 dark:text-neutral-100"
             />
           </div>
           <div className="space-y-1.5 sm:w-44">
-            <label htmlFor="invite-role" className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+            <label
+              htmlFor="invite-role"
+              className="text-xs font-medium text-neutral-600 dark:text-neutral-400"
+            >
               Papel ao adicionar
             </label>
             <select
               id="invite-role"
               value={inviteRole}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setInviteRole(e.target.value)}
-              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-100"
+              className="dark:border-surface-dark-border-strong w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-sm dark:bg-neutral-800 dark:text-neutral-100"
             >
               {COLLAB_ROLES.map((r) => (
                 <option key={r.value} value={r.value}>
@@ -179,7 +186,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
         </div>
 
         {collabSearch.trim().length >= 2 && (
-          <div className="max-h-48 overflow-y-auto rounded-md border border-neutral-100 bg-neutral-50/90 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+          <div className="dark:border-surface-dark-border max-h-48 overflow-y-auto rounded-md border border-neutral-100 bg-neutral-50/90 dark:bg-[#1d1d1b]/50">
             {searchingUsers ? (
               <div className="flex items-center justify-center gap-2 py-2 text-xs text-neutral-500">
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> A procurar…
@@ -187,7 +194,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
             ) : searchResults.length === 0 ? (
               <p className="py-2 text-center text-xs text-neutral-500">Nenhum resultado.</p>
             ) : (
-              <ul className="divide-y divide-neutral-100 dark:divide-surface-dark-border">
+              <ul className="dark:divide-surface-dark-border divide-y divide-neutral-100">
                 {searchResults.map((user: SearchUser) => (
                   <li
                     key={user.id}
@@ -217,7 +224,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
                     <button
                       type="button"
                       onClick={() => addPendingCollaborator(user, inviteRole)}
-                      className="inline-flex shrink-0 items-center gap-1 self-start rounded-md bg-brand-primary-500 px-2 py-2 text-xs font-semibold text-neutral-900 hover:brightness-95 sm:self-center"
+                      className="bg-brand-primary-500 inline-flex shrink-0 items-center gap-1 self-start rounded-md px-2 py-2 text-xs font-semibold text-neutral-900 hover:brightness-95 sm:self-center"
                     >
                       <Plus className="h-3.5 w-3.5" aria-hidden />
                       Adicionar
@@ -230,11 +237,11 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
         )}
 
         {state.draft.collaborators.length > 0 && (
-          <ul className="space-y-2 rounded-md border border-neutral-100 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/40">
+          <ul className="dark:border-surface-dark-border space-y-2 rounded-md border border-neutral-100 bg-white p-2 dark:bg-[#1d1d1b]/40">
             {state.draft.collaborators.map((p) => (
               <li
                 key={p.user.id}
-                className="flex flex-col gap-2 rounded-md border border-neutral-50 px-2 py-2 dark:border-surface-dark-border sm:flex-row sm:items-center sm:justify-between"
+                className="dark:border-surface-dark-border flex flex-col gap-2 rounded-md border border-neutral-50 px-2 py-2 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex min-w-0 items-center gap-2">
                   {p.user.avatar_url ? (
@@ -251,7 +258,9 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
                     </div>
                   )}
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-medium">{p.user.name || p.user.username}</div>
+                    <div className="truncate text-sm font-medium">
+                      {p.user.name || p.user.username}
+                    </div>
                     <div className="text-xs text-neutral-500">
                       {COLLAB_ROLES.find((r) => r.value === p.role)?.label ?? p.role}
                       {errorByUserId[p.user.id] ? (
@@ -265,7 +274,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
                 <button
                   type="button"
                   onClick={() => removePendingCollaborator(p.user.id)}
-                  className="shrink-0 self-start rounded-md p-1.5 text-neutral-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 sm:self-center"
+                  className="shrink-0 self-start rounded-md p-1.5 text-neutral-400 hover:bg-red-50 hover:text-red-600 sm:self-center dark:hover:bg-red-950/30 dark:hover:text-red-400"
                   aria-label="Remover"
                   title="Remover"
                 >
@@ -277,7 +286,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
         )}
       </div>
 
-      <div className="mt-3 flex items-center justify-end gap-2 border-t border-neutral-200 pt-2 dark:border-surface-dark-border">
+      <div className="dark:border-surface-dark-border mt-3 flex items-center justify-end gap-2 border-t border-neutral-200 pt-2">
         <button
           type="button"
           onClick={() => actions.goToStep("ai_reports")}
@@ -289,7 +298,7 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
           type="button"
           disabled={applyBusy}
           onClick={onApplyAndContinue}
-          className="inline-flex items-center gap-2 rounded-md bg-brand-primary-500 px-2 py-2 text-sm font-bold text-neutral-950 transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+          className="bg-brand-primary-500 inline-flex items-center gap-2 rounded-md px-2 py-2 text-sm font-bold text-neutral-950 transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {applyBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
           Aplicar e continuar
@@ -298,4 +307,3 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
     </section>
   );
 }
-

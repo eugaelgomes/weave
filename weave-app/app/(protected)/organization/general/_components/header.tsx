@@ -20,7 +20,7 @@ const OrganizationHeroCard = ({
   onEditBanner: () => void;
   onOpenEditModal: () => void;
 }) => (
-  <div className="group relative overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+  <div className="group dark:border-surface-dark-border dark:shadow-surface-dark-sm relative overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:bg-[#1d1d1b]">
     <div className="relative h-48 w-full bg-neutral-100 dark:bg-[#1d1d1b]">
       {workspace?.banner_url ? (
         <img
@@ -46,7 +46,7 @@ const OrganizationHeroCard = ({
     <div className="px-6 pb-6">
       <div className="relative -mt-12 mb-4 flex items-end justify-between">
         <div className="relative">
-          <div className="h-24 w-24 overflow-hidden rounded-md border-4 border-white bg-neutral-50 shadow-md dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:shadow-surface-dark-md">
+          <div className="dark:border-surface-dark-border-strong dark:shadow-surface-dark-md h-24 w-24 overflow-hidden rounded-md border-4 border-white bg-neutral-50 shadow-md dark:bg-[#1d1d1b]">
             {workspace?.logo_url ? (
               <img
                 src={getStorageUrl(workspace.logo_url)}
@@ -77,7 +77,7 @@ const OrganizationHeroCard = ({
             onClick={onOpenEditModal}
             aria-label="Editar informações da organização"
             title="Editar informações"
-            className="mb-1 rounded-md border border-neutral-200 bg-white p-2 text-neutral-700 hover:bg-neutral-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-800"
+            className="dark:border-surface-dark-border mb-1 rounded-md border border-neutral-200 bg-white p-2 text-neutral-700 hover:bg-neutral-50 dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-800"
           >
             <Edit3 className="h-3.5 w-3.5" />
           </button>
@@ -163,7 +163,7 @@ const EditOrganizationInfoModal = ({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
-        className="w-full max-w-md rounded-md border border-neutral-200 bg-white p-6 shadow-2xl dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-xl"
+        className="dark:border-surface-dark-border dark:shadow-surface-dark-xl w-full max-w-md rounded-md border border-neutral-200 bg-white p-6 shadow-2xl dark:bg-[#1d1d1b]"
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 id={titleId} className="text-base font-bold text-neutral-900 dark:text-neutral-100">
@@ -225,7 +225,7 @@ const EditOrganizationInfoModal = ({
             </button>
             <button
               type="submit"
-              className="rounded-md bg-brand-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-600 dark:hover:bg-yellow-600"
+              className="bg-brand-primary-500 rounded-md px-4 py-2 text-sm font-medium text-white hover:bg-yellow-600 dark:hover:bg-yellow-600"
             >
               Salvar
             </button>

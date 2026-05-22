@@ -24,7 +24,10 @@ import {
 
 const INITIAL_CHIPS: ComposeChipId[] = ["publish_insight", "tune_instructions", "back_feed"];
 
-function chipLabel(chip: ComposeChipId, copy: ReturnType<typeof useLanguage>["t"]["reasoningComposer"]["conversation"]): string {
+function chipLabel(
+  chip: ComposeChipId,
+  copy: ReturnType<typeof useLanguage>["t"]["reasoningComposer"]["conversation"]
+): string {
   switch (chip) {
     case "publish_insight":
       return copy.optionPublishInsight;
@@ -127,14 +130,12 @@ export function useComposeSession(
     appendMessage({
       id: `user-deeplink-${Date.now()}`,
       role: "user",
-      content:
-        normalized === "insight" ? conv.optionPublishInsight : conv.optionTuneInstructions,
+      content: normalized === "insight" ? conv.optionPublishInsight : conv.optionTuneInstructions,
     });
     appendMessage({
       id: `assistant-deeplink-${Date.now()}`,
       role: "assistant",
-      content:
-        normalized === "insight" ? conv.userChoseInsight : conv.userChoseInstructions,
+      content: normalized === "insight" ? conv.userChoseInsight : conv.userChoseInstructions,
     });
   }, [initialIntentParam, conv, appendMessage]);
 

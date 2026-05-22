@@ -397,11 +397,8 @@ export function CalendarPreview({
     const gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
 
     return (
-      <div className="flex flex-1 flex-col gap-1 overflow-hidden border-t border-neutral-200 bg-neutral-100 p-1 dark:border-surface-dark-border dark:bg-neutral-800">
-        <div
-          className="grid rounded-md bg-white dark:bg-[#1d1d1b]"
-          style={{ gridTemplateColumns }}
-        >
+      <div className="dark:border-surface-dark-border flex flex-1 flex-col gap-1 overflow-hidden border-t border-neutral-200 bg-neutral-100 p-1 dark:bg-neutral-800">
+        <div className="grid rounded-md bg-white dark:bg-[#1d1d1b]" style={{ gridTemplateColumns }}>
           {WEEK_DAYS.slice(0, cols).map((day) => (
             <div
               key={day}
@@ -515,9 +512,9 @@ export function CalendarPreview({
     return (
       <div
         ref={scrollContainerRef}
-        className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 flex flex-1 flex-col overflow-x-hidden overflow-y-auto border-t border-neutral-200 bg-white [scrollbar-gutter:stable] dark:border-surface-dark-border dark:bg-[#1d1d1b] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
+        className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 dark:border-surface-dark-border flex flex-1 flex-col overflow-x-hidden overflow-y-auto border-t border-neutral-200 bg-white [scrollbar-gutter:stable] dark:bg-[#1d1d1b] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
       >
-        <div className="sticky top-0 z-20 grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 border-b border-neutral-200 [--label-w:40px] sm:[--label-w:56px] dark:divide-surface-dark-border dark:border-surface-dark-border">
+        <div className="dark:divide-surface-dark-border dark:border-surface-dark-border sticky top-0 z-20 grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 border-b border-neutral-200 [--label-w:40px] sm:[--label-w:56px]">
           <div className="bg-neutral-50 px-1 py-1 text-right text-[10px] font-medium text-neutral-500 dark:bg-[#1d1d1b]/50 dark:text-neutral-400">
             {texts.allDay}
           </div>
@@ -583,14 +580,14 @@ export function CalendarPreview({
         </div>
 
         <div
-          className="relative grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 [--label-w:40px] sm:[--label-w:56px] dark:divide-surface-dark-border"
+          className="dark:divide-surface-dark-border relative grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 [--label-w:40px] sm:[--label-w:56px]"
           style={{ height: `${TOTAL_GRID_HEIGHT}px` }}
         >
           <div className="pointer-events-none absolute inset-0 z-0">
             {hours.map((hour) => (
               <div
                 key={`week-hour-line-${hour}`}
-                className="absolute right-0 left-0 border-b border-neutral-200 dark:border-surface-dark-border"
+                className="dark:border-surface-dark-border absolute right-0 left-0 border-b border-neutral-200"
                 style={{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }}
               />
             ))}
@@ -787,7 +784,7 @@ export function CalendarPreview({
         className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 flex-1 overflow-y-auto bg-white dark:bg-[#1d1d1b] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
       >
         {allDayEvents.length > 0 && (
-          <div className="border-b border-neutral-200 bg-neutral-50 px-1 py-1 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+          <div className="dark:border-surface-dark-border border-b border-neutral-200 bg-neutral-50 px-1 py-1 dark:bg-[#1d1d1b]/50">
             <div className="flex items-center gap-2 pl-10 sm:pl-14">
               <span className="text-[10px] font-medium text-neutral-500 sm:text-xs">
                 {texts.allDay}
@@ -835,7 +832,7 @@ export function CalendarPreview({
                     setSelectedDate(selected);
                     setIsCreateModalOpen(true);
                   }}
-                  className={`absolute right-0 left-0 cursor-pointer border-b border-neutral-200 dark:border-surface-dark-border ${
+                  className={`dark:border-surface-dark-border absolute right-0 left-0 cursor-pointer border-b border-neutral-200 ${
                     isCurrentHour
                       ? "bg-yellow-50/30 hover:bg-yellow-50/40 dark:bg-yellow-900/5 dark:hover:bg-yellow-900/10"
                       : "hover:bg-neutral-50 dark:hover:bg-neutral-900/20"
@@ -1006,7 +1003,7 @@ export function CalendarPreview({
         onClick={() => setViewEventModal(null)}
       >
         <div
-          className="relative w-full max-w-[420px] overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-2xl dark:shadow-surface-dark-xl dark:border-surface-dark-border dark:bg-[#1d1d1b]"
+          className="dark:shadow-surface-dark-xl dark:border-surface-dark-border relative w-full max-w-[420px] overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-2xl dark:bg-[#1d1d1b]"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-end gap-1 bg-white px-4 pt-3 pb-0 dark:bg-[#1d1d1b]">
@@ -1126,10 +1123,10 @@ export function CalendarPreview({
     <>
       {renderViewEventModal()}
       <div
-        className={`flex overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] ${className}`}
+        className={`dark:shadow-surface-dark-sm dark:border-surface-dark-border flex overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-sm dark:bg-[#1d1d1b] ${className}`}
       >
         <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex items-center gap-1.5 overflow-x-auto border-b border-neutral-200 bg-neutral-50 p-1 sm:p-1.5 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50 [&::-webkit-scrollbar]:hidden">
+          <div className="dark:border-surface-dark-border flex items-center gap-1.5 overflow-x-auto border-b border-neutral-200 bg-neutral-50 p-1 sm:p-1.5 dark:bg-[#1d1d1b]/50 [&::-webkit-scrollbar]:hidden">
             <div className="flex shrink-0 items-center gap-1">
               <button
                 onClick={() => navigate(-1)}
@@ -1140,7 +1137,7 @@ export function CalendarPreview({
                 <ChevronLeft size={14} />
               </button>
 
-              <span className="min-w-[80px] text-center text-[10px] font-bold tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
+              <span className="min-w-[80px] text-center text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                 {headerTitle}
               </span>
 
@@ -1184,7 +1181,7 @@ export function CalendarPreview({
             <div className="ml-auto flex shrink-0 items-center gap-1.5">
               <button
                 onClick={goToToday}
-                className="rounded border border-neutral-200 px-1 py-0.5 text-[8.5px] font-bold tracking-wider text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700 dark:border-surface-dark-border dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                className="dark:border-surface-dark-border rounded border border-neutral-200 px-1 py-0.5 text-[8.5px] font-bold tracking-wider text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
                 type="button"
               >
                 {texts.today}
@@ -1195,7 +1192,7 @@ export function CalendarPreview({
                   onClick={() => {
                     refreshEventsForYear(currentDate.getFullYear()).catch(() => {});
                   }}
-                  className="flex items-center justify-center gap-1 rounded border border-neutral-200 px-1 py-0.5 text-[8.5px] font-bold text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-800 dark:border-surface-dark-border dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
+                  className="dark:border-surface-dark-border flex items-center justify-center gap-1 rounded border border-neutral-200 px-1 py-0.5 text-[8.5px] font-bold text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
                   title={locale.startsWith("pt") ? "Atualizar" : "Refresh"}
                   type="button"
                 >

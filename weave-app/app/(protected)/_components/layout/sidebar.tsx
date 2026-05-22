@@ -58,8 +58,7 @@ interface NavigationItem {
 const NAV_ROW_CLASS =
   "flex w-full min-w-0 items-center gap-0 rounded-md px-2 py-1 text-[13px] font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-brand-yellow/50 focus-visible:outline-none";
 
-const NAV_ICON_RAIL_CLASS =
-  "relative flex size-6 shrink-0 items-center justify-center";
+const NAV_ICON_RAIL_CLASS = "relative flex size-6 shrink-0 items-center justify-center";
 
 const COLLAPSED_LABEL_CLASS =
   "flex min-h-0 min-w-0 flex-1 items-center gap-2 overflow-hidden transition-[opacity,max-width] duration-200 ease-out";
@@ -124,13 +123,13 @@ function NavItem({
     <li>
       <div
         className={cn(
-          "flex w-full min-w-0 items-center gap-0 rounded-md font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-brand-yellow/50 focus-visible:outline-none",
+          "focus-visible:ring-brand-yellow/50 flex w-full min-w-0 items-center gap-0 rounded-md font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none",
           rowPadding,
           fontSize,
           isRoot && isCollapsed ? "justify-center px-1" : "",
           showActiveHighlight
             ? "bg-brand-yellow/40 text-slate-950"
-            : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6",
+            : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6"
         )}
       >
         <Link
@@ -141,7 +140,7 @@ function NavItem({
           className={cn(
             "group flex min-w-0 items-center",
             isRoot && isCollapsed ? "justify-center" : "flex-1 gap-3",
-            !isRoot && "gap-3",
+            !isRoot && "gap-3"
           )}
         >
           {isRoot ? (
@@ -151,7 +150,7 @@ function NavItem({
                 className={cn(
                   iconSize,
                   "shrink-0 transition-colors",
-                  active ? "text-slate-950" : "text-slate-950 dark:text-gray-400",
+                  active ? "text-slate-950" : "text-slate-950 dark:text-gray-400"
                 )}
               />
               {isCollapsed && item.badge !== undefined && item.badge > 0 ? (
@@ -164,7 +163,7 @@ function NavItem({
               className={cn(
                 iconSize,
                 "shrink-0 transition-colors",
-                showActiveHighlight ? "text-slate-950" : "text-gray-800 dark:text-gray-400",
+                showActiveHighlight ? "text-slate-950" : "text-gray-800 dark:text-gray-400"
               )}
             />
           )}
@@ -174,7 +173,7 @@ function NavItem({
             <div
               className={cn(
                 COLLAPSED_LABEL_CLASS,
-                isCollapsed ? "pointer-events-none max-w-0 opacity-0" : "opacity-100",
+                isCollapsed ? "pointer-events-none max-w-0 opacity-0" : "opacity-100"
               )}
             >
               <span className="truncate">{item.label}</span>
@@ -199,17 +198,21 @@ function NavItem({
               event.stopPropagation();
               onToggle(item.path);
             }}
-            aria-label={isExpanded ? t.nav.collapseItem.replace("{label}", item.label) : t.nav.expandItem.replace("{label}", item.label)}
+            aria-label={
+              isExpanded
+                ? t.nav.collapseItem.replace("{label}", item.label)
+                : t.nav.expandItem.replace("{label}", item.label)
+            }
             className={cn(
               "focus-visible:ring-brand-yellow/50 shrink-0 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-black/5 hover:text-gray-700 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-400 dark:hover:bg-white/6",
-              isRoot ? "flex size-6" : "ml-1 flex size-5",
+              isRoot ? "flex size-6" : "ml-1 flex size-5"
             )}
           >
             <ChevronRight
               className={cn(
                 "shrink-0 transition-transform duration-200",
                 isRoot ? "size-3.5" : "size-3",
-                isExpanded ? "text-brand-yellow rotate-90" : "text-gray-500 dark:text-gray-400",
+                isExpanded ? "text-brand-yellow rotate-90" : "text-gray-500 dark:text-gray-400"
               )}
             />
           </button>
@@ -221,7 +224,7 @@ function NavItem({
         <ul
           className={cn(
             "mt-0.5 space-y-0",
-            SUB_LIST_PL_BY_DEPTH[Math.min(depth, SUB_LIST_PL_BY_DEPTH.length - 1)],
+            SUB_LIST_PL_BY_DEPTH[Math.min(depth, SUB_LIST_PL_BY_DEPTH.length - 1)]
           )}
         >
           {item.subItems!.map((subItem) => (
@@ -248,14 +251,26 @@ function NavItem({
 // ---------------------------------------------------------------------------
 
 interface RecentItemsProps {
-  recentItems: { type: string; id: string; title: string; icon: LucideIcon }[];
+  recentItems: {
+    type: string;
+    id: string;
+    public_id?: string | null;
+    title: string;
+    icon: LucideIcon;
+  }[];
   pathname: string;
   onLinkClick: () => void;
   emptyLabel: string;
   sectionLabel: string;
 }
 
-function RecentItems({ recentItems, pathname, onLinkClick, emptyLabel, sectionLabel }: RecentItemsProps) {
+function RecentItems({
+  recentItems,
+  pathname,
+  onLinkClick,
+  emptyLabel,
+  sectionLabel,
+}: RecentItemsProps) {
   return (
     <div className="mt-3">
       <h2 className="mb-1.5 px-3 text-[9px] font-bold tracking-widest text-gray-600 uppercase dark:text-gray-500">
@@ -270,7 +285,7 @@ function RecentItems({ recentItems, pathname, onLinkClick, emptyLabel, sectionLa
           </li>
         ) : (
           recentItems.map((item) => {
-            const path = `/notes/${item.id}`;
+            const path = `/notes/${item.public_id || item.id}`;
             const active = isPathActive(pathname, path);
             const ItemIcon = item.icon;
 
@@ -284,13 +299,13 @@ function RecentItems({ recentItems, pathname, onLinkClick, emptyLabel, sectionLa
                     "group flex items-center gap-3 rounded-md px-3 py-1 transition-all duration-200",
                     active
                       ? "bg-brand-yellow/50 text-slate-950"
-                      : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6",
+                      : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6"
                   )}
                 >
                   <ItemIcon
                     className={cn(
                       "h-3.5 w-3.5 shrink-0 transition-colors",
-                      active ? "text-slate-950" : "text-gray-800 dark:text-gray-400",
+                      active ? "text-slate-950" : "text-gray-800 dark:text-gray-400"
                     )}
                   />
                   <span className="truncate text-[12px]">{item.title}</span>
@@ -325,7 +340,7 @@ function SidebarFooter({ isCollapsed, helpLabel }: SidebarFooterProps) {
         className={cn(
           NAV_ROW_CLASS,
           isCollapsed ? "justify-center px-1" : "gap-3",
-          "focus-visible:ring-brand-yellow/50 text-gray-700 hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6",
+          "focus-visible:ring-brand-yellow/50 text-gray-700 hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
         )}
       >
         <span className={NAV_ICON_RAIL_CLASS}>
@@ -334,7 +349,7 @@ function SidebarFooter({ isCollapsed, helpLabel }: SidebarFooterProps) {
         <span
           className={cn(
             COLLAPSED_LABEL_CLASS,
-            isCollapsed ? "pointer-events-none max-w-0 opacity-0" : "opacity-100",
+            isCollapsed ? "pointer-events-none max-w-0 opacity-0" : "opacity-100"
           )}
         >
           <span className="truncate">{helpLabel}</span>
@@ -386,6 +401,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   const recentItems = recentNotes.map((note) => ({
     type: "note" as const,
     id: note.id,
+    public_id: note.public_id,
     title: note.title || t.common.untitled,
     icon: Book,
   }));
@@ -427,9 +443,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       label: t.nav.weaveFlow,
     },
     { path: "/settings", icon: Settings, label: t.nav.settingsLabel },
-    ...(hasOrg
-      ? [{ path: "/organization/general", icon: Users, label: t.nav.workspace }]
-      : []),
+    ...(hasOrg ? [{ path: "/organization/general", icon: Users, label: t.nav.workspace }] : []),
   ];
 
   return (
@@ -454,7 +468,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
         <div
           className={cn(
             "hidden shrink-0 items-center py-1 lg:flex",
-            isCollapsed ? "justify-center px-1" : "px-2 w-full",
+            isCollapsed ? "justify-center px-1" : "w-full px-2"
           )}
         >
           {isCollapsed ? (
@@ -463,27 +477,25 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
                 <button
                   type="button"
                   onClick={toggleCollapse}
-                  className="focus-visible:ring-brand-yellow/50  flex size-7 items-center justify-center rounded-md text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
+                  className="focus-visible:ring-brand-yellow/50 flex size-7 items-center justify-center rounded-md text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
                   title={t.nav.expandMenu}
                   aria-label={t.nav.expandMenu}
                 >
-                 <ChevronsRight size={14} />
+                  <ChevronsRight size={14} />
                 </button>
               ) : null}
             </div>
-          ) : (
-            toggleCollapse ? (
-              <button
-                type="button"
-                onClick={toggleCollapse}
-                className="relative focus-visible:ring-brand-yellow/50 bg-neutral-200/20 dark:bg-neutral-800/40 flex w-full h-7 items-center justify-end pr-2.5 rounded-md text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
-                title={t.nav.collapseMenu}
-                aria-label={t.nav.collapseMenu}
-              >
-                <ChevronsLeft size={14} />
-              </button>
-            ) : null
-          )}
+          ) : toggleCollapse ? (
+            <button
+              type="button"
+              onClick={toggleCollapse}
+              className="focus-visible:ring-brand-yellow/50 relative flex h-7 w-full items-center justify-end rounded-md bg-neutral-200/20 pr-2.5 text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:bg-neutral-800/40 dark:text-gray-300 dark:hover:bg-white/6"
+              title={t.nav.collapseMenu}
+              aria-label={t.nav.collapseMenu}
+            >
+              <ChevronsLeft size={14} />
+            </button>
+          ) : null}
         </div>
 
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-black/15 dark:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent">

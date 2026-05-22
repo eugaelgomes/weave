@@ -26,7 +26,7 @@ function ModalBase({ isOpen, onClose, title, children, footer }: ModalBaseProps)
   return (
     <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/40 p-4 backdrop-blur-sm duration-300">
       <div className="absolute inset-0" onClick={onClose} />
-      <div className="relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-md border border-t-4 border-neutral-200 border-t-yellow-500 bg-white shadow-2xl dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-xl">
+      <div className="dark:border-surface-dark-border dark:shadow-surface-dark-xl relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-md border border-t-4 border-neutral-200 border-t-yellow-500 bg-white shadow-2xl dark:bg-[#1d1d1b]">
         <button
           onClick={onClose}
           title="Close modal"
@@ -36,11 +36,13 @@ function ModalBase({ isOpen, onClose, title, children, footer }: ModalBaseProps)
           <X className="h-4 w-4" />
         </button>
         <div className="p-5 pb-2">
-          <h2 className="text-base leading-tight font-bold text-neutral-900 dark:text-white">{title}</h2>
+          <h2 className="text-base leading-tight font-bold text-neutral-900 dark:text-white">
+            {title}
+          </h2>
         </div>
         <div className="flex-1 overflow-y-auto p-5 pt-2 text-xs">{children}</div>
         {footer ? (
-          <div className="flex justify-end gap-2 border-t border-neutral-100 bg-neutral-50/50 p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+          <div className="dark:border-surface-dark-border flex justify-end gap-2 border-t border-neutral-100 bg-neutral-50/50 p-3 dark:bg-[#1d1d1b]/50">
             {footer}
           </div>
         ) : null}
@@ -114,8 +116,7 @@ export function OrganizationInviteModal({
   }, [showSuperAdminWorkspaceRole]);
 
   /** Workspace admins do not need a project-level role in an area invite. */
-  const skipProjectMemberRole =
-    role === "ADMIN" || role === "SUPER_ADMIN";
+  const skipProjectMemberRole = role === "ADMIN" || role === "SUPER_ADMIN";
 
   useEffect(() => {
     if (!isOpen) return;
@@ -157,7 +158,9 @@ export function OrganizationInviteModal({
     !emailLocalPartContainsPlus(email.trim());
 
   const inviteEmailPlusError =
-    email.trim().length > 0 && emailLocalPartContainsPlus(email) ? t.organizationMembers.inviteEmailPlusAliasNotAllowed : null;
+    email.trim().length > 0 && emailLocalPartContainsPlus(email)
+      ? t.organizationMembers.inviteEmailPlusAliasNotAllowed
+      : null;
 
   const inputClass =
     "w-full rounded-md border border-neutral-200 py-1.5 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1d] dark:text-white";
@@ -219,7 +222,9 @@ export function OrganizationInviteModal({
             />
           </div>
           {inviteEmailPlusError ? (
-            <p className="mt-1 text-[10px] font-medium text-red-600 dark:text-red-400">{inviteEmailPlusError}</p>
+            <p className="mt-1 text-[10px] font-medium text-red-600 dark:text-red-400">
+              {inviteEmailPlusError}
+            </p>
           ) : null}
         </div>
         <div>

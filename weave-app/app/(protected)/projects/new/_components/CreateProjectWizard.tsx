@@ -136,7 +136,10 @@ export function CreateProjectWizard() {
     }
   }, [state.activeStep, state.created.projectId, state.draft, state.setup, user?.id]);
 
-  const stepIndex = useMemo(() => CREATE_PROJECT_WIZARD_STEPS.indexOf(state.activeStep), [state.activeStep]);
+  const stepIndex = useMemo(
+    () => CREATE_PROJECT_WIZARD_STEPS.indexOf(state.activeStep),
+    [state.activeStep]
+  );
 
   const actions: CreateProjectWizardActions = useMemo(
     () => ({
@@ -152,8 +155,12 @@ export function CreateProjectWizard() {
           return { ...prev, activeStep: CREATE_PROJECT_WIZARD_STEPS[i] };
         }),
       setBasicDraft: (key, value) =>
-        setState((prev) => ({ ...prev, draft: { ...prev.draft, basic: { ...prev.draft.basic, [key]: value } } })),
-      setIconFile: (file) => setState((prev) => ({ ...prev, draft: { ...prev.draft, iconFile: file } })),
+        setState((prev) => ({
+          ...prev,
+          draft: { ...prev.draft, basic: { ...prev.draft.basic, [key]: value } },
+        })),
+      setIconFile: (file) =>
+        setState((prev) => ({ ...prev, draft: { ...prev.draft, iconFile: file } })),
       setCustomizeStages: (on) =>
         setState((prev) => ({ ...prev, draft: { ...prev.draft, customizeStages: on } })),
       setStageDrafts: (rows) =>
@@ -289,8 +296,12 @@ export function CreateProjectWizard() {
             showOpenProject ? (
               <button
                 type="button"
-                onClick={() => router.push(`/projects/${state.created.project?.public_id || state.created.projectId}`)}
-                className="inline-flex items-center gap-2 rounded-md bg-brand-primary-500 px-2 py-1.5 text-xs font-bold text-neutral-950 transition hover:brightness-95"
+                onClick={() =>
+                  router.push(
+                    `/projects/${state.created.project?.public_id || state.created.projectId}`
+                  )
+                }
+                className="bg-brand-primary-500 inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-bold text-neutral-950 transition hover:brightness-95"
               >
                 <CheckCircle2 className="h-4 w-4" aria-hidden />
                 Abrir projeto agora
@@ -306,11 +317,12 @@ export function CreateProjectWizard() {
             Novo projeto
           </h1>
           <p className="mt-1.5 text-sm text-neutral-500 dark:text-neutral-400">
-            Crie o projeto e (se quiser) configure etapas, convide pessoas e ative relatórios — por etapas.
+            Crie o projeto e (se quiser) configure etapas, convide pessoas e ative relatórios — por
+            etapas.
           </p>
         </div>
 
-        <div className="mb-3 rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+        <div className="dark:border-surface-dark-border mb-3 rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
           <nav aria-label="Etapas" className="flex flex-wrap gap-1.5">
             {CREATE_PROJECT_WIZARD_STEPS.map((s, i) => {
               const active = state.activeStep === s;
@@ -341,12 +353,14 @@ export function CreateProjectWizard() {
         <div className="space-y-2">
           {state.activeStep === "basic" && <BasicStep state={state} actions={actions} />}
           {state.activeStep === "stages" && <StagesStep state={state} actions={actions} />}
-          {state.activeStep === "collaborators" && <CollaboratorsStep state={state} actions={actions} />}
+          {state.activeStep === "collaborators" && (
+            <CollaboratorsStep state={state} actions={actions} />
+          )}
           {state.activeStep === "ai_reports" && <AiReportsStep state={state} actions={actions} />}
           {state.activeStep === "review" && <ReviewStep state={state} actions={actions} />}
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-2 border-t border-neutral-200 pt-2 dark:border-surface-dark-border">
+        <div className="dark:border-surface-dark-border mt-3 flex items-center justify-between gap-2 border-t border-neutral-200 pt-2">
           <button
             type="button"
             onClick={actions.back}
@@ -374,4 +388,3 @@ export function CreateProjectWizard() {
     </>
   );
 }
-

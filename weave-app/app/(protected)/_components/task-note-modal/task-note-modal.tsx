@@ -4,9 +4,18 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Loader2 } from "lucide-react";
 
-import { useNotes, type Note, type Block, type UpdateNoteData } from "@/app/_contexts/notes-context";
+import {
+  useNotes,
+  type Note,
+  type Block,
+  type UpdateNoteData,
+} from "@/app/_contexts/notes-context";
 import { useOrganization } from "@/app/_contexts/organization-context";
-import { useProjects, type ProjectStage, type TaskPriority } from "@/app/_contexts/projects-context";
+import {
+  useProjects,
+  type ProjectStage,
+  type TaskPriority,
+} from "@/app/_contexts/projects-context";
 import { NoteCommentsProvider, useNoteComments } from "@/app/_contexts/note-comments-context";
 import { NoteCommentsSidebar } from "@/app/(protected)/notes/_components/note-comments-sidebar";
 import { useTaskNoteModal, type TaskNoteModalMode } from "./use-task-note-modal";
@@ -102,17 +111,14 @@ export function TaskNoteModal() {
     [applyServerRevisionToRef]
   );
 
-  const enqueueNoteMutation = useCallback(
-    async <T,>(task: () => Promise<T>): Promise<T> => {
-      const run = noteSaveQueueRef.current.then(task, task);
-      noteSaveQueueRef.current = run.then(
-        () => undefined,
-        () => undefined
-      );
-      return run;
-    },
-    []
-  );
+  const enqueueNoteMutation = useCallback(async <T,>(task: () => Promise<T>): Promise<T> => {
+    const run = noteSaveQueueRef.current.then(task, task);
+    noteSaveQueueRef.current = run.then(
+      () => undefined,
+      () => undefined
+    );
+    return run;
+  }, []);
 
   const saveAndApply = useCallback(
     async (data: UpdateNoteData): Promise<Note | null> => {
@@ -132,11 +138,12 @@ export function TaskNoteModal() {
           return updated;
         } catch (err) {
           if (isConflictError(err)) {
-            const data = (err.data as {
-              currentRevision?: number | null;
-              conflictFields?: string[];
-              serverNote?: Partial<Note>;
-            }) || {};
+            const data =
+              (err.data as {
+                currentRevision?: number | null;
+                conflictFields?: string[];
+                serverNote?: Partial<Note>;
+              }) || {};
             applyServerRevisionToRef(data.currentRevision);
             setNoteConflict({
               noteId: note.id,
@@ -152,7 +159,15 @@ export function TaskNoteModal() {
         }
       });
     },
-    [note, enqueueNoteMutation, updateNote, applyServerNote, applyServerRevisionToRef, parseNoteRevision, callbacks]
+    [
+      note,
+      enqueueNoteMutation,
+      updateNote,
+      applyServerNote,
+      applyServerRevisionToRef,
+      parseNoteRevision,
+      callbacks,
+    ]
   );
 
   const loadTaskPriorities = useCallback(
@@ -335,7 +350,17 @@ export function TaskNoteModal() {
     } finally {
       setIsSaving(false);
     }
-  }, [projectId, stageId, parentNoteId, editingTitle, editingDescription, createTaskInStage, createNoteService, callbacks, closeModal]);
+  }, [
+    projectId,
+    stageId,
+    parentNoteId,
+    editingTitle,
+    editingDescription,
+    createTaskInStage,
+    createNoteService,
+    callbacks,
+    closeModal,
+  ]);
 
   const handleDelete = useCallback(async () => {
     if (!note) return;
@@ -413,7 +438,15 @@ export function TaskNoteModal() {
         setIsSaving(false);
       }
     },
-    [note, saveAndApply, addNoteToProject, getProjectStages, getNoteById, applyServerNote, loadTaskPriorities]
+    [
+      note,
+      saveAndApply,
+      addNoteToProject,
+      getProjectStages,
+      getNoteById,
+      applyServerNote,
+      loadTaskPriorities,
+    ]
   );
 
   const handleStageChange = useCallback(
@@ -505,7 +538,9 @@ export function TaskNoteModal() {
             />
 
             <div className="flex min-h-0 flex-1 overflow-hidden">
-              <div className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto ${showCommentsPanel ? "md:w-[60%]" : ""}`}>
+              <div
+                className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto ${showCommentsPanel ? "md:w-[60%]" : ""}`}
+              >
                 {noteConflict && (
                   <div className="mx-4 mt-4 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800 dark:border-yellow-500/30 dark:bg-yellow-500/10 dark:text-yellow-200">
                     <strong>Conflito detectado:</strong> A tarefa foi modificada por outro usuário.
@@ -549,10 +584,10 @@ export function TaskNoteModal() {
 
               {showCommentsPanel && note && (
                 <NoteCommentsProvider noteId={note.id}>
-                  <div className="hidden w-[40%] border-l border-neutral-200 md:block dark:border-surface-dark-border">
-                    <TaskNoteModalCommentsPanel 
+                  <div className="dark:border-surface-dark-border hidden w-[40%] border-l border-neutral-200 md:block">
+                    <TaskNoteModalCommentsPanel
                       note={note}
-                      onClose={() => setShowCommentsPanel(false)} 
+                      onClose={() => setShowCommentsPanel(false)}
                     />
                   </div>
                 </NoteCommentsProvider>
@@ -567,13 +602,7 @@ export function TaskNoteModal() {
   return createPortal(modalContent, document.body);
 }
 
-function TaskNoteModalCommentsPanel({ 
-  note, 
-  onClose 
-}: { 
-  note: Note; 
-  onClose: () => void;
-}) {
+function TaskNoteModalCommentsPanel({ note, onClose }: { note: Note; onClose: () => void }) {
   const { searchUsers } = useNotes();
 
   const embeddableFiles: NoteCommentsEmbeddableFile[] = React.useMemo(() => {

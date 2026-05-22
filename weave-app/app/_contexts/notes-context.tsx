@@ -45,6 +45,7 @@ export type {
 // Tipos específicos do contexto
 export interface NoteOverview {
   id: string;
+  public_id?: string | null;
   title: string;
   properties: NoteProperties;
   tags: string[];
@@ -198,56 +199,58 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     mostUsedTags: [],
   });
 
-  const extractPreview = (content: string | undefined): string =>
-    plainTextPreview(content, 150);
+  const extractPreview = (content: string | undefined): string => plainTextPreview(content, 150);
 
   /**
    * Mirrors list payload from GET notes:
    * `weave-api/src/modules/notes/controllers/notes-read.controller.js` (due_date, priority_*, associated_project.stage_*).
    */
-  const toOverview = useCallback(
-    (note: Note): NoteOverview => {
-      const assoc = note.associated_project;
-      const props = (note.properties ?? {}) as NoteProperties;
-      return {
-        id: note.id,
-        title: note.title || "Tarefa sem título",
-        properties: props,
-        tags: note.tags || [],
-        lastModified: note.updated_at || note.created_at,
-        preview: extractPreview(note.description || undefined),
-        status: note.status || "sem_status",
-        collaboratorsCount: Array.isArray(note.collaborators) ? note.collaborators.length : 0,
-        collaborators: Array.isArray(note.collaborators) ? note.collaborators : [],
-        created_at: note.created_at,
-        updated_at: note.updated_at,
-        owner_name:
-          note.author?.name || note.author?.username || note.author?.email || note.name || note.email || undefined,
-        owner_avatar_url: getStorageUrl(note.author?.avatar_url || note.avatar_url || ""),
-        due_date: note.due_date ?? props.due_date ?? null,
-        priority_id: note.priority_id ?? null,
-        priority_name: note.priority_name ?? null,
-        priority_color: note.priority_color ?? null,
-        project_id: assoc?.id ?? note.project_id ?? null,
-        project_name: assoc?.name ?? note.project_name ?? null,
-        stage_id: assoc?.stage_id ?? null,
-        stage_name: assoc?.stage_name ?? null,
-        parent_id: note.parent_id ?? null,
-        organization_id: note.associated_organization?.id ?? null,
-        organization_name: note.associated_organization?.name ?? null,
-        organization_logo_url: getStorageUrl(note.associated_organization?.logo_url || ""),
-        resolved_tags: Array.isArray(note.resolved_tags)
-          ? note.resolved_tags.map((tag) => ({
-              id: String(tag.id),
-              name: tag.name,
-              color: tag.color,
-            }))
-          : [],
-        done: note.done === true,
-      };
-    },
-    []
-  );
+  const toOverview = useCallback((note: Note): NoteOverview => {
+    const assoc = note.associated_project;
+    const props = (note.properties ?? {}) as NoteProperties;
+    return {
+      id: note.id,
+      public_id: note.public_id ?? null,
+      title: note.title || "Tarefa sem título",
+      properties: props,
+      tags: note.tags || [],
+      lastModified: note.updated_at || note.created_at,
+      preview: extractPreview(note.description || undefined),
+      status: note.status || "sem_status",
+      collaboratorsCount: Array.isArray(note.collaborators) ? note.collaborators.length : 0,
+      collaborators: Array.isArray(note.collaborators) ? note.collaborators : [],
+      created_at: note.created_at,
+      updated_at: note.updated_at,
+      owner_name:
+        note.author?.name ||
+        note.author?.username ||
+        note.author?.email ||
+        note.name ||
+        note.email ||
+        undefined,
+      owner_avatar_url: getStorageUrl(note.author?.avatar_url || note.avatar_url || ""),
+      due_date: note.due_date ?? props.due_date ?? null,
+      priority_id: note.priority_id ?? null,
+      priority_name: note.priority_name ?? null,
+      priority_color: note.priority_color ?? null,
+      project_id: assoc?.id ?? note.project_id ?? null,
+      project_name: assoc?.name ?? note.project_name ?? null,
+      stage_id: assoc?.stage_id ?? null,
+      stage_name: assoc?.stage_name ?? null,
+      parent_id: note.parent_id ?? null,
+      organization_id: note.associated_organization?.id ?? null,
+      organization_name: note.associated_organization?.name ?? null,
+      organization_logo_url: getStorageUrl(note.associated_organization?.logo_url || ""),
+      resolved_tags: Array.isArray(note.resolved_tags)
+        ? note.resolved_tags.map((tag) => ({
+            id: String(tag.id),
+            name: tag.name,
+            color: tag.color,
+          }))
+        : [],
+      done: note.done === true,
+    };
+  }, []);
 
   const insertOrUpdateNoteLocally = useCallback(
     (note: Note) => {
@@ -405,9 +408,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
                 ? {
                     ...n,
                     ...updatedNote,
-                    blocks: Array.isArray(updatedNote.blocks)
-                      ? updatedNote.blocks
-                      : n.blocks,
+                    blocks: Array.isArray(updatedNote.blocks) ? updatedNote.blocks : n.blocks,
                   }
                 : n
             )
@@ -586,9 +587,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
         });
         const tree = await fetchNoteBlocks(noteId);
         applyLocalBlocksUpdate(noteId, tree);
-        return (
-          findBlockById(tree as (Block & { children?: Block[] })[], created.id) || created
-        );
+        return findBlockById(tree as (Block & { children?: Block[] })[], created.id) || created;
       } catch (err: unknown) {
         console.error("Erro ao criar bloco:", err);
         throw err;

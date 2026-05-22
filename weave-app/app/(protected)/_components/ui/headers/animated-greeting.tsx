@@ -61,7 +61,11 @@ export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
   const getGreeting = () => {
     switch (type) {
       case "home":
-        return <span className="text-brand-primary-500 font-semibold">{t.greeting.hello} {formattedName}</span>;
+        return (
+          <span className="text-brand-primary-500 font-semibold">
+            {t.greeting.hello} {formattedName}
+          </span>
+        );
       case "projects":
         return <span className="text-brand-primary-500 font-semibold">{t.nav.projects}</span>;
       case "notes":
@@ -101,15 +105,23 @@ export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
       case "documents":
         return <span className="text-brand-primary-500 font-semibold">{t.nav.documents}</span>;
       case "weave-ai":
-        return <span className="bg-linear-to-r from-brand-primary-500 to-purple-600 bg-clip-text text-transparent font-bold">{t.nav.weaveAi}</span>;
+        return (
+          <span className="from-brand-primary-500 bg-linear-to-r to-purple-600 bg-clip-text font-bold text-transparent">
+            {t.nav.weaveAi}
+          </span>
+        );
       case "weave-engine":
         return (
-          <span className="bg-linear-to-r from-brand-primary-500 to-amber-300 bg-clip-text text-transparent font-bold">
+          <span className="from-brand-primary-500 bg-linear-to-r to-amber-300 bg-clip-text font-bold text-transparent">
             {t.nav.weaveEngine}
           </span>
         );
       default:
-        return <span className="font-semibold text-gray-900 dark:text-gray-100">{t.greeting.hello} {formattedName}</span>;
+        return (
+          <span className="font-semibold text-gray-900 dark:text-gray-100">
+            {t.greeting.hello} {formattedName}
+          </span>
+        );
     }
   };
 
@@ -168,16 +180,16 @@ export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
     <div className="flex items-center text-xs tracking-tight">
       <div
         className={cn(
-          "transition-all duration-700 ease-out transform",
-          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+          "transform transition-all duration-700 ease-out",
+          isVisible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
         )}
       >
         {getGreeting()}
       </div>
       <div
         className={cn(
-          "ml-1 text-gray-500 dark:text-gray-400 font-normal transition-all duration-1000 ease-out transform delay-300",
-          isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"
+          "ml-1 transform font-normal text-gray-500 transition-all delay-300 duration-1000 ease-out dark:text-gray-400",
+          isVisible ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0"
         )}
       >
         {getMessage()}

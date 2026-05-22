@@ -10,9 +10,6 @@ interface WeaveEngineHeaderProps {
 
 export function WeaveEngineHeader({ className }: WeaveEngineHeaderProps) {
   return (
-    <BaseHeader
-      className={className}
-      leftContent={<AnimatedGreeting type="weave-engine" />}
-    />
+    <BaseHeader className={className} leftContent={<AnimatedGreeting type="weave-engine" />} />
   );
 }

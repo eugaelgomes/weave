@@ -36,7 +36,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
     const chars = initialCode.replace(/\D/g, "").slice(0, 6).split("");
     return [...chars, ...Array(6 - chars.length).fill("")];
   });
-  
+
   const [verificationEmail, setVerificationEmail] = useState(initialEmail);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,8 +79,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
 
       setSuccessMessage(activationResult.message || confirmT.successMessage);
 
-      const autoLoginEmail =
-        pendingAuth?.email || pendingAuth?.login || verificationEmail;
+      const autoLoginEmail = pendingAuth?.email || pendingAuth?.login || verificationEmail;
       if (autoLoginEmail && pendingAuth?.password) {
         const loginResult = await login(autoLoginEmail, pendingAuth.password);
         if (loginResult.success) {
@@ -137,7 +136,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
         newArray[i] = pastedData[i];
       }
       setCodeArray(newArray);
-      
+
       const nextFocusIndex = Math.min(pastedData.length, 5);
       inputRefs.current[nextFocusIndex]?.focus();
     }
@@ -158,7 +157,6 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
   return (
     <div className="flex w-full flex-col items-center justify-center px-6 py-4 sm:px-8">
       <div className="flex w-full max-w-sm flex-col items-center text-center">
-
         <div className="bg-brand-secondary-100 text-brand-primary-500 mb-6 flex h-12 w-12 items-center justify-center rounded-xl">
           <MailCheck className="h-7 w-7" />
         </div>
@@ -167,9 +165,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
           {confirmT.title}
         </h1>
 
-        <p className="text-brand-secondary-500 mb-6 text-sm leading-relaxed">
-          {confirmT.subtitle}
-        </p>
+        <p className="text-brand-secondary-500 mb-6 text-sm leading-relaxed">{confirmT.subtitle}</p>
 
         {!successMessage ? (
           <div className="border-brand-secondary-200 w-full rounded-xl border bg-white p-5 shadow-sm sm:p-6">
@@ -201,7 +197,9 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
                   {codeArray.map((digit, index) => (
                     <input
                       key={index}
-                      ref={(el) => { inputRefs.current[index] = el; }}
+                      ref={(el) => {
+                        inputRefs.current[index] = el;
+                      }}
                       type="text"
                       inputMode="numeric"
                       maxLength={1}
@@ -215,11 +213,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
                 </div>
               </div>
 
-              {error && (
-                <p className="mt-1 text-sm font-medium text-red-600">
-                  {error}
-                </p>
-              )}
+              {error && <p className="mt-1 text-sm font-medium text-red-600">{error}</p>}
 
               <button
                 type="button"

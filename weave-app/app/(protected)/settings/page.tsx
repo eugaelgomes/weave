@@ -460,7 +460,7 @@ const SettingsPage = () => {
                   />
                   <label className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
                     <Camera size={20} className="mb-1 text-white" />
-                    <span className="text-[9px] font-black text-white ">Upload</span>
+                    <span className="text-[9px] font-black text-white">Upload</span>
                     <input
                       type="file"
                       className="hidden"
@@ -470,7 +470,7 @@ const SettingsPage = () => {
                     />
                   </label>
                 </div>
-                <div className="flex items-center gap-1.5 rounded bg-neutral-100 px-2 py-1 text-[9px] font-bold text-neutral-500  dark:bg-[#1d1d1b] dark:text-neutral-400">
+                <div className="flex items-center gap-1.5 rounded bg-neutral-100 px-2 py-1 text-[9px] font-bold text-neutral-500 dark:bg-[#1d1d1b] dark:text-neutral-400">
                   <Calendar size={11} />
                   Membro: {formatDate(user?.created_at || "")}
                 </div>
@@ -560,7 +560,7 @@ const SettingsPage = () => {
                     />
                   </div>
                   <div className="space-y-4 sm:col-span-2 xl:col-span-3">
-                    <h4 className="text-[10px] font-bold tracking-widest text-neutral-400 ">
+                    <h4 className="text-[10px] font-bold tracking-widest text-neutral-400">
                       Privacidade Geral
                     </h4>
                     <label className="flex cursor-pointer items-center gap-3 transition-all">
@@ -603,7 +603,7 @@ const SettingsPage = () => {
                   ) : (
                     <div className="space-y-3 rounded-md border border-amber-100 bg-amber-50/20 p-4 duration-200 dark:border-amber-900/20">
                       <div className="flex items-center justify-between">
-                        <h4 className="flex items-center gap-2 text-[10px] font-bold text-amber-600 ">
+                        <h4 className="flex items-center gap-2 text-[10px] font-bold text-amber-600">
                           <AlertTriangle size={12} /> Troca de Senha
                         </h4>
                         <button

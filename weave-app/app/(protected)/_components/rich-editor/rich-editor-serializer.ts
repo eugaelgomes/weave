@@ -242,7 +242,12 @@ function blockToNode(block: Block): JSONContent | null {
       if (children.length === 0) {
         return {
           type: listType,
-          content: [{ type: "listItem", content: [{ type: "paragraph", content: buildInlineContent(text, marks) }] }],
+          content: [
+            {
+              type: "listItem",
+              content: [{ type: "paragraph", content: buildInlineContent(text, marks) }],
+            },
+          ],
         };
       }
       return {
@@ -294,7 +299,10 @@ function createBlockProperties(
 
 export function blocksToTiptapDoc(blocks: Block[]): JSONContent {
   const content = blocks.map(blockToNode).filter((node): node is JSONContent => Boolean(node));
-  return { type: "doc", content: content.length > 0 ? content : [{ type: "paragraph", content: [] }] };
+  return {
+    type: "doc",
+    content: content.length > 0 ? content : [{ type: "paragraph", content: [] }],
+  };
 }
 
 function nodeToBlock(node: JSONContent, position: number): SyncBlockData[] {
@@ -318,12 +326,7 @@ function nodeToBlock(node: JSONContent, position: number): SyncBlockData[] {
           type: "heading",
           text: inline.text,
           position,
-          properties: createBlockProperties(
-            inline.text,
-            inline.marks,
-            { level },
-            { level }
-          ),
+          properties: createBlockProperties(inline.text, inline.marks, { level }, { level }),
         },
       ];
     }

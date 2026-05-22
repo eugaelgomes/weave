@@ -26,8 +26,18 @@ export function ReviewStep({ state, actions }: CreateProjectWizardStepProps) {
 
   const setupRows = useMemo(() => {
     return [
-      { key: "icon", label: "Ícone", status: state.setup.statusByStep.icon, error: state.setup.errorByStep.icon },
-      { key: "stages", label: "Etapas", status: state.setup.statusByStep.stages, error: state.setup.errorByStep.stages },
+      {
+        key: "icon",
+        label: "Ícone",
+        status: state.setup.statusByStep.icon,
+        error: state.setup.errorByStep.icon,
+      },
+      {
+        key: "stages",
+        label: "Etapas",
+        status: state.setup.statusByStep.stages,
+        error: state.setup.errorByStep.stages,
+      },
       {
         key: "collaborators",
         label: "Colaboradores",
@@ -44,11 +54,11 @@ export function ReviewStep({ state, actions }: CreateProjectWizardStepProps) {
   }, [state.setup.errorByStep, state.setup.statusByStep]);
 
   return (
-    <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
-      <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Revisão</h2>
+    <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
+      <h2 className="mb-2 text-xs font-bold tracking-wider text-neutral-400 uppercase">Revisão</h2>
       <div className="space-y-2 text-sm text-neutral-700 dark:text-neutral-200">
-        <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30">
-          <div className="text-xs font-bold uppercase tracking-wider text-neutral-400">Resumo</div>
+        <div className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-neutral-50 p-2 dark:bg-[#1d1d1b]/30">
+          <div className="text-xs font-bold tracking-wider text-neutral-400 uppercase">Resumo</div>
           <div className="mt-1 font-semibold text-neutral-900 dark:text-neutral-100">
             {state.draft.basic.title.trim() || "Sem título"}
           </div>
@@ -67,19 +77,24 @@ export function ReviewStep({ state, actions }: CreateProjectWizardStepProps) {
             Você ainda não criou o projeto. Volte ao passo “Básico”.
           </div>
         ) : (
-          <div className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/30">
-            <div className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+          <div className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/30">
+            <div className="text-xs font-bold tracking-wider text-neutral-400 uppercase">
               Setup (status)
             </div>
             <ul className="mt-2 space-y-1 text-xs text-neutral-600 dark:text-neutral-300">
               {setupRows.map((r) => (
-                <li key={r.key} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <li
+                  key={r.key}
+                  className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between"
+                >
                   <span className="font-medium text-neutral-700 dark:text-neutral-200">
                     {r.label}
                   </span>
-                  <span className="text-neutral-500 dark:text-neutral-400">{statusLabel(r.status)}</span>
+                  <span className="text-neutral-500 dark:text-neutral-400">
+                    {statusLabel(r.status)}
+                  </span>
                   {r.error ? (
-                    <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400 sm:ml-2">
+                    <span className="inline-flex items-center gap-1 text-red-600 sm:ml-2 dark:text-red-400">
                       <AlertCircle className="h-3.5 w-3.5" aria-hidden />
                       {r.error}
                     </span>
@@ -91,7 +106,7 @@ export function ReviewStep({ state, actions }: CreateProjectWizardStepProps) {
         )}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-neutral-200 pt-2 dark:border-surface-dark-border">
+      <div className="dark:border-surface-dark-border mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-neutral-200 pt-2">
         <button
           type="button"
           onClick={actions.resetAll}
@@ -103,7 +118,7 @@ export function ReviewStep({ state, actions }: CreateProjectWizardStepProps) {
           type="button"
           disabled={!projectId}
           onClick={() => router.push(`/projects/${state.created.project?.public_id || projectId}`)}
-          className="inline-flex items-center gap-2 rounded-md bg-brand-primary-500 px-2 py-2 text-sm font-bold text-neutral-950 transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+          className="bg-brand-primary-500 inline-flex items-center gap-2 rounded-md px-2 py-2 text-sm font-bold text-neutral-950 transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <CheckCircle2 className="h-4 w-4" aria-hidden />
           Abrir projeto
@@ -112,4 +127,3 @@ export function ReviewStep({ state, actions }: CreateProjectWizardStepProps) {
     </section>
   );
 }
-

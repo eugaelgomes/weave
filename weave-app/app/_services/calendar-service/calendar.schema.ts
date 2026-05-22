@@ -130,8 +130,14 @@ export type GoogleCalendarSetting = z.infer<typeof GoogleCalendarSettingSchema>;
 export type FreeBusyResponse = z.infer<typeof FreeBusyResponseSchema>;
 
 export type InternalCalendarEvent = z.infer<typeof InternalCalendarEventSchema>;
-export type CreateInternalCalendarEventPayload = z.infer<typeof CreateInternalCalendarEventPayloadSchema>;
+export type CreateInternalCalendarEventPayload = z.infer<
+  typeof CreateInternalCalendarEventPayloadSchema
+>;
 
 export type InternalCalendarEventInvite = z.infer<typeof InternalCalendarEventInviteSchema>;
-export type CreateCalendarEventInvitePayload = z.infer<typeof CreateCalendarEventInvitePayloadSchema>;
-export type UpdateCalendarEventInvitePayload = z.infer<typeof UpdateCalendarEventInvitePayloadSchema>;
+export type CreateCalendarEventInvitePayload = z.infer<
+  typeof CreateCalendarEventInvitePayloadSchema
+>;
+export type UpdateCalendarEventInvitePayload = z.infer<
+  typeof UpdateCalendarEventInvitePayloadSchema
+>;

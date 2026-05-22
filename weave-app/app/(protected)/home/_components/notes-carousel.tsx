@@ -70,7 +70,7 @@ export default function NotesCarousel({
   };
 
   return (
-    <div className="rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md">
+    <div className="dark:border-surface-dark-border dark:shadow-surface-dark-md rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:p-3 dark:bg-[#1d1d1b]">
       <div className="mb-2 flex items-center justify-between gap-2">
         <h3 className="text-xs font-semibold text-neutral-500 sm:text-sm dark:text-neutral-100">
           {resolvedTitle}
@@ -129,7 +129,8 @@ export default function NotesCarousel({
 
               const hasProjectContext = Boolean(note.project_name || note.stage_name);
               const priorityHex =
-                note.priority_color && /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(note.priority_color)
+                note.priority_color &&
+                /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(note.priority_color)
                   ? note.priority_color
                   : null;
               const noteIcon = note.properties?.icon as ProjectProperties["icon"] | undefined;
@@ -195,17 +196,13 @@ export default function NotesCarousel({
                   className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center text-left sm:w-[220px] sm:snap-start"
                 >
                   <div
-                    className={`group flex min-h-[148px] flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2.5 font-normal transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:hover:border-surface-dark-border-strong dark:hover:shadow-surface-dark-md ${note.done ? "opacity-90" : ""}`}
+                    className={`group dark:border-surface-dark-border dark:hover:border-surface-dark-border-strong dark:hover:shadow-surface-dark-md flex min-h-[148px] flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2.5 font-normal transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:bg-[#1d1d1b] ${note.done ? "opacity-90" : ""}`}
                   >
                     <div className="flex flex-1 flex-col">
                       <div className="mb-1.5 flex items-start justify-between gap-1.5">
                         <div className="flex min-w-0 items-center gap-1.5">
                           {noteIcon ? (
-                            <ProjectIcon
-                              icon={noteIcon}
-                              color={note.properties?.color}
-                              size="xs"
-                            />
+                            <ProjectIcon icon={noteIcon} color={note.properties?.color} size="xs" />
                           ) : null}
                           <h2
                             className={`dark:group-hover:text-brand-primary-500 line-clamp-2 text-xs leading-tight font-normal text-neutral-900 transition-colors group-hover:text-yellow-600 dark:text-neutral-100 ${note.done ? "line-through opacity-80" : ""}`}

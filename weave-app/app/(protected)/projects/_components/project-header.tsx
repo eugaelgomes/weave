@@ -32,7 +32,7 @@ export default function ProjectHeader({
   onIconFile,
 }: ProjectHeaderProps) {
   return (
-    <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-1 dark:border-surface-dark-border">
+    <div className="dark:border-surface-dark-border flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-1">
       <div className="flex min-w-0 items-center gap-1.5">
         <button
           type="button"

@@ -65,12 +65,8 @@ export function ReasoningFeedItem({
     <article className={engineFeedItemClass}>
       <div className="flex gap-2 sm:gap-3">
         <div className="min-w-0 flex-1">
-          <button
-            type="button"
-            onClick={onRead}
-            className="block w-full text-left"
-          >
-            <h3 className="line-clamp-2 text-sm font-medium leading-snug text-neutral-900 transition-colors hover:text-neutral-700 dark:text-neutral-100 dark:hover:text-neutral-300">
+          <button type="button" onClick={onRead} className="block w-full text-left">
+            <h3 className="line-clamp-2 text-sm leading-snug font-medium text-neutral-900 transition-colors hover:text-neutral-700 dark:text-neutral-100 dark:hover:text-neutral-300">
               {item.title}
             </h3>
           </button>

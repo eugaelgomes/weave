@@ -19,40 +19,43 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { t } = useLanguage();
 
-  const SETTINGS_NAV: SettingsNavItem[] = useMemo(() => [
-    {
-      icon: User,
-      label: t.nav.settings,
-      href: "/settings",
-      matchPaths: ["/settings/user-data", "/settings/danger-zone", "/settings/preferences"],
-      type: "settings" as const,
-    },
-    {
-      icon: CreditCard,
-      label: t.nav.plans,
-      href: "/settings/plans",
-      type: "plans" as const,
-    },
-    {
-      icon: Lock,
-      label: t.nav.security,
-      href: "/settings/security",
-      matchPaths: ["/settings/client-tokens"],
-      type: "security" as const,
-    },
-    {
-      icon: Building2,
-      label: t.nav.workspace,
-      href: "/settings/workspace",
-      type: "workspace" as const,
-    },
-    {
-      icon: Zap,
-      label: t.nav.integrations,
-      href: "/settings/integrations",
-      type: "integrations" as const,
-    },
-  ], [t]);
+  const SETTINGS_NAV: SettingsNavItem[] = useMemo(
+    () => [
+      {
+        icon: User,
+        label: t.nav.settings,
+        href: "/settings",
+        matchPaths: ["/settings/user-data", "/settings/danger-zone", "/settings/preferences"],
+        type: "settings" as const,
+      },
+      {
+        icon: CreditCard,
+        label: t.nav.plans,
+        href: "/settings/plans",
+        type: "plans" as const,
+      },
+      {
+        icon: Lock,
+        label: t.nav.security,
+        href: "/settings/security",
+        matchPaths: ["/settings/client-tokens"],
+        type: "security" as const,
+      },
+      {
+        icon: Building2,
+        label: t.nav.workspace,
+        href: "/settings/workspace",
+        type: "workspace" as const,
+      },
+      {
+        icon: Zap,
+        label: t.nav.integrations,
+        href: "/settings/integrations",
+        type: "integrations" as const,
+      },
+    ],
+    [t]
+  );
 
   const activeItem = useMemo(() => {
     const matchers: { prefix: string; item: SettingsNavItem }[] = [];

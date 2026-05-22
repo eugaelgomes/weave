@@ -106,7 +106,7 @@ export default function AuthPage() {
 
   return (
     <div className="relative flex h-[100dvh] w-full flex-col text-slate-950 lg:flex-row">
-      <div className="relative z-10 border-r border-brand-secondary-300/10 hidden overflow-hidden rounded-r-md shadow-xl lg:flex lg:w-[45%] xl:w-1/2">
+      <div className="border-brand-secondary-300/10 relative z-10 hidden overflow-hidden rounded-r-md border-r shadow-xl lg:flex lg:w-[45%] xl:w-1/2">
         <AuthMarketing />
       </div>
 
@@ -122,7 +122,12 @@ export default function AuthPage() {
                 priority
               />
             </div>
-            <span className={cn("text-2xl text-neutral-800 font-semibold tracking-tight", fredoka.className)}>
+            <span
+              className={cn(
+                "text-2xl font-semibold tracking-tight text-neutral-800",
+                fredoka.className
+              )}
+            >
               Weave Notes
             </span>
           </div>

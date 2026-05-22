@@ -33,4 +33,3 @@ export interface WorkspaceOverviewProps {
   formData: OrganizationInfoFormData;
   setFormData: Dispatch<SetStateAction<OrganizationInfoFormData>>;
 }
-

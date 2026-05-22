@@ -72,23 +72,16 @@ export default function ProjectViewPage() {
     const fetchProjectData = async () => {
       setLoading(true);
       try {
-        const [
-          projectData,
-          collabData,
-          notesData,
-          stagesData,
-          tagsData,
-          prioritiesData,
-          viewPref,
-        ] = await Promise.all([
-          getProjectById(projectId),
-          getCollaborators(projectId),
-          getProjectNotes(projectId),
-          getProjectStages(projectId).catch(() => []),
-          getProjectTags(projectId).catch(() => []),
-          getTaskPriorities(projectId).catch(() => []),
-          getMyProjectView(projectId),
-        ]);
+        const [projectData, collabData, notesData, stagesData, tagsData, prioritiesData, viewPref] =
+          await Promise.all([
+            getProjectById(projectId),
+            getCollaborators(projectId),
+            getProjectNotes(projectId),
+            getProjectStages(projectId).catch(() => []),
+            getProjectTags(projectId).catch(() => []),
+            getTaskPriorities(projectId).catch(() => []),
+            getMyProjectView(projectId),
+          ]);
 
         if (projectData) {
           setProject(projectData);
@@ -146,8 +139,7 @@ export default function ProjectViewPage() {
 
   const isOwner = project?.user_id === user?.id;
   const canEdit =
-    isOwner ||
-    collaborators.some((c: any) => c.user_id === user?.id && c.permission === "admin");
+    isOwner || collaborators.some((c: any) => c.user_id === user?.id && c.permission === "admin");
 
   const enrichedProjectNotes = useMemo(() => {
     return projectNotes.map((projectNote: any) => {
@@ -204,20 +196,25 @@ export default function ProjectViewPage() {
 
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md bg-white shadow-sm dark:bg-[#1d1d1b]/50 dark:shadow-surface-dark-sm">
+          <div className="dark:shadow-surface-dark-sm flex min-h-0 flex-1 flex-col overflow-hidden rounded-md bg-white shadow-sm dark:bg-[#1d1d1b]/50">
             {activeView === "board" && (
               <ProjectBoard
                 stages={stages}
                 projectNotes={enrichedProjectNotes}
+                projectPublicId={project?.public_id || projectId}
                 projectTags={projectTags}
                 projectCollaborators={collaborators}
                 taskPriorities={taskPriorities}
-                onAddCard={canEdit ? (stageId) => {
-                  setAddTaskStageId(stageId);
-                  setAddTaskParentNoteId(null);
-                  setAddTaskParentTitle(null);
-                  setShowAddNote(true);
-                } : undefined}
+                onAddCard={
+                  canEdit
+                    ? (stageId) => {
+                        setAddTaskStageId(stageId);
+                        setAddTaskParentNoteId(null);
+                        setAddTaskParentTitle(null);
+                        setShowAddNote(true);
+                      }
+                    : undefined
+                }
                 onAddSubtask={
                   canEdit
                     ? (parentNoteId, stageId, parentTitle) => {
@@ -239,9 +236,7 @@ export default function ProjectViewPage() {
                 }
                 onNoteStageChange={(noteId, newStageId) => {
                   setProjectNotes((prev) =>
-                    prev.map((n) =>
-                      n.id === noteId ? { ...n, project_stage_id: newStageId } : n
-                    )
+                    prev.map((n) => (n.id === noteId ? { ...n, project_stage_id: newStageId } : n))
                   );
                 }}
               />

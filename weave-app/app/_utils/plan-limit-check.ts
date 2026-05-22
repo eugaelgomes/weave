@@ -18,8 +18,7 @@ function gateFrom(
 ): PlanGate {
   const rawCurrent = getNested(usageDetails, usagePath);
   const rawLimit = getNested(planDetails, limitPath);
-  const currentNum =
-    rawCurrent === null || rawCurrent === undefined ? 0 : Number(rawCurrent);
+  const currentNum = rawCurrent === null || rawCurrent === undefined ? 0 : Number(rawCurrent);
   const current = Number.isFinite(currentNum) ? currentNum : 0;
 
   if (rawLimit === null || rawLimit === undefined) {

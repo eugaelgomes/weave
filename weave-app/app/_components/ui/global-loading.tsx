@@ -23,7 +23,7 @@ export default function GlobalLoading({ fullScreen = true, className }: GlobalLo
       >
         <div
           aria-hidden
-          className="border-t-brand-primary-500 size-9 shrink-0 rounded-full border-2 border-neutral-200 motion-safe:animate-spin dark:border-surface-dark-border-strong [@media(prefers-color-scheme:dark)]:border-neutral-700"
+          className="border-t-brand-primary-500 dark:border-surface-dark-border-strong size-9 shrink-0 rounded-full border-2 border-neutral-200 motion-safe:animate-spin [@media(prefers-color-scheme:dark)]:border-neutral-700"
         />
         <p
           className="text-xs font-medium tracking-wide text-neutral-400 dark:text-neutral-500 [@media(prefers-color-scheme:dark)]:text-neutral-500"

@@ -47,7 +47,7 @@ export function UsageHistoryRowDetails({ item }: UsageHistoryRowDetailsProps) {
         return (
           <div
             key={key}
-            className="rounded-md border border-neutral-100 bg-neutral-50/70 p-2.5 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/30"
+            className="dark:border-surface-dark-border-muted rounded-md border border-neutral-100 bg-neutral-50/70 p-2.5 dark:bg-[#1d1d1b]/30"
           >
             <div className="flex items-center justify-between gap-2 text-[10px] font-bold tracking-wide text-neutral-500 uppercase">
               <span>{label}</span>

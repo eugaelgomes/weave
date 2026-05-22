@@ -133,7 +133,7 @@ export function ResetPassword({ onNavigate, locale = "pt-br", token }: Props) {
             </button>
 
             {error && (
-              <p className="mt-4 text-center text-xs font-semibold text-red-500 animate-in fade-in slide-in-from-top-1">
+              <p className="animate-in fade-in slide-in-from-top-1 mt-4 text-center text-xs font-semibold text-red-500">
                 {error}
               </p>
             )}

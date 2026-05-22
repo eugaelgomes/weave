@@ -129,7 +129,7 @@ export function NotificationDetail({ notification }: NotificationDetailProps) {
             <button
               onClick={handleMarkAsRead}
               disabled={loadingAction}
-              className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-900"
+              className="dark:border-surface-dark-border flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-900"
             >
               <Check className="h-3.5 w-3.5" />
               Mark as read
@@ -141,7 +141,7 @@ export function NotificationDetail({ notification }: NotificationDetailProps) {
               <button
                 onClick={handleRestore}
                 disabled={loadingAction}
-                className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-900"
+                className="dark:border-surface-dark-border flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-900"
               >
                 <ArchiveRestore className="h-3.5 w-3.5" />
                 Restore
@@ -159,7 +159,7 @@ export function NotificationDetail({ notification }: NotificationDetailProps) {
             <button
               onClick={handleTrash}
               disabled={loadingAction}
-              className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-900"
+              className="dark:border-surface-dark-border flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-900"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Trash
@@ -168,7 +168,7 @@ export function NotificationDetail({ notification }: NotificationDetailProps) {
         </div>
       </div>
 
-      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+      <div className="dark:border-surface-dark-border rounded-lg border border-neutral-200 bg-white p-6 dark:bg-[#1d1d1b]">
         <div className="flex gap-4">
           <div
             className={cn(
@@ -182,11 +182,11 @@ export function NotificationDetail({ notification }: NotificationDetailProps) {
             <div className="prose dark:prose-invert max-w-none">
               <p className="leading-relaxed whitespace-pre-wrap">{String(message)}</p>
               {actionRequired && (
-                <div className="mt-4 border-t border-neutral-100 pt-4 dark:border-surface-dark-border">
+                <div className="dark:border-surface-dark-border mt-4 border-t border-neutral-100 pt-4">
                   <span className="mb-2 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
                     Action Required
                   </span>
-                  <div className="rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+                  <div className="dark:border-surface-dark-border rounded-md border border-neutral-100 bg-neutral-50 p-3 dark:bg-[#1d1d1b]/50">
                     <p>{String(actionRequired)}</p>
                   </div>
                 </div>

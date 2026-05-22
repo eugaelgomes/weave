@@ -84,7 +84,9 @@ export default function PlansSettingsPage() {
   const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [historyItems, setHistoryItems] = useState<PlanUsageHistoryItem[]>([]);
-  const [historyCurrentPeriod, setHistoryCurrentPeriod] = useState<PlanUsageCurrentPeriod | null>(null);
+  const [historyCurrentPeriod, setHistoryCurrentPeriod] = useState<PlanUsageCurrentPeriod | null>(
+    null
+  );
   const [historyHasMore, setHistoryHasMore] = useState(false);
 
   const defaultMetrics = useMemo(() => buildMetricsFromUser(user), [user]);
@@ -155,10 +157,12 @@ export default function PlansSettingsPage() {
             <CurrentUsageSummaryCard
               planName={user.plan_name}
               periodStart={
-                historyCurrentPeriod?.period_start ?? user?.usage_details?.monthly_cycle?.current_period_start
+                historyCurrentPeriod?.period_start ??
+                user?.usage_details?.monthly_cycle?.current_period_start
               }
               periodEnd={
-                historyCurrentPeriod?.period_end ?? user?.usage_details?.monthly_cycle?.current_period_end
+                historyCurrentPeriod?.period_end ??
+                user?.usage_details?.monthly_cycle?.current_period_end
               }
               totalPercentage={totalPercentage}
               historyExpanded={isHistoryVisible}
@@ -168,8 +172,8 @@ export default function PlansSettingsPage() {
 
             <CurrentUsageBreakdown metrics={currentMetrics} />
 
-            <div className="flex flex-col overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm transition-all dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
-              <div className="flex items-center justify-between border-b border-neutral-100/60 px-4 py-2.5 dark:border-surface-dark-border-muted">
+            <div className="dark:border-surface-dark-border dark:shadow-surface-dark-sm flex flex-col overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm transition-all dark:bg-[#1d1d1b]">
+              <div className="dark:border-surface-dark-border-muted flex items-center justify-between border-b border-neutral-100/60 px-4 py-2.5">
                 <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
                   <Zap size={13} className="text-amber-500" />
                   {t.plansSettings.includedFeatures}
@@ -183,12 +187,16 @@ export default function PlansSettingsPage() {
                         key={key}
                         className={`flex items-center justify-between rounded-md px-3 py-2 text-[10px] font-bold transition-colors ${
                           value
-                            ? "border border-neutral-100 bg-neutral-50/80 text-neutral-700 dark:border-surface-dark-border-strong dark:bg-neutral-800/50 dark:text-neutral-300"
+                            ? "dark:border-surface-dark-border-strong border border-neutral-100 bg-neutral-50/80 text-neutral-700 dark:bg-neutral-800/50 dark:text-neutral-300"
                             : "bg-transparent text-neutral-400 opacity-60"
                         }`}
                       >
                         <span>{featureLabels[key] ?? key}</span>
-                        {value ? <span className="text-emerald-500">{t.plansSettings.active}</span> : <span>—</span>}
+                        {value ? (
+                          <span className="text-emerald-500">{t.plansSettings.active}</span>
+                        ) : (
+                          <span>—</span>
+                        )}
                       </div>
                     ))}
                   </div>

@@ -111,14 +111,19 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
     <div className="flex w-full flex-col px-6 py-4 sm:px-8">
       <div className="mt-2 space-y-4">
         <div className="text-center">
-          <h2 className="text-brand-secondary-900 text-xl font-bold tracking-tight">{profileT.title}</h2>
+          <h2 className="text-brand-secondary-900 text-xl font-bold tracking-tight">
+            {profileT.title}
+          </h2>
           <p className="text-brand-secondary-500 mt-1 text-sm">{profileT.subtitle}</p>
         </div>
 
         <div className="border-brand-secondary-200 space-y-4 rounded-xl border bg-white p-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label htmlFor="theme-mode" className="text-brand-secondary-600 mb-1 block text-xs font-medium">
+              <label
+                htmlFor="theme-mode"
+                className="text-brand-secondary-600 mb-1 block text-xs font-medium"
+              >
                 {profileT.themeLabel}
               </label>
               <select
@@ -152,7 +157,10 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
             </div>
 
             <div>
-              <label htmlFor="ui-density" className="text-brand-secondary-600 mb-1 block text-xs font-medium">
+              <label
+                htmlFor="ui-density"
+                className="text-brand-secondary-600 mb-1 block text-xs font-medium"
+              >
                 {profileT.densityLabel}
               </label>
               <select
@@ -183,7 +191,9 @@ export function SetProfileSettings({ locale = "pt-br", onSkip, onComplete }: Pro
           </div>
 
           <div className="border-brand-secondary-100 mt-1 border-t pt-4">
-            <p className="text-brand-secondary-700 mb-2 text-xs font-semibold">{profileT.aiSection}</p>
+            <p className="text-brand-secondary-700 mb-2 text-xs font-semibold">
+              {profileT.aiSection}
+            </p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               <ToggleButton
                 label={profileT.aiOptions.enabled}

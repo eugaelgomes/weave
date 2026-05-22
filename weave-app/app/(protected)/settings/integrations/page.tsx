@@ -32,9 +32,9 @@ export const IntegrationsSettings: React.FC<any> = () => {
     "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-white p-1.5 shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]";
 
   return (
-    <div className="overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm dark:shadow-surface-dark-sm dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+    <div className="dark:shadow-surface-dark-sm dark:border-surface-dark-border overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm dark:bg-[#1d1d1b]">
       {/* --- Header --- */}
-      <div className="flex items-center justify-between border-b border-neutral-100/60 px-4 py-2 dark:border-surface-dark-border">
+      <div className="dark:border-surface-dark-border flex items-center justify-between border-b border-neutral-100/60 px-4 py-2">
         <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] text-neutral-500 dark:text-neutral-400">
           <Plug className="text-brand-primary-500 h-3.5 w-3.5" />
           Integrações e Aplicações
@@ -75,7 +75,7 @@ export const IntegrationsSettings: React.FC<any> = () => {
               </div>
             </div>
 
-            <div className="mt-auto flex items-center justify-between border-t border-neutral-100/80 pt-3 dark:border-surface-dark-border">
+            <div className="dark:border-surface-dark-border mt-auto flex items-center justify-between border-t border-neutral-100/80 pt-3">
               {googleConnected ? (
                 <>
                   <span className="flex items-center gap-1.5 rounded-md bg-emerald-100 px-2 py-1 text-[9px] font-bold tracking-wider text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
@@ -84,7 +84,7 @@ export const IntegrationsSettings: React.FC<any> = () => {
                   </span>
                   <button
                     onClick={disconnectGoogleCalendar}
-                    className="rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-[10px] font-bold text-neutral-500 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 active:scale-95 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:hover:border-red-900/50 dark:hover:bg-red-900/10 dark:hover:text-red-400"
+                    className="dark:border-surface-dark-border-strong rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-[10px] font-bold text-neutral-500 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 active:scale-95 dark:bg-[#1d1d1b] dark:hover:border-red-900/50 dark:hover:bg-red-900/10 dark:hover:text-red-400"
                   >
                     Desconectar
                   </button>
@@ -126,7 +126,7 @@ export const IntegrationsSettings: React.FC<any> = () => {
               </div>
             </div>
 
-            <div className="mt-auto flex items-center justify-end border-t border-neutral-100/80 pt-3 dark:border-surface-dark-border">
+            <div className="dark:border-surface-dark-border mt-auto flex items-center justify-end border-t border-neutral-100/80 pt-3">
               <button
                 disabled
                 className="cursor-not-allowed rounded-md bg-neutral-100 px-4 py-1.5 text-[11px] font-bold text-neutral-400 dark:bg-[#1d1d1b] dark:text-neutral-600"
@@ -162,7 +162,7 @@ export const IntegrationsSettings: React.FC<any> = () => {
               </div>
             </div>
 
-            <div className="mt-auto flex items-center justify-end border-t border-neutral-100/80 pt-3 dark:border-surface-dark-border">
+            <div className="dark:border-surface-dark-border mt-auto flex items-center justify-end border-t border-neutral-100/80 pt-3">
               <button
                 disabled
                 className="cursor-not-allowed rounded-md bg-neutral-100 px-4 py-1.5 text-[11px] font-bold text-neutral-400 dark:bg-[#1d1d1b] dark:text-neutral-600"

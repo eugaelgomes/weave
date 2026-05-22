@@ -138,8 +138,8 @@ export default function CanvasView() {
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 py-12">
           <div className="max-w-md rounded-xl border border-neutral-200/80 bg-white/80 px-6 py-6 text-center shadow-sm backdrop-blur-md dark:border-neutral-700/70 dark:bg-neutral-950/60">
             <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
-              A Weave organiza macro-projetos neste canvas quando existem épicos para exibir. Adicione épicos à visão para
-              ver o fluxo de valor entre Discovery e Rollout.
+              A Weave organiza macro-projetos neste canvas quando existem épicos para exibir.
+              Adicione épicos à visão para ver o fluxo de valor entre Discovery e Rollout.
             </p>
           </div>
         </div>

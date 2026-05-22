@@ -24,16 +24,18 @@ const METHODOLOGY_STAGE_DEFAULTS: Record<string, Array<StageDraft>> = {
 };
 
 function stageDefaultsFor(methodology: string): StageDraft[] {
-  return (METHODOLOGY_STAGE_DEFAULTS[methodology] ?? METHODOLOGY_STAGE_DEFAULTS.kanban).map((s) => ({
-    ...s,
-  }));
+  return (METHODOLOGY_STAGE_DEFAULTS[methodology] ?? METHODOLOGY_STAGE_DEFAULTS.kanban).map(
+    (s) => ({
+      ...s,
+    })
+  );
 }
 
 export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
   const { getProjectStages, patchProjectStage } = useProjects();
   if (!state.created.projectId) {
     return (
-      <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
+      <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
         <div className="flex items-start gap-2 text-sm text-neutral-700 dark:text-neutral-200">
           <AlertCircle className="mt-0.5 h-4 w-4 text-neutral-400" aria-hidden />
           Crie o projeto no passo “Básico” para configurar etapas.
@@ -44,7 +46,12 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
 
   const projectId = state.created.projectId;
   const [loadingStages, setLoadingStages] = useState(false);
-  const [stagesFromApi, setStagesFromApi] = useState<Array<{ id: string; name: string; color: string | null; position: number }> | null>(null);
+  const [stagesFromApi, setStagesFromApi] = useState<Array<{
+    id: string;
+    name: string;
+    color: string | null;
+    position: number;
+  }> | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const defaults = useMemo(
@@ -131,14 +138,20 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
       actions.goToStep("collaborators");
     } catch (err) {
       console.error(err);
-      actions.setSetupStatus("stages", "error", "Falhou ao aplicar etapas. Pode tentar novamente mais tarde.");
+      actions.setSetupStatus(
+        "stages",
+        "error",
+        "Falhou ao aplicar etapas. Pode tentar novamente mais tarde."
+      );
       setLocalError("Falhou ao aplicar etapas. Tente novamente.");
     }
   };
 
   return (
-    <section className="rounded-md border border-neutral-200 bg-white p-2 dark:border-surface-dark-border dark:bg-[#1d1d1b]/50">
-      <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Etapas do quadro</h2>
+    <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
+      <h2 className="mb-2 text-xs font-bold tracking-wider text-neutral-400 uppercase">
+        Etapas do quadro
+      </h2>
       <p className="text-xs text-neutral-500 dark:text-neutral-500">
         Por omissão usamos as colunas da metodologia. Se quiser, personalize nomes e cores.
       </p>
@@ -150,20 +163,19 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
       ) : null}
 
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <label className="flex cursor-pointer items-center gap-2 self-start rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-xs font-medium text-neutral-700 dark:border-surface-dark-border-strong dark:bg-neutral-800 dark:text-neutral-200">
+        <label className="dark:border-surface-dark-border-strong flex cursor-pointer items-center gap-2 self-start rounded-md border border-neutral-200 bg-neutral-50 px-2 py-2 text-xs font-medium text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
           <input
             type="checkbox"
             checked={state.draft.customizeStages}
             onChange={(e) => onToggleCustomize(e.target.checked)}
-            className="rounded-md border-neutral-300 text-brand-primary-500 focus:ring-brand-primary-500/30"
+            className="text-brand-primary-500 focus:ring-brand-primary-500/30 rounded-md border-neutral-300"
           />
           Personalizar etapas
         </label>
         <div className="text-xs text-neutral-500 dark:text-neutral-500">
           {loadingStages ? (
             <span className="inline-flex items-center gap-2">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-              A carregar etapas…
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />A carregar etapas…
             </span>
           ) : stagesFromApi?.length ? (
             <span>{stagesFromApi.length} etapas no projeto</span>
@@ -174,10 +186,13 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
       </div>
 
       {!state.draft.customizeStages ? (
-        <ul className="mt-3 divide-y divide-neutral-100 rounded-md border border-neutral-100 dark:divide-surface-dark-border dark:border-surface-dark-border">
+        <ul className="dark:divide-surface-dark-border dark:border-surface-dark-border mt-3 divide-y divide-neutral-100 rounded-md border border-neutral-100">
           {defaults.map((s, i) => (
             <li key={i} className="flex items-center gap-2 px-2 py-2 text-sm">
-              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: s.color }}
+              />
               <span className="text-neutral-800 dark:text-neutral-100">{s.name}</span>
             </li>
           ))}
@@ -187,7 +202,7 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
           {(state.draft.stageDrafts.length ? state.draft.stageDrafts : defaults).map((row, i) => (
             <div
               key={i}
-              className="flex flex-col gap-2 rounded-md border border-neutral-100 bg-neutral-50/80 p-2 sm:flex-row sm:items-center dark:border-surface-dark-border dark:bg-[#1d1d1b]/40"
+              className="dark:border-surface-dark-border flex flex-col gap-2 rounded-md border border-neutral-100 bg-neutral-50/80 p-2 sm:flex-row sm:items-center dark:bg-[#1d1d1b]/40"
             >
               <div className="flex items-center gap-1 sm:shrink-0">
                 <button
@@ -203,7 +218,13 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
                 <button
                   type="button"
                   onClick={() => moveStage(i, 1)}
-                  disabled={i === (state.draft.stageDrafts.length ? state.draft.stageDrafts.length : defaults.length) - 1}
+                  disabled={
+                    i ===
+                    (state.draft.stageDrafts.length
+                      ? state.draft.stageDrafts.length
+                      : defaults.length) -
+                      1
+                  }
                   className="rounded-md p-1 text-neutral-500 hover:bg-neutral-200 disabled:opacity-30 dark:hover:bg-neutral-800"
                   aria-label="Mover etapa para baixo"
                   title="Mover para baixo"
@@ -213,7 +234,10 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
               </div>
               <input
                 type="text"
-                value={(state.draft.stageDrafts.length ? state.draft.stageDrafts : defaults)[i]?.name ?? row.name}
+                value={
+                  (state.draft.stageDrafts.length ? state.draft.stageDrafts : defaults)[i]?.name ??
+                  row.name
+                }
                 onChange={(e) =>
                   actions.setStageDrafts((prev) => {
                     const base = prev.length ? [...prev] : [...defaults];
@@ -221,12 +245,15 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
                     return base;
                   })
                 }
-                className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2 py-2 text-sm dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
+                className="dark:border-surface-dark-border-strong min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2 py-2 text-sm dark:bg-[#1d1d1b] dark:text-neutral-100"
                 placeholder="Nome da coluna"
               />
               <input
                 type="text"
-                value={(state.draft.stageDrafts.length ? state.draft.stageDrafts : defaults)[i]?.color ?? row.color}
+                value={
+                  (state.draft.stageDrafts.length ? state.draft.stageDrafts : defaults)[i]?.color ??
+                  row.color
+                }
                 onChange={(e) =>
                   actions.setStageDrafts((prev) => {
                     const base = prev.length ? [...prev] : [...defaults];
@@ -234,7 +261,7 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
                     return base;
                   })
                 }
-                className="w-full rounded-md border border-neutral-200 bg-white px-2 py-2 font-mono text-xs sm:w-28 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
+                className="dark:border-surface-dark-border-strong w-full rounded-md border border-neutral-200 bg-white px-2 py-2 font-mono text-xs sm:w-28 dark:bg-[#1d1d1b] dark:text-neutral-100"
                 placeholder="#hex"
               />
             </div>
@@ -253,7 +280,7 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
         <button
           type="button"
           onClick={onApplyAndContinue}
-          className="rounded-md bg-brand-primary-500 px-2 py-2 text-sm font-bold text-neutral-950 transition hover:brightness-95"
+          className="bg-brand-primary-500 rounded-md px-2 py-2 text-sm font-bold text-neutral-950 transition hover:brightness-95"
         >
           Aplicar e continuar
         </button>
@@ -261,4 +288,3 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
     </section>
   );
 }
-

@@ -4,8 +4,7 @@ export const engineShellClass =
   "flex w-full flex-col rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:p-3 dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-md";
 
 /** Full Engine page: cap height and scroll inside when the feed is long. */
-export const engineShellPageClass =
-  "max-h-[min(70vh,720px)] min-h-0 overflow-hidden";
+export const engineShellPageClass = "max-h-[min(70vh,720px)] min-h-0 overflow-hidden";
 
 export const engineFeedScrollClass = "min-h-0 flex-1 overflow-y-auto";
 

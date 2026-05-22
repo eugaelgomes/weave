@@ -48,10 +48,7 @@ export function useOrgPermissions() {
   const canManageAreas = useCallback(() => can(ORG_PERMISSIONS.MANAGE_AREAS), [can]);
   const canManageBrand = useCallback(() => can(ORG_PERMISSIONS.MANAGE_BRAND), [can]);
   const canManageDomains = useCallback(() => can(ORG_PERMISSIONS.MANAGE_DOMAINS), [can]);
-  const canManageOrgLifecycle = useCallback(
-    () => can(ORG_PERMISSIONS.MANAGE_ORG_LIFECYCLE),
-    [can]
-  );
+  const canManageOrgLifecycle = useCallback(() => can(ORG_PERMISSIONS.MANAGE_ORG_LIFECYCLE), [can]);
   const canManageWeaveAi = useCallback(() => can(ORG_PERMISSIONS.MANAGE_WEAVE_AI), [can]);
 
   return {

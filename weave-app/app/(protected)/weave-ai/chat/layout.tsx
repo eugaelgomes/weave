@@ -18,7 +18,15 @@ interface ChatSidebarProps {
 function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
   const router = useRouter();
   const { t } = useLanguage();
-  const { chatHistory, currentSession, createNewSession, deleteSession, loadChatHistory, hasMoreHistory, loading } = useChat();
+  const {
+    chatHistory,
+    currentSession,
+    createNewSession,
+    deleteSession,
+    loadChatHistory,
+    hasMoreHistory,
+    loading,
+  } = useChat();
 
   const handleDeleteSession = async (sessionId: string) => {
     const confirmed = window.confirm(t.weaveAi.deleteConfirm);
@@ -82,9 +90,7 @@ function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
                       key={chat.id}
                       className={cn(
                         "group flex items-center gap-1 rounded-md border border-transparent px-0.5 py-0.5 transition hover:border-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
-                        currentSession?.id === chat.id
-                          ? "bg-neutral-100 dark:bg-neutral-800"
-                          : ""
+                        currentSession?.id === chat.id ? "bg-neutral-100 dark:bg-neutral-800" : ""
                       )}
                     >
                       <button
@@ -108,7 +114,7 @@ function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
                           event.stopPropagation();
                           handleDeleteSession(chat.id);
                         }}
-                        className="flex h-6 w-6 items-center justify-center rounded-md text-neutral-400 opacity-0 transition hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                        className="flex h-6 w-6 items-center justify-center rounded-md text-neutral-400 opacity-0 transition group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400"
                         aria-label={t.weaveAi.deleteChat}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -144,18 +150,18 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex h-full flex-col gap-2">
-      <WeaveAIHeader/>
+      <WeaveAIHeader />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {/* Cabeçalho mobile padronizado */}
-        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+        <div className="dark:border-surface-dark-border flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:bg-[#1d1d1b]">
           <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
             Navegação
           </span>
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:text-neutral-300 dark:hover:bg-neutral-900"
+            className="dark:border-surface-dark-border-strong flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-900"
           >
             {isMobileMenuOpen ? (
               <>
@@ -193,7 +199,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
           )}
 
           {/* CONTEÚDO PRINCIPAL (Chat Area) */}
-          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-50 md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:shadow-surface-dark-sm dark:bg-[#1d1d1b] dark:md:border-neutral-800">
+          <main className="dark:shadow-surface-dark-sm flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-50 md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:bg-[#1d1d1b] dark:md:border-neutral-800">
             <div className="custom-scrollbar flex-1 overflow-auto text-neutral-900 dark:text-neutral-100">
               {children}
             </div>

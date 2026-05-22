@@ -84,7 +84,7 @@ const ProjectsManagementPage = () => {
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            className="flex h-7 items-center justify-center gap-1.5 rounded border border-neutral-300 bg-white px-2.5 text-[11px] font-medium text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-800"
+            className="dark:border-surface-dark-border-strong flex h-7 items-center justify-center gap-1.5 rounded border border-neutral-300 bg-white px-2.5 text-[11px] font-medium text-neutral-700 transition-colors hover:bg-neutral-50 dark:bg-[#1d1d1b] dark:text-neutral-300 dark:hover:bg-neutral-800"
           >
             <Download className="h-3 w-3" />
             <span>Exportar</span>
@@ -101,60 +101,60 @@ const ProjectsManagementPage = () => {
     >
       {!isLoading ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-surface-dark-border">
-              <div>
-                <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                  Total
-                </p>
-                <p className="text-lg leading-none font-bold text-neutral-900 dark:text-neutral-100">
-                  {metrics.total}
-                </p>
-              </div>
-              <Layers className="h-4 w-4 text-neutral-300 dark:text-neutral-600" />
+          <div className="dark:border-surface-dark-border flex items-center justify-between rounded border border-neutral-200 p-2">
+            <div>
+              <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                Total
+              </p>
+              <p className="text-lg leading-none font-bold text-neutral-900 dark:text-neutral-100">
+                {metrics.total}
+              </p>
             </div>
+            <Layers className="h-4 w-4 text-neutral-300 dark:text-neutral-600" />
+          </div>
 
-            <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-surface-dark-border">
-              <div>
-                <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                  Ativos
-                </p>
-                <p className="text-lg leading-none font-bold text-neutral-900 dark:text-neutral-100">
-                  {metrics.active}
-                </p>
-              </div>
-              <TrendingUp className="h-4 w-4 text-blue-500/70" />
+          <div className="dark:border-surface-dark-border flex items-center justify-between rounded border border-neutral-200 p-2">
+            <div>
+              <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                Ativos
+              </p>
+              <p className="text-lg leading-none font-bold text-neutral-900 dark:text-neutral-100">
+                {metrics.active}
+              </p>
             </div>
+            <TrendingUp className="h-4 w-4 text-blue-500/70" />
+          </div>
 
-            <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-surface-dark-border">
-              <div>
-                <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                  Risco
-                </p>
-                <p className="text-lg leading-none font-bold text-neutral-900 dark:text-neutral-100">
-                  {metrics.pausedOrBlocked}
-                </p>
-              </div>
-              <AlertCircle className="text-brand-primary-500/70 h-4 w-4" />
+          <div className="dark:border-surface-dark-border flex items-center justify-between rounded border border-neutral-200 p-2">
+            <div>
+              <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                Risco
+              </p>
+              <p className="text-lg leading-none font-bold text-neutral-900 dark:text-neutral-100">
+                {metrics.pausedOrBlocked}
+              </p>
             </div>
+            <AlertCircle className="text-brand-primary-500/70 h-4 w-4" />
+          </div>
 
-            <div className="flex items-center justify-between rounded border border-neutral-200 p-2 dark:border-surface-dark-border">
-              <div className="w-full">
-                <div className="mb-1 flex items-center justify-between">
-                  <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-                    Progresso
-                  </p>
-                  <p className="text-[10px] font-bold text-neutral-900 dark:text-neutral-100">
-                    {metrics.completionRate}%
-                  </p>
-                </div>
-                <div className="h-1 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700">
-                  <div
-                    className="h-full bg-green-500"
-                    style={{ width: `${metrics.completionRate}%` }}
-                  />
-                </div>
+          <div className="dark:border-surface-dark-border flex items-center justify-between rounded border border-neutral-200 p-2">
+            <div className="w-full">
+              <div className="mb-1 flex items-center justify-between">
+                <p className="text-[10px] font-medium tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                  Progresso
+                </p>
+                <p className="text-[10px] font-bold text-neutral-900 dark:text-neutral-100">
+                  {metrics.completionRate}%
+                </p>
+              </div>
+              <div className="h-1 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700">
+                <div
+                  className="h-full bg-green-500"
+                  style={{ width: `${metrics.completionRate}%` }}
+                />
               </div>
             </div>
+          </div>
         </div>
       ) : null}
 
@@ -170,7 +170,7 @@ const ProjectsManagementPage = () => {
                 placeholder="Buscar (ex: nome, metodologia)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-8 w-full rounded border border-neutral-300 bg-white pr-3 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-100"
+                className="dark:border-surface-dark-border-strong h-8 w-full rounded border border-neutral-300 bg-white pr-3 pl-8 text-xs focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-100"
               />
             </div>
 
@@ -179,7 +179,7 @@ const ProjectsManagementPage = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-8 appearance-none rounded border border-neutral-300 bg-white pr-8 pl-2.5 text-xs text-neutral-700 focus:border-yellow-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-300"
+                className="dark:border-surface-dark-border-strong h-8 appearance-none rounded border border-neutral-300 bg-white pr-8 pl-2.5 text-xs text-neutral-700 focus:border-yellow-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-300"
               >
                 <option value="all">Todos os Status</option>
                 <option value={PROJECT_STATUS.OPEN}>Abertos</option>
@@ -196,7 +196,7 @@ const ProjectsManagementPage = () => {
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="h-8 appearance-none rounded border border-neutral-300 bg-white pr-8 pl-2.5 text-xs text-neutral-700 focus:border-yellow-500 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-300"
+                className="dark:border-surface-dark-border-strong h-8 appearance-none rounded border border-neutral-300 bg-white pr-8 pl-2.5 text-xs text-neutral-700 focus:border-yellow-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-300"
               >
                 <option value="all">Qualquer Prioridade</option>
                 <option value="alta">Alta</option>
@@ -208,14 +208,14 @@ const ProjectsManagementPage = () => {
           </div>
 
           {/* Tabela */}
-          <div className="flex-1 overflow-auto rounded border border-neutral-200 bg-white dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+          <div className="dark:border-surface-dark-border flex-1 overflow-auto rounded border border-neutral-200 bg-white dark:bg-[#1d1d1b]">
             {isLoading ? (
               <div className="flex h-full items-center justify-center">
                 <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-yellow-500" />
               </div>
             ) : (
               <table className="min-w-full text-left text-xs whitespace-nowrap">
-                <thead className="sticky top-0 z-10 border-b border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-500 uppercase dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:text-neutral-400">
+                <thead className="dark:border-surface-dark-border sticky top-0 z-10 border-b border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-500 uppercase dark:bg-[#1d1d1b] dark:text-neutral-400">
                   <tr>
                     <th className="px-3 py-2">Projeto</th>
                     <th className="w-32 px-3 py-2">Status</th>
@@ -225,7 +225,7 @@ const ProjectsManagementPage = () => {
                     <th className="w-10 px-3 py-2 text-center"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100 dark:divide-surface-dark-border-muted">
+                <tbody className="dark:divide-surface-dark-border-muted divide-y divide-neutral-100">
                   {filteredProjects.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="p-8 text-center text-neutral-400">

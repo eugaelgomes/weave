@@ -52,7 +52,11 @@ function deriveSessionTitleFromMessages(messages: ChatMessage[]): string | null 
   const first = messages.find((m) => m.role === "user" && typeof m.content === "string");
   const raw = first?.content?.trim();
   if (!raw) return null;
-  const firstLine = raw.split(/\n/).find((l) => l.trim().length > 0)?.trim() ?? raw;
+  const firstLine =
+    raw
+      .split(/\n/)
+      .find((l) => l.trim().length > 0)
+      ?.trim() ?? raw;
   const collapsed = firstLine.replace(/\s+/g, " ").trim();
   if (!collapsed) return null;
   return collapsed.length > 255 ? collapsed.slice(0, 255) : collapsed;
@@ -175,7 +179,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         };
 
         setMessages((prev: ChatMessage[]) => {
-          const existingIndex = prev.findIndex((message: ChatMessage) => message.id === optimisticMessageId);
+          const existingIndex = prev.findIndex(
+            (message: ChatMessage) => message.id === optimisticMessageId
+          );
           if (existingIndex >= 0) {
             const next = [...prev];
             next[existingIndex] = userMessage;
@@ -342,12 +348,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
         chatStateEpochRef.current += 1;
 
-        setChatHistory((prev: ChatSession[]) => prev.filter((session: ChatSession) => session.id !== sessionId));
-
-        setCurrentSessionState((prev: ChatSession | null) => (prev?.id === sessionId ? null : prev));
-        setMessages((prev: ChatMessage[]) =>
-          currentSession?.id === sessionId ? [] : prev
+        setChatHistory((prev: ChatSession[]) =>
+          prev.filter((session: ChatSession) => session.id !== sessionId)
         );
+
+        setCurrentSessionState((prev: ChatSession | null) =>
+          prev?.id === sessionId ? null : prev
+        );
+        setMessages((prev: ChatMessage[]) => (currentSession?.id === sessionId ? [] : prev));
 
         return true;
       } catch (err) {

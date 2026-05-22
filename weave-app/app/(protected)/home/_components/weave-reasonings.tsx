@@ -78,15 +78,9 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
 
   const detail = detailReasoningId ? contentByReasoningId.get(detailReasoningId) : undefined;
 
-  const visibleReasonings = useMemo(
-    () => reasonings.filter((r) => !r.is_dismissed),
-    [reasonings]
-  );
+  const visibleReasonings = useMemo(() => reasonings.filter((r) => !r.is_dismissed), [reasonings]);
 
-  const pinned = useMemo(
-    () => visibleReasonings.filter((r) => r.is_pinned),
-    [visibleReasonings]
-  );
+  const pinned = useMemo(() => visibleReasonings.filter((r) => r.is_pinned), [visibleReasonings]);
 
   const recent = useMemo(
     () => visibleReasonings.filter((r) => !r.is_pinned).slice(0, 12),
@@ -203,12 +197,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
   const hasFeed = pinned.length > 0 || recent.length > 0;
 
   return (
-    <div
-      className={cn(
-        engineShellClass,
-        variant === "page" && hasFeed && engineShellPageClass
-      )}
-    >
+    <div className={cn(engineShellClass, variant === "page" && hasFeed && engineShellPageClass)}>
       <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         {variant === "home" ? (
           <div className="min-w-0">
@@ -252,11 +241,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
         </div>
       </header>
 
-      <section
-        className={cn(
-          variant === "page" && hasFeed && "flex min-h-0 flex-1 flex-col"
-        )}
-      >
+      <section className={cn(variant === "page" && hasFeed && "flex min-h-0 flex-1 flex-col")}>
         {variant === "page" && (
           <div className="mb-2 flex items-center justify-between gap-2">
             <h3 className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
@@ -308,20 +293,16 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
         )}
 
         {!loading && !error && hasFeed && (
-          <div
-            className={cn(
-              variant === "page" && engineFeedScrollClass
-            )}
-          >
+          <div className={cn(variant === "page" && engineFeedScrollClass)}>
             {summaryParts.length > 0 && (
               <p className="mb-2 shrink-0 text-[11px] font-normal text-neutral-400 dark:text-neutral-500">
                 {summaryParts.join(" · ")}
               </p>
             )}
 
-            <div className="divide-y divide-neutral-100 dark:divide-surface-dark-border">
+            <div className="dark:divide-surface-dark-border divide-y divide-neutral-100">
               {pinned.length > 0 && (
-                <p className="py-2 text-[10px] font-normal uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
+                <p className="py-2 text-[10px] font-normal tracking-wide text-neutral-400 uppercase dark:text-neutral-500">
                   {copy.pinnedSection}
                 </p>
               )}

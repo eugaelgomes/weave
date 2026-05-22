@@ -36,8 +36,8 @@ export function UsageHistoryTable({
   }, [expandedId, rowIds]);
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm transition-all dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
-      <div className="flex items-center justify-between border-b border-neutral-100/60 px-4 py-2.5 dark:border-surface-dark-border-muted">
+    <div className="dark:border-surface-dark-border dark:shadow-surface-dark-sm flex flex-col overflow-hidden rounded-md border border-neutral-200/60 bg-white shadow-sm transition-all dark:bg-[#1d1d1b]">
+      <div className="dark:border-surface-dark-border-muted flex items-center justify-between border-b border-neutral-100/60 px-4 py-2.5">
         <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
           <History size={13} className="text-amber-500" />
           Histórico Mensal
@@ -54,7 +54,7 @@ export function UsageHistoryTable({
           <button
             type="button"
             onClick={onRetry}
-            className="rounded-md border border-neutral-200 px-3 py-1.5 text-[11px] font-semibold text-neutral-700 hover:bg-neutral-50 dark:border-surface-dark-border dark:text-neutral-300 dark:hover:bg-neutral-800"
+            className="dark:border-surface-dark-border rounded-md border border-neutral-200 px-3 py-1.5 text-[11px] font-semibold text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-800"
           >
             Tentar novamente
           </button>
@@ -79,14 +79,15 @@ export function UsageHistoryTable({
                   <th className="px-3 py-2 text-right">Detalhes</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-surface-dark-border-muted">
+              <tbody className="dark:divide-surface-dark-border-muted divide-y divide-neutral-100">
                 {items.map((item) => {
                   const open = expandedId === item.id;
                   return (
                     <React.Fragment key={item.id}>
                       <tr className="hover:bg-neutral-50/70 dark:hover:bg-neutral-800/20">
                         <td className="px-3 py-2 text-left text-[11px] font-medium text-neutral-700 dark:text-neutral-300">
-                          {formatDate(item.period_start ?? "")} – {formatDate(item.period_end ?? "")}
+                          {formatDate(item.period_start ?? "")} –{" "}
+                          {formatDate(item.period_end ?? "")}
                         </td>
                         <td className="px-3 py-2 text-right text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                           {item.totals.notes_created_period.toLocaleString("pt-BR")}
@@ -110,7 +111,7 @@ export function UsageHistoryTable({
                           <button
                             type="button"
                             onClick={() => setExpandedId(open ? null : item.id)}
-                            className="inline-flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 hover:bg-neutral-50 dark:border-surface-dark-border dark:text-neutral-300 dark:hover:bg-neutral-800"
+                            className="dark:border-surface-dark-border inline-flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-800"
                           >
                             {open ? (
                               <>
@@ -126,7 +127,10 @@ export function UsageHistoryTable({
                       </tr>
                       {open ? (
                         <tr>
-                          <td colSpan={8} className="border-t border-neutral-100 bg-neutral-50/40 p-0 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/25">
+                          <td
+                            colSpan={8}
+                            className="dark:border-surface-dark-border-muted border-t border-neutral-100 bg-neutral-50/40 p-0 dark:bg-[#1d1d1b]/25"
+                          >
                             <UsageHistoryRowDetails item={item} />
                           </td>
                         </tr>
@@ -139,12 +143,12 @@ export function UsageHistoryTable({
           </div>
 
           {hasMore ? (
-            <div className="border-t border-neutral-100 px-4 py-3 dark:border-surface-dark-border-muted">
+            <div className="dark:border-surface-dark-border-muted border-t border-neutral-100 px-4 py-3">
               <button
                 type="button"
                 onClick={onLoadMore}
                 disabled={isLoadingMore}
-                className="rounded-md border border-neutral-200 px-3 py-1.5 text-[11px] font-semibold text-neutral-700 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-surface-dark-border dark:text-neutral-300 dark:hover:bg-neutral-800"
+                className="dark:border-surface-dark-border rounded-md border border-neutral-200 px-3 py-1.5 text-[11px] font-semibold text-neutral-700 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60 dark:text-neutral-300 dark:hover:bg-neutral-800"
               >
                 {isLoadingMore ? "Carregando..." : "Carregar mais períodos"}
               </button>

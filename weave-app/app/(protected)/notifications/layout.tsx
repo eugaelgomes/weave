@@ -35,7 +35,7 @@ function NotificationSidebar({ className, onLinkClick }: SidebarProps) {
 
   return (
     <div className={cn("flex flex-col", className)}>
-      <div className="flex h-12 shrink-0 items-center justify-between border-b border-neutral-100 px-4 dark:border-surface-dark-border">
+      <div className="dark:border-surface-dark-border flex h-12 shrink-0 items-center justify-between border-b border-neutral-100 px-4">
         <div className="flex items-center gap-2 text-[11px] font-bold tracking-[0.1em] text-neutral-800 uppercase dark:text-neutral-200">
           <Bell className="h-3.5 w-3.5 text-amber-500" />
           Notificações
@@ -90,17 +90,17 @@ export default function NotificationsLayout({ children }: { children: React.Reac
 
   return (
     <div className="flex h-[calc(100vh-5rem)] flex-col gap-2">
-      <NotificationsHeader className="border-b border-neutral-200/90 pb-2 dark:border-surface-dark-border" />
+      <NotificationsHeader className="dark:border-surface-dark-border border-b border-neutral-200/90 pb-2" />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:border-surface-dark-border dark:bg-[#1d1d1b]">
+        <div className="dark:border-surface-dark-border flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 md:hidden dark:bg-[#1d1d1b]">
           <span className="text-xs font-semibold tracking-wider text-neutral-500 dark:text-neutral-400">
             Navegação
           </span>
           <button
             type="button"
             onClick={() => setIsSidebarOpen((prev) => !prev)}
-            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:text-neutral-300 dark:hover:bg-neutral-900"
+            className="dark:border-surface-dark-border-strong flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-900"
           >
             {isSidebarOpen ? (
               <>
@@ -134,7 +134,7 @@ export default function NotificationsLayout({ children }: { children: React.Reac
             </div>
           )}
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-50 md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:shadow-surface-dark-sm dark:bg-[#1d1d1b] dark:md:border-neutral-800">
+          <div className="dark:shadow-surface-dark-sm flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-50 md:rounded-md md:border md:border-neutral-200 md:bg-white md:shadow-sm dark:bg-[#1d1d1b] dark:md:border-neutral-800">
             <div className="custom-scrollbar mx-auto flex h-full w-full max-w-5xl flex-col overflow-y-auto">
               {children}
             </div>

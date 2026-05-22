@@ -25,24 +25,49 @@ export function NoteFormatToolbar({ actions, className }: NoteFormatToolbarProps
   return (
     <div
       className={clsx(
-        "mb-1 flex flex-wrap items-center gap-0.5 rounded-lg border border-neutral-200/80 bg-neutral-50/90 px-1 py-0.5 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b]/60",
+        "dark:border-surface-dark-border-strong mb-1 flex flex-wrap items-center gap-0.5 rounded-lg border border-neutral-200/80 bg-neutral-50/90 px-1 py-0.5 dark:bg-[#1d1d1b]/60",
         className
       )}
       onMouseDown={(e) => e.preventDefault()}
     >
-      <button type="button" className={btn} title="Negrito (**)" onClick={() => actions.wrap("**", "**")}>
+      <button
+        type="button"
+        className={btn}
+        title="Negrito (**)"
+        onClick={() => actions.wrap("**", "**")}
+      >
         <Bold size={15} strokeWidth={2.25} />
       </button>
-      <button type="button" className={btn} title="Itálico (*)" onClick={() => actions.wrap("*", "*")}>
+      <button
+        type="button"
+        className={btn}
+        title="Itálico (*)"
+        onClick={() => actions.wrap("*", "*")}
+      >
         <Italic size={15} strokeWidth={2.25} />
       </button>
-      <button type="button" className={btn} title="Riscado (~~)" onClick={() => actions.wrap("~~", "~~")}>
+      <button
+        type="button"
+        className={btn}
+        title="Riscado (~~)"
+        onClick={() => actions.wrap("~~", "~~")}
+      >
         <Strikethrough size={15} strokeWidth={2.25} />
       </button>
-      <button type="button" className={btn} title="Código (`)" onClick={() => actions.wrap("`", "`")}>
+      <button
+        type="button"
+        className={btn}
+        title="Código (`)"
+        onClick={() => actions.wrap("`", "`")}
+      >
         <Code size={15} strokeWidth={2.25} />
       </button>
-      <button type="button" className={btn} title="Link [texto](url)" onClick={() => actions.insertLink()}>
+      <button
+        type="button"
+        className={btn}
+        title="Link [texto](url)"
+        onClick={() => actions.insertLink()}
+      >
         <Link2 size={15} strokeWidth={2.25} />
       </button>
     </div>

@@ -33,7 +33,7 @@ export function SaveStatusIndicator({
   if (status === "saved") {
     return (
       <div
-        className={`inline-flex items-center gap-1.5 text-[10px] font-semibold text-emerald-600 transition-all duration-200 animate-pulse dark:text-emerald-400 ${className}`}
+        className={`inline-flex animate-pulse items-center gap-1.5 text-[10px] font-semibold text-emerald-600 transition-all duration-200 dark:text-emerald-400 ${className}`}
       >
         <CheckCircle2 size={12} />
         {savedLabel}

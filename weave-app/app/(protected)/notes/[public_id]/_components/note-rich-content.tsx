@@ -51,7 +51,8 @@ function activeMarksForSegment(
 
 function sortMarksForNesting(marks: ContentMark[]): ContentMark[] {
   return [...marks].sort(
-    (a, b) => MARK_WRAP_ORDER.indexOf(a.type as (typeof MARK_WRAP_ORDER)[number]) -
+    (a, b) =>
+      MARK_WRAP_ORDER.indexOf(a.type as (typeof MARK_WRAP_ORDER)[number]) -
       MARK_WRAP_ORDER.indexOf(b.type as (typeof MARK_WRAP_ORDER)[number])
   );
 }
@@ -126,7 +127,7 @@ function wrapNode(node: React.ReactNode, mark: ContentMark, key: string): React.
           href={href}
           target={target}
           rel={target === "_blank" ? "noopener noreferrer" : undefined}
-          className="font-medium text-brand-primary-600 underline-offset-2 hover:underline dark:text-brand-primary-400"
+          className="text-brand-primary-600 dark:text-brand-primary-400 font-medium underline-offset-2 hover:underline"
         >
           {node}
         </a>
@@ -188,7 +189,7 @@ const markdownComponents = (opts: {
     <h1
       className={clsx(
         "font-bold tracking-tight text-neutral-900 dark:text-neutral-50",
-        opts.tight ? "mb-1 mt-0 text-2xl first:mt-0" : "mb-2 mt-4 text-3xl first:mt-0"
+        opts.tight ? "mt-0 mb-1 text-2xl first:mt-0" : "mt-4 mb-2 text-3xl first:mt-0"
       )}
     >
       {children}
@@ -198,19 +199,19 @@ const markdownComponents = (opts: {
     <h2
       className={clsx(
         "font-semibold tracking-tight text-neutral-900 dark:text-neutral-50",
-        opts.tight ? "mb-1 mt-2 text-xl" : "mb-2 mt-5 text-2xl"
+        opts.tight ? "mt-2 mb-1 text-xl" : "mt-5 mb-2 text-2xl"
       )}
     >
       {children}
     </h2>
   ),
   h3: ({ children }) => (
-    <h3 className="mb-1.5 mt-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+    <h3 className="mt-4 mb-1.5 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
       {children}
     </h3>
   ),
   h4: ({ children }) => (
-    <h4 className="mb-1.5 mt-3 text-base font-semibold text-neutral-900 dark:text-neutral-100">
+    <h4 className="mt-3 mb-1.5 text-base font-semibold text-neutral-900 dark:text-neutral-100">
       {children}
     </h4>
   ),
@@ -238,7 +239,7 @@ const markdownComponents = (opts: {
   a: ({ href, children }) => (
     <a
       href={href}
-      className="font-medium text-brand-primary-600 underline-offset-2 hover:underline dark:text-brand-primary-400"
+      className="text-brand-primary-600 dark:text-brand-primary-400 font-medium underline-offset-2 hover:underline"
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -246,11 +247,11 @@ const markdownComponents = (opts: {
     </a>
   ),
   blockquote: ({ children }) => (
-    <blockquote className="my-2 border-l-4 border-neutral-300 pl-4 text-neutral-700 italic dark:border-surface-dark-border-muted dark:text-neutral-300">
+    <blockquote className="dark:border-surface-dark-border-muted my-2 border-l-4 border-neutral-300 pl-4 text-neutral-700 italic dark:text-neutral-300">
       {children}
     </blockquote>
   ),
-  hr: () => <hr className="my-4 border-neutral-200 dark:border-surface-dark-border-strong" />,
+  hr: () => <hr className="dark:border-surface-dark-border-strong my-4 border-neutral-200" />,
   pre: ({ children }) => (
     <pre className="my-3 overflow-x-auto rounded-xl bg-neutral-100 p-4 dark:bg-[#1d1d1b]/80">
       {children}
@@ -274,10 +275,16 @@ const markdownComponents = (opts: {
       <table className="w-full border-collapse text-left text-sm">{children}</table>
     </div>
   ),
-  thead: ({ children }) => <thead className="border-b border-neutral-200 dark:border-surface-dark-border-strong">{children}</thead>,
+  thead: ({ children }) => (
+    <thead className="dark:border-surface-dark-border-strong border-b border-neutral-200">
+      {children}
+    </thead>
+  ),
   tbody: ({ children }) => <tbody>{children}</tbody>,
   tr: ({ children }) => (
-    <tr className="border-b border-neutral-100 last:border-0 dark:border-surface-dark-border">{children}</tr>
+    <tr className="dark:border-surface-dark-border border-b border-neutral-100 last:border-0">
+      {children}
+    </tr>
   ),
   th: ({ children }) => (
     <th className="px-3 py-2 font-semibold text-neutral-900 dark:text-neutral-100">{children}</th>
@@ -307,7 +314,7 @@ const markdownComponents = (opts: {
           checked={Boolean(checked)}
           disabled={disabled}
           readOnly
-          className="mr-2 mt-1 h-4 w-4 shrink-0 rounded border-neutral-300 text-brand-primary-600 accent-brand-primary-500 dark:border-surface-dark-border-muted"
+          className="text-brand-primary-600 accent-brand-primary-500 dark:border-surface-dark-border-muted mt-1 mr-2 h-4 w-4 shrink-0 rounded border-neutral-300"
         />
       );
     }
@@ -361,7 +368,7 @@ export function NoteRichContent({
   return (
     <div
       className={clsx(
-        "note-rich-content max-w-none select-text text-[16px] leading-7 text-neutral-800 dark:text-neutral-200",
+        "note-rich-content max-w-none text-[16px] leading-7 text-neutral-800 select-text dark:text-neutral-200",
         className
       )}
     >

@@ -109,7 +109,9 @@ export async function fetchInternalCalendarEvents(
   const query = params.toString() ? `?${params.toString()}` : "";
   const res = await apiClient.get(`${API_ENDPOINTS.CALENDAR_EVENTS}${query}`);
   const data = await handleResponse<unknown>(res);
-  const parsedData = z.object({ events: z.array(InternalCalendarEventSchema).optional() }).parse(data);
+  const parsedData = z
+    .object({ events: z.array(InternalCalendarEventSchema).optional() })
+    .parse(data);
   return parsedData.events || [];
 }
 

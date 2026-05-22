@@ -49,17 +49,44 @@ export function WeaveEngineIcon({ className, tone, ...props }: WeaveEngineIconPr
   const palette = tone ? STATUS_PALETTES[tone] : DEFAULT_PALETTE;
 
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className={cn("shrink-0", className)} fill="none" {...props}>
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={cn("shrink-0", className)}
+      fill="none"
+      {...props}
+    >
       <defs>
-        <linearGradient id={`${uid}-top`} x1="12" y1="2.22" x2="12" y2="10.84" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id={`${uid}-top`}
+          x1="12"
+          y1="2.22"
+          x2="12"
+          y2="10.84"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop stopColor={palette.top[0]} />
           <stop offset="1" stopColor={palette.top[1]} />
         </linearGradient>
-        <linearGradient id={`${uid}-left`} x1="5.11" y1="10.51" x2="11.89" y2="18.89" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id={`${uid}-left`}
+          x1="5.11"
+          y1="10.51"
+          x2="11.89"
+          y2="18.89"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop stopColor={palette.left[0]} />
           <stop offset="1" stopColor={palette.left[1]} />
         </linearGradient>
-        <linearGradient id={`${uid}-right`} x1="18.89" y1="10.51" x2="12.11" y2="18.89" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id={`${uid}-right`}
+          x1="18.89"
+          y1="10.51"
+          x2="12.11"
+          y2="18.89"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop stopColor={palette.right[0]} />
           <stop offset="1" stopColor={palette.right[1]} />
         </linearGradient>

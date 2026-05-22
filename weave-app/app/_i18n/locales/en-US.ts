@@ -190,8 +190,7 @@ const enUS: TranslationKeys = {
     conversation: {
       openerMessage:
         "Hi {name}, what should we do in the Engine today? We have a few paths — which one do we take?",
-      openerWithProject:
-        "Hi {name}. Continue on project {project}? What should we do?",
+      openerWithProject: "Hi {name}. Continue on project {project}? What should we do?",
       askWhichPath: "Which path should we take?",
       optionPublishInsight: "Publish manual insight",
       optionTuneInstructions: "Tune engine instructions",
@@ -270,8 +269,7 @@ const enUS: TranslationKeys = {
       reviewType: "Type",
       successSave: "Instructions saved",
       errorSave: "Failed to save instructions",
-      scopeHintDetail:
-        "Global applies to all types; per-type overrides only that report.",
+      scopeHintDetail: "Global applies to all types; per-type overrides only that report.",
       typeDescriptions: {
         analysis: "Operational analysis",
         daily_standup: "Automated dailies",
@@ -365,7 +363,8 @@ const enUS: TranslationKeys = {
   organizationGeneral: {
     description: "Manage your organization profile and workspace settings.",
     emptyTitle: "Welcome to Weave",
-    emptyBody: "Create your first workspace to start managing projects and collaborating with your team.",
+    emptyBody:
+      "Create your first workspace to start managing projects and collaborating with your team.",
     createWorkspace: "Create Workspace",
     deletedTitle: "Organization Deleted",
     deletedBody: "This organization is scheduled for permanent deletion in 30 days.",
@@ -380,7 +379,8 @@ const enUS: TranslationKeys = {
     cityStateLabel: "City/State",
     countryLabel: "Country",
     noAddress: "No address on file.",
-    addressBillingHint: "Addresses are used for billing and can be edited in subscription management.",
+    addressBillingHint:
+      "Addresses are used for billing and can be edited in subscription management.",
     featuresSectionTitle: "Features",
     featureAiAgent: "AI Assistant",
     featureAiAgentHint: "Artificial intelligence capabilities",
@@ -590,7 +590,8 @@ const enUS: TranslationKeys = {
     hidePassword: "Hide password",
     successExisting:
       "Invite accepted! We sent a confirmation email. Sign in with the invited email and your password — you'll be taken to your organization's areas.",
-    successCreatedLoginElse: "Account created and invite accepted. Sign in with your username and password on the next screen.",
+    successCreatedLoginElse:
+      "Account created and invite accepted. Sign in with your username and password on the next screen.",
     acceptError: "Could not accept invite.",
   },
   headers: {

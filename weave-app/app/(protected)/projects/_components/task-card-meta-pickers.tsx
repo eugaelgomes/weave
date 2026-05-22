@@ -77,9 +77,7 @@ export function TaskCardTagsPicker({
 }: TaskCardTagsPickerProps) {
   if (projectTags.length === 0) {
     return (
-      <p className="text-neutral-500 dark:text-neutral-400">
-        Este projeto ainda não tem tags.
-      </p>
+      <p className="text-neutral-500 dark:text-neutral-400">Este projeto ainda não tem tags.</p>
     );
   }
 
@@ -97,7 +95,7 @@ export function TaskCardTagsPicker({
             className={`rounded-md border px-2 py-1 text-[11px] transition-opacity disabled:cursor-not-allowed disabled:opacity-40 ${
               selected
                 ? "border-brand-primary-500 bg-brand-primary-500/10 text-brand-primary-500"
-                : "border-neutral-200 text-neutral-600 hover:border-neutral-300 dark:border-surface-dark-border dark:text-neutral-300 dark:hover:border-neutral-600"
+                : "dark:border-surface-dark-border border-neutral-200 text-neutral-600 hover:border-neutral-300 dark:text-neutral-300 dark:hover:border-neutral-600"
             }`}
             style={
               selected
@@ -131,9 +129,7 @@ export function TaskCardCollaboratorsPicker({
   onToggle,
 }: TaskCardCollaboratorsPickerProps) {
   if (projectCollaborators.length === 0) {
-    return (
-      <p className="text-neutral-500 dark:text-neutral-400">Sem colaboradores no projeto.</p>
-    );
+    return <p className="text-neutral-500 dark:text-neutral-400">Sem colaboradores no projeto.</p>;
   }
 
   return (
@@ -150,7 +146,7 @@ export function TaskCardCollaboratorsPicker({
             className={`rounded-md border px-2 py-1 text-[11px] transition-opacity disabled:cursor-not-allowed disabled:opacity-40 ${
               selected
                 ? "border-brand-primary-500 bg-brand-primary-500/10 text-brand-primary-500"
-                : "border-neutral-200 text-neutral-600 hover:border-neutral-300 dark:border-surface-dark-border dark:text-neutral-300 dark:hover:border-neutral-600"
+                : "dark:border-surface-dark-border border-neutral-200 text-neutral-600 hover:border-neutral-300 dark:text-neutral-300 dark:hover:border-neutral-600"
             }`}
           >
             {label}

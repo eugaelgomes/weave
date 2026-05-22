@@ -20,10 +20,7 @@ import type { Note, UpdateNoteData } from "@/app/_contexts/notes-context";
 import type { Project, ProjectStage, TaskPriority } from "@/app/_contexts/projects-context";
 import type { TaskNoteModalMode } from "./use-task-note-modal";
 import { getTagColor } from "@/app/_utils/tag-colors";
-import {
-  getCollaboratorDisplayName,
-  getCollaboratorAvatarUrl,
-} from "@/app/_utils/collaborators";
+import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/_utils/collaborators";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 
 interface TaskNoteModalMetaProps {
@@ -67,8 +64,7 @@ export function TaskNoteModalMeta({
   const currentProjectId = note?.associated_project?.id ?? initialProjectId ?? "";
   const currentStageId = note?.associated_project?.stage_id ?? initialStageId ?? "";
   const effectiveStageId =
-    currentStageId ||
-    (note?.associated_project && projectStages[0] ? projectStages[0].id : "");
+    currentStageId || (note?.associated_project && projectStages[0] ? projectStages[0].id : "");
 
   const formatDateForInput = useCallback((dateStr: string | null | undefined): string => {
     if (!dateStr) return "";
@@ -114,13 +110,13 @@ export function TaskNoteModalMeta({
 
   if (mode === "create" && !note) {
     return (
-      <div className="border-b border-neutral-100 px-4 py-3 dark:border-surface-dark-border">
+      <div className="dark:border-surface-dark-border border-b border-neutral-100 px-4 py-3">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <MetaRow icon={FolderKanban} label="Projeto">
             <select
               value={initialProjectId || ""}
               onChange={(e) => void onProjectChange(e.target.value)}
-              className="w-full cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 outline-none transition-colors hover:bg-neutral-100 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75"
+              className="w-full cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 transition-colors outline-none hover:bg-neutral-100 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75"
             >
               <option value="">Sem projeto</option>
               {projects.map((p) => (
@@ -136,7 +132,7 @@ export function TaskNoteModalMeta({
               <select
                 value={initialStageId || ""}
                 onChange={(e) => void onStageChange(e.target.value)}
-                className="w-full cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 outline-none transition-colors hover:bg-neutral-100 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75"
+                className="w-full cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 transition-colors outline-none hover:bg-neutral-100 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75"
               >
                 <option value="">Selecione o estágio</option>
                 {projectStages.map((s) => (
@@ -155,7 +151,7 @@ export function TaskNoteModalMeta({
   if (!note) return null;
 
   return (
-    <div className="border-b border-neutral-100 px-4 py-3 dark:border-surface-dark-border">
+    <div className="dark:border-surface-dark-border border-b border-neutral-100 px-4 py-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {(canEdit || note.associated_project) && (
           <MetaRow icon={FolderKanban} label="Projeto">
@@ -163,7 +159,7 @@ export function TaskNoteModalMeta({
               <select
                 value={currentProjectId}
                 onChange={(e) => void onProjectChange(e.target.value)}
-                className="w-full cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 outline-none transition-colors hover:bg-neutral-100 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75"
+                className="w-full cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 transition-colors outline-none hover:bg-neutral-100 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75"
               >
                 <option value="">Sem projeto</option>
                 {projects.map((p) => (
@@ -194,7 +190,7 @@ export function TaskNoteModalMeta({
                 <select
                   value={effectiveStageId}
                   onChange={(e) => void onStageChange(e.target.value)}
-                  className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 outline-none transition-colors hover:bg-neutral-100 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75"
+                  className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 transition-colors outline-none hover:bg-neutral-100 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75"
                 >
                   {projectStages.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -227,7 +223,7 @@ export function TaskNoteModalMeta({
                 const v = e.target.value;
                 void onDueDateChange(v ? new Date(v).toISOString() : null);
               }}
-              className="w-full rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 outline-none transition-colors hover:bg-neutral-100 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75"
+              className="w-full rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 transition-colors outline-none hover:bg-neutral-100 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75"
             />
           ) : (
             <span className="text-xs text-neutral-600 dark:text-neutral-300">
@@ -253,7 +249,7 @@ export function TaskNoteModalMeta({
               <select
                 value={note.priority_id ?? ""}
                 onChange={(e) => void onPriorityChange(e.target.value)}
-                className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 outline-none transition-colors hover:bg-neutral-100 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75"
+                className="min-w-0 flex-1 cursor-pointer rounded-lg border-0 bg-neutral-100/80 px-2 py-1.5 text-xs text-neutral-800 transition-colors outline-none hover:bg-neutral-100 dark:bg-neutral-800/55 dark:text-neutral-200 dark:hover:bg-neutral-800/75"
               >
                 <option value="">Sem prioridade</option>
                 {taskPriorities.map((p) => (
@@ -343,7 +339,7 @@ export function TaskNoteModalMeta({
                         }
                       }}
                       placeholder="Nova tag..."
-                      className="w-20 rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-[11px] outline-none focus:border-yellow-500 dark:border-surface-dark-border dark:bg-neutral-800 dark:text-neutral-200"
+                      className="dark:border-surface-dark-border w-20 rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-[11px] outline-none focus:border-yellow-500 dark:bg-neutral-800 dark:text-neutral-200"
                       autoFocus
                     />
                     <button
@@ -378,7 +374,7 @@ export function TaskNoteModalMeta({
                     return (
                       <div
                         key={index}
-                        className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-200 dark:border-surface-dark-border-strong dark:bg-neutral-700"
+                        className="dark:border-surface-dark-border-strong flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-neutral-200 dark:bg-neutral-700"
                         title={displayName}
                       >
                         {avatarUrl ? (

@@ -6,7 +6,10 @@ export const ReasoningInstructionSliceSchema = z.object({
 });
 
 export const ReasoningInstructionsSchema = z.object({
-  global: ReasoningInstructionSliceSchema.optional().default({ systemAppend: "", promptAppend: "" }),
+  global: ReasoningInstructionSliceSchema.optional().default({
+    systemAppend: "",
+    promptAppend: "",
+  }),
   byType: z.record(z.string(), ReasoningInstructionSliceSchema).optional().default({}),
 });
 

@@ -43,19 +43,15 @@ export default function WeaveAi() {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
-          "print:hidden fixed z-[106] flex h-14 w-14 items-center justify-center rounded-xl shadow-lg transition hover:scale-[1.03] active:scale-[0.98]",
-          "bottom-5 right-5 md:bottom-10 md:right-8",
-          "bg-brand-primary-500 text-neutral-900 hover:bg-brand-primary-400",
+          "fixed z-[106] flex h-14 w-14 items-center justify-center rounded-xl shadow-lg transition hover:scale-[1.03] active:scale-[0.98] print:hidden",
+          "right-5 bottom-5 md:right-8 md:bottom-10",
+          "bg-brand-primary-500 hover:bg-brand-primary-400 text-neutral-900",
           "focus-visible:ring-brand-primary-400 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none dark:text-neutral-950 dark:focus-visible:ring-offset-neutral-900"
         )}
         aria-haspopup="dialog"
         aria-label={open ? t.common.close : t.nav.weaveAi}
       >
-        {open ? (
-          <X className="h-6 w-6" strokeWidth={2} aria-hidden />
-        ) : (
-          <>W.AI</>
-        )}
+        {open ? <X className="h-6 w-6" strokeWidth={2} aria-hidden /> : <>W.AI</>}
       </button>
 
       {mounted &&
@@ -73,9 +69,9 @@ export default function WeaveAi() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="weave-ai-modal-title"
-              className="fixed right-4 bottom-24 z-[105] flex w-[min(28rem,calc(100vw-2rem))] max-h-[min(75vh,600px)] min-h-[min(42vh,360px)] flex-col overflow-hidden rounded-t-2xl border border-neutral-200 bg-white shadow-2xl sm:bottom-28 sm:right-6 sm:rounded-xl md:right-8 dark:border-surface-dark-border dark:bg-[#1d1d1b] max-sm:left-4 max-sm:right-4 max-sm:w-auto"
+              className="dark:border-surface-dark-border fixed right-4 bottom-24 z-[105] flex max-h-[min(75vh,600px)] min-h-[min(42vh,360px)] w-[min(28rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-t-2xl border border-neutral-200 bg-white shadow-2xl max-sm:right-4 max-sm:left-4 max-sm:w-auto sm:right-6 sm:bottom-28 sm:rounded-xl md:right-8 dark:bg-[#1d1d1b]"
             >
-              <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-neutral-200 px-3 dark:border-surface-dark-border">
+              <div className="dark:border-surface-dark-border flex h-12 shrink-0 items-center justify-between gap-2 border-b border-neutral-200 px-3">
                 <h2
                   id="weave-ai-modal-title"
                   className="truncate text-xs font-semibold text-neutral-800 dark:text-neutral-100"
@@ -86,7 +82,7 @@ export default function WeaveAi() {
                   <Link
                     href="/weave-ai/chat"
                     onClick={() => setOpen(false)}
-                    className="text-[10px] font-semibold text-brand-primary-600 hover:underline dark:text-brand-primary-400"
+                    className="text-brand-primary-600 dark:text-brand-primary-400 text-[10px] font-semibold hover:underline"
                   >
                     {t.nav.weaveAiOpenFull}
                   </Link>

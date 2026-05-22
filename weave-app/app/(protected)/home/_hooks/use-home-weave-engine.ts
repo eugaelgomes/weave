@@ -66,9 +66,9 @@ export function useHomeWeaveEngine(options?: { projectsLimit?: number; perProjec
       const merged: HomeReasoningItem[] = perProject.flatMap(
         ({ project, list }: { project: ProjectOverview; list: ReasoningLean[] }) =>
           list.map((r: ReasoningLean) => ({
-          ...r,
-          projectId: project.id,
-          projectName: project.title,
+            ...r,
+            projectId: project.id,
+            projectName: project.title,
           }))
       );
 
@@ -155,4 +155,3 @@ export function useHomeWeaveEngine(options?: { projectsLimit?: number; perProjec
     ensureContent,
   };
 }
-

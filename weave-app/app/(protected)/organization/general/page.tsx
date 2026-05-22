@@ -40,8 +40,8 @@ const WorkspacePage = () => {
     return (
       <WorkspacePageShell description={t.organizationGeneral.description}>
         <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col items-center justify-center py-4">
-          <div className="w-full max-w-md rounded-md border border-neutral-200 bg-white p-8 text-center shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-md bg-neutral-50 shadow-sm ring-1 ring-neutral-200 dark:bg-[#1d1d1b] dark:ring-surface-dark-border-strong">
+          <div className="dark:border-surface-dark-border dark:shadow-surface-dark-sm w-full max-w-md rounded-md border border-neutral-200 bg-white p-8 text-center shadow-sm dark:bg-[#1d1d1b]">
+            <div className="dark:ring-surface-dark-border-strong mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-md bg-neutral-50 shadow-sm ring-1 ring-neutral-200 dark:bg-[#1d1d1b]">
               <Building2 className="h-10 w-10 text-neutral-400" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
@@ -54,7 +54,7 @@ const WorkspacePage = () => {
               type="button"
               onClick={handleCreateOrganization}
               disabled={isCreating}
-              className="mt-8 inline-flex items-center gap-2 rounded-md bg-brand-primary-500 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-yellow-600 hover:shadow-lg disabled:opacity-70 dark:hover:bg-yellow-600"
+              className="bg-brand-primary-500 mt-8 inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-yellow-600 hover:shadow-lg disabled:opacity-70 dark:hover:bg-yellow-600"
             >
               {isCreating ? (
                 <Activity className="h-4 w-4 animate-spin" />
@@ -73,7 +73,7 @@ const WorkspacePage = () => {
     return (
       <WorkspacePageShell description={t.organizationGeneral.description}>
         <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col items-center justify-center py-4">
-          <div className="w-full max-w-md rounded-md border border-neutral-200 bg-white p-8 text-center shadow-sm dark:border-surface-dark-border dark:bg-[#1d1d1b] dark:shadow-surface-dark-sm">
+          <div className="dark:border-surface-dark-border dark:shadow-surface-dark-sm w-full max-w-md rounded-md border border-neutral-200 bg-white p-8 text-center shadow-sm dark:bg-[#1d1d1b]">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-md bg-red-100 dark:bg-red-900/20">
               <Trash2 className="h-10 w-10 text-red-600 dark:text-red-400" />
             </div>
@@ -86,7 +86,7 @@ const WorkspacePage = () => {
             <button
               type="button"
               onClick={handleRestoreOrganization}
-              className="mt-6 inline-flex items-center gap-2 rounded-md bg-brand-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-600 dark:hover:bg-yellow-600"
+              className="bg-brand-primary-500 mt-6 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white hover:bg-yellow-600 dark:hover:bg-yellow-600"
             >
               <RefreshCw className="h-4 w-4" /> {t.organizationGeneral.restoreOrganization}
             </button>

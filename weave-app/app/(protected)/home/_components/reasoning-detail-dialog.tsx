@@ -10,7 +10,10 @@ import {
   engineTextLinkClass,
   engineIconActionClass,
 } from "@/app/(protected)/weave-engine/_components/engine-styles";
-import { formatRelativeTime, getReasoningTypeLabel } from "@/app/(protected)/home/_components/engine-utils";
+import {
+  formatRelativeTime,
+  getReasoningTypeLabel,
+} from "@/app/(protected)/home/_components/engine-utils";
 import { cn } from "@/lib/utils";
 
 type EngineCopy = TranslationKeys["home"]["engine"];
@@ -80,12 +83,8 @@ export function ReasoningDetailDialog({
             {copy.loadingDetail}
           </p>
         ) : (
-          <div
-            className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed font-normal text-neutral-800 dark:text-neutral-200 [&_pre]:bg-transparent [&_pre]:p-0"
-          >
-            <div className="whitespace-pre-wrap">
-              {detail.output_markdown || copy.noContent}
-            </div>
+          <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed font-normal text-neutral-800 dark:text-neutral-200 [&_pre]:bg-transparent [&_pre]:p-0">
+            <div className="whitespace-pre-wrap">{detail.output_markdown || copy.noContent}</div>
           </div>
         )}
 

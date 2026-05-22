@@ -14,17 +14,17 @@ The **Weave Notes** front end is a Next.js application for structured work: bloc
 
 ## Technologies
 
-| Technology         | Version | Usage                          |
-| ------------------ | ------- | ------------------------------ |
-| **Next.js**        | 16+     | React framework (App Router)   |
-| **React**          | 19      | UI library                     |
-| **TypeScript**     | 5+      | Static typing                  |
-| **Tailwind CSS**   | 4+      | Utility-first styling          |
-| **@dnd-kit**       | 6+      | Drag and drop                  |
-| **react-markdown** | 10+     | Markdown rendering             |
-| **lucide-react**   | —       | Icons                          |
-| **sonner**         | 2+      | Toast notifications            |
-| **next-themes**    | —       | Light / dark theme             |
+| Technology         | Version | Usage                        |
+| ------------------ | ------- | ---------------------------- |
+| **Next.js**        | 16+     | React framework (App Router) |
+| **React**          | 19      | UI library                   |
+| **TypeScript**     | 5+      | Static typing                |
+| **Tailwind CSS**   | 4+      | Utility-first styling        |
+| **@dnd-kit**       | 6+      | Drag and drop                |
+| **react-markdown** | 10+     | Markdown rendering           |
+| **lucide-react**   | —       | Icons                        |
+| **sonner**         | 2+      | Toast notifications          |
+| **next-themes**    | —       | Light / dark theme           |
 
 ## Directory layout
 
@@ -43,7 +43,7 @@ weave-app/
 └── package.json
 ```
 
-Feature UI is colocated under route folders (for example `app/(protected)/notes/[id]/_components`).
+Feature UI is colocated under route folders (for example `app/(protected)/notes/[public_id]/_components`).
 
 ## Architecture
 
@@ -71,18 +71,19 @@ Authenticated-only providers mount after the user is signed in.
 
 ### Routes (high level)
 
-| Route pattern              | Type        | Description                    |
-| -------------------------- | ----------- | ------------------------------ |
-| `/`                        | Public      | Landing                        |
-| `/auth`, `/activate`       | Public      | Sign-in, sign-up, activation   |
-| `/home`                    | Protected   | Dashboard                      |
-| `/notes`, `/notes/[id]`    | Protected   | Notes                          |
-| `/projects`, `/projects/*` | Protected   | Projects                       |
-| `/organization/*`          | Protected   | Organization admin and areas |
-| `/settings/*`              | Protected   | User and workspace settings    |
-| `/weave-ai/*`              | Protected   | AI chat and agents             |
-| `/notifications/*`       | Protected   | Notifications                  |
-| `/calendar`                | Protected   | Calendar                       |
+| Route pattern                                  | Type      | Description                  |
+| ---------------------------------------------- | --------- | ---------------------------- |
+| `/`                                            | Public    | Landing                      |
+| `/auth`, `/activate`                           | Public    | Sign-in, sign-up, activation |
+| `/home`                                        | Protected | Dashboard                    |
+| `/notes`, `/notes/[public_id]`                 | Protected | Notes (public id in URL)     |
+| `/projects/[public_id]/tasks/[public_note_id]` | Protected | Task alias → `/notes/...`    |
+| `/projects`, `/projects/*`                     | Protected | Projects                     |
+| `/organization/*`                              | Protected | Organization admin and areas |
+| `/settings/*`                                  | Protected | User and workspace settings  |
+| `/weave-ai/*`                                  | Protected | AI chat and agents           |
+| `/notifications/*`                             | Protected | Notifications                |
+| `/calendar`                                    | Protected | Calendar                     |
 
 Exact URLs follow the App Router file tree under `app/(public)` and `app/(protected)`.
 
@@ -131,15 +132,15 @@ docker compose up --build
 
 ## Scripts
 
-| Script                 | Description                    |
-| ---------------------- | ------------------------------ |
-| `npm run dev`          | Dev server with hot reload     |
-| `npm run build`        | Production build               |
-| `npm start`            | Production server              |
-| `npm run lint`         | ESLint                         |
-| `npm run lint:fix`     | ESLint with fixes              |
-| `npm run format`       | Prettier write                 |
-| `npm run format:check` | Prettier check                 |
+| Script                 | Description                |
+| ---------------------- | -------------------------- |
+| `npm run dev`          | Dev server with hot reload |
+| `npm run build`        | Production build           |
+| `npm start`            | Production server          |
+| `npm run lint`         | ESLint                     |
+| `npm run lint:fix`     | ESLint with fixes          |
+| `npm run format`       | Prettier write             |
+| `npm run format:check` | Prettier check             |
 
 ---
 

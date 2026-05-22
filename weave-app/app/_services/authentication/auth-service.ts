@@ -21,7 +21,7 @@ import {
   BackendMeResponseSchema,
   CreateUserDataSchema,
   LoginCredentialsSchema,
-  ActivateAccountPayloadSchema
+  ActivateAccountPayloadSchema,
 } from "./auth.schema";
 
 export type {
@@ -122,7 +122,6 @@ const _mapBackendDataToUser = (data: BackendUserData): User => {
     phone_number: profile.phone_number ?? undefined,
     public_id: profile.public_id,
 
-
     // Settings
     theme_mode: normalizeThemeMode(settings?.theme_mode ?? undefined),
     private_profile: settings?.private_profile ?? undefined,
@@ -172,7 +171,6 @@ const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
     email: user.user_profile.email,
     avatar_url: getStorageUrl(user.user_profile.avatar_url),
     public_id: user.user_profile.public_id,
-
 
     // Settings
     theme_mode: normalizeThemeMode(user.user_settings.theme_mode),
