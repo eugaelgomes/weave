@@ -183,7 +183,8 @@ class CreateUsersController extends BaseController {
         email,
         username,
         activationToken,
-        activationCode
+        req.headers["accept-language"],
+        req.body?.locale
       );
 
       return res.status(201).json({

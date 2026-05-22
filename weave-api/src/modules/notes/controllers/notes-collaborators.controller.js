@@ -119,7 +119,7 @@ class NotesCollaboratorsController extends NotesBaseController {
             collaboratorData.name,
             noteData.title,
             ownerData.name,
-            noteId
+            noteData.public_note_id || null
           );
         } catch (emailError) {
           console.error(

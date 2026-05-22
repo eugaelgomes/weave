@@ -30,6 +30,33 @@ async function resolveProjectPublicIdParam(req, res, next, id) {
   }
 }
 
+/**
+ * Middleware for router.param('noteId') or router.param('id') on notes routes.
+ */
+async function resolveNotePublicIdParam(req, res, next, id) {
+  try {
+    if (id && id.length === 12 && !id.includes("-")) {
+      const query = `
+        SELECT id
+        FROM notes
+        WHERE public_note_id = $1 AND deleted = false;
+      `;
+      const { executeQuery } = require("@/database/connection");
+      const results = await executeQuery(query, [id]);
+
+      if (results && results.length > 0) {
+        const internalId = results[0].id;
+        if (req.params.id === id) req.params.id = internalId;
+        if (req.params.noteId === id) req.params.noteId = internalId;
+      }
+    }
+    next();
+  } catch (error) {
+    console.error("[resolveNotePublicIdParam] Error resolving public ID:", error);
+    next();
+  }
+}
+
 async function resolveOrganizationPublicIdParam(req, res, next, id) {
   try {
     if (id && id.length === 12 && !id.includes("-")) {
@@ -56,6 +83,7 @@ async function resolveOrganizationPublicIdParam(req, res, next, id) {
 }
 
 module.exports = {
+  resolveNotePublicIdParam,
   resolveProjectPublicIdParam,
   resolveOrganizationPublicIdParam,
 };

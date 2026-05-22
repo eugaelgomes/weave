@@ -3,48 +3,64 @@ const {
   buildMailTemplate,
   escapeHtml,
 } = require("@/services/email/mail-template");
+const { getUserEmailLocale, t } = require("@/services/email/i18n");
 
-function createCollabTemplate({ noteName, ownerName, noteUrl }) {
-  const subject = `Nova colaboracao: ${noteName}`;
+/**
+ * @param {object} params
+ * @param {string} params.locale
+ * @param {string} params.noteName
+ * @param {string} params.ownerName
+ * @param {string} params.noteUrl
+ */
+function createCollabTemplate({ locale, noteName, ownerName, noteUrl }) {
+  const subject = t(locale, "collab.subject", { noteName });
   const { html, text } = buildMailTemplate({
-    preheader: "Voce foi adicionado(a) como colaborador de uma nota.",
-    title: "Nova colaboracao em nota",
-    subtitle: "Compartilhamento de nota",
-    introLines: [`${ownerName} adicionou voce como colaborador(a).`],
-    ctaText: "Acessar nota",
+    locale,
+    preheader: t(locale, "collab.preheader"),
+    title: t(locale, "collab.title"),
+    subtitle: t(locale, "collab.subtitle"),
+    introLines: [t(locale, "collab.intro", { ownerName })],
+    ctaText: t(locale, "collab.cta"),
     ctaUrl: noteUrl,
     contentHtml: `
       <div style="margin: 16px 0; padding: 14px; border: 1px solid #E5E7EB; border-radius: 8px; background: #F9FAFB;">
-        <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>Nota:</strong> ${escapeHtml(noteName)}</p>
-        <p style="margin: 0; font-size: 13px; color: #6B7280;">Permissao de colaboracao ativa para visualizar e editar.</p>
+        <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.note"))}:</strong> ${escapeHtml(noteName)}</p>
+        <p style="margin: 0; font-size: 13px; color: #6B7280;">${escapeHtml(t(locale, "collab.permission"))}</p>
       </div>
     `,
-    outroLines: [
-      `Se voce nao esperava este convite de ${ownerName}, pode ignorar este email.`,
-    ],
+    outroLines: [t(locale, "collab.outro", { ownerName })],
   });
 
   return { subject, html, text };
 }
 
+/**
+ * @param {string} collaboratorEmail
+ * @param {string} collaboratorName
+ * @param {string} noteName
+ * @param {string} ownerName
+ * @param {string|null} [notePublicId]
+ */
 async function collabMail(
   collaboratorEmail,
   collaboratorName,
   noteName,
   ownerName,
-  noteId = null
+  notePublicId = null
 ) {
   try {
+    const locale = await getUserEmailLocale({ email: collaboratorEmail });
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    const noteUrl = noteId
-      ? `${frontendUrl}/auth/?redirect=/app/notes/view/${noteId}`
-      : `${frontendUrl}/auth/?redirect=/app/notes`;
+    const notePath = notePublicId
+      ? `/app/notes/view/${notePublicId}`
+      : "/app/notes";
+    const noteUrl = `${frontendUrl}/auth/?redirect=${encodeURIComponent(notePath)}`;
 
     const emailTemplate = createCollabTemplate({
+      locale,
       noteName,
       ownerName,
       noteUrl,
-      collaboratorName,
     });
 
     await MailService().sendMail({
@@ -64,4 +80,4 @@ async function collabMail(
   }
 }
 
-module.exports = { collabMail };
+module.exports = { collabMail, createCollabTemplate };

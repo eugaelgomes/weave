@@ -312,6 +312,7 @@ class NotesWriteController extends NotesBaseController {
       // Montar estrutura completa da nota com todos os dados das tabelas relacionadas
       const completeNote = {
         id: result.note_id,
+        public_id: result.public_note_id || null,
         user_id: result.user_id,
         project_id: result.project_id,
         title: result.title,

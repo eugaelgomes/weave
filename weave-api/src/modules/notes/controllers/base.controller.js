@@ -204,7 +204,11 @@ class NotesBaseController {
     const { includeBlocks = true } = options;
     const projectId = note.project_id ? String(note.project_id) : null;
     return {
-      id: note.id.toString(),
+      id:
+        note.id === undefined || note.id === null
+          ? ""
+          : String(note.id),
+      public_id: note.public_note_id || null,
       title: note.title,
       description: note.description,
       properties: note.properties || {},

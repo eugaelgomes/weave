@@ -21,6 +21,7 @@ const {
 const {
   send_organization_invite_accepted,
 } = require("@/services/email/templates/invite-member-accepted");
+const { getUserEmailLocale } = require("@/services/email/i18n");
 const { validRoles } = require("../normalizer");
 const { hasPlusAliasInLocalPart } = require("@/utils/data/email-rules");
 const {
@@ -415,6 +416,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
       );
 
       const inviter = await SearchUsersRepository.findById(authUserId);
+      const inviterLocale = await getUserEmailLocale({ userId: authUserId });
 
       // Send the invite email
       const emailResult = await send_organization_invite(
@@ -422,7 +424,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
         currentOrg.org_name,
         inviter.name || inviter.username,
         invite.invite_id,
-        normalizedRole
+        normalizedRole,
+        inviterLocale
       );
 
       if (!emailResult.success) {

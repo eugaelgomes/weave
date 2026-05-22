@@ -3,6 +3,7 @@ const { getAiReportDeliveryQueueRedisKey, getEmailQueueRedisKey } = require("../
 const { executeQuery } = require("../database/connection");
 const { logger } = require("../lib");
 const { buildAiReportEmail } = require("../services/email/templates/ai-report");
+const { localeFromUserPreference } = require("../services/email/i18n");
 
 class AiReportDeliveryProcessor {
   constructor() {
@@ -39,23 +40,28 @@ class AiReportDeliveryProcessor {
 
     try {
       const recipients = await this._getRecipients(projectId, recipientScope, customRecipients);
-      
+
       if (recipients.length === 0) {
         logger.warn("No recipients found for AI report delivery", { reasoningId, recipientScope });
         return;
       }
 
-      const { html, text, subject } = buildAiReportEmail({
-        reportType: reasoningType,
-        projectTitle: title.split(" - ")[1] || "Project Report",
-        outputMarkdown,
-        projectId,
-        reasoningId,
-      });
-
       const emailQueueKey = getEmailQueueRedisKey();
+      const projectTitle = title.split(" - ")[1] || title || "Project Report";
 
       for (const recipient of recipients) {
+        const locale = localeFromUserPreference(recipient.user_preference);
+
+        const { html, text, subject } = buildAiReportEmail({
+          locale,
+          reportType: reasoningType,
+          projectTitle,
+          outputMarkdown,
+          projectId,
+          reasoningId,
+          recipientName: recipient.name,
+        });
+
         const emailJob = {
           payload: {
             to: [recipient.email],
@@ -81,7 +87,7 @@ class AiReportDeliveryProcessor {
   async _getRecipients(projectId, scope, customIds) {
     if (scope === "owner_only") {
       return executeQuery(
-        `SELECT u.email, u.name FROM users u 
+        `SELECT u.email, u.name, u.user_preference FROM users u 
          INNER JOIN projects p ON p.user_id = u.user_id 
          WHERE p.id = $1`,
         [projectId]
@@ -90,20 +96,20 @@ class AiReportDeliveryProcessor {
 
     if (scope === "custom" && Array.isArray(customIds) && customIds.length > 0) {
       return executeQuery(
-        `SELECT u.email, u.name FROM users u WHERE u.user_id = ANY($1::uuid[])`,
+        `SELECT u.email, u.name, u.user_preference FROM users u WHERE u.user_id = ANY($1::uuid[])`,
         [customIds]
       );
     }
 
     return executeQuery(
-      `SELECT DISTINCT u.email, u.name
+      `SELECT DISTINCT u.email, u.name, u.user_preference
       FROM project_members pm
       INNER JOIN users u ON u.user_id = pm.user_id
       WHERE pm.project_id = $1
         AND pm.deleted = false
         AND pm.suspended = false
       UNION
-      SELECT u.email, u.name
+      SELECT u.email, u.name, u.user_preference
       FROM users u
       INNER JOIN projects p ON p.user_id = u.user_id
       WHERE p.id = $1 AND p.deleted = false`,

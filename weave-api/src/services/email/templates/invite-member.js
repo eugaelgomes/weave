@@ -3,52 +3,53 @@ const {
   buildMailTemplate,
   escapeHtml,
 } = require("@/services/email/mail-template");
+const { getRoleLabel, resolveEmailLocale, t } = require("@/services/email/i18n");
 
+/**
+ * @param {string} invitedEmail
+ * @param {string} organizationName
+ * @param {string} inviterName
+ * @param {string} inviteToken
+ * @param {string} role
+ * @param {string} [inviterLocale]
+ */
 async function send_organization_invite(
   invitedEmail,
   organizationName,
   inviterName,
   inviteToken,
-  role
+  role,
+  inviterLocale
 ) {
+  const locale = resolveEmailLocale(inviterLocale);
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
   const acceptInviteLink = `${frontendUrl}/auth?invite_token=${inviteToken}`;
-
-  const roleTranslation = {
-    owner: "Proprietario",
-    admin: "Administrador",
-    member: "Membro",
-    viewer: "Visualizador",
-    guest: "Convidado",
-    super_admin: "Super administrador",
-  };
-
-  const translatedRole = roleTranslation[role] || role;
+  const translatedRole = getRoleLabel(locale, role);
 
   try {
     const { html, text } = buildMailTemplate({
-      preheader: "Convite para participar de uma organizacao.",
-      title: "Voce foi convidado(a)",
-      subtitle: "Convite para organizacao",
+      locale,
+      preheader: t(locale, "invite.preheader"),
+      title: t(locale, "invite.title"),
+      subtitle: t(locale, "invite.subtitle"),
       introLines: [
-        `${inviterName} convidou voce para entrar na organizacao ${organizationName}.`,
+        t(locale, "invite.intro", { inviterName, organizationName }),
       ],
-      ctaText: "Aceitar convite",
+      ctaText: t(locale, "invite.cta"),
       ctaUrl: acceptInviteLink,
-      infoText: "Este convite expira em 7 dias.",
+      infoText: t(locale, "invite.info"),
       contentHtml: `
         <div style="margin: 16px 0; padding: 14px; border: 1px solid #E5E7EB; border-radius: 8px; background: #F9FAFB;">
-          <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>Organizacao:</strong> ${escapeHtml(organizationName)}</p>
-          <p style="margin: 0; font-size: 14px; color: #111827;"><strong>Cargo:</strong> ${escapeHtml(translatedRole)}</p>
+          <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.organization"))}:</strong> ${escapeHtml(organizationName)}</p>
+          <p style="margin: 0; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.role"))}:</strong> ${escapeHtml(translatedRole)}</p>
         </div>
-        <p style="margin: 12px 0 0; font-size: 13px; color: #6B7280;">Token do convite: <strong>${escapeHtml(inviteToken)}</strong></p>
       `,
     });
 
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
       to: invitedEmail,
-      subject: `Convite para ${organizationName} - Weave Notes`,
+      subject: t(locale, "invite.subject", { organizationName }),
       text,
       html,
     });

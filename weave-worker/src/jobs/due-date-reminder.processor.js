@@ -1,6 +1,9 @@
 const { executeQuery } = require("../database/connection");
 const { logger } = require("../lib");
 const { createMailService } = require("../services/email/sender");
+const {
+  buildDueReminderTemplate,
+} = require("../services/email/templates/due-reminder");
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -81,12 +84,14 @@ class DueDateReminderProcessor {
       `
         SELECT
           n.id::text,
+          n.public_note_id,
           n.title,
           n.due_date,
           n.properties,
           n.user_id::text,
           u.email AS owner_email,
-          u.name AS owner_name
+          u.name AS owner_name,
+          u.user_preference AS owner_preference
         FROM notes n
         INNER JOIN users u ON n.user_id = u.user_id
         WHERE n.deleted = false
@@ -111,12 +116,16 @@ class DueDateReminderProcessor {
   async processNoteReminder(note) {
     const recipients = [];
     if (note.owner_email) {
-      recipients.push({ email: String(note.owner_email).trim(), name: note.owner_name });
+      recipients.push({
+        email: String(note.owner_email).trim(),
+        name: note.owner_name,
+        user_preference: note.owner_preference,
+      });
     }
 
     const collaborators = await executeQuery(
       `
-        SELECT DISTINCT u.email, u.name
+        SELECT DISTINCT u.email, u.name, u.user_preference
         FROM note_collaborators nc
         INNER JOIN users u ON nc.user_id = u.user_id
         WHERE nc.note_id = $1
@@ -131,6 +140,7 @@ class DueDateReminderProcessor {
       recipients.push({
         email: String(collaborator.email).trim(),
         name: collaborator.name,
+        user_preference: collaborator.user_preference,
       });
     }
 
@@ -157,15 +167,12 @@ class DueDateReminderProcessor {
   }
 
   async sendNoteReminders(note, recipients) {
-    const title = note.title || "Nota";
+    const title = note.title || null;
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    const noteUrl = `${frontendUrl}/auth/?redirect=/app/notes/${note.id}`;
-    const dueDateLabel = new Date(note.due_date).toLocaleString("pt-BR", {
-      dateStyle: "full",
-      timeStyle: "short",
-      timeZone: "UTC",
-    });
-    const subject = `Lembrete: prazo amanha - ${title}`;
+    const notePath = note.public_note_id
+      ? `/app/notes/${note.public_note_id}`
+      : "/app/notes";
+    const noteUrl = `${frontendUrl}/auth/?redirect=${encodeURIComponent(notePath)}`;
 
     const dedup = new Set();
     let sentAny = false;
@@ -176,14 +183,18 @@ class DueDateReminderProcessor {
       dedup.add(emailLower);
 
       try {
+        const { subject, html, text } = buildDueReminderTemplate({
+          recipientName: recipient.name,
+          noteTitle: title,
+          dueDate: note.due_date,
+          noteUrl,
+          userPreference: recipient.user_preference,
+        });
+
         await this.mailService.sendMail({
-          html: `
-            <p>Ola ${recipient.name || "usuario"},</p>
-            <p>A nota "<strong>${title}</strong>" vence amanha (${dueDateLabel}).</p>
-            <p><a href="${noteUrl}">Abrir nota</a></p>
-          `,
+          html,
           subject,
-          text: `A nota "${title}" vence amanha (${dueDateLabel}). Abra em: ${noteUrl}`,
+          text,
           to: recipient.email,
         });
         sentAny = true;

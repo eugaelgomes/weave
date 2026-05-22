@@ -1,36 +1,18 @@
 /**
  * AI Report Email Template
- *
- * Builds the email payload for weave-engine reasoning reports
- * using the existing buildMailTemplate infrastructure.
  */
 
 const { buildMailTemplate } = require("../template");
 const { markdownToHtml } = require("../../markdown/markdown-to-html");
 const { env } = require("../../../config");
-
-const REPORT_TYPE_LABELS = {
-  sprint_kickoff: "Sprint Kickoff",
-  daily_standup: "Daily Standup",
-  sprint_review: "Sprint Review",
-  deadline_alert: "Deadline Alert",
-  analysis: "Analysis",
-};
+const { getReportTypeLabel, resolveEmailLocale, t } = require("../i18n");
 
 /**
- * Builds an AI report email.
- *
  * @param {object} options
- * @param {string} options.reportType - e.g. "daily_standup"
- * @param {string} options.projectTitle
- * @param {number} [options.sprintNumber]
- * @param {string} options.outputMarkdown - The reasoning content
- * @param {string} options.projectId
- * @param {string} [options.reasoningId]
- * @param {string} [options.recipientName]
  * @returns {{ html: string, text: string, subject: string }}
  */
 function buildAiReportEmail({
+  locale: rawLocale,
   reportType,
   projectTitle,
   sprintNumber,
@@ -39,10 +21,14 @@ function buildAiReportEmail({
   reasoningId,
   recipientName,
 }) {
-  const typeLabel =
-    REPORT_TYPE_LABELS[reportType] || reportType || "AI Report";
+  const locale = resolveEmailLocale(rawLocale);
+  const typeLabel = getReportTypeLabel(locale, reportType);
 
-  const subject = `${typeLabel} — ${projectTitle}${sprintNumber ? ` (Sprint ${sprintNumber})` : ""}`;
+  const sprintSuffix = sprintNumber
+    ? t(locale, "aiReport.sprintSuffix", { sprintNumber })
+    : "";
+
+  const subject = `${typeLabel} — ${projectTitle}${sprintSuffix}`;
 
   const appUrl = env.appUrl || process.env.APP_URL || "https://app.weavenotes.com";
   const ctaUrl = reasoningId
@@ -51,22 +37,27 @@ function buildAiReportEmail({
 
   const contentHtml = markdownToHtml(outputMarkdown || "");
 
+  const greeting = recipientName
+    ? `${recipientName},`
+    : undefined;
+
   const { html, text } = buildMailTemplate({
+    locale,
     title: typeLabel,
-    subtitle: `${projectTitle}${sprintNumber ? ` • Sprint ${sprintNumber}` : ""}`,
-    greeting: recipientName ? `Olá, ${recipientName}` : undefined,
+    subtitle: `${projectTitle}${sprintSuffix ? ` • Sprint ${sprintNumber}` : ""}`,
+    greeting,
     contentHtml,
-    ctaText: "Ver Report Completo",
+    ctaText: t(locale, "aiReport.cta"),
     ctaUrl,
-    preheader: `Novo ${typeLabel.toLowerCase()} para ${projectTitle}`,
-    introLines: [
-      `O Weave Engine gerou um novo report para o projeto ${projectTitle}.`,
-    ],
-    footerNote:
-      "Este report foi gerado automaticamente pela IA do Weave Notes.",
+    preheader: t(locale, "aiReport.preheader", {
+      reportType: typeLabel.toLowerCase(),
+      projectTitle,
+    }),
+    introLines: [t(locale, "aiReport.intro", { projectTitle })],
+    footerNote: t(locale, "aiReport.footer"),
   });
 
   return { html, text, subject };
 }
 
-module.exports = { buildAiReportEmail, REPORT_TYPE_LABELS };
+module.exports = { buildAiReportEmail };

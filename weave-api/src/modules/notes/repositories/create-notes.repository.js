@@ -1,5 +1,6 @@
 const BaseRepository = require("./base.repository");
 const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
+const { generatePublicId } = require("@/utils/generate-public-id");
 const { enqueueNoteEmbeddingJob } = require("../../../services/queue/queue-controller");
 
 const DEFAULT_NOTE_PROPERTIES = {
@@ -26,8 +27,18 @@ class CreateNotesRepository extends BaseRepository {
     assignedTo = null
   ) {
     const query = `
-      INSERT INTO notes (user_id, title, description, tags, status, project_id, properties, priority_id)
-      VALUES ($1, $2, $3, $4::uuid[], $5, $6, $7, $8)
+      INSERT INTO notes (
+        user_id,
+        title,
+        description,
+        tags,
+        status,
+        project_id,
+        properties,
+        priority_id,
+        public_note_id
+      )
+      VALUES ($1, $2, $3, $4::uuid[], $5, $6, $7, $8, $9)
       RETURNING *; 
     `;
     const results = await this.executeQuery(query, [
@@ -39,6 +50,7 @@ class CreateNotesRepository extends BaseRepository {
       projectId,
       JSON.stringify(DEFAULT_NOTE_PROPERTIES),
       priorityId,
+      generatePublicId(),
     ]);
     const createdNote = results[0];
 
@@ -62,12 +74,22 @@ class CreateNotesRepository extends BaseRepository {
   ) {
     const query = `
       WITH new_note AS (
-        INSERT INTO notes (user_id, title, description, tags, status, project_id, properties)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO notes (
+          user_id,
+          title,
+          description,
+          tags,
+          status,
+          project_id,
+          properties,
+          public_note_id
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *
       )
       SELECT 
         new_note.id AS note_id,
+        new_note.public_note_id,
         new_note.project_id,
         new_note.title,
         new_note.description,
@@ -94,6 +116,7 @@ class CreateNotesRepository extends BaseRepository {
       status,
       projectId,
       JSON.stringify(DEFAULT_NOTE_PROPERTIES),
+      generatePublicId(),
     ]);
     const createdNote = results[0];
 

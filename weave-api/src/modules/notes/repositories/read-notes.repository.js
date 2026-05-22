@@ -1,4 +1,5 @@
 const BaseRepository = require("./base.repository");
+const { buildNoteIdWhereClause } = require("@/utils/note-id-lookup");
 
 /**
  * Leitura de notas, estatísticas e processamento de URLs.
@@ -7,7 +8,8 @@ class ReadNotesRepository extends BaseRepository {
   async getAllNotesByUserId(userId, orgWideOrganizationId = null) {
     const query = `
     SELECT 
-      n.id::text,
+      n.id,
+      n.public_note_id,
       n.user_id::text,
       n.project_id::text,
       n.title,
@@ -91,7 +93,8 @@ class ReadNotesRepository extends BaseRepository {
   async getAllNotesFormatted(userId, orgWideOrganizationId = null) {
     const query = `
       SELECT 
-        n.id::text,
+        n.id,
+        n.public_note_id,
         n.user_id::text,
         n.project_id::text,
         n.parent_id::text,
@@ -242,7 +245,8 @@ class ReadNotesRepository extends BaseRepository {
 
     const notesQuery = `
       SELECT 
-        n.id::text,
+        n.id,
+        n.public_note_id,
         n.title,
         n.description,
         n.status,
@@ -293,6 +297,7 @@ class ReadNotesRepository extends BaseRepository {
       WHERE ${whereConditions.join(" AND ")}
       GROUP BY 
         n.id,
+        n.public_note_id,
         u.user_id,
         p.id,
         o.id,
@@ -337,9 +342,11 @@ class ReadNotesRepository extends BaseRepository {
   }
 
   async getNoteById(noteId) {
+    const noteIdWhere = buildNoteIdWhereClause("n", 1, noteId);
     const query = `
     SELECT 
-        n.id::text,
+        n.id,
+        n.public_note_id,
         n.title,
         n.description,
         n.status,
@@ -398,9 +405,11 @@ class ReadNotesRepository extends BaseRepository {
     LEFT JOIN note_collaborators nc ON n.id = nc.note_id
     LEFT JOIN users c ON nc.user_id = c.user_id
     LEFT JOIN organizations o ON p.organization_id = o.id AND o.deleted = false
-    WHERE n.id = $1 AND n.deleted = false
+    WHERE ${noteIdWhere}
+      AND n.deleted = false
     GROUP BY 
-        n.id, 
+        n.id,
+        n.public_note_id,
         u.user_id, 
         p.id,
         p.organization_id,
@@ -424,13 +433,14 @@ class ReadNotesRepository extends BaseRepository {
    * @returns {Promise<{ id: string, user_id: string, project_id: string | null } | null>}
    */
   async getNoteAccessSummary(noteId) {
+    const noteIdWhere = buildNoteIdWhereClause("n", 1, noteId);
     const query = `
       SELECT
-        n.id::text,
+        n.id,
         n.user_id::text,
         n.project_id::text
       FROM notes n
-      WHERE n.id = $1::uuid
+      WHERE ${noteIdWhere}
         AND n.deleted = false
       LIMIT 1;
     `;
@@ -540,7 +550,7 @@ class ReadNotesRepository extends BaseRepository {
   async findNotesForDueDateEveReminder() {
     const query = `
       SELECT
-        n.id::text,
+        n.id,
         n.title,
         n.due_date,
         n.properties,

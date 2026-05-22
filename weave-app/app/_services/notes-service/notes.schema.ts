@@ -104,6 +104,7 @@ export const NotesUserSchema = z.object({
 // --- Note Entity ---
 export const NoteSchema = z.object({
   id: z.string(),
+  public_id: z.string().nullable().optional(),
   title: z.string(),
   description: z.string().nullable().optional(),
   properties: NotePropertiesSchema.nullable().optional(),

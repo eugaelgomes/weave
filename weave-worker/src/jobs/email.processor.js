@@ -1,6 +1,7 @@
 const { Resend } = require("resend");
 const redis = require("../config/redis");
 const { getEmailQueueRedisKey } = require("../config/redis-queue-keys");
+const { DEV_SENDER, normalizeSenderFrom } = require("../services/email/sender-name");
 
 class EmailProcessor {
   constructor() {
@@ -44,19 +45,24 @@ class EmailProcessor {
     console.log(`[Email Processor] Processing email job to: ${payload.to.join(", ")}`);
 
     try {
-      let { data, error } = await this.resend.emails.send(payload);
+      const outbound = {
+        ...payload,
+        from: normalizeSenderFrom(payload.from),
+      };
+
+      let { data, error } = await this.resend.emails.send(outbound);
 
       const errorMessage = error?.message || "";
       const shouldRetryWithOnboardingSender =
         process.env.NODE_ENV !== "production" &&
-        payload.from !== "Weave Notes <onboarding@resend.dev>" &&
+        outbound.from !== DEV_SENDER &&
         /domain|verify|verified/i.test(errorMessage);
 
       if (shouldRetryWithOnboardingSender) {
         console.log(`[Email Processor] Retrying email with onboarding sender...`);
         ({ data, error } = await this.resend.emails.send({
-          ...payload,
-          from: "Weave Notes <onboarding@resend.dev>",
+          ...outbound,
+          from: DEV_SENDER,
         }));
       }
 

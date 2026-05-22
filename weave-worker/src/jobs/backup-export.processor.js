@@ -4,6 +4,9 @@ const { executeQuery } = require("../database/connection");
 const { logger } = require("../lib");
 const storageService = require("../services/storage");
 const { createMailService } = require("../services/email/sender");
+const {
+  buildBackupEmailPayload,
+} = require("../services/email/templates/backup-notification");
 const { getBackupExportQueueRedisKey } = require("../config/redis-queue-keys");
 
 class BackupExportProcessor {
@@ -90,6 +93,7 @@ class BackupExportProcessor {
         expiresAt,
         toEmail: user.email,
         userName: user.name || user.username,
+        userPreference: user.user_preference,
       });
 
       if (!emailSent) {
@@ -172,7 +176,7 @@ class BackupExportProcessor {
   async getUserById(userId) {
     const rows = await executeQuery(
       `
-        SELECT user_id, email, name, username
+        SELECT user_id, email, name, username, user_preference
         FROM users
         WHERE user_id = $1
         LIMIT 1
@@ -308,27 +312,24 @@ class BackupExportProcessor {
     );
   }
 
-  async sendBackupEmail({ downloadUrl, expiresAt, toEmail, userName }) {
+  async sendBackupEmail({
+    downloadUrl,
+    expiresAt,
+    toEmail,
+    userName,
+    userPreference,
+  }) {
     if (!this.mailService) {
       logger.warn("Email service not available for backup email");
       return false;
     }
 
-    const subject = "Seu backup esta pronto para download";
-    const expiresLabel = new Date(expiresAt).toLocaleString("pt-BR");
-    const text = [
-      `Ola ${userName || "usuario"},`,
-      "",
-      "Seu backup foi processado com sucesso.",
-      `Baixe aqui: ${downloadUrl}`,
-      `Expira em: ${expiresLabel}`,
-    ].join("\n");
-    const html = `
-      <p>Ola ${userName || "usuario"},</p>
-      <p>Seu backup foi processado com sucesso.</p>
-      <p><a href="${downloadUrl}">Baixar backup</a></p>
-      <p>Expira em: ${expiresLabel}</p>
-    `;
+    const { html, text, subject } = buildBackupEmailPayload({
+      userName,
+      downloadUrl,
+      expiresAt,
+      userPreference,
+    });
 
     await this.mailService.sendMail({
       html,

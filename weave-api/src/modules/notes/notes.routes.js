@@ -1,5 +1,6 @@
 const express = require("express");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { resolveNotePublicIdParam } = require("@/middlewares/public-id-resolver");
 const {
   commentFilesUpload,
   noteUpdateUpload,
@@ -18,6 +19,10 @@ const NotesCommentsController = require("@/modules/notes/controllers/notes-comme
 const NoteBlocksController = require("@/modules/notes/controllers/note-blocks.controller");
 
 const router = express.Router();
+
+router.param("id", resolveNotePublicIdParam);
+router.param("noteId", resolveNotePublicIdParam);
+
 const blockAutosaveV2Enabled =
   String(process.env.ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true").toLowerCase() !== "false";
 const blockWriteLimiter = blockAutosaveV2Enabled

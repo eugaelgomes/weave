@@ -35,6 +35,27 @@ class EmbeddingProcessor {
     }
   }
 
+  /**
+   * @param {string} errText
+   * @returns {{ status: number | null, code: string | null, type: string | null }}
+   */
+  parseOpenAiError(errText) {
+    const statusMatch = errText.match(/OpenAI API error: (\d+)/);
+    const status = statusMatch ? Number(statusMatch[1]) : null;
+    try {
+      const jsonStart = errText.indexOf("{");
+      if (jsonStart === -1) return { code: null, status, type: null };
+      const body = JSON.parse(errText.slice(jsonStart));
+      return {
+        code: body?.error?.code ?? null,
+        status,
+        type: body?.error?.type ?? null,
+      };
+    } catch {
+      return { code: null, status, type: null };
+    }
+  }
+
   async processJob(job) {
     const noteId = job?.noteId;
 
@@ -42,6 +63,26 @@ class EmbeddingProcessor {
       logger.warn("Skipping embedding job without noteId");
       return;
     }
+
+    // #region agent log
+    fetch("http://127.0.0.1:7701/ingest/2f9d05dd-4fb3-4892-84ba-05df7854fb8b", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "be6aa6" },
+      body: JSON.stringify({
+        sessionId: "be6aa6",
+        runId: "pre-fix",
+        hypothesisId: "D",
+        location: "embedding.processor.js:processJob:entry",
+        message: "Embedding job started",
+        data: {
+          noteId,
+          queuedAt: job?.queuedAt ?? null,
+          hasApiKey: Boolean(process.env.OPENAI_API_KEY),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
 
     try {
       const note = await this.findNoteById(noteId);
@@ -78,6 +119,29 @@ class EmbeddingProcessor {
 
       if (!response.ok) {
         const errText = await response.text();
+        const parsed = this.parseOpenAiError(
+          `OpenAI API error: ${response.status} - ${errText}`,
+        );
+        // #region agent log
+        fetch("http://127.0.0.1:7701/ingest/2f9d05dd-4fb3-4892-84ba-05df7854fb8b", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "be6aa6" },
+          body: JSON.stringify({
+            sessionId: "be6aa6",
+            runId: "pre-fix",
+            hypothesisId: "A",
+            location: "embedding.processor.js:processJob:openai-response",
+            message: "OpenAI embeddings API non-OK",
+            data: {
+              noteId,
+              httpStatus: response.status,
+              errorCode: parsed.code,
+              errorType: parsed.type,
+            },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
         throw new Error(`OpenAI API error: ${response.status} - ${errText}`);
       }
 
@@ -87,8 +151,45 @@ class EmbeddingProcessor {
       await this.saveEmbedding(noteId, embeddingArray);
       
       logger.info("Generated and saved embedding", { noteId });
+      // #region agent log
+      fetch("http://127.0.0.1:7701/ingest/2f9d05dd-4fb3-4892-84ba-05df7854fb8b", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "be6aa6" },
+        body: JSON.stringify({
+          sessionId: "be6aa6",
+          runId: "pre-fix",
+          hypothesisId: "A",
+          location: "embedding.processor.js:processJob:success",
+          message: "Embedding saved",
+          data: { noteId },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
 
     } catch (error) {
+      const parsed = this.parseOpenAiError(error.message);
+      // #region agent log
+      fetch("http://127.0.0.1:7701/ingest/2f9d05dd-4fb3-4892-84ba-05df7854fb8b", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "be6aa6" },
+        body: JSON.stringify({
+          sessionId: "be6aa6",
+          runId: "pre-fix",
+          hypothesisId: "C",
+          location: "embedding.processor.js:processJob:catch",
+          message: "Embedding job failed",
+          data: {
+            noteId,
+            httpStatus: parsed.status,
+            errorCode: parsed.code,
+            errorType: parsed.type,
+            willRequeue: false,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       logger.error("Failed to process embedding job", {
         noteId,
         error: error.message,

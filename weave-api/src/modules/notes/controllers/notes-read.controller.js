@@ -60,6 +60,7 @@ class NotesReadController extends NotesBaseController {
       const notesWithBlocks = result.notes.map((note) => ({
         blocks: [],
         id: note.id,
+        public_id: note.public_note_id || null,
         title: note.title,
         description: note.description || null,
         properties: note.properties || {},
@@ -136,6 +137,7 @@ class NotesReadController extends NotesBaseController {
       // Montar estrutura completa da nota
       const completeNote = {
         id: note.id,
+        public_id: note.public_note_id || null,
         title: note.title,
         description: note.description || null,
         properties: note.properties || {},

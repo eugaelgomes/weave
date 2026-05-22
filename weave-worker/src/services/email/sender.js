@@ -1,6 +1,7 @@
 const { Resend } = require("resend");
 const { env } = require("../../config");
 const { logger } = require("../../lib");
+const { DEV_SENDER, normalizeSenderFrom } = require("./sender-name");
 
 let mailServiceInstance = null;
 
@@ -49,9 +50,9 @@ function createMailService() {
         to,
       } = mailOptions;
 
-      const sender =
-        from ||
-        (env.isDevelopment ? "Weave Notes <onboarding@resend.dev>" : null);
+      const sender = normalizeSenderFrom(
+        from || (env.isDevelopment ? DEV_SENDER : null)
+      );
 
       if (!sender) {
         throw new Error("Configuração de email faltando: EMAIL_FROM");
@@ -81,14 +82,14 @@ function createMailService() {
       const errorMessage = error?.message || "";
       const shouldRetryWithOnboardingSender =
         env.isDevelopment &&
-        payload.from !== "Weave Notes <onboarding@resend.dev>" &&
+        payload.from !== DEV_SENDER &&
         /domain|verify|verified/i.test(errorMessage);
 
       if (shouldRetryWithOnboardingSender) {
         logger.debug("Retrying email with onboarding sender");
         ({ data, error } = await resend.emails.send({
           ...payload,
-          from: "Weave Notes <onboarding@resend.dev>",
+          from: DEV_SENDER,
         }));
       }
 

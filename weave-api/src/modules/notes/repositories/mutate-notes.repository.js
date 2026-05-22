@@ -1,5 +1,9 @@
 const BaseRepository = require("./base.repository");
 const { enqueueNoteEmbeddingJob } = require("../../../services/queue/queue-controller");
+const {
+  buildNoteIdWhereClause,
+  buildNotesBulkDeleteWhere,
+} = require("@/utils/note-id-lookup");
 
 /**
  * Atualização e exclusão lógica de notas.
@@ -52,10 +56,11 @@ class MutateNotesRepository extends BaseRepository {
       values.push(Number(baseRevision));
     }
 
+    const noteIdWhere = buildNoteIdWhereClause("notes", paramIndex, noteId);
     const whereClause =
       baseRevision !== null && baseRevision !== undefined
-        ? `id = $${paramIndex} AND revision = $${paramIndex + 1}`
-        : `id = $${paramIndex}`;
+        ? `${noteIdWhere} AND revision = $${paramIndex + 1}`
+        : noteIdWhere;
 
     const query = `
       UPDATE notes
@@ -92,9 +97,9 @@ class MutateNotesRepository extends BaseRepository {
     const query = `
       UPDATE notes
       SET revision = revision + 1, updated_at = NOW()
-      WHERE id = $1
+      WHERE id = $1::uuid
       ${revisionFilter}
-      RETURNING id::text, revision, updated_at
+      RETURNING id, revision, updated_at
     `;
     const results = await this.executeQuery(query, values);
     return results[0] || null;
@@ -102,14 +107,15 @@ class MutateNotesRepository extends BaseRepository {
 
   async deleteNoteById(noteIds) {
     const idsArray = Array.isArray(noteIds) ? noteIds : [noteIds];
+    const { sql: whereSql, params } = buildNotesBulkDeleteWhere(idsArray);
 
     const query = `
     UPDATE notes
     SET deleted = true
-    WHERE id = ANY($1);
+    WHERE ${whereSql};
   `;
 
-    const result = await this.executeQuery(query, [idsArray]);
+    const result = await this.executeQuery(query, params);
 
     if (result.rowCount === 0) {
       throw new Error("Nenhuma nota encontrada para deleção.");

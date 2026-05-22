@@ -10,7 +10,7 @@ const COLOR_TEXT = "#111827";
 const COLOR_MUTED = "#6B7280";
 const COLOR_BORDER = "#E5E7EB";
 const COLOR_CODE_BG = "#F3F4F6";
-const COLOR_QUOTE_BORDER = "#EAB308";
+const COLOR_QUOTE_BORDER = "#D1D5DB";
 
 /**
  * @param {string} text

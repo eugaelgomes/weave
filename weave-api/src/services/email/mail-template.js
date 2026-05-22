@@ -1,11 +1,26 @@
 const contactEmail = process.env.CONTACT_EMAIL || "us@weavenotes.app";
+const { t, resolveEmailLocale } = require("./i18n");
+const { getEmailLogoSrc } = require("./email-logo");
 
-const COLOR_YELLOW_500 = "#EAB308";
+const COLOR_CTA_BG = "#374151";
+const COLOR_CTA_TEXT = "#FFFFFF";
 const COLOR_BG = "#F9FAFB";
 const COLOR_SURFACE = "#FFFFFF";
 const COLOR_TEXT = "#111827";
 const COLOR_MUTED = "#6B7280";
 const COLOR_BORDER = "#E5E7EB";
+const COLOR_INFO_BG = "#F9FAFB";
+
+/**
+ * @param {string} [explicitLogoUrl]
+ * @returns {string|null}
+ */
+function resolveLogoSrc(explicitLogoUrl) {
+  if (explicitLogoUrl) {
+    return explicitLogoUrl;
+  }
+  return getEmailLogoSrc();
+}
 
 function escapeHtml(text = "") {
   return String(text)
@@ -26,8 +41,29 @@ function renderParagraphs(lines = []) {
     .join("");
 }
 
+/**
+ * @param {object} [options]
+ * @param {string} [options.locale]
+ * @param {string} [options.brandName]
+ * @param {string} [options.logoUrl]
+ * @param {string} [options.preheader]
+ * @param {string} [options.title]
+ * @param {string} [options.subtitle]
+ * @param {string} [options.greeting]
+ * @param {string[]} [options.introLines]
+ * @param {string} [options.contentHtml]
+ * @param {string} [options.ctaText]
+ * @param {string} [options.ctaUrl]
+ * @param {string} [options.infoText]
+ * @param {string[]} [options.outroLines]
+ * @param {string} [options.footerNote]
+ * @param {boolean} [options.exposeCtaUrlInText]
+ * @returns {{ html: string, text: string }}
+ */
 function buildMailTemplate({
-  brandName = "Weave Notes",
+  locale: rawLocale,
+  brandName,
+  logoUrl,
   preheader = "",
   title = "",
   subtitle = "",
@@ -38,18 +74,29 @@ function buildMailTemplate({
   ctaUrl = "",
   infoText = "",
   outroLines = [],
-  footerNote = "Este email foi enviado automaticamente. Por favor, nao responda.",
+  footerNote,
+  exposeCtaUrlInText = false,
 } = {}) {
-  const safeBrandName = escapeHtml(brandName);
+  const locale = resolveEmailLocale(rawLocale);
+  const resolvedBrandName = brandName || t(locale, "common.brandName");
+  const resolvedFooterNote = footerNote || t(locale, "common.autoFooter");
+  const resolvedLogoSrc = resolveLogoSrc(logoUrl);
+
+  const safeBrandName = escapeHtml(resolvedBrandName);
   const safePreheader = escapeHtml(preheader);
   const safeTitle = escapeHtml(title);
   const safeSubtitle = escapeHtml(subtitle);
   const safeGreeting = escapeHtml(greeting);
-  const safeFooterNote = escapeHtml(footerNote);
+  const safeFooterNote = escapeHtml(resolvedFooterNote);
   const safeInfoText = escapeHtml(infoText);
   const safeContactEmail = escapeHtml(contactEmail);
   const safeCtaText = escapeHtml(ctaText);
   const safeCtaUrl = escapeHtml(ctaUrl);
+  const htmlLang = escapeHtml(locale);
+
+  const logoBlock = resolvedLogoSrc
+    ? `<img src="${resolvedLogoSrc}" alt="${safeBrandName}" width="120" height="auto" style="display: block; margin: 0 auto; max-width: 120px; height: auto; border: 0; outline: none; text-decoration: none;" />`
+    : `<p style="margin: 0; font-family: Segoe UI, Arial, sans-serif; font-size: 18px; line-height: 1.3; color: ${COLOR_TEXT}; font-weight: 700;">${safeBrandName}</p>`;
 
   const intro = renderParagraphs(introLines);
   const outro = renderParagraphs(outroLines);
@@ -58,8 +105,8 @@ function buildMailTemplate({
       ? `
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin: 28px auto;">
         <tr>
-          <td style="border-radius: 8px; background: ${COLOR_YELLOW_500}; text-align: center;">
-            <a href="${safeCtaUrl}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 15px; font-weight: 700; color: ${COLOR_TEXT}; text-decoration: none;">${safeCtaText}</a>
+          <td style="border-radius: 8px; background: ${COLOR_CTA_BG}; text-align: center;">
+            <a href="${safeCtaUrl}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 15px; font-weight: 600; color: ${COLOR_CTA_TEXT}; text-decoration: none;">${safeCtaText}</a>
           </td>
         </tr>
       </table>
@@ -68,14 +115,14 @@ function buildMailTemplate({
 
   const infoBox = safeInfoText
     ? `
-      <div style="margin: 24px 0; padding: 16px 18px; border: 1px solid ${COLOR_BORDER}; border-left: 4px solid ${COLOR_YELLOW_500}; border-radius: 8px; background: #FFFBEB; font-size: 14px; line-height: 1.6; color: ${COLOR_TEXT};">
+      <div style="margin: 24px 0; padding: 16px 18px; border: 1px solid ${COLOR_BORDER}; border-radius: 8px; background: ${COLOR_INFO_BG}; font-size: 14px; line-height: 1.6; color: ${COLOR_TEXT};">
         ${safeInfoText}
       </div>
     `
     : "";
 
   const html = `<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="${htmlLang}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -115,14 +162,14 @@ function buildMailTemplate({
         <td align="center">
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="email-shell" style="width: 600px; max-width: 600px; background: ${COLOR_SURFACE}; border: 1px solid ${COLOR_BORDER}; border-radius: 12px; overflow: hidden;">
             <tr>
-              <td style="padding: 22px 28px; text-align: center; border-bottom: 3px solid ${COLOR_YELLOW_500}; background: ${COLOR_SURFACE};">
-                <h1 style="margin: 0; font-family: Segoe UI, Arial, sans-serif; font-size: 22px; line-height: 1.3; color: ${COLOR_TEXT}; font-weight: 700;">${safeBrandName}</h1>
-                ${safeSubtitle ? `<p style="margin: 6px 0 0; font-family: Segoe UI, Arial, sans-serif; font-size: 13px; line-height: 1.5; color: ${COLOR_MUTED};">${safeSubtitle}</p>` : ""}
+              <td style="padding: 22px 28px; text-align: center; border-bottom: 1px solid ${COLOR_BORDER}; background: ${COLOR_SURFACE};">
+                ${logoBlock}
+                ${safeSubtitle ? `<p style="margin: 8px 0 0; font-family: Segoe UI, Arial, sans-serif; font-size: 12px; line-height: 1.5; color: ${COLOR_MUTED};">${safeSubtitle}</p>` : ""}
               </td>
             </tr>
             <tr>
               <td class="email-content" style="padding: 36px 32px; font-family: Segoe UI, Arial, sans-serif;">
-                ${safeTitle ? `<h2 style="margin: 0 0 16px; font-size: 24px; line-height: 1.3; color: ${COLOR_TEXT}; font-weight: 700;">${safeTitle}</h2>` : ""}
+                ${safeTitle ? `<h2 style="margin: 0 0 14px; font-size: 18px; line-height: 1.35; color: ${COLOR_TEXT}; font-weight: 600;">${safeTitle}</h2>` : ""}
                 ${safeGreeting ? `<p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: ${COLOR_TEXT};">${safeGreeting}</p>` : ""}
                 ${intro}
                 ${contentHtml || ""}
@@ -147,15 +194,22 @@ function buildMailTemplate({
   </body>
 </html>`;
 
+  const ctaTextLine =
+    ctaText && ctaUrl
+      ? exposeCtaUrlInText
+        ? `${ctaText}: ${ctaUrl}`
+        : `${ctaText} (${t(locale, "common.ctaHint")})`
+      : "";
+
   const text = [
     preheader,
     title,
     greeting,
     ...introLines,
-    ctaText && ctaUrl ? `${ctaText}: ${ctaUrl}` : "",
+    ctaTextLine,
     infoText,
     ...outroLines,
-    `${brandName} - ${contactEmail}`,
+    `${resolvedBrandName} - ${contactEmail}`,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -163,4 +217,4 @@ function buildMailTemplate({
   return { html, text };
 }
 
-module.exports = { buildMailTemplate, escapeHtml };
+module.exports = { buildMailTemplate, escapeHtml, getEmailLogoSrc };
