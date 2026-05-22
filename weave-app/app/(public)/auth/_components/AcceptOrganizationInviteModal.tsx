@@ -108,21 +108,40 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
   const handleAcceptNew = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
-    if (!name.trim() || !username.trim() || !password) {
+
+    const trimmedUsername = username.trim();
+    if (!name.trim() || !trimmedUsername || !password) {
       setFormError(t.acceptOrganizationInvite.fillAllFields);
       return;
     }
+
+    const USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
+    const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+    if (!USERNAME_REGEX.test(trimmedUsername)) {
+      setFormError("Nome de usuário inválido: Apenas letras, números, ., - ou _ são permitidos.");
+      return;
+    }
+    if (trimmedUsername.length < 6 || trimmedUsername.length > 18) {
+      setFormError("O nome de usuário deve ter entre 6 e 18 caracteres.");
+      return;
+    }
+    if (!PASSWORD_REGEX.test(password)) {
+      setFormError("A senha deve conter no mínimo 8 caracteres, incluindo letras maiúsculas, minúsculas e números.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const accepted = await acceptInvite({
         token,
         name: name.trim(),
-        username: username.trim(),
+        username: trimmedUsername,
         password,
       });
-      const result = await login(username.trim(), password);
+      const result = await login(trimmedUsername, password);
       if (result.success) {
-        router.replace(postLoginAreasPath(accepted?.area_id));
+        router.replace("/home");
         return;
       }
       setSuccess(t.acceptOrganizationInvite.successCreatedLoginElse);
@@ -136,7 +155,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
   if (!isOpen || !token) return null;
 
   return (
-    <div className="relative flex w-full flex-col px-6 py-4 sm:px-8">
+    <div className="relative flex w-full flex-col px-5 py-3 sm:px-6 sm:py-4">
       <button
         type="button"
         onClick={onClose}
@@ -146,29 +165,36 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
         <X className="h-3.5 w-3.5" />
       </button>
 
-      <div className="mt-2">
-        <div className="border-brand-secondary-100 mb-5 border-b pb-4">
-          <div className="mb-3 flex justify-center">
-            <div className="bg-brand-secondary-100 flex h-10 w-10 items-center justify-center rounded-full">
-              <Building2 className="text-brand-primary-500 h-5 w-5" />
-            </div>
+      <div className="mt-1">
+        <div className="border-brand-secondary-100 mb-3 border-b pb-3">
+          <div className="mb-2 flex justify-center">
+            {!loading && !loadError && preview?.org_logo_url ? (
+              <img
+                src={preview.org_logo_url}
+                alt={preview.org_name || "Logo"}
+                className="h-10 w-10 rounded-full object-cover shadow-sm ring-1 ring-neutral-200"
+              />
+            ) : (
+              <div className="bg-brand-secondary-100 flex h-10 w-10 items-center justify-center rounded-full">
+                <Building2 className="text-brand-primary-500 h-5 w-5" />
+              </div>
+            )}
           </div>
           {!loading && !loadError && preview ? (
             <>
-              <p className="text-brand-secondary-900 text-center text-lg leading-snug font-semibold">
+              <p className="text-brand-secondary-900 text-center text-base leading-snug font-semibold">
                 {greeting}
               </p>
               {!preview.has_account ? (
-                <p className="text-brand-secondary-600 mt-3 text-center text-sm leading-relaxed">
+                <p className="text-brand-secondary-600 mt-1.5 text-center text-xs leading-relaxed">
                   {t.acceptOrganizationInvite.confirmCredentials}
                 </p>
               ) : null}
             </>
           ) : loading ? (
             <div className="flex justify-center">
-              <div className="bg-brand-secondary-100 flex h-10 w-10 items-center justify-center rounded-full">
-                <Building2 className="text-brand-primary-500 h-5 w-5" />
-              </div>
+              {/* Espaço reservado para manter altura enquanto carrega */}
+              <div className="h-6"></div>
             </div>
           ) : null}
         </div>
@@ -199,7 +225,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
           {!loading && !loadError && preview && (
             <>
               {preview.has_account ? (
-                <p className="text-brand-secondary-600 mb-3 text-center text-sm leading-relaxed">
+                <p className="text-brand-secondary-600 mb-2 text-center text-xs leading-relaxed">
                   {t.acceptOrganizationInvite.existingAccountHint}
                 </p>
               ) : null}

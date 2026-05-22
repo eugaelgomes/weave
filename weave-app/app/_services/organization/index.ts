@@ -6,6 +6,7 @@ import {
   type ProjectMemberRoleForInvite,
   isOrgWorkspaceRole,
 } from "./org-role-constants";
+import getStorageUrl from "@/app/_utils/get-storage-url";
 
 export {
   ORG_WORKSPACE_ROLES,
@@ -306,6 +307,7 @@ export interface AcceptInviteData {
 
 export interface OrganizationInvitePreview {
   org_name: string;
+  org_logo_url?: string | null;
   email: string;
   role: string;
   expires_at: string;
@@ -848,7 +850,13 @@ export const previewOrganizationInvite = async (
   if (!data.data) {
     throw new Error("Resposta inválida do servidor");
   }
-  return asUnknown<OrganizationInvitePreview>(data.data);
+  
+  const previewData = data.data as any;
+  if (previewData.org_logo_url) {
+    previewData.org_logo_url = getStorageUrl(previewData.org_logo_url);
+  }
+  
+  return asUnknown<OrganizationInvitePreview>(previewData);
 };
 
 export const acceptInvite = async (

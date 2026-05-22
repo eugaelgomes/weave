@@ -456,10 +456,17 @@ class OrganizationMembersController extends OrganizationsBaseController {
    */
   async previewInvite(req, res) {
     try {
-      const token = req.query.token;
+      let token = req.query.token;
       if (!token || typeof token !== "string") {
         return res.status(400).json({ error: "Token is required" });
       }
+
+      // Extract the UUID part from the token to be forgiving of extra garbage characters (e.g. trailing quotes)
+      const uuidMatch = token.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+      if (!uuidMatch) {
+        return res.status(400).json({ error: "Invalid token format" });
+      }
+      token = uuidMatch[0];
 
       const invite =
         await this.organizationsRepository.findOrgInviteByToken(token);
@@ -477,6 +484,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         status: "OK",
         data: {
           org_name: invite.org_name,
+          org_logo_url: invite.logo_url ? spacesService.getFileUrl(invite.logo_url) : null,
           email: invite.email,
           role: invite.role,
           expires_at: invite.expires_at,
@@ -501,12 +509,19 @@ class OrganizationMembersController extends OrganizationsBaseController {
    */
   async acceptInvite(req, res) {
     try {
-      const { token, name, username, password } = req.body;
+      let { token, name, username, password } = req.body;
       const authUserId = req.user?.userId;
 
       if (!token) {
         return res.status(400).json({ error: "Token is required" });
       }
+
+      // Extract the UUID part from the token to be forgiving of extra garbage characters
+      const uuidMatch = token.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+      if (!uuidMatch) {
+        return res.status(400).json({ error: "Invalid token format" });
+      }
+      token = uuidMatch[0];
 
       const invite =
         await this.organizationsRepository.findOrgInviteByToken(token);

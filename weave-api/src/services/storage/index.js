@@ -432,9 +432,6 @@ class SpacesService {
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  /**
-   * Extrai a key (path relativo) da URL completa
-   */
   extractKeyFromUrl(url) {
     if (!url) return null;
     const normalize = (value = "") => value.replace(/\/+/g, "/");
@@ -459,6 +456,27 @@ class SpacesService {
       console.error("Erro ao extrair key da URL:", error);
       return null;
     }
+  }
+
+  /**
+   * Constrói a URL completa para acesso a um arquivo
+   * @param {string} key - A chave (path) do arquivo no bucket
+   * @returns {string|null} - URL completa do arquivo
+   */
+  getFileUrl(key) {
+    if (!key) return null;
+    if (key.startsWith("http://") || key.startsWith("https://")) {
+      return key;
+    }
+    
+    // Substitui digitaloceanspaces.com por {region}.digitaloceanspaces.com caso aplicável
+    // e garante que a URL aponte corretamente para o bucket
+    const publicUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`.replace(
+      "digitaloceanspaces.com",
+      `${this.region}.digitaloceanspaces.com`
+    );
+    
+    return publicUrl;
   }
 
   // ========================================

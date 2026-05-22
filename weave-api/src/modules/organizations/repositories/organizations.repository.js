@@ -704,7 +704,7 @@ class OrganizationsRepository {
 
   async findOrgInviteByToken(invite_id) {
     const query = `
-      SELECT i.*, o.org_name, o.unique_name as org_unique_name,
+      SELECT i.*, o.org_name, o.unique_name as org_unique_name, o.logo_url,
         a.area_name AS area_name
       FROM organization_member_invites i
       JOIN organizations o ON o.id = i.organization_id

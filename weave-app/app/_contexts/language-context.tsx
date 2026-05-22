@@ -26,13 +26,20 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const prefs = (user?.usage_preference as UserPreferences) || {};
 
   const userLocale = prefs.language?.interface as SupportedLocale | undefined;
-  const [locale, setLocaleState] = useState<SupportedLocale>(userLocale || detectBrowserLocale());
+  
+  // Use a stable initial state (SSR safe) to prevent hydration mismatches.
+  // The server always returns 'pt-BR' when navigator is undefined.
+  const [locale, setLocaleState] = useState<SupportedLocale>(userLocale || "pt-BR");
 
   useEffect(() => {
-    if (userLocale && userLocale !== locale) {
-      setLocaleState(userLocale);
+    if (userLocale) {
+      if (userLocale !== locale) setLocaleState(userLocale);
+    } else {
+      // If no user preference, fallback to browser locale after hydration
+      const browserLocale = detectBrowserLocale();
+      if (locale !== browserLocale) setLocaleState(browserLocale);
     }
-  }, [userLocale, locale]);
+  }, [userLocale]);
 
   useEffect(() => {
     document.documentElement.lang = locale;
