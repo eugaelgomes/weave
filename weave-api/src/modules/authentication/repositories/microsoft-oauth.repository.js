@@ -22,7 +22,7 @@ class MicrosoftOauthRepository extends BaseRepository {
         (
           SELECT row_to_json(org_data)
           FROM (
-            SELECT om.organization_id AS org_id, om.role AS org_member_role, o.unique_name AS org_unique_name, o.public_organization_id AS org_public_id, o.org_name
+            SELECT om.organization_id AS org_id, om.role AS org_member_role, o.unique_name AS org_unique_name, o.public_id AS org_public_id, o.org_name
             FROM organization_members om
             JOIN organizations o ON o.id = om.organization_id
             WHERE om.user_id = u.user_id
@@ -39,10 +39,9 @@ class MicrosoftOauthRepository extends BaseRepository {
               oam.created_at AS org_default_area_member_since, oa.area_name AS org_default_area_name,
               oa.slug AS org_default_area_slug, oa.description AS org_default_area_description,
               oa.properties AS org_default_area_properties
-            FROM organization_members oam
+            FROM organization_area_members oam
             JOIN organization_areas oa ON oa.id = oam.area_id
             WHERE oam.user_id = u.user_id AND oam.deleted = false AND oa.deleted = false
-              AND oam.area_id IS NOT NULL
               AND oam.organization_id = (
                   SELECT organization_id FROM organization_members 
                   WHERE user_id = u.user_id

@@ -59,7 +59,7 @@ class SigninRepository extends BaseRepository {
               om.role AS org_member_role, 
               om.created_at AS org_member_since, 
               o.unique_name AS org_unique_name, 
-              o.public_organization_id AS org_public_id,
+              o.public_id AS org_public_id,
               o.org_name, 
               o.logo_url AS org_logo_url
             FROM organization_members om
@@ -114,7 +114,7 @@ class SigninRepository extends BaseRepository {
               oa.slug AS org_default_area_slug,
               oa.description AS org_default_area_description,
               oa.properties AS org_default_area_properties
-            FROM organization_members oam
+            FROM organization_area_members oam
             JOIN organization_areas oa ON oa.id = oam.area_id
             WHERE oam.user_id = u.user_id
               AND oam.deleted = false

@@ -63,7 +63,7 @@ async function resolveOrganizationPublicIdParam(req, res, next, id) {
       const query = `
         SELECT id
         FROM organizations
-        WHERE public_organization_id = $1 AND deleted = false;
+        WHERE public_id = $1 AND deleted = false;
       `;
       const { executeQuery } = require("@/database/connection");
       const results = await executeQuery(query, [id]);

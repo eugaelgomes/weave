@@ -178,7 +178,7 @@ const validRoles = Object.freeze(Object.values(ORG_ROLES));
 const orgDataResponse = (organization) => {
   return {
     id: organization.id,
-    public_id: organization.public_organization_id || null,
+    public_id: organization.public_id || null,
     org_name: organization.org_name,
     unique_name: organization.unique_name,
     logo_url: organization.logo_url,
