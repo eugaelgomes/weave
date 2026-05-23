@@ -385,7 +385,6 @@ CREATE TABLE public.organization_members (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL,
   user_id uuid NOT NULL,
-  area_id uuid NULL,
   role public.organization_workspace_role_enum NOT NULL,
   status public.organization_member_status_enum NOT NULL DEFAULT 'ACTIVE',
   invited_by uuid NULL,
@@ -394,7 +393,28 @@ CREATE TABLE public.organization_members (
   removed_by uuid NULL,
   deleted_at timestamptz NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NULL
+  updated_at timestamptz NULL,
+  CONSTRAINT unique_org_user UNIQUE (organization_id, user_id)
+);
+
+CREATE TABLE public.organization_area_members (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL,
+  area_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  role public.organization_workspace_role_enum NOT NULL,
+  status public.organization_member_status_enum NOT NULL DEFAULT 'ACTIVE',
+  invited_by uuid NULL,
+  deleted bool NOT NULL DEFAULT false,
+  removed_at timestamptz NULL,
+  removed_by uuid NULL,
+  deleted_at timestamptz NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NULL,
+  CONSTRAINT unique_org_area_user UNIQUE (organization_id, area_id, user_id),
+  CONSTRAINT fk_org_area_members_org FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE,
+  CONSTRAINT fk_org_area_members_area FOREIGN KEY (area_id) REFERENCES public.organization_areas(id) ON DELETE CASCADE,
+  CONSTRAINT fk_org_area_members_user FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE
 );
 CREATE TABLE public.organization_domains (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

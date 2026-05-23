@@ -155,17 +155,29 @@ class OrganizationAreasRepository {
   async listAreaMembers(areaId, organizationId) {
     const query = `
 			SELECT 
-				m.*, 
-				u.name,
-				u.username,
-				u.email,
-				u.avatar_url
-			FROM organization_members m
+				m.id, m.organization_id, m.area_id, m.user_id, m.role, m.status, m.invited_by, m.deleted, m.removed_at, m.removed_by, m.deleted_at, m.created_at, m.updated_at,
+				u.name, u.username, u.email, u.avatar_url
+			FROM organization_area_members m
 			JOIN users u ON u.user_id = m.user_id
 			WHERE m.organization_id = $1
-				AND m.area_id = $2
 				AND m.deleted = false
-			ORDER BY u.name ASC;
+				AND m.area_id = $2
+
+			UNION ALL
+
+			SELECT 
+				om.id, om.organization_id, $2::uuid AS area_id, om.user_id, om.role, om.status, om.invited_by, om.deleted, om.removed_at, om.removed_by, om.deleted_at, om.created_at, om.updated_at,
+				u.name, u.username, u.email, u.avatar_url
+			FROM organization_members om
+			JOIN users u ON u.user_id = om.user_id
+			WHERE om.organization_id = $1
+				AND om.deleted = false
+				AND om.role IN ('ADMIN', 'SUPER_ADMIN')
+				AND EXISTS (
+				  SELECT 1 FROM organization_areas a
+				  WHERE a.id = $2 AND a.organization_id = $1 AND a.is_root_area = true
+				)
+			ORDER BY name ASC;
 		`;
     return await executeQuery(query, [organizationId, areaId]);
   }
@@ -173,7 +185,7 @@ class OrganizationAreasRepository {
   async getAreaMember(areaId, organizationId, userId) {
     const query = `
 			SELECT *
-			FROM organization_members
+			FROM organization_area_members
 			WHERE organization_id = $1
 				AND area_id = $2
 				AND user_id = $3
@@ -188,14 +200,14 @@ class OrganizationAreasRepository {
     const query = `
 			WITH existing AS (
 				SELECT id, deleted
-				FROM organization_members
+				FROM organization_area_members
 				WHERE organization_id = $1
 					AND area_id = $2
 					AND user_id = $3
 				LIMIT 1
 			),
 			reactivated AS (
-				UPDATE organization_members
+				UPDATE organization_area_members
 				SET deleted = false,
 						role = UPPER($4)::public.organization_workspace_role_enum,
 						invited_by = $5,
@@ -207,7 +219,7 @@ class OrganizationAreasRepository {
 				RETURNING *
 			),
 			inserted AS (
-				INSERT INTO organization_members (
+				INSERT INTO organization_area_members (
 					organization_id,
 					area_id,
 					user_id,
@@ -238,7 +250,7 @@ class OrganizationAreasRepository {
 
   async updateAreaMemberRole(areaId, organizationId, userId, role) {
     const query = `
-			UPDATE organization_members
+			UPDATE organization_area_members
 			SET role = UPPER($4)::public.organization_workspace_role_enum,
 					updated_at = CURRENT_TIMESTAMP
 			WHERE organization_id = $1
@@ -258,7 +270,7 @@ class OrganizationAreasRepository {
 
   async removeAreaMember(areaId, organizationId, userId, removedBy) {
     const query = `
-			UPDATE organization_members
+			UPDATE organization_area_members
 			SET deleted = true,
 					removed_at = CURRENT_TIMESTAMP,
 					removed_by = $4,

@@ -160,8 +160,7 @@ export function OrganizationInviteModal({
 
   const hasAreas = areas.length > 0;
   const canSubmit =
-    hasAreas &&
-    Boolean(email.trim() && name.trim() && areaId) &&
+    Boolean(email.trim() && name.trim() && (skipProjectMemberRole || (hasAreas && areaId))) &&
     !emailLocalPartContainsPlus(email.trim());
 
   const inviteEmailPlusError =
@@ -257,63 +256,69 @@ export function OrganizationInviteModal({
             <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
           </div>
         </div>
-        <div>
-          <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-            {t.organizationMembers.areaRequired}
-          </label>
-          {hasAreas ? (
-            <div className="relative">
-              <Layers3 className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-              <select
-                value={areaId}
-                onChange={(e) => setAreaId(e.target.value)}
-                aria-label={t.organizationMembers.areaRequired}
-                className={`${inputClass} appearance-none py-1.5 pr-8 pl-8`}
-              >
-                {areas.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.area_name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+        
+        {!skipProjectMemberRole ? (
+          <>
+            <div>
+              <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
+                {t.organizationMembers.areaRequired}
+              </label>
+              {hasAreas ? (
+                <div className="relative">
+                  <Layers3 className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+                  <select
+                    value={areaId}
+                    onChange={(e) => setAreaId(e.target.value)}
+                    aria-label={t.organizationMembers.areaRequired}
+                    className={`${inputClass} appearance-none py-1.5 pr-8 pl-8`}
+                  >
+                    {areas.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.area_name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+                </div>
+              ) : (
+                <p className="text-[10px] font-medium text-amber-700 dark:text-amber-400">
+                  {t.organizationMembers.areaInviteNoAreas}
+                </p>
+              )}
             </div>
-          ) : (
-            <p className="text-[10px] font-medium text-amber-700 dark:text-amber-400">
-              {t.organizationMembers.areaInviteNoAreas}
-            </p>
-          )}
-        </div>
-        {areaId && !skipProjectMemberRole ? (
-          <div>
-            <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-              {t.organizationMembers.areaRoleLabel}
-            </label>
-            <div className="relative">
-              <select
-                value={projectMemberRole}
-                onChange={(e) => setProjectMemberRole(e.target.value as ProjectMemberRoleForInvite)}
-                aria-label={t.organizationMembers.areaRoleLabel}
-                className={`${inputClass} appearance-none px-3`}
-              >
-                {PROJECT_MEMBER_ROLES.map((r) => (
-                  <option key={r} value={r}>
-                    {projectMemberRoleLabel(t, r)}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-            </div>
-            <p className="mt-1.5 text-[10px] leading-snug text-neutral-500 dark:text-neutral-400">
-              {t.organizationMembers.projectRoleInAreaHint}
+            {areaId && (
+              <div>
+                <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
+                  {t.organizationMembers.areaRoleLabel}
+                </label>
+                <div className="relative">
+                  <select
+                    value={projectMemberRole}
+                    onChange={(e) => setProjectMemberRole(e.target.value as ProjectMemberRoleForInvite)}
+                    aria-label={t.organizationMembers.areaRoleLabel}
+                    className={`${inputClass} appearance-none px-3`}
+                  >
+                    {PROJECT_MEMBER_ROLES.map((r) => (
+                      <option key={r} value={r}>
+                        {projectMemberRoleLabel(t, r)}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+                </div>
+                <p className="mt-1.5 text-[10px] leading-snug text-neutral-500 dark:text-neutral-400">
+                  {t.organizationMembers.projectRoleInAreaHint}
+                </p>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-900/30 dark:bg-yellow-900/10">
+            <p className="text-[10px] leading-snug text-yellow-800 dark:text-yellow-500">
+              {t.organizationMembers.inviteAdminAreaNoProjectRole}
             </p>
           </div>
-        ) : null}
-        {areaId && skipProjectMemberRole ? (
-          <p className="text-[10px] leading-snug text-neutral-500 dark:text-neutral-400">
-            {t.organizationMembers.inviteAdminAreaNoProjectRole}
-          </p>
-        ) : null}
+        )}
       </div>
     </ModalBase>
   );

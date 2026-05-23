@@ -19,7 +19,7 @@ class OrganizationsRepository {
       SELECT role FROM organization_members
       WHERE organization_id = $1
         AND user_id = $2
-        AND area_id IS NULL
+        
         AND deleted = false
       LIMIT 1;
     `;
@@ -69,7 +69,7 @@ class OrganizationsRepository {
     LEFT JOIN plans p ON p.plan_id = o.plan_id
     LEFT JOIN users u ON u.user_id = o.user_id
     WHERE om.user_id = $1 AND om.deleted = false
-      AND om.area_id IS NULL
+      
     ORDER BY om.created_at ASC
     LIMIT 1;
     `;
@@ -164,11 +164,10 @@ class OrganizationsRepository {
            'area_name', a.area_name,
            'role', am.role
          )), '[]'::json)
-         FROM organization_members am
+         FROM organization_area_members am
          JOIN organization_areas a ON a.id = am.area_id
          WHERE am.user_id = u1.user_id
            AND am.deleted = false 
-           AND am.area_id IS NOT NULL
            AND a.deleted = false
            AND am.organization_id = $1) as areas,
         (SELECT ul.created_at as last_login_at
@@ -181,7 +180,7 @@ class OrganizationsRepository {
       LEFT JOIN users u1 ON om.user_id = u1.user_id
       LEFT JOIN users u2 ON om.invited_by = u2.user_id
       WHERE om.organization_id = $1
-        AND om.area_id IS NULL
+        
         AND om.deleted = false
       ORDER BY 
         CASE om.role 
@@ -203,7 +202,7 @@ class OrganizationsRepository {
       SELECT COUNT(*)::int AS total
       FROM organization_members
       WHERE organization_id = $1
-        AND area_id IS NULL
+        
         AND role = UPPER($2)
         AND deleted = false;
     `;
@@ -226,7 +225,7 @@ class OrganizationsRepository {
         FROM organization_members
         WHERE organization_id = $1
           AND user_id = $2
-          AND area_id IS NULL
+          
         LIMIT 1
       ),
       reactivated AS (
@@ -242,8 +241,8 @@ class OrganizationsRepository {
         RETURNING *
       ),
       inserted AS (
-        INSERT INTO organization_members (organization_id, user_id, area_id, role, status, invited_by)
-        SELECT $1, $2, NULL,
+        INSERT INTO organization_members (organization_id, user_id, role, status, invited_by)
+        SELECT $1, $2,
           UPPER($3)::public.organization_workspace_role_enum,
           UPPER($4)::public.organization_member_status_enum,
           $5
@@ -283,7 +282,7 @@ class OrganizationsRepository {
         SELECT om.user_id, 'PROJECT_MANAGER' AS project_role, 1 AS priority
         FROM organization_members om
         WHERE om.organization_id = $1
-          AND om.area_id IS NULL
+          
           AND om.role IN ('ADMIN', 'SUPER_ADMIN')
           AND om.deleted = false
           AND om.user_id != $2::uuid
@@ -292,9 +291,8 @@ class OrganizationsRepository {
 
         -- Area-level admins → PROJECT_MANAGER
         SELECT om.user_id, 'PROJECT_MANAGER' AS project_role, 2 AS priority
-        FROM organization_members om
+        FROM organization_area_members om
         WHERE om.organization_id = $1
-          AND om.area_id IS NOT NULL
           AND om.role = 'ADMIN'
           AND om.deleted = false
           AND om.user_id != $2::uuid
@@ -303,9 +301,8 @@ class OrganizationsRepository {
 
         -- Area-level members → CONTRIBUTOR
         SELECT om.user_id, 'CONTRIBUTOR' AS project_role, 3 AS priority
-        FROM organization_members om
+        FROM organization_area_members om
         WHERE om.organization_id = $1
-          AND om.area_id IS NOT NULL
           AND om.role = 'MEMBER'
           AND om.deleted = false
           AND om.user_id != $2::uuid
@@ -318,11 +315,21 @@ class OrganizationsRepository {
 
   async removeOrganizationMember(organization_id, user_id) {
     const query = `
-      UPDATE organization_members
-      SET deleted = true, updated_at = now()
-      WHERE organization_id = $1 AND user_id = $2 AND area_id IS NULL
-        AND role NOT IN ('ADMIN', 'SUPER_ADMIN')
-      RETURNING *;
+      WITH deleted_org_member AS (
+        UPDATE organization_members
+        SET deleted = true, updated_at = now()
+        WHERE organization_id = $1 AND user_id = $2 
+          AND role NOT IN ('ADMIN', 'SUPER_ADMIN')
+        RETURNING *
+      ),
+      deleted_area_members AS (
+        UPDATE organization_area_members
+        SET deleted = true, updated_at = now()
+        WHERE organization_id = $1 AND user_id = $2
+          AND EXISTS (SELECT 1 FROM deleted_org_member)
+        RETURNING *
+      )
+      SELECT * FROM deleted_org_member;
     `;
     const results = await executeQuery(query, [organization_id, user_id]);
     return results[0];
@@ -333,7 +340,7 @@ class OrganizationsRepository {
       UPDATE organization_members
       SET role = UPPER($3)::public.organization_workspace_role_enum,
           updated_at = now()
-      WHERE organization_id = $1 AND user_id = $2 AND area_id IS NULL
+      WHERE organization_id = $1 AND user_id = $2 
       RETURNING *;
     `;
     const results = await executeQuery(query, [organization_id, user_id, role]);
@@ -345,7 +352,7 @@ class OrganizationsRepository {
       UPDATE organization_members
       SET status = UPPER($3)::public.organization_member_status_enum,
           updated_at = now()
-      WHERE organization_id = $1 AND user_id = $2 AND area_id IS NULL
+      WHERE organization_id = $1 AND user_id = $2 
       RETURNING *;
     `;
     const results = await executeQuery(query, [
@@ -365,7 +372,7 @@ class OrganizationsRepository {
       SELECT * FROM organization_members
       WHERE organization_id = $1
         AND user_id = $2
-        AND area_id IS NULL
+        
         AND deleted = false
       LIMIT 1;
     `;
@@ -378,7 +385,7 @@ class OrganizationsRepository {
       SELECT 1 FROM organization_members
       WHERE organization_id = $1
         AND user_id = $2
-        AND area_id IS NULL
+        
         AND deleted = false
       LIMIT 1;
     `;
@@ -393,7 +400,7 @@ class OrganizationsRepository {
       LEFT JOIN users u ON om.user_id = u.user_id
       INNER JOIN organizations o ON o.id = om.organization_id
       WHERE om.organization_id = $1 AND om.user_id = o.user_id
-        AND om.area_id IS NULL
+        
         AND om.deleted = false
       LIMIT 1;
     `;
@@ -584,7 +591,7 @@ class OrganizationsRepository {
             SELECT 1 FROM organization_members om
             WHERE om.organization_id = o.id
               AND om.user_id = $2
-              AND om.area_id IS NULL
+              
               AND om.deleted = false
               AND om.role IN ('SUPER_ADMIN', 'ADMIN')
           )
@@ -650,7 +657,7 @@ class OrganizationsRepository {
             SELECT 1 FROM organization_members om
             WHERE om.organization_id = o.id
               AND om.user_id = $2
-              AND om.area_id IS NULL
+              
               AND om.deleted = false
               AND om.role IN ('SUPER_ADMIN', 'ADMIN')
           )
@@ -717,7 +724,7 @@ class OrganizationsRepository {
             SELECT 1 FROM organization_members om
             WHERE om.organization_id = o.id
               AND om.user_id = $2
-              AND om.area_id IS NULL
+              
               AND om.deleted = false
               AND om.role IN ('SUPER_ADMIN', 'ADMIN', 'BILLING_MANAGER')
           )
@@ -878,7 +885,7 @@ class OrganizationsRepository {
     const query = `
 WITH user_check AS (
     SELECT 1 FROM organization_members 
-    WHERE organization_id = $1 AND user_id = $3 AND area_id IS NULL AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
+    WHERE organization_id = $1 AND user_id = $3  AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
 )
 UPDATE organizations
 SET logo_url = $2, updated_at = NOW()
@@ -893,7 +900,7 @@ RETURNING *;
     const query = `
 WITH user_check AS (
     SELECT 1 FROM organization_members 
-    WHERE organization_id = $1 AND user_id = $3 AND area_id IS NULL AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
+    WHERE organization_id = $1 AND user_id = $3  AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
 )
 UPDATE organizations
 SET banner_url = $2, updated_at = NOW()

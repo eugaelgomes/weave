@@ -132,24 +132,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
         role
       );
 
-      // When promoted to ADMIN/SUPER_ADMIN, ensure membership in root area
-      if (["ADMIN", "SUPER_ADMIN"].includes(role?.toUpperCase())) {
-        try {
-          const rootArea = await this.areasRepository.getRootArea(currentOrg.id);
-          if (rootArea) {
-            await this.areasRepository.addAreaMember(
-              rootArea.id,
-              currentOrg.id,
-              memberId,
-              ORG_ROLES.ADMIN,
-              authUserId
-            );
-          }
-        } catch (rootErr) {
-          console.error("[Root Area Auto-Add on Promotion] Falha:", rootErr);
-        }
-      }
-
       res.status(200).json({
         status: "OK",
         message: "Role updated successfully",
@@ -374,10 +356,18 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return;
       }
 
-      const trimmedAreaId =
-        typeof area_id === "string" ? area_id.trim() : "";
-      if (!trimmedAreaId) {
+      const isGlobalRole =
+        normalizedRole === ORG_ROLES.ADMIN ||
+        normalizedRole === ORG_ROLES.SUPER_ADMIN;
+
+      let trimmedAreaId = typeof area_id === "string" ? area_id.trim() : "";
+      
+      if (!trimmedAreaId && !isGlobalRole) {
         return res.status(400).json({ error: "area_id is required" });
+      }
+
+      if (isGlobalRole) {
+        trimmedAreaId = null; // Org-level admins shouldn't have an area_id to avoid duplication
       }
 
       let resolvedProjectMemberRole = null;
@@ -387,21 +377,17 @@ class OrganizationMembersController extends OrganizationsBaseController {
           currentOrg.id
         );
         if (!area) return res.status(404).json({ error: "Area not found" });
-        if (
-          normalizedRole === ORG_ROLES.ADMIN ||
-          normalizedRole === ORG_ROLES.SUPER_ADMIN
-        ) {
-          resolvedProjectMemberRole = "PROJECT_MANAGER";
-        } else {
-          resolvedProjectMemberRole =
-            this._resolveProjectMemberRole(project_member_role);
-          if (!PROJECT_MEMBER_ROLES.includes(resolvedProjectMemberRole)) {
-            return res.status(400).json({
-              error:
-                "Invalid project_member_role. Use: PROJECT_MANAGER, CONTRIBUTOR, COMMENTER, VIEWER",
-            });
-          }
+
+        resolvedProjectMemberRole =
+          this._resolveProjectMemberRole(project_member_role);
+        if (!PROJECT_MEMBER_ROLES.includes(resolvedProjectMemberRole)) {
+          return res.status(400).json({
+            error:
+              "Invalid project_member_role. Use: PROJECT_MANAGER, CONTRIBUTOR, COMMENTER, VIEWER",
+          });
         }
+      } else if (isGlobalRole) {
+        resolvedProjectMemberRole = "PROJECT_MANAGER";
       }
 
       const pending = await this.organizationsRepository.checkExistingInvite(
@@ -653,26 +639,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
           "ACTIVE",
           invite.invited_by
         );
-
-        // ADMIN/SUPER_ADMIN must always belong to the root area
-        if (["ADMIN", "SUPER_ADMIN"].includes(invite.role?.toUpperCase())) {
-          try {
-            const rootArea = await this.areasRepository.getRootArea(
-              invite.organization_id
-            );
-            if (rootArea) {
-              await this.areasRepository.addAreaMember(
-                rootArea.id,
-                invite.organization_id,
-                targetUserId,
-                ORG_ROLES.ADMIN,
-                invite.invited_by
-              );
-            }
-          } catch (rootErr) {
-            console.error("[Root Area Auto-Add] Falha:", rootErr);
-          }
-        }
       }
 
       if (invite.area_id) {
