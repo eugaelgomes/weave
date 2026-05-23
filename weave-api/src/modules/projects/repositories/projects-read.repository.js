@@ -241,7 +241,7 @@ class ProjectsReadRepository {
               'avatar_url', cu.avatar_url,
               'role', pm.role,
               'added_at', pm.created_at,
-              'added_by', pm.added_by::text,
+              'added_by', pm.added_by::text
             ) AS obj
              FROM project_members pm
              JOIN users cu ON cu.user_id = pm.user_id
@@ -389,7 +389,7 @@ class ProjectsReadRepository {
               'avatar_url', cu.avatar_url,
               'role', pm.role,
               'added_at', pm.created_at,
-              'added_by', pm.added_by::text,
+              'added_by', pm.added_by::text
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -511,7 +511,7 @@ class ProjectsReadRepository {
               'avatar_url', cu.avatar_url,
               'role', pm.role,
               'added_at', pm.created_at,
-              'added_by', pm.added_by::text,
+              'added_by', pm.added_by::text
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -595,7 +595,7 @@ class ProjectsReadRepository {
               'avatar_url', cu.avatar_url,
               'role', pm.role,
               'added_at', pm.created_at,
-              'added_by', pm.added_by::text,
+              'added_by', pm.added_by::text
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -687,7 +687,7 @@ class ProjectsReadRepository {
               'avatar_url', cu.avatar_url,
               'role', pm.role,
               'added_at', pm.created_at,
-              'added_by', pm.added_by::text,
+              'added_by', pm.added_by::text
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -894,7 +894,7 @@ class ProjectsReadRepository {
               'avatar_url', u.avatar_url,
               'role', pm.role,
               'added_at', pm.created_at,
-              'added_by', pm.added_by::text,
+              'added_by', pm.added_by::text
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -934,7 +934,7 @@ class ProjectsReadRepository {
               'avatar_url', u.avatar_url,
               'role', pm.role,
               'added_at', pm.created_at,
-              'added_by', pm.added_by::text,
+              'added_by', pm.added_by::text
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
