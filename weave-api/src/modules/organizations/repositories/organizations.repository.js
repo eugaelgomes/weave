@@ -769,13 +769,12 @@ class OrganizationsRepository {
     invited_by,
     name = null,
     username = null,
-    area_id = null,
-    project_member_role = null
+    target_areas = []
   ) {
     const query = `
       INSERT INTO organization_member_invites (
         organization_id, email, name, username, role, invited_by, expires_at,
-        area_id, project_member_role
+        target_areas
       )
       VALUES (
         $1,
@@ -785,13 +784,7 @@ class OrganizationsRepository {
         UPPER($5)::public.organization_workspace_role_enum,
         $6,
         NOW() + INTERVAL '7 days',
-        NULLIF(trim(COALESCE($7::text, '')), '')::uuid,
-        CASE
-          WHEN trim(COALESCE($7::text, '')) = '' THEN NULL::public.project_member_role_enum
-          ELSE UPPER(
-            COALESCE(NULLIF(trim(COALESCE($8::text, '')), ''), 'CONTRIBUTOR')
-          )::public.project_member_role_enum
-        END
+        $7::jsonb
       )
       RETURNING *;
     `;
@@ -802,20 +795,29 @@ class OrganizationsRepository {
       username,
       role,
       invited_by,
-      area_id,
-      project_member_role,
+      JSON.stringify(target_areas),
     ]);
+    return results[0];
+  }
+
+  async resendOrgInvite(invite_id) {
+    const query = `
+      UPDATE organization_member_invites
+      SET expires_at = NOW() + INTERVAL '7 days',
+          updated_at = NOW()
+      WHERE invite_id = $1
+        AND deleted = false
+      RETURNING *;
+    `;
+    const results = await executeQuery(query, [invite_id]);
     return results[0];
   }
 
   async findOrgInviteByToken(invite_id) {
     const query = `
-      SELECT i.*, o.org_name, o.unique_name as org_unique_name, o.logo_url,
-        a.area_name AS area_name
+      SELECT i.*, o.org_name, o.unique_name as org_unique_name, o.logo_url
       FROM organization_member_invites i
       JOIN organizations o ON o.id = i.organization_id
-      LEFT JOIN organization_areas a
-        ON a.id = i.area_id AND a.organization_id = i.organization_id AND a.deleted = false
       WHERE i.invite_id = $1 
         AND i.deleted = false 
         AND i.invite_verified = false

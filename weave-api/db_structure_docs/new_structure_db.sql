@@ -447,15 +447,9 @@ CREATE TABLE public.organization_member_invites (
   deleted_at timestamptz NULL,
   invited_by uuid NOT NULL,
   expires_at timestamptz NULL,
-  area_id uuid NULL,
-  project_member_role public.project_member_role_enum NULL,
+  target_areas jsonb DEFAULT '[]'::jsonb NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NULL,
-  CONSTRAINT organization_member_invites_project_role_check
-    CHECK (
-      area_id IS NULL
-      OR project_member_role IS NOT NULL
-    )
+  updated_at timestamptz NULL
 );
 
 -- public.projects definition

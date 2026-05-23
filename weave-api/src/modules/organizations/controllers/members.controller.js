@@ -313,8 +313,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         role = ORG_ROLES.MEMBER,
         name,
         username,
-        area_id,
-        project_member_role,
+        target_areas = [],
       } = req.body;
 
       if (!email) {
@@ -360,34 +359,27 @@ class OrganizationMembersController extends OrganizationsBaseController {
         normalizedRole === ORG_ROLES.ADMIN ||
         normalizedRole === ORG_ROLES.SUPER_ADMIN;
 
-      let trimmedAreaId = typeof area_id === "string" ? area_id.trim() : "";
-      
-      if (!trimmedAreaId && !isGlobalRole) {
-        return res.status(400).json({ error: "area_id is required" });
+      if (!Array.isArray(target_areas)) {
+        return res.status(400).json({ error: "target_areas must be an array" });
       }
 
-      if (isGlobalRole) {
-        trimmedAreaId = null; // Org-level admins shouldn't have an area_id to avoid duplication
-      }
-
-      let resolvedProjectMemberRole = null;
-      if (trimmedAreaId) {
+      const validTargetAreas = [];
+      for (const tArea of target_areas) {
+        if (!tArea.area_id) continue;
         const area = await this.areasRepository.getAreaById(
-          trimmedAreaId,
+          tArea.area_id,
           currentOrg.id
         );
-        if (!area) return res.status(404).json({ error: "Area not found" });
+        if (!area) return res.status(404).json({ error: `Area not found: ${tArea.area_id}` });
 
-        resolvedProjectMemberRole =
-          this._resolveProjectMemberRole(project_member_role);
-        if (!PROJECT_MEMBER_ROLES.includes(resolvedProjectMemberRole)) {
+        const resolvedProjectRole = this._resolveProjectMemberRole(tArea.role);
+        if (!PROJECT_MEMBER_ROLES.includes(resolvedProjectRole)) {
           return res.status(400).json({
             error:
               "Invalid project_member_role. Use: PROJECT_MANAGER, CONTRIBUTOR, COMMENTER, VIEWER",
           });
         }
-      } else if (isGlobalRole) {
-        resolvedProjectMemberRole = "PROJECT_MANAGER";
+        validTargetAreas.push({ area_id: tArea.area_id, role: resolvedProjectRole });
       }
 
       const pending = await this.organizationsRepository.checkExistingInvite(
@@ -426,8 +418,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         authUserId,
         usedName,
         username || null,
-        trimmedAreaId,
-        resolvedProjectMemberRole
+        validTargetAreas
       );
 
       const inviter = await SearchUsersRepository.findById(authUserId);
@@ -455,8 +446,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
           email: invite.email,
           role: invite.role,
           expires_at: invite.expires_at,
-          area_id: invite.area_id || null,
-          project_member_role: invite.project_member_role || null,
+          target_areas: invite.target_areas,
         },
       });
     } catch (error) {
@@ -507,9 +497,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
           expires_at: invite.expires_at,
           has_account,
           invited_name: invite.name || null,
-          area_id: invite.area_id || null,
-          area_name: invite.area_name || null,
-          project_member_role: invite.project_member_role || null,
+          target_areas: invite.target_areas || [],
         },
       });
     } catch (error) {
@@ -641,23 +629,26 @@ class OrganizationMembersController extends OrganizationsBaseController {
         );
       }
 
-      if (invite.area_id) {
-        const areaRole = this._mapProjectRoleToAreaRole(
-          invite.project_member_role
-        );
-        const existingAreaMember = await this.areasRepository.getAreaMember(
-          invite.area_id,
-          invite.organization_id,
-          targetUserId
-        );
-        if (!existingAreaMember) {
-          await this.areasRepository.addAreaMember(
-            invite.area_id,
+      if (Array.isArray(invite.target_areas)) {
+        for (const targetArea of invite.target_areas) {
+          if (!targetArea.area_id) continue;
+          
+          const areaRole = this._mapProjectRoleToAreaRole(targetArea.role);
+          const existingAreaMember = await this.areasRepository.getAreaMember(
+            targetArea.area_id,
             invite.organization_id,
-            targetUserId,
-            areaRole,
-            invite.invited_by
+            targetUserId
           );
+          
+          if (!existingAreaMember) {
+            await this.areasRepository.addAreaMember(
+              targetArea.area_id,
+              invite.organization_id,
+              targetUserId,
+              areaRole,
+              invite.invited_by
+            );
+          }
         }
       }
 
@@ -685,7 +676,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
             name: invite.org_name,
           },
           role: invite.role,
-          area_id: invite.area_id || null,
+          target_areas: invite.target_areas || [],
         },
       });
     } catch (error) {
@@ -773,6 +764,177 @@ class OrganizationMembersController extends OrganizationsBaseController {
     } catch (error) {
       console.error("Error canceling invite:", error);
       res.status(500).json({ error: "Error canceling invite" });
+    }
+  }
+
+  /**
+   * Resend a pending invite
+   * @param {Request & AuthenticatedRequest} req
+   * @param {Response} res
+   */
+  async resendInvite(req, res) {
+    try {
+      const authUserId = this._validateAuthentication(req, res);
+      if (!authUserId) return;
+
+      const { invite_id } = req.params;
+      const currentOrg = await this._getUserOrganization(authUserId);
+      if (!currentOrg) {
+        return res.status(404).json({ error: "Organization not found" });
+      }
+
+      if (!(await this._ensureCanManageMembers(currentOrg, res))) {
+        return;
+      }
+
+      let invite = await this.organizationsRepository.findOrgInviteByToken(invite_id);
+      if (!invite) {
+        // Might be expired, let's try to fetch it anyway to resend
+        const pending = await this.organizationsRepository.getPendingOrgInvites(currentOrg.id);
+        invite = pending.find(i => i.invite_id === invite_id);
+        if (!invite) {
+           return res.status(404).json({ error: "Invite not found" });
+        }
+      }
+
+      if (String(invite.organization_id) !== String(currentOrg.id)) {
+        return res.status(403).json({ error: "No permission" });
+      }
+
+      // Update expiration
+      const updatedInvite = await this.organizationsRepository.resendOrgInvite(invite_id);
+
+      const inviter = await SearchUsersRepository.findById(authUserId);
+      const inviterLocale = await getUserEmailLocale({ userId: authUserId });
+
+      const emailResult = await send_organization_invite(
+        updatedInvite.email,
+        currentOrg.org_name,
+        inviter.name || inviter.username,
+        updatedInvite.invite_id,
+        updatedInvite.role,
+        inviterLocale
+      );
+
+      if (!emailResult.success) {
+        console.warn("Failed to resend invite email:", emailResult.error);
+      }
+
+      res.status(200).json({
+        status: "OK",
+        message: "Invite resent successfully",
+        data: updatedInvite,
+      });
+    } catch (error) {
+      console.error("Error resending invite:", error);
+      res.status(500).json({ error: "Error resending invite" });
+    }
+  }
+
+  /**
+   * Bulk invite members
+   * @param {Request & AuthenticatedRequest} req
+   * @param {Response} res
+   */
+  async inviteMembersBulk(req, res) {
+    try {
+      const authUserId = this._validateAuthentication(req, res);
+      if (!authUserId) return;
+
+      const { invites } = req.body;
+      if (!Array.isArray(invites) || invites.length === 0) {
+        return res.status(400).json({ error: "An array of invites is required" });
+      }
+
+      const currentOrg = await this._getUserOrganization(authUserId);
+      if (!currentOrg) {
+        return res.status(404).json({ error: "Organization not found" });
+      }
+
+      if (!(await this._ensureCanManageMembers(currentOrg, res))) {
+        return;
+      }
+
+      const inviter = await SearchUsersRepository.findById(authUserId);
+      const inviterLocale = await getUserEmailLocale({ userId: authUserId });
+
+      const results = {
+        successful: [],
+        failed: []
+      };
+
+      for (const inviteData of invites) {
+        const { email, role = ORG_ROLES.MEMBER, name, username, target_areas = [] } = inviteData;
+        
+        try {
+          if (!email || hasPlusAliasInLocalPart(email)) {
+            throw new Error("Invalid email");
+          }
+
+          const normalizedRole = typeof role === "string" ? role.trim().toUpperCase() : "";
+          if (!validRoles.includes(normalizedRole)) {
+            throw new Error("Invalid role");
+          }
+
+          const pending = await this.organizationsRepository.checkExistingInvite(currentOrg.id, email);
+          if (pending) {
+            throw new Error("Invite already pending");
+          }
+
+          const existingUsers = await SearchUsersRepository.findByUsernameOrEmail("", email);
+          const targetUser = existingUsers.find((u) => u.email === email);
+          if (targetUser) {
+            const isMember = await this.organizationsRepository.isMember(currentOrg.id, targetUser.user_id);
+            if (isMember) {
+              throw new Error("Already a member");
+            }
+          }
+
+          // Validate areas
+          const validTargetAreas = [];
+          for (const tArea of target_areas) {
+            if (!tArea.area_id) continue;
+            const area = await this.areasRepository.getAreaById(tArea.area_id, currentOrg.id);
+            if (area) {
+              const resolvedRole = this._resolveProjectMemberRole(tArea.role);
+              validTargetAreas.push({ area_id: tArea.area_id, role: resolvedRole });
+            }
+          }
+
+          const invite = await this.organizationsRepository.createOrgInvite(
+            currentOrg.id,
+            email,
+            normalizedRole,
+            authUserId,
+            name?.trim() || null,
+            username || null,
+            validTargetAreas
+          );
+
+          await send_organization_invite(
+            email,
+            currentOrg.org_name,
+            inviter.name || inviter.username,
+            invite.invite_id,
+            normalizedRole,
+            inviterLocale
+          );
+
+          results.successful.push({ email, invite_id: invite.invite_id });
+        } catch (err) {
+          results.failed.push({ email, reason: err.message });
+        }
+      }
+
+      res.status(201).json({
+        status: "OK",
+        message: "Bulk invite processed",
+        data: results
+      });
+
+    } catch (error) {
+      console.error("Error in bulk invite:", error);
+      res.status(500).json({ error: "Error processing bulk invites" });
     }
   }
 }

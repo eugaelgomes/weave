@@ -229,6 +229,16 @@ router.post(
   organizationMembersController.inviteMember.bind(organizationMembersController)
 );
 
+router.post(
+  "/invites/bulk",
+  organizationMembersController.inviteMembersBulk.bind(organizationMembersController)
+);
+
+router.post(
+  "/invites/:invite_id/resend",
+  organizationMembersController.resendInvite.bind(organizationMembersController)
+);
+
 router.get(
   "/invites",
   organizationMembersController.getPendingInvites.bind(
