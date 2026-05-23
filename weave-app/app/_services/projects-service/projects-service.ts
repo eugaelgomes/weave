@@ -83,10 +83,10 @@ export interface ProjectCollaborator {
   name?: string;
   username: string;
   email: string;
-  avatar_url?: string;
-  permission: "admin" | "viewer";
+  avatar_url?: string | null;
+  permission: string;
   added_at: string;
-  removed: boolean;
+  removed?: boolean;
 }
 
 export interface ProjectNote {

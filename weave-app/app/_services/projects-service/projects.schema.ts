@@ -58,13 +58,13 @@ export const ProjectOwnerSchema = z.object({
 
 export const ProjectCollaboratorSchema = z.object({
   user_id: z.string(),
-  name: z.string().optional(),
+  name: z.string().nullable().optional(),
   username: z.string(),
   email: z.string(),
-  avatar_url: z.string().optional(),
-  permission: z.enum(["admin", "viewer"]),
+  avatar_url: z.string().nullable().optional(),
+  permission: z.string(),
   added_at: z.string(),
-  removed: z.boolean(),
+  removed: z.boolean().optional(),
 });
 
 export const ProjectNoteSchema = z
