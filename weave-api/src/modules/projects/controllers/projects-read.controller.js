@@ -377,7 +377,6 @@ class ProjectsReadController extends ProjectsCoreController {
         role: r.role,
         added_at: r.added_at,
         added_by: r.added_by,
-        suspended: r.suspended,
       }));
 
       if (wantsEnvelope) {

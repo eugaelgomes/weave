@@ -132,6 +132,24 @@ class OrganizationMembersController extends OrganizationsBaseController {
         role
       );
 
+      // When promoted to ADMIN/SUPER_ADMIN, ensure membership in root area
+      if (["ADMIN", "SUPER_ADMIN"].includes(role?.toUpperCase())) {
+        try {
+          const rootArea = await this.areasRepository.getRootArea(currentOrg.id);
+          if (rootArea) {
+            await this.areasRepository.addAreaMember(
+              rootArea.id,
+              currentOrg.id,
+              memberId,
+              ORG_ROLES.ADMIN,
+              authUserId
+            );
+          }
+        } catch (rootErr) {
+          console.error("[Root Area Auto-Add on Promotion] Falha:", rootErr);
+        }
+      }
+
       res.status(200).json({
         status: "OK",
         message: "Role updated successfully",
@@ -171,6 +189,24 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return res.status(400).json({
           success: false,
           error: "Cannot remove the organization owner",
+        });
+      }
+
+      // ADMIN/SUPER_ADMIN must always keep their org-level record.
+      // They need to be demoted first before removal.
+      const targetMember =
+        await this.organizationsRepository.getOrganizationMember(
+          currentOrg.id,
+          memberId
+        );
+      if (
+        targetMember &&
+        ["ADMIN", "SUPER_ADMIN"].includes(targetMember.role)
+      ) {
+        return res.status(400).json({
+          success: false,
+          error:
+            "Não é possível remover um administrador. Altere o papel para MEMBER antes de remover.",
         });
       }
 
@@ -240,11 +276,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
           acc[member.status] = (acc[member.status] || 0) + 1;
           return acc;
         }, {}),
-        count_by_suspended: members.reduce((acc, member) => {
-          const key = member.suspended || false ? "suspended" : "active";
-          acc[key] = (acc[key] || 0) + 1;
-          return acc;
-        }, {}),
+
         list_org_members: members.map((member) => ({
           member_data: {
             id: member.user_id,
@@ -255,7 +287,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
             membership: {
               role: member.role,
               status: member.status,
-              suspended: member.suspended,
               created_at: member.created_at,
               updated_at: member.updated_at,
             },
@@ -622,6 +653,26 @@ class OrganizationMembersController extends OrganizationsBaseController {
           "ACTIVE",
           invite.invited_by
         );
+
+        // ADMIN/SUPER_ADMIN must always belong to the root area
+        if (["ADMIN", "SUPER_ADMIN"].includes(invite.role?.toUpperCase())) {
+          try {
+            const rootArea = await this.areasRepository.getRootArea(
+              invite.organization_id
+            );
+            if (rootArea) {
+              await this.areasRepository.addAreaMember(
+                rootArea.id,
+                invite.organization_id,
+                targetUserId,
+                ORG_ROLES.ADMIN,
+                invite.invited_by
+              );
+            }
+          } catch (rootErr) {
+            console.error("[Root Area Auto-Add] Falha:", rootErr);
+          }
+        }
       }
 
       if (invite.area_id) {

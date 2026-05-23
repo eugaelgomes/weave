@@ -186,7 +186,6 @@ class SprintContextBuilder {
       INNER JOIN users u ON u.user_id = pm.user_id
       WHERE pm.project_id = $1
         AND pm.deleted = false
-        AND pm.suspended = false
       ORDER BY
         CASE pm.role
           WHEN 'project_manager' THEN 0

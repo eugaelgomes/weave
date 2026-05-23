@@ -184,7 +184,6 @@ class ReasoningsRepository {
         ON pm.project_id = r.project_id
         AND pm.user_id = $2
         AND pm.deleted = false
-        AND pm.suspended = false
       LEFT JOIN weave_engine_reasoning_interactions ri
         ON ri.reasoning_id = r.id
         AND ri.user_id = $2
@@ -304,7 +303,6 @@ class ReasoningsRepository {
         ON pm.project_id = r.project_id
         AND pm.user_id = $2::uuid
         AND pm.deleted = false
-        AND pm.suspended = false
       LEFT JOIN weave_engine_reasoning_interactions ri
         ON ri.reasoning_id = r.id
         AND ri.user_id = $2::uuid

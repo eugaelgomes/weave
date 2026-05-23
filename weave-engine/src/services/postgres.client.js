@@ -16,7 +16,7 @@ const baseConfig = process.env.DATABASE_URL
 const pool = new Pool({
   ...baseConfig,
   idleTimeoutMillis: 30000,
-  max: 10,
+  max: 3,
   ssl:
     process.env.DATABASE_SSL === "false"
       ? false

@@ -193,7 +193,6 @@ class ProjectsUpdateController extends ProjectsCoreController {
         action = null,
         userId: collaboratorId,
         role = "contributor",
-        suspended = null,
       } = req.body;
 
       // Validação de autenticação
@@ -204,13 +203,11 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const project = ctx.project;
 
       // Validação de dados obrigatórios
-      // Permitir action null se suspended for fornecido
       if (
-        suspended === null &&
-        (!action || !["add", "update", "remove", "suspend"].includes(action))
+        !action || !["add", "update", "remove"].includes(action)
       ) {
         throw new Error(
-          "Ação inválida. Use 'add', 'update', 'remove' ou 'suspend'"
+          "Ação inválida. Use 'add', 'update' ou 'remove'"
         );
       }
 
@@ -259,11 +256,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
       let result;
       let message;
 
-      // Se suspended for fornecido e action for null, tratar como ação de suspensão
-      const effectiveAction =
-        suspended !== null && !action ? "suspend" : action;
-
-      switch (effectiveAction) {
+      switch (action) {
         case "add": {
           // Validar role
           if (!ASSIGNABLE_PROJECT_ROLES.includes(role)) {
@@ -285,18 +278,6 @@ class ProjectsUpdateController extends ProjectsCoreController {
             return;
           }
 
-          // Verificar se o usuário está suspenso
-          const isSuspended =
-            await this.projectsRepository.isSuspendedCollaborator(
-              projectId,
-              collaboratorId
-            );
-
-          if (isSuspended) {
-            throw new Error(
-              "Usuário suspenso do projeto, basta remover suspensão e o mesmo voltará como colaborador."
-            );
-          }
 
           // Verificar se o colaborador já está ativo
           const isAlready = await this.projectsRepository.isCollaborator(
@@ -473,37 +454,6 @@ class ProjectsUpdateController extends ProjectsCoreController {
                 collaboratorId
               );
           message = "Colaborador removido com sucesso";
-          break;
-        }
-
-        case "suspend": {
-          // Verificar se o colaborador existe (independente de estar suspenso ou não)
-          const existsInProject =
-            await this.projectsRepository.isCollaboratorInProject(
-              projectId,
-              collaboratorId
-            );
-
-          if (!existsInProject) {
-            throw new Error("Usuário não é colaborador deste projeto");
-          }
-
-          result = ctx.orgWide
-            ? await this.projectsRepository.updateCollaboratorSuspensionWithOrgManagement(
-                projectId,
-                ctx.membership.id,
-                collaboratorId,
-                suspended
-              )
-            : await this.projectsRepository.updateCollaboratorSuspension(
-                projectId,
-                userId,
-                collaboratorId,
-                suspended
-              );
-          message = suspended
-            ? "Colaborador suspenso com sucesso"
-            : "Suspensão removida com sucesso";
           break;
         }
       }

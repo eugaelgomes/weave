@@ -85,15 +85,6 @@ class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
         return;
       }
 
-      const isSuspended = await this.projectsRepository.isSuspendedCollaborator(
-        projectId,
-        collaboratorId
-      );
-      if (isSuspended) {
-        throw new Error(
-          "Usuário suspenso do projeto, basta remover suspensão e o mesmo voltará como colaborador."
-        );
-      }
 
       const isAlreadyCollaborator = await this.projectsRepository.isCollaborator(
         projectId,

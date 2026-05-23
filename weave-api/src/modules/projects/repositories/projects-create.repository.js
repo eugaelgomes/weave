@@ -99,6 +99,36 @@ class ProjectsCreateRepository {
 
     return executeQuery(query, values);
   }
+
+  /**
+   * Bulk-insert project members (fire-and-forget, ignores conflicts).
+   * Used for auto-adding org admins / area members on project creation.
+   *
+   * @param {string} projectId
+   * @param {{ userId: string, role: string, addedBy: string }[]} members
+   */
+  async bulkAddProjectMembers(projectId, members) {
+    if (!members || members.length === 0) return;
+
+    const query = `
+      INSERT INTO project_members (project_id, user_id, role, added_by)
+      SELECT $1::uuid, u.user_id, u.role, u.added_by
+      FROM unnest($2::uuid[], $3::text[], $4::uuid[]) AS u(user_id, role, added_by)
+      WHERE NOT EXISTS (
+        SELECT 1 FROM project_members pm
+        WHERE pm.project_id = $1::uuid
+          AND pm.user_id = u.user_id
+          AND pm.deleted = false
+      );
+    `;
+
+    const userIds = members.map((m) => m.userId);
+    const roles = members.map((m) => m.role.toUpperCase());
+    const addedBys = members.map((m) => m.addedBy);
+
+    return executeQuery(query, [projectId, userIds, roles, addedBys]);
+  }
+
   async addCollaborator(
     projectId,
     ownerId,
@@ -124,7 +154,6 @@ class ProjectsCreateRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -166,7 +195,6 @@ class ProjectsCreateRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -237,7 +265,6 @@ class ProjectsCreateRepository {
             WHERE pm.project_id = $1::uuid
               AND pm.user_id = $3::uuid
               AND pm.deleted = false
-              AND pm.suspended = false
               AND pm.role IN (${PROJECT_WRITE_CAPABLE_ROLES_SQL})
           ))
           AND deleted = false
@@ -331,8 +358,7 @@ class ProjectsCreateRepository {
               WHERE pm.project_id = $1::uuid
                 AND pm.user_id = $3::uuid
                 AND pm.deleted = false
-                AND pm.suspended = false
-                AND pm.role IN (${PROJECT_WRITE_CAPABLE_ROLES_SQL})
+                  AND pm.role IN (${PROJECT_WRITE_CAPABLE_ROLES_SQL})
             ))
           )
           AND deleted = false

@@ -153,6 +153,38 @@ class ProjectsCreateController extends ProjectsCoreController {
 
       const newProject = result[0];
 
+      // ═══════════════════════════════════════════════════════════════
+      // Auto-add org admins + area managers/contributors as project members
+      // ═══════════════════════════════════════════════════════════════
+      if (newProject.organization_id) {
+        try {
+          const autoMembers =
+            await organizationsRepository.getAutoAssignableProjectMembers(
+              newProject.organization_id,
+              userId
+            );
+
+          if (autoMembers.length > 0) {
+            const membersToInsert = autoMembers.map((m) => ({
+              userId: m.user_id,
+              role: m.project_role,
+              addedBy: userId,
+            }));
+
+            await this.projectsRepository.bulkAddProjectMembers(
+              newProject.id,
+              membersToInsert
+            );
+          }
+        } catch (autoAddError) {
+          // Non-blocking: log and continue
+          console.error(
+            "[Auto-Add Members] Falha ao adicionar membros automaticamente:",
+            autoAddError
+          );
+        }
+      }
+
       // Formatar e retornar o projeto criado
       const formattedProject = this._formatProjectResponse(newProject);
 

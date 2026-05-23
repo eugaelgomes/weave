@@ -33,7 +33,6 @@ class ProjectsReadRepository {
             WHERE pm0.project_id = p.id
               AND pm0.user_id::text = $${i}::text
               AND pm0.deleted = false
-              AND pm0.suspended = false
           )
         )`);
       i++;
@@ -107,7 +106,6 @@ class ProjectsReadRepository {
           WHERE pmo.project_id = p.id
             AND pmo.user_id::text = $${i}::text
             AND pmo.deleted = false
-            AND pmo.suspended = false
         )`);
       i++;
     }
@@ -244,7 +242,6 @@ class ProjectsReadRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             ) AS obj
              FROM project_members pm
              JOIN users cu ON cu.user_id = pm.user_id
@@ -393,7 +390,6 @@ class ProjectsReadRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -449,7 +445,6 @@ class ProjectsReadRepository {
             WHERE pm2.project_id = p.id
               AND pm2.user_id::text = $1::text
               AND pm2.deleted = false
-              AND pm2.suspended = false
           )
         )
       GROUP BY p.id, u.username, u.email, u.name, u.avatar_url, o.org_name, o.unique_name, o.logo_url
@@ -517,7 +512,6 @@ class ProjectsReadRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -557,7 +551,6 @@ class ProjectsReadRepository {
             WHERE pm2.project_id = p.id
               AND pm2.user_id::text = $2::text
               AND pm2.deleted = false
-              AND pm2.suspended = false
           )
         )
       GROUP BY p.id, u.username, u.email, u.name, u.avatar_url, o.org_name, o.unique_name, o.logo_url
@@ -603,7 +596,6 @@ class ProjectsReadRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -696,7 +688,6 @@ class ProjectsReadRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -904,7 +895,6 @@ class ProjectsReadRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -921,7 +911,6 @@ class ProjectsReadRepository {
             WHERE pm2.project_id = p.id
               AND pm2.user_id::text = $2::text
               AND pm2.deleted = false
-              AND pm2.suspended = false
           )
         )
       GROUP BY p.id;
@@ -946,7 +935,6 @@ class ProjectsReadRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -970,7 +958,6 @@ class ProjectsReadRepository {
         WHERE pm.project_id = $1::uuid
           AND pm.user_id::text = $2::text
           AND pm.deleted = false
-          AND pm.suspended = false
       ) AS is_collaborator;
     `;
 
@@ -985,28 +972,12 @@ class ProjectsReadRepository {
       WHERE pm.project_id = $1::uuid
         AND pm.user_id::text = $2::text
         AND pm.deleted = false
-        AND pm.suspended = false
       LIMIT 1;
     `;
     const result = await executeQuery(query, [projectId, userId]);
     return result[0]?.role || null;
   }
 
-  async isSuspendedCollaborator(projectId, userId) {
-    const query = `
-      SELECT EXISTS (
-        SELECT 1
-        FROM project_members pm
-        WHERE pm.project_id = $1::uuid
-          AND pm.user_id::text = $2::text
-          AND pm.deleted = false
-          AND pm.suspended = true
-      ) AS is_suspended;
-    `;
-
-    const result = await executeQuery(query, [projectId, userId]);
-    return result[0]?.is_suspended || false;
-  }
 
   async isCollaboratorInProject(projectId, userId) {
     const query = `
@@ -1122,7 +1093,6 @@ class ProjectsReadRepository {
                 WHERE pm.project_id = $1::uuid
                   AND pm.user_id::text = $2::text
                   AND pm.deleted = false
-                  AND pm.suspended = false
               )
             )
         )
@@ -1175,7 +1145,6 @@ class ProjectsReadRepository {
                 WHERE pm.project_id = $1::uuid
                   AND pm.user_id::text = $${i}::text
                   AND pm.deleted = false
-                  AND pm.suspended = false
               )
             )
         )`;
@@ -1365,11 +1334,6 @@ class ProjectsReadRepository {
       i++;
     }
 
-    if (filters.suspended === true || filters.suspended === false) {
-      params.push(filters.suspended);
-      conditions.push(`pm.suspended = $${i}`);
-      i++;
-    }
 
     if (filters.search) {
       params.push(`%${filters.search}%`);
@@ -1418,7 +1382,6 @@ class ProjectsReadRepository {
         pm.role,
         pm.created_at AS added_at,
         pm.added_by::text,
-        pm.suspended,
         COUNT(*) OVER() AS total_count
       FROM project_members pm
       INNER JOIN users u ON u.user_id = pm.user_id
@@ -1451,7 +1414,6 @@ class ProjectsReadRepository {
           WHERE pm2.project_id = p.id
             AND pm2.user_id = $1::uuid
             AND pm2.deleted = false
-            AND pm2.suspended = false
         )
       )`,
     ];

@@ -218,7 +218,6 @@ class SearchUsersRepository extends BaseRepository {
         WHERE user_id = $2::uuid
           AND deleted = false
           AND status = 'ACTIVE'::public.organization_member_status_enum
-          AND suspended = false
       ),
       searcher_has_orgs AS (
         SELECT EXISTS (SELECT 1 FROM searcher_orgs) AS has_any
@@ -245,7 +244,6 @@ class SearchUsersRepository extends BaseRepository {
               WHERE om.user_id = u.user_id
                 AND om.deleted = false
                 AND om.status = 'ACTIVE'::public.organization_member_status_enum
-                AND om.suspended = false
             )
           )
           OR (
@@ -257,7 +255,6 @@ class SearchUsersRepository extends BaseRepository {
               WHERE om.user_id = u.user_id
                 AND om.deleted = false
                 AND om.status = 'ACTIVE'::public.organization_member_status_enum
-                AND om.suspended = false
             )
           )
         )

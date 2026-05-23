@@ -238,7 +238,6 @@ CREATE TYPE public.organization_member_status_enum AS ENUM (
   'ACTIVE',
   'PENDING',
   'INVITED',
-  'SUSPENDED',
   'REMOVED'
 );
 
@@ -368,6 +367,7 @@ CREATE TABLE public.organization_areas (
   slug text NOT NULL,
   description text NULL DEFAULT 'Area description here',
   properties jsonb NOT NULL DEFAULT '{}'::jsonb,
+  is_root_area bool NOT NULL DEFAULT false,
   active bool NOT NULL DEFAULT true,
   deleted bool NOT NULL DEFAULT false,
   created_by uuid NOT NULL,
@@ -379,7 +379,7 @@ CREATE TABLE public.organization_areas (
   CONSTRAINT organization_areas_slug_pattern_check
     CHECK (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$')
 );
-COMMENT ON TABLE public.organization_areas IS 'Áreas de uma organização.';
+COMMENT ON TABLE public.organization_areas IS 'Áreas de uma organização. A área raiz (is_root_area=true) é criada automaticamente com a org.';
 
 CREATE TABLE public.organization_members (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -389,7 +389,6 @@ CREATE TABLE public.organization_members (
   role public.organization_workspace_role_enum NOT NULL,
   status public.organization_member_status_enum NOT NULL DEFAULT 'ACTIVE',
   invited_by uuid NULL,
-  suspended bool NOT NULL DEFAULT false,
   deleted bool NOT NULL DEFAULT false,
   removed_at timestamptz NULL,
   removed_by uuid NULL,
@@ -504,7 +503,6 @@ CREATE TABLE public.project_members (
   user_id uuid NOT NULL,
   role public.project_member_role_enum NOT NULL,
   added_by uuid NOT NULL,
-  suspended bool NOT NULL DEFAULT false,
   deleted bool NOT NULL DEFAULT false,
   deleted_at timestamptz NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -854,7 +852,6 @@ CREATE TABLE public.system_admins (
   user_function text NULL,
   password text NOT NULL DEFAULT '.',
   is_active bool NOT NULL DEFAULT true,
-  is_suspended bool NOT NULL DEFAULT false,
   deleted bool NOT NULL DEFAULT false,
   created_by uuid NULL,
   deleted_at timestamptz NULL,

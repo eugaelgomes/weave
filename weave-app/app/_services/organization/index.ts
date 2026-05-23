@@ -72,8 +72,7 @@ export interface OrganizationMember {
   avatar_url?: string | null;
   membership: {
     role: OrgWorkspaceRole;
-    status: "active" | "pending" | "suspended";
-    suspended: boolean;
+    status: "active" | "pending";
     created_at: string;
     updated_at: string;
   };
@@ -721,7 +720,6 @@ export interface OrganizationMembersData {
   count: number;
   count_by_role: Record<string, number>;
   count_by_status: Record<string, number>;
-  count_by_suspended: Record<string, number>;
   list_org_members: OrganizationMember[];
 }
 
@@ -748,7 +746,6 @@ export const fetchOrganizationMembers = async (
         count,
         count_by_role: recordNumbers(data.count_by_role),
         count_by_status: recordNumbers(data.count_by_status),
-        count_by_suspended: recordNumbers(data.count_by_suspended),
         list_org_members: (data.list_org_members as Array<{ member_data: OrganizationMember }>).map(
           (item) => item.member_data
         ),

@@ -282,6 +282,14 @@ class OrganizationAreasController extends OrganizationsBaseController {
           .json({ success: false, error: "Area not found" });
       }
 
+      // Bloqueia alterações estruturais em área raiz
+      if (existingArea.is_root_area && req.body.parent_area_id !== undefined) {
+        return res.status(400).json({
+          success: false,
+          error: "A área raiz não pode ser movida para outra área pai.",
+        });
+      }
+
       if (
         !(await this._requireAreaWriteAccess(res, organization, areaId, userId))
       ) {
@@ -402,6 +410,13 @@ class OrganizationAreasController extends OrganizationsBaseController {
         return res
           .status(404)
           .json({ success: false, error: "Area not found" });
+      }
+
+      if (area.is_root_area) {
+        return res.status(400).json({
+          success: false,
+          error: "A área raiz não pode ser removida.",
+        });
       }
 
       if (

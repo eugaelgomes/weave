@@ -11,6 +11,17 @@ class OrganizationAreasRepository {
     return await executeQuery(query, [organizationId]);
   }
 
+  async getRootArea(organizationId) {
+    const query = `
+			SELECT *
+			FROM organization_areas
+			WHERE organization_id = $1 AND is_root_area = true AND deleted = false
+			LIMIT 1;
+		`;
+    const results = await executeQuery(query, [organizationId]);
+    return results[0];
+  }
+
   async getAreaById(areaId, organizationId) {
     const query = `
 			SELECT *
@@ -116,10 +127,12 @@ class OrganizationAreasRepository {
 			UPDATE organization_areas
 			SET ${setClauses.join(", ")}
 			WHERE id = $${index} AND organization_id = $${index + 1}
+			  AND (is_root_area = false OR $${index + 2}::boolean = false)
 			RETURNING *;
 		`;
 
-    values.push(areaId, organizationId);
+    const hasStructuralChange = fields.parent_area_id !== undefined;
+    values.push(areaId, organizationId, hasStructuralChange);
 
     const results = await executeQuery(query, values);
     return results[0];
@@ -132,6 +145,7 @@ class OrganizationAreasRepository {
 					active = false,
 					updated_at = CURRENT_TIMESTAMP
 			WHERE id = $1 AND organization_id = $2
+			  AND is_root_area = false
 			RETURNING *;
 		`;
     const results = await executeQuery(query, [areaId, organizationId]);
@@ -172,23 +186,45 @@ class OrganizationAreasRepository {
 
   async addAreaMember(areaId, organizationId, userId, role, addedBy) {
     const query = `
-			INSERT INTO organization_members (
-				organization_id,
-				area_id,
-				user_id,
-				role,
-				invited_by,
-				status
+			WITH existing AS (
+				SELECT id, deleted
+				FROM organization_members
+				WHERE organization_id = $1
+					AND area_id = $2
+					AND user_id = $3
+				LIMIT 1
+			),
+			reactivated AS (
+				UPDATE organization_members
+				SET deleted = false,
+						role = UPPER($4)::public.organization_workspace_role_enum,
+						invited_by = $5,
+						status = 'ACTIVE'::public.organization_member_status_enum,
+						updated_at = now(),
+						removed_at = NULL,
+						removed_by = NULL
+				WHERE id = (SELECT id FROM existing WHERE deleted = true)
+				RETURNING *
+			),
+			inserted AS (
+				INSERT INTO organization_members (
+					organization_id,
+					area_id,
+					user_id,
+					role,
+					invited_by,
+					status
+				)
+				SELECT $1, $2, $3,
+					UPPER($4)::public.organization_workspace_role_enum,
+					$5,
+					'ACTIVE'::public.organization_member_status_enum
+				WHERE NOT EXISTS (SELECT 1 FROM existing)
+				RETURNING *
 			)
-			VALUES (
-        $1,
-        $2,
-        $3,
-        UPPER($4)::public.organization_workspace_role_enum,
-        $5,
-        'ACTIVE'::public.organization_member_status_enum
-      )
-			RETURNING *;
+			SELECT * FROM reactivated
+			UNION ALL
+			SELECT * FROM inserted;
 		`;
     const results = await executeQuery(query, [
       organizationId,

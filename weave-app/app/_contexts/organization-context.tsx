@@ -185,7 +185,6 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
             count: membersData.count,
             count_by_role: membersData.count_by_role,
             count_by_status: membersData.count_by_status,
-            count_by_suspended: membersData.count_by_suspended,
           });
         } else {
           setMembers([]);
@@ -365,7 +364,6 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
             count: updatedMembers.count,
             count_by_role: updatedMembers.count_by_role,
             count_by_status: updatedMembers.count_by_status,
-            count_by_suspended: updatedMembers.count_by_suspended,
           });
         } else {
           setMembers([]);

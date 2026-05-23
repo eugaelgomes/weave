@@ -22,7 +22,7 @@ import {
   Layers3,
   Edit2,
   ChevronDown,
-  Ban,
+  UserMinus,
   Filter,
   FolderKanban,
 } from "lucide-react";
@@ -35,7 +35,6 @@ import { OrganizationInviteModal } from "@/app/(protected)/organization/members/
 const MEMBERSHIP_STATUSES: OrganizationMember["membership"]["status"][] = [
   "active",
   "pending",
-  "suspended",
 ];
 
 type AvatarUser = { avatar_url?: string | null };
@@ -113,46 +112,6 @@ const FilterSelect = ({
   </div>
 );
 
-type SuspendedFilterValue = "all" | "true" | "false";
-
-type SuspendedSegmentedProps = {
-  label: string;
-  value: SuspendedFilterValue;
-  onChange: (value: SuspendedFilterValue) => void;
-};
-
-const SuspendedSegmented = ({ label, value, onChange }: SuspendedSegmentedProps) => {
-  const { t } = useLanguage();
-  const segments: { key: SuspendedFilterValue; label: string }[] = [
-    { key: "all", label: t.organizationMembers.filterSuspendedAll },
-    { key: "false", label: t.organizationMembers.filterSuspendedActiveOnly },
-    { key: "true", label: t.organizationMembers.filterSuspendedSuspendedOnly },
-  ];
-  return (
-    <div className="flex min-w-0 flex-col gap-1.5">
-      <span className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-        {label}
-      </span>
-      <div className="dark:border-surface-dark-border-strong flex rounded-md border border-neutral-200 p-0.5">
-        {segments.map(({ key, label: segLabel }) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => onChange(key)}
-            className={cn(
-              "min-w-0 flex-1 rounded px-1.5 py-1 text-[10px] font-semibold transition-colors",
-              value === key
-                ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-                : "text-neutral-600 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-800/60"
-            )}
-          >
-            {segLabel}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 type ModalBaseProps = {
   isOpen: boolean;
@@ -334,7 +293,6 @@ export default function MembersPage() {
   const [filterArea, setFilterArea] = useState("all");
   const [filterProject, setFilterProject] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [filterSuspended, setFilterSuspended] = useState<SuspendedFilterValue>("all");
   const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [loadingAction, setLoadingAction] = useState(false);
 
@@ -385,7 +343,6 @@ export default function MembersPage() {
     const labels: Record<OrganizationMember["membership"]["status"], string> = {
       active: t.organizationMembers.membershipStatusActive,
       pending: t.organizationMembers.membershipStatusPending,
-      suspended: t.organizationMembers.membershipStatusSuspended,
     };
     return MEMBERSHIP_STATUSES.map((s) => ({ value: s, label: labels[s] }));
   }, [t]);
@@ -468,20 +425,13 @@ export default function MembersPage() {
       filterProject === "all" ||
       m.activity?.projects?.some((p) => p.project_name === filterProject);
     const matchesStatus = filterStatus === "all" || m.membership.status === filterStatus;
-    const matchesSuspended =
-      filterSuspended === "all"
-        ? true
-        : filterSuspended === "true"
-          ? m.membership.suspended === true
-          : m.membership.suspended === false;
 
     return (
       matchesSearch &&
       matchesRole &&
       matchesArea &&
       matchesProject &&
-      matchesStatus &&
-      matchesSuspended
+      matchesStatus
     );
   });
 
@@ -490,15 +440,13 @@ export default function MembersPage() {
     (filterRole !== "all" ? 1 : 0) +
     (filterArea !== "all" ? 1 : 0) +
     (filterProject !== "all" ? 1 : 0) +
-    (filterStatus !== "all" ? 1 : 0) +
-    (filterSuspended !== "all" ? 1 : 0);
+    (filterStatus !== "all" ? 1 : 0);
 
   const clearFilters = () => {
     setFilterRole("all");
     setFilterArea("all");
     setFilterProject("all");
     setFilterStatus("all");
-    setFilterSuspended("all");
     setSearchTerm("");
   };
 
@@ -566,11 +514,6 @@ export default function MembersPage() {
               onChange={setFilterStatus}
               placeholder={t.organizationMembers.filterStatusPlaceholder}
               options={statusFilterOptions}
-            />
-            <SuspendedSegmented
-              label={t.organizationMembers.filterSuspendedLabel}
-              value={filterSuspended}
-              onChange={setFilterSuspended}
             />
             {areaFilterOptions.length > 0 ? (
               <FilterSelect
@@ -700,15 +643,8 @@ export default function MembersPage() {
                           <span className="text-[10px] text-neutral-500 dark:text-neutral-400">
                             {member.membership.status === "active"
                               ? t.organizationMembers.membershipStatusActive
-                              : member.membership.status === "pending"
-                                ? t.organizationMembers.membershipStatusPending
-                                : t.organizationMembers.membershipStatusSuspended}
+                              : t.organizationMembers.membershipStatusPending}
                           </span>
-                          {member.membership.suspended ? (
-                            <span className="inline-flex items-center rounded-md bg-red-100 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                              {t.organizationMembers.suspendedBadge}
-                            </span>
-                          ) : null}
                         </div>
                       </td>
                       <td className="px-3 py-2 text-right">
@@ -726,9 +662,9 @@ export default function MembersPage() {
                               type="button"
                               onClick={() => setMemberToRemove(member)}
                               className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
-                              title={t.organizationMembers.banSuspendTitle}
+                              title={t.organizationMembers.removeMemberTitle}
                             >
-                              <Ban className="h-3.5 w-3.5" />
+                              <UserMinus className="h-3.5 w-3.5" />
                             </button>
                           </div>
                         ) : null}

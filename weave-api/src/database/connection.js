@@ -7,7 +7,7 @@ const pool = new Pool({
   user: process.env.DATABASE_USERNAME,
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
-  max: 10,
+  max: 5,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
   ssl: {

@@ -207,8 +207,7 @@ class ProjectsUpdateRepository {
               'avatar_url', u.avatar_url,
               'role', pm.role,
               'added_at', pm.created_at,
-              'added_by', pm.added_by::text,
-              'suspended', pm.suspended
+              'added_by', pm.added_by::text
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -228,55 +227,6 @@ class ProjectsUpdateRepository {
     ]);
   }
 
-  async updateCollaboratorSuspensionWithOrgManagement(
-    projectId,
-    organizationId,
-    collaboratorUserId,
-    suspended
-  ) {
-    const query = `
-      WITH updated_member AS (
-        UPDATE project_members
-        SET suspended = $4, updated_at = NOW()
-        WHERE project_id = $1::uuid
-          AND user_id = $3::uuid
-          AND deleted = false
-          AND EXISTS (
-            SELECT 1 FROM projects WHERE id = $1::uuid AND organization_id = $2::uuid AND deleted = false
-          )
-        RETURNING project_id
-      )
-      SELECT 
-        COALESCE(
-          jsonb_agg(
-            jsonb_build_object(
-              'user_id', pm.user_id::text,
-              'name', u.name,
-              'username', u.username,
-              'email', u.email,
-              'avatar_url', u.avatar_url,
-              'role', pm.role,
-              'added_at', pm.created_at,
-              'added_by', pm.added_by::text,
-              'suspended', pm.suspended
-            )
-          ) FILTER (WHERE pm.id IS NOT NULL),
-          '[]'::jsonb
-        ) AS collaborators
-      FROM project_members pm
-      JOIN users u ON pm.user_id = u.user_id
-      WHERE pm.project_id = $1::uuid
-        AND pm.deleted = false
-      GROUP BY pm.project_id;
-    `;
-
-    return executeQuery(query, [
-      projectId,
-      organizationId,
-      collaboratorUserId,
-      suspended,
-    ]);
-  }
 
   async updateCollaboratorPermission(
     projectId,
@@ -309,8 +259,7 @@ class ProjectsUpdateRepository {
               'avatar_url', u.avatar_url,
               'role', pm.role,
               'added_at', pm.created_at,
-              'added_by', pm.added_by::text,
-              'suspended', pm.suspended
+              'added_by', pm.added_by::text
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -330,55 +279,7 @@ class ProjectsUpdateRepository {
     ]);
   }
 
-  async updateCollaboratorSuspension(
-    projectId,
-    ownerId,
-    collaboratorUserId,
-    suspended
-  ) {
-    const query = `
-      WITH updated_member AS (
-        UPDATE project_members
-        SET suspended = $4, updated_at = NOW()
-        WHERE project_id = $1::uuid
-          AND user_id = $3::uuid
-          AND deleted = false
-          AND EXISTS (
-            SELECT 1 FROM projects WHERE id = $1::uuid AND user_id = $2::uuid
-          )
-        RETURNING project_id
-      )
-      SELECT 
-        COALESCE(
-          jsonb_agg(
-            jsonb_build_object(
-              'user_id', pm.user_id::text,
-              'name', u.name,
-              'username', u.username,
-              'email', u.email,
-              'avatar_url', u.avatar_url,
-              'role', pm.role,
-              'added_at', pm.created_at,
-              'added_by', pm.added_by::text,
-              'suspended', pm.suspended
-            )
-          ) FILTER (WHERE pm.id IS NOT NULL),
-          '[]'::jsonb
-        ) AS collaborators
-      FROM project_members pm
-      JOIN users u ON pm.user_id = u.user_id
-      WHERE pm.project_id = $1::uuid
-        AND pm.deleted = false
-      GROUP BY pm.project_id;
-    `;
 
-    return executeQuery(query, [
-      projectId,
-      ownerId,
-      collaboratorUserId,
-      suspended,
-    ]);
-  }
   async updateNoteInProjectWithOrgScope(
     projectId,
     noteId,
@@ -422,7 +323,6 @@ class ProjectsUpdateRepository {
             WHERE pm.project_id = $1::uuid
               AND pm.user_id = $3::uuid
               AND pm.deleted = false
-              AND pm.suspended = false
               AND pm.role IN (${PROJECT_WRITE_CAPABLE_ROLES_SQL})
           ))
         )
@@ -488,7 +388,6 @@ class ProjectsUpdateRepository {
           WHERE pm.project_id = $1::uuid
             AND pm.user_id = $3::uuid
             AND pm.deleted = false
-            AND pm.suspended = false
             AND pm.role IN (${PROJECT_WRITE_CAPABLE_ROLES_SQL})
         ))
         AND deleted = false

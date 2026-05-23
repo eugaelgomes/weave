@@ -54,7 +54,6 @@ class ProjectsDeleteRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -98,7 +97,6 @@ class ProjectsDeleteRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -149,7 +147,6 @@ class ProjectsDeleteRepository {
             WHERE pm.project_id = $1::uuid
               AND pm.user_id = $3::uuid
               AND pm.deleted = false
-              AND pm.suspended = false
               AND pm.role IN (${PROJECT_WRITE_CAPABLE_ROLES_SQL})
           ))
           AND deleted = false
@@ -208,7 +205,6 @@ class ProjectsDeleteRepository {
               WHERE pm.project_id = $1::uuid
                 AND pm.user_id = $3::uuid
                 AND pm.deleted = false
-                AND pm.suspended = false
                 AND pm.role IN (${PROJECT_WRITE_CAPABLE_ROLES_SQL})
             ))
           )

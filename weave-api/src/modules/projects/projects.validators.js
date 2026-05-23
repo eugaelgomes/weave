@@ -383,18 +383,11 @@ function attachParsedCollaborators(req) {
     field: "created_at",
     order: "desc",
   });
-
-  let suspended = null;
-  if (q.suspended !== undefined && q.suspended !== "") {
-    suspended = String(q.suspended).toLowerCase() === "true";
-  }
-
   req.parsedQuery = {
     pagination,
     sort,
     filters: {
       role: parseCsvEnum(q.role, PROJECT_MEMBER_ROLES, { maxItems: 10 }),
-      suspended,
       search: trimSearch(q.search, 80),
       added_from: parseIsoDateTime(q.added_from),
       added_to: parseIsoDateTime(q.added_to),
@@ -408,7 +401,6 @@ const validateGetProjectCollaborators = [
   query("limit").optional().isInt({ min: 1, max: 100 }).toInt(),
   query("sort").optional().isString().trim().isLength({ max: 64 }),
   query("role").optional().isString().trim().isLength({ max: 120 }),
-  query("suspended").optional().isIn(["true", "false"]),
   query("search").optional().isString().trim().isLength({ max: 80 }),
   query("added_from").optional().isISO8601(),
   query("added_to").optional().isISO8601(),
@@ -592,7 +584,6 @@ const PROJECT_COLLABORATORS_LIST_TRIGGER_KEYS = [
   "limit",
   "sort",
   "role",
-  "suspended",
   "search",
   "added_from",
   "added_to",

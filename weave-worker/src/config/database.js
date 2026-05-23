@@ -6,7 +6,7 @@ const databaseConfig = {
   user: env.database.user,
   password: env.database.password,
   database: env.database.name,
-  max: 10,
+  max: 5,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
   ssl: {

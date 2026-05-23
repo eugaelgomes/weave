@@ -149,7 +149,6 @@ const hasProjectAccess = async (userId, projectId) => {
           WHERE pm.project_id = p.id
             AND pm.user_id = $2
             AND pm.deleted = false
-            AND pm.suspended = false
         )
       )
     LIMIT 1;
@@ -172,7 +171,6 @@ const hasOrganizationAccess = async (userId, organizationId) => {
           WHERE om.organization_id = o.id
             AND om.user_id = $2
             AND om.deleted = false
-            AND om.suspended = false
         )
       )
     LIMIT 1;

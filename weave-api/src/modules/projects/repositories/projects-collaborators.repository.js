@@ -10,7 +10,7 @@ const { executeQuery } = require("@/database/connection");
  * @property {string} role
  * @property {string} [added_at]
  * @property {string} [added_by]
- * @property {boolean} [suspended]
+
  */
 
 /**
@@ -106,7 +106,6 @@ class ProjectsCollaboratorsRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -157,7 +156,6 @@ class ProjectsCollaboratorsRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -217,7 +215,6 @@ class ProjectsCollaboratorsRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -276,7 +273,6 @@ class ProjectsCollaboratorsRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -323,7 +319,6 @@ class ProjectsCollaboratorsRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -374,7 +369,6 @@ class ProjectsCollaboratorsRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -389,7 +383,7 @@ class ProjectsCollaboratorsRepository {
   }
 
   /**
-   * Lists collaborators for a project if `userId` is owner or an active non-suspended member.
+   * Lists collaborators for a project if `userId` is owner or an active member.
    * @param {string} projectId - Project UUID.
    * @param {string} userId - Requesting user UUID.
    * @returns {Promise<Array<{ id: string, user_id: string, collaborators: ProjectCollaboratorJson[] }>>}
@@ -410,7 +404,6 @@ class ProjectsCollaboratorsRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -427,7 +420,6 @@ class ProjectsCollaboratorsRepository {
             WHERE pm2.project_id = p.id
               AND pm2.user_id = $2::uuid
               AND pm2.deleted = false
-              AND pm2.suspended = false
           )
         )
       GROUP BY p.id;
@@ -457,7 +449,6 @@ class ProjectsCollaboratorsRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -474,7 +465,7 @@ class ProjectsCollaboratorsRepository {
   }
 
   /**
-   * True if the user is an active, non-suspended member of the project.
+   * True if the user is an active member of the project.
    * @param {string} projectId - Project UUID.
    * @param {string} userId - User UUID.
    * @returns {Promise<boolean>}
@@ -487,33 +478,12 @@ class ProjectsCollaboratorsRepository {
         WHERE pm.project_id = $1::uuid
           AND pm.user_id = $2::uuid
           AND pm.deleted = false
-          AND pm.suspended = false
       ) AS is_collaborator;
     `;
     const result = await executeQuery(query, [projectId, userId]);
     return result[0]?.is_collaborator || false;
   }
 
-  /**
-   * True if the user is a member row that is not deleted and is suspended.
-   * @param {string} projectId - Project UUID.
-   * @param {string} userId - User UUID.
-   * @returns {Promise<boolean>}
-   */
-  async isSuspendedCollaborator(projectId, userId) {
-    const query = `
-      SELECT EXISTS (
-        SELECT 1
-        FROM project_members pm
-        WHERE pm.project_id = $1::uuid
-          AND pm.user_id = $2::uuid
-          AND pm.deleted = false
-          AND pm.suspended = true
-      ) AS is_suspended;
-    `;
-    const result = await executeQuery(query, [projectId, userId]);
-    return result[0]?.is_suspended || false;
-  }
 
   /**
    * True if a non-deleted membership row exists (regardless of suspension).
@@ -564,7 +534,7 @@ class ProjectsCollaboratorsRepository {
   }
 
   /**
-   * Fetches project detail when `userId` is owner or an active member (not suspended).
+   * Fetches project detail when `userId` is owner or an active member.
    * @param {string} projectId - Project UUID.
    * @param {string} userId - Requesting user UUID.
    * @returns {Promise<ProjectDetailRow[]>}
@@ -601,7 +571,6 @@ class ProjectsCollaboratorsRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb
@@ -640,7 +609,6 @@ class ProjectsCollaboratorsRepository {
             WHERE pm2.project_id = p.id
               AND pm2.user_id = $2::uuid
               AND pm2.deleted = false
-              AND pm2.suspended = false
           )
         )
       GROUP BY p.id, u.username, u.email, u.name, u.avatar_url, o.org_name, o.unique_name, o.logo_url
@@ -687,7 +655,6 @@ class ProjectsCollaboratorsRepository {
               'role', pm.role,
               'added_at', pm.created_at,
               'added_by', pm.added_by::text,
-              'suspended', pm.suspended
             )
           ) FILTER (WHERE pm.id IS NOT NULL AND pm.deleted = false),
           '[]'::jsonb

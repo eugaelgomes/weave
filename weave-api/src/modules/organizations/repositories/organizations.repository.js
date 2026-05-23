@@ -205,8 +205,7 @@ class OrganizationsRepository {
       WHERE organization_id = $1
         AND area_id IS NULL
         AND role = UPPER($2)
-        AND deleted = false
-        AND suspended = false;
+        AND deleted = false;
     `;
     const results = await executeQuery(query, [organization_id, role]);
     return results[0]?.total || 0;
@@ -222,16 +221,38 @@ class OrganizationsRepository {
   ) {
     const inviterId = invited_by || user_id;
     const query = `
-      INSERT INTO organization_members (organization_id, user_id, area_id, role, status, invited_by)
-      VALUES (
-        $1,
-        $2,
-        NULL,
-        UPPER($3)::public.organization_workspace_role_enum,
-        UPPER($4)::public.organization_member_status_enum,
-        $5
+      WITH existing AS (
+        SELECT id, deleted
+        FROM organization_members
+        WHERE organization_id = $1
+          AND user_id = $2
+          AND area_id IS NULL
+        LIMIT 1
+      ),
+      reactivated AS (
+        UPDATE organization_members
+        SET deleted = false,
+            role = UPPER($3)::public.organization_workspace_role_enum,
+            status = UPPER($4)::public.organization_member_status_enum,
+            invited_by = $5,
+            updated_at = now(),
+            removed_at = NULL,
+            removed_by = NULL
+        WHERE id = (SELECT id FROM existing WHERE deleted = true)
+        RETURNING *
+      ),
+      inserted AS (
+        INSERT INTO organization_members (organization_id, user_id, area_id, role, status, invited_by)
+        SELECT $1, $2, NULL,
+          UPPER($3)::public.organization_workspace_role_enum,
+          UPPER($4)::public.organization_member_status_enum,
+          $5
+        WHERE NOT EXISTS (SELECT 1 FROM existing)
+        RETURNING *
       )
-      RETURNING *;
+      SELECT * FROM reactivated
+      UNION ALL
+      SELECT * FROM inserted;
     `;
     const params = [organization_id, user_id, role, status, inviterId];
 
@@ -244,11 +265,63 @@ class OrganizationsRepository {
     return results[0];
   }
 
+  /**
+   * Returns users who should be auto-added as project members:
+   * 1. Org-level ADMIN / SUPER_ADMIN (area_id IS NULL) → project role: PROJECT_MANAGER
+   * 2. Area-level ADMIN members → project role: PROJECT_MANAGER
+   * 3. Area-level MEMBER members → project role: CONTRIBUTOR
+   *
+   * @param {string} organizationId
+   * @param {string} excludeUserId - The project creator (already added as owner)
+   * @returns {Promise<{ user_id: string, project_role: string }[]>}
+   */
+  async getAutoAssignableProjectMembers(organizationId, excludeUserId) {
+    const query = `
+      SELECT DISTINCT ON (user_id) user_id::text, project_role
+      FROM (
+        -- Org-level admins (area_id IS NULL)
+        SELECT om.user_id, 'PROJECT_MANAGER' AS project_role, 1 AS priority
+        FROM organization_members om
+        WHERE om.organization_id = $1
+          AND om.area_id IS NULL
+          AND om.role IN ('ADMIN', 'SUPER_ADMIN')
+          AND om.deleted = false
+          AND om.user_id != $2::uuid
+
+        UNION ALL
+
+        -- Area-level admins → PROJECT_MANAGER
+        SELECT om.user_id, 'PROJECT_MANAGER' AS project_role, 2 AS priority
+        FROM organization_members om
+        WHERE om.organization_id = $1
+          AND om.area_id IS NOT NULL
+          AND om.role = 'ADMIN'
+          AND om.deleted = false
+          AND om.user_id != $2::uuid
+
+        UNION ALL
+
+        -- Area-level members → CONTRIBUTOR
+        SELECT om.user_id, 'CONTRIBUTOR' AS project_role, 3 AS priority
+        FROM organization_members om
+        WHERE om.organization_id = $1
+          AND om.area_id IS NOT NULL
+          AND om.role = 'MEMBER'
+          AND om.deleted = false
+          AND om.user_id != $2::uuid
+      ) sub
+      ORDER BY user_id, priority ASC;
+    `;
+
+    return executeQuery(query, [organizationId, excludeUserId]);
+  }
+
   async removeOrganizationMember(organization_id, user_id) {
     const query = `
       UPDATE organization_members
       SET deleted = true, updated_at = now()
       WHERE organization_id = $1 AND user_id = $2 AND area_id IS NULL
+        AND role NOT IN ('ADMIN', 'SUPER_ADMIN')
       RETURNING *;
     `;
     const results = await executeQuery(query, [organization_id, user_id]);
@@ -280,6 +353,23 @@ class OrganizationsRepository {
       user_id,
       status,
     ]);
+    return results[0];
+  }
+
+  /**
+   * Get a single org-level member record (area_id IS NULL).
+   * @returns {Promise<Object|undefined>}
+   */
+  async getOrganizationMember(organization_id, user_id) {
+    const query = `
+      SELECT * FROM organization_members
+      WHERE organization_id = $1
+        AND user_id = $2
+        AND area_id IS NULL
+        AND deleted = false
+      LIMIT 1;
+    `;
+    const results = await executeQuery(query, [organization_id, user_id]);
     return results[0];
   }
 
@@ -429,6 +519,15 @@ class OrganizationsRepository {
         "ACTIVE",
         null,
         client
+      );
+
+      // Cria a área raiz (central) da organização
+      const rootAreaSlug = unique_name || 'central';
+      await client.query(
+        `INSERT INTO organization_areas (
+           organization_id, area_name, slug, description, properties, created_by, is_root_area
+         ) VALUES ($1, 'Central', $2, 'Área central da organização', '{}'::jsonb, $3, true)`,
+        [organization.id, rootAreaSlug, user_id]
       );
 
       if (defaultPlanId) {

@@ -2,7 +2,7 @@ const { executeQuery } = require("@/database/connection");
 
 /**
  * Workspace isolation: active membership is any `organization_members` row with
- * `deleted = false`, `status = ACTIVE`, `suspended = false` (any `area_id`).
+ * `deleted = false` and `status = ACTIVE` (any `area_id`).
  */
 class WorkspaceUserScopeRepository {
   /**
@@ -16,7 +16,6 @@ class WorkspaceUserScopeRepository {
       WHERE user_id = $1::uuid
         AND deleted = false
         AND status = 'ACTIVE'::public.organization_member_status_enum
-        AND suspended = false
     `;
     const rows = await executeQuery(query, [userId]);
     return rows.map((r) => r.organization_id);
@@ -39,7 +38,6 @@ class WorkspaceUserScopeRepository {
         WHERE user_id = $1::uuid
           AND deleted = false
           AND status = 'ACTIVE'::public.organization_member_status_enum
-          AND suspended = false
       ),
       target_orgs AS (
         SELECT DISTINCT organization_id
@@ -47,7 +45,6 @@ class WorkspaceUserScopeRepository {
         WHERE user_id = $2::uuid
           AND deleted = false
           AND status = 'ACTIVE'::public.organization_member_status_enum
-          AND suspended = false
       ),
       actor_count AS (SELECT COUNT(*)::int AS c FROM actor_orgs),
       target_count AS (SELECT COUNT(*)::int AS c FROM target_orgs)
