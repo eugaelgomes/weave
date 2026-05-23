@@ -62,7 +62,7 @@ export const ProjectCollaboratorSchema = z.object({
   username: z.string(),
   email: z.string(),
   avatar_url: z.string().nullable().optional(),
-  permission: z.string(),
+  permission: z.string().optional(),
   added_at: z.string(),
   removed: z.boolean().optional(),
 });

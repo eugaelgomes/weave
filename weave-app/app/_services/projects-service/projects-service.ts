@@ -84,7 +84,7 @@ export interface ProjectCollaborator {
   username: string;
   email: string;
   avatar_url?: string | null;
-  permission: string;
+  permission?: string;
   added_at: string;
   removed?: boolean;
 }
