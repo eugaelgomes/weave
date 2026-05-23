@@ -55,7 +55,6 @@ class CreateApiTokensRepository extends BaseRepository {
       SELECT role FROM organization_members 
       WHERE user_id = $1
         AND organization_id = $2
-        AND area_id IS NULL
         AND deleted = false
       LIMIT 1
     `;

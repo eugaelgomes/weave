@@ -540,7 +540,6 @@ class PlansRepository {
         SELECT om.organization_id
         FROM organization_members om
         WHERE om.user_id = $1
-          AND om.area_id IS NULL
           AND om.deleted = false
         ORDER BY om.created_at DESC
         LIMIT 1

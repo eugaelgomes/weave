@@ -136,8 +136,7 @@ class SearchUsersRepository extends BaseRepository {
       SELECT om.user_id, om.organization_id
       FROM organization_members om
       INNER JOIN target_user tu ON tu.user_id = om.user_id
-      WHERE om.area_id IS NULL
-        AND om.deleted = false
+      WHERE om.deleted = false
       ORDER BY om.created_at DESC
       LIMIT 1
     )

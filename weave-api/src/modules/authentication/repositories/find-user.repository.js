@@ -24,7 +24,6 @@ class FindUserRepository extends BaseRepository {
             FROM organization_members om
             JOIN organizations o ON o.id = om.organization_id
             WHERE om.user_id = u.user_id
-              AND om.area_id IS NULL
               AND om.deleted = false
             ORDER BY om.created_at DESC LIMIT 1
           ) org_data
@@ -45,7 +44,6 @@ class FindUserRepository extends BaseRepository {
               AND oam.organization_id = (
                   SELECT organization_id FROM organization_members 
                   WHERE user_id = u.user_id
-                    AND area_id IS NULL
                     AND deleted = false
                   ORDER BY created_at DESC
                   LIMIT 1
