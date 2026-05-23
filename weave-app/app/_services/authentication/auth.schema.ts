@@ -227,10 +227,10 @@ export const BackendAuthResponseSchema = z.object({
   user: z.object({
     user_profile: z.object({
       id: z.string(),
-      name: z.string(),
+      name: z.string().optional(),
       username: z.string(),
-      email: z.string().email(),
-      avatar_url: z.string(),
+      email: z.union([z.string().email(), z.null(), z.literal("")]).optional(),
+      avatar_url: z.union([z.string(), z.null()]).optional(),
       public_id: z.string().optional(),
     }),
 

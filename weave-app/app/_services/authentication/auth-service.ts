@@ -168,8 +168,8 @@ const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
     id: user.user_profile.id,
     user_name: user.user_profile.name,
     username: user.user_profile.username,
-    email: user.user_profile.email,
-    avatar_url: getStorageUrl(user.user_profile.avatar_url),
+    email: backendProfileEmailToUser(user.user_profile.email ?? null),
+    avatar_url: getStorageUrl(user.user_profile.avatar_url ?? ""),
     public_id: user.user_profile.public_id,
 
     // Settings

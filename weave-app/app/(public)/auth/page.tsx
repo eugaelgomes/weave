@@ -147,6 +147,7 @@ export default function AuthPage() {
               isOpen={!!inviteToken}
               token={inviteToken ?? ""}
               onClose={() => router.replace("/auth/")}
+              onSuccess={(login?: string) => handleNavigate("signin", login ? { login } : undefined)}
             />
           )}
           {currentView === "confirm" && (

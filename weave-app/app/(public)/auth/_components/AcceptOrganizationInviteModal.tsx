@@ -19,6 +19,8 @@ type Props = {
   isOpen: boolean;
   token: string;
   onClose: () => void;
+  /** Chamado após aceitar convite com sucesso. Recebe o login (username ou email) para pré-preencher o signin. */
+  onSuccess?: (login?: string) => void;
 };
 
 function inviteDisplayName(preview: OrganizationInvitePreview): string | null {
@@ -61,7 +63,7 @@ function buildInviteGreeting(t: TranslationKeys, preview: OrganizationInvitePrev
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
-export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props) {
+export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSuccess }: Props) {
   const router = useRouter();
   const { t } = useLanguage();
   const { login, authenticated } = useAuth();
@@ -175,11 +177,14 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
     try {
       const data = await acceptInvite({ token });
       setInvitePostLoginPath(postLoginAreasPath(data?.area_id));
-      setSuccess(t.acceptOrganizationInvite.successExisting);
       if (authenticated) {
+        setSuccess(t.acceptOrganizationInvite.successExisting);
         setTimeout(() => {
           window.location.href = "/home";
         }, 1500);
+      } else {
+        // Não autenticado: redireciona para signin com o email pré-preenchido
+        onSuccess?.(preview?.email ?? undefined);
       }
     } catch (e) {
       setFormError(e instanceof Error ? e.message : t.acceptOrganizationInvite.acceptError);
@@ -214,19 +219,23 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
     }
 
     setSubmitting(true);
+    // Captura a senha aqui para garantir que não muda durante o processo async
+    const capturedPassword = password;
     try {
-      const accepted = await acceptInvite({
+      await acceptInvite({
         token,
         name: name.trim(),
         username: trimmedUsername,
-        password,
+        password: capturedPassword,
       });
-      const result = await login(trimmedUsername, password);
+      // Tenta login automático
+      const result = await login(trimmedUsername, capturedPassword);
       if (result.success) {
         window.location.href = "/home";
         return;
       }
-      setSuccess(t.acceptOrganizationInvite.successCreatedLoginElse);
+      // Login automático falhou (ex: race condition) — redireciona para signin pré-preenchido
+      onSuccess?.(trimmedUsername);
     } catch (e) {
       setFormError(e instanceof Error ? e.message : t.acceptOrganizationInvite.acceptError);
     } finally {
