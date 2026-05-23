@@ -478,7 +478,12 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const invite =
         await this.organizationsRepository.findOrgInviteByToken(token);
       if (!invite) {
-        return res.status(400).json({ error: "Invalid or expired invite" });
+        const diag = await this.organizationsRepository.findOrgInviteByTokenDiagnostic(token);
+        if (!diag) return res.status(404).json({ error: "Convite não encontrado" });
+        if (diag.deleted) return res.status(410).json({ error: "Este convite foi cancelado" });
+        if (diag.invite_verified) return res.status(409).json({ error: "Este convite já foi utilizado" });
+        if (new Date(diag.expires_at) < new Date()) return res.status(410).json({ error: "Este convite expirou. Peça ao administrador um novo convite." });
+        return res.status(400).json({ error: "Convite inválido ou expirado" });
       }
 
       const existingUsers = await SearchUsersRepository.findByUsernameOrEmail(
@@ -531,7 +536,12 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const invite =
         await this.organizationsRepository.findOrgInviteByToken(token);
       if (!invite) {
-        return res.status(400).json({ error: "Invalid or expired invite" });
+        const diag = await this.organizationsRepository.findOrgInviteByTokenDiagnostic(token);
+        if (!diag) return res.status(404).json({ error: "Convite não encontrado" });
+        if (diag.deleted) return res.status(410).json({ error: "Este convite foi cancelado" });
+        if (diag.invite_verified) return res.status(409).json({ error: "Este convite já foi utilizado. Entre em contato com o administrador para um novo convite." });
+        if (new Date(diag.expires_at) < new Date()) return res.status(410).json({ error: "Este convite expirou. Peça ao administrador um novo convite." });
+        return res.status(400).json({ error: "Convite inválido ou expirado" });
       }
 
       const existingUsers = await SearchUsersRepository.findByUsernameOrEmail(
@@ -569,6 +579,10 @@ class OrganizationMembersController extends OrganizationsBaseController {
           password: hashedPassword,
           private_profile: false,
         });
+
+        if (!createdUser || !createdUser[0]) {
+          return res.status(500).json({ error: "Failed to create user account" });
+        }
 
         targetUserId = createdUser[0].user_id;
         await UserTokensRepository.verifyUserEmail(targetUserId);
@@ -613,7 +627,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         }
       }
 
-      await this.organizationsRepository.verifyOrgInvite(invite.invite_id);
+
 
       const isMember = await this.organizationsRepository.isMember(
         invite.organization_id,
@@ -652,6 +666,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
         }
       }
 
+      await this.organizationsRepository.verifyOrgInvite(invite.invite_id);
+
       const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
       const homePath = `${frontendBase}/app/home`;
 
@@ -680,12 +696,15 @@ class OrganizationMembersController extends OrganizationsBaseController {
         },
       });
     } catch (error) {
-      console.error("Error accepting invite:", error);
+      console.error("Error accepting invite:", error?.message || error);
       const uniqueField = getUniqueFieldFromPgError(error);
       if (uniqueField) {
         return res.status(409).json(buildUniqueConflictPayload(uniqueField));
       }
-      res.status(500).json({ error: "Error accepting invite" });
+      const clientMsg = error?.message && !error.message.toLowerCase().includes("sql") && !error.message.toLowerCase().includes("postgres")
+        ? error.message
+        : "Error accepting invite";
+      res.status(500).json({ error: clientMsg });
     }
   }
   /**

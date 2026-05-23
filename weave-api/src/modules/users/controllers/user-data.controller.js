@@ -250,6 +250,28 @@ class UserDataController extends BaseController {
   }
 
   /**
+   * Public: check username availability without requiring authentication.
+   * Only checks the `username` field. Used in the invite-accept flow.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @returns {Promise<void>}
+   */
+  async checkUsernamePublic(req, res) {
+    try {
+      const username = normalizeUsername(req.query?.username);
+      if (!username) {
+        return res.status(400).json({ error: "username query param is required" });
+      }
+      const availability = await SearchUsersRepository.checkUniqueAvailability({ username });
+      return res.status(200).json({ availability });
+    } catch (error) {
+      console.error("Error checking username availability (public):", error);
+      res.status(500).json({ error: "Error checking username" });
+    }
+  }
+
+  /**
    * Checa disponibilidade de `email`, `username` e `phone_number` para o usuário autenticado.
    *
    * @param {UserDataRequest} req

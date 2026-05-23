@@ -62,7 +62,7 @@ const esES: TranslationKeys = {
     menu: "Menú",
     expandMenu: "Expandir menú",
     collapseMenu: "Contraer menú",
-    recentAccess: "Acceso Reciente",
+    recentAccess: "Reciente",
     openSidebar: "Abrir menú lateral",
     backToHome: "Volver al inicio",
     areas: "Áreas",

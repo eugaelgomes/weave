@@ -827,6 +827,18 @@ class OrganizationsRepository {
     return results[0];
   }
 
+  /** Finds an invite regardless of verification/expiry status for diagnostic purposes */
+  async findOrgInviteByTokenDiagnostic(invite_id) {
+    const query = `
+      SELECT i.invite_verified, i.expires_at, i.deleted
+      FROM organization_member_invites i
+      WHERE i.invite_id = $1
+      LIMIT 1;
+    `;
+    const results = await executeQuery(query, [invite_id]);
+    return results[0];
+  }
+
   async getAllOrgInvites(organization_id) {
     const query = `
       SELECT * FROM organization_member_invites

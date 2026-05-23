@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, Loader2, Building2, Eye, EyeOff, User, Lock } from "lucide-react";
+import { X, Loader2, Building2, Eye, EyeOff, User, Lock, CheckCircle2, AlertCircle } from "lucide-react";
 import {
   acceptInvite,
   previewOrganizationInvite,
@@ -13,6 +13,7 @@ import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import type { TranslationKeys } from "@/app/_i18n";
 import { setInvitePostLoginPath } from "@/app/_utils/post-login-redirect";
+import apiClient, { API_ENDPOINTS, handleResponse } from "@/app/_services/api-methods";
 
 type Props = {
   isOpen: boolean;
@@ -57,10 +58,13 @@ function buildInviteGreeting(t: TranslationKeys, preview: OrganizationInvitePrev
   return t.acceptOrganizationInvite.greetingNoName.replace("{org}", org);
 }
 
+const USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
 export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props) {
   const router = useRouter();
   const { t } = useLanguage();
-  const { login } = useAuth();
+  const { login, authenticated } = useAuth();
   const [preview, setPreview] = useState<OrganizationInvitePreview | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,10 +72,15 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [usernameAvailability, setUsernameAvailability] = useState<{available: boolean, message?: string} | null>(null);
 
   const greeting = useMemo(() => (preview ? buildInviteGreeting(t, preview) : ""), [preview, t]);
 
@@ -107,6 +116,56 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
     };
   }, [isOpen, token, t]);
 
+  // Real-time username check with debounce
+  useEffect(() => {
+    const trimmed = username.trim();
+    if (!trimmed) {
+      setUsernameAvailability(null);
+      setCheckingUsername(false);
+      return;
+    }
+
+    if (!USERNAME_REGEX.test(trimmed)) {
+      setUsernameAvailability({ available: false, message: "Apenas letras, números, ., - ou _ são permitidos." });
+      setCheckingUsername(false);
+      return;
+    }
+
+    if (trimmed.length < 6 || trimmed.length > 18) {
+      setUsernameAvailability({ available: false, message: "Deve ter entre 6 e 18 caracteres." });
+      setCheckingUsername(false);
+      return;
+    }
+
+    let cancelled = false;
+    setCheckingUsername(true);
+    
+    const handler = setTimeout(async () => {
+      try {
+        const res = await apiClient.get(`${API_ENDPOINTS.CHECK_USERNAME_PUBLIC}?username=${encodeURIComponent(trimmed)}`);
+        const json = await handleResponse<{ availability?: { username: { available: boolean } } }>(res);
+        if (!cancelled) {
+          if (json?.availability?.username?.available) {
+            setUsernameAvailability({ available: true, message: "Nome de usuário disponível!" });
+          } else {
+            setUsernameAvailability({ available: false, message: "Nome de usuário já está em uso." });
+          }
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setUsernameAvailability({ available: false, message: "Erro ao verificar disponibilidade." });
+        }
+      } finally {
+        if (!cancelled) setCheckingUsername(false);
+      }
+    }, 500);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(handler);
+    };
+  }, [username]);
+
   const postLoginAreasPath = (areaId?: string | null) =>
     areaId ? `/organization/areas?areaId=${encodeURIComponent(areaId)}` : "/organization/areas";
 
@@ -117,6 +176,11 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
       const data = await acceptInvite({ token });
       setInvitePostLoginPath(postLoginAreasPath(data?.area_id));
       setSuccess(t.acceptOrganizationInvite.successExisting);
+      if (authenticated) {
+        setTimeout(() => {
+          window.location.href = "/home";
+        }, 1500);
+      }
     } catch (e) {
       setFormError(e instanceof Error ? e.message : t.acceptOrganizationInvite.acceptError);
     } finally {
@@ -129,24 +193,23 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
     setFormError(null);
 
     const trimmedUsername = username.trim();
-    if (!name.trim() || !trimmedUsername || !password) {
-      setFormError(t.acceptOrganizationInvite.fillAllFields);
+    if (!name.trim() || !trimmedUsername || !password || !confirmPassword) {
+      setFormError(t.acceptOrganizationInvite.fillAllFields || "Por favor, preencha todos os campos.");
       return;
     }
 
-    const USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
-    const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (usernameAvailability && !usernameAvailability.available) {
+      setFormError("Por favor, escolha um nome de usuário disponível.");
+      return;
+    }
 
-    if (!USERNAME_REGEX.test(trimmedUsername)) {
-      setFormError("Nome de usuário inválido: Apenas letras, números, ., - ou _ são permitidos.");
-      return;
-    }
-    if (trimmedUsername.length < 6 || trimmedUsername.length > 18) {
-      setFormError("O nome de usuário deve ter entre 6 e 18 caracteres.");
-      return;
-    }
     if (!PASSWORD_REGEX.test(password)) {
       setFormError("A senha deve conter no mínimo 8 caracteres, incluindo letras maiúsculas, minúsculas e números.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setFormError("As senhas não coincidem.");
       return;
     }
 
@@ -160,7 +223,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
       });
       const result = await login(trimmedUsername, password);
       if (result.success) {
-        router.replace("/home");
+        window.location.href = "/home";
         return;
       }
       setSuccess(t.acceptOrganizationInvite.successCreatedLoginElse);
@@ -170,6 +233,11 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
       setSubmitting(false);
     }
   };
+
+  const hasLower = /(?=.*[a-z])/.test(password);
+  const hasUpper = /(?=.*[A-Z])/.test(password);
+  const hasNumber = /(?=.*\d)/.test(password);
+  const hasLength = password.length >= 8;
 
   if (!isOpen || !token) return null;
 
@@ -293,7 +361,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleAcceptNew} className="space-y-3">
+                <form onSubmit={handleAcceptNew} className="space-y-4">
                   <div className="relative">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
                       <User className="text-brand-secondary-400 h-4 w-4" />
@@ -308,51 +376,117 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose }: Props)
                       className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1.5 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60"
                     />
                   </div>
-                  <div className="relative">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                      <User className="text-brand-secondary-400 h-4 w-4" />
+                  <div>
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                        <User className="text-brand-secondary-400 h-4 w-4" />
+                      </div>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder={t.acceptOrganizationInvite.usernamePlaceholder}
+                        autoComplete="username"
+                        disabled={submitting}
+                        className={`border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1.5 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60 ${usernameAvailability?.available === false ? "border-red-300 focus:ring-red-500" : ""}`}
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                        {checkingUsername ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-brand-primary-500" />
+                        ) : usernameAvailability?.available === true ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : usernameAvailability?.available === false ? (
+                          <AlertCircle className="h-4 w-4 text-red-500" />
+                        ) : null}
+                      </div>
                     </div>
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder={t.acceptOrganizationInvite.usernamePlaceholder}
-                      autoComplete="username"
-                      disabled={submitting}
-                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1.5 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60"
-                    />
+                    {usernameAvailability?.message && (
+                      <p className={`mt-1 text-xs ${usernameAvailability.available ? "text-emerald-600" : "text-red-500"}`}>
+                        {usernameAvailability.message}
+                      </p>
+                    )}
                   </div>
-                  <div className="relative">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                      <Lock className="text-brand-secondary-400 h-4 w-4" />
+                  <div>
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                        <Lock className="text-brand-secondary-400 h-4 w-4" />
+                      </div>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder={t.acceptOrganizationInvite.passwordPlaceholder}
+                        autoComplete="new-password"
+                        disabled={submitting}
+                        className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1.5 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60"
+                      />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
+                        aria-label={
+                          showPassword
+                            ? t.acceptOrganizationInvite.hidePassword
+                            : t.acceptOrganizationInvite.showPassword
+                        }
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder={t.acceptOrganizationInvite.passwordPlaceholder}
-                      autoComplete="new-password"
-                      disabled={submitting}
-                      className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1.5 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60"
-                    />
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      onClick={() => setShowPassword((v) => !v)}
-                      className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
-                      aria-label={
-                        showPassword
-                          ? t.acceptOrganizationInvite.hidePassword
-                          : t.acceptOrganizationInvite.showPassword
-                      }
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                    {password && (
+                      <div className="mt-2 space-y-1">
+                        <div className="flex gap-1">
+                          <div className={`h-1 flex-1 rounded-full ${hasLength && hasLower && hasUpper && hasNumber ? "bg-emerald-500" : password.length > 0 ? "bg-amber-400" : "bg-neutral-200"}`}></div>
+                          <div className={`h-1 flex-1 rounded-full ${hasLength && hasLower && hasUpper && hasNumber ? "bg-emerald-500" : (hasLength && (hasLower || hasUpper || hasNumber)) ? "bg-amber-400" : "bg-neutral-200"}`}></div>
+                          <div className={`h-1 flex-1 rounded-full ${hasLength && hasLower && hasUpper && hasNumber ? "bg-emerald-500" : "bg-neutral-200"}`}></div>
+                        </div>
+                        <ul className="grid grid-cols-2 gap-1 text-[10px] text-brand-secondary-500 mt-1.5">
+                          <li className={`flex items-center gap-1 ${hasLength ? "text-emerald-600" : ""}`}><CheckCircle2 className="h-3 w-3" /> Min 8 caract.</li>
+                          <li className={`flex items-center gap-1 ${hasUpper ? "text-emerald-600" : ""}`}><CheckCircle2 className="h-3 w-3" /> Letra Maiúscula</li>
+                          <li className={`flex items-center gap-1 ${hasLower ? "text-emerald-600" : ""}`}><CheckCircle2 className="h-3 w-3" /> Letra Minúscula</li>
+                          <li className={`flex items-center gap-1 ${hasNumber ? "text-emerald-600" : ""}`}><CheckCircle2 className="h-3 w-3" /> Número</li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                        <Lock className="text-brand-secondary-400 h-4 w-4" />
+                      </div>
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder={"Confirme a senha"}
+                        autoComplete="new-password"
+                        disabled={submitting}
+                        className={`border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1.5 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none disabled:opacity-60 ${confirmPassword && confirmPassword !== password ? "border-red-300 focus:ring-red-500" : ""}`}
+                      />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowConfirmPassword((v) => !v)}
+                        className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
+                        aria-label={
+                          showConfirmPassword
+                            ? t.acceptOrganizationInvite.hidePassword
+                            : t.acceptOrganizationInvite.showPassword
+                        }
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {confirmPassword && confirmPassword !== password && (
+                      <p className="mt-1 text-xs text-red-500">As senhas não coincidem</p>
+                    )}
                   </div>
                   <button
                     type="submit"
-                    disabled={submitting}
-                    className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center gap-2 rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-60"
+                    disabled={submitting || !!(usernameAvailability && !usernameAvailability.available)}
+                    className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center gap-2 rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:hover:scale-100 disabled:cursor-not-allowed"
+
                   >
                     {submitting ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

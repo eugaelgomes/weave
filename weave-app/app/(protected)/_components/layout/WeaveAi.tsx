@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { cn } from "@/lib/utils";
 import ChatWidget from "@/app/(protected)/_components/ui/weave-ai/chat-widget";
@@ -43,15 +43,41 @@ export default function WeaveAi() {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
-          "fixed z-[106] flex h-14 w-14 items-center justify-center rounded-xl shadow-lg transition hover:scale-[1.03] active:scale-[0.98] print:hidden",
-          "right-5 bottom-5 md:right-8 md:bottom-10",
-          "bg-brand-primary-500 hover:bg-brand-primary-400 text-neutral-900",
-          "focus-visible:ring-brand-primary-400 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none dark:text-neutral-950 dark:focus-visible:ring-offset-neutral-900"
+          "fixed z-[106] flex h-14 w-14 items-center justify-center rounded-full print:hidden",
+          "right-5 bottom-5 md:right-8 md:bottom-5",
+          // Estilo Clean (Branco com borda sutil)
+          "bg-white text-neutral-800 border border-neutral-200/60",
+          "shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] dark:bg-[#1d1d1b] dark:text-neutral-200 dark:border-neutral-800 dark:shadow-none",
+          // Animações
+          "transition-all duration-300 ease-out",
+          "hover:-translate-y-0.5 hover:shadow-[0_8px_25px_-4px_rgba(0,0,0,0.12)] active:translate-y-0 active:scale-95",
+          // Acessibilidade
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-900"
         )}
         aria-haspopup="dialog"
         aria-label={open ? t.common.close : t.nav.weaveAi}
       >
-        {open ? <X className="h-6 w-6" strokeWidth={2} aria-hidden /> : <>W.AI</>}
+        <div className="relative flex h-full w-full items-center justify-center">
+          <span
+            className={cn(
+              "absolute text-[1.1rem] transition-all duration-300 ease-in-out font-medium",
+              open ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100"
+            )}
+            // Caso já tenha a Fredoka configurada no Tailwind (ex: font-fredoka), você pode remover o style e usar a classe lá em cima.
+            style={{ fontFamily: "'Fredoka', sans-serif", letterSpacing: "-0.02em" }}
+            aria-hidden={open}
+          >
+            w.ai
+          </span>
+          <X
+            strokeWidth={2}
+            className={cn(
+              "absolute h-6 w-6 transition-all duration-300 ease-in-out",
+              open ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-0 opacity-0 text-neutral-400"
+            )}
+            aria-hidden={!open}
+          />
+        </div>
       </button>
 
       {mounted &&
@@ -60,7 +86,7 @@ export default function WeaveAi() {
           <>
             <button
               type="button"
-              className="fixed inset-0 z-[104] bg-neutral-950/50 backdrop-blur-sm"
+              className="fixed inset-0 z-[104] bg-neutral-950/20 backdrop-blur-[2px] transition-opacity dark:bg-neutral-950/50"
               aria-label={t.common.close}
               onClick={() => setOpen(false)}
             />
@@ -82,7 +108,7 @@ export default function WeaveAi() {
                   <Link
                     href="/weave-ai/chat"
                     onClick={() => setOpen(false)}
-                    className="text-brand-primary-600 dark:text-brand-primary-400 text-[10px] font-semibold hover:underline"
+                    className="text-neutral-500 dark:text-neutral-400 text-[10px] font-medium hover:text-neutral-900 hover:underline dark:hover:text-neutral-100"
                   >
                     {t.nav.weaveAiOpenFull}
                   </Link>

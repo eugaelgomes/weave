@@ -67,6 +67,8 @@ export const API_ENDPOINTS = {
   // User Management
   UPDATE_PROFILE: "/users/me/update-profile",
   CHECK_USER_AVAILABILITY: "/users/check-availability",
+  CHECK_USERNAME_PUBLIC: "/users/check-username",
+
   UPDATE_PASSWORD: "/users/me/update-password",
   DELETE_ACCOUNT: "/users/delete-my-account",
   CREATE_ACCOUNT: "/users/create-account",

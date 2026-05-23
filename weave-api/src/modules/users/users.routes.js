@@ -44,6 +44,14 @@ router.get(
   UserDataController.checkAvailability.bind(UserDataController)
 );
 
+// Public route: check username availability without authentication (e.g. invite accept flow)
+router.get(
+  "/check-username",
+  standardTrafficLimiter,
+  UserDataController.checkUsernamePublic.bind(UserDataController)
+);
+
+
 router.put(
   "/me/update-profile",
   verifyToken,

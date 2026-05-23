@@ -60,7 +60,7 @@ const ptBR = {
     menu: "Menu",
     expandMenu: "Expandir menu",
     collapseMenu: "Recolher menu",
-    recentAccess: "Acesso Recente",
+    recentAccess: "Recente",
     openSidebar: "Abrir menu lateral",
     backToHome: "Voltar para o início",
     areas: "Áreas",

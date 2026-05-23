@@ -62,7 +62,7 @@ const enUS: TranslationKeys = {
     menu: "Menu",
     expandMenu: "Expand menu",
     collapseMenu: "Collapse menu",
-    recentAccess: "Recent Access",
+    recentAccess: "Recent",
     openSidebar: "Open sidebar",
     backToHome: "Back to home",
     areas: "Areas",
