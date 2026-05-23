@@ -19,7 +19,7 @@ class AiReportDeliveryProcessor {
 
     while (this.isRunning) {
       try {
-        const result = await redis.blpop(this.queueName, 0);
+        const result = await redis.blpop(this.queueName, 5);
 
         if (result) {
           const [, jobDataStr] = result;

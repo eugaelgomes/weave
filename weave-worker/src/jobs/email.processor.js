@@ -24,7 +24,7 @@ class EmailProcessor {
     while (this.isRunning) {
       try {
         // block waiting for a job
-        const result = await redis.blpop(queueName, 0); // 0 means wait indefinitely
+        const result = await redis.blpop(queueName, 5);
 
         if (result) {
           const [, jobDataStr] = result;
