@@ -10,26 +10,26 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { isPathActive, getFirstNavigablePath } from "@/app/_utils/navigation";
 import {
-  Book,
+  ListTodo,
   Home,
-  Network,
+  Workflow,
   X,
   FileText,
   Frown,
   MessageSquare,
   ChevronRight,
   Bot,
-  Users,
+  Building2,
   ChevronsLeft,
   ChevronsRight,
   Waypoints,
-  Calendar,
   Settings,
-  Sparkles,
   CircleHelp,
   type LucideIcon,
 } from "lucide-react";
 import { WeaveEngineIcon } from "@/app/(protected)/_components/layout/icons/weave-engine-icon";
+import { WeaveAiIcon } from "@/app/(protected)/_components/layout/icons/weave-ai-icon";
+import { ProjectIcon } from "@/app/(protected)/projects/_components/project-icon";
 
 const SUPPORT_URL = `${process.env.NEXT_PUBLIC_APP_URL || "https://weavenotes.app"}/support/`;
 
@@ -256,9 +256,12 @@ interface RecentItemsProps {
     id: string;
     public_id?: string | null;
     title: string;
-    icon: LucideIcon;
+    icon?: LucideIcon;
+    projectIcon?: any;
+    projectColor?: string | null;
   }[];
   pathname: string;
+  isCollapsed: boolean;
   onLinkClick: () => void;
   emptyLabel: string;
   sectionLabel: string;
@@ -267,53 +270,74 @@ interface RecentItemsProps {
 function RecentItems({
   recentItems,
   pathname,
+  isCollapsed,
   onLinkClick,
   emptyLabel,
   sectionLabel,
 }: RecentItemsProps) {
+  if (recentItems.length === 0) return null;
+
   return (
-    <div className="mt-3">
-      <h2 className="mb-1.5 px-3 text-[9px] font-bold tracking-widest text-gray-600 uppercase dark:text-gray-500">
-        {sectionLabel}
-      </h2>
+    <div className={cn(isCollapsed ? "border-t border-gray-200/80 pt-2 dark:border-white/10" : "")}>
+      {!isCollapsed && (
+        <h2 className="mb-1.5 px-3 text-[11px] font-bold tracking-widest text-gray-600 dark:text-gray-500">
+          {sectionLabel}
+        </h2>
+      )}
 
-      <ul className="space-y-0 px-1">
-        {recentItems.length === 0 ? (
-          <li className="flex flex-col items-center justify-center gap-2 py-5 text-center text-xs text-gray-800 dark:text-gray-400">
-            <Frown className="size-6 opacity-60" />
-            <span className="text-xs">{emptyLabel}</span>
-          </li>
-        ) : (
-          recentItems.map((item) => {
-            const path = `/notes/${item.public_id || item.id}`;
-            const active = isPathActive(pathname, path);
-            const ItemIcon = item.icon;
+      <ul className={cn("space-y-0.5", isCollapsed ? "px-1" : "px-1")}>
+        {recentItems.map((item) => {
+          const basePath = item.type === "project" ? "/projects" : "/notes";
+          const path = `${basePath}/${item.public_id || item.id}`;
+          const active = isPathActive(pathname, path);
+          const ItemIcon = item.icon;
 
-            return (
-              <li key={`${item.type}-${item.id}`}>
-                <Link
-                  href={path}
-                  onClick={onLinkClick}
-                  title={item.title}
-                  className={cn(
-                    "group flex items-center gap-3 rounded-md px-3 py-1 transition-all duration-200",
-                    active
-                      ? "bg-brand-yellow/50 text-slate-950"
-                      : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6"
-                  )}
-                >
-                  <ItemIcon
-                    className={cn(
-                      "h-3.5 w-3.5 shrink-0 transition-colors",
-                      active ? "text-slate-950" : "text-gray-800 dark:text-gray-400"
-                    )}
-                  />
-                  <span className="truncate text-[12px]">{item.title}</span>
-                </Link>
-              </li>
-            );
-          })
-        )}
+          return (
+            <li key={`${item.type}-${item.id}`}>
+              <Link
+                href={path}
+                onClick={onLinkClick}
+                title={item.title}
+                className={cn(
+                  "group flex min-w-0 items-center rounded-md font-medium transition-colors duration-200",
+                  isCollapsed ? "justify-center px-1 py-1.5" : "gap-3 px-3 py-1.5",
+                  active
+                    ? "bg-brand-yellow/40 text-slate-950"
+                    : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6"
+                )}
+              >
+                {isCollapsed ? (
+                  <span className="flex w-9 shrink-0 items-center justify-center">
+                    {item.projectIcon !== undefined ? (
+                      <ProjectIcon icon={item.projectIcon} color={item.projectColor} size="sm" />
+                    ) : ItemIcon ? (
+                      <ItemIcon
+                        className={cn(
+                          "h-4 w-4 shrink-0 transition-colors",
+                          active ? "text-slate-950" : "text-gray-700 dark:text-gray-400"
+                        )}
+                      />
+                    ) : null}
+                  </span>
+                ) : (
+                  <>
+                    {item.projectIcon !== undefined ? (
+                      <ProjectIcon icon={item.projectIcon} color={item.projectColor} size="sm" />
+                    ) : ItemIcon ? (
+                      <ItemIcon
+                        className={cn(
+                          "h-4 w-4 shrink-0 transition-colors",
+                          active ? "text-slate-950" : "text-gray-700 dark:text-gray-400"
+                        )}
+                      />
+                    ) : null}
+                    <span className="truncate text-[12px]">{item.title}</span>
+                  </>
+                )}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -396,14 +420,16 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
 
   if (!authenticated || !authData) return null;
 
-  const recentNotes = authData.notes.getRecentNotes().slice(0, 6);
+  const recentProjects = authData.projects.getRecentProjects().slice(0, 5);
 
-  const recentItems = recentNotes.map((note) => ({
-    type: "note" as const,
-    id: note.id,
-    public_id: note.public_id,
-    title: note.title || t.common.untitled,
-    icon: Book,
+  const recentItems = recentProjects.map((proj: any) => ({
+    type: "project" as const,
+    id: proj.id,
+    public_id: proj.public_id,
+    title: proj.title || t.common.untitled,
+    icon: Workflow,
+    projectIcon: proj.icon,
+    projectColor: proj.color,
   }));
 
   const hasOrg = !!authData.user.org_id;
@@ -417,33 +443,28 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       badge: unreadCount > 0 ? unreadCount : undefined,
     },
     {
-      path: "/projects",
-      icon: Network,
-      label: t.nav.projects,
-    },
-    { path: "/notes", icon: Book, label: t.nav.notes },
-    {
       path: "/weave-ai/chat",
-      icon: Sparkles,
+      icon: WeaveAiIcon,
       label: t.nav.weaveAi,
       subItems: [
         { path: "/weave-ai/chat", icon: MessageSquare, label: t.nav.chat },
         { path: "/weave-ai/agent", icon: Bot, label: t.nav.agent },
       ],
     },
+    { path: "/notes", icon: ListTodo, label: t.nav.notes },
     {
-      path: "/calendar",
-      icon: Calendar,
-      label: t.nav.calendar,
+      path: "/projects",
+      icon: Workflow,
+      label: t.nav.projects,
     },
-    { path: "/documents", icon: FileText, label: t.nav.documents },
     {
       path: "/weave-flow",
       icon: Waypoints,
       label: t.nav.weaveFlow,
     },
+    { path: "/documents", icon: FileText, label: t.nav.documents },
     { path: "/settings", icon: Settings, label: t.nav.settingsLabel },
-    ...(hasOrg ? [{ path: "/organization/general", icon: Users, label: t.nav.workspace }] : []),
+    ...(hasOrg ? [{ path: "/organization/general", icon: Building2, label: t.nav.workspace }] : []),
   ];
 
   return (
@@ -451,7 +472,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       {/* Header mobile */}
       <div className="flex items-center justify-between p-3 lg:hidden">
         <div className="flex items-center gap-2">
-          <Book className="text-brand-yellow h-3.5 w-3.5" />
+          <ListTodo className="text-brand-yellow h-3.5 w-3.5" />
         </div>
         <button
           type="button"
@@ -515,15 +536,14 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
             ))}
           </ul>
 
-          {!isCollapsed && (
-            <RecentItems
-              recentItems={recentItems}
-              pathname={pathname}
-              onLinkClick={handleLinkClick}
-              emptyLabel={t.common.empty}
-              sectionLabel={t.nav.recentAccess}
-            />
-          )}
+          <RecentItems
+            recentItems={recentItems}
+            pathname={pathname}
+            isCollapsed={isCollapsed}
+            onLinkClick={handleLinkClick}
+            emptyLabel={t.common.empty}
+            sectionLabel={t.nav.recentAccess}
+          />
         </div>
 
         <SidebarFooter isCollapsed={isCollapsed} helpLabel={t.footer.help} />

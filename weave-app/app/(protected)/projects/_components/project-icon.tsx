@@ -55,8 +55,8 @@ export function hasStorageIcon(icon: IconFieldValue | undefined): boolean {
 
 const sizeMap = {
   xs: { box: "h-3.5 w-3.5", emoji: "text-[11px]", lucide: "h-2 w-2" },
-  sm: { box: "h-5 w-5", emoji: "text-sm", lucide: "h-2.5 w-2.5" },
-  md: { box: "h-6 w-6", emoji: "text-base", lucide: "h-3 w-3" },
+  sm: { box: "h-5 w-5", emoji: "text-sm", lucide: "h-3 w-3" },
+  md: { box: "h-6 w-6", emoji: "text-base", lucide: "h-3.5 w-3.5" },
 } as const;
 
 type ProjectIconProps = {

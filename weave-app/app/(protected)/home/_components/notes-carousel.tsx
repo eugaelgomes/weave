@@ -70,7 +70,7 @@ export default function NotesCarousel({
   };
 
   return (
-    <div className="dark:border-surface-dark-border dark:shadow-surface-dark-md rounded-md border border-neutral-200 bg-white p-2 shadow-md sm:p-3 dark:bg-[#1d1d1b]">
+    <div className="w-full">
       <div className="mb-2 flex items-center justify-between gap-2">
         <h3 className="text-xs font-semibold text-neutral-500 sm:text-sm dark:text-neutral-100">
           {resolvedTitle}

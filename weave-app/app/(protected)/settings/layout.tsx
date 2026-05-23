@@ -3,7 +3,7 @@
 import React, { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, Building2, Lock, Zap, CreditCard, type LucideIcon } from "lucide-react";
+import { User, Lock, Zap, CreditCard, type LucideIcon } from "lucide-react";
 import { SettingsHeader } from "../_components/ui/headers/settings-header";
 import { useLanguage } from "@/app/_contexts/language-context";
 
@@ -12,7 +12,7 @@ type SettingsNavItem = {
   label: string;
   href: string;
   matchPaths?: string[];
-  type: "settings" | "workspace" | "plans" | "security" | "integrations" | "preferences";
+  type: "settings" | "plans" | "security" | "integrations" | "preferences";
 };
 
 function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
@@ -40,12 +40,6 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
         href: "/settings/security",
         matchPaths: ["/settings/client-tokens"],
         type: "security" as const,
-      },
-      {
-        icon: Building2,
-        label: t.nav.workspace,
-        href: "/settings/workspace",
-        type: "workspace" as const,
       },
       {
         icon: Zap,
