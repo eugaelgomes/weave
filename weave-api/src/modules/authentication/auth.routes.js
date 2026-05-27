@@ -9,6 +9,7 @@ const GithubOauthController = require("@/modules/authentication/controllers/gith
 const MicrosoftOauthController = require("@/modules/authentication/controllers/microsoft-oauth.controller");
 const LogoutController = require("@/modules/authentication/controllers/logout.controller");
 const {
+  enforceOauthCallbackQueryShape,
   enforceSigninBodyShape,
   handleAuthPayloadValidation,
   validateOauthCallbackPayload,
@@ -34,6 +35,7 @@ router.get(
 router.get(
   "/signin/sso/google/callback",
   authLimiter,
+  enforceOauthCallbackQueryShape,
   validateOauthCallbackPayload(),
   handleAuthPayloadValidation,
   GoogleOauthController.googleCallback.bind(GoogleOauthController)
@@ -47,6 +49,7 @@ router.get(
 router.get(
   "/signin/sso/github/callback",
   authLimiter,
+  enforceOauthCallbackQueryShape,
   validateOauthCallbackPayload(),
   handleAuthPayloadValidation,
   GithubOauthController.githubCallback.bind(GithubOauthController)
@@ -60,6 +63,7 @@ router.get(
 router.get(
   "/signin/sso/microsoft/callback",
   authLimiter,
+  enforceOauthCallbackQueryShape,
   validateOauthCallbackPayload(),
   handleAuthPayloadValidation,
   MicrosoftOauthController.microsoftCallback.bind(MicrosoftOauthController)

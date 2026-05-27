@@ -91,7 +91,7 @@ class MicrosoftOauthController extends AuthBaseController {
 
       const { access_token } = tokenResponse.data;
       if (!access_token) {
-        throw new Error("Token de acesso não recebido da Microsoft");
+        throw new Error("Access token not received from Microsoft.");
       }
 
       const userResponse = await axios.get(
@@ -107,7 +107,7 @@ class MicrosoftOauthController extends AuthBaseController {
       const userEmail = microsoftUser?.mail || microsoftUser?.userPrincipalName;
 
       if (!microsoftId || !userEmail) {
-        throw new Error("Dados incompletos do utilizador na Microsoft");
+        throw new Error("Incomplete user data received from Microsoft.");
       }
 
       let user = await MicrosoftOauthRepository.findUserByMicrosoftId(microsoftId);
@@ -138,9 +138,7 @@ class MicrosoftOauthController extends AuthBaseController {
                 );
 
               if (!existingInvite) {
-                throw new Error(
-                  "Este endereço de e-mail pertence a um domínio corporativo restrito."
-                );
+                throw new Error("This email belongs to a restricted corporate domain.");
               }
             }
           }
@@ -157,7 +155,7 @@ class MicrosoftOauthController extends AuthBaseController {
       }
 
       if (!user) {
-        throw new Error("Falha ao criar ou recuperar o utilizador");
+        throw new Error("Failed to create or retrieve user.");
       }
 
       const organization = this._normalizeOrganization(user.organization);
@@ -178,11 +176,11 @@ class MicrosoftOauthController extends AuthBaseController {
 
       const token = jwt.sign(payload, secretsManager(), {
         algorithm: "HS256",
-        expiresIn: "24h",
+        expiresIn: "12h",
       });
 
       setAuthCookie(res, req, token, {
-        maxAge: 24 * 60 * 60 * 1000,
+        maxAge: 12 * 60 * 60 * 1000,
       });
 
       return res.redirect(`${frontendURL}/home/?auth=success`);

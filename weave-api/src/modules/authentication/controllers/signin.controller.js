@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { matchedData } = require("express-validator");
 
+const { AppError } = require("@/errors/app-error");
 const AuthBaseController = require("./base.controller");
 const SigninRepository = require("@/modules/authentication/repositories/signin.repository");
 const cookieHelper = require("@/utils/cookie-helper");
@@ -21,9 +22,10 @@ class SigninController extends AuthBaseController {
   /**
    * @param {import('express').Request} req
    * @param {import('express').Response} res
-   * @returns {Promise<import('express').Response>}
+   * @param {import('express').NextFunction} next
+   * @returns {Promise<unknown>}
    */
-  async userSignin(req, res) {
+  async userSignin(req, res, next) {
     const { login, password } = matchedData(req, {
       includeOptionals: false,
       locations: ["body"],
@@ -34,33 +36,25 @@ class SigninController extends AuthBaseController {
       const user = await SigninRepository.findUserByUsername(username);
 
       if (!user) {
-        return res.status(401).json({
-          message:
-            "Username/email or password invalid. Check it and try again.",
-        });
+        return next(AppError.unauthorized("Invalid credentials."));
       }
 
       if (user.auth_with_google && !user.password) {
-        return res.status(401).json({
-          message:
-            "This account uses Google authentication. Please log in with Google.",
-        });
+        return next(AppError.unauthorized("This account uses SSO authentication."));
       }
 
       const verifiedAccount = user.email_verified;
       if (!verifiedAccount) {
-        return res.status(403).json({
-          error_code: "EMAIL_NOT_VERIFIED",
-          email: user.email,
-          message: "Please verify your email before logging in.",
-        });
+        return next(
+          new AppError("EMAIL_NOT_VERIFIED", "Please verify your email before logging in.", 403, {
+            body: { email: user.email },
+          })
+        );
       }
 
       const comparePassword = await bcrypt.compare(password, user.password);
       if (!comparePassword) {
-        return res.status(401).json({
-          message: "Username/password invalid. Check it and try again.",
-        });
+        return next(AppError.unauthorized("Invalid credentials."));
       }
 
       const organization = this._normalizeOrganization(user.organization);
@@ -119,7 +113,7 @@ class SigninController extends AuthBaseController {
           },
           user_organization: {
             id: protectedOrg?.id || null,
-            public_id: protectedOrg?.org_public_id || null,
+            public_id: protectedOrg?.public_id || null,
             unique_name: protectedOrg?.unique_name || null,
             name: protectedOrg?.name || null,
             logo_url: protectedOrg?.logo_url || null,
@@ -140,8 +134,7 @@ class SigninController extends AuthBaseController {
         },
       });
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: "Internal Server Error" });
+      next(error);
     }
   }
 }

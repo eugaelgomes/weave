@@ -8,9 +8,9 @@ const pool = new Pool({
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
   max: 5,
-  idleTimeoutMillis: 10000,   // libera conexões idle em 10s (era 30s)
+  idleTimeoutMillis: 10000,
   connectionTimeoutMillis: 5000,
-  allowExitOnIdle: true,       // permite que o pool saia quando idle (útil em dev)
+  allowExitOnIdle: true,
   ssl: {
     rejectUnauthorized: false,
     //ca: process.env.SSL_CERTIFICATE,

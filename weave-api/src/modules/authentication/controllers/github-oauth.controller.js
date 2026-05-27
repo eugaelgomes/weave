@@ -88,7 +88,7 @@ class GithubOauthController extends AuthBaseController {
       const { access_token } = tokenResponse.data;
 
       if (!access_token) {
-        throw new Error("Token de acesso não recebido do GitHub");
+        throw new Error("Access token not received from GitHub.");
       }
 
       const userResponse = await axios.get("https://api.github.com/user", {
@@ -123,7 +123,7 @@ class GithubOauthController extends AuthBaseController {
       const githubId = githubUser?.id ? String(githubUser.id) : null;
 
       if (!githubId || !userEmail) {
-        throw new Error("Dados incompletos do utilizador no GitHub");
+        throw new Error("Incomplete user data received from GitHub.");
       }
 
       let user = await GithubOauthRepository.findUserByGithubId(githubId);
@@ -155,9 +155,7 @@ class GithubOauthController extends AuthBaseController {
                 );
 
               if (!existingInvite) {
-                throw new Error(
-                  "Este endereço de e-mail pertence a um domínio corporativo restrito."
-                );
+                throw new Error("This email belongs to a restricted corporate domain.");
               }
             }
           }
@@ -182,9 +180,7 @@ class GithubOauthController extends AuthBaseController {
       }
 
       if (!user) {
-        throw new Error(
-          "Falha catastrófica ao criar ou recuperar o utilizador"
-        );
+        throw new Error("Failed to create or retrieve user.");
       }
 
       const organization = this._normalizeOrganization(user.organization);
@@ -205,11 +201,11 @@ class GithubOauthController extends AuthBaseController {
 
       const token = jwt.sign(payload, secretsManager(), {
         algorithm: "HS256",
-        expiresIn: "24h",
+        expiresIn: "12h",
       });
 
       setAuthCookie(res, req, token, {
-        maxAge: 24 * 60 * 60 * 1000,
+        maxAge: 12 * 60 * 60 * 1000,
       });
 
       res.redirect(`${frontendURL}/home/?auth=success`);

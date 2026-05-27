@@ -34,6 +34,7 @@ class AuthBaseController {
    * @param {object | null | undefined} organizationData
    * @returns {{
    *   id: string | null,
+   *   public_id: string | null,
    *   unique_name: string | null,
    *   name: string | null,
    *   logo_url: string | null,
@@ -48,6 +49,7 @@ class AuthBaseController {
 
     return {
       id: organizationData.org_id,
+      public_id: organizationData.org_public_id,
       unique_name: organizationData.org_unique_name,
       name: organizationData.org_name,
       logo_url: organizationData.org_logo_url,

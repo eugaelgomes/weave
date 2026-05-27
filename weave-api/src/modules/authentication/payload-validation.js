@@ -9,23 +9,23 @@ function validateSigninPayload() {
   return [
     body("login")
       .exists({ values: "falsy" })
-      .withMessage("Usuário ou e-mail é obrigatório.")
+      .withMessage("Username or email is required.")
       .bail()
       .isString()
-      .withMessage("Usuário ou e-mail deve ser texto.")
+      .withMessage("Invalid username or email format.")
       .bail()
       .trim()
       .isLength({ min: 3, max: 255 })
-      .withMessage("Usuário ou e-mail inválido."),
+      .withMessage("Invalid username or email length."),
     body("password")
       .exists({ values: "falsy" })
-      .withMessage("Senha é obrigatória.")
+      .withMessage("Password is required.")
       .bail()
       .isString()
-      .withMessage("Senha inválida.")
+      .withMessage("Invalid password format.")
       .bail()
       .isLength({ min: 1, max: 255 })
-      .withMessage("Senha inválida."),
+      .withMessage("Invalid password length."),
   ];
 }
 
@@ -34,33 +34,33 @@ function validateOauthCallbackPayload() {
     query("code")
       .optional()
       .isString()
-      .withMessage("Código inválido.")
+      .withMessage("Invalid authorization code format.")
       .bail()
       .trim()
       .isLength({ min: 8, max: 2048 })
-      .withMessage("Código inválido.")
+      .withMessage("Invalid authorization code length.")
       .matches(/^[A-Za-z0-9._\-~/+=:]+$/)
-      .withMessage("Código inválido."),
+      .withMessage("Invalid authorization code characters."),
     query("error")
       .optional()
       .isString()
-      .withMessage("Erro OAuth inválido.")
+      .withMessage("Invalid OAuth error format.")
       .bail()
       .trim()
       .isLength({ min: 1, max: 100 })
-      .withMessage("Erro OAuth inválido."),
+      .withMessage("Invalid OAuth error length."),
     query("state")
       .exists({ values: "falsy" })
-      .withMessage("State OAuth é obrigatório.")
+      .withMessage("OAuth state is required.")
       .bail()
       .isString()
-      .withMessage("State OAuth inválido.")
+      .withMessage("Invalid OAuth state format.")
       .bail()
       .trim()
       .isLength({ min: 8, max: 255 })
-      .withMessage("State OAuth inválido.")
+      .withMessage("Invalid OAuth state length.")
       .matches(/^[A-Za-z0-9._\-]+$/)
-      .withMessage("State OAuth inválido."),
+      .withMessage("Invalid OAuth state characters."),
   ];
 }
 
@@ -68,7 +68,7 @@ function enforceSigninBodyShape(req, res, next) {
   const unexpected = rejectUnexpectedKeys(req.body, ["login", "password"]);
   if (unexpected.length > 0) {
     return res.status(400).json({
-      message: "Payload inválido para signin.",
+      message: "Invalid signin payload structure.",
     });
   }
   return next();
@@ -78,7 +78,7 @@ function enforceOauthCallbackQueryShape(req, res, next) {
   const unexpected = rejectUnexpectedKeys(req.query, ["code", "error", "state"]);
   if (unexpected.length > 0) {
     return res.status(400).json({
-      message: "Payload inválido para callback OAuth.",
+      message: "Invalid OAuth callback payload structure.",
     });
   }
   return next();
