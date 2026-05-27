@@ -28,6 +28,25 @@ class OrganizationsRepository {
   }
 
   /**
+   * Context Lookup: Get membership (role, status) for multiple users.
+   * @param {string[]} userIds
+   * @param {string} organizationId
+   * @returns {Promise<Array<{ user_id: string, role: string, status: string }>>}
+   */
+  async getMembershipsByUserIds(userIds, organizationId) {
+    if (!userIds || userIds.length === 0) return [];
+    
+    const query = `
+      SELECT user_id::text, role, status
+      FROM organization_members
+      WHERE organization_id = $1
+        AND user_id = ANY($2::uuid[])
+        AND deleted = false
+    `;
+    return await executeQuery(query, [organizationId, userIds]);
+  }
+
+  /**
    * Organização ativa do utilizador com `member_role` para o motor de permissões.
    * Usa membership; se só existir como owner legacy sem linha em members, usa fallback.
    */

@@ -1,22 +1,11 @@
 const spacesService = require("@/services/storage");
-const OrganizationDomainsRepository = require("@/modules/organizations/repositories/domains.repository");
-const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
-
 const BaseController = require("./base.controller");
-const bcrypt = require("bcrypt");
-const crypto = require("crypto");
 const { validationResult } = require("express-validator");
-const CreateUsersRepository = require("@/modules/users/repositories/create-users.repository");
-const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
-const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
+const CreateUsersService = require("@/services/users/create-users.service");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
-const { welcome_message } = require("@/services/email/templates/welcome-mail");
-const PlansManager = require("@/services/plans/manager");
 const {
   buildUniqueConflictPayload,
 } = require("@/modules/users/utils/unique-conflicts");
-
-const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
 
 /**
  * @typedef {import('express').Request & {
@@ -59,44 +48,6 @@ class CreateUsersController extends BaseController {
         phone_number = null,
       } = req.body;
 
-      // Validar Domínio Corporativo
-      // Se o email pertencer a um domínio verificado, o usuário DEVE ter um convite.
-      const emailDomain = email.split("@")[1];
-      if (emailDomain) {
-        const domainInfo =
-          await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
-
-        if (
-          domainInfo &&
-          (domainInfo.status === "VERIFIED" || domainInfo.status === "PENDING")
-        ) {
-          // Verifica se existe convite pendente para este email nesta organização
-          const existingInvite =
-            await OrganizationsRepository.checkExistingInvite(
-              domainInfo.organization_id,
-              email
-            );
-
-          if (!existingInvite) {
-            return res.status(403).json({
-              status: "error",
-              message:
-                "This email belongs to a verified corporate domain. You need an invitation from the organization to create an account.",
-            });
-          }
-        }
-      }
-
-      // Usa user_name se fornecido, senão usa name
-      const userName = user_name || name;
-
-      if (!userName) {
-        return res.status(400).json({
-          status: "error",
-          message: "Name is required.",
-        });
-      }
-
       if (timezone && !this._isValidTimezone(timezone)) {
         const allTimezones = Intl.supportedValuesOf("timeZone");
         return res.status(400).json({
@@ -106,50 +57,36 @@ class CreateUsersController extends BaseController {
         });
       }
 
-      const availability = await SearchUsersRepository.checkUniqueAvailability(
-        { username, email, phone_number }
-      );
+      // Delegate creation and business validations to service
+      const result = await CreateUsersService.createUser(req.body, req.body?.locale || "en");
 
-      if (!availability.email.available) {
-        return res.status(409).json(buildUniqueConflictPayload("email"));
-      }
-      if (!availability.username.available) {
-        return res.status(409).json(buildUniqueConflictPayload("username"));
-      }
-      if (!availability.phone_number.available) {
-        return res.status(409).json(buildUniqueConflictPayload("phone_number"));
+      if (result.conflict) {
+        return res.status(409).json(buildUniqueConflictPayload(result.conflict));
       }
 
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-      const newUser = await CreateUsersRepository.createUser({
-        name: userName,
-        username,
-        email,
-        password: hashedPassword,
-        timezone,
-        private_profile,
-        birth_date,
-        phone_number,
-        avatar_url: null,
-      });
-
-      const userId = newUser[0].user_id;
+      const { user } = result;
 
       let profileImageUrl = null;
-      if (req.file && req.file.buffer) {
+      if (req.file && req.file.path) {
         try {
+          // Stream file from disk
+          const fs = require("fs");
+          const fileStream = fs.createReadStream(req.file.path);
+          
           const saveResult = await spacesService.uploadProfileImage(
-            req.file.buffer,
+            fileStream,
             req.file.mimetype,
-            userId
+            user.userId
           );
+          
+          // Clean up temp file
+          fs.unlink(req.file.path, (err) => { if (err) console.error("Failed to delete temp file:", err); });
+
           if (saveResult.success) {
             profileImageUrl = saveResult.key;
-            await UserDataRepository.updateProfileImage(
-              userId,
-              profileImageUrl
-            );
+            // Delegate profile image update
+            const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
+            await UserDataRepository.updateProfileImage(user.userId, profileImageUrl);
           } else {
             console.error("Image upload failed:", saveResult.error);
           }
@@ -158,49 +95,26 @@ class CreateUsersController extends BaseController {
         }
       }
 
-      const activationToken = crypto.randomBytes(12).toString("hex");
-      const activationCode = Math.floor(
-        100000 + Math.random() * 900000
-      ).toString();
-      const currentDateTime = this._getCurrentDateTime();
-      await UserTokensRepository.createEmailActivationToken(
-        userId,
-        activationToken,
-        activationCode,
-        currentDateTime
-      );
-
-      // Atribuir plano padrão ao novo usuário
-      try {
-        await PlansManager.setDefaultPlanForNewUser(userId);
-      } catch (planError) {
-        console.error("Erro ao atribuir plano padrão:", planError);
-        // Não bloqueamos a criação do usuário por causa disso
-      }
-
-      await welcome_message(
-        userName,
-        email,
-        username,
-        activationToken,
-        req.headers["accept-language"],
-        req.body?.locale
-      );
-
       return res.status(201).json({
         status: "OK",
-        message: `Welcome to Weave Notes ${userName}! Check your email to activate your account.`,
+        message: `Welcome to Weave Notes ${user.userName}! Check your email to activate your account.`,
         user: {
-          id: userId,
-          name: userName,
-          username,
-          email,
+          id: user.userId,
+          name: user.userName,
+          username: user.username,
+          email: user.email,
           avatar_url: profileImageUrl,
-          created_at: newUser[0].created_at,
+          created_at: user.createdAt,
         },
         redirect: "/auth/",
       });
     } catch (error) {
+      if (error.message === "CORPORATE_DOMAIN_INVITE_REQUIRED") {
+        return res.status(403).json({
+          status: "error",
+          message: "This email belongs to a verified corporate domain. You need an invitation from the organization to create an account.",
+        });
+      }
       console.error("An error occurred during registration:", error);
       return this._handleError(error, res, next);
     }

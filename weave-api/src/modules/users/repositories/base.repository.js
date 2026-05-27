@@ -2,7 +2,7 @@ const { executeQuery } = require("@/database/connection");
 const { defaultAppPreferences } = require("@/modules/users/normalize");
 
 /**
- * Base para repositórios de usuário: expõe `executeQuery` e preferências padrão da app.
+ * Base for user repositories: exposes `executeQuery` and default app preferences.
  */
 class BaseRepository {
   constructor() {

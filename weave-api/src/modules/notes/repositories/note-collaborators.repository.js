@@ -148,6 +148,27 @@ class NoteCollaboratorsRepository extends BaseRepository {
   }
 
   /**
+   * Context Lookup: Get membership for multiple users in a note.
+   * @param {string[]} userIds
+   * @param {string} noteId
+   * @returns {Promise<Array<{ user_id: string, role: string }>>}
+   */
+  async getCollaboratorsByUserIds(userIds, noteId) {
+    if (!userIds || userIds.length === 0) return [];
+    const internalNoteId = await this._resolveInternalNoteId(noteId);
+    if (!internalNoteId) return [];
+
+    const query = `
+      SELECT user_id::text, 'COLLABORATOR' as role
+      FROM note_collaborators
+      WHERE note_id = $1::uuid
+        AND user_id = ANY($2::uuid[])
+        AND removed = false
+    `;
+    return await executeQuery(query, [internalNoteId, userIds]);
+  }
+
+  /**
    * E-mails de colaboradores ativos (para lembretes de prazo).
    *
    * @param {string} noteId

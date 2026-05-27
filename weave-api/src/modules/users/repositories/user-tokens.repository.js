@@ -2,7 +2,7 @@ const BaseRepository = require("./base.repository");
 const { executeQuery } = require("@/database/connection");
 
 /**
- * Operações na tabela `tokens` para verificação/alteração de e-mail e ativação de conta.
+ * `tokens` table operations for email verification/change and account activation.
  */
 class UserTokensRepository extends BaseRepository {
   /**
@@ -22,7 +22,7 @@ class UserTokensRepository extends BaseRepository {
    * @param {string|number} userId
    * @param {string} token
    * @param {string} newEmail
-   * @param {string} createdAt ISO ou formato aceito pelo Postgres em cast timestamp
+   * @param {string} createdAt ISO string or Postgres timestamp
    * @returns {Promise<import('pg').QueryResultRow[]>}
    */
   async createEmailChangeToken(userId, token, newEmail, createdAt) {
@@ -97,15 +97,16 @@ class UserTokensRepository extends BaseRepository {
    * @param {string} token
    * @param {string} code
    * @param {string} createdAt
+   * @param {import('pg').PoolClient} [client=null]
    * @returns {Promise<import('pg').QueryResultRow[]>}
    */
-  async createEmailActivationToken(userId, token, code, createdAt) {
+  async createEmailActivationToken(userId, token, code, createdAt, client = null) {
     const query = `
       INSERT INTO tokens 
         (user_id, token, code, type, expires_at, created_at, active) 
       VALUES ($1, $2, $3, 'email_verification', ($4::timestamp + interval '7 days'), $4, TRUE)
     `;
-    return await executeQuery(query, [userId, token, code, createdAt]);
+    return await executeQuery(query, [userId, token, code, createdAt], client);
   }
 
   /**

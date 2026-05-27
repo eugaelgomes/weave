@@ -69,28 +69,35 @@ const getUniqueFieldFromPgError = (error) => {
   if (!error || error.code !== "23505") return null;
 
   const constraint = String(error.constraint || "").toLowerCase();
-  const detail = String(error.detail || "").toLowerCase();
 
+  // Explicit validation by constraint name
   if (
-    constraint.includes("users_email_key") ||
-    constraint.includes("uq_users_email_lower") ||
-    detail.includes("(email)") ||
-    detail.includes("lower(email)")
+    constraint === "users_email_key" ||
+    constraint === "uq_users_email_lower"
   ) {
     return "email";
   }
 
-  if (
-    constraint.includes("users_username_key") ||
-    detail.includes("(username)")
-  ) {
+  if (constraint === "users_username_key") {
     return "username";
   }
 
-  if (
-    constraint.includes("phone_number") ||
-    detail.includes("(phone_number)")
-  ) {
+  if (constraint === "users_phone_number_key" || constraint === "phone_number") {
+    return "phone_number";
+  }
+
+  // Fallback to detail string matching for legacy migrations
+  const detail = String(error.detail || "").toLowerCase();
+  
+  if (detail.includes("(email)") || detail.includes("lower(email)")) {
+    return "email";
+  }
+
+  if (detail.includes("(username)")) {
+    return "username";
+  }
+
+  if (detail.includes("(phone_number)")) {
     return "phone_number";
   }
 

@@ -506,6 +506,25 @@ class ProjectsCollaboratorsRepository {
   }
 
   /**
+   * Context Lookup: Get roles for multiple users in a project.
+   * @param {string[]} userIds
+   * @param {string} projectId
+   * @returns {Promise<Array<{ user_id: string, role: string }>>}
+   */
+  async getCollaboratorsByUserIds(userIds, projectId) {
+    if (!userIds || userIds.length === 0) return [];
+    
+    const query = `
+      SELECT user_id::text, role
+      FROM project_members
+      WHERE project_id = $1::uuid
+        AND user_id = ANY($2::uuid[])
+        AND deleted = false
+    `;
+    return await executeQuery(query, [projectId, userIds]);
+  }
+
+  /**
    * Fetches a project row only when `userId` is the owner.
    * @param {string} projectId - Project UUID.
    * @param {string} userId - Owner user UUID.

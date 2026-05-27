@@ -28,14 +28,15 @@ const { generatePublicId } = require("@/utils/generate-public-id");
  */
 
 /**
- * Inserção de registros na tabela `users`.
+ * Insert records into `users` table.
  */
 class CreateUsersRepository extends BaseRepository {
   /**
    * @param {CreateUserPayload} userData
+   * @param {import('pg').PoolClient} [client=null]
    * @returns {Promise<CreateUserRow[]>}
    */
-  async createUser(userData) {
+  async createUser(userData, client = null) {
     const {
       name,
       username,
@@ -89,16 +90,17 @@ class CreateUsersRepository extends BaseRepository {
       defaultAppPreferences,
       resolvedPlanId,
       publicUserId,
-    ]);
+    ], client);
   }
 
   /**
    * @param {string} username
    * @param {string} name
    * @param {string|number} githubId
+   * @param {import('pg').PoolClient} [client=null]
    * @returns {Promise<Array<{ user_id: string|number }>>}
    */
-  async createGithubUser(username, name, githubId) {
+  async createGithubUser(username, name, githubId, client = null) {
     const planId = await PlansRepository.getDefaultSignupPlanId();
     const publicUserId = generatePublicId();
     const query = `
@@ -109,7 +111,7 @@ class CreateUsersRepository extends BaseRepository {
       )
       RETURNING user_id, public_user_id;
     `;
-    return await executeQuery(query, [username, name, githubId, planId, publicUserId]);
+    return await executeQuery(query, [username, name, githubId, planId, publicUserId], client);
   }
 }
 module.exports = new CreateUsersRepository();

@@ -27,15 +27,17 @@ const getConnection = async () => {
   }
 };
 
-const executeQuery = async (sql, params = []) => {
-  const client = await getConnection();
+const executeQuery = async (sql, params = [], explicitClient = null) => {
+  const client = explicitClient || await getConnection();
   try {
     const { rows } = await client.query(sql, params);
     return rows;
   } catch (error) {
     throw error;
   } finally {
-    client.release();
+    if (!explicitClient) {
+      client.release();
+    }
   }
 };
 
@@ -51,4 +53,19 @@ const rowCount = async (sql, params = []) => {
   }
 };
 
-module.exports = { pool, getConnection, executeQuery, rowCount };
+const withTransaction = async (callback) => {
+  const client = await getConnection();
+  try {
+    await client.query("BEGIN");
+    const result = await callback(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+module.exports = { pool, getConnection, executeQuery, rowCount, withTransaction };

@@ -2,18 +2,18 @@ const BaseRepository = require("./base.repository");
 const { executeQuery } = require("@/database/connection");
 
 /**
- * Tokens e soft-delete relacionados à exclusão de conta.
+ * Tokens and soft-delete related to account deletion.
  */
 class DeleteUsersRepository extends BaseRepository {
   /**
-   * Desativa tokens anteriores e insere um novo token de exclusão (7 dias).
+   * Deactivate previous tokens and insert a new deletion token (7 days).
    *
    * @param {string|number} userId
    * @param {string} token
    * @returns {Promise<import('pg').QueryResultRow[]>}
    */
   async createDeleteAccountToken(userId, token) {
-    // Desativa tokens antigos de exclusão
+    // Deactivate old deletion tokens
     await executeQuery(
       `UPDATE tokens SET active = FALSE 
        WHERE user_id = $1 AND type = 'delete_user_account' AND active = TRUE`,
@@ -42,7 +42,7 @@ class DeleteUsersRepository extends BaseRepository {
   }
 
   /**
-   * Marca o usuário como excluído e anonimiza e-mail/username.
+   * Mark the user as deleted and anonymize email/username.
    *
    * @param {string|number} userId
    * @returns {Promise<Array<{ user_id: string|number }>>}
@@ -71,6 +71,7 @@ class DeleteUsersRepository extends BaseRepository {
   }
 
   /**
+   * Deactivate the delete account token.
    * @param {string} token
    * @returns {Promise<import('pg').QueryResultRow[]>}
    */

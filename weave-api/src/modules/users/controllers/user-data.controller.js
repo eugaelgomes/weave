@@ -7,11 +7,9 @@ const UserDataRepository = require("@/modules/users/repositories/user-data.repos
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 const { presignObjectFields } = require("@/utils/data/presign-storage-files");
-const {
-  sendEmailChangeValidation,
-} = require("@/services/email/templates/reset-password");
 const updateProfileLogs = require("@/utils/system_logs/update_profile-logs");
 const { normalizeAppPreferences } = require("@/modules/users/normalize");
+const UserDataService = require("@/services/users/user-data.service");
 const {
   buildUniqueConflictPayload,
   normalizeEmail,
@@ -334,199 +332,15 @@ class UserDataController extends BaseController {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const normalizedThemeMode =
-        theme_mode !== undefined ? String(theme_mode).trim().toUpperCase() : undefined;
+      const { updatedUser, emailPendingValidation, pendingEmail } = await UserDataService.updateProfile(
+        req.user.userId,
+        currentUser,
+        req.body,
+        req.file,
+        req // required for updateProfileLogs inside service
+      );
 
-      if (normalizedThemeMode && !["LIGHT", "DARK"].includes(normalizedThemeMode)) {
-        return res.status(400).json({ message: "Invalid theme mode" });
-      }
-
-      if (birth_date && isNaN(new Date(birth_date).getTime())) {
-        return res.status(400).json({ message: "Invalid birth date format" });
-      }
-
-      if (
-        (currentPassword && !newPassword) ||
-        (!currentPassword && newPassword)
-      ) {
-        return res
-          .status(400)
-          .json({ message: "Both current and new passwords are required" });
-      }
-
-      if (emailValidationToken) {
-        const tokenRecord = await UserTokensRepository.findEmailChangeToken(
-          req.user.userId,
-          emailValidationToken
-        );
-        if (!tokenRecord)
-          return res.status(400).json({ message: "Invalid or expired token" });
-
-        const dataToUpdate = await UserTokensRepository.getDataToUpdate(
-          req.user.userId
-        );
-        if (dataToUpdate?.new_email) {
-          await UserDataRepository.updateUserProfile(req.user.userId, {
-            email: dataToUpdate.new_email,
-          });
-          await UserTokensRepository.clearDataToUpdate(req.user.userId);
-          await UserTokensRepository.deactivateEmailToken(emailValidationToken);
-
-          auditChanges.email_status = "verified_and_changed";
-          auditChanges.new_email = dataToUpdate.new_email;
-        }
-      }
-
-      let emailPendingValidation = false;
-      let pendingEmail = null;
-
-      if (
-        email !== undefined &&
-        normalizeEmail(email) !== normalizeEmail(currentUser.email) &&
-        !emailValidationToken
-      ) {
-        const emailAvailability = await SearchUsersRepository.checkUniqueAvailability(
-          { email },
-          { excludeUserId: req.user.userId }
-        );
-        if (!emailAvailability.email.available) {
-          return res.status(409).json(buildUniqueConflictPayload("email"));
-        }
-
-        const token = crypto.randomBytes(10).toString("hex");
-        await UserTokensRepository.deactivateOldEmailTokens(req.user.userId);
-        await UserTokensRepository.createEmailChangeToken(
-          req.user.userId,
-          token,
-          email,
-          this._getCurrentDateTime()
-        );
-
-        const emailResult = await sendEmailChangeValidation(
-          currentUser.email,
-          email,
-          token
-        );
-        if (!emailResult.success)
-          return res
-            .status(500)
-            .json({ message: "Error sending validation email" });
-
-        emailPendingValidation = true;
-        pendingEmail = email;
-
-        auditChanges.email_request = "pending_validation";
-        auditChanges.requested_email = email;
-      }
-
-      const updates = {};
-      if (name !== undefined) updates.name = name;
-      if (normalizedThemeMode !== undefined) updates.theme_mode = normalizedThemeMode;
-      if (birth_date !== undefined) updates.birth_date = birth_date || null;
-      if (phone_number !== undefined)
-        updates.phone_number = phone_number || null;
-      if (private_profile !== undefined)
-        updates.private_profile = private_profile;
-      const resolvedPreference = usage_preference ?? user_preference;
-      if (resolvedPreference !== undefined) {
-        const parsed =
-          typeof resolvedPreference === "string"
-            ? JSON.parse(resolvedPreference)
-            : resolvedPreference;
-        updates.user_preference = normalizeAppPreferences(parsed);
-      }
-
-      if (
-        username !== undefined &&
-        normalizeUsername(username) !== normalizeUsername(currentUser.username)
-      ) {
-        const usernameAvailability = await SearchUsersRepository.checkUniqueAvailability(
-          { username },
-          { excludeUserId: req.user.userId }
-        );
-        if (!usernameAvailability.username.available) {
-          return res.status(409).json(buildUniqueConflictPayload("username"));
-        }
-        updates.username = username;
-      }
-
-      if (
-        phone_number !== undefined &&
-        normalizePhoneNumber(phone_number) !== normalizePhoneNumber(currentUser.phone_number)
-      ) {
-        const phoneAvailability = await SearchUsersRepository.checkUniqueAvailability(
-          { phone_number },
-          { excludeUserId: req.user.userId }
-        );
-        if (!phoneAvailability.phone_number.available) {
-          return res.status(409).json(buildUniqueConflictPayload("phone_number"));
-        }
-      }
-
-      let updatedUser = currentUser;
-      if (Object.keys(updates).length > 0) {
-        updatedUser = await UserDataRepository.updateUserProfile(
-          req.user.userId,
-          updates
-        );
-        Object.assign(auditChanges, updates);
-      }
-
-      let avatarUrl = updatedUser.avatar_url;
-      if (req.file?.buffer) {
-        const uploadResult = await spacesService.uploadProfileImage(
-          req.file.buffer,
-          req.file.mimetype,
-          req.user.userId
-        );
-        if (uploadResult.success) {
-          const updateImage = await UserDataRepository.updateProfileImage(
-            req.user.userId,
-            uploadResult.key
-          );
-          avatarUrl = updateImage[0].avatar_url;
-          auditChanges.avatar_updated = true;
-        }
-      }
-
-      if (currentPassword && newPassword) {
-        const match = await bcrypt.compare(
-          currentPassword,
-          currentUser.password
-        );
-        if (!match) {
-          updateProfileLogs.createLog(
-            req.user.userId,
-            "security_change",
-            req,
-            "failure",
-            { reason: "wrong_current_password" }
-          );
-          return res
-            .status(401)
-            .json({ message: "Current password is incorrect" });
-        }
-
-        const hashedPassword = await bcrypt.hash(
-          newPassword,
-          parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12
-        );
-        await UserDataRepository.updateUserPassword(
-          req.user.userId,
-          hashedPassword
-        );
-
-        auditChanges.password_changed = true;
-        updateProfileLogs.createLog(
-          req.user.userId,
-          "security_change",
-          req,
-          "success",
-          { action: "password_update" }
-        );
-      }
-
-      const mockUserForPresign = { avatar_url: avatarUrl };
+      const mockUserForPresign = { avatar_url: updatedUser.avatar_url };
       const protectedMock = await presignObjectFields(
         mockUserForPresign,
         ["avatar_url"],
@@ -563,18 +377,24 @@ class UserDataController extends BaseController {
         };
       }
 
-      if (Object.keys(auditChanges).length > 0) {
-        updateProfileLogs.createLog(
-          req.user.userId,
-          "profile_update",
-          req,
-          "success",
-          auditChanges
-        );
-      }
-
       return res.status(200).json(response);
     } catch (error) {
+      if (error.message === "INCORRECT_PASSWORD") {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+      if (error.message === "INVALID_TOKEN") {
+        return res.status(400).json({ message: "Invalid or expired token" });
+      }
+      if (error.message === "CONFLICT_EMAIL") {
+        return res.status(409).json(buildUniqueConflictPayload("email"));
+      }
+      if (error.message === "CONFLICT_USERNAME") {
+        return res.status(409).json(buildUniqueConflictPayload("username"));
+      }
+      if (error.message === "CONFLICT_PHONE") {
+        return res.status(409).json(buildUniqueConflictPayload("phone_number"));
+      }
+      
       console.error("Error updating profile:", error);
 
       updateProfileLogs.createLog(

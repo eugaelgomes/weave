@@ -5,6 +5,8 @@ const {
   getUniqueFieldFromPgError,
 } = require("@/modules/users/utils/unique-conflicts");
 
+const ALL_TIMEZONES = Intl.supportedValuesOf("timeZone");
+
 /**
  * Shared utilities for user module controllers (datetime, timezone, HTTP errors).
  */
@@ -25,7 +27,6 @@ class BaseController {
    * @returns {boolean}
    */
   _isValidTimezone(timezone) {
-    const ALL_TIMEZONES = Intl.supportedValuesOf("timeZone");
     return ALL_TIMEZONES.includes(timezone);
   }
 

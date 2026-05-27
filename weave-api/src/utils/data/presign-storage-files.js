@@ -5,6 +5,7 @@ const {
   assertFileAccess,
   StorageAccessError,
 } = require("@/services/storage/access-control");
+const redis = require("@/services/queue/connection");
 
 const spacesHostname = (() => {
   try {
@@ -66,6 +67,12 @@ async function generatePresignedUrl(key, expiresIn = SESSION_MAX_AGE_SECONDS) {
   if (!key) return null;
 
   try {
+    const redisKey = `s3_presign:${key}`;
+    const cachedUrl = await redis.get(redisKey).catch(() => null);
+    if (cachedUrl) {
+      return cachedUrl;
+    }
+
     const command = new GetObjectCommand({
       Bucket: spacesService.bucketName,
       Key: key,
@@ -74,6 +81,10 @@ async function generatePresignedUrl(key, expiresIn = SESSION_MAX_AGE_SECONDS) {
     const url = await getSignedUrl(spacesService.s3Client, command, {
       expiresIn,
     });
+
+    // Cache in Redis with slightly lower TTL for safety margin
+    const ttl = Math.max(1, expiresIn - 300);
+    await redis.setex(redisKey, ttl, url).catch(() => null);
 
     return url;
   } catch (error) {
