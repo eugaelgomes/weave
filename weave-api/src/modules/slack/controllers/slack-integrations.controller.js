@@ -1,6 +1,7 @@
 /* eslint-disable no-console -- integration errors */
 const OrganizationsBaseController = require("@/modules/organizations/controllers/base-controller");
-const OrganizationSlackIntegrationsRepository = require("@/modules/slack/repositories/organization-slack-integrations.repository");
+const ReadSlackIntegrationsRepository = require("@/modules/slack/repositories/read-slack-integrations.repository");
+const MutateSlackIntegrationsRepository = require("@/modules/slack/repositories/mutate-slack-integrations.repository");
 const {
   conversationsInfo,
   authRevoke,
@@ -33,7 +34,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
       }
 
       const row =
-        await OrganizationSlackIntegrationsRepository.findActiveByOrganizationId(
+        await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
           String(organization.id)
         );
 
@@ -93,7 +94,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
       }
 
       const integration =
-        await OrganizationSlackIntegrationsRepository.findActiveByOrganizationId(
+        await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
           String(organization.id)
         );
       if (!integration?.bot_access_token) {
@@ -115,7 +116,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
         ? String(info.channel.name)
         : null;
 
-      await OrganizationSlackIntegrationsRepository.updateDefaultChannel(
+      await MutateSlackIntegrationsRepository.updateDefaultChannel(
         String(organization.id),
         channelId.trim(),
         channelName
@@ -154,7 +155,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
       }
 
       const integration =
-        await OrganizationSlackIntegrationsRepository.findActiveByOrganizationId(
+        await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
           String(organization.id)
         );
       if (integration?.bot_access_token) {
@@ -165,7 +166,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
         }
       }
 
-      await OrganizationSlackIntegrationsRepository.softDeleteByOrganizationId(
+      await MutateSlackIntegrationsRepository.softDeleteByOrganizationId(
         String(organization.id)
       );
 

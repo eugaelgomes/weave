@@ -5,7 +5,7 @@ const {
   ORG_PERMISSIONS,
   orgRoleHasPermission,
 } = require("@/modules/organizations/organization-role-policy");
-const OrganizationSlackIntegrationsRepository = require("@/modules/slack/repositories/organization-slack-integrations.repository");
+const MutateSlackIntegrationsRepository = require("@/modules/slack/repositories/mutate-slack-integrations.repository");
 const {
   issueSlackInstallState,
   verifySlackInstallState,
@@ -106,7 +106,7 @@ class SlackOauthController extends WebhooksBaseController {
         return res.redirect(`${FRONTEND_URL}/app/settings/integrations?slack=error`);
       }
 
-      await OrganizationSlackIntegrationsRepository.upsertInstallation({
+      await MutateSlackIntegrationsRepository.upsertInstallation({
         appId: data.app_id ? String(data.app_id) : null,
         botAccessToken: botToken,
         botUserId: data.bot_user_id ? String(data.bot_user_id) : null,

@@ -1,39 +1,9 @@
-const { executeQuery, rowCount } = require("@/database/connection");
+const BaseRepository = require("./base.repository");
 
 /**
- * Persistence for Slack OAuth installations (`organization_slack_integrations`).
+ * Mutation queries for Slack OAuth installations (`organization_slack_integrations`).
  */
-class OrganizationSlackIntegrationsRepository {
-  /**
-   * @param {string} organizationId
-   * @returns {Promise<object|undefined>}
-   */
-  async findActiveByOrganizationId(organizationId) {
-    const rows = await executeQuery(
-      `SELECT
-         id,
-         organization_id,
-         slack_team_id,
-         slack_team_name,
-         bot_user_id,
-         app_id,
-         scopes,
-         bot_access_token,
-         installed_by_user_id,
-         default_channel_id,
-         default_channel_name,
-         is_active,
-         deleted,
-         created_at,
-         updated_at
-       FROM organization_slack_integrations
-       WHERE organization_id = $1::uuid AND deleted = false
-       LIMIT 1`,
-      [organizationId]
-    );
-    return rows[0];
-  }
-
+class MutateSlackIntegrationsRepository extends BaseRepository {
   /**
    * Upserts installation for an organization (one row per org).
    *
@@ -58,7 +28,7 @@ class OrganizationSlackIntegrationsRepository {
     botAccessToken,
     installedByUserId,
   }) {
-    const rows = await executeQuery(
+    const rows = await this.executeQuery(
       `INSERT INTO organization_slack_integrations (
          organization_id,
          slack_team_id,
@@ -119,7 +89,7 @@ class OrganizationSlackIntegrationsRepository {
    * @param {string|null} channelName
    */
   async updateDefaultChannel(organizationId, channelId, channelName) {
-    await rowCount(
+    await this.rowCount(
       `UPDATE organization_slack_integrations
        SET default_channel_id = $2,
            default_channel_name = $3,
@@ -134,7 +104,7 @@ class OrganizationSlackIntegrationsRepository {
    * @param {string} organizationId
    */
   async softDeleteByOrganizationId(organizationId) {
-    await rowCount(
+    await this.rowCount(
       `UPDATE organization_slack_integrations
        SET is_active = false,
            deleted = true,
@@ -145,4 +115,4 @@ class OrganizationSlackIntegrationsRepository {
   }
 }
 
-module.exports = new OrganizationSlackIntegrationsRepository();
+module.exports = new MutateSlackIntegrationsRepository();
