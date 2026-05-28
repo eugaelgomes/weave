@@ -12,7 +12,7 @@ const {
 } = require("@/utils/workspace-share-guard");
 const {
   notifyOrganizationDefaultChannel,
-} = require("@/services/slack/slack-notify.service");
+} = require("@/services/integrations/slack/slack-notify.service");
 
 const APP_FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 

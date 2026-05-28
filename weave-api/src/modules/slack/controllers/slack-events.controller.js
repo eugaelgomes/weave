@@ -1,4 +1,4 @@
-const { verifySlackSignature } = require("@/services/slack/slack.client");
+const { verifySlackSignature } = require("@/services/integrations/slack/slack.client");
 
 /**
  * Slack Events API / interactivity endpoints (public).

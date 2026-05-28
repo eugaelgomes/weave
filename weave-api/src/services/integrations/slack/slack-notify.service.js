@@ -1,6 +1,6 @@
 /* eslint-disable no-console -- best-effort notification logging */
-const OrganizationSlackIntegrationsRepository = require("@/modules/slack/repositories/organization-slack-integrations.repository");
-const { chatPostMessage } = require("@/services/slack/slack.client");
+const ReadSlackIntegrationsRepository = require("@/modules/slack/repositories/read-slack-integrations.repository");
+const { chatPostMessage } = require("@/services/integrations/slack/slack.client");
 
 /**
  * Sends a plain-text notification to the organization's default Slack channel when configured.
@@ -17,7 +17,7 @@ async function notifyOrganizationDefaultChannel({ organizationId, text }) {
   }
   try {
     const row =
-      await OrganizationSlackIntegrationsRepository.findActiveByOrganizationId(
+      await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
         organizationId
       );
     if (
