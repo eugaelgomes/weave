@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
-const { matchedData } = require("express-validator");
+const { z } = require("zod");
 
 const AuthBaseController = require("./base.controller");
 const GoogleOauthRepository = require("@/modules/authentication/repositories/google-oauth.repository");
@@ -10,6 +10,7 @@ const OrganizationsRepository = require("@/modules/organizations/repositories/or
 const cookieHelper = require("@/utils/cookie-helper");
 const oauthState = require("@/modules/authentication/oauth-state");
 const secretsService = require("@/services/secrets");
+const { buildJwtPayload } = require("@/modules/authentication/jwt-payload.schema");
 
 const setAuthCookie = cookieHelper.setAuthCookie;
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
@@ -41,11 +42,16 @@ class GoogleOauthController extends AuthBaseController {
    * @param {import('express').Response} res
    */
   async googleCallback(req, res) {
+    // Schema for the Google userinfo API response
+    const googleUserSchema = z.object({
+      id: z.string().min(1),
+      email: z.string().email(),
+      name: z.string().optional(),
+      picture: z.string().url().optional(),
+    });
+
     try {
-      const { code, error, state } = matchedData(req, {
-        includeOptionals: true,
-        locations: ["query"],
-      });
+      const { code, error, state } = req.query;
       const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
 
       const isValidOauthState = consumeAndValidateOauthState({
@@ -94,11 +100,11 @@ class GoogleOauthController extends AuthBaseController {
       const userResponse = await axios.get(
         `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${access_token}`
       );
-      const googleUser = userResponse.data;
-
-      if (!googleUser.id || !googleUser.email) {
-        throw new Error("Incomplete user data received from Google.");
+      const googleUserResult = googleUserSchema.safeParse(userResponse.data);
+      if (!googleUserResult.success) {
+        throw new Error("Incomplete or invalid user data received from Google.");
       }
+      const googleUser = googleUserResult.data;
 
       let user = await GoogleOauthRepository.findUserByGoogleId(googleUser.id);
 
@@ -152,18 +158,7 @@ class GoogleOauthController extends AuthBaseController {
       const organization = this._normalizeOrganization(user.organization);
       const defaultArea = this._normalizeDefaultArea(user.default_area);
 
-      const payload = {
-        userId: user.user_id,
-        username: user.username,
-        email: user.email,
-        plan_id: user.plan_id,
-        org_id: organization?.id || null,
-        org_unique_name: organization?.unique_name || null,
-        org_member_role: organization?.member_role || null,
-        org_default_area_id: defaultArea?.id || null,
-        org_default_area_slug: defaultArea?.slug || null,
-        org_default_area_role: defaultArea?.role || null,
-      };
+      const payload = buildJwtPayload(user, organization, defaultArea);
 
       const token = jwt.sign(payload, secretsManager(), {
         algorithm: "HS256",

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
-const { matchedData } = require("express-validator");
+const { z } = require("zod");
 
 const AuthBaseController = require("./base.controller");
 const MicrosoftOauthRepository = require("@/modules/authentication/repositories/microsoft-oauth.repository");
@@ -10,6 +10,7 @@ const OrganizationsRepository = require("@/modules/organizations/repositories/or
 const cookieHelper = require("@/utils/cookie-helper");
 const oauthState = require("@/modules/authentication/oauth-state");
 const secretsService = require("@/services/secrets");
+const { buildJwtPayload } = require("@/modules/authentication/jwt-payload.schema");
 
 const setAuthCookie = cookieHelper.setAuthCookie;
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
@@ -45,10 +46,7 @@ class MicrosoftOauthController extends AuthBaseController {
     const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
 
     try {
-      const { code, error, state } = matchedData(req, {
-        includeOptionals: true,
-        locations: ["query"],
-      });
+      const { code, error, state } = req.query;
 
       const isValidOauthState = consumeAndValidateOauthState({
         provider: "microsoft",
@@ -102,13 +100,25 @@ class MicrosoftOauthController extends AuthBaseController {
           },
         }
       );
-      const microsoftUser = userResponse.data;
-      const microsoftId = microsoftUser?.id;
-      const userEmail = microsoftUser?.mail || microsoftUser?.userPrincipalName;
+      // Schema for Microsoft Graph /me response
+      const microsoftUserSchema = z
+        .object({
+          id: z.string().min(1),
+          displayName: z.string().nullable().optional(),
+          mail: z.string().email().nullable().optional(),
+          userPrincipalName: z.string().min(1).optional(),
+        })
+        .refine((u) => !!(u.mail || u.userPrincipalName), {
+          message: "No email found in Microsoft user profile.",
+        });
 
-      if (!microsoftId || !userEmail) {
-        throw new Error("Incomplete user data received from Microsoft.");
+      const microsoftUserResult = microsoftUserSchema.safeParse(userResponse.data);
+      if (!microsoftUserResult.success) {
+        throw new Error("Incomplete or invalid user data received from Microsoft.");
       }
+      const microsoftUser = microsoftUserResult.data;
+      const microsoftId = microsoftUser.id;
+      const userEmail = microsoftUser.mail || microsoftUser.userPrincipalName;
 
       let user = await MicrosoftOauthRepository.findUserByMicrosoftId(microsoftId);
 
@@ -161,18 +171,7 @@ class MicrosoftOauthController extends AuthBaseController {
       const organization = this._normalizeOrganization(user.organization);
       const defaultArea = this._normalizeDefaultArea(user.default_area);
 
-      const payload = {
-        userId: user.user_id,
-        username: user.username,
-        email: user.email,
-        plan_id: user.plan_id,
-        org_id: organization?.id || null,
-        org_unique_name: organization?.unique_name || null,
-        org_member_role: organization?.member_role || null,
-        org_default_area_id: defaultArea?.id || null,
-        org_default_area_slug: defaultArea?.slug || null,
-        org_default_area_role: defaultArea?.role || null,
-      };
+      const payload = buildJwtPayload(user, organization, defaultArea);
 
       const token = jwt.sign(payload, secretsManager(), {
         algorithm: "HS256",

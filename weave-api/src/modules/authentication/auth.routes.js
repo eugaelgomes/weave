@@ -2,6 +2,7 @@ const express = require("express");
 
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { authLimiter } = require("@/middlewares/security/request-limiters");
+const { validate } = require("@/middlewares/validation/validate");
 
 const SigninController = require("@/modules/authentication/controllers/signin.controller");
 const GoogleOauthController = require("@/modules/authentication/controllers/google-oauth.controller");
@@ -9,11 +10,8 @@ const GithubOauthController = require("@/modules/authentication/controllers/gith
 const MicrosoftOauthController = require("@/modules/authentication/controllers/microsoft-oauth.controller");
 const LogoutController = require("@/modules/authentication/controllers/logout.controller");
 const {
-  enforceOauthCallbackQueryShape,
-  enforceSigninBodyShape,
-  handleAuthPayloadValidation,
-  validateOauthCallbackPayload,
-  validateSigninPayload,
+  oauthCallbackSchema,
+  signinSchema,
 } = require("@/modules/authentication/payload-validation");
 
 const router = express.Router();
@@ -21,9 +19,7 @@ const router = express.Router();
 router.post(
   "/signin",
   authLimiter,
-  enforceSigninBodyShape,
-  validateSigninPayload(),
-  handleAuthPayloadValidation,
+  validate(signinSchema, "body"),
   SigninController.userSignin.bind(SigninController)
 );
 
@@ -35,9 +31,7 @@ router.get(
 router.get(
   "/signin/sso/google/callback",
   authLimiter,
-  enforceOauthCallbackQueryShape,
-  validateOauthCallbackPayload(),
-  handleAuthPayloadValidation,
+  validate(oauthCallbackSchema, "query"),
   GoogleOauthController.googleCallback.bind(GoogleOauthController)
 );
 
@@ -49,9 +43,7 @@ router.get(
 router.get(
   "/signin/sso/github/callback",
   authLimiter,
-  enforceOauthCallbackQueryShape,
-  validateOauthCallbackPayload(),
-  handleAuthPayloadValidation,
+  validate(oauthCallbackSchema, "query"),
   GithubOauthController.githubCallback.bind(GithubOauthController)
 );
 
@@ -63,9 +55,7 @@ router.get(
 router.get(
   "/signin/sso/microsoft/callback",
   authLimiter,
-  enforceOauthCallbackQueryShape,
-  validateOauthCallbackPayload(),
-  handleAuthPayloadValidation,
+  validate(oauthCallbackSchema, "query"),
   MicrosoftOauthController.microsoftCallback.bind(MicrosoftOauthController)
 );
 

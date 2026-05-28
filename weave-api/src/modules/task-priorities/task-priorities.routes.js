@@ -1,5 +1,5 @@
 const { Router } = require("express");
-const TaskPrioritiesController = require("@/modules/task_priorities/controllers/task-priorities.controller");
+const TaskPrioritiesController = require("@/modules/task-priorities/controllers/task-priorities.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { requireScope } = require("@/middlewares/auth/require-scope");
 const {

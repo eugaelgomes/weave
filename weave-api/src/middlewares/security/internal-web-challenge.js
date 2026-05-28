@@ -22,7 +22,13 @@ function shouldSkipInternalChallenge(path) {
   ) {
     return true;
   }
-  if (path.startsWith("/webhooks") || isSsoAuthPath) {
+  const isSlackWebhookOrOAuth =
+    path.startsWith("/slack/events") ||
+    path.startsWith("/slack/interactivity") ||
+    path.startsWith("/slack/install") ||
+    path.startsWith("/slack/oauth/callback");
+
+  if (path.startsWith("/webhooks") || isSsoAuthPath || isSlackWebhookOrOAuth) {
     return true;
   }
   return false;

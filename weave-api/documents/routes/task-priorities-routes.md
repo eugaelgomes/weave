@@ -1,4 +1,4 @@
-# Task Priorities Routes (`src/modules/task_priorities/task_priorities.routes.js`)
+# Task Priorities Routes (`src/modulestask-prioritiestask-priorities.routes.js`)
 
 ## What it does
 

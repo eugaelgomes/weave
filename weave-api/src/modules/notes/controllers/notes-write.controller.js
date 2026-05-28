@@ -2,7 +2,7 @@ const NotesBaseController = require("./base.controller");
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
-const taskPrioritiesRepository = require("@/modules/task_priorities/repositories/task-priorities.repository");
+const taskPrioritiesRepository = require("@/modules/task-priorities/repositories/task-priorities.repository");
 const {
   ALLOWED_NOTE_STATUSES,
   normalizeNoteStatus,

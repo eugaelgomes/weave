@@ -1,6 +1,6 @@
 const { fromUnknown } = require("@/errors");
-const TaskPrioritiesRepository = require("@/modules/task_priorities/repositories/task-priorities.repository");
-const TaskPrioritiesBaseController = require("@/modules/task_priorities/controllers/base.controller");
+const TaskPrioritiesRepository = require("@/modules/task-priorities/repositories/task-priorities.repository");
+const TaskPrioritiesBaseController = require("@/modules/task-priorities/controllers/base.controller");
 
 class TaskPrioritiesController extends TaskPrioritiesBaseController {
   /**

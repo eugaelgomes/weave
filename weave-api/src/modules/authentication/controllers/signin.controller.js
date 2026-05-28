@@ -1,7 +1,6 @@
 /* eslint-disable sort-keys */
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { matchedData } = require("express-validator");
 
 const { AppError } = require("@/errors/app-error");
 const AuthBaseController = require("./base.controller");
@@ -10,6 +9,7 @@ const cookieHelper = require("@/utils/cookie-helper");
 const authLogs = require("@/utils/system_logs/auth-logs");
 const storageFileUtils = require("@/utils/data/presign-storage-files");
 const secretsService = require("@/services/secrets");
+const { buildJwtPayload } = require("@/modules/authentication/jwt-payload.schema");
 
 const setAuthCookie = cookieHelper.setAuthCookie;
 const presignObjectFields = storageFileUtils.presignObjectFields;
@@ -20,17 +20,14 @@ const secretsManager = secretsService.secretsManager;
  */
 class SigninController extends AuthBaseController {
   /**
+   * Signin user with email/username and password.
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    * @param {import('express').NextFunction} next
    * @returns {Promise<unknown>}
    */
   async userSignin(req, res, next) {
-    const { login, password } = matchedData(req, {
-      includeOptionals: false,
-      locations: ["body"],
-    });
-    const username = login;
+    const { login: username, password } = req.body;
 
     try {
       const user = await SigninRepository.findUserByUsername(username);
@@ -60,18 +57,7 @@ class SigninController extends AuthBaseController {
       const organization = this._normalizeOrganization(user.organization);
       const defaultArea = this._normalizeDefaultArea(user.default_area);
 
-      const payload = {
-        userId: user.user_id,
-        username: user.username,
-        email: user.email,
-        plan_id: user.plan_id,
-        org_id: organization?.id || null,
-        org_unique_name: organization?.unique_name || null,
-        org_member_role: organization?.member_role || null,
-        org_default_area_id: defaultArea?.id || null,
-        org_default_area_slug: defaultArea?.slug || null,
-        org_default_area_role: defaultArea?.role || null,
-      };
+      const payload = buildJwtPayload(user, organization, defaultArea);
 
       const token = jwt.sign(payload, secretsManager(), {
         algorithm: "HS256",

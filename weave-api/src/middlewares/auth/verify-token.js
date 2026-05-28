@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const LookupApiTokensRepository = require("@/modules/api-tokens/repositories/lookup-api-tokens.repository");
 const secretsService = require("@/services/secrets");
+const { jwtPayloadSchema } = require("@/modules/authentication/jwt-payload.schema");
 
 const secretsManager = secretsService.secretsManager;
 
@@ -123,8 +124,15 @@ const verifyToken = async (req, res, next) => {
       algorithms: ["HS256"],
     });
 
-    // Attaches the normal web credentials to the request
-    req.user = decoded;
+    const parsed = jwtPayloadSchema.safeParse(decoded);
+    if (!parsed.success) {
+      return res.status(401).json({
+        message: "Invalid or expired session.",
+      });
+    }
+
+    // Attaches the validated web credentials to the request
+    req.user = parsed.data;
 
     return next();
   } catch {

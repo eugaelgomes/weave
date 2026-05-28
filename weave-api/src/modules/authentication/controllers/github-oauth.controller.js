@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
-const { matchedData } = require("express-validator");
+const { z } = require("zod");
 
 const AuthBaseController = require("./base.controller");
 const GithubOauthRepository = require("@/modules/authentication/repositories/github-oauth.repository");
@@ -10,6 +10,7 @@ const OrganizationsRepository = require("@/modules/organizations/repositories/or
 const cookieHelper = require("@/utils/cookie-helper");
 const oauthState = require("@/modules/authentication/oauth-state");
 const secretsService = require("@/services/secrets");
+const { buildJwtPayload } = require("@/modules/authentication/jwt-payload.schema");
 
 const setAuthCookie = cookieHelper.setAuthCookie;
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
@@ -46,10 +47,7 @@ class GithubOauthController extends AuthBaseController {
     const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
 
     try {
-      const { code, error, state } = matchedData(req, {
-        includeOptionals: true,
-        locations: ["query"],
-      });
+      const { code, error, state } = req.query;
       const isValidOauthState = consumeAndValidateOauthState({
         provider: "github",
         req,
@@ -98,7 +96,26 @@ class GithubOauthController extends AuthBaseController {
           "User-Agent": "Weave-Notes",
         },
       });
-      const githubUser = userResponse.data;
+      // Schema for GitHub's /user endpoint
+      const githubUserSchema = z.object({
+        id: z.number().int().positive(),
+        login: z.string().min(1),
+        name: z.string().nullable().optional(),
+        avatar_url: z.string().url().optional(),
+      });
+
+      // Schema for a single email entry from GitHub's /user/emails endpoint
+      const githubEmailSchema = z.object({
+        email: z.string().email(),
+        primary: z.boolean(),
+        verified: z.boolean(),
+      });
+
+      const githubUserResult = githubUserSchema.safeParse(userResponse.data);
+      if (!githubUserResult.success) {
+        throw new Error("Incomplete or invalid user data received from GitHub.");
+      }
+      const githubUser = githubUserResult.data;
 
       const emailsResponse = await axios.get(
         "https://api.github.com/user/emails",
@@ -111,19 +128,22 @@ class GithubOauthController extends AuthBaseController {
         }
       );
 
-      const emails = Array.isArray(emailsResponse.data)
-        ? emailsResponse.data
-        : [];
+      const rawEmails = Array.isArray(emailsResponse.data) ? emailsResponse.data : [];
+      const emails = rawEmails
+        .map((e) => githubEmailSchema.safeParse(e))
+        .filter((r) => r.success)
+        .map((r) => r.data);
+
       const primaryEmailObj =
         emails.find((e) => e.primary && e.verified) ||
         emails.find((e) => e.verified) ||
         emails[0];
 
       const userEmail = primaryEmailObj?.email;
-      const githubId = githubUser?.id ? String(githubUser.id) : null;
+      const githubId = String(githubUser.id);
 
-      if (!githubId || !userEmail) {
-        throw new Error("Incomplete user data received from GitHub.");
+      if (!userEmail) {
+        throw new Error("No verified email found for this GitHub account.");
       }
 
       let user = await GithubOauthRepository.findUserByGithubId(githubId);
@@ -186,18 +206,7 @@ class GithubOauthController extends AuthBaseController {
       const organization = this._normalizeOrganization(user.organization);
       const defaultArea = this._normalizeDefaultArea(user.default_area);
 
-      const payload = {
-        userId: user.user_id,
-        username: user.username,
-        email: user.email,
-        plan_id: user.plan_id,
-        org_id: organization?.id || null,
-        org_unique_name: organization?.unique_name || null,
-        org_member_role: organization?.member_role || null,
-        org_default_area_id: defaultArea?.id || null,
-        org_default_area_slug: defaultArea?.slug || null,
-        org_default_area_role: defaultArea?.role || null,
-      };
+      const payload = buildJwtPayload(user, organization, defaultArea);
 
       const token = jwt.sign(payload, secretsManager(), {
         algorithm: "HS256",
