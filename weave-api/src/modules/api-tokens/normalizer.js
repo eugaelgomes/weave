@@ -1,10 +1,5 @@
 /**
- * Normalizer for API token scopes. This module defines the available scopes in the system and provides utility functions to validate and format scopes for API tokens.
- *
- * The scopes are defined as an array of objects, each containing an ID, a user-friendly name, and a description.
- * The normalizer provides a method to retrieve the scopes in a format suitable for frontend dropdowns and another method to validate user-provided scopes against the defined list.
- *
- * This helps ensure that only valid scopes are assigned to API tokens and provides a clear structure for managing permissions in the system.
+ * API token scope definitions and validation utilities.
  */
 const API_SCOPES = [
   {
@@ -55,12 +50,47 @@ const API_SCOPES = [
     name: "Create/Edit Calendar Events",
     description: "Allows creating, updating, and managing calendar events.",
   },
+  {
+    id: "tags:read",
+    name: "Read Tags",
+    description: "Allows reading organization and project tags.",
+  },
+  {
+    id: "tags:write",
+    name: "Manage Tags",
+    description: "Allows creating, updating and deleting tags.",
+  },
+  {
+    id: "priorities:read",
+    name: "Read Task Priorities",
+    description: "Allows reading organization and project task priorities.",
+  },
+  {
+    id: "priorities:write",
+    name: "Manage Task Priorities",
+    description: "Allows creating, updating and deleting task priorities.",
+  },
+  {
+    id: "users:read",
+    name: "Read Users",
+    description: "Allows searching and reading user profiles within the organization.",
+  },
+  {
+    id: "ai:chat",
+    name: "Use AI Chat",
+    description: "Allows interacting with Weave AI chat and listing models.",
+  },
+  {
+    id: "ai:agents",
+    name: "Manage AI Agents",
+    description: "Allows reading and managing Weave AI agents.",
+  },
 ];
 
 class ApiTokensNormalizer {
   /**
-   * Retorna os escopos padronizados para enviar ao frontend.
-   * Utilizado para alimentar o menu suspenso (Select) de criação de tokens.
+   * Returns API scopes formatted for frontend selection components.
+   * @returns {Array<{value: string, label: string, description: string}>}
    */
   static getAvailableScopes() {
     return API_SCOPES.map((scope) => ({
@@ -71,15 +101,13 @@ class ApiTokensNormalizer {
   }
 
   /**
-   * Valida se uma lista de escopos fornecida pelo usuário contém apenas
-   * escopos previamente registrados e permitidos pelo sistema.
-   *
-   * @param {string[]} scopes - Array de strings com os IDs dos escopos.
-   * @returns {boolean} True se todos os escopos são válidos.
+   * Validates if the given scopes exist in the system.
+   * @param {string[]} scopes - Scope IDs to validate.
+   * @returns {boolean}
    */
   static areScopesValid(scopes) {
     if (!Array.isArray(scopes)) return false;
-    if (scopes.length === 0) return true; // Pode querer permitir token sem escopo ou barrar (ajuste se necessário)
+    if (scopes.length === 0) return true; // Allows tokens without scopes
 
     const validScopeIds = API_SCOPES.map((s) => s.id);
     return scopes.every((scope) => validScopeIds.includes(scope));

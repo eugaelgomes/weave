@@ -5,6 +5,7 @@ const path = require("path");
 const aiController = require("./controllers/chat.controller");
 const agentController = require("./controllers/agents.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { requireScope } = require("@/middlewares/auth/require-scope");
 const {
   requireOrgPermission,
 } = require("@/middlewares/auth/require-org-permission");
@@ -158,6 +159,16 @@ const requireManageWeaveAi = requireOrgPermission(
 );
 
 router.use(verifyToken, strictLimiter);
+
+router.use((req, res, next) => {
+  if (req.path.startsWith("/chat") || req.path.startsWith("/models")) {
+    return requireScope("ai:chat")(req, res, next);
+  }
+  if (req.path.startsWith("/agents")) {
+    return requireScope("ai:agents")(req, res, next);
+  }
+  return next();
+});
 
 // Chat endpoints
 router.post("/chat", handleChatFilesUpload, bind(aiController, "chat"));

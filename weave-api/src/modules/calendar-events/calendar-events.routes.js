@@ -2,6 +2,7 @@ const express = require("express");
 const calendarEventsController = require("@/modules/calendar-events/controllers/calendar-events.controller");
 const eventInvitesController = require("@/modules/calendar-events/controllers/event-invites.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { requireScope } = require("@/middlewares/auth/require-scope");
 const {
   highTrafficLimiter,
   standardTrafficLimiter,
@@ -10,6 +11,13 @@ const {
 const router = express.Router();
 
 router.use(verifyToken);
+
+router.use((req, res, next) => {
+  if (req.method === "GET") {
+    return requireScope("calendar:read")(req, res, next);
+  }
+  return requireScope("calendar:write")(req, res, next);
+});
 
 router.get(
   "/",

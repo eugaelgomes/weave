@@ -7,6 +7,7 @@ const UserViewPrefsController = require("@/modules/projects/controllers/user-vie
 const ProjectsCollaboratorsCreateController = require("@/modules/projects/controllers/projects-collaborators-create.controller");
 const ProjectsCollaboratorsUpdateController = require("@/modules/projects/controllers/projects-collaborators-update.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { requireScope } = require("@/middlewares/auth/require-scope");
 const {
   requireProjectPermission,
   PROJECT_PERMISSIONS,
@@ -42,6 +43,13 @@ router.param("projectId", resolveProjectPublicIdParam);
 router.param("noteId", resolveNotePublicIdParam);
 
 router.use(verifyToken);
+
+router.use((req, res, next) => {
+  if (req.method === "GET") {
+    return requireScope("projects:read")(req, res, next);
+  }
+  return requireScope("projects:write")(req, res, next);
+});
 
 router.get(
   "/",

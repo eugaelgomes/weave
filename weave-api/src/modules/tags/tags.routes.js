@@ -1,6 +1,7 @@
 const { Router } = require("express");
 const TagsController = require("@/modules/tags/controllers/tags.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { requireScope } = require("@/middlewares/auth/require-scope");
 const {
   requireOrgPermission,
 } = require("@/middlewares/auth/require-org-permission");
@@ -21,6 +22,13 @@ router.param("org_id", resolveOrganizationPublicIdParam);
 const requireManageTags = requireOrgPermission(ORG_PERMISSIONS.MANAGE_TAGS);
 
 router.use(verifyToken);
+
+router.use((req, res, next) => {
+  if (req.method === "GET") {
+    return requireScope("tags:read")(req, res, next);
+  }
+  return requireScope("tags:write")(req, res, next);
+});
 
 router.post(
   "/:project_id/tags",

@@ -1,5 +1,6 @@
 const express = require("express");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { requireScope } = require("@/middlewares/auth/require-scope");
 const { resolveNotePublicIdParam } = require("@/middlewares/public-id-resolver");
 const {
   commentFilesUpload,
@@ -30,6 +31,16 @@ const blockWriteLimiter = blockAutosaveV2Enabled
   : standardTrafficLimiter;
 
 router.use(verifyToken);
+
+router.use((req, res, next) => {
+  if (req.method === "GET") {
+    return requireScope("notes:read")(req, res, next);
+  }
+  if (req.method === "DELETE") {
+    return requireScope("notes:delete")(req, res, next);
+  }
+  return requireScope("notes:write")(req, res, next);
+});
 
 router.get("/", highTrafficLimiter, (req, res, next) => {
   NotesReadController.getAllNotes(req, res, next);

@@ -1,6 +1,7 @@
 const { Router } = require("express");
 const TaskPrioritiesController = require("@/modules/task_priorities/controllers/task-priorities.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { requireScope } = require("@/middlewares/auth/require-scope");
 const {
   requireOrgPermission,
 } = require("@/middlewares/auth/require-org-permission");
@@ -23,6 +24,13 @@ const requireManageTaskPriorities = requireOrgPermission(
 );
 
 router.use(verifyToken);
+
+router.use((req, res, next) => {
+  if (req.method === "GET") {
+    return requireScope("priorities:read")(req, res, next);
+  }
+  return requireScope("priorities:write")(req, res, next);
+});
 
 router.post(
   "/:project_id/create-priority",

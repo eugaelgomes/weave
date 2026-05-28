@@ -13,6 +13,7 @@ const {
   highTrafficLimiter,
 } = require("@/middlewares/security/request-limiters");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { requireScope } = require("@/middlewares/auth/require-scope");
 
 // Utils
 const { inputValidation } = require("@/utils/data/input-validation");
@@ -74,7 +75,7 @@ router.put(
 );
 
 // Search Users
-router.get("/search", verifyToken, highTrafficLimiter, (req, res, next) => {
+router.get("/search", verifyToken, highTrafficLimiter, requireScope("users:read"), (req, res, next) => {
   SearchUsersController.searchUsers(req, res, next);
 });
 
