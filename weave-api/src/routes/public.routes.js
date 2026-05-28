@@ -1,5 +1,6 @@
 const express = require("express");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { logPublicApiRequest } = require("@/middlewares/http/log-public-api-request");
 
 const notesRoutes = require("@/modules/notes/notes.routes");
 const projectsRoutes = require("@/modules/projects/projects.routes");
@@ -32,10 +33,14 @@ const publicRoutes = [
 const createPublicRouter = ({ version = DEFAULT_VERSION } = {}) => {
   const router = express.Router();
 
+  // Stamp the API version on every request for logging and routing.
   router.use((req, _res, next) => {
     req.apiVersion = version;
     next();
   });
+
+  // Observability: log every authenticated Public API request fire-and-forget.
+  router.use(logPublicApiRequest);
 
   publicRoutes.forEach(({ method, path, middlewares = [], handler }) => {
     router[method](path, ...middlewares, handler);

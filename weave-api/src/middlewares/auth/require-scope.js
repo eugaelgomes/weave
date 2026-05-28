@@ -9,20 +9,26 @@ const { AppError } = require("@/errors/app-error");
  * If the request comes from an API Token (`req.user.isApiCall` is true),
  * it validates if `req.apiToken.scopes` includes ALL the required scopes.
  *
+ * Also stamps `res.locals.scopesRequired` so the observability middleware can
+ * record which scopes were declared as required for the matched route.
+ *
  * @param {string | string[]} requiredScopes - The scope(s) required to access the route.
  */
 function requireScope(requiredScopes) {
   return (req, res, next) => {
-    // Skip validation for web session requests; Web RBAC handles access.
+    const scopesToCheck = Array.isArray(requiredScopes)
+      ? requiredScopes
+      : [requiredScopes];
+
+    // Expose required scopes for the observability log middleware.
+    res.locals.scopesRequired = scopesToCheck;
+
+    // Skip scope validation for web session requests; Web RBAC handles access.
     if (!req.user || !req.user.isApiCall) {
       return next();
     }
 
     const tokenScopes = req.apiToken?.scopes || [];
-
-    const scopesToCheck = Array.isArray(requiredScopes)
-      ? requiredScopes
-      : [requiredScopes];
 
     const hasAllRequiredScopes = scopesToCheck.every((scope) =>
       tokenScopes.includes(scope)
@@ -31,9 +37,7 @@ function requireScope(requiredScopes) {
     if (!hasAllRequiredScopes) {
       return next(
         AppError.forbidden(
-          `Access denied. API Token lacks required scope(s): ${scopesToCheck.join(
-            ", "
-          )}`,
+          `Access denied. API Token lacks required scope(s): ${scopesToCheck.join(", ")}`,
           "INSUFFICIENT_SCOPE"
         )
       );
