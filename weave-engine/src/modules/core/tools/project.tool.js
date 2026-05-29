@@ -26,7 +26,7 @@ async function listMyProjects(args) {
   if (!args.userId) {
     return { error: "No userId provided in execution context." };
   }
-  
+
   const limit = typeof args.limit === "number" && args.limit > 0 ? args.limit : 10;
 
   try {

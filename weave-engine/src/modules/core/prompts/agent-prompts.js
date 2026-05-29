@@ -269,8 +269,8 @@ function buildSystemMessage(additionalContext = {}) {
     const maxNotes = 10;
     const notesToInclude = additionalContext.indexedNotes.slice(0, maxNotes);
     const extraNotes = Math.max(0, additionalContext.indexedNotes.length - maxNotes);
-    
-    systemMessage += `\n\n**PRIMARY CONTEXT - Indexed Notes** (${notesToInclude.length}${extraNotes > 0 ? ` of ${additionalContext.indexedNotes.length} total` : ''}):`;
+
+    systemMessage += `\n\n**PRIMARY CONTEXT - Indexed Notes** (${notesToInclude.length}${extraNotes > 0 ? ` of ${additionalContext.indexedNotes.length} total` : ""}):`;
     notesToInclude.forEach((note, idx) => {
       const stageInfo = note.project_stage_name
         ? ` | stage: ${note.project_stage_name}`
@@ -291,7 +291,7 @@ function buildSystemMessage(additionalContext = {}) {
     const projectsToInclude = additionalContext.indexedProjects.slice(0, maxProjects);
     const extraProjects = Math.max(0, additionalContext.indexedProjects.length - maxProjects);
 
-    systemMessage += `\n\n**PRIMARY CONTEXT - Indexed Projects** (${projectsToInclude.length}${extraProjects > 0 ? ` of ${additionalContext.indexedProjects.length} total` : ''}):`;
+    systemMessage += `\n\n**PRIMARY CONTEXT - Indexed Projects** (${projectsToInclude.length}${extraProjects > 0 ? ` of ${additionalContext.indexedProjects.length} total` : ""}):`;
     projectsToInclude.forEach((project, idx) => {
       const stageCount = Array.isArray(project.stages)
         ? project.stages.length
