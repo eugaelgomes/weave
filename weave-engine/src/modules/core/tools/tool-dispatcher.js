@@ -10,14 +10,18 @@ const {
   schemas: webBrowserSchemas,
 } = require("./web-browser.tool");
 const { searchMyNotes, schemas: searchSchemas } = require("./search.tool");
+const { getUserProfile, schemas: profileSchemas } = require("./profile.tool");
+const { listMyProjects, schemas: projectSchemas } = require("./project.tool");
 
 const INTERNAL_TOOLS = {
   web_search: searchWeb,
   read_url: readUrl,
   search_my_notes: searchMyNotes,
+  get_user_profile: getUserProfile,
+  list_my_projects: listMyProjects,
 };
 
-const internalToolSchemas = [...webBrowserSchemas, ...searchSchemas];
+const internalToolSchemas = [...webBrowserSchemas, ...searchSchemas, ...profileSchemas, ...projectSchemas];
 
 /**
  * Checks if a function name is an internal tool.
@@ -44,7 +48,7 @@ async function executeInternalTool(functionName, args, executionContext = {}) {
     const enrichedArgs = { ...args };
 
     // Inject server-side userId for tools that need authenticated identity
-    if (functionName === "search_my_notes" && executionContext.userId) {
+    if (["search_my_notes", "get_user_profile", "list_my_projects"].includes(functionName) && executionContext.userId) {
       enrichedArgs.userId = executionContext.userId;
     }
 

@@ -418,8 +418,6 @@ class LlmQueueProcessor {
     const conversationHistory = this.normalizeConversationHistory(
       payload.conversationHistory
     );
-    const conversationHistoryBlock =
-      this.serializeConversationHistory(conversationHistory);
 
     const composeOverlay =
       isEngineComposeSurface(payload.context) ||
@@ -451,14 +449,6 @@ class LlmQueueProcessor {
 
 ## Temporary files
 ${fileSummary}
-
-## Conversation memory (same session)
-${conversationHistoryBlock}
-
-Guidelines for continuity:
-- Use the conversation memory to keep consistency across turns in this same session.
-- Prefer the latest user instruction if it conflicts with older turns.
-- Do not invent previous messages that are not listed above.
 
 ${
   noteDocumentContract

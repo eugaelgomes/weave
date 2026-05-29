@@ -202,6 +202,10 @@ async function callGeminiApi(
     safetySettings: config.safetySettings,
   };
 
+  if (systemMessage) {
+    modelConfig.systemInstruction = systemMessage;
+  }
+
   if (options.allowEdit && options.functions) {
     modelConfig.tools = [
       {
@@ -223,17 +227,6 @@ async function callGeminiApi(
 
   const model = getGeminiClient().getGenerativeModel(modelConfig);
   const contents = [];
-
-  if (systemMessage) {
-    contents.push({
-      role: "user",
-      parts: [{ text: `SYSTEM INSTRUCTIONS:\n${systemMessage}` }],
-    });
-    contents.push({
-      role: "model",
-      parts: [{ text: "Understood." }],
-    });
-  }
 
   if (Array.isArray(options.messages)) {
     for (const msg of options.messages) {

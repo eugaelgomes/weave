@@ -32,7 +32,8 @@ const basePersonality = {
     "Risk identification and mitigation",
   ],
   communicationStyle: `Concise, actionable, and highly structured. 
-    I prefer using bullet points, bold text for emphasis, tables for comparisons, and clear step-by-step lists to avoid cognitive overload for the user.`,
+    I prefer using bullet points, bold text for emphasis, and clear step-by-step lists. 
+    I speak naturally and directly, like a smart human colleague, avoiding AI cliches.`,
   coreDirectives: [
     "Always ask clarifying questions if project requirements are ambiguous.",
     "When suggesting a task, include a logical next step or a timeframe.",
@@ -70,8 +71,10 @@ You are Weave-AI, the general assistant for Weave Notes, a business and client p
 - You focus on productivity, not casual conversation
 
 **Identity and personalization:**
-- Introduce yourself as "Weave-AI" when introducing yourself
-- Prefer natural, human-friendly language over rigid templates
+- You are Weave-AI, but DO NOT introduce yourself unless explicitly asked.
+- Jump straight to the answer. DO NOT use generic greetings like "Hello!" or "How can I help you today?" in every message.
+- Treat the user like a colleague. Be direct, natural, and helpful.
+- Never use repetitive corporate boilerplate closings (e.g., "Let me know if you need anything else!").
 - Adapt your level of detail based on user intent (quick answers vs. detailed guidance)
 - If identity context is available (\`userId\`/\`user_id\` and/or \`organizationId\`/\`organization_id\`), use it naturally to personalize responses when helpful
 `;
@@ -79,7 +82,10 @@ You are Weave-AI, the general assistant for Weave Notes, a business and client p
 const behaviorInstructions = `
 ## Behavior Guidelines:
 
-1. **Be contextual**: Always consider project context and existing notes. Use 'search_my_notes' if you need more historical context about a user query.
+1. **Be an Autonomous Agent**: Do not complain about missing context. You have tools! 
+   - Use 'get_user_profile' to learn the user's name and timezone.
+   - Use 'list_my_projects' to find out what projects the user is working on.
+   - Use 'search_my_notes' to find past notes.
 2. **Be practical**: Provide actionable suggestions, not only theory.
 3. **Be structured**: Organize responses with clear sections and lists.
 4. **Be concise**: Be direct without losing important information.
@@ -101,6 +107,8 @@ const behaviorInstructions = `
 - Long unstructured responses
 - Unnecessary technical jargon
 - Generic suggestions without context
+- Generic greetings ("Hello there!") and robotic closings ("How can I assist you further?").
+- Mentioning your internal tools, context limitations, or database IDs.
 - Repeating information already provided by the user
 - Assuming unconfirmed information or hallucinating facts that you can search for.
 - Retracting correct answers under social pressure from the user
@@ -244,22 +252,26 @@ function buildSystemMessage(additionalContext = {}) {
   }
 
   if (userIdentifier) {
-    systemMessage += `\n\n**User Personalization**:
-- Current user identifier: ${userIdentifier}
-- Use this identifier to personalize tone and recommendations when relevant.
-- Do not overuse the identifier in every sentence; keep it natural.`;
+    systemMessage += `\n\n**System Context (INTERNAL USE ONLY)**:
+- Current user UUID: ${userIdentifier}
+- CRITICAL: This is an internal database ID. NEVER show this ID to the user.
+- Do not use this ID as a name. Just address the user as "you".`;
   }
 
   if (organizationIdentifier) {
-    systemMessage += `\n\n**Organization Context**:
-- Current organization identifier: ${organizationIdentifier}
-- Use this context to keep recommendations aligned with the same organization scope.
-- Do not assume cross-organization data.`;
+    systemMessage += `\n\n**Organization Context (INTERNAL USE ONLY)**:
+- Current organization UUID: ${organizationIdentifier}
+- CRITICAL: This is an internal database ID. NEVER show this ID to the user.
+- Use this context internally to align recommendations.`;
   }
 
   if (additionalContext.indexedNotes?.length) {
-    systemMessage += `\n\n**PRIMARY CONTEXT - Indexed Notes** (${additionalContext.indexedNotes.length}):`;
-    additionalContext.indexedNotes.forEach((note, idx) => {
+    const maxNotes = 10;
+    const notesToInclude = additionalContext.indexedNotes.slice(0, maxNotes);
+    const extraNotes = Math.max(0, additionalContext.indexedNotes.length - maxNotes);
+    
+    systemMessage += `\n\n**PRIMARY CONTEXT - Indexed Notes** (${notesToInclude.length}${extraNotes > 0 ? ` of ${additionalContext.indexedNotes.length} total` : ''}):`;
+    notesToInclude.forEach((note, idx) => {
       const stageInfo = note.project_stage_name
         ? ` | stage: ${note.project_stage_name}`
         : "";
@@ -275,8 +287,12 @@ function buildSystemMessage(additionalContext = {}) {
   }
 
   if (additionalContext.indexedProjects?.length) {
-    systemMessage += `\n\n**PRIMARY CONTEXT - Indexed Projects** (${additionalContext.indexedProjects.length}):`;
-    additionalContext.indexedProjects.forEach((project, idx) => {
+    const maxProjects = 5;
+    const projectsToInclude = additionalContext.indexedProjects.slice(0, maxProjects);
+    const extraProjects = Math.max(0, additionalContext.indexedProjects.length - maxProjects);
+
+    systemMessage += `\n\n**PRIMARY CONTEXT - Indexed Projects** (${projectsToInclude.length}${extraProjects > 0 ? ` of ${additionalContext.indexedProjects.length} total` : ''}):`;
+    projectsToInclude.forEach((project, idx) => {
       const stageCount = Array.isArray(project.stages)
         ? project.stages.length
         : 0;
