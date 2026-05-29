@@ -88,12 +88,8 @@ const schemas = [
           type: "string",
           description: "Keyword or phrase to search for in notes.",
         },
-        userId: {
-          type: "string",
-          description: "The ID of the user (must be retrieved from context).",
-        },
       },
-      required: ["query", "userId"],
+      required: ["query"],
     },
   },
 ];

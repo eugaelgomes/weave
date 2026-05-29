@@ -32,15 +32,23 @@ function isInternalTool(functionName) {
  * Executes an internal tool.
  * @param {string} functionName
  * @param {object} args
+ * @param {object} [executionContext] - Server-side context (userId, organizationId) injected securely
  * @returns {Promise<any>}
  */
-async function executeInternalTool(functionName, args) {
+async function executeInternalTool(functionName, args, executionContext = {}) {
   if (!isInternalTool(functionName)) {
     throw new Error(`Internal tool not found: ${functionName}`);
   }
   logger.info(`Executing internal tool: ${functionName}`, { args });
   try {
-    const result = await INTERNAL_TOOLS[functionName](args);
+    const enrichedArgs = { ...args };
+
+    // Inject server-side userId for tools that need authenticated identity
+    if (functionName === "search_my_notes" && executionContext.userId) {
+      enrichedArgs.userId = executionContext.userId;
+    }
+
+    const result = await INTERNAL_TOOLS[functionName](enrichedArgs);
     return result;
   } catch (error) {
     logger.error(`Internal tool ${functionName} failed`, {

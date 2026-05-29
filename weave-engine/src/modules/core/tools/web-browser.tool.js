@@ -57,6 +57,56 @@ async function searchWeb({ query }) {
 }
 
 /**
+ * Validates a URL is safe to fetch (prevents SSRF).
+ * Only allows public HTTP/HTTPS URLs.
+ *
+ * @param {string} rawUrl
+ * @returns {boolean}
+ */
+function isUrlSafe(rawUrl) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return false;
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    return false;
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]" ||
+    hostname === "0.0.0.0"
+  ) {
+    return false;
+  }
+
+  // Block internal network hostnames (no dot = likely a container/service name)
+  if (!hostname.includes(".")) {
+    return false;
+  }
+
+  // Block private/reserved IP ranges
+  const ipMatch = hostname.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (ipMatch) {
+    const octets = ipMatch.slice(1).map(Number);
+    const [a, b] = octets;
+    if (a === 10) return false;
+    if (a === 172 && b >= 16 && b <= 31) return false;
+    if (a === 192 && b === 168) return false;
+    if (a === 169 && b === 254) return false;
+    if (a === 0) return false;
+  }
+
+  return true;
+}
+
+/**
  * Reads a URL and extracts the main text.
  * @param {object} args
  * @param {string} args.url
@@ -65,6 +115,10 @@ async function searchWeb({ query }) {
 async function readUrl({ url }) {
   if (!url) {
     return { error: "URL is required" };
+  }
+
+  if (!isUrlSafe(url)) {
+    return { error: "URL is not allowed: only public HTTP/HTTPS URLs are permitted" };
   }
 
   try {

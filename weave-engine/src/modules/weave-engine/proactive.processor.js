@@ -270,9 +270,9 @@ class ProactiveQueueProcessor {
     }
 
     return {
-      label: "review",
-      reason: "Safety re-check fallback used",
-      sanitizedText: this.compactText(primaryResult.content),
+      label: "unsafe",
+      reason: "Safety re-check unavailable — content blocked by default",
+      sanitizedText: "",
     };
   }
 
@@ -284,8 +284,10 @@ class ProactiveQueueProcessor {
   applySafetyPolicy(primaryResult, safetyCheck) {
     const isUnsafe = safetyCheck.label === "unsafe";
     const safeContent = isUnsafe
-      ? "Conteudo bloqueado na verificacao de seguranca."
-      : safetyCheck.sanitizedText || primaryResult.content;
+      ? "Content blocked by safety review."
+      : safetyCheck.label === "safe"
+        ? primaryResult.content
+        : safetyCheck.sanitizedText || primaryResult.content;
 
     return {
       data: {

@@ -12,7 +12,7 @@ let geminiClient = null;
 
 const MAX_INLINE_FILES_PER_REQUEST = Number.parseInt(
   process.env.WEAVE_MAX_INLINE_FILES_PER_REQUEST || "3",
-  3
+  10
 );
 
 /**

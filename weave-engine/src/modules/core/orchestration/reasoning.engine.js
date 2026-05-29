@@ -117,6 +117,7 @@ async function executeAgenticTask({
   model,
   systemMessage,
   conversationHistory = [],
+  executionContext = {},
 }) {
   let iterations = 0;
   const startedAt = Date.now();
@@ -176,7 +177,7 @@ async function executeAgenticTask({
 
       if (isInternalTool(fnName)) {
         // Execute internally and loop
-        const result = await executeInternalTool(fnName, fnArgs);
+        const result = await executeInternalTool(fnName, fnArgs, executionContext);
 
         currentOptions.messages.push({
           role: "tool",

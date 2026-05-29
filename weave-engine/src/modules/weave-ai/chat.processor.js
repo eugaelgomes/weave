@@ -349,6 +349,10 @@ class LlmQueueProcessor {
             model: payload.model || null,
             systemMessage,
             conversationHistory,
+            executionContext: {
+              userId: payload.userId || null,
+              organizationId: organizationId || null,
+            },
           }),
           new Promise((_, reject) => {
             setTimeout(() => {
