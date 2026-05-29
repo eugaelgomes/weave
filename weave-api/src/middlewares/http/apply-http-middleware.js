@@ -22,9 +22,7 @@ function configureGlobalMiddlewares(app) {
   app.use(cookieParser());
   app.use(sessionMiddleware);
 
-  app.use(
-    express.urlencoded({ extended: true, verify: captureRawBody })
-  );
+  app.use(express.urlencoded({ extended: true, verify: captureRawBody }));
   app.use(express.json({ verify: captureRawBody }));
 
   app.set("trust proxy", 1);
@@ -44,6 +42,13 @@ function configureGlobalMiddlewares(app) {
     if (
       req.method === "POST" &&
       req.path.startsWith("/api/v1/webhooks/slack")
+    ) {
+      return next();
+    }
+    if (
+      req.path.startsWith("/api/v1/slack/events") ||
+      req.path.startsWith("/api/v1/slack/interactivity") ||
+      req.path.startsWith("/api/v1/slack/oauth/callback")
     ) {
       return next();
     }
