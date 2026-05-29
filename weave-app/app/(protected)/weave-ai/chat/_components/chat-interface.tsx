@@ -673,57 +673,35 @@ export default function ChatInterface({
 
           {isTyping && (
             <div className="flex gap-2">
-              <div className="dark:border-surface-dark-border flex items-center rounded-2xl border border-neutral-200 bg-white px-3.5 py-2 shadow-sm dark:bg-[#1d1d1b]">
-                <div className="flex items-center gap-2.5">
-                  <svg
-                    width="54"
-                    height="20"
-                    viewBox="0 0 54 20"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <style>{`
-                      @keyframes weave-flow-left {
-                        0% { stroke-dashoffset: 0; }
-                        100% { stroke-dashoffset: -12; }
+              <div className="dark:border-surface-dark-border flex items-center rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 shadow-sm dark:bg-[#1d1d1b]">
+                <div className="flex items-center select-none">
+                  <style>{`
+                    @keyframes letter-glow {
+                      0%, 100% {
+                        opacity: 0.15;
+                        filter: drop-shadow(0 0 0px rgba(255, 213, 0, 0));
                       }
-                      @keyframes weave-flow-right {
-                        0% { stroke-dashoffset: 0; }
-                        100% { stroke-dashoffset: 12; }
+                      35%, 85% {
+                        opacity: 1;
+                        filter: drop-shadow(0 0 2px rgba(255, 213, 0, 0.6));
                       }
-                      @keyframes weave-pulse {
-                        0%, 100% { transform: scaleY(0.9); opacity: 0.85; }
-                        50% { transform: scaleY(1.15); opacity: 1; }
-                      }
-                      .weave-thread-1 {
-                        animation: weave-flow-left 1.2s linear infinite, weave-pulse 2s ease-in-out infinite;
-                        transform-origin: center;
-                      }
-                      .weave-thread-2 {
-                        animation: weave-flow-right 1.2s linear infinite, weave-pulse 2s ease-in-out infinite alternate;
-                        transform-origin: center;
-                      }
-                    `}</style>
-                    <path
-                      d="M 3 10 Q 15 2, 27 10 T 51 10"
-                      stroke="#FFD500"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeDasharray="6 6"
-                      className="weave-thread-1"
-                    />
-                    <path
-                      d="M 3 10 Q 15 18, 27 10 T 51 10"
-                      stroke="#EE964B"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeDasharray="6 6"
-                      className="weave-thread-2"
-                    />
-                  </svg>
-                  <span className="animate-pulse text-[10px] font-medium text-neutral-400 dark:text-neutral-500">
-                    {t.weaveAi.weavingResponse}
-                  </span>
+                    }
+                    .animate-thinking-letter {
+                      display: inline-block;
+                      animation: letter-glow 2s ease-in-out infinite;
+                    }
+                  `}</style>
+                  {(t.weaveAi.thinking || "Thinking...").split("").map((char, idx) => (
+                    <span
+                      key={idx}
+                      className="animate-thinking-letter text-brand-yellow text-xs font-bold tracking-wider"
+                      style={{
+                        animationDelay: `${idx * 0.08}s`,
+                      }}
+                    >
+                      {char === " " ? "\u00A0" : char}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>

@@ -20,7 +20,7 @@ const {
   getOrganizationDetails,
   schemas: organizationSchemas,
 } = require("./organization.tool");
-const { consultAgentManual, schemas: agentManualSchemas } = require("./agent-manual.tool");
+const { consultBrain, schemas: brainSchemas } = require("./brain.tool");
 
 const INTERNAL_TOOLS = {
   web_search: searchWeb,
@@ -30,7 +30,7 @@ const INTERNAL_TOOLS = {
   list_my_projects: listMyProjects,
   get_project_details: getProjectDetails,
   get_organization_details: getOrganizationDetails,
-  consult_agent_manual: consultAgentManual,
+  consult_brain: consultBrain,
 };
 
 const internalToolSchemas = [
@@ -39,7 +39,7 @@ const internalToolSchemas = [
   ...profileSchemas,
   ...projectSchemas,
   ...organizationSchemas,
-  ...agentManualSchemas,
+  ...brainSchemas,
 ];
 
 /**
@@ -105,7 +105,7 @@ function getInternalToolDefinitions(allowWebSearch = true) {
     ...profileSchemas,
     ...projectSchemas,
     ...organizationSchemas,
-    ...agentManualSchemas,
+    ...brainSchemas,
   ];
 }
 
