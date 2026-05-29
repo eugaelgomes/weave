@@ -51,7 +51,9 @@ function isEngineComposeSurface(context = {}) {
  */
 function buildEngineComposePromptOverlay(context = {}) {
   const merged = resolveComposeContext(context);
-  const intent = merged.composeIntent ? String(merged.composeIntent) : "undecided";
+  const intent = merged.composeIntent
+    ? String(merged.composeIntent)
+    : "undecided";
   const projectId = merged.projectId ? String(merged.projectId) : "none";
   const from = merged.from ? String(merged.from) : "engine";
 

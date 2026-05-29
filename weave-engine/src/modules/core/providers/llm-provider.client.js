@@ -121,7 +121,9 @@ async function withTimeout(promise, timeoutMs, code) {
   let timeoutId;
   const timeoutPromise = new Promise((_, reject) => {
     timeoutId = setTimeout(() => {
-      reject(createProviderError(code, `Provider timeout after ${timeoutMs}ms`));
+      reject(
+        createProviderError(code, `Provider timeout after ${timeoutMs}ms`)
+      );
     }, timeoutMs);
   });
 
@@ -233,7 +235,9 @@ async function callGeminiApi(
       if (msg.role === "user") {
         contents.push({ role: "user", parts: [{ text: msg.content }] });
       } else if (msg.role === "assistant") {
-        if (msg.tool_calls && msg.tool_calls.length > 0) {
+        if (msg.rawParts) {
+          contents.push({ role: "model", parts: msg.rawParts });
+        } else if (msg.tool_calls && msg.tool_calls.length > 0) {
           const fn = msg.tool_calls[0].function;
           contents.push({
             role: "model",
@@ -307,6 +311,7 @@ async function callGeminiApi(
         arguments: functionCall.args,
         name: functionCall.name,
       },
+      rawParts: result.response.candidates?.[0]?.content?.parts || null,
       text: null,
       type: "function_call",
     };
@@ -391,7 +396,37 @@ async function callOpenAiApi(
   ];
 
   if (Array.isArray(options.messages)) {
-    messages.push(...options.messages);
+    const sanitizedMessages = options.messages.map((msg) => {
+      const cleanMsg = {
+        role: msg.role,
+      };
+
+      if (msg.content !== undefined) {
+        cleanMsg.content = msg.content;
+      }
+
+      if (msg.role === "assistant" && msg.tool_calls) {
+        cleanMsg.tool_calls = msg.tool_calls.map((tc) => ({
+          id: tc.id || `call_${Math.random().toString(36).substring(2, 11)}`,
+          type: "function",
+          function: {
+            name: tc.function.name,
+            arguments: tc.function.arguments,
+          },
+        }));
+      }
+
+      if (msg.role === "tool") {
+        cleanMsg.tool_call_id =
+          msg.tool_call_id ||
+          `call_${Math.random().toString(36).substring(2, 11)}`;
+        cleanMsg.content = msg.content;
+      }
+
+      return cleanMsg;
+    });
+
+    messages.push(...sanitizedMessages);
   }
 
   if (prompt || userContent.length > 1) {
@@ -442,6 +477,7 @@ async function callOpenAiApi(
         name: toolCall.function.name,
       },
       text: null,
+      toolCallId: toolCall.id,
       type: "function_call",
     };
   }

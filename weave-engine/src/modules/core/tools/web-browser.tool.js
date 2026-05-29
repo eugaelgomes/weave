@@ -118,7 +118,9 @@ async function readUrl({ url }) {
   }
 
   if (!isUrlSafe(url)) {
-    return { error: "URL is not allowed: only public HTTP/HTTPS URLs are permitted" };
+    return {
+      error: "URL is not allowed: only public HTTP/HTTPS URLs are permitted",
+    };
   }
 
   try {

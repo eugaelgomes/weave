@@ -11,7 +11,15 @@ const {
 } = require("./web-browser.tool");
 const { searchMyNotes, schemas: searchSchemas } = require("./search.tool");
 const { getUserProfile, schemas: profileSchemas } = require("./profile.tool");
-const { listMyProjects, schemas: projectSchemas } = require("./project.tool");
+const {
+  listMyProjects,
+  getProjectDetails,
+  schemas: projectSchemas,
+} = require("./project.tool");
+const {
+  getOrganizationDetails,
+  schemas: organizationSchemas,
+} = require("./organization.tool");
 
 const INTERNAL_TOOLS = {
   web_search: searchWeb,
@@ -19,9 +27,17 @@ const INTERNAL_TOOLS = {
   search_my_notes: searchMyNotes,
   get_user_profile: getUserProfile,
   list_my_projects: listMyProjects,
+  get_project_details: getProjectDetails,
+  get_organization_details: getOrganizationDetails,
 };
 
-const internalToolSchemas = [...webBrowserSchemas, ...searchSchemas, ...profileSchemas, ...projectSchemas];
+const internalToolSchemas = [
+  ...webBrowserSchemas,
+  ...searchSchemas,
+  ...profileSchemas,
+  ...projectSchemas,
+  ...organizationSchemas,
+];
 
 /**
  * Checks if a function name is an internal tool.
@@ -47,9 +63,20 @@ async function executeInternalTool(functionName, args, executionContext = {}) {
   try {
     const enrichedArgs = { ...args };
 
-    // Inject server-side userId for tools that need authenticated identity
-    if (["search_my_notes", "get_user_profile", "list_my_projects"].includes(functionName) && executionContext.userId) {
-      enrichedArgs.userId = executionContext.userId;
+    // Inject server-side userId and organizationId for tools that need authenticated identity
+    if (
+      [
+        "search_my_notes",
+        "get_user_profile",
+        "list_my_projects",
+        "get_project_details",
+        "get_organization_details",
+      ].includes(functionName)
+    ) {
+      if (executionContext.userId)
+        enrichedArgs.userId = executionContext.userId;
+      if (executionContext.organizationId)
+        enrichedArgs.organizationId = executionContext.organizationId;
     }
 
     const result = await INTERNAL_TOOLS[functionName](enrichedArgs);
@@ -70,7 +97,12 @@ function getInternalToolDefinitions(allowWebSearch = true) {
   if (allowWebSearch) {
     return internalToolSchemas;
   }
-  return [...searchSchemas];
+  return [
+    ...searchSchemas,
+    ...profileSchemas,
+    ...projectSchemas,
+    ...organizationSchemas,
+  ];
 }
 
 module.exports = {

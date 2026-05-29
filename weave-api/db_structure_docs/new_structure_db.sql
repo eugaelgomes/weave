@@ -716,21 +716,36 @@ CREATE TABLE public.ai_user_agent (
 CREATE TABLE public.ai_chat_sessions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
+  organization_id uuid NULL,
+  project_id uuid NULL,
+  note_id uuid NULL,
   title varchar(255) NOT NULL DEFAULT 'Nova Conversa',
+  context jsonb NOT NULL DEFAULT '{}'::jsonb,
+  deleted bool NOT NULL DEFAULT false,
+  deleted_at timestamptz NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT ai_chat_sessions_user_fk FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE,
+  CONSTRAINT ai_chat_sessions_org_fk FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE SET NULL,
+  CONSTRAINT ai_chat_sessions_project_fk FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE SET NULL
 );
 
 CREATE TABLE public.ai_chat_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id uuid NOT NULL,
   user_id uuid NOT NULL,
+  parent_message_id uuid NULL,
   role varchar(20) NOT NULL,
-  content text NOT NULL,
-  model varchar(50) NOT NULL,
+  content text NULL,
+  model varchar(50) NULL,
+  tool_calls jsonb NULL,
+  tool_call_id varchar(255) NULL,
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  deleted bool NOT NULL DEFAULT false,
+  deleted_at timestamptz NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT ai_chat_messages_role_check CHECK (role IN ('user', 'assistant'))
+  CONSTRAINT ai_chat_messages_role_check CHECK (role IN ('system', 'user', 'assistant', 'tool')),
+  CONSTRAINT ai_chat_messages_session_fk FOREIGN KEY (session_id) REFERENCES public.ai_chat_sessions(id) ON DELETE CASCADE
 );
 
 CREATE TABLE public.notifications (

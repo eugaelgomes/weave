@@ -135,7 +135,13 @@ async function executeAgenticTask({
     messages: [...conversationHistory],
   };
 
-  let currentPrompt = message;
+  // Add the initial user message to history immediately so it persists across ReAct loops
+  currentOptions.messages.push({
+    role: "user",
+    content: message,
+  });
+
+  let currentPrompt = ""; // The message is now in messages history, no need for prompt
   let providerUsed = null;
 
   while (iterations < MAX_REACT_ITERATIONS) {
@@ -160,13 +166,18 @@ async function executeAgenticTask({
     if (data.type === "function_call" && data.functionCall) {
       const fnName = data.functionCall.name;
       const fnArgs = data.functionCall.arguments;
+      const toolCallId =
+        data.toolCallId ||
+        `call_${Math.random().toString(36).substring(2, 11)}`;
 
       // Add assistant tool_call message to history
       currentOptions.messages.push({
         role: "assistant",
         content: null,
+        rawParts: data.rawParts,
         tool_calls: [
           {
+            id: toolCallId,
             function: {
               name: fnName,
               arguments: JSON.stringify(fnArgs),
@@ -177,11 +188,16 @@ async function executeAgenticTask({
 
       if (isInternalTool(fnName)) {
         // Execute internally and loop
-        const result = await executeInternalTool(fnName, fnArgs, executionContext);
+        const result = await executeInternalTool(
+          fnName,
+          fnArgs,
+          executionContext
+        );
 
         currentOptions.messages.push({
           role: "tool",
           name: fnName,
+          tool_call_id: toolCallId,
           content: typeof result === "string" ? result : JSON.stringify(result),
         });
 

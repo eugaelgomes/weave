@@ -49,7 +49,9 @@ function normalizeOptionalUuid(value) {
  * @returns {boolean}
  */
 function isPublicId12(value) {
-  return typeof value === "string" && value.length === 12 && !value.includes("-");
+  return (
+    typeof value === "string" && value.length === 12 && !value.includes("-")
+  );
 }
 
 /**

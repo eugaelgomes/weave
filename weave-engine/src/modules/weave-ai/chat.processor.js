@@ -130,13 +130,17 @@ class LlmQueueProcessor {
           ? parsedJob.attempts
           : 0,
       createdAt:
-        typeof parsedJob.createdAt === "string" ? parsedJob.createdAt : new Date().toISOString(),
+        typeof parsedJob.createdAt === "string"
+          ? parsedJob.createdAt
+          : new Date().toISOString(),
       requestId:
-        typeof parsedJob.requestId === "string" && parsedJob.requestId.trim().length > 0
+        typeof parsedJob.requestId === "string" &&
+        parsedJob.requestId.trim().length > 0
           ? parsedJob.requestId.trim()
           : null,
       taskType:
-        typeof parsedJob.taskType === "string" && parsedJob.taskType.trim().length > 0
+        typeof parsedJob.taskType === "string" &&
+        parsedJob.taskType.trim().length > 0
           ? parsedJob.taskType
           : "provider_call",
     };
@@ -151,11 +155,18 @@ class LlmQueueProcessor {
       return false;
     }
 
-    if (typeof job.responseQueueKey !== "string" || !job.responseQueueKey.trim()) {
+    if (
+      typeof job.responseQueueKey !== "string" ||
+      !job.responseQueueKey.trim()
+    ) {
       return false;
     }
 
-    if (!job.payload || typeof job.payload !== "object" || Array.isArray(job.payload)) {
+    if (
+      !job.payload ||
+      typeof job.payload !== "object" ||
+      Array.isArray(job.payload)
+    ) {
       return false;
     }
 
@@ -186,7 +197,9 @@ class LlmQueueProcessor {
 
     let responsePayload;
     const startedAt = Date.now();
-    const queueLatencyMs = createdAt ? Date.now() - new Date(createdAt).getTime() : null;
+    const queueLatencyMs = createdAt
+      ? Date.now() - new Date(createdAt).getTime()
+      : null;
 
     try {
       const data = await this.executeTask(taskType, payload);
@@ -344,14 +357,20 @@ class LlmQueueProcessor {
             allowEdit: Boolean(payload.allowEdit),
             allowWebSearch: Boolean(payload.allowWebSearch),
             files: Array.isArray(payload.files) ? payload.files : [],
-            functions: Array.isArray(payload.functions) ? payload.functions : [],
+            functions: Array.isArray(payload.functions)
+              ? payload.functions
+              : [],
             message: payload.message || "",
             model: payload.model || null,
             systemMessage,
             conversationHistory,
             executionContext: {
               userId: payload.userId || null,
-              organizationId: organizationId || null,
+              organizationId:
+                payload.organizationId ||
+                payload.context?.organizationId ||
+                payload.context?.organization_id ||
+                null,
             },
           }),
           new Promise((_, reject) => {

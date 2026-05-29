@@ -63,7 +63,8 @@ const BLOCK_TYPES = {
  * @returns {MarkdownInterpretation}
  */
 function interpretMarkdownForLlm(markdown = "") {
-  const source = typeof markdown === "string" ? markdown : String(markdown ?? "");
+  const source =
+    typeof markdown === "string" ? markdown : String(markdown ?? "");
   const lines = source.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
   const blocks = [];
   const entities = {
@@ -436,7 +437,9 @@ function parseInline(input, entities) {
   while (cursor < input.length) {
     const rest = input.slice(cursor);
 
-    const imageMatch = rest.match(/^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]+)")?\)/);
+    const imageMatch = rest.match(
+      /^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]+)")?\)/
+    );
     if (imageMatch) {
       const [, alt, src] = imageMatch;
       tokens.push({
@@ -489,7 +492,10 @@ function parseInline(input, entities) {
 
     const strikeMatch = rest.match(/^~~([^~]+)~~/);
     if (strikeMatch) {
-      tokens.push({ text: strikeMatch[1], type: INLINE_TOKEN_TYPES.STRIKETHROUGH });
+      tokens.push({
+        text: strikeMatch[1],
+        type: INLINE_TOKEN_TYPES.STRIKETHROUGH,
+      });
       cursor += strikeMatch[0].length;
       continue;
     }
@@ -567,7 +573,10 @@ function buildNormalizedText(blocks) {
       continue;
     }
 
-    if (block.type === BLOCK_TYPES.PARAGRAPH || block.type === BLOCK_TYPES.BLOCKQUOTE) {
+    if (
+      block.type === BLOCK_TYPES.PARAGRAPH ||
+      block.type === BLOCK_TYPES.BLOCKQUOTE
+    ) {
       lines.push(block.text || "");
       continue;
     }
@@ -580,16 +589,23 @@ function buildNormalizedText(blocks) {
       continue;
     }
 
-    if (block.type === BLOCK_TYPES.ORDERED_LIST || block.type === BLOCK_TYPES.UNORDERED_LIST) {
+    if (
+      block.type === BLOCK_TYPES.ORDERED_LIST ||
+      block.type === BLOCK_TYPES.UNORDERED_LIST
+    ) {
       for (const item of block.items || []) {
         const bullet = block.type === BLOCK_TYPES.ORDERED_LIST ? "1." : "-";
-        lines.push(`${"  ".repeat(item.depth || 0)}${bullet} ${item.text || ""}`.trimEnd());
+        lines.push(
+          `${"  ".repeat(item.depth || 0)}${bullet} ${item.text || ""}`.trimEnd()
+        );
       }
       continue;
     }
 
     if (block.type === BLOCK_TYPES.TABLE && block.table) {
-      const headerText = block.table.headers.map((cell) => cell.text).join(" | ");
+      const headerText = block.table.headers
+        .map((cell) => cell.text)
+        .join(" | ");
       lines.push(`| ${headerText} |`);
       for (const row of block.table.rows) {
         const rowText = row.cells.map((cell) => cell.text).join(" | ");
@@ -603,7 +619,10 @@ function buildNormalizedText(blocks) {
     }
   }
 
-  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return lines
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 /**
@@ -627,12 +646,16 @@ function buildStats(source, normalizedText, blocks, entities) {
   return {
     blockCount: blocks.length,
     characterCount: source.length,
-    codeBlockCount: blocks.filter((block) => block.type === BLOCK_TYPES.CODE_BLOCK).length,
+    codeBlockCount: blocks.filter(
+      (block) => block.type === BLOCK_TYPES.CODE_BLOCK
+    ).length,
     headingCount: entities.headings.length,
     imageCount: entities.images.length,
     linkCount: entities.links.length,
     listItemCount,
-    wordCount: normalizedText ? normalizedText.split(/\s+/).filter(Boolean).length : 0,
+    wordCount: normalizedText
+      ? normalizedText.split(/\s+/).filter(Boolean).length
+      : 0,
   };
 }
 
