@@ -32,7 +32,7 @@ import { useAuth } from "@/app/_contexts/auth-context";
 import { useNotes } from "@/app/_contexts/notes-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { type AIModel } from "@/app/_contexts/chat-context";
-import { useAgent } from "@/app/_contexts/agent-context";
+import { useAgent, type Agent } from "@/app/_contexts/agent-context";
 import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
 import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
@@ -56,6 +56,19 @@ const ModelIcon = ({ model, className }: { model?: AIModel | null; className?: s
 
   if (model?.provider === "perplexity") return <Globe className="text-brand-navy h-3 w-3" />;
   return <Sparkles className="text-brand-yellow h-3 w-3" />;
+};
+
+const AgentIcon = ({ agent, className }: { agent?: Agent | null; className?: string }) => {
+  if (agent?.avatar_url) {
+    return (
+      <img
+        src={agent.avatar_url}
+        alt={`${agent.name || "agent"} avatar`}
+        className={className || "h-3 w-3 rounded-full object-cover"}
+      />
+    );
+  }
+  return <Bot className={className || "h-3 w-3 text-neutral-500"} />;
 };
 
 function formatModelLabel(model: AIModel) {
@@ -869,15 +882,16 @@ export default function ChatInterface({
                 <div className="relative ml-1">
                   <button
                     onClick={() => setIsModelMenuOpen((v) => !v)}
-                    className="border-brand-beige hover:bg-brand-beige hover:text-brand-navy dark:border-surface-dark-border dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-8 items-center gap-1.5 rounded-full border bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition-colors dark:bg-[#1d1d1b] dark:text-neutral-400"
+                    className="border-brand-beige hover:bg-brand-beige hover:text-brand-navy dark:border-surface-dark-border dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-7 items-center gap-1 rounded-full border bg-neutral-50 px-2 py-0.5 text-[10px] font-medium text-neutral-600 transition-colors dark:bg-[#1d1d1b] dark:text-neutral-400"
                   >
-                    <span className="text-[10px] font-medium text-neutral-500">
-                      {t.weaveAi.model}:
-                    </span>
-                    <span className="text-[10px] text-neutral-400">
+                    <ModelIcon
+                      model={selectedModel}
+                      className="h-3.5 w-3.5 flex-shrink-0 object-contain"
+                    />
+                    <span className="max-w-[80px] truncate text-[10px] font-semibold text-neutral-500">
                       {loading ? t.common.loading : selectedModel?.name}
                     </span>
-                    <ChevronDown className="h-3 w-3 text-neutral-500" />
+                    <ChevronDown className="h-2.5 w-2.5 flex-shrink-0 text-neutral-400" />
                   </button>
 
                   {isModelMenuOpen && (
@@ -887,7 +901,7 @@ export default function ChatInterface({
                         onClick={() => setIsModelMenuOpen(false)}
                       />
                       <div className="dark:border-surface-dark-border absolute bottom-full left-0 z-20 mb-2 w-48 overflow-hidden rounded border border-neutral-200 bg-white shadow-lg dark:bg-[#1d1d1b]">
-                        <div className="max-h-48 overflow-y-auto p-1">
+                        <div className="max-h-48 overflow-y-auto p-0.5">
                           {models.map((model) => (
                             <button
                               key={model.id}
@@ -895,13 +909,16 @@ export default function ChatInterface({
                                 setSelectedModel(model);
                                 setIsModelMenuOpen(false);
                               }}
-                              className={`hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs ${
+                              className={`hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs ${
                                 selectedModel?.id === model.id
                                   ? "bg-brand-beige text-brand-navy dark:bg-brand-navy/30 dark:text-brand-beige"
                                   : ""
                               }`}
                             >
-                              <ModelIcon model={model} className="h-3 w-3 flex-shrink-0" />
+                              <ModelIcon
+                                model={model}
+                                className="h-3.5 w-3.5 flex-shrink-0 object-contain"
+                              />
                               <span className="truncate">{formatModelLabel(model)}</span>
                             </button>
                           ))}
@@ -914,15 +931,16 @@ export default function ChatInterface({
                 <div className="relative ml-1">
                   <button
                     onClick={() => setIsAgentMenuOpen((prev) => !prev)}
-                    className="border-brand-beige hover:bg-brand-beige hover:text-brand-navy dark:border-surface-dark-border dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-8 items-center gap-1.5 rounded-full border bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition-colors dark:bg-[#1d1d1b] dark:text-neutral-400"
+                    className="border-brand-beige hover:bg-brand-beige hover:text-brand-navy dark:border-surface-dark-border dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-7 items-center gap-1 rounded-full border bg-neutral-50 px-2 py-0.5 text-[10px] font-medium text-neutral-600 transition-colors dark:bg-[#1d1d1b] dark:text-neutral-400"
                   >
-                    <span className="text-[10px] font-medium text-neutral-500">
-                      {t.weaveAi.agent}:
-                    </span>
-                    <span className="text-[10px] text-neutral-400">
+                    <AgentIcon
+                      agent={selectedAgent}
+                      className="h-3.5 w-3.5 flex-shrink-0 rounded-full object-cover"
+                    />
+                    <span className="max-w-[80px] truncate text-[10px] font-semibold text-neutral-500">
                       {loading ? t.common.loading : selectedAgent?.name || t.nav.agent}
                     </span>
-                    <ChevronDown className="h-3 w-3 text-neutral-500" />
+                    <ChevronDown className="h-2.5 w-2.5 flex-shrink-0 text-neutral-400" />
                   </button>
 
                   {isAgentMenuOpen && (
@@ -931,38 +949,43 @@ export default function ChatInterface({
                         className="fixed inset-0 z-10"
                         onClick={() => setIsAgentMenuOpen(false)}
                       />
-                      <div className="dark:border-surface-dark-border absolute right-0 bottom-full z-20 mb-2 w-56 rounded border border-neutral-200 bg-white shadow-lg dark:bg-[#1d1d1b]">
-                        <button
-                          onClick={() => {
-                            setSelectedAgentId(null);
-                            setIsAgentMenuOpen(false);
-                          }}
-                          className={`hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center gap-2 rounded p-2 text-xs ${
-                            !selectedAgentId
-                              ? "bg-brand-beige text-brand-navy dark:bg-brand-navy/30 dark:text-brand-beige"
-                              : ""
-                          }`}
-                        >
-                          <Bot className="h-3 w-3" />
-                          Agente padrão
-                        </button>
-                        {agents.map((agent) => (
+                      <div className="dark:border-surface-dark-border absolute right-0 bottom-full z-20 mb-2 w-56 overflow-hidden rounded border border-neutral-200 bg-white shadow-lg dark:bg-[#1d1d1b]">
+                        <div className="max-h-48 overflow-y-auto p-0.5">
                           <button
-                            key={agent.id}
                             onClick={() => {
-                              setSelectedAgentId(agent.id);
+                              setSelectedAgentId(null);
                               setIsAgentMenuOpen(false);
                             }}
-                            className={`hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center gap-2 rounded p-2 text-left text-xs ${
-                              selectedAgentId === agent.id
+                            className={`hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-xs ${
+                              !selectedAgentId
                                 ? "bg-brand-beige text-brand-navy dark:bg-brand-navy/30 dark:text-brand-beige"
                                 : ""
                             }`}
                           >
-                            <Bot className="h-3 w-3" />
-                            <span className="truncate">{agent.name}</span>
+                            <AgentIcon agent={null} className="h-3.5 w-3.5 flex-shrink-0" />
+                            <span>Agente padrão</span>
                           </button>
-                        ))}
+                          {agents.map((agent) => (
+                            <button
+                              key={agent.id}
+                              onClick={() => {
+                                setSelectedAgentId(agent.id);
+                                setIsAgentMenuOpen(false);
+                              }}
+                              className={`hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs ${
+                                selectedAgentId === agent.id
+                                  ? "bg-brand-beige text-brand-navy dark:bg-brand-navy/30 dark:text-brand-beige"
+                                  : ""
+                              }`}
+                            >
+                              <AgentIcon
+                                agent={agent}
+                                className="h-3.5 w-3.5 flex-shrink-0 rounded-full object-cover"
+                              />
+                              <span className="truncate">{agent.name}</span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </>
                   )}
