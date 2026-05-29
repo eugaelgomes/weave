@@ -197,6 +197,11 @@ export const API_ENDPOINTS = {
   GOOGLE_CALENDAR_STREAM: "/webhooks/google/calendar/stream",
   GOOGLE_CALENDAR_DISCONNECT: "/webhooks/google/calendar/disconnect",
 
+  // Slack
+  SLACK_STATUS: "/slack/integrations",
+  SLACK_INSTALL: "/slack/install",
+  SLACK_DISCONNECT: "/slack/integrations",
+
   // Internal Calendar Events
   CALENDAR_EVENTS: "/calendar-events",
   CALENDAR_EVENT_BY_ID: (id: string) => `/calendar-events/${id}`,

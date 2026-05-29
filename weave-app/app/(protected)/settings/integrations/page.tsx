@@ -10,9 +10,44 @@ import GoogleCalendarLogo from "@/app/_assets/google_logo.svg";
 import OutlookLogo from "@/app/_assets/microsoft_office_outlook_mail.svg";
 import SlackLogo from "@/app/_assets/slack_salesforce_logo.png";
 import { SettingsPageShell } from "@/app/(protected)/settings/_components/settings-page-shell";
+import { useSlack } from "@/app/_contexts/slack-context";
 
-export const IntegrationsSettings: React.FC<any> = () => {
+export const IntegrationsSettings: React.FC = () => {
   const { googleConnected, connectGoogleCalendar, disconnectGoogleCalendar } = useCalendar();
+  const { slackStatus, updatingChannel, connectSlack, disconnectSlack, updateDefaultChannel } =
+    useSlack();
+
+  const [channelInput, setChannelInput] = React.useState("");
+
+  React.useEffect(() => {
+    setChannelInput(slackStatus.default_channel_id || "");
+  }, [slackStatus.default_channel_id]);
+
+  const handleConnectSlack = () => {
+    connectSlack();
+  };
+
+  const handleDisconnectSlack = async () => {
+    const confirmed = window.confirm("Deseja realmente desconectar o Slack?");
+    if (!confirmed) return;
+    try {
+      await disconnectSlack();
+    } catch (err) {
+      console.error(err);
+      alert("Falha ao desconectar o Slack");
+    }
+  };
+
+  const handleUpdateChannel = async () => {
+    if (!channelInput.trim()) return;
+    try {
+      await updateDefaultChannel(channelInput.trim());
+      alert("Canal padrão atualizado com sucesso!");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Falha ao atualizar canal padrão.";
+      alert(message);
+    }
+  };
 
   // --- Classes base refinadas para menor espaçamento ---
   const itemCardClass =
@@ -137,38 +172,80 @@ export const IntegrationsSettings: React.FC<any> = () => {
           </div>
 
           {/* Slack */}
-          <div className={`${itemCardClass} ${disabledCardClass}`}>
+          <div
+            className={`${itemCardClass} ${slackStatus.connected ? connectedCardClass : defaultCardClass}`}
+          >
             <div className="flex items-start gap-3">
               <div className={logoWrapClass}>
-                <Image
-                  src={SlackLogo}
-                  alt="Slack"
-                  className="h-full w-full object-contain opacity-60 grayscale"
-                />
+                <Image src={SlackLogo} alt="Slack" className="h-full w-full object-contain" />
               </div>
 
               <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <h4 className="text-[12px] font-bold text-neutral-900 dark:text-neutral-100">
-                    Slack
-                  </h4>
-                  <span className="rounded bg-neutral-200 px-1.5 py-0.5 text-[8px] font-black tracking-wider text-neutral-500 dark:bg-neutral-800">
-                    Em breve
-                  </span>
-                </div>
+                <h4 className="text-[12px] font-bold text-neutral-900 dark:text-neutral-100">
+                  Slack
+                </h4>
                 <p className="text-[10px] leading-snug text-neutral-500 dark:text-neutral-400">
-                  Receba notificações e crie tarefas via comandos no Slack.
+                  {slackStatus.connected && slackStatus.slack_team_name
+                    ? `Conectado ao workspace ${slackStatus.slack_team_name}.`
+                    : "Receba notificações e crie tarefas via comandos no Slack."}
                 </p>
               </div>
             </div>
 
-            <div className="dark:border-surface-dark-border mt-auto flex items-center justify-end border-t border-neutral-100/80 pt-3">
-              <button
-                disabled
-                className="cursor-not-allowed rounded-md bg-neutral-100 px-4 py-1.5 text-[11px] font-bold text-neutral-400 dark:bg-[#1d1d1b] dark:text-neutral-600"
-              >
-                Conectar
-              </button>
+            {slackStatus.connected && (
+              <div className="mt-2 space-y-1.5">
+                <label className="text-[9px] font-bold tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+                  ID do Canal Padrão (notificações)
+                </label>
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={channelInput}
+                    onChange={(e) => setChannelInput(e.target.value)}
+                    placeholder="Ex: C0123456789"
+                    className="focus:border-brand-primary-500 flex-1 rounded border border-neutral-200 bg-white px-2 py-1 text-[10px] text-neutral-800 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200"
+                  />
+                  <button
+                    onClick={handleUpdateChannel}
+                    disabled={updatingChannel || !channelInput.trim()}
+                    className="bg-brand-primary-500 rounded px-2.5 py-1 text-[10px] font-bold text-white hover:bg-yellow-600 disabled:opacity-50"
+                  >
+                    {updatingChannel ? "Salvando..." : "Salvar"}
+                  </button>
+                </div>
+                {slackStatus.default_channel_name && (
+                  <p className="text-[9px] text-neutral-400 dark:text-neutral-500">
+                    Canal atual:{" "}
+                    <span className="font-semibold text-neutral-600 dark:text-neutral-400">
+                      #{slackStatus.default_channel_name}
+                    </span>
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="dark:border-surface-dark-border mt-auto flex items-center justify-between border-t border-neutral-100/80 pt-3">
+              {slackStatus.connected ? (
+                <>
+                  <span className="flex items-center gap-1.5 rounded-md bg-emerald-100 px-2 py-1 text-[9px] font-bold tracking-wider text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>
+                    Conectado
+                  </span>
+                  <button
+                    onClick={handleDisconnectSlack}
+                    className="dark:border-surface-dark-border-strong rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-[10px] font-bold text-neutral-500 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 active:scale-95 dark:bg-[#1d1d1b] dark:hover:border-red-900/50 dark:hover:bg-red-900/10 dark:hover:text-red-400"
+                  >
+                    Desconectar
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleConnectSlack}
+                  className="bg-brand-primary-500 ml-auto rounded-md px-4 py-1.5 text-[11px] font-bold text-white shadow-sm transition-all hover:bg-yellow-600 active:scale-95"
+                >
+                  Conectar
+                </button>
+              )}
             </div>
           </div>
         </div>
