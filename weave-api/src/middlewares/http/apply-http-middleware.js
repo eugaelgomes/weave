@@ -70,6 +70,12 @@ function configureGlobalMiddlewares(app) {
     ) {
       return next();
     }
+    if (
+      req.method === "GET" &&
+      req.path.startsWith("/api/v1/slack/install")
+    ) {
+      return next();
+    }
     return corsMiddleware(req, res, next);
   });
 

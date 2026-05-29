@@ -14,6 +14,7 @@ import type {
   SubProject,
   ProjectProperties,
 } from "@/app/_services/projects-service/projects-service";
+import { ModuleLayout } from "../_components/layout/module-layout";
 
 function subprojectProperties(sub: SubProject): ProjectProperties | undefined {
   if (!sub.properties) return undefined;
@@ -233,23 +234,8 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
   );
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col gap-2 md:px-0">
-      <ProjectsHeader />
-
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {/* Layout Flexbox com Gap (Desktop) */}
-        <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
-          {/* SIDEBAR LATERAL — Altura dinâmica da Viewport + Sticky + Overflow interno */}
-          <div className="dark:border-surface-dark-border hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-sm md:sticky md:block md:h-[calc(100vh-auto)] md:w-[180px] dark:bg-[#1d1d1b]/50">
-            {sidebarContent}
-          </div>
-
-          {/* CONTEÚDO PRINCIPAL (Detail) */}
-          <div className="dark:shadow-surface-dark-sm md:dark:border-surface-dark-border flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:bg-[#1d1d1b]">
-            {children}
-          </div>
-        </div>
-      </div>
-    </div>
+    <ModuleLayout header={<ProjectsHeader />} sidebarContent={sidebarContent}>
+      {children}
+    </ModuleLayout>
   );
 }

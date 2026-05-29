@@ -13,7 +13,7 @@ import {
 } from "../../_contexts/note-comments-panel-context";
 import GlobalLoading from "@/app/_components/ui/global-loading";
 import { getNotePath } from "@/app/_utils/note-path";
-
+import { ModuleLayout } from "../_components/layout/module-layout";
 function NotesLayoutContent({ children }: { children: React.ReactNode }) {
   const { loading: notesLoading, getRecentNotes } = useNotes();
   const pathname = usePathname();
@@ -102,27 +102,13 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col gap-2 md:px-0">
-      <NotesHeader />
-
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
-          {/* SIDEBAR LATERAL — Altura dinâmica da Viewport + Sticky + Overflow */}
-          <div
-            className={`dark:border-surface-dark-border hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-md md:sticky md:h-[calc(100vh-auto)] dark:bg-[#1d1d1b]/50 ${
-              commentsPanelOpen ? "md:hidden" : "md:block md:w-[180px]"
-            }`}
-          >
-            {sidebarContent}
-          </div>
-
-          {/* CONTEÚDO PRINCIPAL (Detail) */}
-          <div className="dark:shadow-surface-dark-sm md:dark:border-surface-dark-border flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:bg-[#1d1d1b]">
-            {children}
-          </div>
-        </div>
-      </div>
-    </div>
+    <ModuleLayout
+      header={<NotesHeader />}
+      sidebarContent={sidebarContent}
+      hideSidebarOnDesktop={commentsPanelOpen}
+    >
+      {children}
+    </ModuleLayout>
   );
 }
 

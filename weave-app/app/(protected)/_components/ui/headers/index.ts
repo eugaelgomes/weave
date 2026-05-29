@@ -9,4 +9,5 @@ export * from "./workspace-header";
 export * from "./notifications-header";
 export * from "./documents-header";
 export * from "./weave-engine-header";
+export * from "./weave-flow-header";
 export * from "./animated-greeting";

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { User, Lock, Zap, CreditCard, type LucideIcon } from "lucide-react";
 import { SettingsHeader } from "../_components/ui/headers/settings-header";
 import { useLanguage } from "@/app/_contexts/language-context";
+import { ModuleLayout } from "../_components/layout/module-layout";
 
 type SettingsNavItem = {
   icon: LucideIcon;
@@ -107,22 +108,9 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col gap-2 md:px-0">
-      <SettingsHeader type={activeItem.type} />
-
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
-          {/* Same shell as /notes: sticky sidebar + scrollable main */}
-          <div className="dark:border-surface-dark-border hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-md md:sticky md:block md:h-[calc(100vh-auto)] md:w-[180px] dark:bg-[#1d1d1b]/50">
-            {sidebarContent}
-          </div>
-
-          <div className="dark:shadow-surface-dark-sm md:dark:border-surface-dark-border flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:bg-[#1d1d1b]">
-            {children}
-          </div>
-        </div>
-      </div>
-    </div>
+    <ModuleLayout header={<SettingsHeader type={activeItem.type} />} sidebarContent={sidebarContent}>
+      {children}
+    </ModuleLayout>
   );
 }
 

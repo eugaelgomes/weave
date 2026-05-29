@@ -118,7 +118,7 @@ export default function NotesCarousel({
         <div className="relative">
           <div
             ref={carouselRef}
-            className="no-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-1"
+            className="no-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth py-4 -my-4 px-2 -mx-2"
           >
             {notes.map((note) => {
               const validUpdated = formatDate(note.updated_at || note.lastModified);
@@ -196,7 +196,7 @@ export default function NotesCarousel({
                   className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center text-left sm:w-[220px] sm:snap-start"
                 >
                   <div
-                    className={`group dark:border-surface-dark-border dark:hover:border-surface-dark-border-strong dark:hover:shadow-surface-dark-md flex min-h-[148px] flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2.5 font-normal transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md hover:shadow-neutral-200/50 dark:bg-[#1d1d1b] ${note.done ? "opacity-90" : ""}`}
+                    className={`group dark:border-surface-dark-border dark:hover:border-surface-dark-border-strong flex min-h-[148px] flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2.5 font-normal shadow-sm dark:shadow-surface-dark-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md dark:hover:shadow-surface-dark-md dark:bg-[#1d1d1b] ${note.done ? "opacity-90" : ""}`}
                   >
                     <div className="flex flex-1 flex-col">
                       <div className="mb-1.5 flex items-start justify-between gap-1.5">
@@ -327,6 +327,7 @@ export default function NotesCarousel({
                 </button>
               );
             })}
+            <div className="w-2 shrink-0" aria-hidden="true" />
           </div>
 
           {notes.length > 1 && (

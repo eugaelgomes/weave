@@ -16,7 +16,7 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex h-48 items-center justify-center bg-white dark:bg-[#1d1d1b]">
+      <div className="flex h-48 items-center justify-center">
         <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-yellow-500"></div>
       </div>
     );

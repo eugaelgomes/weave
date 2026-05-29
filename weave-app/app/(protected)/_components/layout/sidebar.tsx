@@ -10,7 +10,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { isPathActive, getFirstNavigablePath } from "@/app/_utils/navigation";
 import {
-  ListTodo,
+  ListChecks,
   Home,
   Workflow,
   X,
@@ -34,7 +34,7 @@ const AiFredokaIcon = ({ className }: { className?: string }) => {
   return (
     <span
       className={cn(
-        "font-fredoka text-[11px] leading-none font-bold tracking-tighter select-none",
+        "font-fredoka text-[13px] leading-none font-bold tracking-tighter select-none flex items-center justify-center",
         className
       )}
     >
@@ -448,7 +448,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       icon: AiFredokaIcon,
       label: t.nav.weaveAi,
     },
-    { path: "/notes", icon: ListTodo, label: t.nav.notes },
+    { path: "/notes", icon: ListChecks, label: t.nav.notes },
     {
       path: "/projects",
       icon: Workflow,
@@ -469,7 +469,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       {/* Header mobile */}
       <div className="flex items-center justify-between p-3 lg:hidden">
         <div className="flex items-center gap-2">
-          <ListTodo className="text-brand-yellow h-3.5 w-3.5" />
+          <ListChecks className="text-brand-yellow h-3.5 w-3.5" />
         </div>
         <button
           type="button"
@@ -486,7 +486,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
         <div
           className={cn(
             "hidden shrink-0 items-center py-1 lg:flex",
-            isCollapsed ? "justify-center px-1" : "w-full px-2"
+            isCollapsed ? "justify-center px-1 w-full" : "w-full px-1"
           )}
         >
           {isCollapsed ? (

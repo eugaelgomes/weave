@@ -19,6 +19,7 @@ import {
   type WorkspaceHeaderType,
 } from "../_components/ui/headers/workspace-header";
 import { useLanguage } from "@/app/_contexts/language-context";
+import { ModuleLayout } from "../_components/layout/module-layout";
 
 type WorkspaceNavLeaf = {
   icon: LucideIcon;
@@ -238,21 +239,9 @@ function OrganizationLayoutContent({ children }: { children: React.ReactNode }) 
   );
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col gap-2 md:px-0">
-      <WorkspaceHeader type={activeLeaf.type} />
-
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="flex min-h-0 flex-1 flex-col md:flex-row md:gap-2">
-          <div className="dark:border-surface-dark-border hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-md md:sticky md:block md:h-[calc(100vh-auto)] md:w-[180px] dark:bg-[#1d1d1b]/50">
-            {sidebarContent}
-          </div>
-
-          <div className="dark:shadow-surface-dark-sm md:dark:border-surface-dark-border flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:bg-[#1d1d1b]">
-            {children}
-          </div>
-        </div>
-      </div>
-    </div>
+    <ModuleLayout header={<WorkspaceHeader type={activeLeaf.type} />} sidebarContent={sidebarContent}>
+      {children}
+    </ModuleLayout>
   );
 }
 
