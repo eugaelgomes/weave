@@ -28,8 +28,20 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { WeaveEngineIcon } from "@/app/(protected)/_components/layout/icons/weave-engine-icon";
-import { WeaveAiIcon } from "@/app/(protected)/_components/layout/icons/weave-ai-icon";
 import { ProjectIcon } from "@/app/(protected)/projects/_components/project-icon";
+
+const AiFredokaIcon = ({ className }: { className?: string }) => {
+  return (
+    <span
+      className={cn(
+        "font-fredoka text-[11px] leading-none font-bold tracking-tighter select-none",
+        className
+      )}
+    >
+      AI
+    </span>
+  );
+};
 
 const SUPPORT_URL = `${process.env.NEXT_PUBLIC_APP_URL || "https://weavenotes.app"}/support/`;
 
@@ -396,18 +408,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (isCollapsed) return;
-
-    const newExpandedState: Record<string, boolean> = {};
-    const itemsWithSubs = [{ path: "/weave-ai/chat", checkPath: "/weave-ai" }];
-
-    itemsWithSubs.forEach(({ path, checkPath }) => {
-      if (pathname.startsWith(checkPath)) {
-        newExpandedState[path] = true;
-      }
-    });
-
-    setExpandedItems((prev) => ({ ...prev, ...newExpandedState }));
+    // No sub-items to expand currently
   }, [pathname, isCollapsed]);
 
   const handleLinkClick = () => {
@@ -444,12 +445,8 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
     },
     {
       path: "/weave-ai/chat",
-      icon: WeaveAiIcon,
+      icon: AiFredokaIcon,
       label: t.nav.weaveAi,
-      subItems: [
-        { path: "/weave-ai/chat", icon: MessageSquare, label: t.nav.chat },
-        { path: "/weave-ai/agent", icon: Bot, label: t.nav.agent },
-      ],
     },
     { path: "/notes", icon: ListTodo, label: t.nav.notes },
     {
@@ -462,7 +459,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       icon: Waypoints,
       label: t.nav.weaveFlow,
     },
-    { path: "/documents", icon: FileText, label: t.nav.documents },
+    // { path: "/documents", icon: FileText, label: t.nav.documents },
     { path: "/settings", icon: Settings, label: t.nav.settingsLabel },
     ...(hasOrg ? [{ path: "/organization/general", icon: Building2, label: t.nav.workspace }] : []),
   ];

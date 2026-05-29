@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { flushSync } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Plus, Menu, X, Trash2 } from "lucide-react";
+import { Plus, Menu, X, Trash2, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WeaveAIHeader } from "../../_components/ui/headers/weave-ai-header";
 import { useChat } from "@/app/_contexts/chat-context";
@@ -17,6 +17,7 @@ interface ChatSidebarProps {
 
 function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { t } = useLanguage();
   const {
     chatHistory,
@@ -59,7 +60,26 @@ function ChatSidebar({ className, onLinkClick }: ChatSidebarProps) {
           )}
         </div>
 
-        <div className="mb-4">
+        <div className="mb-4 space-y-2">
+          <Link
+            href="/weave-ai/agent"
+            onClick={onLinkClick}
+            className={cn(
+              "flex w-full items-center justify-center gap-2 rounded-md border px-2 py-1.5 text-[11px] font-semibold shadow-sm transition",
+              pathname.startsWith("/weave-ai/agent")
+                ? "border-brand-yellow/50 bg-brand-yellow/10 dark:border-brand-yellow/40 dark:bg-brand-yellow/5 dark:text-brand-yellow text-slate-900"
+                : "border-neutral-200 bg-neutral-50 text-neutral-600 hover:bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-800/40 dark:text-neutral-400 dark:hover:bg-neutral-800"
+            )}
+          >
+            <Bot
+              className={cn(
+                "h-3.5 w-3.5",
+                pathname.startsWith("/weave-ai/agent") ? "text-brand-yellow" : "text-neutral-500"
+              )}
+            />
+            {t.nav.agent}
+          </Link>
+
           <button
             onClick={() => {
               flushSync(() => {
