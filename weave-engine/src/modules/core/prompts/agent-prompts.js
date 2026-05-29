@@ -268,6 +268,13 @@ function buildSystemMessage(additionalContext = {}) {
 - Use this context internally to align recommendations.`;
   }
 
+  if (additionalContext.organizationMembers?.length) {
+    systemMessage += `\n\n**PRIMARY CONTEXT - Organization Members**:`;
+    additionalContext.organizationMembers.forEach((member) => {
+      systemMessage += `\n- ${member.name || "Unknown"} (${member.email || "no-email"}) | role: ${member.role}`;
+    });
+  }
+
   if (additionalContext.indexedNotes?.length) {
     const maxNotes = 10;
     const notesToInclude = additionalContext.indexedNotes.slice(0, maxNotes);
@@ -322,6 +329,13 @@ function buildSystemMessage(additionalContext = {}) {
         if (stagesSummary) {
           systemMessage += `\n   stages_list: ${stagesSummary}`;
         }
+      }
+
+      if (Array.isArray(project.collaborators) && project.collaborators.length > 0) {
+        const collabSummary = project.collaborators
+          .map((c) => `${c.name || c.email} (${c.role})`)
+          .join(", ");
+        systemMessage += `\n   collaborators: ${collabSummary}`;
       }
     });
   }

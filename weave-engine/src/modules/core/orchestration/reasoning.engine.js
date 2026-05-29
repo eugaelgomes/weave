@@ -121,6 +121,7 @@ async function executeAgenticTask({
 }) {
   let iterations = 0;
   const startedAt = Date.now();
+  const executedActions = [];
 
   // Combine internal engine tools with API tools
   const availableFunctions = [...(functions || [])];
@@ -194,6 +195,8 @@ async function executeAgenticTask({
           executionContext
         );
 
+        executedActions.push({ name: fnName, args: fnArgs, result });
+
         currentOptions.messages.push({
           role: "tool",
           name: fnName,
@@ -207,6 +210,7 @@ async function executeAgenticTask({
         return {
           data,
           providerUsed,
+          executedActions,
         };
       }
     }
@@ -215,6 +219,7 @@ async function executeAgenticTask({
     return {
       data,
       providerUsed,
+      executedActions,
     };
   }
 
@@ -227,6 +232,7 @@ async function executeAgenticTask({
         "Eu pensei por muito tempo, mas não consegui chegar a uma conclusão final.",
     },
     providerUsed,
+    executedActions,
   };
 }
 

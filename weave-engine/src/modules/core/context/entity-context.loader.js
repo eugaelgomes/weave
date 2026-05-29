@@ -256,6 +256,25 @@ async function loadAccessibleProjects(
         (
           SELECT jsonb_agg(
             jsonb_build_object(
+              'user_id', pm.user_id::text,
+              'name', u.name,
+              'email', u.email,
+              'avatar_url', u.avatar_url,
+              'role', pm.role
+            )
+          )
+          FROM project_members pm
+          INNER JOIN users u ON pm.user_id = u.user_id
+          WHERE pm.project_id = p.id
+            AND pm.deleted = false
+            AND pm.suspended = false
+        ),
+        '[]'::jsonb
+      ) AS collaborators,
+      COALESCE(
+        (
+          SELECT jsonb_agg(
+            jsonb_build_object(
               'id', n.id::text,
               'title', n.title,
               'description', n.description,
@@ -314,6 +333,36 @@ async function loadAccessibleProjects(
 }
 
 /**
+ * Loads organization members for context injection.
+ * Limited to 10 members.
+ *
+ * @param {string|null} organizationId
+ * @returns {Promise<object[]>}
+ */
+async function loadOrganizationMembers(organizationId) {
+  if (!organizationId || !UUID_REGEX.test(String(organizationId || ""))) {
+    return [];
+  }
+
+  const query = `
+    SELECT
+      om.user_id::text,
+      u.name,
+      u.email,
+      om.role
+    FROM organization_members om
+    INNER JOIN users u ON om.user_id = u.user_id
+    WHERE om.organization_id = $1::uuid
+      AND om.deleted = false
+      AND om.suspended = false
+    LIMIT 10;
+  `;
+
+  const { rows } = await pool.query(query, [organizationId]);
+  return rows;
+}
+
+/**
  * Builds contextual entities for prompt composition.
  *
  * @param {object} payload
@@ -329,19 +378,22 @@ async function buildEntityContext(payload = {}) {
   const projectIds = await resolveProjectIdsFromPayload(payload.projectIds);
   const organizationId = normalizeOptionalUuid(payload.organizationId);
 
-  const [indexedNotes, indexedProjects] = await Promise.all([
+  const [indexedNotes, indexedProjects, organizationMembers] = await Promise.all([
     loadAccessibleNotes(noteIds, userId, organizationId),
     loadAccessibleProjects(projectIds, userId, organizationId),
+    loadOrganizationMembers(organizationId),
   ]);
 
   return {
     indexedNotes,
     indexedProjects,
+    organizationMembers,
   };
 }
 
 module.exports = {
   buildEntityContext,
+  loadOrganizationMembers,
   normalizeOptionalUuid,
   normalizeUuidList,
   resolveNoteIdsFromPayload,

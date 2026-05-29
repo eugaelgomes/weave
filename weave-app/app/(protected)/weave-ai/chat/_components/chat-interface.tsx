@@ -481,30 +481,6 @@ export default function ChatInterface({
                 key={msg.id}
                 className={`flex gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}
               >
-                <div className="mt-0.5 flex-shrink-0">
-                  <div
-                    className={`flex h-6 w-6 items-center justify-center overflow-hidden rounded-full ${
-                      isUser ? "bg-brand-yellow" : "bg-brand-navy"
-                    }`}
-                  >
-                    {isUser ? (
-                      user?.avatar_url ? (
-                        <Image
-                          src={user.avatar_url}
-                          alt="User"
-                          width={24}
-                          height={24}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <User className="text-brand-navy h-3 w-3" />
-                      )
-                    ) : (
-                      <Bot className="h-3 w-3 text-white" />
-                    )}
-                  </div>
-                </div>
-
                 <div
                   className={`flex max-w-[85%] flex-col ${isUser ? "items-end" : "items-start"}`}
                 >
@@ -684,9 +660,6 @@ export default function ChatInterface({
 
           {isTyping && (
             <div className="flex gap-2">
-              <div className="bg-brand-navy flex h-6 w-6 flex-shrink-0 items-center justify-center rounded">
-                <Bot className="h-3 w-3 text-white" />
-              </div>
               <div className="dark:border-surface-dark-border flex items-center rounded border border-neutral-200 bg-white px-3 py-2 dark:bg-[#1d1d1b]">
                 <div className="flex gap-1">
                   <span className="bg-brand-yellow h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.3s]"></span>

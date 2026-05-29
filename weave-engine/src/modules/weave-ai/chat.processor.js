@@ -352,7 +352,7 @@ class LlmQueueProcessor {
           payload.conversationHistory
         );
 
-        const { data, providerUsed } = await Promise.race([
+        const { data, providerUsed, executedActions = [] } = await Promise.race([
           executeAgenticTask({
             allowEdit: Boolean(payload.allowEdit),
             allowWebSearch: Boolean(payload.allowWebSearch),
@@ -393,6 +393,7 @@ class LlmQueueProcessor {
             content: data?.content || null,
             response: data?.text || data?.content || null,
             text: data?.text || null,
+            executedActions,
           },
           functions,
           providerUsed,
