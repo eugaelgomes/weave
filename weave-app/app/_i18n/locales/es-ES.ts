@@ -651,6 +651,7 @@ const esES: TranslationKeys = {
     projects: "Proyectos",
     limitReached: "Límite mensual de mensajes de IA alcanzado.",
     viewPlans: "Ver planes",
+    weavingResponse: "Tejiendo respuesta...",
   },
   plansSettings: {
     description: "Detalles de tu plan, límites y consumo actual.",

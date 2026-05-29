@@ -673,11 +673,57 @@ export default function ChatInterface({
 
           {isTyping && (
             <div className="flex gap-2">
-              <div className="dark:border-surface-dark-border flex items-center rounded border border-neutral-200 bg-white px-3 py-2 dark:bg-[#1d1d1b]">
-                <div className="flex gap-1">
-                  <span className="bg-brand-yellow h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.3s]"></span>
-                  <span className="bg-brand-yellow h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.15s]"></span>
-                  <span className="bg-brand-yellow h-1.5 w-1.5 animate-bounce rounded-full"></span>
+              <div className="dark:border-surface-dark-border flex items-center rounded-2xl border border-neutral-200 bg-white px-3.5 py-2 shadow-sm dark:bg-[#1d1d1b]">
+                <div className="flex items-center gap-2.5">
+                  <svg
+                    width="54"
+                    height="20"
+                    viewBox="0 0 54 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <style>{`
+                      @keyframes weave-flow-left {
+                        0% { stroke-dashoffset: 0; }
+                        100% { stroke-dashoffset: -12; }
+                      }
+                      @keyframes weave-flow-right {
+                        0% { stroke-dashoffset: 0; }
+                        100% { stroke-dashoffset: 12; }
+                      }
+                      @keyframes weave-pulse {
+                        0%, 100% { transform: scaleY(0.9); opacity: 0.85; }
+                        50% { transform: scaleY(1.15); opacity: 1; }
+                      }
+                      .weave-thread-1 {
+                        animation: weave-flow-left 1.2s linear infinite, weave-pulse 2s ease-in-out infinite;
+                        transform-origin: center;
+                      }
+                      .weave-thread-2 {
+                        animation: weave-flow-right 1.2s linear infinite, weave-pulse 2s ease-in-out infinite alternate;
+                        transform-origin: center;
+                      }
+                    `}</style>
+                    <path
+                      d="M 3 10 Q 15 2, 27 10 T 51 10"
+                      stroke="#FFD500"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray="6 6"
+                      className="weave-thread-1"
+                    />
+                    <path
+                      d="M 3 10 Q 15 18, 27 10 T 51 10"
+                      stroke="#EE964B"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray="6 6"
+                      className="weave-thread-2"
+                    />
+                  </svg>
+                  <span className="animate-pulse text-[10px] font-medium text-neutral-400 dark:text-neutral-500">
+                    {t.weaveAi.weavingResponse}
+                  </span>
                 </div>
               </div>
             </div>

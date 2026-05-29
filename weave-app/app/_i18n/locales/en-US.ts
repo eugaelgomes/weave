@@ -649,6 +649,7 @@ const enUS: TranslationKeys = {
     projects: "Projects",
     limitReached: "Monthly AI message limit reached.",
     viewPlans: "View plans",
+    weavingResponse: "Weaving response...",
   },
   plansSettings: {
     description: "Details of your plan, limits and current usage.",

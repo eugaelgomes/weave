@@ -647,6 +647,7 @@ const ptBR = {
     projects: "Projetos",
     limitReached: "Limite mensal de mensagens de IA atingido.",
     viewPlans: "Ver planos",
+    weavingResponse: "Tecendo resposta...",
   },
   plansSettings: {
     description: "Detalhes do seu plano, limites e consumo atual.",
