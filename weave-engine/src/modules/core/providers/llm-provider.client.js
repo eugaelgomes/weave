@@ -346,7 +346,10 @@ async function callOpenAiApi(
   }
 
   const normalizedFiles = normalizeFiles(options.files);
-  const userContent = [{ text: prompt, type: "text" }];
+  const userContent = [];
+  if (prompt) {
+    userContent.push({ text: prompt, type: "text" });
+  }
   const ignoredFiles = [];
 
   normalizedFiles.forEach((file) => {
@@ -429,7 +432,7 @@ async function callOpenAiApi(
     messages.push(...sanitizedMessages);
   }
 
-  if (prompt || userContent.length > 1) {
+  if (userContent.length > 0) {
     messages.push({
       content: userContent,
       role: "user",
