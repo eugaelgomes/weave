@@ -402,12 +402,6 @@ class LlmQueueProcessor {
     }
   }
 
-  /**
-   * Build chat-v2 system prompt using request metadata.
-   *
-   * @param {object} payload
-   * @returns {Promise<string>}
-   */
   async buildChatV2SystemMessage(payload = {}) {
     const noteIds = Array.isArray(payload.noteIds) ? payload.noteIds : [];
     const projectIds = Array.isArray(payload.projectIds)
@@ -448,46 +442,36 @@ class LlmQueueProcessor {
 
     const fileSummary =
       files.length === 0
-        ? "No files attached."
+        ? "none"
         : files
             .map(
               (file, index) =>
-                `${index + 1}. ${file.name || "file"} (${file.mimeType || "application/octet-stream"}, ${file.sizeBytes || 0} bytes)`
+                `${index + 1}. ${file.name || "file"} (${file.mimeType || "bin"}, ${file.sizeBytes || 0}B)`
             )
-            .join("\n");
+            .join("\n  ");
 
     return `${baseMessage}${composeOverlay}
 
-## Context received from Server (v2)
+[Context (v2)]
 - userId: ${payload.userId || "unknown"}
 - sessionId: ${payload.sessionId || "unknown"}
-- noteIds: ${noteIds.length > 0 ? noteIds.join(", ") : "none"}
-- projectIds: ${projectIds.length > 0 ? projectIds.join(", ") : "none"}
-- organizationId: ${organizationId || "unknown"}
-- userLanguage: ${payload.userLanguage || payload.context?.userLanguage || "unknown"}
+- noteIds: ${noteIds.length > 0 ? noteIds.join(",") : "none"}
+- projectIds: ${projectIds.length > 0 ? projectIds.join(",") : "none"}
+- orgId: ${organizationId || "unknown"}
+- lang: ${payload.userLanguage || payload.context?.userLanguage || "unknown"}
 - allowEdit: ${payload.allowEdit ? "true" : "false"}
-
-## Temporary files
-${fileSummary}
-
+- files: ${files.length === 0 ? "none" : `\n  ${fileSummary}`}
 ${
   noteDocumentContract
-    ? `## Note document contract for update_note_content
-- When updating note body, prefer returning "document" (full payload) or "blocks" (array) in function arguments.
-- Allowed document node types: ${Array.isArray(noteDocumentContract.allowedNodeTypes) ? noteDocumentContract.allowedNodeTypes.join(", ") : "unknown"}
-- Allowed mark types: ${Array.isArray(noteDocumentContract.allowedMarkTypes) ? noteDocumentContract.allowedMarkTypes.join(", ") : "unknown"}
-- Avoid unsupported node/mark types outside this contract.
-- Prefer structured output by intent:
-  - sections/titles -> heading + paragraph
-  - enumerations/checklists -> bulletList, orderedList, taskList/taskItem
-  - emphasis/callout -> blockquote
-  - snippets/technical commands -> codeBlock
-  - plain prose only when user asks for short/simple text
-- Never return empty content for update_note_content. Ensure at least one text node with meaningful text.
-
-`
+    ? `
+[Note Doc Contract]
+- Allowed nodes: ${Array.isArray(noteDocumentContract.allowedNodeTypes) ? noteDocumentContract.allowedNodeTypes.join(",") : "unknown"}
+- Allowed marks: ${Array.isArray(noteDocumentContract.allowedMarkTypes) ? noteDocumentContract.allowedMarkTypes.join(",") : "unknown"}
+- Format intent: sections->heading+para; lists->bulletList/orderedList/taskList; emphasis->blockquote; code->codeBlock.
+- Never return empty. Must use structured function call if db action needed.`
     : ""
-}Respond to the user clearly. If database action is needed, return a structured function call.${agentInstructions ? `\n\n## Selected agent\n${agentInstructions}` : ""}`;
+}
+Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`;
   }
 
   /**
