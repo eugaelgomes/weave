@@ -74,10 +74,19 @@ const AgentIcon = ({ agent, className }: { agent?: Agent | null; className?: str
 };
 
 function formatModelLabel(model: AIModel) {
-  const providerLabel = model.name ? model.name.toUpperCase() : "MODEL";
-  return model.description
-    ? `${providerLabel} - ${model.description} (${model.version})`
-    : `${providerLabel} (${model.version})`;
+  const version = model.version || "";
+  if (!version) return model.description || model.name;
+  
+  return version
+    .split("-")
+    .map(word => {
+      const lower = word.toLowerCase();
+      if (lower === "gpt") return "GPT";
+      if (lower === "pro") return "PRO";
+      if (lower === "preview") return "PREVIEW";
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join("-");
 }
 
 function validateChatFile(file: File): string | null {
@@ -972,8 +981,8 @@ export default function ChatInterface({
                       model={selectedModel}
                       className="h-3.5 w-3.5 flex-shrink-0 object-contain"
                     />
-                    <span className="max-w-[80px] truncate text-[10px] font-semibold text-neutral-500">
-                      {loading ? t.common.loading : selectedModel?.name}
+                    <span className="max-w-[120px] truncate text-[10px] font-semibold text-neutral-500">
+                      {loading ? t.common.loading : (selectedModel ? formatModelLabel(selectedModel) : "")}
                     </span>
                     <ChevronDown className="h-2.5 w-2.5 flex-shrink-0 text-neutral-400" />
                   </button>

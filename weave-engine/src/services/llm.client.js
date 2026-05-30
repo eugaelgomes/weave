@@ -6,6 +6,8 @@ const AI_PROVIDERS = {
 };
 
 const AI_MODELS = {
+  GEMINI_3_5_FLASH: "gemini-3.5-flash",
+  GEMINI_3_5_FLASH_LITE: "gemini-3.5-flash-lite",
   GEMINI_3_1_PRO_PREVIEW: "gemini-3.1-pro-preview",
   OPENAI_GPT_4O_MINI: "gpt-4o-mini",
 };

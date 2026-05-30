@@ -10,7 +10,9 @@ const LLM_PROVIDER_LOGOS = Object.freeze({
 
 const LLM_MODELS = Object.freeze({
   [LLM_PROVIDERS.GEMINI]: Object.freeze({
-    PRO: "gemini-3.1-pro-preview",
+    FLASH_3_5: "gemini-3.5-flash",
+    FLASH_3_5_LITE: "gemini-3.5-flash-lite",
+    PRO_3_1_PREVIEW: "gemini-3.1-pro-preview",
   }),
   [LLM_PROVIDERS.OPENAI]: Object.freeze({
     DEFAULT: "gpt-5.4",
