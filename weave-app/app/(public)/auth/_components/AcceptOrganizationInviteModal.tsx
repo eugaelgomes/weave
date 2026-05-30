@@ -2,7 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, Loader2, Building2, Eye, EyeOff, User, Lock, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  X,
+  Loader2,
+  Building2,
+  Eye,
+  EyeOff,
+  User,
+  Lock,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 import {
   acceptInvite,
   previewOrganizationInvite,
@@ -82,7 +92,10 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [checkingUsername, setCheckingUsername] = useState(false);
-  const [usernameAvailability, setUsernameAvailability] = useState<{available: boolean, message?: string} | null>(null);
+  const [usernameAvailability, setUsernameAvailability] = useState<{
+    available: boolean;
+    message?: string;
+  } | null>(null);
 
   const greeting = useMemo(() => (preview ? buildInviteGreeting(t, preview) : ""), [preview, t]);
 
@@ -105,9 +118,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
         }
       } catch (e) {
         if (!cancelled) {
-          setLoadError(
-            formatInviteLoadError(e, t.acceptOrganizationInvite.loadErrorDefault)
-          );
+          setLoadError(formatInviteLoadError(e, t.acceptOrganizationInvite.loadErrorDefault));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -128,7 +139,10 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
     }
 
     if (!USERNAME_REGEX.test(trimmed)) {
-      setUsernameAvailability({ available: false, message: "Apenas letras, números, ., - ou _ são permitidos." });
+      setUsernameAvailability({
+        available: false,
+        message: "Apenas letras, números, ., - ou _ são permitidos.",
+      });
       setCheckingUsername(false);
       return;
     }
@@ -141,21 +155,31 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
 
     let cancelled = false;
     setCheckingUsername(true);
-    
+
     const handler = setTimeout(async () => {
       try {
-        const res = await apiClient.get(`${API_ENDPOINTS.CHECK_USERNAME_PUBLIC}?username=${encodeURIComponent(trimmed)}`);
-        const json = await handleResponse<{ availability?: { username: { available: boolean } } }>(res);
+        const res = await apiClient.get(
+          `${API_ENDPOINTS.CHECK_USERNAME_PUBLIC}?username=${encodeURIComponent(trimmed)}`
+        );
+        const json = await handleResponse<{ availability?: { username: { available: boolean } } }>(
+          res
+        );
         if (!cancelled) {
           if (json?.availability?.username?.available) {
             setUsernameAvailability({ available: true, message: "Nome de usuário disponível!" });
           } else {
-            setUsernameAvailability({ available: false, message: "Nome de usuário já está em uso." });
+            setUsernameAvailability({
+              available: false,
+              message: "Nome de usuário já está em uso.",
+            });
           }
         }
       } catch (e) {
         if (!cancelled) {
-          setUsernameAvailability({ available: false, message: "Erro ao verificar disponibilidade." });
+          setUsernameAvailability({
+            available: false,
+            message: "Erro ao verificar disponibilidade.",
+          });
         }
       } finally {
         if (!cancelled) setCheckingUsername(false);
@@ -199,7 +223,9 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
 
     const trimmedUsername = username.trim();
     if (!name.trim() || !trimmedUsername || !password || !confirmPassword) {
-      setFormError(t.acceptOrganizationInvite.fillAllFields || "Por favor, preencha todos os campos.");
+      setFormError(
+        t.acceptOrganizationInvite.fillAllFields || "Por favor, preencha todos os campos."
+      );
       return;
     }
 
@@ -209,7 +235,9 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
     }
 
     if (!PASSWORD_REGEX.test(password)) {
-      setFormError("A senha deve conter no mínimo 8 caracteres, incluindo letras maiúsculas, minúsculas e números.");
+      setFormError(
+        "A senha deve conter no mínimo 8 caracteres, incluindo letras maiúsculas, minúsculas e números."
+      );
       return;
     }
 
@@ -334,8 +362,17 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
 
               {formError && (
                 <div className="animate-in fade-in slide-in-from-top-4 fixed top-4 right-4 z-[999] flex max-w-sm items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 shrink-0 text-red-500"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   <p>{formError}</p>
                 </div>
@@ -401,7 +438,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
                       />
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                         {checkingUsername ? (
-                          <Loader2 className="h-4 w-4 animate-spin text-brand-primary-500" />
+                          <Loader2 className="text-brand-primary-500 h-4 w-4 animate-spin" />
                         ) : usernameAvailability?.available === true ? (
                           <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                         ) : usernameAvailability?.available === false ? (
@@ -410,7 +447,9 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
                       </div>
                     </div>
                     {usernameAvailability?.message && (
-                      <p className={`mt-1 text-xs ${usernameAvailability.available ? "text-emerald-600" : "text-red-500"}`}>
+                      <p
+                        className={`mt-1 text-xs ${usernameAvailability.available ? "text-emerald-600" : "text-red-500"}`}
+                      >
                         {usernameAvailability.message}
                       </p>
                     )}
@@ -440,21 +479,47 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
                             : t.acceptOrganizationInvite.showPassword
                         }
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
                       </button>
                     </div>
                     {password && (
                       <div className="mt-2 space-y-1">
                         <div className="flex gap-1">
-                          <div className={`h-1 flex-1 rounded-full ${hasLength && hasLower && hasUpper && hasNumber ? "bg-emerald-500" : password.length > 0 ? "bg-amber-400" : "bg-neutral-200"}`}></div>
-                          <div className={`h-1 flex-1 rounded-full ${hasLength && hasLower && hasUpper && hasNumber ? "bg-emerald-500" : (hasLength && (hasLower || hasUpper || hasNumber)) ? "bg-amber-400" : "bg-neutral-200"}`}></div>
-                          <div className={`h-1 flex-1 rounded-full ${hasLength && hasLower && hasUpper && hasNumber ? "bg-emerald-500" : "bg-neutral-200"}`}></div>
+                          <div
+                            className={`h-1 flex-1 rounded-full ${hasLength && hasLower && hasUpper && hasNumber ? "bg-emerald-500" : password.length > 0 ? "bg-amber-400" : "bg-neutral-200"}`}
+                          ></div>
+                          <div
+                            className={`h-1 flex-1 rounded-full ${hasLength && hasLower && hasUpper && hasNumber ? "bg-emerald-500" : hasLength && (hasLower || hasUpper || hasNumber) ? "bg-amber-400" : "bg-neutral-200"}`}
+                          ></div>
+                          <div
+                            className={`h-1 flex-1 rounded-full ${hasLength && hasLower && hasUpper && hasNumber ? "bg-emerald-500" : "bg-neutral-200"}`}
+                          ></div>
                         </div>
-                        <ul className="grid grid-cols-2 gap-1 text-[10px] text-brand-secondary-500 mt-1.5">
-                          <li className={`flex items-center gap-1 ${hasLength ? "text-emerald-600" : ""}`}><CheckCircle2 className="h-3 w-3" /> Min 8 caract.</li>
-                          <li className={`flex items-center gap-1 ${hasUpper ? "text-emerald-600" : ""}`}><CheckCircle2 className="h-3 w-3" /> Letra Maiúscula</li>
-                          <li className={`flex items-center gap-1 ${hasLower ? "text-emerald-600" : ""}`}><CheckCircle2 className="h-3 w-3" /> Letra Minúscula</li>
-                          <li className={`flex items-center gap-1 ${hasNumber ? "text-emerald-600" : ""}`}><CheckCircle2 className="h-3 w-3" /> Número</li>
+                        <ul className="text-brand-secondary-500 mt-1.5 grid grid-cols-2 gap-1 text-[10px]">
+                          <li
+                            className={`flex items-center gap-1 ${hasLength ? "text-emerald-600" : ""}`}
+                          >
+                            <CheckCircle2 className="h-3 w-3" /> Min 8 caract.
+                          </li>
+                          <li
+                            className={`flex items-center gap-1 ${hasUpper ? "text-emerald-600" : ""}`}
+                          >
+                            <CheckCircle2 className="h-3 w-3" /> Letra Maiúscula
+                          </li>
+                          <li
+                            className={`flex items-center gap-1 ${hasLower ? "text-emerald-600" : ""}`}
+                          >
+                            <CheckCircle2 className="h-3 w-3" /> Letra Minúscula
+                          </li>
+                          <li
+                            className={`flex items-center gap-1 ${hasNumber ? "text-emerald-600" : ""}`}
+                          >
+                            <CheckCircle2 className="h-3 w-3" /> Número
+                          </li>
                         </ul>
                       </div>
                     )}
@@ -484,7 +549,11 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
                             : t.acceptOrganizationInvite.showPassword
                         }
                       >
-                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
                       </button>
                     </div>
                     {confirmPassword && confirmPassword !== password && (
@@ -493,9 +562,10 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
                   </div>
                   <button
                     type="submit"
-                    disabled={submitting || !!(usernameAvailability && !usernameAvailability.available)}
-                    className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center gap-2 rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:hover:scale-100 disabled:cursor-not-allowed"
-
+                    disabled={
+                      submitting || !!(usernameAvailability && !usernameAvailability.available)
+                    }
+                    className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center gap-2 rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
                   >
                     {submitting ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

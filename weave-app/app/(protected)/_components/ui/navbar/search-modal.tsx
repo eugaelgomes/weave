@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useContext } from "react";
 import {
   Search,
   SlidersHorizontal,
@@ -12,8 +12,8 @@ import {
   Home,
 } from "lucide-react";
 import { createPortal } from "react-dom";
-import { useNotes } from "@/app/_contexts/notes-context";
-import { useProjects } from "@/app/_contexts/projects-context";
+import { NotesContext } from "@/app/_contexts/notes-context";
+import { ProjectsContext } from "@/app/_contexts/projects-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import Link from "next/link";
 
@@ -37,8 +37,10 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { notesOverview } = useNotes();
-  const { projectsOverview } = useProjects();
+  const notesContext = useContext(NotesContext);
+  const projectsContext = useContext(ProjectsContext);
+  const notesOverview = notesContext ? notesContext.notesOverview : [];
+  const projectsOverview = projectsContext ? projectsContext.projectsOverview : [];
   const { t } = useLanguage();
   const searchT = t.navbar.searchModal;
 

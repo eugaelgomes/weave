@@ -7,6 +7,9 @@ import { User, Lock, Zap, CreditCard, type LucideIcon } from "lucide-react";
 import { SettingsHeader } from "../_components/ui/headers/settings-header";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { ModuleLayout } from "../_components/layout/module-layout";
+import { ApiTokensProvider } from "@/app/_contexts/api-tokens-context";
+import { BackupProvider } from "@/app/_contexts/backup-context";
+import { SlackProvider } from "@/app/_contexts/slack-context";
 
 type SettingsNavItem = {
   icon: LucideIcon;
@@ -108,12 +111,23 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ModuleLayout header={<SettingsHeader type={activeItem.type} />} sidebarContent={sidebarContent}>
+    <ModuleLayout
+      header={<SettingsHeader type={activeItem.type} />}
+      sidebarContent={sidebarContent}
+    >
       {children}
     </ModuleLayout>
   );
 }
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
-  return <SettingsLayoutContent>{children}</SettingsLayoutContent>;
+  return (
+    <ApiTokensProvider>
+      <BackupProvider>
+        <SlackProvider>
+          <SettingsLayoutContent>{children}</SettingsLayoutContent>
+        </SlackProvider>
+      </BackupProvider>
+    </ApiTokensProvider>
+  );
 }

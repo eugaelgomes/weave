@@ -42,18 +42,20 @@ export const Toggle = ({
   description?: string;
   disabled?: boolean;
 }) => (
-  <label className={`flex cursor-pointer items-center justify-between gap-3 rounded-md py-2 transition-all ${disabled ? "cursor-not-allowed opacity-50" : "group"}`}>
+  <label
+    className={`flex cursor-pointer items-center justify-between gap-3 rounded-md py-2 transition-all ${disabled ? "cursor-not-allowed opacity-50" : "group"}`}
+  >
     <div className="flex flex-col">
       <span className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
         {label}
       </span>
       {description && (
-        <span className="text-[10px] text-neutral-500 dark:text-neutral-500 mt-0.5">
+        <span className="mt-0.5 text-[10px] text-neutral-500 dark:text-neutral-500">
           {description}
         </span>
       )}
     </div>
-    <div className="relative flex items-center shrink-0">
+    <div className="relative flex shrink-0 items-center">
       <input
         type="checkbox"
         checked={checked}
@@ -85,7 +87,7 @@ export const Select = ({
     <div className="space-y-1">
       <label
         htmlFor={selectId}
-        className="text-[10px] font-bold tracking-[0.12em] text-neutral-400 dark:text-neutral-500 mb-1 block uppercase"
+        className="mb-1 block text-[10px] font-bold tracking-[0.12em] text-neutral-400 uppercase dark:text-neutral-500"
       >
         {label}
       </label>
@@ -95,7 +97,7 @@ export const Select = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
-          className={`w-full rounded-md text-[12px] font-medium transition-all outline-none py-1.5 h-8 border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200 disabled:opacity-50 appearance-none`}
+          className={`dark:border-surface-dark-border-strong h-8 w-full appearance-none rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-[12px] font-medium transition-all outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 dark:bg-[#1d1d1b] dark:text-neutral-200`}
         >
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -133,7 +135,7 @@ export const Input = ({
     <div className="space-y-1">
       <label
         htmlFor={inputId}
-        className="text-[10px] font-bold tracking-[0.12em] text-neutral-400 dark:text-neutral-500 mb-1 block uppercase"
+        className="mb-1 block text-[10px] font-bold tracking-[0.12em] text-neutral-400 uppercase dark:text-neutral-500"
       >
         {label}
       </label>
@@ -144,7 +146,7 @@ export const Input = ({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         placeholder={placeholder}
-        className={`w-full rounded-md text-[12px] font-medium transition-all outline-none py-1.5 h-8 border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200 disabled:opacity-50`}
+        className={`dark:border-surface-dark-border-strong h-8 w-full rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-[12px] font-medium transition-all outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 dark:bg-[#1d1d1b] dark:text-neutral-200`}
       />
     </div>
   );

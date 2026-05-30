@@ -300,7 +300,7 @@ export interface ProjectsContextType {
   ) => Promise<ReasoningActionItem | null>;
 }
 
-const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
+export const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
 
 export function useProjects(): ProjectsContextType {
   const context = useContext(ProjectsContext);

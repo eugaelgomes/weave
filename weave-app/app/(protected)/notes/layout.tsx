@@ -14,6 +14,10 @@ import {
 import GlobalLoading from "@/app/_components/ui/global-loading";
 import { getNotePath } from "@/app/_utils/note-path";
 import { ModuleLayout } from "../_components/layout/module-layout";
+import { NotesProvider } from "@/app/_contexts/notes-context";
+import { TagsProvider } from "@/app/_contexts/tags-context";
+import { TaskPrioritiesProvider } from "@/app/_contexts/task-priorities-context";
+
 function NotesLayoutContent({ children }: { children: React.ReactNode }) {
   const { loading: notesLoading, getRecentNotes } = useNotes();
   const pathname = usePathname();
@@ -127,8 +131,14 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <NoteCommentsPanelProvider>
-      <NotesLayoutContent>{children}</NotesLayoutContent>
-    </NoteCommentsPanelProvider>
+    <NotesProvider>
+      <TagsProvider>
+        <TaskPrioritiesProvider>
+          <NoteCommentsPanelProvider>
+            <NotesLayoutContent>{children}</NotesLayoutContent>
+          </NoteCommentsPanelProvider>
+        </TaskPrioritiesProvider>
+      </TagsProvider>
+    </NotesProvider>
   );
 }

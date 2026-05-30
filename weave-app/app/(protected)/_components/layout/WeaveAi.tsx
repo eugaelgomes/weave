@@ -46,13 +46,13 @@ export default function WeaveAi() {
           "fixed z-[106] flex h-14 w-14 items-center justify-center rounded-full print:hidden",
           "right-5 bottom-5 md:right-8 md:bottom-5",
           // Estilo Clean (Branco com borda sutil)
-          "bg-white text-neutral-800 border border-neutral-200/60",
-          "shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] dark:bg-[#1d1d1b] dark:text-neutral-200 dark:border-neutral-800 dark:shadow-none",
+          "border border-neutral-200/60 bg-white text-neutral-800",
+          "shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] dark:border-neutral-800 dark:bg-[#1d1d1b] dark:text-neutral-200 dark:shadow-none",
           // Animações
           "transition-all duration-300 ease-out",
           "hover:-translate-y-0.5 hover:shadow-[0_8px_25px_-4px_rgba(0,0,0,0.12)] active:translate-y-0 active:scale-95",
           // Acessibilidade
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-900"
+          "focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2 focus-visible:outline-none dark:focus-visible:ring-offset-neutral-900"
         )}
         aria-haspopup="dialog"
         aria-label={open ? t.common.close : t.nav.weaveAi}
@@ -60,8 +60,8 @@ export default function WeaveAi() {
         <div className="relative flex h-full w-full items-center justify-center">
           <span
             className={cn(
-              "absolute text-[1.1rem] transition-all duration-300 ease-in-out font-medium",
-              open ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100"
+              "absolute text-[1.1rem] font-medium transition-all duration-300 ease-in-out",
+              open ? "scale-0 rotate-90 opacity-0" : "scale-100 rotate-0 opacity-100"
             )}
             // Caso já tenha a Fredoka configurada no Tailwind (ex: font-fredoka), você pode remover o style e usar a classe lá em cima.
             style={{ fontFamily: "'Fredoka', sans-serif", letterSpacing: "-0.02em" }}
@@ -73,7 +73,9 @@ export default function WeaveAi() {
             strokeWidth={2}
             className={cn(
               "absolute h-6 w-6 transition-all duration-300 ease-in-out",
-              open ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-0 opacity-0 text-neutral-400"
+              open
+                ? "scale-100 rotate-0 opacity-100"
+                : "scale-0 -rotate-90 text-neutral-400 opacity-0"
             )}
             aria-hidden={!open}
           />
@@ -108,7 +110,7 @@ export default function WeaveAi() {
                   <Link
                     href="/weave-ai/chat"
                     onClick={() => setOpen(false)}
-                    className="text-neutral-500 dark:text-neutral-400 text-[10px] font-medium hover:text-neutral-900 hover:underline dark:hover:text-neutral-100"
+                    className="text-[10px] font-medium text-neutral-500 hover:text-neutral-900 hover:underline dark:text-neutral-400 dark:hover:text-neutral-100"
                   >
                     {t.nav.weaveAiOpenFull}
                   </Link>

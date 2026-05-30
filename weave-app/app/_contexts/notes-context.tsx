@@ -136,7 +136,7 @@ export interface NotesContextType {
   recuseCollaboration: (noteId: string) => Promise<boolean>;
 }
 
-const NotesContext = createContext<NotesContextType | undefined>(undefined);
+export const NotesContext = createContext<NotesContextType | undefined>(undefined);
 
 export function useNotes(): NotesContextType {
   const context = useContext(NotesContext);

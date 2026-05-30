@@ -854,12 +854,12 @@ export const previewOrganizationInvite = async (
         : "Resposta inválida do servidor"
     );
   }
-  
+
   const previewData = data.data as any;
   if (previewData.org_logo_url) {
     previewData.org_logo_url = getStorageUrl(previewData.org_logo_url);
   }
-  
+
   return asUnknown<OrganizationInvitePreview>(previewData);
 };
 

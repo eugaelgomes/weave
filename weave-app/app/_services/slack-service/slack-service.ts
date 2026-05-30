@@ -1,4 +1,9 @@
-import { apiClient, API_ENDPOINTS, handleResponse, API_BASE_URL } from "@/app/_services/api-methods";
+import {
+  apiClient,
+  API_ENDPOINTS,
+  handleResponse,
+  API_BASE_URL,
+} from "@/app/_services/api-methods";
 import { z } from "zod";
 
 export interface SlackStatus {

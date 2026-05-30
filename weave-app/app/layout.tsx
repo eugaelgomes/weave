@@ -21,7 +21,8 @@ const fredoka = Fredoka({
 const siteOrigin = getSiteOrigin();
 
 const siteTitle = "Weave";
-const siteDescription = "Weave é uma plataforma proativa de gestão de projetos que usa inteligência artificial para ajudar equipes a organizar, acompanhar e entregar projetos de forma mais inteligente e eficiente.";
+const siteDescription =
+  "Weave é uma plataforma proativa de gestão de projetos que usa inteligência artificial para ajudar equipes a organizar, acompanhar e entregar projetos de forma mais inteligente e eficiente.";
 
 const ogImages: Array<{ url: string; width: number; height: number; alt: string; type: string }> = [
   {

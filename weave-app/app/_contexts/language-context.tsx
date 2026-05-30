@@ -26,7 +26,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const prefs = (user?.usage_preference as UserPreferences) || {};
 
   const userLocale = prefs.language?.interface as SupportedLocale | undefined;
-  
+
   // Use a stable initial state (SSR safe) to prevent hydration mismatches.
   // The server always returns 'pt-BR' when navigator is undefined.
   const [locale, setLocaleState] = useState<SupportedLocale>(userLocale || "pt-BR");

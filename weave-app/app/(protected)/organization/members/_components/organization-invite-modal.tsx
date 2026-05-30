@@ -256,7 +256,7 @@ export function OrganizationInviteModal({
             <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
           </div>
         </div>
-        
+
         {!skipProjectMemberRole ? (
           <>
             <div>
@@ -294,7 +294,9 @@ export function OrganizationInviteModal({
                 <div className="relative">
                   <select
                     value={projectMemberRole}
-                    onChange={(e) => setProjectMemberRole(e.target.value as ProjectMemberRoleForInvite)}
+                    onChange={(e) =>
+                      setProjectMemberRole(e.target.value as ProjectMemberRoleForInvite)
+                    }
                     aria-label={t.organizationMembers.areaRoleLabel}
                     className={`${inputClass} appearance-none px-3`}
                   >

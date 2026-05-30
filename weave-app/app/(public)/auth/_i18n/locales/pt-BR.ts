@@ -17,8 +17,7 @@ export const ptBR = {
   },
   signUp: {
     title: "Criar Conta",
-    subtitle:
-      "Crie sua conta no Weave e comece a gerenciar seus projetos de forma proativa!",
+    subtitle: "Crie sua conta no Weave e comece a gerenciar seus projetos de forma proativa!",
     namePlaceholder: "Nome",
     usernamePlaceholder: "Usuário",
     passwordPlaceholder: "Senha",

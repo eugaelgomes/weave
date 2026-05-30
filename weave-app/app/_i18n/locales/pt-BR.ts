@@ -539,7 +539,8 @@ const ptBR = {
     membershipStatusActive: "Ativo",
     membershipStatusPending: "Pendente",
     removeAccessConfirmButton: "Sim, remover",
-    removeAccessQuestion: "Tem certeza de que deseja remover {name} da organização? O membro perderá acesso a todos os projetos e dados.",
+    removeAccessQuestion:
+      "Tem certeza de que deseja remover {name} da organização? O membro perderá acesso a todos os projetos e dados.",
     inviteNamePlaceholder: "Nome",
     inviteEmailPlaceholder: "email@exemplo.com",
     inviteEmailPlusAliasNotAllowed:

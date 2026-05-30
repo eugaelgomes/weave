@@ -20,6 +20,8 @@ import {
 } from "../_components/ui/headers/workspace-header";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { ModuleLayout } from "../_components/layout/module-layout";
+import { OrganizationProvider } from "@/app/_contexts/organization-context";
+import { SlackProvider } from "@/app/_contexts/slack-context";
 
 type WorkspaceNavLeaf = {
   icon: LucideIcon;
@@ -239,7 +241,10 @@ function OrganizationLayoutContent({ children }: { children: React.ReactNode }) 
   );
 
   return (
-    <ModuleLayout header={<WorkspaceHeader type={activeLeaf.type} />} sidebarContent={sidebarContent}>
+    <ModuleLayout
+      header={<WorkspaceHeader type={activeLeaf.type} />}
+      sidebarContent={sidebarContent}
+    >
       {children}
     </ModuleLayout>
   );
@@ -252,5 +257,11 @@ export default function OrganizationLayout({ children }: { children: React.React
     return <>{children}</>;
   }
 
-  return <OrganizationLayoutContent>{children}</OrganizationLayoutContent>;
+  return (
+    <OrganizationProvider>
+      <SlackProvider>
+        <OrganizationLayoutContent>{children}</OrganizationLayoutContent>
+      </SlackProvider>
+    </OrganizationProvider>
+  );
 }

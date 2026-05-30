@@ -110,17 +110,18 @@ export default function AuthPage() {
   }, [searchParams]);
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full items-center justify-center bg-white p-4 text-slate-950 sm:p-8 overflow-hidden">
+    <div className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-white p-4 text-slate-950 sm:p-8">
       {/* Background Art com o Engine */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none flex items-center justify-center">
+      <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center overflow-hidden">
         {/* Composição minimalista: do meio para o canto superior direito */}
-        <WeaveEngineIcon className="absolute -right-50 -top-20 h-[900px] w-[900px] opacity-15 rotate-12" />
+        <WeaveEngineIcon className="absolute -top-20 -right-50 h-[900px] w-[900px] rotate-12 opacity-15" />
       </div>
 
       <div className="relative z-10 w-full max-w-[440px] overflow-hidden">
         <div className="mb-2 flex flex-col items-center justify-center text-center">
           <span className="text-xs font-bold tracking-wide text-neutral-500">
-            {(authT.authHeader.preTitle as any)[currentView] || (authT.authHeader.preTitle as any).default}
+            {(authT.authHeader.preTitle as any)[currentView] ||
+              (authT.authHeader.preTitle as any).default}
           </span>
           <span
             className={cn(
@@ -147,7 +148,9 @@ export default function AuthPage() {
               isOpen={!!inviteToken}
               token={inviteToken ?? ""}
               onClose={() => router.replace("/auth/")}
-              onSuccess={(login?: string) => handleNavigate("signin", login ? { login } : undefined)}
+              onSuccess={(login?: string) =>
+                handleNavigate("signin", login ? { login } : undefined)
+              }
             />
           )}
           {currentView === "confirm" && (

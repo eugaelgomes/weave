@@ -39,8 +39,8 @@ export function SettingsForm({
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
-        <section className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/20">
-          <h2 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2">
+        <section className="dark:border-surface-dark-border-muted space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:bg-[#1d1d1b]/20">
+          <h2 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
             <Settings size={12} className="text-amber-500" />
             {t.organizationGeneral.settingsSectionTitle}
           </h2>
@@ -80,8 +80,8 @@ export function SettingsForm({
           </div>
         </section>
 
-        <section className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/20">
-          <h2 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2">
+        <section className="dark:border-surface-dark-border-muted space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:bg-[#1d1d1b]/20">
+          <h2 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
             <MapPin size={12} className="text-amber-500" />
             {t.organizationGeneral.locationSectionTitle}
           </h2>
@@ -118,8 +118,8 @@ export function SettingsForm({
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <section className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/20">
-          <h2 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2">
+        <section className="dark:border-surface-dark-border-muted space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:bg-[#1d1d1b]/20">
+          <h2 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
             <Layers size={12} className="text-amber-500" />
             {t.organizationGeneral.featuresSectionTitle}
           </h2>
@@ -150,8 +150,8 @@ export function SettingsForm({
           </div>
         </section>
 
-        <section className="space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]/20">
-          <h2 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2">
+        <section className="dark:border-surface-dark-border-muted space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:bg-[#1d1d1b]/20">
+          <h2 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
             <Bell size={12} className="text-amber-500" />
             {t.organizationGeneral.notificationsSectionTitle}
           </h2>
@@ -192,7 +192,7 @@ export function SettingsForm({
       {userIsOwner ? (
         <section className="space-y-3 rounded-md border border-red-100 bg-red-50/20 p-4 dark:border-red-900/20 dark:bg-red-950/10">
           <div className="mb-2">
-            <h2 className="text-[10px] font-bold tracking-wider text-red-600 dark:text-red-400 flex items-center gap-1.5 mb-1">
+            <h2 className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-red-600 dark:text-red-400">
               <ShieldAlert size={12} />
               {t.organizationGeneral.dangerZoneTitle}
             </h2>

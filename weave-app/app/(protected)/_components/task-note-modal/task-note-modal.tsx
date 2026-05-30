@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useContext } from "react";
 import { createPortal } from "react-dom";
 import { Loader2 } from "lucide-react";
 
 import {
-  useNotes,
+  NotesContext,
   type Note,
   type Block,
   type UpdateNoteData,
 } from "@/app/_contexts/notes-context";
 import { useOrganization } from "@/app/_contexts/organization-context";
 import {
-  useProjects,
+  ProjectsContext,
   type ProjectStage,
   type TaskPriority,
 } from "@/app/_contexts/projects-context";
@@ -39,8 +39,22 @@ type NoteConflictState = {
 };
 
 export function TaskNoteModal() {
+  const { state } = useTaskNoteModal();
+  if (!state.isOpen) return null;
+  return <TaskNoteModalInner />;
+}
+
+function TaskNoteModalInner() {
   const { state, callbacks, closeModal, openModal } = useTaskNoteModal();
   const { isOpen, mode, noteId, projectId, projectPublicId, stageId, parentNoteId } = state;
+
+  const notesContext = useContext(NotesContext);
+  const projectsContext = useContext(ProjectsContext);
+
+  if (!notesContext || !projectsContext) {
+    console.warn("TaskNoteModal: NotesContext or ProjectsContext is missing.");
+    return null;
+  }
 
   const {
     getNoteById,
@@ -49,7 +63,7 @@ export function TaskNoteModal() {
     deleteNote,
     exportNoteAsPDF,
     putNoteBlocksSync,
-  } = useNotes();
+  } = notesContext;
 
   const { organization } = useOrganization();
 
@@ -63,7 +77,7 @@ export function TaskNoteModal() {
     createTaskInStage,
     getProjectTags,
     getCollaborators,
-  } = useProjects();
+  } = projectsContext;
 
   const [mounted, setMounted] = useState(false);
   const [note, setNote] = useState<Note | null>(null);
@@ -700,7 +714,8 @@ export function TaskNoteModal() {
 }
 
 function TaskNoteModalCommentsPanel({ note, onClose }: { note: Note; onClose: () => void }) {
-  const { searchUsers } = useNotes();
+  const notesContext = useContext(NotesContext);
+  const searchUsers = notesContext ? notesContext.searchUsers : async () => [];
 
   const embeddableFiles: NoteCommentsEmbeddableFile[] = React.useMemo(() => {
     const files = note.properties?.files || [];

@@ -134,7 +134,7 @@ const ProjectsManagementPage = () => {
                 {metrics.pausedOrBlocked}
               </p>
             </div>
-            <AlertCircle className="text-red-500/70 h-4 w-4" />
+            <AlertCircle className="h-4 w-4 text-red-500/70" />
           </div>
 
           <div className="dark:border-surface-dark-border flex items-center justify-between rounded-md border border-neutral-100 bg-neutral-50/30 p-3 dark:bg-[#1d1d1b]/20">
@@ -170,7 +170,7 @@ const ProjectsManagementPage = () => {
                 placeholder="Buscar (ex: nome, metodologia)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="dark:border-surface-dark-border-strong h-8 w-full rounded-md border border-neutral-200 bg-white pr-3 pl-8 text-[12px] font-medium focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-200 transition-all"
+                className="dark:border-surface-dark-border-strong h-8 w-full rounded-md border border-neutral-200 bg-white pr-3 pl-8 text-[12px] font-medium transition-all focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-200"
               />
             </div>
 
@@ -179,7 +179,7 @@ const ProjectsManagementPage = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="dark:border-surface-dark-border-strong h-8 appearance-none rounded-md border border-neutral-200 bg-white pr-8 pl-2.5 text-[12px] font-medium text-neutral-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-200 transition-all"
+                className="dark:border-surface-dark-border-strong h-8 appearance-none rounded-md border border-neutral-200 bg-white pr-8 pl-2.5 text-[12px] font-medium text-neutral-700 transition-all focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-200"
               >
                 <option value="all">Todos os Status</option>
                 <option value={PROJECT_STATUS.OPEN}>Abertos</option>
@@ -196,7 +196,7 @@ const ProjectsManagementPage = () => {
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="dark:border-surface-dark-border-strong h-8 appearance-none rounded-md border border-neutral-200 bg-white pr-8 pl-2.5 text-[12px] font-medium text-neutral-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-200 transition-all"
+                className="dark:border-surface-dark-border-strong h-8 appearance-none rounded-md border border-neutral-200 bg-white pr-8 pl-2.5 text-[12px] font-medium text-neutral-700 transition-all focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none dark:bg-[#1d1d1b] dark:text-neutral-200"
               >
                 <option value="all">Qualquer Prioridade</option>
                 <option value="alta">Alta</option>

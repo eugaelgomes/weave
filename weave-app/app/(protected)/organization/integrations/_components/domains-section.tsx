@@ -13,8 +13,7 @@ import {
 } from "@/app/_services/organization";
 import { Badge } from "@/app/(protected)/organization/general/_components/form-primitives";
 
-const domainInputFocus =
-  "outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500";
+const domainInputFocus = "outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500";
 
 export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
   const { t } = useLanguage();
@@ -127,13 +126,13 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
               value={newDomain}
               onChange={(e) => setNewDomain(e.target.value)}
               placeholder={t.organizationIntegrations.domainPlaceholder}
-              className={`dark:border-surface-dark-border flex-1 rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-[12px] font-medium h-8 transition-all text-neutral-900 dark:bg-[#1d1d1b] dark:text-neutral-200 ${domainInputFocus}`}
+              className={`dark:border-surface-dark-border h-8 flex-1 rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-[12px] font-medium text-neutral-900 transition-all dark:bg-[#1d1d1b] dark:text-neutral-200 ${domainInputFocus}`}
               disabled={isAdding}
             />
             <button
               type="submit"
               disabled={isAdding || !newDomain}
-              className="bg-brand-primary-500 flex items-center gap-2 rounded-md px-4 h-8 text-[11px] font-bold text-white hover:bg-amber-600 disabled:opacity-50 dark:hover:bg-amber-600"
+              className="bg-brand-primary-500 flex h-8 items-center gap-2 rounded-md px-4 text-[11px] font-bold text-white hover:bg-amber-600 disabled:opacity-50 dark:hover:bg-amber-600"
             >
               {isAdding ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

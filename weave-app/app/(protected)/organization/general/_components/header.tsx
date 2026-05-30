@@ -20,7 +20,7 @@ const OrganizationHeroCard = ({
   onEditBanner: () => void;
   onOpenEditModal: () => void;
 }) => (
-  <div className="group relative overflow-hidden rounded-md border border-neutral-100 bg-white dark:border-surface-dark-border-muted dark:bg-[#1d1d1b]">
+  <div className="group dark:border-surface-dark-border-muted relative overflow-hidden rounded-md border border-neutral-100 bg-white dark:bg-[#1d1d1b]">
     <div className="relative h-48 w-full bg-neutral-100 dark:bg-[#1d1d1b]">
       {workspace?.banner_url ? (
         <img
@@ -199,7 +199,7 @@ const EditOrganizationInfoModal = ({
           <div className="space-y-1">
             <label
               htmlFor={sloganId}
-              className="text-[10px] font-bold tracking-[0.12em] text-neutral-400 dark:text-neutral-500 mb-1 block uppercase"
+              className="mb-1 block text-[10px] font-bold tracking-[0.12em] text-neutral-400 uppercase dark:text-neutral-500"
             >
               Slogan
             </label>

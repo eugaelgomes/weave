@@ -32,10 +32,7 @@ import { cn } from "@/lib/utils";
 import { MemberWorkspaceRoleBadge } from "@/app/(protected)/organization/members/_components/member-workspace-role-badge";
 import { OrganizationInviteModal } from "@/app/(protected)/organization/members/_components/organization-invite-modal";
 
-const MEMBERSHIP_STATUSES: OrganizationMember["membership"]["status"][] = [
-  "active",
-  "pending",
-];
+const MEMBERSHIP_STATUSES: OrganizationMember["membership"]["status"][] = ["active", "pending"];
 
 type AvatarUser = { avatar_url?: string | null };
 
@@ -96,7 +93,7 @@ const FilterSelect = ({
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
         className={cn(
-          "dark:border-surface-dark-border-strong w-full min-w-0 cursor-pointer appearance-none rounded-md border border-neutral-200 bg-white py-1.5 pr-8 text-[12px] font-medium text-neutral-700 transition-all outline-none hover:bg-neutral-50 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:bg-[#1d1d1b] dark:text-neutral-200 dark:hover:bg-neutral-800/50 h-8",
+          "dark:border-surface-dark-border-strong h-8 w-full min-w-0 cursor-pointer appearance-none rounded-md border border-neutral-200 bg-white py-1.5 pr-8 text-[12px] font-medium text-neutral-700 transition-all outline-none hover:bg-neutral-50 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:bg-[#1d1d1b] dark:text-neutral-200 dark:hover:bg-neutral-800/50",
           Icon ? "pl-8" : "pl-3"
         )}
       >
@@ -111,7 +108,6 @@ const FilterSelect = ({
     </div>
   </div>
 );
-
 
 type ModalBaseProps = {
   isOpen: boolean;
@@ -131,7 +127,7 @@ const ModalBase = ({ isOpen, onClose, title, children, footer }: ModalBaseProps)
           onClick={onClose}
           title="Fechar modal"
           aria-label="Fechar modal"
-          className="dark:hover:text-amber-500 absolute top-4 right-4 z-10 rounded-md p-1.5 text-neutral-500 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20"
+          className="absolute top-4 right-4 z-10 rounded-md p-1.5 text-neutral-500 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20 dark:hover:text-amber-500"
         >
           <X className="h-4 w-4" />
         </button>
@@ -426,13 +422,7 @@ export default function MembersPage() {
       m.activity?.projects?.some((p) => p.project_name === filterProject);
     const matchesStatus = filterStatus === "all" || m.membership.status === filterStatus;
 
-    return (
-      matchesSearch &&
-      matchesRole &&
-      matchesArea &&
-      matchesProject &&
-      matchesStatus
-    );
+    return matchesSearch && matchesRole && matchesArea && matchesProject && matchesStatus;
   });
 
   const activeFiltersCount =

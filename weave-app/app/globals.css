@@ -84,6 +84,9 @@
     /* Legacy variables */
     --bg-primary: #ffffff;
     --bg-secondary: #f5f5f5;
+
+    --scrollbar-thumb: rgba(0, 0, 0, 0.12);
+    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.22);
   }
 
   .dark {
@@ -115,6 +118,9 @@
     /* Legacy variables */
     --bg-primary: #0a0a0a;
     --bg-secondary: #171717;
+
+    --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.25);
   }
 }
 
@@ -126,12 +132,12 @@ body {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #ffd500 transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 ::-webkit-scrollbar {
-  width: 0.1px;
-  height: 0.1px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -139,8 +145,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ffd500;
-  border-radius: 4px;
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Estilos para layout responsivo */

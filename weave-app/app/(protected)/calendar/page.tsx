@@ -1123,7 +1123,7 @@ export function CalendarPreview({
     <>
       {renderViewEventModal()}
       <div
-        className={`shadow-md dark:shadow-surface-dark-md dark:border-surface-dark-border flex overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 dark:bg-[#1d1d1b] ${className}`}
+        className={`dark:shadow-surface-dark-md dark:border-surface-dark-border flex overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 shadow-md dark:bg-[#1d1d1b] ${className}`}
       >
         <div className="flex flex-1 flex-col overflow-hidden">
           <div className="dark:border-surface-dark-border flex items-center gap-1.5 overflow-x-auto border-b border-neutral-200 bg-neutral-50 p-1 sm:p-1.5 dark:bg-[#1d1d1b]/50 [&::-webkit-scrollbar]:hidden">

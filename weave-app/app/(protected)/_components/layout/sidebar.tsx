@@ -5,12 +5,11 @@ import Link from "next/link";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useNotification } from "@/app/_contexts/notification-context";
-import { useSafeAuthenticatedData } from "@/app/(protected)/_hooks/use-authenticated-data";
+import { useProjects } from "@/app/_contexts/projects-context";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { isPathActive, getFirstNavigablePath } from "@/app/_utils/navigation";
 import {
-  ListChecks,
   Home,
   Workflow,
   X,
@@ -20,8 +19,6 @@ import {
   ChevronRight,
   Bot,
   Building2,
-  ChevronsLeft,
-  ChevronsRight,
   Waypoints,
   Settings,
   CircleHelp,
@@ -34,12 +31,29 @@ const AiFredokaIcon = ({ className }: { className?: string }) => {
   return (
     <span
       className={cn(
-        "font-fredoka text-[13px] leading-none font-bold tracking-tighter select-none flex items-center justify-center",
+        "font-fredoka flex items-center justify-center text-[13px] leading-none font-bold tracking-tighter select-none",
         className
       )}
     >
       AI
     </span>
+  );
+};
+
+const SidebarToggleIcon = ({ className }: { className?: string }) => {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={cn("size-3.5", className)}
+      aria-hidden="true"
+    >
+      <path
+        fillRule="evenodd"
+        d="M6 5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2V5H6Zm4 0v14h8a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-8ZM3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6Z"
+        clipRule="evenodd"
+      />
+    </svg>
   );
 };
 
@@ -400,10 +414,9 @@ function SidebarFooter({ isCollapsed, helpLabel }: SidebarFooterProps) {
 // ---------------------------------------------------------------------------
 
 const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarProps) => {
-  const { authenticated } = useAuth();
+  const { authenticated, user } = useAuth();
   const { t } = useLanguage();
   const { unreadCount } = useNotification();
-  const authData = useSafeAuthenticatedData();
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
@@ -419,9 +432,11 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
     setExpandedItems((prev) => ({ ...prev, [path]: !prev[path] }));
   };
 
-  if (!authenticated || !authData) return null;
+  if (!authenticated) return null;
 
-  const recentProjects = authData.projects.getRecentProjects().slice(0, 5);
+  // Projects are global now.
+  const projectsCtx = useProjects();
+  const recentProjects = projectsCtx.getRecentProjects().slice(0, 5);
 
   const recentItems = recentProjects.map((proj: any) => ({
     type: "project" as const,
@@ -433,7 +448,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
     projectColor: proj.color,
   }));
 
-  const hasOrg = !!authData.user.org_id;
+  const hasOrg = !!user?.org_id;
 
   const navigationItems: NavigationItem[] = [
     { path: "/home", icon: Home, label: t.nav.home },
@@ -448,7 +463,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       icon: AiFredokaIcon,
       label: t.nav.weaveAi,
     },
-    { path: "/notes", icon: ListChecks, label: t.nav.notes },
+    { path: "/notes", icon: FileText, label: t.nav.notes },
     {
       path: "/projects",
       icon: Workflow,
@@ -469,7 +484,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       {/* Header mobile */}
       <div className="flex items-center justify-between p-3 lg:hidden">
         <div className="flex items-center gap-2">
-          <ListChecks className="text-brand-yellow h-3.5 w-3.5" />
+          <FileText className="text-brand-yellow h-3.5 w-3.5" />
         </div>
         <button
           type="button"
@@ -486,37 +501,35 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
         <div
           className={cn(
             "hidden shrink-0 items-center py-1 lg:flex",
-            isCollapsed ? "justify-center px-1 w-full" : "w-full px-1"
+            isCollapsed ? "w-full justify-center px-1" : "w-full px-1"
           )}
         >
           {isCollapsed ? (
-            <div className={NAV_ICON_RAIL_CLASS}>
-              {toggleCollapse ? (
-                <button
-                  type="button"
-                  onClick={toggleCollapse}
-                  className="focus-visible:ring-brand-yellow/50 flex size-7 items-center justify-center rounded-md text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
-                  title={t.nav.expandMenu}
-                  aria-label={t.nav.expandMenu}
-                >
-                  <ChevronsRight size={14} />
-                </button>
-              ) : null}
-            </div>
+            toggleCollapse ? (
+              <button
+                type="button"
+                onClick={toggleCollapse}
+                className="focus-visible:ring-brand-yellow/50 flex h-8 w-full items-center justify-center rounded-md text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
+                title={t.nav.expandMenu}
+                aria-label={t.nav.expandMenu}
+              >
+                <SidebarToggleIcon />
+              </button>
+            ) : null
           ) : toggleCollapse ? (
             <button
               type="button"
               onClick={toggleCollapse}
-              className="focus-visible:ring-brand-yellow/50 relative flex h-7 w-full items-center justify-end rounded-md bg-neutral-200/20 pr-2.5 text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:bg-neutral-800/40 dark:text-gray-300 dark:hover:bg-white/6"
+              className="focus-visible:ring-brand-yellow/50 flex h-8 w-full items-center justify-end rounded-md px-2 text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
               title={t.nav.collapseMenu}
               aria-label={t.nav.collapseMenu}
             >
-              <ChevronsLeft size={14} />
+              <SidebarToggleIcon />
             </button>
           ) : null}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-black/15 dark:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent">
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
           <ul className="space-y-0.5 px-1 pt-0.5 pb-1.5">
             {navigationItems.map((item) => (
               <NavItem

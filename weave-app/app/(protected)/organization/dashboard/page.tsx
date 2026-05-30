@@ -76,7 +76,7 @@ const ProjectsPage = () => {
                 placeholder="Buscar projetos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="dark:border-surface-dark-border-strong h-8 w-full rounded-md border border-neutral-200 bg-white pr-4 pl-9 text-[12px] font-medium focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none sm:w-64 dark:bg-[#1d1d1b] dark:text-neutral-200 transition-all"
+                className="dark:border-surface-dark-border-strong h-8 w-full rounded-md border border-neutral-200 bg-white pr-4 pl-9 text-[12px] font-medium transition-all focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none sm:w-64 dark:bg-[#1d1d1b] dark:text-neutral-200"
               />
             </div>
             <button className="bg-brand-primary-500 flex h-8 items-center justify-center gap-2 rounded-md px-4 text-[11px] font-bold text-white transition-colors hover:bg-amber-600 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:outline-none dark:focus:ring-offset-neutral-950">
@@ -107,7 +107,7 @@ const ProjectsPage = () => {
                   : "Crie o primeiro projeto da sua organização para começar a colaborar."}
               </p>
               {!searchTerm && (
-                <button className="bg-brand-primary-500 inline-flex items-center justify-center gap-2 rounded-md px-4 h-8 text-[11px] font-bold text-white transition-colors hover:bg-amber-600">
+                <button className="bg-brand-primary-500 inline-flex h-8 items-center justify-center gap-2 rounded-md px-4 text-[11px] font-bold text-white transition-colors hover:bg-amber-600">
                   <Plus className="h-4 w-4" />
                   Criar Primeiro Projeto
                 </button>
@@ -174,7 +174,7 @@ const ProjectsPage = () => {
                       </div>
                     </div>
 
-                    <div className="dark:text-brand-primary-500 flex items-center gap-1 text-[11px] font-bold text-amber-600 opacity-0 transition-opacity group-hover:opacity-100 uppercase tracking-wider">
+                    <div className="dark:text-brand-primary-500 flex items-center gap-1 text-[11px] font-bold tracking-wider text-amber-600 uppercase opacity-0 transition-opacity group-hover:opacity-100">
                       Acessar <ArrowRight className="h-3 w-3" />
                     </div>
                   </div>

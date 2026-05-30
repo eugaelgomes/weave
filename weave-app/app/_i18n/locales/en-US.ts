@@ -541,7 +541,8 @@ const enUS: TranslationKeys = {
     membershipStatusActive: "Active",
     membershipStatusPending: "Pending",
     removeAccessConfirmButton: "Yes, remove",
-    removeAccessQuestion: "Are you sure you want to remove {name} from the organization? They will lose access to all projects and data.",
+    removeAccessQuestion:
+      "Are you sure you want to remove {name} from the organization? They will lose access to all projects and data.",
     inviteNamePlaceholder: "Name",
     inviteEmailPlaceholder: "name@example.com",
     inviteEmailPlusAliasNotAllowed:

@@ -260,7 +260,6 @@ export default function ProjectViewPage() {
           onSuccess={(updatedCollabs) => setCollaborators(updatedCollabs)}
         />
       )}
-
     </div>
   );
 }

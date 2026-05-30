@@ -15,6 +15,10 @@ import type {
   ProjectProperties,
 } from "@/app/_services/projects-service/projects-service";
 import { ModuleLayout } from "../_components/layout/module-layout";
+import { WeaveEngineProvider } from "@/app/_contexts/weave-engine-context";
+import { TagsProvider } from "@/app/_contexts/tags-context";
+import { TaskPrioritiesProvider } from "@/app/_contexts/task-priorities-context";
+import { NotesProvider } from "@/app/_contexts/notes-context";
 
 function subprojectProperties(sub: SubProject): ProjectProperties | undefined {
   if (!sub.properties) return undefined;
@@ -28,9 +32,12 @@ function subprojectProperties(sub: SubProject): ProjectProperties | undefined {
   return sub.properties;
 }
 
-export default function ProjectsLayout({ children }: { children: React.ReactNode }) {
-  const { authenticated, loading: authLoading } = useAuth();
-  const { getRecentProjects, loading: projectsLoading } = useProjects();
+// ---------------------------------------------------------------------------
+// ProjectsLayoutContent — sidebar content that consumes projects/engine context
+// ---------------------------------------------------------------------------
+
+function ProjectsLayoutContent({ children }: { children: React.ReactNode }) {
+  const { getRecentProjects } = useProjects();
   const { feed } = useWeaveEngine();
   const pathname = usePathname();
   const [expandedProjects, setExpandedProjects] = useState<string[]>([]);
@@ -42,17 +49,6 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
       prev.includes(projectId) ? prev.filter((id) => id !== projectId) : [...prev, projectId]
     );
   };
-
-  if (authLoading) {
-    return <GlobalLoading fullScreen={false} />;
-  }
-
-  if (!authenticated) {
-    if (typeof window !== "undefined") {
-      window.location.href = "/auth/";
-    }
-    return null;
-  }
 
   const recentProjects = getRecentProjects();
   const signalsByProjectPublicId = React.useMemo(() => {
@@ -237,5 +233,36 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
     <ModuleLayout header={<ProjectsHeader />} sidebarContent={sidebarContent}>
       {children}
     </ModuleLayout>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ProjectsLayout — provider wrapper
+// ---------------------------------------------------------------------------
+
+export default function ProjectsLayout({ children }: { children: React.ReactNode }) {
+  const { authenticated, loading: authLoading } = useAuth();
+
+  if (authLoading) {
+    return <GlobalLoading fullScreen={false} />;
+  }
+
+  if (!authenticated) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/auth/";
+    }
+    return null;
+  }
+
+  return (
+    <NotesProvider>
+      <WeaveEngineProvider>
+        <TagsProvider>
+          <TaskPrioritiesProvider>
+            <ProjectsLayoutContent>{children}</ProjectsLayoutContent>
+          </TaskPrioritiesProvider>
+        </TagsProvider>
+      </WeaveEngineProvider>
+    </NotesProvider>
   );
 }
