@@ -1801,61 +1801,61 @@ const NoteDetail = () => {
             onChange={handleFilesUpload}
           />
 
-          {/* Banner em largura total; ícone “encosta” no hero com absolute (evita corte por overflow) */}
-          {note.properties?.banner?.path ? (
-            <div className="w-full shrink-0 overflow-visible pb-6">
-              <div className="relative w-full">
-                <div className="group relative z-0 h-52 w-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
-                  <Image
-                    src={getStorageUrl(note.properties.banner.path)}
-                    alt="Banner"
-                    fill
-                    sizes="100vw"
-                    className="object-cover"
-                  />
-                  {note.access?.canEdit && (
-                    <div className="absolute right-3 bottom-3 z-20 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-                      <button
-                        onClick={() => bannerInputRef.current?.click()}
-                        className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-black/70"
-                      >
-                        Trocar
-                      </button>
-                      <button
-                        onClick={handleRemoveBanner}
-                        className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-red-500/80"
-                      >
-                        Remover
-                      </button>
-                    </div>
-                  )}
-                </div>
-                {/* top-full = base do banner (só h-52); -translate-y-7 = metade do ícone h-14 sobre o banner */}
-                <div className="pointer-events-none absolute inset-x-0 top-full z-30 flex -translate-y-7 justify-start px-3 sm:px-4">
-                  <div className="pointer-events-auto min-w-0">
-                    <IconPropsToolbar />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : note.properties?.color ? (
-            <div className="w-full shrink-0 overflow-visible pb-12">
-              <div className="relative w-full">
-                <div
-                  className="relative z-0 h-28 w-full"
-                  style={{ backgroundColor: note.properties.color }}
-                />
-                <div className="pointer-events-none absolute inset-x-0 top-full z-30 flex -translate-y-7 justify-start px-3 sm:px-4">
-                  <div className="pointer-events-auto min-w-0">
-                    <IconPropsToolbar />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="no-scrollbar flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
+              {/* Banner em largura total da coluna; ícone “encosta” no hero com absolute */}
+              {note.properties?.banner?.path ? (
+                <div className="w-full shrink-0 overflow-visible pb-6">
+                  <div className="relative w-full">
+                    <div className="group relative z-0 h-52 w-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+                      <Image
+                        src={getStorageUrl(note.properties.banner.path)}
+                        alt="Banner"
+                        fill
+                        sizes="100vw"
+                        className="object-cover"
+                      />
+                      {note.access?.canEdit && (
+                        <div className="absolute right-3 bottom-3 z-20 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                          <button
+                            onClick={() => bannerInputRef.current?.click()}
+                            className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-black/70"
+                          >
+                            Trocar
+                          </button>
+                          <button
+                            onClick={handleRemoveBanner}
+                            className="rounded-md bg-black/50 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-red-500/80"
+                          >
+                            Remover
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {/* top-full = base do banner (só h-52); -translate-y-7 = metade do ícone h-14 sobre o banner */}
+                    <div className="pointer-events-none absolute inset-x-0 top-full z-30 flex -translate-y-7 justify-start px-3 sm:px-4">
+                      <div className="pointer-events-auto min-w-0">
+                        <IconPropsToolbar />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : note.properties?.color ? (
+                <div className="w-full shrink-0 overflow-visible pb-12">
+                  <div className="relative w-full">
+                    <div
+                      className="relative z-0 h-28 w-full"
+                      style={{ backgroundColor: note.properties.color }}
+                    />
+                    <div className="pointer-events-none absolute inset-x-0 top-full z-30 flex -translate-y-7 justify-start px-3 sm:px-4">
+                      <div className="pointer-events-auto min-w-0">
+                        <IconPropsToolbar />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
               {!hasNoteHero ? (
                 <div className="shrink-0 px-3 pt-6 sm:px-4">
                   <IconPropsToolbar />
@@ -1863,7 +1863,7 @@ const NoteDetail = () => {
               ) : null}
 
               <div
-                className={`no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-6 sm:px-4 ${
+                className={`flex-1 px-3 pb-6 sm:px-4 ${
                   hasNoteHero ? "pt-2 sm:pt-4" : ""
                 }`}
               >
