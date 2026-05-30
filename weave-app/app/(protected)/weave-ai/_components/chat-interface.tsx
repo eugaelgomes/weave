@@ -712,8 +712,8 @@ export default function ChatInterface({
                       ))}
                       {attachedNoteIds.map((noteId: string, idx: number) => {
                          const note = Array.isArray(notesOverview) ? notesOverview.find((n: any) => n.id === noteId) : null;
-                         const href = `/notes/${note?.public_id || noteId}`;
-                         const noteIcon = note?.icon || note?.properties?.icon;
+                         const href = `/notes/${(note as any)?.public_id || noteId}`;
+                         const noteIcon = (note as any)?.icon || (note as any)?.properties?.icon;
                          return (
                           <Link href={href} key={`note-${idx}`} className="flex items-center gap-1 rounded bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
                             <RenderContextIcon icon={noteIcon} fallback={FileText} color={note?.priority_color} />
@@ -723,8 +723,8 @@ export default function ChatInterface({
                       })}
                       {attachedProjectIds.map((projectId: string, idx: number) => {
                          const project = Array.isArray(projectsOverview) ? projectsOverview.find((p: any) => p.id === projectId) : null;
-                         const href = `/projects/${project?.public_id || projectId}`;
-                         const projectIcon = project?.icon || project?.properties?.icon;
+                         const href = `/projects/${(project as any)?.public_id || projectId}`;
+                         const projectIcon = (project as any)?.icon || (project as any)?.properties?.icon;
                          return (
                           <Link href={href} key={`proj-${idx}`} className="flex items-center gap-1 rounded bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
                             <RenderContextIcon icon={projectIcon} fallback={FolderKanban} color={project?.color} />

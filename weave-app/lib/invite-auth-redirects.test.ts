@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   resolveLegacyAuthInviteRedirect,
   resolveOrganizationAcceptInviteRedirect,
-} from "./invite-auth-redirects.ts";
+} from "./invite-auth-redirects";
 
 const SAMPLE_UUID = "078ce37f-ba69-4038-942e-a375f9580c4a";
 
