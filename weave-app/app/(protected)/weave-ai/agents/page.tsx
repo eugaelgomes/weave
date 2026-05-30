@@ -224,7 +224,7 @@ export default function AgentsOverviewPage() {
 
           <button
             type="button"
-            onClick={() => router.push("/weave-ai/agent/new")}
+            onClick={() => router.push("/weave-ai/agents/new")}
             className="bg-brand-primary-500 hover:bg-brand-primary-400 flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold text-neutral-900 shadow-sm transition"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -253,7 +253,7 @@ export default function AgentsOverviewPage() {
             <AgentCard
               key={agent.id}
               agent={agent}
-              onOpen={() => router.push(`/weave-ai/agent/${agent.id}`)}
+              onOpen={() => router.push(`/weave-ai/agents/${agent.id}`)}
             />
           ))}
         </div>

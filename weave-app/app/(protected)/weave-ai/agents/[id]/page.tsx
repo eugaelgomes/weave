@@ -109,7 +109,7 @@ export function AgentForm({
     try {
       const newAgent = await duplicateAgent(initialData.id);
       toast.success("Agente duplicado com sucesso.");
-      router.push(`/weave-ai/agent/${newAgent.id}`);
+      router.push(`/weave-ai/agents/${newAgent.id}`);
     } catch (error) {
       console.error("Erro ao duplicar:", error);
       toast.error("Não foi possível duplicar o agente.");
@@ -192,7 +192,7 @@ export function AgentForm({
       }
       const newAgent = await createAgent(data);
       toast.success("Agente criado.");
-      router.push(`/weave-ai/agent/${newAgent.id}`);
+      router.push(`/weave-ai/agents/${newAgent.id}`);
     } catch (error) {
       console.error("Error saving agent:", error);
       toast.error("Não foi possível salvar. Tente novamente.");
@@ -203,10 +203,10 @@ export function AgentForm({
 
   const handleCancel = () => {
     if (isEditing && initialData?.id) {
-      router.push(`/weave-ai/agent/${initialData.id}`);
+      router.push(`/weave-ai/agents/${initialData.id}`);
       return;
     }
-    router.push("/weave-ai/agent");
+    router.push("/weave-ai/agents");
   };
 
   return (
@@ -591,7 +591,7 @@ export default function AgentDetailPage() {
           </p>
         </div>
         <Link
-          href="/weave-ai/agent"
+          href="/weave-ai/agents"
           className="dark:border-surface-dark-border inline-flex items-center gap-1.5 rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-900"
         >
           <ArrowLeft className="h-3 w-3" />

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import ChatInterface from "../_components/chat-interface";
+import ChatInterface from "../../_components/chat-interface";
 import { isChatSessionId } from "@/app/_utils/chat-session-id";
 
 export default async function ChatHistoryPage({ params }: { params: Promise<{ id: string }> }) {
