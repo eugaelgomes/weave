@@ -36,8 +36,10 @@ import { useAgent, type Agent } from "@/app/_contexts/agent-context";
 import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
 import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { isChatSessionId } from "@/app/_utils/chat-session-id";
+import { resolveProjectIcon } from "@/app/(protected)/projects/_components/project-icon";
 
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
@@ -119,6 +121,25 @@ function formatMessageDateTime(dateValue?: string | number): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function RenderContextIcon({ icon, fallback: Fallback, color }: { icon: any; fallback: React.ComponentType<any>; color?: string | null }) {
+  const resolved = React.useMemo(() => resolveProjectIcon(icon), [icon]);
+  
+  if (resolved?.kind === "emoji") {
+    return <span className="text-[10px] mr-0.5 leading-none shrink-0" aria-hidden>{resolved.value}</span>;
+  }
+  
+  if (resolved?.kind === "image") {
+    return (
+      <span className="relative h-3 w-3 shrink-0 overflow-hidden rounded-sm border border-neutral-200/80 mr-0.5" aria-hidden>
+        <img src={resolved.url} alt="" className="h-full w-full object-cover" />
+      </span>
+    );
+  }
+  
+  const accent = color && /^#[0-9A-Fa-f]{3,8}$/i.test(color) ? color : undefined;
+  return <Fallback className="h-2.5 w-2.5 shrink-0" style={accent ? { color: accent } : undefined} />;
 }
 
 export type ChatInterfaceVariant = "fullPage" | "widget";
@@ -418,7 +439,7 @@ export default function ChatInterface({
   }, [normalizedContextSearch]);
 
   return (
-    <div className="flex h-full flex-col bg-white dark:bg-[#1d1d1b]">
+    <div className="relative flex h-full flex-col bg-white dark:bg-[#1d1d1b]">
       <div className="dark:border-surface-dark-border flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-1">
         <div className="flex items-center gap-2">
           <h1 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
@@ -455,7 +476,7 @@ export default function ChatInterface({
       <div
         ref={messagesContainerRef}
         onScroll={updateScrollButtons}
-        className="relative flex-1 flex-shrink-0 overflow-y-auto scroll-smooth p-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent"
+        className="relative flex-1 flex-shrink-0 overflow-y-auto scroll-smooth p-2 pb-48 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent"
       >
         <div className="mx-auto w-full max-w-4xl space-y-4">
           {messages?.length === 0 && !loading && (
@@ -488,6 +509,11 @@ export default function ChatInterface({
               : Array.isArray(msg?.metadata?.citations)
                 ? msg.metadata.citations
                 : [];
+            
+            const attachedFiles = Array.isArray(msg?.metadata?.files) ? msg.metadata.files : [];
+            const attachedNoteIds = Array.isArray(msg?.metadata?.noteIds) ? msg.metadata.noteIds : [];
+            const attachedProjectIds = Array.isArray(msg?.metadata?.projectIds) ? msg.metadata.projectIds : [];
+            const hasAttachments = attachedFiles.length > 0 || attachedNoteIds.length > 0 || attachedProjectIds.length > 0;
 
             return (
               <div
@@ -666,6 +692,40 @@ export default function ChatInterface({
                       )}
                     </div>
                   </div>
+
+                  {isUser && hasAttachments && (
+                    <div className="mt-1 flex flex-wrap gap-1 justify-end">
+                      {attachedFiles.map((f: any, idx: number) => (
+                        <div key={`file-${idx}`} className="flex items-center gap-1 rounded bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+                          <Paperclip className="h-2.5 w-2.5" />
+                          <span className="truncate max-w-[150px]">{f.originalName || f.name || "Arquivo"}</span>
+                        </div>
+                      ))}
+                      {attachedNoteIds.map((noteId: string, idx: number) => {
+                         const note = Array.isArray(notesOverview) ? notesOverview.find((n: any) => n.id === noteId) : null;
+                         const href = `/notes/${note?.public_id || noteId}`;
+                         const noteIcon = note?.icon || note?.properties?.icon;
+                         return (
+                          <Link href={href} key={`note-${idx}`} className="flex items-center gap-1 rounded bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
+                            <RenderContextIcon icon={noteIcon} fallback={FileText} color={note?.priority_color} />
+                            <span className="truncate max-w-[150px] hover:underline underline-offset-2">{note?.title || "Nota"}</span>
+                          </Link>
+                         );
+                      })}
+                      {attachedProjectIds.map((projectId: string, idx: number) => {
+                         const project = Array.isArray(projectsOverview) ? projectsOverview.find((p: any) => p.id === projectId) : null;
+                         const href = `/projects/${project?.public_id || projectId}`;
+                         const projectIcon = project?.icon || project?.properties?.icon;
+                         return (
+                          <Link href={href} key={`proj-${idx}`} className="flex items-center gap-1 rounded bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
+                            <RenderContextIcon icon={projectIcon} fallback={FolderKanban} color={project?.color} />
+                            <span className="truncate max-w-[150px] hover:underline underline-offset-2">{project?.title || "Projeto"}</span>
+                          </Link>
+                         );
+                      })}
+                    </div>
+                  )}
+
                 </div>
               </div>
             );
@@ -736,8 +796,8 @@ export default function ChatInterface({
         )}
       </div>
 
-      <div className="pb-2">
-        <div className="mx-auto flex max-w-4xl flex-col gap-2">
+      <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-[#1d1d1b] dark:via-[#1d1d1b]/95 dark:to-transparent pt-10 pb-4 px-4 pointer-events-none">
+        <div className="mx-auto flex max-w-4xl flex-col gap-2 pointer-events-auto">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap gap-1">
               {selectedFiles.map((file) => (
