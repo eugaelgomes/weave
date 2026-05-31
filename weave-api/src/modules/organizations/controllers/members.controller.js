@@ -370,7 +370,10 @@ class OrganizationMembersController extends OrganizationsBaseController {
           tArea.area_id,
           currentOrg.id
         );
-        if (!area) return res.status(404).json({ error: `Area not found: ${tArea.area_id}` });
+        if (!area)
+          return res
+            .status(404)
+            .json({ error: `Area not found: ${tArea.area_id}` });
 
         const resolvedProjectRole = this._resolveProjectMemberRole(tArea.role);
         if (!PROJECT_MEMBER_ROLES.includes(resolvedProjectRole)) {
@@ -379,7 +382,10 @@ class OrganizationMembersController extends OrganizationsBaseController {
               "Invalid project_member_role. Use: PROJECT_MANAGER, CONTRIBUTOR, COMMENTER, VIEWER",
           });
         }
-        validTargetAreas.push({ area_id: tArea.area_id, role: resolvedProjectRole });
+        validTargetAreas.push({
+          area_id: tArea.area_id,
+          role: resolvedProjectRole,
+        });
       }
 
       const pending = await this.organizationsRepository.checkExistingInvite(
@@ -469,7 +475,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
       }
 
       // Extract the UUID part from the token to be forgiving of extra garbage characters (e.g. trailing quotes)
-      const uuidMatch = token.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+      const uuidMatch = token.match(
+        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+      );
       if (!uuidMatch) {
         return res.status(400).json({ error: "Invalid token format" });
       }
@@ -478,11 +486,25 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const invite =
         await this.organizationsRepository.findOrgInviteByToken(token);
       if (!invite) {
-        const diag = await this.organizationsRepository.findOrgInviteByTokenDiagnostic(token);
-        if (!diag) return res.status(404).json({ error: "Convite não encontrado" });
-        if (diag.deleted) return res.status(410).json({ error: "Este convite foi cancelado" });
-        if (diag.invite_verified) return res.status(409).json({ error: "Este convite já foi utilizado" });
-        if (new Date(diag.expires_at) < new Date()) return res.status(410).json({ error: "Este convite expirou. Peça ao administrador um novo convite." });
+        const diag =
+          await this.organizationsRepository.findOrgInviteByTokenDiagnostic(
+            token
+          );
+        if (!diag)
+          return res.status(404).json({ error: "Convite não encontrado" });
+        if (diag.deleted)
+          return res.status(410).json({ error: "Este convite foi cancelado" });
+        if (diag.invite_verified)
+          return res
+            .status(409)
+            .json({ error: "Este convite já foi utilizado" });
+        if (new Date(diag.expires_at) < new Date())
+          return res
+            .status(410)
+            .json({
+              error:
+                "Este convite expirou. Peça ao administrador um novo convite.",
+            });
         return res.status(400).json({ error: "Convite inválido ou expirado" });
       }
 
@@ -496,7 +518,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
         status: "OK",
         data: {
           org_name: invite.org_name,
-          org_logo_url: invite.logo_url ? spacesService.getFileUrl(invite.logo_url) : null,
+          org_logo_url: invite.logo_url
+            ? spacesService.getFileUrl(invite.logo_url)
+            : null,
           email: invite.email,
           role: invite.role,
           expires_at: invite.expires_at,
@@ -527,7 +551,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
       }
 
       // Extract the UUID part from the token to be forgiving of extra garbage characters
-      const uuidMatch = token.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+      const uuidMatch = token.match(
+        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+      );
       if (!uuidMatch) {
         return res.status(400).json({ error: "Invalid token format" });
       }
@@ -536,11 +562,28 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const invite =
         await this.organizationsRepository.findOrgInviteByToken(token);
       if (!invite) {
-        const diag = await this.organizationsRepository.findOrgInviteByTokenDiagnostic(token);
-        if (!diag) return res.status(404).json({ error: "Convite não encontrado" });
-        if (diag.deleted) return res.status(410).json({ error: "Este convite foi cancelado" });
-        if (diag.invite_verified) return res.status(409).json({ error: "Este convite já foi utilizado. Entre em contato com o administrador para um novo convite." });
-        if (new Date(diag.expires_at) < new Date()) return res.status(410).json({ error: "Este convite expirou. Peça ao administrador um novo convite." });
+        const diag =
+          await this.organizationsRepository.findOrgInviteByTokenDiagnostic(
+            token
+          );
+        if (!diag)
+          return res.status(404).json({ error: "Convite não encontrado" });
+        if (diag.deleted)
+          return res.status(410).json({ error: "Este convite foi cancelado" });
+        if (diag.invite_verified)
+          return res
+            .status(409)
+            .json({
+              error:
+                "Este convite já foi utilizado. Entre em contato com o administrador para um novo convite.",
+            });
+        if (new Date(diag.expires_at) < new Date())
+          return res
+            .status(410)
+            .json({
+              error:
+                "Este convite expirou. Peça ao administrador um novo convite.",
+            });
         return res.status(400).json({ error: "Convite inválido ou expirado" });
       }
 
@@ -581,7 +624,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
         });
 
         if (!createdUser || !createdUser[0]) {
-          return res.status(500).json({ error: "Failed to create user account" });
+          return res
+            .status(500)
+            .json({ error: "Failed to create user account" });
         }
 
         targetUserId = createdUser[0].user_id;
@@ -627,8 +672,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
         }
       }
 
-
-
       const isMember = await this.organizationsRepository.isMember(
         invite.organization_id,
         targetUserId
@@ -646,14 +689,14 @@ class OrganizationMembersController extends OrganizationsBaseController {
       if (Array.isArray(invite.target_areas)) {
         for (const targetArea of invite.target_areas) {
           if (!targetArea.area_id) continue;
-          
+
           const areaRole = this._mapProjectRoleToAreaRole(targetArea.role);
           const existingAreaMember = await this.areasRepository.getAreaMember(
             targetArea.area_id,
             invite.organization_id,
             targetUserId
           );
-          
+
           if (!existingAreaMember) {
             await this.areasRepository.addAreaMember(
               targetArea.area_id,
@@ -701,9 +744,12 @@ class OrganizationMembersController extends OrganizationsBaseController {
       if (uniqueField) {
         return res.status(409).json(buildUniqueConflictPayload(uniqueField));
       }
-      const clientMsg = error?.message && !error.message.toLowerCase().includes("sql") && !error.message.toLowerCase().includes("postgres")
-        ? error.message
-        : "Error accepting invite";
+      const clientMsg =
+        error?.message &&
+        !error.message.toLowerCase().includes("sql") &&
+        !error.message.toLowerCase().includes("postgres")
+          ? error.message
+          : "Error accepting invite";
       res.status(500).json({ error: clientMsg });
     }
   }
@@ -806,13 +852,16 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return;
       }
 
-      let invite = await this.organizationsRepository.findOrgInviteByToken(invite_id);
+      let invite =
+        await this.organizationsRepository.findOrgInviteByToken(invite_id);
       if (!invite) {
         // Might be expired, let's try to fetch it anyway to resend
-        const pending = await this.organizationsRepository.getPendingOrgInvites(currentOrg.id);
-        invite = pending.find(i => i.invite_id === invite_id);
+        const pending = await this.organizationsRepository.getPendingOrgInvites(
+          currentOrg.id
+        );
+        invite = pending.find((i) => i.invite_id === invite_id);
         if (!invite) {
-           return res.status(404).json({ error: "Invite not found" });
+          return res.status(404).json({ error: "Invite not found" });
         }
       }
 
@@ -821,7 +870,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
       }
 
       // Update expiration
-      const updatedInvite = await this.organizationsRepository.resendOrgInvite(invite_id);
+      const updatedInvite =
+        await this.organizationsRepository.resendOrgInvite(invite_id);
 
       const inviter = await SearchUsersRepository.findById(authUserId);
       const inviterLocale = await getUserEmailLocale({ userId: authUserId });
@@ -862,7 +912,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
       const { invites } = req.body;
       if (!Array.isArray(invites) || invites.length === 0) {
-        return res.status(400).json({ error: "An array of invites is required" });
+        return res
+          .status(400)
+          .json({ error: "An array of invites is required" });
       }
 
       const currentOrg = await this._getUserOrganization(authUserId);
@@ -879,31 +931,46 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
       const results = {
         successful: [],
-        failed: []
+        failed: [],
       };
 
       for (const inviteData of invites) {
-        const { email, role = ORG_ROLES.MEMBER, name, username, target_areas = [] } = inviteData;
-        
+        const {
+          email,
+          role = ORG_ROLES.MEMBER,
+          name,
+          username,
+          target_areas = [],
+        } = inviteData;
+
         try {
           if (!email || hasPlusAliasInLocalPart(email)) {
             throw new Error("Invalid email");
           }
 
-          const normalizedRole = typeof role === "string" ? role.trim().toUpperCase() : "";
+          const normalizedRole =
+            typeof role === "string" ? role.trim().toUpperCase() : "";
           if (!validRoles.includes(normalizedRole)) {
             throw new Error("Invalid role");
           }
 
-          const pending = await this.organizationsRepository.checkExistingInvite(currentOrg.id, email);
+          const pending =
+            await this.organizationsRepository.checkExistingInvite(
+              currentOrg.id,
+              email
+            );
           if (pending) {
             throw new Error("Invite already pending");
           }
 
-          const existingUsers = await SearchUsersRepository.findByUsernameOrEmail("", email);
+          const existingUsers =
+            await SearchUsersRepository.findByUsernameOrEmail("", email);
           const targetUser = existingUsers.find((u) => u.email === email);
           if (targetUser) {
-            const isMember = await this.organizationsRepository.isMember(currentOrg.id, targetUser.user_id);
+            const isMember = await this.organizationsRepository.isMember(
+              currentOrg.id,
+              targetUser.user_id
+            );
             if (isMember) {
               throw new Error("Already a member");
             }
@@ -913,10 +980,16 @@ class OrganizationMembersController extends OrganizationsBaseController {
           const validTargetAreas = [];
           for (const tArea of target_areas) {
             if (!tArea.area_id) continue;
-            const area = await this.areasRepository.getAreaById(tArea.area_id, currentOrg.id);
+            const area = await this.areasRepository.getAreaById(
+              tArea.area_id,
+              currentOrg.id
+            );
             if (area) {
               const resolvedRole = this._resolveProjectMemberRole(tArea.role);
-              validTargetAreas.push({ area_id: tArea.area_id, role: resolvedRole });
+              validTargetAreas.push({
+                area_id: tArea.area_id,
+                role: resolvedRole,
+              });
             }
           }
 
@@ -948,9 +1021,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
       res.status(201).json({
         status: "OK",
         message: "Bulk invite processed",
-        data: results
+        data: results,
       });
-
     } catch (error) {
       console.error("Error in bulk invite:", error);
       res.status(500).json({ error: "Error processing bulk invites" });

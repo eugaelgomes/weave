@@ -34,15 +34,15 @@ For a **from-scratch** bootstrap you may also fold this table into `new_structur
 
 ## Environment variables (`weave-api`)
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `SLACK_CLIENT_ID` | Yes | Slack app client ID |
-| `SLACK_CLIENT_SECRET` | Yes | Slack app client secret |
-| `SLACK_SIGNING_SECRET` | Yes for Events/interactivity | Signing secret (verify callbacks) |
-| `SLACK_REDIRECT_URI` | Optional | Defaults to `{API}/api/v1/webhooks/slack/oauth/callback` (see `slack.client.js`) |
-| `SLACK_BOT_SCOPES` | Optional | Override bot scopes (comma-separated). Default includes `chat:write`, `chat:write.public`, channel/group/im/mpim read scopes |
-| `FRONTEND_URL` | Recommended | Used for OAuth redirect back to the app (e.g. `/app/settings/integrations`) |
-| `SECRET_KEY` | Yes | JWT signing secret for OAuth `state` tokens |
+| Variable               | Required                     | Description                                                                                                                  |
+| ---------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `SLACK_CLIENT_ID`      | Yes                          | Slack app client ID                                                                                                          |
+| `SLACK_CLIENT_SECRET`  | Yes                          | Slack app client secret                                                                                                      |
+| `SLACK_SIGNING_SECRET` | Yes for Events/interactivity | Signing secret (verify callbacks)                                                                                            |
+| `SLACK_REDIRECT_URI`   | Optional                     | Defaults to `{API}/api/v1/webhooks/slack/oauth/callback` (see `slack.client.js`)                                             |
+| `SLACK_BOT_SCOPES`     | Optional                     | Override bot scopes (comma-separated). Default includes `chat:write`, `chat:write.public`, channel/group/im/mpim read scopes |
+| `FRONTEND_URL`         | Recommended                  | Used for OAuth redirect back to the app (e.g. `/app/settings/integrations`)                                                  |
+| `SECRET_KEY`           | Yes                          | JWT signing secret for OAuth `state` tokens                                                                                  |
 
 ### Where to set variables
 

@@ -2,7 +2,9 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const LookupApiTokensRepository = require("@/modules/api-tokens/repositories/lookup-api-tokens.repository");
 const secretsService = require("@/services/secrets");
-const { jwtPayloadSchema } = require("@/modules/authentication/jwt-payload.schema");
+const {
+  jwtPayloadSchema,
+} = require("@/modules/authentication/jwt-payload.schema");
 
 const secretsManager = secretsService.secretsManager;
 

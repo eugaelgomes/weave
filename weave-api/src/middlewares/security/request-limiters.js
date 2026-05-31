@@ -26,11 +26,15 @@ const standardTrafficLimiter = rateLimit({
   message: { error: "Too many requests. Please try again later." },
 });
 
-const notesBlockWriteWindowMs = Number(process.env.NOTES_BLOCKS_WRITE_WINDOW_MS || 5 * 60 * 1000);
+const notesBlockWriteWindowMs = Number(
+  process.env.NOTES_BLOCKS_WRITE_WINDOW_MS || 5 * 60 * 1000
+);
 const notesBlockWriteMax = Number(process.env.NOTES_BLOCKS_WRITE_MAX || 3000);
 
 const notesBlockWriteLimiter = rateLimit({
-  windowMs: Number.isFinite(notesBlockWriteWindowMs) ? notesBlockWriteWindowMs : 5 * 60 * 1000,
+  windowMs: Number.isFinite(notesBlockWriteWindowMs)
+    ? notesBlockWriteWindowMs
+    : 5 * 60 * 1000,
   max: Number.isFinite(notesBlockWriteMax) ? notesBlockWriteMax : 3000,
   standardHeaders: true,
   legacyHeaders: false,
@@ -44,7 +48,9 @@ const notesBlockWriteLimiter = rateLimit({
       path: req.originalUrl,
       userId: req.user?.userId || null,
     });
-    res.status(429).json({ error: "Too many block edit requests. Please try again later." });
+    res
+      .status(429)
+      .json({ error: "Too many block edit requests. Please try again later." });
   },
 });
 

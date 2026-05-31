@@ -18,7 +18,9 @@ function isUuidProjectId(value) {
  * @returns {boolean}
  */
 function isPublicProjectId(value) {
-  return typeof value === "string" && value.length === 12 && !value.includes("-");
+  return (
+    typeof value === "string" && value.length === 12 && !value.includes("-")
+  );
 }
 
 /**

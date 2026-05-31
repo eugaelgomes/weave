@@ -95,8 +95,14 @@ class SearchUsersRepository extends BaseRepository {
       if (username && normalizeUsername(user.username) === username) {
         availability.username = { available: false, reason: "already_in_use" };
       }
-      if (phoneNumber && normalizePhoneNumber(user.phone_number) === phoneNumber) {
-        availability.phone_number = { available: false, reason: "already_in_use" };
+      if (
+        phoneNumber &&
+        normalizePhoneNumber(user.phone_number) === phoneNumber
+      ) {
+        availability.phone_number = {
+          available: false,
+          reason: "already_in_use",
+        };
       }
     }
 
@@ -156,7 +162,7 @@ class SearchUsersRepository extends BaseRepository {
         )
       `;
     } else {
-      const orgIdsList = orgIds.map(id => `'${id}'`).join(',');
+      const orgIdsList = orgIds.map((id) => `'${id}'`).join(",");
       usersQuery += `
         AND EXISTS (
           SELECT 1 FROM organization_members om

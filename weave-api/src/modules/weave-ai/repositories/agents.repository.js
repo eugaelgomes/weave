@@ -45,7 +45,10 @@ class AgentsRepository {
    * @returns {Promise<object[]>}
    */
   async getUserAgents(userId, filters = {}) {
-    const conditions = ["a.user_id = $1", "(a.deleted = false OR a.deleted IS NULL)"];
+    const conditions = [
+      "a.user_id = $1",
+      "(a.deleted = false OR a.deleted IS NULL)",
+    ];
     const values = [userId];
     let paramIndex = 2;
 
@@ -62,7 +65,9 @@ class AgentsRepository {
     }
 
     if (filters.search) {
-      conditions.push(`(a.name ILIKE $${paramIndex} OR a.description ILIKE $${paramIndex})`);
+      conditions.push(
+        `(a.name ILIKE $${paramIndex} OR a.description ILIKE $${paramIndex})`
+      );
       values.push(`%${filters.search}%`);
       paramIndex++;
     }

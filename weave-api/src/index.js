@@ -58,7 +58,7 @@ server.on("listening", () => {
   responseConsumer.start().catch((err) => {
     console.error("[API] Failed to start response consumer:", err);
   });
-  
+
   triggerConsumer.start().catch((err) => {
     console.error("[API] Failed to start trigger consumer:", err);
   });

@@ -1,5 +1,7 @@
 const BaseRepository = require("./base.repository");
-const { enqueueNoteEmbeddingJob } = require("../../../services/queue/queue-controller");
+const {
+  enqueueNoteEmbeddingJob,
+} = require("../../../services/queue/queue-controller");
 const {
   buildNoteIdWhereClause,
   buildNotesBulkDeleteWhere,
@@ -77,9 +79,15 @@ class MutateNotesRepository extends BaseRepository {
     });
 
     if (updatedNote) {
-      console.log("[MutateNotesRepository] Enqueueing embedding job for", updatedNote.id);
-      await enqueueNoteEmbeddingJob(updatedNote.id).catch(err => {
-        console.error("[MutateNotesRepository] Failed to enqueue embedding job", err);
+      console.log(
+        "[MutateNotesRepository] Enqueueing embedding job for",
+        updatedNote.id
+      );
+      await enqueueNoteEmbeddingJob(updatedNote.id).catch((err) => {
+        console.error(
+          "[MutateNotesRepository] Failed to enqueue embedding job",
+          err
+        );
       });
     }
 

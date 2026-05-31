@@ -24,7 +24,10 @@ const oauthCallbackSchema = z
       .string()
       .min(8, "Invalid authorization code length.")
       .max(2048, "Invalid authorization code length.")
-      .regex(/^[A-Za-z0-9._\-~/+=:]+$/, "Invalid authorization code characters.")
+      .regex(
+        /^[A-Za-z0-9._\-~/+=:]+$/,
+        "Invalid authorization code characters."
+      )
       .trim()
       .optional(),
     error: z

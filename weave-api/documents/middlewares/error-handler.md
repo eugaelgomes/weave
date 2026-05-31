@@ -17,10 +17,10 @@ Error logs include `requestId`, `method`, `path`, and `userId` when available.
 
 Use `AppError` (`src/errors/app-error.js`) for operational failures:
 
-| Type | `isOperational` | Client sees |
-|------|-----------------|-------------|
-| Validation, auth, not found, conflict | `true` | `code` + safe `message` |
-| Postgres / bugs / unknown | `false` | Generic `INTERNAL_ERROR` |
+| Type                                  | `isOperational` | Client sees              |
+| ------------------------------------- | --------------- | ------------------------ |
+| Validation, auth, not found, conflict | `true`          | `code` + safe `message`  |
+| Postgres / bugs / unknown             | `false`         | Generic `INTERNAL_ERROR` |
 
 Normalize unknown errors with `fromUnknown(error)` before `next(error)`.
 
@@ -40,9 +40,9 @@ Some endpoints still return legacy shapes (`{ error: "string" }`, `{ code, messa
 
 ## Handlers
 
-| Handler | Behavior |
-|---------|----------|
-| `notFoundHandler` | `404` with `ROUTE_NOT_FOUND` (no raw route path in production) |
+| Handler              | Behavior                                                             |
+| -------------------- | -------------------------------------------------------------------- |
+| `notFoundHandler`    | `404` with `ROUTE_NOT_FOUND` (no raw route path in production)       |
 | `globalErrorHandler` | Maps `AppError` / `fromUnknown`, logs 5xx and non-operational errors |
 
 ## Development vs production

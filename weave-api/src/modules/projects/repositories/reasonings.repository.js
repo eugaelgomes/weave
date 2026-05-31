@@ -92,7 +92,10 @@ class ReasoningsRepository {
       );
 
       // 3. Insert action items if provided
-      if (Array.isArray(content.actionItems) && content.actionItems.length > 0) {
+      if (
+        Array.isArray(content.actionItems) &&
+        content.actionItems.length > 0
+      ) {
         const actionValues = content.actionItems.map((item, idx) => [
           reasoning.id,
           item.noteId || null,

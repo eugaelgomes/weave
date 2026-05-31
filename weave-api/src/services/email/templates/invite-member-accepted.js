@@ -47,7 +47,9 @@ async function send_organization_invite_accepted(
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
       to: toEmail,
-      subject: t(locale, "inviteAccepted.subject", { organizationName: safeOrg }),
+      subject: t(locale, "inviteAccepted.subject", {
+        organizationName: safeOrg,
+      }),
       text,
       html,
     });

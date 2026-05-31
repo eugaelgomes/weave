@@ -86,7 +86,12 @@ class ProjectsCollaboratorsRepository {
    * @param {string} [role="viewer"] - `project_member_role_enum` value (stored uppercased).
    * @returns {Promise<ProjectCollaboratorsAggregateRow[]>}
    */
-  async addCollaborator(projectId, ownerId, collaboratorUserId, role = "viewer") {
+  async addCollaborator(
+    projectId,
+    ownerId,
+    collaboratorUserId,
+    role = "viewer"
+  ) {
     const query = `
       WITH inserted_member AS (
         INSERT INTO project_members (project_id, user_id, role, added_by)
@@ -283,7 +288,12 @@ class ProjectsCollaboratorsRepository {
       WHERE p.id = $1::uuid
       GROUP BY p.id;
     `;
-    return executeQuery(query, [projectId, ownerId, collaboratorUserId, newRole]);
+    return executeQuery(query, [
+      projectId,
+      ownerId,
+      collaboratorUserId,
+      newRole,
+    ]);
   }
 
   /**
@@ -484,7 +494,6 @@ class ProjectsCollaboratorsRepository {
     return result[0]?.is_collaborator || false;
   }
 
-
   /**
    * True if a non-deleted membership row exists (regardless of suspension).
    * @param {string} projectId - Project UUID.
@@ -513,7 +522,7 @@ class ProjectsCollaboratorsRepository {
    */
   async getCollaboratorsByUserIds(userIds, projectId) {
     if (!userIds || userIds.length === 0) return [];
-    
+
     const query = `
       SELECT user_id::text, role
       FROM project_members

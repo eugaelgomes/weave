@@ -468,14 +468,15 @@ class SpacesService {
     if (key.startsWith("http://") || key.startsWith("https://")) {
       return key;
     }
-    
+
     // Substitui digitaloceanspaces.com por {region}.digitaloceanspaces.com caso aplicável
     // e garante que a URL aponte corretamente para o bucket
-    const publicUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`.replace(
-      "digitaloceanspaces.com",
-      `${this.region}.digitaloceanspaces.com`
-    );
-    
+    const publicUrl =
+      `${this.spacesEndpoint}/${this.bucketName}/${key}`.replace(
+        "digitaloceanspaces.com",
+        `${this.region}.digitaloceanspaces.com`
+      );
+
     return publicUrl;
   }
 

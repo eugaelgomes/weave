@@ -75,9 +75,15 @@ router.put(
 );
 
 // Search Users
-router.get("/search", verifyToken, highTrafficLimiter, requireScope("users:read"), (req, res, next) => {
-  SearchUsersController.searchUsers(req, res, next);
-});
+router.get(
+  "/search",
+  verifyToken,
+  highTrafficLimiter,
+  requireScope("users:read"),
+  (req, res, next) => {
+    SearchUsersController.searchUsers(req, res, next);
+  }
+);
 
 // Get Profile Image
 router.get(

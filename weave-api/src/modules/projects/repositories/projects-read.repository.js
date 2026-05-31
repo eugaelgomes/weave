@@ -185,7 +185,9 @@ class ProjectsReadRepository {
 
     if (filters.tags?.length) {
       params.push(JSON.stringify(filters.tags));
-      conditions.push(`COALESCE(p.properties->'tags','[]'::jsonb) @> $${i}::jsonb`);
+      conditions.push(
+        `COALESCE(p.properties->'tags','[]'::jsonb) @> $${i}::jsonb`
+      );
       i++;
     }
 
@@ -814,9 +816,9 @@ class ProjectsReadRepository {
     const sortMap = {
       created_at: "created_at",
       name: "name",
-      position: "\"position\"",
+      position: '"position"',
     };
-    const sortCol = sortMap[sort.field] || "\"position\"";
+    const sortCol = sortMap[sort.field] || '"position"';
     const sortDir = sort.order === "asc" ? "ASC" : "DESC";
 
     params.push(pagination.limit);
@@ -977,7 +979,6 @@ class ProjectsReadRepository {
     const result = await executeQuery(query, [projectId, userId]);
     return result[0]?.role || null;
   }
-
 
   async isCollaboratorInProject(projectId, userId) {
     const query = `
@@ -1323,17 +1324,13 @@ class ProjectsReadRepository {
     const params = [projectId];
     let i = 2;
 
-    const conditions = [
-      "pm.project_id = $1::uuid",
-      "pm.deleted = false",
-    ];
+    const conditions = ["pm.project_id = $1::uuid", "pm.deleted = false"];
 
     if (filters.role?.length) {
       params.push(filters.role);
       conditions.push(`pm.role = ANY($${i}::project_member_role_enum[])`);
       i++;
     }
-
 
     if (filters.search) {
       params.push(`%${filters.search}%`);
@@ -1428,7 +1425,9 @@ class ProjectsReadRepository {
     }
 
     if (methodology) {
-      conditions.push(`p.methodology = $${paramIndex}::project_methodology_enum`);
+      conditions.push(
+        `p.methodology = $${paramIndex}::project_methodology_enum`
+      );
       params.push(String(methodology).toUpperCase());
       paramIndex++;
     }
@@ -1545,7 +1544,9 @@ class ProjectsReadRepository {
     }
 
     if (methodology) {
-      conditions.push(`p.methodology = $${paramIndex}::project_methodology_enum`);
+      conditions.push(
+        `p.methodology = $${paramIndex}::project_methodology_enum`
+      );
       params.push(String(methodology).toUpperCase());
       paramIndex++;
     }

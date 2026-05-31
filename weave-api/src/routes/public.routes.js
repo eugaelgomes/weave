@@ -1,6 +1,8 @@
 const express = require("express");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
-const { logPublicApiRequest } = require("@/middlewares/http/log-public-api-request");
+const {
+  logPublicApiRequest,
+} = require("@/middlewares/http/log-public-api-request");
 
 const notesRoutes = require("@/modules/notes/notes.routes");
 const projectsRoutes = require("@/modules/projects/projects.routes");
@@ -10,7 +12,9 @@ const taskPrioritiesRoutes = require("@/modules/task-priorities/task-priorities.
 const weaveAiRoutes = require("@/modules/weave-ai/weave-ai.routes");
 const SearchUsersController = require("@/modules/users/controllers/search-users.controllers");
 const { requireScope } = require("@/middlewares/auth/require-scope");
-const { highTrafficLimiter } = require("@/middlewares/security/request-limiters");
+const {
+  highTrafficLimiter,
+} = require("@/middlewares/security/request-limiters");
 
 const DEFAULT_VERSION = "v1";
 

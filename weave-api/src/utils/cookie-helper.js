@@ -20,7 +20,10 @@ function getAuthCookieOptions(req, options = {}) {
 
   // Usar sameSite 'lax' por padrão (funciona para subdomínios)
   // Só usar 'none' se COOKIE_SAME_SITE estiver explicitamente definido como 'none'
-  const sameSite = isProduction && !isLocalhost ? process.env.COOKIE_SAME_SITE || "lax" : "lax";
+  const sameSite =
+    isProduction && !isLocalhost
+      ? process.env.COOKIE_SAME_SITE || "lax"
+      : "lax";
   const secure = isProduction && !isLocalhost ? isHttps : false;
 
   const cookieOptions = {
@@ -74,7 +77,10 @@ function clearAuthCookie(res, req) {
   const isHttps = req?.secure || forwardedProto === "https";
   const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
   const domain = getCookieDomain(req.hostname);
-  const sameSite = isProduction && !isLocalhost ? process.env.COOKIE_SAME_SITE || "lax" : "lax";
+  const sameSite =
+    isProduction && !isLocalhost
+      ? process.env.COOKIE_SAME_SITE || "lax"
+      : "lax";
   const secure = isProduction && !isLocalhost ? isHttps : false;
 
   const clearOptions = {

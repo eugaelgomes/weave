@@ -100,7 +100,9 @@ class CalendarEventsController {
         payload.noteId = resolvedNoteId;
       }
       if (payload.projectId) {
-        const resolvedProjectId = await resolveProjectIdToUuid(payload.projectId);
+        const resolvedProjectId = await resolveProjectIdToUuid(
+          payload.projectId
+        );
         if (!resolvedProjectId) {
           return res.status(404).json({ error: "Projeto não encontrado" });
         }
@@ -228,7 +230,9 @@ class CalendarEventsController {
         fields.note_id = resolvedNoteId;
       }
       if (fields.project_id) {
-        const resolvedProjectId = await resolveProjectIdToUuid(fields.project_id);
+        const resolvedProjectId = await resolveProjectIdToUuid(
+          fields.project_id
+        );
         if (!resolvedProjectId) {
           return res.status(404).json({ error: "Projeto não encontrado" });
         }

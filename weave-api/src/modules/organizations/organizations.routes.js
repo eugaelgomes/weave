@@ -212,7 +212,9 @@ router.post(
 
 router.post(
   "/invites/bulk",
-  organizationMembersController.inviteMembersBulk.bind(organizationMembersController)
+  organizationMembersController.inviteMembersBulk.bind(
+    organizationMembersController
+  )
 );
 
 router.post(

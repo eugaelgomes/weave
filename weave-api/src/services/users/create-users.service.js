@@ -17,12 +17,17 @@ class CreateUsersService {
   async _validateCorporateDomain(email) {
     const emailDomain = email.split("@")[1];
     if (emailDomain) {
-      const domainInfo = await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
-      if (domainInfo && (domainInfo.status === "VERIFIED" || domainInfo.status === "PENDING")) {
-        const existingInvite = await OrganizationsRepository.checkExistingInvite(
-          domainInfo.organization_id,
-          email
-        );
+      const domainInfo =
+        await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
+      if (
+        domainInfo &&
+        (domainInfo.status === "VERIFIED" || domainInfo.status === "PENDING")
+      ) {
+        const existingInvite =
+          await OrganizationsRepository.checkExistingInvite(
+            domainInfo.organization_id,
+            email
+          );
         if (!existingInvite) {
           throw new Error("CORPORATE_DOMAIN_INVITE_REQUIRED");
         }
@@ -35,36 +40,59 @@ class CreateUsersService {
    * Delegates S3 and emails to external handlers.
    */
   async createUser(userData, locale = "en") {
-    const { email, username, phone_number, password, timezone, private_profile, birth_date, name, user_name } = userData;
+    const {
+      email,
+      username,
+      phone_number,
+      password,
+      timezone,
+      private_profile,
+      birth_date,
+      name,
+      user_name,
+    } = userData;
 
     await this._validateCorporateDomain(email);
 
     const userName = user_name || name;
 
-    const availability = await SearchUsersRepository.checkUniqueAvailability({ username, email, phone_number });
+    const availability = await SearchUsersRepository.checkUniqueAvailability({
+      username,
+      email,
+      phone_number,
+    });
     if (!availability.email.available) return { conflict: "email" };
     if (!availability.username.available) return { conflict: "username" };
-    if (!availability.phone_number.available) return { conflict: "phone_number" };
+    if (!availability.phone_number.available)
+      return { conflict: "phone_number" };
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const activationToken = crypto.randomBytes(12).toString("hex");
-    const activationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const currentDateTime = new Date().toISOString().slice(0, 19).replace("T", " ");
+    const activationCode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+    const currentDateTime = new Date()
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " ");
 
     // Use transaction for database atomicity
     const result = await withTransaction(async (client) => {
-      const newUser = await CreateUsersRepository.createUser({
-        name: userName,
-        username,
-        email,
-        password: hashedPassword,
-        timezone,
-        private_profile,
-        birth_date,
-        phone_number,
-        avatar_url: null,
-      }, client);
+      const newUser = await CreateUsersRepository.createUser(
+        {
+          name: userName,
+          username,
+          email,
+          password: hashedPassword,
+          timezone,
+          private_profile,
+          birth_date,
+          phone_number,
+          avatar_url: null,
+        },
+        client
+      );
 
       const userId = newUser[0].user_id;
 
@@ -81,7 +109,7 @@ class CreateUsersService {
         userName,
         username,
         email,
-        createdAt: newUser[0].created_at
+        createdAt: newUser[0].created_at,
       };
     });
 
@@ -93,10 +121,13 @@ class CreateUsersService {
         email: result.email,
         username: result.username,
         activationToken,
-        locale
+        locale,
       });
     } catch (queueError) {
-      console.error("Failed to enqueue welcome email, but user was created:", queueError);
+      console.error(
+        "Failed to enqueue welcome email, but user was created:",
+        queueError
+      );
     }
 
     return { success: true, user: result };

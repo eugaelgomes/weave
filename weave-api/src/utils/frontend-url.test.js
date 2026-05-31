@@ -1,14 +1,14 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const {
-  normalizeFrontendBase,
-  buildAuthInviteUrl,
-} = require("./frontend-url");
+const { normalizeFrontendBase, buildAuthInviteUrl } = require("./frontend-url");
 
 const SAMPLE_UUID = "078ce37f-ba69-4038-942e-a375f9580c4a";
 
 test("normalizeFrontendBase strips trailing slashes", () => {
-  assert.equal(normalizeFrontendBase("https://app.example/"), "https://app.example");
+  assert.equal(
+    normalizeFrontendBase("https://app.example/"),
+    "https://app.example"
+  );
   assert.equal(
     normalizeFrontendBase("https://app.example///"),
     "https://app.example"

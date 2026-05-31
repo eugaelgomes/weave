@@ -22,7 +22,9 @@ function buildDevDetails(appError, originalError) {
 
   const details = {
     originalMessage:
-      originalError instanceof Error ? originalError.message : String(originalError),
+      originalError instanceof Error
+        ? originalError.message
+        : String(originalError),
     ...getPgLogContext(originalError),
   };
 

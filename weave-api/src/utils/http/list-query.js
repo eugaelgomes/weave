@@ -57,8 +57,7 @@ function parseCsvEnum(raw, allowed, opts = {}) {
  * @returns {string|null}
  */
 function trimSearch(raw, maxLen) {
-  if (raw === null || raw === undefined || typeof raw !== "string")
-    return null;
+  if (raw === null || raw === undefined || typeof raw !== "string") return null;
   const t = raw.trim();
   if (!t) return null;
   return t.slice(0, maxLen);

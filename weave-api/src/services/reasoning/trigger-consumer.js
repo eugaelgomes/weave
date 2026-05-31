@@ -50,22 +50,34 @@ class ReasoningTriggerConsumer {
   async processTrigger(trigger) {
     const { projectId, reportType, config } = trigger;
 
-    console.log(`[Reasoning Trigger Consumer] Building context for project: ${projectId}, type: ${reportType}`);
+    console.log(
+      `[Reasoning Trigger Consumer] Building context for project: ${projectId}, type: ${reportType}`
+    );
 
     try {
       // 1. Build context (Data fetching happens here in the API)
       const context = await sprintContextBuilder.build(config);
-      const normalizedType = this._normalizeReportType(reportType || trigger.reasoningType);
+      const normalizedType = this._normalizeReportType(
+        reportType || trigger.reasoningType
+      );
       const customAppends = resolveInstructionAppends(
         config?.reasoning_instructions,
         normalizedType
       );
-      const prompt = this._buildPrompt(normalizedType, context, customAppends.promptAppend);
+      const prompt = this._buildPrompt(
+        normalizedType,
+        context,
+        customAppends.promptAppend
+      );
       const systemMessage = this._buildSystemMessage(
         normalizedType,
         customAppends.systemAppend
       );
-      const sprintId = trigger.sprintId || config?.current_sprint_id || config?.sprint_id || null;
+      const sprintId =
+        trigger.sprintId ||
+        config?.current_sprint_id ||
+        config?.sprint_id ||
+        null;
 
       // 2. Prepare Engine Job
       const job = {
@@ -83,7 +95,9 @@ class ReasoningTriggerConsumer {
         customRecipients: Array.isArray(config?.custom_recipients)
           ? config.custom_recipients
           : [],
-        channels: Array.isArray(config?.channels) ? config.channels : ["in_app"],
+        channels: Array.isArray(config?.channels)
+          ? config.channels
+          : ["in_app"],
         expiresAt: this._buildExpiresAt(config),
         inputContext: context || {},
         prompt,
@@ -98,10 +112,14 @@ class ReasoningTriggerConsumer {
 
       // 3. Push to Engine
       await redis.rpush(this.engineQueueKey, JSON.stringify(job));
-      console.log(`[Reasoning Trigger Consumer] Job pushed to engine for project: ${projectId}`);
-      
+      console.log(
+        `[Reasoning Trigger Consumer] Job pushed to engine for project: ${projectId}`
+      );
     } catch (error) {
-      console.error("[Reasoning Trigger Consumer] Failed to process trigger:", error);
+      console.error(
+        "[Reasoning Trigger Consumer] Failed to process trigger:",
+        error
+      );
     }
   }
 
@@ -134,7 +152,8 @@ class ReasoningTriggerConsumer {
    */
   _buildPrompt(reportType, context, customAppend = "") {
     const baseContext =
-      typeof context?.fullContext === "string" && context.fullContext.trim().length > 0
+      typeof context?.fullContext === "string" &&
+      context.fullContext.trim().length > 0
         ? context.fullContext.trim()
         : "No structured sprint context available.";
 
@@ -192,7 +211,9 @@ class ReasoningTriggerConsumer {
     const sprintEnd = config?.sprint_end || config?.current_sprint_end || null;
     if (!sprintEnd) return null;
     const asIsoDate =
-      typeof sprintEnd === "string" ? sprintEnd.slice(0, 10) : new Date(sprintEnd).toISOString().slice(0, 10);
+      typeof sprintEnd === "string"
+        ? sprintEnd.slice(0, 10)
+        : new Date(sprintEnd).toISOString().slice(0, 10);
     return `${asIsoDate}T23:59:59.999Z`;
   }
 

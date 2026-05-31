@@ -23,7 +23,8 @@ const FUNCTION_SCHEMAS = Object.freeze({
           type: "string",
         },
         files: {
-          description: "Array of file references. Each object needs 'name' and 'url'.",
+          description:
+            "Array of file references. Each object needs 'name' and 'url'.",
           items: {
             properties: {
               name: { type: "string" },
@@ -48,7 +49,8 @@ const FUNCTION_SCHEMAS = Object.freeze({
         },
         title: { type: "string" },
         urls: {
-          description: "Array of external URLs. Each object needs 'title' and 'url'.",
+          description:
+            "Array of external URLs. Each object needs 'title' and 'url'.",
           items: {
             properties: {
               title: { type: "string" },
@@ -66,7 +68,8 @@ const FUNCTION_SCHEMAS = Object.freeze({
   },
   search_projects: {
     category: FunctionCategory.PROJECTS,
-    description: "Search for projects by title or description to find project IDs, stage IDs, and priority IDs.",
+    description:
+      "Search for projects by title or description to find project IDs, stage IDs, and priority IDs.",
     name: "search_projects",
     parameters: {
       additionalProperties: false,
@@ -82,7 +85,8 @@ const FUNCTION_SCHEMAS = Object.freeze({
   },
   search_users: {
     category: FunctionCategory.USERS,
-    description: "Search for users in the organization by name, username, or email to get their user IDs. Essential for resolving names to collaborator IDs.",
+    description:
+      "Search for users in the organization by name, username, or email to get their user IDs. Essential for resolving names to collaborator IDs.",
     name: "search_users",
     parameters: {
       additionalProperties: false,

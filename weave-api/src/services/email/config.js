@@ -42,8 +42,7 @@ function MailService() {
       } = mailOptions;
 
       const sender = normalizeSenderFrom(
-        from ||
-          (process.env.NODE_ENV !== "production" ? DEV_SENDER : null)
+        from || (process.env.NODE_ENV !== "production" ? DEV_SENDER : null)
       );
 
       if (!sender) {
@@ -82,4 +81,3 @@ function MailService() {
 }
 
 module.exports = { MailService };
-

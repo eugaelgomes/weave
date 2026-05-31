@@ -42,13 +42,16 @@ async function loadResourceAccessContext({ userId, context = {} }) {
       result.note.accessible = false;
     } else {
       const ownerId = String(note.user_id || "");
-      const collaborators = Array.isArray(note.collaborators) ? note.collaborators : [];
+      const collaborators = Array.isArray(note.collaborators)
+        ? note.collaborators
+        : [];
       const isCollaborator = collaborators.some(
         (item) => String(item.id || item.user_id || "") === String(userId)
       );
       result.note.isOwner = ownerId === String(userId);
       result.note.isCollaborator = isCollaborator;
-      result.note.accessible = result.note.isOwner || result.note.isCollaborator;
+      result.note.accessible =
+        result.note.isOwner || result.note.isCollaborator;
     }
   }
 
@@ -57,7 +60,9 @@ async function loadResourceAccessContext({ userId, context = {} }) {
       context.projectId,
       userId
     );
-    const project = Array.isArray(projectResult) ? projectResult[0] : projectResult;
+    const project = Array.isArray(projectResult)
+      ? projectResult[0]
+      : projectResult;
     result.project.exists = Boolean(project);
     if (!project) {
       result.project.accessible = false;
@@ -71,7 +76,8 @@ async function loadResourceAccessContext({ userId, context = {} }) {
       );
       result.project.isOwner = ownerId === String(userId);
       result.project.isCollaborator = isCollaborator;
-      result.project.accessible = result.project.isOwner || result.project.isCollaborator;
+      result.project.accessible =
+        result.project.isOwner || result.project.isCollaborator;
     }
   }
 

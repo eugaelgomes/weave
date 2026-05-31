@@ -77,20 +77,24 @@ class CreateUsersRepository extends BaseRepository {
     RETURNING user_id, public_user_id, email, name, avatar_url, created_at;
   `;
 
-    return await executeQuery(query, [
-      name,
-      username,
-      email,
-      password,
-      timezone,
-      private_profile,
-      birth_date,
-      phone_number,
-      avatar_url,
-      defaultAppPreferences,
-      resolvedPlanId,
-      publicUserId,
-    ], client);
+    return await executeQuery(
+      query,
+      [
+        name,
+        username,
+        email,
+        password,
+        timezone,
+        private_profile,
+        birth_date,
+        phone_number,
+        avatar_url,
+        defaultAppPreferences,
+        resolvedPlanId,
+        publicUserId,
+      ],
+      client
+    );
   }
 
   /**
@@ -111,7 +115,11 @@ class CreateUsersRepository extends BaseRepository {
       )
       RETURNING user_id, public_user_id;
     `;
-    return await executeQuery(query, [username, name, githubId, planId, publicUserId], client);
+    return await executeQuery(
+      query,
+      [username, name, githubId, planId, publicUserId],
+      client
+    );
   }
 }
 module.exports = new CreateUsersRepository();

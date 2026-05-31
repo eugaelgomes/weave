@@ -18,7 +18,9 @@ class PlansSubscriptionController {
 
       const effective = await PlansRepository.getEffectivePlanByUserId(userId);
       if (!effective?.plan_id) {
-        return res.status(404).json({ message: "No active subscription found" });
+        return res
+          .status(404)
+          .json({ message: "No active subscription found" });
       }
 
       const subscription = await this._getSubscriptionRow(
@@ -75,7 +77,9 @@ class PlansSubscriptionController {
 
       const effective = await PlansRepository.getEffectivePlanByUserId(userId);
       if (!effective) {
-        return res.status(404).json({ message: "No active subscription found" });
+        return res
+          .status(404)
+          .json({ message: "No active subscription found" });
       }
 
       if (effective.plan_id === planId) {
@@ -114,7 +118,11 @@ class PlansSubscriptionController {
         );
       }
 
-      await this._refreshPlanUsageSnapshot(subscriberType, subscriberId, targetPlan);
+      await this._refreshPlanUsageSnapshot(
+        subscriberType,
+        subscriberId,
+        targetPlan
+      );
 
       const usageRecord = await PlansRepository.getPlanUsage(userId);
       const downgradWarnings = this._checkDowngradeWarnings(
@@ -152,7 +160,9 @@ class PlansSubscriptionController {
 
       const effective = await PlansRepository.getEffectivePlanByUserId(userId);
       if (!effective) {
-        return res.status(404).json({ message: "No active subscription found" });
+        return res
+          .status(404)
+          .json({ message: "No active subscription found" });
       }
 
       const subscription = await this._getSubscriptionRow(
@@ -161,11 +171,15 @@ class PlansSubscriptionController {
       );
 
       if (!subscription) {
-        return res.status(404).json({ message: "Subscription record not found" });
+        return res
+          .status(404)
+          .json({ message: "Subscription record not found" });
       }
 
       if (subscription.cancel_at_period_end) {
-        return res.status(409).json({ message: "Cancellation already scheduled" });
+        return res
+          .status(409)
+          .json({ message: "Cancellation already scheduled" });
       }
 
       await executeQuery(
@@ -236,9 +250,21 @@ class PlansSubscriptionController {
     const warnings = [];
 
     const checks = [
-      { usage: "usage_summary.notes_total", limit: "limits.max_notes", label: "notes" },
-      { usage: "usage_summary.projects_total", limit: "limits.max_projects", label: "projects" },
-      { usage: "usage_summary.team_members_total", limit: "limits.max_team_members", label: "team members" },
+      {
+        usage: "usage_summary.notes_total",
+        limit: "limits.max_notes",
+        label: "notes",
+      },
+      {
+        usage: "usage_summary.projects_total",
+        limit: "limits.max_projects",
+        label: "projects",
+      },
+      {
+        usage: "usage_summary.team_members_total",
+        limit: "limits.max_team_members",
+        label: "team members",
+      },
     ];
 
     for (const check of checks) {

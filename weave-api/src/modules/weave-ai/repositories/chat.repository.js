@@ -235,10 +235,13 @@ class WeaveAIRepository {
     ORDER BY created_at ASC
   `;
 
-    const normalizedLimit = Number.isFinite(Number(limit)) && Number(limit) > 0
-      ? Number(limit)
-      : 20;
-    const result = await pool.query(query, [sessionId, userId, normalizedLimit]);
+    const normalizedLimit =
+      Number.isFinite(Number(limit)) && Number(limit) > 0 ? Number(limit) : 20;
+    const result = await pool.query(query, [
+      sessionId,
+      userId,
+      normalizedLimit,
+    ]);
     return result.rows;
   }
 

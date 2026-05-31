@@ -28,7 +28,7 @@ const getConnection = async () => {
 };
 
 const executeQuery = async (sql, params = [], explicitClient = null) => {
-  const client = explicitClient || await getConnection();
+  const client = explicitClient || (await getConnection());
   try {
     const { rows } = await client.query(sql, params);
     return rows;
@@ -68,4 +68,10 @@ const withTransaction = async (callback) => {
   }
 };
 
-module.exports = { pool, getConnection, executeQuery, rowCount, withTransaction };
+module.exports = {
+  pool,
+  getConnection,
+  executeQuery,
+  rowCount,
+  withTransaction,
+};

@@ -9,7 +9,10 @@ const {
 } = require("@/utils/patterns/product-patterns");
 const spacesService = require("@/services/storage");
 const { normalizeBlocksTree } = require("../block-normalizer");
-const { resolveNoteTitle, deriveTitleFromBlocks } = require("@/modules/notes/utils/derive-note-title");
+const {
+  resolveNoteTitle,
+  deriveTitleFromBlocks,
+} = require("@/modules/notes/utils/derive-note-title");
 const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
 const { PLAN_PATHS } = require("@/services/plans/plan-paths");
 const { resolveProjectIdToUuid } = require("@/utils/project-id-lookup");
@@ -31,12 +34,19 @@ class NotesWriteController extends NotesBaseController {
 
   _isSameFieldValue(fieldName, currentValue, incomingValue) {
     if (fieldName === "due_date") {
-      const currentDate = currentValue ? new Date(currentValue).toISOString() : null;
-      const incomingDate = incomingValue ? new Date(incomingValue).toISOString() : null;
+      const currentDate = currentValue
+        ? new Date(currentValue).toISOString()
+        : null;
+      const incomingDate = incomingValue
+        ? new Date(incomingValue).toISOString()
+        : null;
       return currentDate === incomingDate;
     }
     if (fieldName === "tags") {
-      return JSON.stringify(currentValue || []) === JSON.stringify(incomingValue || []);
+      return (
+        JSON.stringify(currentValue || []) ===
+        JSON.stringify(incomingValue || [])
+      );
     }
     if (fieldName === "properties") {
       if (!incomingValue || typeof incomingValue !== "object") return true;
@@ -82,13 +92,7 @@ class NotesWriteController extends NotesBaseController {
         }
       }
 
-      const {
-        title,
-        description,
-        tags = [],
-        status,
-        project_id,
-      } = req.body;
+      const { title, description, tags = [], status, project_id } = req.body;
 
       // 1. Validação de autenticação
       const userId = this._validateAuthentication(req, res);
@@ -275,7 +279,8 @@ class NotesWriteController extends NotesBaseController {
       });
       if (!resolvedTitle) {
         return res.status(400).json({
-          error: "Informe um título ou texto na descrição, no bloco inicial ou nos blocos.",
+          error:
+            "Informe um título ou texto na descrição, no bloco inicial ou nos blocos.",
         });
       }
 
@@ -385,7 +390,9 @@ class NotesWriteController extends NotesBaseController {
       }
       const parsedBaseRevision = this._parseBaseRevision(baseRevision);
       const occEnforced =
-        String(process.env.ENABLE_NOTES_OCC_REQUIRED || "false").toLowerCase() === "true";
+        String(
+          process.env.ENABLE_NOTES_OCC_REQUIRED || "false"
+        ).toLowerCase() === "true";
       if (occEnforced && parsedBaseRevision === null) {
         return res.status(400).json({
           error: "baseRevision é obrigatório para atualizar a nota",
@@ -455,9 +462,11 @@ class NotesWriteController extends NotesBaseController {
       // Prepara os dados para atualização (apenas campos fornecidos)
       const updateData = {};
       if (title !== undefined) {
-        const trimmed = title === null || title === undefined ? "" : String(title).trim();
+        const trimmed =
+          title === null || title === undefined ? "" : String(title).trim();
         if (trimmed === "") {
-          const blocksFromDb = await this.notesRepository.findNoteBlocksTreeByNoteId(id);
+          const blocksFromDb =
+            await this.notesRepository.findNoteBlocksTreeByNoteId(id);
           const derived = deriveTitleFromBlocks(blocksFromDb);
           updateData.title = derived || "Sem título";
         } else {
@@ -746,15 +755,13 @@ class NotesWriteController extends NotesBaseController {
             serverRevision: latestNote.revision ?? null,
             userId,
           });
-          return res
-            .status(409)
-            .json(
-              this._buildConflictPayload({
-                incomingData: updateData,
-                latestNote,
-                noteId: id,
-              })
-            );
+          return res.status(409).json(
+            this._buildConflictPayload({
+              incomingData: updateData,
+              latestNote,
+              noteId: id,
+            })
+          );
         }
       }
 

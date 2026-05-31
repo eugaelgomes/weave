@@ -272,7 +272,9 @@ router.post(
   "/:id/reasonings/trigger",
   standardTrafficLimiter,
   requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
-  ProjectsUpdateController.triggerReasoningGeneration.bind(ProjectsUpdateController)
+  ProjectsUpdateController.triggerReasoningGeneration.bind(
+    ProjectsUpdateController
+  )
 );
 router.post(
   "/:id/reasonings",

@@ -41,7 +41,9 @@ class BackupExportController extends BackupBaseController {
       const usageRecord = await PlanUsageManager.managePlanUsage(userId);
       const planDetails = await PlansRepository.getPlanById(userPlan.plan_id);
       const appliedPlanDetails =
-        usageRecord?.applied_plan_snapshot || userPlan.plan_details || planDetails?.details;
+        usageRecord?.applied_plan_snapshot ||
+        userPlan.plan_details ||
+        planDetails?.details;
 
       const canBackup = PlanUsageManager.checkLimit(
         appliedPlanDetails,
@@ -103,11 +105,15 @@ class BackupExportController extends BackupBaseController {
           error: "Usuário não encontrado",
         });
 
-      const job = await backupJobsRepository.createJob("backup_export", userId, {
-        email: user.email,
-        username: user.name || user.username,
-        requestedAt: new Date().toISOString(),
-      });
+      const job = await backupJobsRepository.createJob(
+        "backup_export",
+        userId,
+        {
+          email: user.email,
+          username: user.name || user.username,
+          requestedAt: new Date().toISOString(),
+        }
+      );
 
       await PlanUsageManager.consumeExport(usageRecord.id, "backup");
 

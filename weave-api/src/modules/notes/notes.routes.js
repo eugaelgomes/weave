@@ -1,7 +1,9 @@
 const express = require("express");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { requireScope } = require("@/middlewares/auth/require-scope");
-const { resolveNotePublicIdParam } = require("@/middlewares/public-id-resolver");
+const {
+  resolveNotePublicIdParam,
+} = require("@/middlewares/public-id-resolver");
 const {
   commentFilesUpload,
   noteUpdateUpload,
@@ -25,7 +27,9 @@ router.param("id", resolveNotePublicIdParam);
 router.param("noteId", resolveNotePublicIdParam);
 
 const blockAutosaveV2Enabled =
-  String(process.env.ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true").toLowerCase() !== "false";
+  String(
+    process.env.ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true"
+  ).toLowerCase() !== "false";
 const blockWriteLimiter = blockAutosaveV2Enabled
   ? notesBlockWriteLimiter
   : standardTrafficLimiter;
@@ -74,13 +78,21 @@ router.post("/:noteId/blocks", blockWriteLimiter, (req, res, next) => {
   NoteBlocksController.create(req, res, next);
 });
 
-router.patch("/:noteId/blocks/:blockId", blockWriteLimiter, (req, res, next) => {
-  NoteBlocksController.update(req, res, next);
-});
+router.patch(
+  "/:noteId/blocks/:blockId",
+  blockWriteLimiter,
+  (req, res, next) => {
+    NoteBlocksController.update(req, res, next);
+  }
+);
 
-router.delete("/:noteId/blocks/:blockId", blockWriteLimiter, (req, res, next) => {
-  NoteBlocksController.softDelete(req, res, next);
-});
+router.delete(
+  "/:noteId/blocks/:blockId",
+  blockWriteLimiter,
+  (req, res, next) => {
+    NoteBlocksController.softDelete(req, res, next);
+  }
+);
 
 router.get("/:id", (req, res, next) => {
   NotesReadController.getNoteById(req, res, next);

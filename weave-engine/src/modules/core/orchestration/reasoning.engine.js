@@ -147,9 +147,11 @@ async function executeAgenticTask({
 
   while (iterations < MAX_REACT_ITERATIONS) {
     if (Date.now() - startedAt >= MAX_AGENTIC_DURATION_MS) {
-      const isPt = executionContext.language && executionContext.language.toLowerCase().startsWith("pt");
-      const msg = isPt 
-        ? "Atingi o limite de tempo interno da ferramenta e precisei parar o raciocínio. Fique à vontade para me pedir para continuar!" 
+      const isPt =
+        executionContext.language &&
+        executionContext.language.toLowerCase().startsWith("pt");
+      const msg = isPt
+        ? "Atingi o limite de tempo interno da ferramenta e precisei parar o raciocínio. Fique à vontade para me pedir para continuar!"
         : "I hit the internal time limit for this task and had to stop early. Feel free to ask me to continue!";
       return {
         data: { type: "text", text: msg, content: msg },
@@ -173,12 +175,14 @@ async function executeAgenticTask({
     if (data.type === "function_call" && data.toolCalls) {
       const toolCallsArray = data.toolCalls.map((tc, idx) => {
         return {
-          id: tc.id || `call_${Math.random().toString(36).substring(2, 11)}_${idx}`,
+          id:
+            tc.id ||
+            `call_${Math.random().toString(36).substring(2, 11)}_${idx}`,
           function: {
             name: tc.name,
             arguments: JSON.stringify(tc.arguments),
           },
-          rawArgs: tc.arguments
+          rawArgs: tc.arguments,
         };
       });
 
@@ -187,11 +191,18 @@ async function executeAgenticTask({
         role: "assistant",
         content: null,
         rawParts: data.rawParts,
-        tool_calls: toolCallsArray.map(t => ({ id: t.id, function: t.function })),
+        tool_calls: toolCallsArray.map((t) => ({
+          id: t.id,
+          function: t.function,
+        })),
       });
 
-      const internalCalls = toolCallsArray.filter(t => isInternalTool(t.function.name));
-      const externalCalls = toolCallsArray.filter(t => !isInternalTool(t.function.name));
+      const internalCalls = toolCallsArray.filter((t) =>
+        isInternalTool(t.function.name)
+      );
+      const externalCalls = toolCallsArray.filter(
+        (t) => !isInternalTool(t.function.name)
+      );
 
       if (internalCalls.length > 0 && externalCalls.length === 0) {
         // Execute all internal tools in parallel
@@ -200,10 +211,18 @@ async function executeAgenticTask({
             const fnName = tc.function.name;
             const fnArgs = tc.rawArgs;
             try {
-              const result = await executeInternalTool(fnName, fnArgs, executionContext);
+              const result = await executeInternalTool(
+                fnName,
+                fnArgs,
+                executionContext
+              );
               return { tc, result, error: null };
             } catch (err) {
-              return { tc, result: null, error: err.message || "Tool execution failed" };
+              return {
+                tc,
+                result: null,
+                error: err.message || "Tool execution failed",
+              };
             }
           })
         );
@@ -212,12 +231,15 @@ async function executeAgenticTask({
           const fnName = tc.function.name;
           const fnArgs = tc.rawArgs;
           const output = error ? { error } : result;
-          
+
           executedActions.push({ name: fnName, args: fnArgs, result: output });
 
-          let contentStr = typeof output === "string" ? output : JSON.stringify(output);
+          let contentStr =
+            typeof output === "string" ? output : JSON.stringify(output);
           if (contentStr.length > 12000) {
-            contentStr = contentStr.slice(0, 12000) + "\n\n...[TRUNCATED BY ENGINE DUE TO SIZE LIMITS]";
+            contentStr =
+              contentStr.slice(0, 12000) +
+              "\n\n...[TRUNCATED BY ENGINE DUE TO SIZE LIMITS]";
           }
 
           currentOptions.messages.push({
@@ -227,7 +249,7 @@ async function executeAgenticTask({
             content: contentStr,
           });
         }
-        
+
         continue;
       } else {
         // If there is ANY external tool, we return to API to execute them.
@@ -275,9 +297,12 @@ async function executeAgenticTask({
 
         executedActions.push({ name: fnName, args: fnArgs, result });
 
-        let contentStr = typeof result === "string" ? result : JSON.stringify(result);
+        let contentStr =
+          typeof result === "string" ? result : JSON.stringify(result);
         if (contentStr.length > 12000) {
-          contentStr = contentStr.slice(0, 12000) + "\n\n...[TRUNCATED BY ENGINE DUE TO SIZE LIMITS]";
+          contentStr =
+            contentStr.slice(0, 12000) +
+            "\n\n...[TRUNCATED BY ENGINE DUE TO SIZE LIMITS]";
         }
 
         currentOptions.messages.push({
@@ -307,11 +332,13 @@ async function executeAgenticTask({
   }
 
   // Fallback if max iterations reached
-  const isPt = executionContext.language && executionContext.language.toLowerCase().startsWith("pt");
+  const isPt =
+    executionContext.language &&
+    executionContext.language.toLowerCase().startsWith("pt");
   const fallbackMsg = isPt
     ? "Pensei por muitas iterações e não consegui chegar numa conclusão final. Pode me dar mais detalhes?"
     : "I thought for many iterations but couldn't reach a final conclusion. Could you provide more details?";
-  
+
   return {
     data: {
       type: "text",

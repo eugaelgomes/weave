@@ -19,14 +19,18 @@ router.get(
   "/integrations",
   verifyToken,
   standardTrafficLimiter,
-  SlackIntegrationsController.getSlackIntegration.bind(SlackIntegrationsController)
+  SlackIntegrationsController.getSlackIntegration.bind(
+    SlackIntegrationsController
+  )
 );
 
 router.put(
   "/integrations/default-channel",
   verifyToken,
   structuralLimiter,
-  SlackIntegrationsController.setDefaultChannel.bind(SlackIntegrationsController)
+  SlackIntegrationsController.setDefaultChannel.bind(
+    SlackIntegrationsController
+  )
 );
 
 router.delete(

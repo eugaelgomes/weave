@@ -32,9 +32,7 @@ function notesGroupedByStage(
 
     sections.push(`### Stage: ${stage.name}`);
     for (const note of stageNotes) {
-      sections.push(
-        serializeNote(note, blocksByNoteId.get(note.id) || [])
-      );
+      sections.push(serializeNote(note, blocksByNoteId.get(note.id) || []));
     }
     sections.push("");
   }
@@ -42,9 +40,7 @@ function notesGroupedByStage(
   if (unstagedNotes.length > 0) {
     sections.push("### Unstaged / Backlog");
     for (const note of unstagedNotes) {
-      sections.push(
-        serializeNote(note, blocksByNoteId.get(note.id) || [])
-      );
+      sections.push(serializeNote(note, blocksByNoteId.get(note.id) || []));
     }
   }
 
@@ -73,13 +69,15 @@ function serializeNote(note, blocks) {
   const yamlStr = yaml.dump(frontmatter).trim();
   const contentMarkdown = blocksToMarkdown(blocks);
 
-  return `
+  return (
+    `
 ---
 ${yamlStr}
 ---
 
 ${contentMarkdown}
-`.trim() + "\n";
+`.trim() + "\n"
+  );
 }
 
 /**

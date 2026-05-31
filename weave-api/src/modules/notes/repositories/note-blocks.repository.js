@@ -99,9 +99,7 @@ class NoteBlocksRepository extends BaseRepository {
       const siblings = byParent.get(parentKey) || [];
       return siblings.map((r) => {
         const props =
-          r.properties && typeof r.properties === "object"
-            ? r.properties
-            : {};
+          r.properties && typeof r.properties === "object" ? r.properties : {};
         const text = typeof props.text === "string" ? props.text : "";
         const node = {
           id: String(r.id),
@@ -207,7 +205,9 @@ class NoteBlocksRepository extends BaseRepository {
     );
 
     const parentId =
-      data.parent_id === undefined || data.parent_id === null || data.parent_id === ""
+      data.parent_id === undefined ||
+      data.parent_id === null ||
+      data.parent_id === ""
         ? null
         : String(data.parent_id);
 
@@ -300,7 +300,8 @@ class NoteBlocksRepository extends BaseRepository {
     const existing = await this.findById(blockId);
     if (!existing) return null;
 
-    const blockType = patch.type !== undefined ? String(patch.type) : String(existing.type);
+    const blockType =
+      patch.type !== undefined ? String(patch.type) : String(existing.type);
     let properties = existing.properties;
     if (typeof properties === "string") {
       try {

@@ -72,9 +72,7 @@ class NotesCollaboratorsController extends NotesBaseController {
         throw new Error("Você não pode adicionar a si mesmo como colaborador");
       }
 
-      if (
-        await respondIfWorkspaceShareDenied(res, userId, collaboratorId)
-      ) {
+      if (await respondIfWorkspaceShareDenied(res, userId, collaboratorId)) {
         return;
       }
 

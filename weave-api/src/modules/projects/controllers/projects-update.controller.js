@@ -26,7 +26,9 @@ const {
 } = require("@/utils/workspace-share-guard");
 const { resolveNoteTitle } = require("@/modules/notes/utils/derive-note-title");
 const redis = require("@/services/queue/consumer-connection");
-const { getReasoningTriggerQueueRedisKey } = require("@/services/queue/queue-keys");
+const {
+  getReasoningTriggerQueueRedisKey,
+} = require("@/services/queue/queue-keys");
 const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
 
 class ProjectsUpdateController extends ProjectsCoreController {
@@ -203,12 +205,8 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const project = ctx.project;
 
       // Validação de dados obrigatórios
-      if (
-        !action || !["add", "update", "remove"].includes(action)
-      ) {
-        throw new Error(
-          "Ação inválida. Use 'add', 'update' ou 'remove'"
-        );
+      if (!action || !["add", "update", "remove"].includes(action)) {
+        throw new Error("Ação inválida. Use 'add', 'update' ou 'remove'");
       }
 
       if (!collaboratorId) {
@@ -277,7 +275,6 @@ class ProjectsUpdateController extends ProjectsCoreController {
           ) {
             return;
           }
-
 
           // Verificar se o colaborador já está ativo
           const isAlready = await this.projectsRepository.isCollaborator(
@@ -782,7 +779,8 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
   _parseStringArrayField(value) {
     if (value === undefined || value === null || value === "") return [];
-    if (Array.isArray(value)) return value.map((item) => String(item)).filter(Boolean);
+    if (Array.isArray(value))
+      return value.map((item) => String(item)).filter(Boolean);
     if (typeof value === "string") {
       try {
         const parsed = JSON.parse(value);
@@ -829,7 +827,11 @@ class ProjectsUpdateController extends ProjectsCoreController {
     const parsed = this._parseNullableField(parentIdRaw);
     if (parsed === null || parsed === undefined) return null;
     const parent = await notesRepository.getNoteById(parsed);
-    if (!parent || parent.deleted || String(parent.project_id) !== String(projectId)) {
+    if (
+      !parent ||
+      parent.deleted ||
+      String(parent.project_id) !== String(projectId)
+    ) {
       throw new Error("Tarefa pai inválida ou não pertence a este projeto");
     }
     return String(parsed);
@@ -850,7 +852,11 @@ class ProjectsUpdateController extends ProjectsCoreController {
       throw new Error("Tarefa não pode ser pai de si mesma");
     }
     const parent = await notesRepository.getNoteById(parsed);
-    if (!parent || parent.deleted || String(parent.project_id) !== String(projectId)) {
+    if (
+      !parent ||
+      parent.deleted ||
+      String(parent.project_id) !== String(projectId)
+    ) {
       throw new Error("Tarefa pai inválida ou não pertence a este projeto");
     }
     let walker = parent;
@@ -918,9 +924,12 @@ class ProjectsUpdateController extends ProjectsCoreController {
         );
       }
 
-      const stageRows = await this.projectsRepository.getProjectStages(projectId);
+      const stageRows =
+        await this.projectsRepository.getProjectStages(projectId);
       if (!stageRows.some((stage) => String(stage.id) === String(stageId))) {
-        return res.status(404).json({ error: "Estágio não encontrado para este projeto" });
+        return res
+          .status(404)
+          .json({ error: "Estágio não encontrado para este projeto" });
       }
 
       const project = await this.projectsRepository.getProjectByIdWithAccess(
@@ -940,7 +949,9 @@ class ProjectsUpdateController extends ProjectsCoreController {
         try {
           parsedProperties = JSON.parse(properties || "{}");
         } catch {
-          return res.status(400).json({ error: "properties deve ser um JSON válido" });
+          return res
+            .status(400)
+            .json({ error: "properties deve ser um JSON válido" });
         }
       }
       const parsedDueDate =
@@ -971,11 +982,15 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       const mergedProperties = {
         ...(createdNote.properties || {}),
-        ...(parsedProperties && typeof parsedProperties === "object" ? parsedProperties : {}),
+        ...(parsedProperties && typeof parsedProperties === "object"
+          ? parsedProperties
+          : {}),
       };
       if (uploadedFiles.length > 0) {
         mergedProperties.files = [
-          ...(Array.isArray(mergedProperties.files) ? mergedProperties.files : []),
+          ...(Array.isArray(mergedProperties.files)
+            ? mergedProperties.files
+            : []),
           ...uploadedFiles,
         ];
       }
@@ -996,8 +1011,15 @@ class ProjectsUpdateController extends ProjectsCoreController {
           )
       );
 
-      await this.projectsRepository.updateNoteInProject(projectId, createdNote.id, userId);
-      const notes = await this.projectsRepository.getAssociatedNotes(projectId, userId);
+      await this.projectsRepository.updateNoteInProject(
+        projectId,
+        createdNote.id,
+        userId
+      );
+      const notes = await this.projectsRepository.getAssociatedNotes(
+        projectId,
+        userId
+      );
 
       res.status(201).json({
         message: "Tarefa criada com sucesso",
@@ -1041,8 +1063,13 @@ class ProjectsUpdateController extends ProjectsCoreController {
       }
 
       const currentNote = await notesRepository.getNoteById(noteId);
-      if (!currentNote || String(currentNote.project_id) !== String(projectId)) {
-        return res.status(404).json({ error: "Tarefa não encontrada neste projeto" });
+      if (
+        !currentNote ||
+        String(currentNote.project_id) !== String(projectId)
+      ) {
+        return res
+          .status(404)
+          .json({ error: "Tarefa não encontrada neste projeto" });
       }
 
       const project = await this.projectsRepository.getProjectByIdWithAccess(
@@ -1052,16 +1079,23 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const projectOrgId = project?.[0]?.organization_id || null;
       const parsedPriorityId = this._parseNullableField(priority_id);
       if (parsedPriorityId !== undefined) {
-        await this._validateTaskPriorityScope(parsedPriorityId, projectId, projectOrgId);
+        await this._validateTaskPriorityScope(
+          parsedPriorityId,
+          projectId,
+          projectOrgId
+        );
       }
 
       const updateData = {};
       if (title !== undefined) updateData.title = String(title).trim();
       if (description !== undefined) updateData.description = description;
-      if (parsedPriorityId !== undefined) updateData.priority_id = parsedPriorityId;
+      if (parsedPriorityId !== undefined)
+        updateData.priority_id = parsedPriorityId;
       if (due_date !== undefined) {
         updateData.due_date =
-          due_date === null || due_date === "" ? null : new Date(due_date).toISOString();
+          due_date === null || due_date === ""
+            ? null
+            : new Date(due_date).toISOString();
       }
 
       if (stage_id !== undefined) {
@@ -1072,8 +1106,11 @@ class ProjectsUpdateController extends ProjectsCoreController {
               "Estágio é obrigatório. Não é permitido remover o estágio da tarefa.",
           });
         }
-        const stages = await this.projectsRepository.getProjectStages(projectId);
-        if (!stages.some((stage) => String(stage.id) === String(parsedStageId))) {
+        const stages =
+          await this.projectsRepository.getProjectStages(projectId);
+        if (
+          !stages.some((stage) => String(stage.id) === String(parsedStageId))
+        ) {
           return res.status(404).json({
             error: "Estágio não encontrado para este projeto.",
           });
@@ -1090,7 +1127,9 @@ class ProjectsUpdateController extends ProjectsCoreController {
         updateData.parent_id = resolvedParentId;
       }
 
-      const currentTags = Array.isArray(currentNote.tags) ? currentNote.tags.map(String) : [];
+      const currentTags = Array.isArray(currentNote.tags)
+        ? currentNote.tags.map(String)
+        : [];
       let nextTags = currentTags;
       const setTags = this._parseStringArrayField(set_tags);
       if (set_tags !== undefined) {
@@ -1109,7 +1148,9 @@ class ProjectsUpdateController extends ProjectsCoreController {
         try {
           incomingProperties = JSON.parse(properties || "{}");
         } catch {
-          return res.status(400).json({ error: "properties deve ser um JSON válido" });
+          return res
+            .status(400)
+            .json({ error: "properties deve ser um JSON válido" });
         }
       }
       const mergedProperties = {
@@ -1127,18 +1168,26 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       if (uploadedFiles.length > 0) {
         mergedProperties.files = [
-          ...(Array.isArray(mergedProperties.files) ? mergedProperties.files : []),
+          ...(Array.isArray(mergedProperties.files)
+            ? mergedProperties.files
+            : []),
           ...uploadedFiles,
         ];
       }
 
-      const removeFileIds = new Set(this._parseStringArrayField(remove_file_ids));
+      const removeFileIds = new Set(
+        this._parseStringArrayField(remove_file_ids)
+      );
       if (removeFileIds.size > 0 && Array.isArray(mergedProperties.files)) {
-        const filesToDelete = mergedProperties.files.filter((file) => removeFileIds.has(file.id));
+        const filesToDelete = mergedProperties.files.filter((file) =>
+          removeFileIds.has(file.id)
+        );
         await Promise.all(
           filesToDelete
             .filter((file) => file.path)
-            .map((file) => spacesService.deleteImage(file.path).catch(() => null))
+            .map((file) =>
+              spacesService.deleteImage(file.path).catch(() => null)
+            )
         );
         mergedProperties.files = mergedProperties.files.filter(
           (file) => !removeFileIds.has(file.id)
@@ -1150,29 +1199,40 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       const setCollaborators = this._parseStringArrayField(set_collaborators);
       const addCollaborators = this._parseStringArrayField(add_collaborators);
-      const removeCollaborators = this._parseStringArrayField(remove_collaborators);
+      const removeCollaborators =
+        this._parseStringArrayField(remove_collaborators);
 
       if (set_collaborators !== undefined) {
-        const currentCollaborators = await notesRepository.getCollaboratorsByNoteId(noteId);
+        const currentCollaborators =
+          await notesRepository.getCollaboratorsByNoteId(noteId);
         const targetIds = new Set(setCollaborators);
         await Promise.all(
           currentCollaborators
             .filter((collaborator) => !collaborator.removed)
-            .filter((collaborator) => !targetIds.has(String(collaborator.user_id)))
+            .filter(
+              (collaborator) => !targetIds.has(String(collaborator.user_id))
+            )
             .map((collaborator) =>
-              notesRepository.removeCollaborator(noteId, String(collaborator.user_id))
+              notesRepository.removeCollaborator(
+                noteId,
+                String(collaborator.user_id)
+              )
             )
         );
         await Promise.all(
           [...targetIds]
             .filter((collaboratorId) => collaboratorId !== userId)
-            .map((collaboratorId) => notesRepository.addCollaborator(noteId, collaboratorId))
+            .map((collaboratorId) =>
+              notesRepository.addCollaborator(noteId, collaboratorId)
+            )
         );
       } else {
         await Promise.all(
           addCollaborators
             .filter((collaboratorId) => collaboratorId !== userId)
-            .map((collaboratorId) => notesRepository.addCollaborator(noteId, collaboratorId))
+            .map((collaboratorId) =>
+              notesRepository.addCollaborator(noteId, collaboratorId)
+            )
         );
         await Promise.all(
           removeCollaborators.map((collaboratorId) =>
@@ -1181,8 +1241,15 @@ class ProjectsUpdateController extends ProjectsCoreController {
         );
       }
 
-      await this.projectsRepository.updateNoteInProject(projectId, noteId, userId);
-      const notes = await this.projectsRepository.getAssociatedNotes(projectId, userId);
+      await this.projectsRepository.updateNoteInProject(
+        projectId,
+        noteId,
+        userId
+      );
+      const notes = await this.projectsRepository.getAssociatedNotes(
+        projectId,
+        userId
+      );
 
       res.status(200).json({
         message: "Tarefa atualizada com sucesso",
@@ -1243,7 +1310,10 @@ class ProjectsUpdateController extends ProjectsCoreController {
         });
       }
 
-      const notes = await this.projectsRepository.getAssociatedNotes(projectId, userId);
+      const notes = await this.projectsRepository.getAssociatedNotes(
+        projectId,
+        userId
+      );
 
       res.status(200).json({
         message: "Estágio da nota atualizado com sucesso",
@@ -1408,7 +1478,8 @@ class ProjectsUpdateController extends ProjectsCoreController {
         );
         if (!allValid) {
           return res.status(400).json({
-            error: "default_workable_days deve conter valores entre 0 (Dom) e 6 (Sáb)",
+            error:
+              "default_workable_days deve conter valores entre 0 (Dom) e 6 (Sáb)",
           });
         }
       }
@@ -1416,8 +1487,12 @@ class ProjectsUpdateController extends ProjectsCoreController {
       let normalizedReasoningInstructions;
       if (reasoning_instructions !== undefined) {
         try {
-          const { normalizeReasoningInstructions } = require("@/utils/reasoning-instructions");
-          normalizedReasoningInstructions = normalizeReasoningInstructions(reasoning_instructions);
+          const {
+            normalizeReasoningInstructions,
+          } = require("@/utils/reasoning-instructions");
+          normalizedReasoningInstructions = normalizeReasoningInstructions(
+            reasoning_instructions
+          );
         } catch (normalizeErr) {
           if (normalizeErr?.statusCode === 400) {
             return res.status(400).json({ error: normalizeErr.message });
@@ -1649,10 +1724,8 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
     while (candidate <= end) {
       const dayOfWeek = candidate.getUTCDay();
-      const isStartDay =
-        candidate.getTime() === start.getTime();
-      const isEndDay =
-        candidate.getTime() === end.getTime();
+      const isStartDay = candidate.getTime() === start.getTime();
+      const isEndDay = candidate.getTime() === end.getTime();
       const isWorkableDay = workableDays.includes(dayOfWeek);
 
       let hasReport = false;
@@ -1672,7 +1745,12 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       if (hasReport) {
         const reportTime = new Date(candidate);
-        reportTime.setUTCHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+        reportTime.setUTCHours(
+          parseInt(hours, 10),
+          parseInt(minutes, 10),
+          0,
+          0
+        );
         if (reportTime > now) {
           return reportTime.toISOString();
         }
@@ -1704,13 +1782,19 @@ class ProjectsUpdateController extends ProjectsCoreController {
         .trim()
         .toLowerCase();
       const reasoningType = this._normalizeReasoningType(requestedType);
-      const requestedSprintId = req.body?.sprintId ? String(req.body.sprintId) : null;
-      const titleOverride = req.body?.title ? String(req.body.title).trim() : null;
+      const requestedSprintId = req.body?.sprintId
+        ? String(req.body.sprintId)
+        : null;
+      const titleOverride = req.body?.title
+        ? String(req.body.title).trim()
+        : null;
 
-      const reportConfig = await reportConfigRepository.getByProjectId(projectId);
+      const reportConfig =
+        await reportConfigRepository.getByProjectId(projectId);
       if (!reportConfig) {
         return res.status(400).json({
-          error: "Configure o relatório de IA do projeto antes de gerar reasonings.",
+          error:
+            "Configure o relatório de IA do projeto antes de gerar reasonings.",
         });
       }
 
@@ -1718,7 +1802,9 @@ class ProjectsUpdateController extends ProjectsCoreController {
       if (requestedSprintId) {
         sprint = await sprintsRepository.getById(requestedSprintId);
         if (!sprint || String(sprint.project_id) !== String(projectId)) {
-          return res.status(404).json({ error: "Sprint não encontrada para este projeto." });
+          return res
+            .status(404)
+            .json({ error: "Sprint não encontrada para este projeto." });
         }
       } else {
         sprint = await sprintsRepository.getActiveByProject(projectId);
@@ -1726,7 +1812,8 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       if (!sprint) {
         return res.status(400).json({
-          error: "Não há sprint ativa. Defina uma sprint para gerar o reasoning.",
+          error:
+            "Não há sprint ativa. Defina uma sprint para gerar o reasoning.",
         });
       }
 
@@ -1750,8 +1837,8 @@ class ProjectsUpdateController extends ProjectsCoreController {
           sprint_status: sprint.status,
           sprint_start: sprint.start_date,
           sprint_end: sprint.end_date,
-          sprint_workable_days:
-            sprint.workable_days || reportConfig.default_workable_days || [1, 2, 3, 4, 5],
+          sprint_workable_days: sprint.workable_days ||
+            reportConfig.default_workable_days || [1, 2, 3, 4, 5],
         },
         triggeredAt: new Date().toISOString(),
       };
@@ -1781,13 +1868,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       await this._validateProjectAccess(projectId, userId);
 
-      const {
-        sprintId,
-        reasoningType,
-        title,
-        content,
-        options,
-      } = req.body;
+      const { sprintId, reasoningType, title, content, options } = req.body;
 
       if (!sprintId || !reasoningType || !title) {
         return res.status(400).json({

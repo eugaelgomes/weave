@@ -94,7 +94,7 @@ class ProjectsCreateRepository {
       projectData.properties,
       JSON.stringify(stagesData),
       projectData.parent_project_id || null,
-      generatePublicId()
+      generatePublicId(),
     ];
 
     return executeQuery(query, values);

@@ -37,7 +37,7 @@ async function searchWeb({ query }) {
         .split("&rut=")[0];
 
       const decodedUrl = decodeURIComponent(url);
-      const snippet = match[2].replace(/<[^>]+>/g, "").replace(/&quot;/g, "\"");
+      const snippet = match[2].replace(/<[^>]+>/g, "").replace(/&quot;/g, '"');
 
       results.push({
         url: decodedUrl,

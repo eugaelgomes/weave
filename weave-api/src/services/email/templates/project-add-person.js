@@ -23,7 +23,8 @@ async function inviteProjectMember(
   projectPublicId = null
 ) {
   const locale = await getUserEmailLocale({ email });
-  const firstName = (nome || "").split(" ")[0] || t(locale, "common.greetingFallback");
+  const firstName =
+    (nome || "").split(" ")[0] || t(locale, "common.greetingFallback");
   const targetId = projectPublicId || projectId;
   const projectUrl = `${frontendUrl}/auth/?redirect=${encodeURIComponent(`/app/projects/${targetId}`)}`;
 
@@ -36,9 +37,7 @@ async function inviteProjectMember(
       title: t(locale, "project.title"),
       subtitle: t(locale, "project.subtitle"),
       greeting: `${firstName},`,
-      introLines: [
-        t(locale, "project.intro", { addedByName }),
-      ],
+      introLines: [t(locale, "project.intro", { addedByName })],
       ctaText: t(locale, "project.cta"),
       ctaUrl: projectUrl,
       contentHtml: `

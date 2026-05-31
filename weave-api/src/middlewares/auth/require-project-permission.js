@@ -54,7 +54,9 @@ function requireProjectPermission(permission) {
         project = memberRows[0];
       } else {
         const membership =
-          await organizationsRepository.getActiveOrganizationWithMembership(userId);
+          await organizationsRepository.getActiveOrganizationWithMembership(
+            userId
+          );
         if (
           membership?.id &&
           orgRoleHasPermission(
@@ -90,7 +92,9 @@ function requireProjectPermission(permission) {
       }
 
       const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+        await organizationsRepository.getActiveOrganizationWithMembership(
+          userId
+        );
       if (
         membership?.id &&
         orgRoleHasPermission(
@@ -138,4 +142,3 @@ module.exports = {
   requireProjectPermission,
   PROJECT_PERMISSIONS,
 };
-

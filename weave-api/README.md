@@ -69,30 +69,30 @@ docker compose up server --build
 
 ## Environment variables
 
-| Variable                                        | Description |
-| ----------------------------------------------- | ----------- |
-| `APP_PORT`                                      | Listen port (default **8080**) |
-| `NODE_ENV`                                      | `development` or `production` |
-| `DATABASE_NAME`                                 | PostgreSQL database name |
-| `DATABASE_HOST_URL`                             | Database host |
-| `DATABASE_SERVICE_PORT`                         | Database port (default **5432**) |
-| `DATABASE_USERNAME` / `DATABASE_PASSWORD`      | Database credentials |
-| `SSL_CERTIFICATE`                               | Optional client SSL for DB |
-| `SESSION_SECRET`                                | Express session secret |
-| `SECRET_KEY`                                    | JWT signing secret |
-| `ALLOWED_ORIGINS` / `PRODUCTION_ALLOWED_ORIGINS` | Allowed browser `Origin` values (comma-separated) |
-| `COOKIE_DOMAIN`                                 | Cookie domain (`localhost` in dev) |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`     | Google OAuth |
-| `GOOGLE_REDIRECT_URI`                           | Google OAuth callback |
-| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`     | GitHub OAuth |
-| `RESEND_API_KEY`                                | Resend transactional email |
-| `DO_SPACES_ENDPOINT`                            | S3 endpoint (e.g. DigitalOcean Spaces) |
-| `DO_SPACES_ACCESS_KEY` / `DO_SPACES_SECRET_KEY` | Object storage keys |
-| `DO_SPACES_BUCKET_NAME` / `DO_SPACES_REGION`    | Bucket and region |
-| `GEMINI_API_KEY`                                | Google Generative AI (where used from API) |
-| `FRONTEND_URL`                                  | Front-end URL (OAuth redirects, emails) |
-| `TOKEN_IP`                                      | Optional ipinfo.io token |
-| `INTERNAL_WEB_CHALLENGE_SECRET`                 | Required in production for internal browser API guard |
+| Variable                                         | Description                                           |
+| ------------------------------------------------ | ----------------------------------------------------- |
+| `APP_PORT`                                       | Listen port (default **8080**)                        |
+| `NODE_ENV`                                       | `development` or `production`                         |
+| `DATABASE_NAME`                                  | PostgreSQL database name                              |
+| `DATABASE_HOST_URL`                              | Database host                                         |
+| `DATABASE_SERVICE_PORT`                          | Database port (default **5432**)                      |
+| `DATABASE_USERNAME` / `DATABASE_PASSWORD`        | Database credentials                                  |
+| `SSL_CERTIFICATE`                                | Optional client SSL for DB                            |
+| `SESSION_SECRET`                                 | Express session secret                                |
+| `SECRET_KEY`                                     | JWT signing secret                                    |
+| `ALLOWED_ORIGINS` / `PRODUCTION_ALLOWED_ORIGINS` | Allowed browser `Origin` values (comma-separated)     |
+| `COOKIE_DOMAIN`                                  | Cookie domain (`localhost` in dev)                    |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`      | Google OAuth                                          |
+| `GOOGLE_REDIRECT_URI`                            | Google OAuth callback                                 |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`      | GitHub OAuth                                          |
+| `RESEND_API_KEY`                                 | Resend transactional email                            |
+| `DO_SPACES_ENDPOINT`                             | S3 endpoint (e.g. DigitalOcean Spaces)                |
+| `DO_SPACES_ACCESS_KEY` / `DO_SPACES_SECRET_KEY`  | Object storage keys                                   |
+| `DO_SPACES_BUCKET_NAME` / `DO_SPACES_REGION`     | Bucket and region                                     |
+| `GEMINI_API_KEY`                                 | Google Generative AI (where used from API)            |
+| `FRONTEND_URL`                                   | Front-end URL (OAuth redirects, emails)               |
+| `TOKEN_IP`                                       | Optional ipinfo.io token                              |
+| `INTERNAL_WEB_CHALLENGE_SECRET`                  | Required in production for internal browser API guard |
 
 Add Redis, worker, and engine URLs as required by your deployment (`weave-api` enqueue and consumer code under `services/queue` and `services/reasoning`).
 
@@ -103,22 +103,22 @@ Add Redis, worker, and engine URLs as required by your deployment (`weave-api` e
 - **Internal browser API:** `/api/v1` — mounted from [`src/routes/internal.routes.js`](src/routes/internal.routes.js). After `Origin` checks (where applicable), requests must pass the **internal web challenge** middleware except for documented bypass paths (for example webhooks and specific SSO routes). Challenge token: `GET /api/v1/_internal/challenge`, header `X-Weave-Internal-Challenge` on subsequent calls, signed with `INTERNAL_WEB_CHALLENGE_SECRET` (verification skipped in dev if the secret is unset).
 - **Public API:** `/api/public/v1` — public router from [`src/routes/public.routes.js`](src/routes/public.routes.js).
 
-| Prefix             | Module              | Auth / notes |
-| ------------------ | ------------------- | ------------ |
-| `/auth`            | Authentication      | Mixed (endpoints vary) |
-| `/users`           | Users               | Mixed |
-| `/password`        | Password reset      | Public flows + tokens |
-| `/notes`           | Notes and blocks    | Yes |
-| `/backup`          | Backup / export       | Yes |
-| `/projects`        | Projects, collaborators, tags, priorities | Yes |
-| `/organizations`   | Organizations, members, areas | Yes |
-| `/weave-ai`        | AI chat, agents, models | Yes |
-| `/plans`           | Plans and usage       | Yes |
-| `/notifications`   | Notifications       | Yes |
-| `/calendar-events` | Calendar            | Yes |
-| `/api-tokens`      | API tokens          | Yes |
-| `/webhooks`        | Inbound webhooks    | Often unauthenticated; see routes |
-| `GET /health`      | Liveness            | No (not under `/api/v1`) |
+| Prefix             | Module                                    | Auth / notes                      |
+| ------------------ | ----------------------------------------- | --------------------------------- |
+| `/auth`            | Authentication                            | Mixed (endpoints vary)            |
+| `/users`           | Users                                     | Mixed                             |
+| `/password`        | Password reset                            | Public flows + tokens             |
+| `/notes`           | Notes and blocks                          | Yes                               |
+| `/backup`          | Backup / export                           | Yes                               |
+| `/projects`        | Projects, collaborators, tags, priorities | Yes                               |
+| `/organizations`   | Organizations, members, areas             | Yes                               |
+| `/weave-ai`        | AI chat, agents, models                   | Yes                               |
+| `/plans`           | Plans and usage                           | Yes                               |
+| `/notifications`   | Notifications                             | Yes                               |
+| `/calendar-events` | Calendar                                  | Yes                               |
+| `/api-tokens`      | API tokens                                | Yes                               |
+| `/webhooks`        | Inbound webhooks                          | Often unauthenticated; see routes |
+| `GET /health`      | Liveness                                  | No (not under `/api/v1`)          |
 
 Indexes for maintainers: [documents/routes/README.md](documents/routes/README.md), [documents/middlewares/README.md](documents/middlewares/README.md), [documents/services/README.md](documents/services/README.md).
 
@@ -185,21 +185,21 @@ Use `next(fromUnknown(err))` or `throw AppError.*` for operational failures. Pub
 
 ## Main dependencies
 
-| Package                                 | Role |
-| --------------------------------------- | ---- |
-| `express`                               | HTTP framework |
-| `jsonwebtoken` / `express-jwt`          | JWT |
-| `bcrypt`                                | Password hashing |
-| `passport` + Google / GitHub strategies | OAuth |
-| `pg`                                    | PostgreSQL client |
-| `connect-pg-simple`                     | Session store in PostgreSQL |
-| `ioredis`                               | Redis queues |
-| `resend`                                | Transactional email |
-| `@aws-sdk/client-s3`                    | Object storage |
-| `@google/generative-ai`                 | Gemini (where invoked from API) |
-| `multer` / `sharp`                      | Uploads and images |
-| `helmet` / `cors` / `express-rate-limit`| HTTP hardening and limits |
-| `module-alias` / Babel                  | Aliases and production build |
+| Package                                  | Role                            |
+| ---------------------------------------- | ------------------------------- |
+| `express`                                | HTTP framework                  |
+| `jsonwebtoken` / `express-jwt`           | JWT                             |
+| `bcrypt`                                 | Password hashing                |
+| `passport` + Google / GitHub strategies  | OAuth                           |
+| `pg`                                     | PostgreSQL client               |
+| `connect-pg-simple`                      | Session store in PostgreSQL     |
+| `ioredis`                                | Redis queues                    |
+| `resend`                                 | Transactional email             |
+| `@aws-sdk/client-s3`                     | Object storage                  |
+| `@google/generative-ai`                  | Gemini (where invoked from API) |
+| `multer` / `sharp`                       | Uploads and images              |
+| `helmet` / `cors` / `express-rate-limit` | HTTP hardening and limits       |
+| `module-alias` / Babel                   | Aliases and production build    |
 
 ---
 
@@ -219,17 +219,17 @@ Responses include `data`, the legacy key (`projects`, `notes`, `stages`, …), `
 
 ### Endpoints (query highlights)
 
-| Method | Path | Notes |
-| ------ | ---- | ----- |
-| GET | `/projects` | Filters: `search`, `status`, `methodology` (CSV: `KANBAN`, `SCRUM` only), `visibility`, `ownership`, `owner_user_id`, `collaborator_user_id`, `organization_id` (org-wide roles only), `parent_only`, `has_parent`, date ranges (`created_*`, `updated_*`, `start_*`, `target_end_*`), `progress_min`/`max`, `priority`, `tags`, `active`. `include=collaborators,notes,subprojects`. `sort=field:asc\|desc`. |
-| GET | `/projects/:id` | `include=collaborators,notes,subprojects,stages` (default: collaborators + notes). |
-| GET | `/projects/:id/my-view-preference` | `{ view: "board" \| "list" }` for the authenticated user (`READ_PROJECT_CONTENT`). |
-| PUT | `/projects/:id/my-view-preference` | Body `{ view: "board" \| "list" }`. Persists UI layout preference per user per project. |
-| GET | `/projects/:id/stages` | `include_done`, `search`, pagination, `sort`. |
-| GET | `/projects/:projectId/notes` | `status`, `priority_id`, `tags` (note tag UUIDs), `stage_id`, `created_by`, `due_from`/`to`, timestamps, `search`. |
-| GET | `/projects/:projectId/collaborators` | `role`, `suspended`, `search`, `added_from`/`to`. Requires `READ_PROJECT_CONTENT`. |
-| GET | `/projects/:id/sprints` | `status`, date ranges on `start_*` / `end_*`, pagination; legacy `limit` without `page` still supported. |
-| GET | `/projects/:id/reasonings` | Extends `sprintId`, `reasoningType`, `from`/`to`, `is_read`, `is_pinned`, `is_dismissed`, `created_by`, pagination. |
+| Method | Path                                 | Notes                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/projects`                          | Filters: `search`, `status`, `methodology` (CSV: `KANBAN`, `SCRUM` only), `visibility`, `ownership`, `owner_user_id`, `collaborator_user_id`, `organization_id` (org-wide roles only), `parent_only`, `has_parent`, date ranges (`created_*`, `updated_*`, `start_*`, `target_end_*`), `progress_min`/`max`, `priority`, `tags`, `active`. `include=collaborators,notes,subprojects`. `sort=field:asc\|desc`. |
+| GET    | `/projects/:id`                      | `include=collaborators,notes,subprojects,stages` (default: collaborators + notes).                                                                                                                                                                                                                                                                                                                            |
+| GET    | `/projects/:id/my-view-preference`   | `{ view: "board" \| "list" }` for the authenticated user (`READ_PROJECT_CONTENT`).                                                                                                                                                                                                                                                                                                                            |
+| PUT    | `/projects/:id/my-view-preference`   | Body `{ view: "board" \| "list" }`. Persists UI layout preference per user per project.                                                                                                                                                                                                                                                                                                                       |
+| GET    | `/projects/:id/stages`               | `include_done`, `search`, pagination, `sort`.                                                                                                                                                                                                                                                                                                                                                                 |
+| GET    | `/projects/:projectId/notes`         | `status`, `priority_id`, `tags` (note tag UUIDs), `stage_id`, `created_by`, `due_from`/`to`, timestamps, `search`.                                                                                                                                                                                                                                                                                            |
+| GET    | `/projects/:projectId/collaborators` | `role`, `suspended`, `search`, `added_from`/`to`. Requires `READ_PROJECT_CONTENT`.                                                                                                                                                                                                                                                                                                                            |
+| GET    | `/projects/:id/sprints`              | `status`, date ranges on `start_*` / `end_*`, pagination; legacy `limit` without `page` still supported.                                                                                                                                                                                                                                                                                                      |
+| GET    | `/projects/:id/reasonings`           | Extends `sprintId`, `reasoningType`, `from`/`to`, `is_read`, `is_pinned`, `is_dismissed`, `created_by`, pagination.                                                                                                                                                                                                                                                                                           |
 
 ### Indexes (optional)
 

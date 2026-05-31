@@ -352,7 +352,11 @@ class LlmQueueProcessor {
           payload.conversationHistory
         );
 
-        const { data, providerUsed, executedActions = [] } = await Promise.race([
+        const {
+          data,
+          providerUsed,
+          executedActions = [],
+        } = await Promise.race([
           executeAgenticTask({
             allowEdit: Boolean(payload.allowEdit),
             allowWebSearch: Boolean(payload.allowWebSearch),
@@ -371,7 +375,10 @@ class LlmQueueProcessor {
                 payload.context?.organizationId ||
                 payload.context?.organization_id ||
                 null,
-              language: payload.userLanguage || payload.context?.userLanguage || "en-US",
+              language:
+                payload.userLanguage ||
+                payload.context?.userLanguage ||
+                "en-US",
             },
           }),
           new Promise((_, reject) => {
@@ -385,7 +392,7 @@ class LlmQueueProcessor {
 
         const functions =
           data?.type === "function_call"
-            ? (data.toolCalls || (data.functionCall ? [data.functionCall] : []))
+            ? data.toolCalls || (data.functionCall ? [data.functionCall] : [])
             : [];
 
         return {

@@ -3,7 +3,11 @@ const {
   buildMailTemplate,
   escapeHtml,
 } = require("@/services/email/mail-template");
-const { getRoleLabel, resolveEmailLocale, t } = require("@/services/email/i18n");
+const {
+  getRoleLabel,
+  resolveEmailLocale,
+  t,
+} = require("@/services/email/i18n");
 const { buildAuthInviteUrl } = require("@/utils/frontend-url");
 
 /**

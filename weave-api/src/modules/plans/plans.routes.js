@@ -42,7 +42,9 @@ router.put(
 router.post(
   "/subscription/cancel",
   verifyToken,
-  PlansSubscriptionController.cancelSubscription.bind(PlansSubscriptionController)
+  PlansSubscriptionController.cancelSubscription.bind(
+    PlansSubscriptionController
+  )
 );
 
 router.get("/", PlansManager.getAllPlans.bind(PlansManager));

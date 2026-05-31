@@ -227,7 +227,6 @@ class ProjectsUpdateRepository {
     ]);
   }
 
-
   async updateCollaboratorPermission(
     projectId,
     ownerId,
@@ -278,7 +277,6 @@ class ProjectsUpdateRepository {
       newRole,
     ]);
   }
-
 
   async updateNoteInProjectWithOrgScope(
     projectId,

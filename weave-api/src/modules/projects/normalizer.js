@@ -120,9 +120,7 @@ const normalizeNewProject = (payload, userId, orgId, userProps = {}) => {
       : methodologyRaw
   ).toLowerCase();
   if (!METHODOLOGY_CONFIGS[methodologyKey]) {
-    throw new Error(
-      "Metodologia inválida. Use 'kanban' ou 'scrum'."
-    );
+    throw new Error("Metodologia inválida. Use 'kanban' ou 'scrum'.");
   }
   const methodology = methodologyKey;
 

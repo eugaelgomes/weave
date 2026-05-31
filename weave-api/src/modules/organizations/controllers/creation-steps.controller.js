@@ -61,7 +61,10 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
     const defaultName = "Central Area";
     const slugBase =
       organization.unique_name || normalizeOrganizationName(defaultName);
-    const uniqueSlug = await this._generateUniqueAreaSlug(organization.id, slugBase);
+    const uniqueSlug = await this._generateUniqueAreaSlug(
+      organization.id,
+      slugBase
+    );
     const newArea = await this.areasRepository.createArea({
       organizationId: organization.id,
       parentAreaId: null,
@@ -151,22 +154,26 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
           validated,
           false
         );
-        organization = await this.organizationsRepository.updateCreationIdentityStep(
-          organization.id,
-          userId,
-          {
-            org_name: validated.org_name,
-            unique_name: validated.unique_name,
-            logo_url:
-              validated.logo_url !== null ? validated.logo_url : organization.logo_url,
-            banner_url: organization.banner_url,
-            description: validated.description,
-            default_timezone: organization.default_timezone || "America/Sao_Paulo",
-            default_locale: validated.default_locale,
-            country: validated.country,
-            settings: settingsWithStep,
-          }
-        );
+        organization =
+          await this.organizationsRepository.updateCreationIdentityStep(
+            organization.id,
+            userId,
+            {
+              org_name: validated.org_name,
+              unique_name: validated.unique_name,
+              logo_url:
+                validated.logo_url !== null
+                  ? validated.logo_url
+                  : organization.logo_url,
+              banner_url: organization.banner_url,
+              description: validated.description,
+              default_timezone:
+                organization.default_timezone || "America/Sao_Paulo",
+              default_locale: validated.default_locale,
+              country: validated.country,
+              settings: settingsWithStep,
+            }
+          );
       }
 
       return res.status(200).json({
@@ -226,21 +233,22 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
         true
       );
 
-      const updated = await this.organizationsRepository.updateCreationIdentityStep(
-        organization.id,
-        userId,
-        {
-          org_name: organization.org_name,
-          unique_name: organization.unique_name,
-          logo_url: organization.logo_url,
-          banner_url: organization.banner_url,
-          description: organization.description,
-          default_timezone: organization.default_timezone,
-          default_locale: organization.default_locale,
-          country: organization.country,
-          settings: settingsWithStep,
-        }
-      );
+      const updated =
+        await this.organizationsRepository.updateCreationIdentityStep(
+          organization.id,
+          userId,
+          {
+            org_name: organization.org_name,
+            unique_name: organization.unique_name,
+            logo_url: organization.logo_url,
+            banner_url: organization.banner_url,
+            description: organization.description,
+            default_timezone: organization.default_timezone,
+            default_locale: organization.default_locale,
+            country: organization.country,
+            settings: settingsWithStep,
+          }
+        );
 
       return res.status(200).json({
         status: "OK",

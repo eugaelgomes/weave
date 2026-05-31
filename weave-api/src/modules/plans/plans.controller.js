@@ -9,9 +9,9 @@ class PlanUsageManager {
    * O rollover mensal agora é executado pelo worker.
    */
   /**
-   * 
-   * @param {string} userId 
-   * @param {string | null} orgId 
+   *
+   * @param {string} userId
+   * @param {string | null} orgId
    * @returns {Promise<Record<string, any>>}
    */
   async managePlanUsage(userId, orgId = null) {
@@ -178,7 +178,8 @@ class PlanUsageManager {
   }
 
   async _initializeFirstUsage(userId, orgId) {
-    const effectivePlan = await PlansRepository.getEffectivePlanByUserId(userId);
+    const effectivePlan =
+      await PlansRepository.getEffectivePlanByUserId(userId);
     const user = await PlansRepository.getUserWithPlan(userId);
     if (!user && !effectivePlan) return null;
 
@@ -204,8 +205,9 @@ class PlanUsageManager {
       );
     }
 
-    const subscriberType =
-      orgId ? "organization" : effectivePlan?.subscriber_type || "user";
+    const subscriberType = orgId
+      ? "organization"
+      : effectivePlan?.subscriber_type || "user";
     const subscriberId = orgId || effectivePlan?.subscriber_id || userId;
 
     const startDate = new Date();

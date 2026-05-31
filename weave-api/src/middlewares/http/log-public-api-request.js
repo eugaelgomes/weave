@@ -31,24 +31,27 @@ function logPublicApiRequest(req, res, next) {
     const errorCode = res.locals?.errorCode ?? null;
 
     void LogApiRequestsRepository.insert({
-      apiTokenId:     req.apiToken?.id ?? null,
-      userId:         req.user?.userId ?? null,
+      apiTokenId: req.apiToken?.id ?? null,
+      userId: req.user?.userId ?? null,
       organizationId: req.user?.organizationId ?? null,
-      httpMethod:     req.method,
-      path:           req.originalUrl ?? req.path,
-      apiVersion:     req.apiVersion ?? "v1",
+      httpMethod: req.method,
+      path: req.originalUrl ?? req.path,
+      apiVersion: req.apiVersion ?? "v1",
       scopesRequired: res.locals?.scopesRequired ?? null,
-      statusCode:     res.statusCode,
+      statusCode: res.statusCode,
       durationMs,
       errorCode,
-      requestId:      req.requestId ?? null,
-      ipAddress:      req.clientIp ?? null,
-      userAgent:      req.headers["user-agent"] ?? null,
-      originHeader:   req.headers["origin"] ?? null,
-      refererHeader:  req.headers["referer"] ?? null,
+      requestId: req.requestId ?? null,
+      ipAddress: req.clientIp ?? null,
+      userAgent: req.headers["user-agent"] ?? null,
+      originHeader: req.headers["origin"] ?? null,
+      refererHeader: req.headers["referer"] ?? null,
     }).catch((err) => {
       // Never break the response for a logging failure.
-      console.error("[PublicApiLog] Failed to insert request log:", err.message);
+      console.error(
+        "[PublicApiLog] Failed to insert request log:",
+        err.message
+      );
     });
   });
 

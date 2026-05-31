@@ -36,9 +36,7 @@ const inputValidation = () => {
       .withMessage("E-mail inválido.")
       .bail()
       .custom((value) => !hasPlusAliasInLocalPart(value))
-      .withMessage(
-        "E-mails com alias (+) no endereço não são permitidos."
-      ),
+      .withMessage("E-mails com alias (+) no endereço não são permitidos."),
 
     body("password")
       .isStrongPassword({

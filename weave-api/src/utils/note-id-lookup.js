@@ -18,7 +18,9 @@ function isUuidNoteId(value) {
  * @returns {boolean}
  */
 function isPublicNoteId(value) {
-  return typeof value === "string" && value.length === 12 && !value.includes("-");
+  return (
+    typeof value === "string" && value.length === 12 && !value.includes("-")
+  );
 }
 
 /**

@@ -48,7 +48,9 @@ function computeVariation(current, previous) {
  */
 function buildUsageMetrics(usageDetails = {}, planDetails = {}) {
   const metric = (usagePath, limitPath) => {
-    const used = toNumber(PlanUsageManager.getNestedValue(usageDetails, usagePath));
+    const used = toNumber(
+      PlanUsageManager.getNestedValue(usageDetails, usagePath)
+    );
     const rawLimit = PlanUsageManager.getNestedValue(planDetails, limitPath);
     const limit =
       rawLimit === null || rawLimit === undefined ? null : toNumber(rawLimit);
@@ -181,7 +183,8 @@ class PlansUsageHistoryController {
       const from = parseDateFilter(req.query.from);
       const to = parseDateFilter(req.query.to);
 
-      const currentUsage = await PlansRepository.getIndividualUserPlanUsage(userId);
+      const currentUsage =
+        await PlansRepository.getIndividualUserPlanUsage(userId);
       const currentUsageDetails = currentUsage?.usage_details || {};
       const currentPlanDetails = currentUsage?.applied_plan_snapshot || {};
       const currentMetrics = buildUsageMetrics(
@@ -189,13 +192,14 @@ class PlansUsageHistoryController {
         currentPlanDetails
       );
 
-      const rawHistory = await PlansRepository.getIndividualUsageHistoryDetailed({
-        userId,
-        limit: limit + 1,
-        offset,
-        from,
-        to,
-      });
+      const rawHistory =
+        await PlansRepository.getIndividualUsageHistoryDetailed({
+          userId,
+          limit: limit + 1,
+          offset,
+          from,
+          to,
+        });
 
       const hasMore = rawHistory.length > limit;
       const historyRows = hasMore ? rawHistory.slice(0, limit) : rawHistory;

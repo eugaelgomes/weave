@@ -74,11 +74,18 @@ class ProjectsReadController extends ProjectsCoreController {
           userId
         );
 
-      const wantsEnvelope = hasAnyQueryKey(req.query, PROJECTS_LIST_TRIGGER_KEYS);
+      const wantsEnvelope = hasAnyQueryKey(
+        req.query,
+        PROJECTS_LIST_TRIGGER_KEYS
+      );
 
       if (wantsEnvelope) {
-        const { pagination, sort, include: includeArr, filters } =
-          req.parsedQuery;
+        const {
+          pagination,
+          sort,
+          include: includeArr,
+          filters,
+        } = req.parsedQuery;
 
         const filtersForRepo = { ...filters };
         if (!this._canAccessAllOrganizationProjects(membership)) {
@@ -193,10 +200,7 @@ class ProjectsReadController extends ProjectsCoreController {
       if (!userId) return;
 
       const project = await this._loadProjectForRead(id, userId);
-      const include = req.parsedQuery?.include || [
-        "collaborators",
-        "notes",
-      ];
+      const include = req.parsedQuery?.include || ["collaborators", "notes"];
 
       const formatted = this._formatProjectResponse(project);
       /** @type {Record<string, unknown>} */
@@ -237,7 +241,9 @@ class ProjectsReadController extends ProjectsCoreController {
       }
 
       if (include.includes("stages")) {
-        const stages = await this.projectsRepository.getProjectStages(project.id);
+        const stages = await this.projectsRepository.getProjectStages(
+          project.id
+        );
         formattedProject.stages = (stages || []).map((s) =>
           this._formatProjectStage(s)
         );
@@ -710,14 +716,13 @@ class ProjectsReadController extends ProjectsCoreController {
       }
 
       const { pagination, sort, filters } = req.parsedQuery;
-      const { rows, total } =
-        await reasoningsRepository.listByProjectForMember(
-          projectId,
-          userId,
-          filters,
-          pagination,
-          sort
-        );
+      const { rows, total } = await reasoningsRepository.listByProjectForMember(
+        projectId,
+        userId,
+        filters,
+        pagination,
+        sort
+      );
 
       return res.status(200).json(
         buildListEnvelope({

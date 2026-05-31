@@ -110,10 +110,19 @@ class ProjectsCoreController extends ProjectsBaseController {
             validated[key] = value;
           } else if (typeof value === "object" && value.path !== undefined) {
             validated[key] = {
-              name: value.name !== null && value.name !== undefined ? String(value.name) : "",
+              name:
+                value.name !== null && value.name !== undefined
+                  ? String(value.name)
+                  : "",
               path: String(value.path),
-              size: value.size !== null && value.size !== undefined ? String(value.size) : "",
-              type: value.type !== null && value.type !== undefined ? String(value.type) : "",
+              size:
+                value.size !== null && value.size !== undefined
+                  ? String(value.size)
+                  : "",
+              type:
+                value.type !== null && value.type !== undefined
+                  ? String(value.type)
+                  : "",
             };
           } else {
             throw new Error(

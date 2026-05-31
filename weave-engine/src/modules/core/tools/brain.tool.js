@@ -9,7 +9,7 @@ async function consultBrain() {
   try {
     const brainDir = path.join(__dirname, "../docs/brain");
     const files = await fs.readdir(brainDir);
-    const mdFiles = files.filter(f => f.endsWith(".md")).sort();
+    const mdFiles = files.filter((f) => f.endsWith(".md")).sort();
 
     if (mdFiles.length === 0) {
       return {

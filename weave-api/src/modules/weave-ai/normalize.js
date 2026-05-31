@@ -168,7 +168,8 @@ function formatAgentResponse(rawAgent) {
     id: rawAgent.id,
     user_id: rawAgent.user_id,
     name: rawAgent.name || personality?.metadata?.name || "Unnamed Agent",
-    description: rawAgent.description || personality?.metadata?.description || null,
+    description:
+      rawAgent.description || personality?.metadata?.description || null,
     project_id: rawAgent.project_id || null,
     project_title: rawAgent.project_title || null,
     is_active: rawAgent.is_active !== false,

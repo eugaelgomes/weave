@@ -6,7 +6,8 @@
  * @param {unknown} value
  * @returns {boolean}
  */
-const isNonEmptyString = (value) => typeof value === "string" && value.trim().length > 0;
+const isNonEmptyString = (value) =>
+  typeof value === "string" && value.trim().length > 0;
 
 /**
  * @param {UniqueUserField} field
@@ -82,13 +83,16 @@ const getUniqueFieldFromPgError = (error) => {
     return "username";
   }
 
-  if (constraint === "users_phone_number_key" || constraint === "phone_number") {
+  if (
+    constraint === "users_phone_number_key" ||
+    constraint === "phone_number"
+  ) {
     return "phone_number";
   }
 
   // Fallback to detail string matching for legacy migrations
   const detail = String(error.detail || "").toLowerCase();
-  
+
   if (detail.includes("(email)") || detail.includes("lower(email)")) {
     return "email";
   }

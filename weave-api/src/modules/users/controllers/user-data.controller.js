@@ -259,9 +259,13 @@ class UserDataController extends BaseController {
     try {
       const username = normalizeUsername(req.query?.username);
       if (!username) {
-        return res.status(400).json({ error: "username query param is required" });
+        return res
+          .status(400)
+          .json({ error: "username query param is required" });
       }
-      const availability = await SearchUsersRepository.checkUniqueAvailability({ username });
+      const availability = await SearchUsersRepository.checkUniqueAvailability({
+        username,
+      });
       return res.status(200).json({ availability });
     } catch (error) {
       console.error("Error checking username availability (public):", error);
@@ -332,13 +336,14 @@ class UserDataController extends BaseController {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const { updatedUser, emailPendingValidation, pendingEmail } = await UserDataService.updateProfile(
-        req.user.userId,
-        currentUser,
-        req.body,
-        req.file,
-        req // required for updateProfileLogs inside service
-      );
+      const { updatedUser, emailPendingValidation, pendingEmail } =
+        await UserDataService.updateProfile(
+          req.user.userId,
+          currentUser,
+          req.body,
+          req.file,
+          req // required for updateProfileLogs inside service
+        );
 
       const mockUserForPresign = { avatar_url: updatedUser.avatar_url };
       const protectedMock = await presignObjectFields(
@@ -380,7 +385,9 @@ class UserDataController extends BaseController {
       return res.status(200).json(response);
     } catch (error) {
       if (error.message === "INCORRECT_PASSWORD") {
-        return res.status(401).json({ message: "Current password is incorrect" });
+        return res
+          .status(401)
+          .json({ message: "Current password is incorrect" });
       }
       if (error.message === "INVALID_TOKEN") {
         return res.status(400).json({ message: "Invalid or expired token" });
@@ -394,7 +401,7 @@ class UserDataController extends BaseController {
       if (error.message === "CONFLICT_PHONE") {
         return res.status(409).json(buildUniqueConflictPayload("phone_number"));
       }
-      
+
       console.error("Error updating profile:", error);
 
       updateProfileLogs.createLog(

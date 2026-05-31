@@ -141,8 +141,6 @@ class OrganizationsController extends OrganizationsBaseController {
         unique_name = await generateUniqueOrganizationName(org_name);
       }
 
-
-
       const newOrganization = await this.organizationsRepository.createOrgs(
         userId,
         org_name.trim(),
@@ -291,9 +289,9 @@ class OrganizationsController extends OrganizationsBaseController {
         updatedUniqueName = normalizedName;
       }
 
-      const updatedSettings = settings ? { ...currentOrg.settings, ...settings } : currentOrg.settings;
-
-
+      const updatedSettings = settings
+        ? { ...currentOrg.settings, ...settings }
+        : currentOrg.settings;
 
       const updatedOrg = await this.organizationsRepository.updateOrg(
         currentOrg.id,
@@ -325,12 +323,12 @@ class OrganizationsController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("Error updating organization:", error);
-      if (
-        error instanceof Error &&
-        /not found/i.test(error.message)
-      ) {
+      if (error instanceof Error && /not found/i.test(error.message)) {
         return next(
-          AppError.notFound("Organization not found", ERROR_CODES.RESOURCE_NOT_FOUND)
+          AppError.notFound(
+            "Organization not found",
+            ERROR_CODES.RESOURCE_NOT_FOUND
+          )
         );
       }
       return next(fromUnknown(error));

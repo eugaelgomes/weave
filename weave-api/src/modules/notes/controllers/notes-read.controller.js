@@ -65,7 +65,9 @@ class NotesReadController extends NotesBaseController {
         description: note.description || null,
         properties: note.properties || {},
         tags: note.tags || [] || null,
-        resolved_tags: Array.isArray(note.resolved_tags) ? note.resolved_tags : [],
+        resolved_tags: Array.isArray(note.resolved_tags)
+          ? note.resolved_tags
+          : [],
         status: note.status || null,
         due_date: note.due_date ?? null,
         priority_id: note.priority_id ?? null,

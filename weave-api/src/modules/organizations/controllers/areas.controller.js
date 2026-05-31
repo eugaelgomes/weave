@@ -7,11 +7,7 @@ const {
   ORG_ROLES,
 } = require("@/modules/organizations/organization-role-policy");
 
-const AREA_MEMBER_ROLES = [
-  ORG_ROLES.ADMIN,
-  ORG_ROLES.MEMBER,
-  ORG_ROLES.GUEST,
-];
+const AREA_MEMBER_ROLES = [ORG_ROLES.ADMIN, ORG_ROLES.MEMBER, ORG_ROLES.GUEST];
 
 class OrganizationAreasController extends OrganizationsBaseController {
   constructor() {

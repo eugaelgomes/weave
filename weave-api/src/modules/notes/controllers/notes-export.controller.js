@@ -54,9 +54,8 @@ class NotesExportController extends NotesBaseController {
         return res.status(404).json({ error: "Nota não encontrada" });
       }
 
-      const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
-        noteId
-      );
+      const blocks =
+        await this.notesRepository.findNoteBlocksTreeByNoteId(noteId);
 
       const dataForPDF = {
         ...note,

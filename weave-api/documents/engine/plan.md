@@ -12,11 +12,11 @@ O `weave-engine` é o serviço de IA proativa do Weave Notes. O processador proa
 
 Se colocarmos tudo em uma tabela, temos 3 gargalos:
 
-| Problema | Causa | Impacto |
-|---|---|---|
-| **Tabela pesada** | `output_markdown` (TEXT grande) + `input_context` (JSONB enorme com snapshot de notes, blocks, stages) na mesma row | Scans de listagem lentos — query de "listar últimos 10 raciocínios" carrega payloads enormes desnecessariamente |
-| **Interações por membro** | `is_dismissed`, `is_pinned` são por reasoning, mas cada membro do projeto deve poder dismiss/pin independentemente | Impossível rastrear quem leu, descartou ou fixou |
-| **Action items não-rastreáveis** | Recomendações da IA ficam enterradas no markdown | Impossível marcar como "feito", atribuir a alguém, ou medir adoption rate |
+| Problema                         | Causa                                                                                                               | Impacto                                                                                                         |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **Tabela pesada**                | `output_markdown` (TEXT grande) + `input_context` (JSONB enorme com snapshot de notes, blocks, stages) na mesma row | Scans de listagem lentos — query de "listar últimos 10 raciocínios" carrega payloads enormes desnecessariamente |
+| **Interações por membro**        | `is_dismissed`, `is_pinned` são por reasoning, mas cada membro do projeto deve poder dismiss/pin independentemente  | Impossível rastrear quem leu, descartou ou fixou                                                                |
+| **Action items não-rastreáveis** | Recomendações da IA ficam enterradas no markdown                                                                    | Impossível marcar como "feito", atribuir a alguém, ou medir adoption rate                                       |
 
 ### Solução: 4 tabelas
 
@@ -38,32 +38,32 @@ erDiagram
 
 Tabela principal — só metadados e referências. **Nenhum campo de conteúdo pesado**.
 
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | `uuid PK DEFAULT gen_random_uuid()` | Identificador único |
-| `project_id` | `uuid NOT NULL` | Projeto que gerou o raciocínio |
-| `sprint_id` | `uuid NOT NULL` | Sprint associada |
-| `report_config_id` | `uuid NULL` | Config de AI report que disparou |
-| `organization_id` | `uuid NULL` | Organização (para escopo) |
-| `triggered_by` | `uuid NOT NULL` | Usuário/owner que disparou |
-| `reasoning_type` | `weave_engine_reasoning_type NOT NULL` | Tipo do raciocínio (enum) |
-| `title` | `varchar(255) NOT NULL` | Título (ex: "Sprint 3 - Daily Standup") |
-| `provider_used` | `varchar(50) NULL` | Provider LLM |
-| `model_used` | `varchar(100) NULL` | Modelo LLM |
-| `safety_label` | `varchar(20) NOT NULL DEFAULT 'safe'` | `safe`, `review`, `unsafe` |
-| `safety_reason` | `text NULL` | Razão do safety check |
-| `safety_blocked` | `bool NOT NULL DEFAULT false` | Se foi bloqueado |
-| `status` | `varchar(20) NOT NULL DEFAULT 'completed'` | `pending`, `processing`, `completed`, `failed` |
-| `error_message` | `text NULL` | Erro (se falhou) |
-| `processing_time_ms` | `int NULL` | Tempo de processamento |
-| `recipient_scope` | `varchar(20) NOT NULL DEFAULT 'all_members'` | `owner_only`, `all_members`, `custom` |
-| `custom_recipients` | `jsonb NOT NULL DEFAULT '[]'` | User IDs específicos |
-| `action_items_count` | `smallint NOT NULL DEFAULT 0` | Contagem de action items extraídos |
-| `deleted` | `bool NOT NULL DEFAULT false` | Soft delete |
-| `deleted_at` | `timestamptz NULL` | |
-| `expires_at` | `timestamptz NULL` | Expira no `end_date` da sprint |
-| `created_at` | `timestamptz NOT NULL DEFAULT now()` | |
-| `updated_at` | `timestamptz NOT NULL DEFAULT now()` | |
+| Coluna               | Tipo                                         | Descrição                                      |
+| -------------------- | -------------------------------------------- | ---------------------------------------------- |
+| `id`                 | `uuid PK DEFAULT gen_random_uuid()`          | Identificador único                            |
+| `project_id`         | `uuid NOT NULL`                              | Projeto que gerou o raciocínio                 |
+| `sprint_id`          | `uuid NOT NULL`                              | Sprint associada                               |
+| `report_config_id`   | `uuid NULL`                                  | Config de AI report que disparou               |
+| `organization_id`    | `uuid NULL`                                  | Organização (para escopo)                      |
+| `triggered_by`       | `uuid NOT NULL`                              | Usuário/owner que disparou                     |
+| `reasoning_type`     | `weave_engine_reasoning_type NOT NULL`       | Tipo do raciocínio (enum)                      |
+| `title`              | `varchar(255) NOT NULL`                      | Título (ex: "Sprint 3 - Daily Standup")        |
+| `provider_used`      | `varchar(50) NULL`                           | Provider LLM                                   |
+| `model_used`         | `varchar(100) NULL`                          | Modelo LLM                                     |
+| `safety_label`       | `varchar(20) NOT NULL DEFAULT 'safe'`        | `safe`, `review`, `unsafe`                     |
+| `safety_reason`      | `text NULL`                                  | Razão do safety check                          |
+| `safety_blocked`     | `bool NOT NULL DEFAULT false`                | Se foi bloqueado                               |
+| `status`             | `varchar(20) NOT NULL DEFAULT 'completed'`   | `pending`, `processing`, `completed`, `failed` |
+| `error_message`      | `text NULL`                                  | Erro (se falhou)                               |
+| `processing_time_ms` | `int NULL`                                   | Tempo de processamento                         |
+| `recipient_scope`    | `varchar(20) NOT NULL DEFAULT 'all_members'` | `owner_only`, `all_members`, `custom`          |
+| `custom_recipients`  | `jsonb NOT NULL DEFAULT '[]'`                | User IDs específicos                           |
+| `action_items_count` | `smallint NOT NULL DEFAULT 0`                | Contagem de action items extraídos             |
+| `deleted`            | `bool NOT NULL DEFAULT false`                | Soft delete                                    |
+| `deleted_at`         | `timestamptz NULL`                           |                                                |
+| `expires_at`         | `timestamptz NULL`                           | Expira no `end_date` da sprint                 |
+| `created_at`         | `timestamptz NOT NULL DEFAULT now()`         |                                                |
+| `updated_at`         | `timestamptz NOT NULL DEFAULT now()`         |                                                |
 
 ---
 
@@ -71,17 +71,17 @@ Tabela principal — só metadados e referências. **Nenhum campo de conteúdo p
 
 Separada para manter a tabela principal leve. Carregada apenas quando o usuário abre o raciocínio.
 
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | `uuid PK DEFAULT gen_random_uuid()` | Identificador |
-| `reasoning_id` | `uuid NOT NULL UNIQUE` | FK → `weave_engine_reasonings.id` |
-| `output_markdown` | `text NOT NULL` | Markdown altamente estruturado |
-| `output_raw` | `jsonb NULL` | Resposta bruta do provider |
-| `output_metadata` | `jsonb NOT NULL DEFAULT '{}'` | Métricas, insights extraídos |
-| `input_context` | `jsonb NOT NULL DEFAULT '{}'` | Snapshot do contexto (notes, blocks, stages, members) |
-| `input_prompt` | `text NULL` | Prompt enviado ao LLM |
-| `input_system_message` | `text NULL` | System message usado |
-| `created_at` | `timestamptz NOT NULL DEFAULT now()` | |
+| Coluna                 | Tipo                                 | Descrição                                             |
+| ---------------------- | ------------------------------------ | ----------------------------------------------------- |
+| `id`                   | `uuid PK DEFAULT gen_random_uuid()`  | Identificador                                         |
+| `reasoning_id`         | `uuid NOT NULL UNIQUE`               | FK → `weave_engine_reasonings.id`                     |
+| `output_markdown`      | `text NOT NULL`                      | Markdown altamente estruturado                        |
+| `output_raw`           | `jsonb NULL`                         | Resposta bruta do provider                            |
+| `output_metadata`      | `jsonb NOT NULL DEFAULT '{}'`        | Métricas, insights extraídos                          |
+| `input_context`        | `jsonb NOT NULL DEFAULT '{}'`        | Snapshot do contexto (notes, blocks, stages, members) |
+| `input_prompt`         | `text NULL`                          | Prompt enviado ao LLM                                 |
+| `input_system_message` | `text NULL`                          | System message usado                                  |
+| `created_at`           | `timestamptz NOT NULL DEFAULT now()` |                                                       |
 
 ---
 
@@ -89,21 +89,21 @@ Separada para manter a tabela principal leve. Carregada apenas quando o usuário
 
 Cada membro do projeto interage independentemente com cada raciocínio.
 
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | `uuid PK DEFAULT gen_random_uuid()` | Identificador |
-| `reasoning_id` | `uuid NOT NULL` | FK → `weave_engine_reasonings.id` |
-| `user_id` | `uuid NOT NULL` | Membro que interagiu |
-| `is_read` | `bool NOT NULL DEFAULT false` | Se leu |
-| `read_at` | `timestamptz NULL` | Quando leu |
-| `is_dismissed` | `bool NOT NULL DEFAULT false` | Se descartou |
-| `dismissed_at` | `timestamptz NULL` | Quando descartou |
-| `is_pinned` | `bool NOT NULL DEFAULT false` | Se fixou |
-| `pinned_at` | `timestamptz NULL` | Quando fixou |
-| `feedback` | `varchar(20) NULL` | `helpful`, `not_helpful`, `neutral` |
-| `feedback_at` | `timestamptz NULL` | Quando deu feedback |
-| `created_at` | `timestamptz NOT NULL DEFAULT now()` | |
-| `updated_at` | `timestamptz NOT NULL DEFAULT now()` | |
+| Coluna         | Tipo                                 | Descrição                           |
+| -------------- | ------------------------------------ | ----------------------------------- |
+| `id`           | `uuid PK DEFAULT gen_random_uuid()`  | Identificador                       |
+| `reasoning_id` | `uuid NOT NULL`                      | FK → `weave_engine_reasonings.id`   |
+| `user_id`      | `uuid NOT NULL`                      | Membro que interagiu                |
+| `is_read`      | `bool NOT NULL DEFAULT false`        | Se leu                              |
+| `read_at`      | `timestamptz NULL`                   | Quando leu                          |
+| `is_dismissed` | `bool NOT NULL DEFAULT false`        | Se descartou                        |
+| `dismissed_at` | `timestamptz NULL`                   | Quando descartou                    |
+| `is_pinned`    | `bool NOT NULL DEFAULT false`        | Se fixou                            |
+| `pinned_at`    | `timestamptz NULL`                   | Quando fixou                        |
+| `feedback`     | `varchar(20) NULL`                   | `helpful`, `not_helpful`, `neutral` |
+| `feedback_at`  | `timestamptz NULL`                   | Quando deu feedback                 |
+| `created_at`   | `timestamptz NOT NULL DEFAULT now()` |                                     |
+| `updated_at`   | `timestamptz NOT NULL DEFAULT now()` |                                     |
 
 **Constraint única**: `UNIQUE (reasoning_id, user_id)` — um registro por membro por reasoning.
 
@@ -113,22 +113,22 @@ Cada membro do projeto interage independentemente com cada raciocínio.
 
 Action items extraídos do output da IA. Podem ser atribuídos e acompanhados.
 
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | `uuid PK DEFAULT gen_random_uuid()` | Identificador |
-| `reasoning_id` | `uuid NOT NULL` | FK → `weave_engine_reasonings.id` |
-| `note_id` | `uuid NULL` | Nota referenciada (se aplicável) |
-| `position` | `smallint NOT NULL DEFAULT 0` | Ordem no raciocínio |
-| `content` | `text NOT NULL` | Texto do action item |
-| `priority` | `varchar(20) NULL` | `critical`, `high`, `medium`, `low` |
-| `assigned_to` | `uuid NULL` | Membro atribuído |
-| `is_completed` | `bool NOT NULL DEFAULT false` | Se foi resolvido |
-| `completed_at` | `timestamptz NULL` | Quando foi resolvido |
-| `completed_by` | `uuid NULL` | Quem resolveu |
-| `deleted` | `bool NOT NULL DEFAULT false` | Soft delete |
-| `deleted_at` | `timestamptz NULL` | |
-| `created_at` | `timestamptz NOT NULL DEFAULT now()` | |
-| `updated_at` | `timestamptz NOT NULL DEFAULT now()` | |
+| Coluna         | Tipo                                 | Descrição                           |
+| -------------- | ------------------------------------ | ----------------------------------- |
+| `id`           | `uuid PK DEFAULT gen_random_uuid()`  | Identificador                       |
+| `reasoning_id` | `uuid NOT NULL`                      | FK → `weave_engine_reasonings.id`   |
+| `note_id`      | `uuid NULL`                          | Nota referenciada (se aplicável)    |
+| `position`     | `smallint NOT NULL DEFAULT 0`        | Ordem no raciocínio                 |
+| `content`      | `text NOT NULL`                      | Texto do action item                |
+| `priority`     | `varchar(20) NULL`                   | `critical`, `high`, `medium`, `low` |
+| `assigned_to`  | `uuid NULL`                          | Membro atribuído                    |
+| `is_completed` | `bool NOT NULL DEFAULT false`        | Se foi resolvido                    |
+| `completed_at` | `timestamptz NULL`                   | Quando foi resolvido                |
+| `completed_by` | `uuid NULL`                          | Quem resolveu                       |
+| `deleted`      | `bool NOT NULL DEFAULT false`        | Soft delete                         |
+| `deleted_at`   | `timestamptz NULL`                   |                                     |
+| `created_at`   | `timestamptz NOT NULL DEFAULT now()` |                                     |
+| `updated_at`   | `timestamptz NOT NULL DEFAULT now()` |                                     |
 
 ---
 
@@ -149,6 +149,7 @@ CREATE TYPE public.weave_engine_reasoning_type AS ENUM (
 ## Indexes (todas as tabelas)
 
 ### `weave_engine_reasonings`
+
 ```sql
 -- Listagem principal: raciocínios de um projeto+sprint
 CREATE INDEX idx_reasonings_project_sprint
@@ -182,6 +183,7 @@ CREATE INDEX idx_reasonings_safety
 ```
 
 ### `weave_engine_reasoning_contents`
+
 ```sql
 -- Lookup 1:1 rápido
 CREATE UNIQUE INDEX idx_reasoning_contents_reasoning_id
@@ -189,6 +191,7 @@ CREATE UNIQUE INDEX idx_reasoning_contents_reasoning_id
 ```
 
 ### `weave_engine_reasoning_interactions`
+
 ```sql
 -- Garantir unicidade membro+reasoning
 CREATE UNIQUE INDEX uq_reasoning_interaction_user
@@ -206,6 +209,7 @@ CREATE INDEX idx_reasoning_interactions_feedback
 ```
 
 ### `weave_engine_reasoning_action_items`
+
 ```sql
 -- Action items de um raciocínio
 CREATE INDEX idx_reasoning_actions_reasoning
@@ -298,26 +302,31 @@ O campo `output_markdown` em `reasoning_contents` deve conter markdown altamente
 # 📋 Daily Standup — Sprint 3 (04/05/2026)
 
 ## ✅ Completed Yesterday
+
 - **[NOTE-123] Implement login flow** — moved to Done by @gael
 - **[NOTE-456] Fix navbar alignment** — completed
 
 ## 🔄 In Progress
+
 - **[NOTE-789] Calendar integration** — 60% complete, blocked by API auth
-  - ⚠️ *Deadline: 06/05/2026 (2 days remaining)*
+  - ⚠️ _Deadline: 06/05/2026 (2 days remaining)_
 
 ## 🚨 Blockers & Risks
+
 - API authentication token expiring — needs renewal by team lead
 - Sprint velocity below target (18/30 points completed)
 
 ## 📊 Sprint Metrics
-| Metric | Value |
-|---|---|
-| Days Remaining | 5 |
-| Points Completed | 18/30 |
-| Velocity Trend | ↘️ Declining |
-| Tasks At Risk | 2 |
+
+| Metric           | Value        |
+| ---------------- | ------------ |
+| Days Remaining   | 5            |
+| Points Completed | 18/30        |
+| Velocity Trend   | ↘️ Declining |
+| Tasks At Risk    | 2            |
 
 ## 💡 AI Recommendations
+
 1. Prioritize **[NOTE-789]** blocker resolution
 2. Consider moving **[NOTE-901]** to next sprint
 3. Schedule sync meeting for API auth issue
@@ -332,6 +341,7 @@ O campo `output_markdown` em `reasoning_contents` deve conter markdown altamente
 #### [NEW] `db_structure_docs/migrations/2026-05-04_create_weave_engine_reasonings.sql`
 
 Migration standalone com:
+
 1. Enum `weave_engine_reasoning_type`
 2. Tabela `weave_engine_reasonings`
 3. Tabela `weave_engine_reasoning_contents`
@@ -342,6 +352,7 @@ Migration standalone com:
 #### [MODIFY] [new_structure_db.sql](file:///home/gaelgomes/projetos/weave-notes/weave-api/db_structure_docs/new_structure_db.sql)
 
 Adicionar ao arquivo principal:
+
 1. DROPs na seção de reset
 2. DROP do enum
 3. As 4 tabelas + enum
@@ -352,6 +363,7 @@ Adicionar ao arquivo principal:
 ## Verification Plan
 
 ### Manual Verification
+
 - Revisão do SQL contra os padrões do `new_structure_db.sql`
 - Validação das FKs com `project_sprints`, `project_ai_report_configs`, `project_members`
 - Verificação dos índices para os patterns de query via roles

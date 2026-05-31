@@ -10,7 +10,9 @@ const OrganizationsRepository = require("@/modules/organizations/repositories/or
 const cookieHelper = require("@/utils/cookie-helper");
 const oauthState = require("@/modules/authentication/oauth-state");
 const secretsService = require("@/services/secrets");
-const { buildJwtPayload } = require("@/modules/authentication/jwt-payload.schema");
+const {
+  buildJwtPayload,
+} = require("@/modules/authentication/jwt-payload.schema");
 
 const setAuthCookie = cookieHelper.setAuthCookie;
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
@@ -112,18 +114,24 @@ class MicrosoftOauthController extends AuthBaseController {
           message: "No email found in Microsoft user profile.",
         });
 
-      const microsoftUserResult = microsoftUserSchema.safeParse(userResponse.data);
+      const microsoftUserResult = microsoftUserSchema.safeParse(
+        userResponse.data
+      );
       if (!microsoftUserResult.success) {
-        throw new Error("Incomplete or invalid user data received from Microsoft.");
+        throw new Error(
+          "Incomplete or invalid user data received from Microsoft."
+        );
       }
       const microsoftUser = microsoftUserResult.data;
       const microsoftId = microsoftUser.id;
       const userEmail = microsoftUser.mail || microsoftUser.userPrincipalName;
 
-      let user = await MicrosoftOauthRepository.findUserByMicrosoftId(microsoftId);
+      let user =
+        await MicrosoftOauthRepository.findUserByMicrosoftId(microsoftId);
 
       if (!user) {
-        const existingUser = await FindUserRepository.findUserByEmail(userEmail);
+        const existingUser =
+          await FindUserRepository.findUserByEmail(userEmail);
 
         if (existingUser) {
           await MicrosoftOauthRepository.updateUserWithMicrosoft(
@@ -148,7 +156,9 @@ class MicrosoftOauthController extends AuthBaseController {
                 );
 
               if (!existingInvite) {
-                throw new Error("This email belongs to a restricted corporate domain.");
+                throw new Error(
+                  "This email belongs to a restricted corporate domain."
+                );
               }
             }
           }
@@ -158,9 +168,8 @@ class MicrosoftOauthController extends AuthBaseController {
             microsoftUser.displayName || userEmail.split("@")[0],
             userEmail
           );
-          user = await MicrosoftOauthRepository.findUserByMicrosoftId(
-            microsoftId
-          );
+          user =
+            await MicrosoftOauthRepository.findUserByMicrosoftId(microsoftId);
         }
       }
 

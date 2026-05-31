@@ -30,7 +30,9 @@ class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
 
       const usageRecord = await PlanUsageManager.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
-      const planDetails = await PlansRepository.getPlanById(getUserPlan.plan_id);
+      const planDetails = await PlansRepository.getPlanById(
+        getUserPlan.plan_id
+      );
 
       if (!usageRecord || !planDetails) {
         return res.status(404).json({
@@ -39,7 +41,9 @@ class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
       }
 
       const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+        await organizationsRepository.getActiveOrganizationWithMembership(
+          userId
+        );
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       // Ensure user has access (permission is enforced by route middleware).
@@ -79,17 +83,12 @@ class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
         throw new Error("Você não pode adicionar a si mesmo como colaborador");
       }
 
-      if (
-        await respondIfWorkspaceShareDenied(res, userId, collaboratorId)
-      ) {
+      if (await respondIfWorkspaceShareDenied(res, userId, collaboratorId)) {
         return;
       }
 
-
-      const isAlreadyCollaborator = await this.projectsRepository.isCollaborator(
-        projectId,
-        collaboratorId
-      );
+      const isAlreadyCollaborator =
+        await this.projectsRepository.isCollaborator(projectId, collaboratorId);
 
       if (isAlreadyCollaborator) {
         throw new Error("Usuário já é colaborador deste projeto");

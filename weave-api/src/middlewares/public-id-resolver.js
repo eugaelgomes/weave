@@ -14,7 +14,7 @@ async function resolveProjectPublicIdParam(req, res, next, id) {
       `;
       const { executeQuery } = require("@/database/connection");
       const results = await executeQuery(query, [id]);
-      
+
       if (results && results.length > 0) {
         const internalId = results[0].id;
         // In Express, router.param allows modifying req.params by just updating it:
@@ -25,7 +25,10 @@ async function resolveProjectPublicIdParam(req, res, next, id) {
     }
     next();
   } catch (error) {
-    console.error("[resolveProjectPublicIdParam] Error resolving public ID:", error);
+    console.error(
+      "[resolveProjectPublicIdParam] Error resolving public ID:",
+      error
+    );
     next();
   }
 }
@@ -52,7 +55,10 @@ async function resolveNotePublicIdParam(req, res, next, id) {
     }
     next();
   } catch (error) {
-    console.error("[resolveNotePublicIdParam] Error resolving public ID:", error);
+    console.error(
+      "[resolveNotePublicIdParam] Error resolving public ID:",
+      error
+    );
     next();
   }
 }
@@ -67,7 +73,7 @@ async function resolveOrganizationPublicIdParam(req, res, next, id) {
       `;
       const { executeQuery } = require("@/database/connection");
       const results = await executeQuery(query, [id]);
-      
+
       if (results && results.length > 0) {
         const internalId = results[0].id;
         if (req.params.id === id) req.params.id = internalId;
@@ -77,7 +83,10 @@ async function resolveOrganizationPublicIdParam(req, res, next, id) {
     }
     next();
   } catch (error) {
-    console.error("[resolveOrganizationPublicIdParam] Error resolving public ID:", error);
+    console.error(
+      "[resolveOrganizationPublicIdParam] Error resolving public ID:",
+      error
+    );
     next();
   }
 }

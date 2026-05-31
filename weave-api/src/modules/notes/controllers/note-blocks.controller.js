@@ -1,8 +1,13 @@
 const NotesBaseController = require("./base.controller");
-const { normalizeBlocksTree, flattenBlocksForInsert } = require("../block-normalizer");
+const {
+  normalizeBlocksTree,
+  flattenBlocksForInsert,
+} = require("../block-normalizer");
 const { getConnection } = require("@/database/connection");
 const spacesService = require("@/services/storage");
-const { enqueueNoteEmbeddingJob } = require("@/services/queue/queue-controller");
+const {
+  enqueueNoteEmbeddingJob,
+} = require("@/services/queue/queue-controller");
 const {
   resolveNoteIdToUuid,
   buildNoteIdWhereClause,
@@ -25,19 +30,33 @@ class NoteBlocksController extends NotesBaseController {
 
   async _processExternalMedia(tree, noteId, userId) {
     for (const block of tree) {
-      if ((block.type === "image" || block.type === "video") && block.properties?.attrs?.src) {
+      if (
+        (block.type === "image" || block.type === "video") &&
+        block.properties?.attrs?.src
+      ) {
         const src = block.properties.attrs.src;
         // Detecta se é um link externo (http/https) que não é do nosso storage ou se é base64/data URI
-        const isExternalHttp = /^https?:\/\//i.test(src) && !src.includes("/notes/") && !src.includes("upload://");
-        const isDataUri = /^data:(image|video)\/[a-zA-Z0-9+.-]+;base64,/i.test(src);
+        const isExternalHttp =
+          /^https?:\/\//i.test(src) &&
+          !src.includes("/notes/") &&
+          !src.includes("upload://");
+        const isDataUri = /^data:(image|video)\/[a-zA-Z0-9+.-]+;base64,/i.test(
+          src
+        );
 
         if (isExternalHttp || isDataUri) {
           try {
-            console.info(`[notes.blocks.sync] Processando mídia para upload...`);
+            console.info(
+              `[notes.blocks.sync] Processando mídia para upload...`
+            );
             const resp = await fetch(src);
             if (resp.ok) {
               const contentType = resp.headers.get("content-type");
-              if (contentType && (contentType.startsWith("image/") || contentType.startsWith("video/"))) {
+              if (
+                contentType &&
+                (contentType.startsWith("image/") ||
+                  contentType.startsWith("video/"))
+              ) {
                 const buffer = Buffer.from(await resp.arrayBuffer());
                 const newUrl = await spacesService.uploadNoteDocumentImage(
                   buffer,
@@ -47,11 +66,16 @@ class NoteBlocksController extends NotesBaseController {
                   isDataUri ? "pasted-media" : "external-media"
                 );
                 block.properties.attrs.src = newUrl;
-                console.info(`[notes.blocks.sync] Mídia salva no storage: ${newUrl}`);
+                console.info(
+                  `[notes.blocks.sync] Mídia salva no storage: ${newUrl}`
+                );
               }
             }
           } catch (e) {
-            console.error(`[notes.blocks.sync] Falha ao processar mídia (${isDataUri ? "data-uri" : src}):`, e.message);
+            console.error(
+              `[notes.blocks.sync] Falha ao processar mídia (${isDataUri ? "data-uri" : src}):`,
+              e.message
+            );
             // Continua com a url original, o validador decidirá se passa
           }
         }
@@ -73,9 +97,8 @@ class NoteBlocksController extends NotesBaseController {
 
       await this._validateNoteAccess(noteId, userId);
 
-      const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
-        noteId
-      );
+      const blocks =
+        await this.notesRepository.findNoteBlocksTreeByNoteId(noteId);
       return res.status(200).json({ blocks });
     } catch (error) {
       this._handleError(error, res, next);
@@ -93,18 +116,14 @@ class NoteBlocksController extends NotesBaseController {
 
       await this._validateNoteAccessLightweight(noteId, userId);
 
-      const block = await this.notesRepository.insertNoteBlock(
-        noteId,
-        userId,
-        {
-          type: req.body?.type,
-          parent_id: req.body?.parent_id ?? req.body?.parentId,
-          position: req.body?.position,
-          properties: req.body?.properties,
-          text: req.body?.text,
-          done: req.body?.done,
-        }
-      );
+      const block = await this.notesRepository.insertNoteBlock(noteId, userId, {
+        type: req.body?.type,
+        parent_id: req.body?.parent_id ?? req.body?.parentId,
+        position: req.body?.position,
+        properties: req.body?.properties,
+        text: req.body?.text,
+        done: req.body?.done,
+      });
       return res.status(201).json(block);
     } catch (error) {
       this._handleError(error, res, next);
@@ -131,7 +150,10 @@ class NoteBlocksController extends NotesBaseController {
         req.body?.expectedVersion ?? req.body?.expected_version,
         "expectedVersion"
       );
-      if (expectedVersion !== null && Number(existing.version) !== expectedVersion) {
+      if (
+        expectedVersion !== null &&
+        Number(existing.version) !== expectedVersion
+      ) {
         console.info("[notes.blocks.patch.conflict]", {
           blockId,
           currentVersion: Number(existing.version),
@@ -149,13 +171,17 @@ class NoteBlocksController extends NotesBaseController {
         });
       }
 
-      const updated = await this.notesRepository.updateNoteBlock(blockId, {
-        type: req.body?.type,
-        position: req.body?.position,
-        text: req.body?.text,
-        done: req.body?.done,
-        properties: req.body?.properties,
-      }, expectedVersion);
+      const updated = await this.notesRepository.updateNoteBlock(
+        blockId,
+        {
+          type: req.body?.type,
+          position: req.body?.position,
+          text: req.body?.text,
+          done: req.body?.done,
+          properties: req.body?.properties,
+        },
+        expectedVersion
+      );
       if (!updated) {
         const latest = await this.notesRepository.findNoteBlockById(blockId);
         if (latest && String(latest.note_id) === String(noteId)) {
@@ -177,7 +203,11 @@ class NoteBlocksController extends NotesBaseController {
         }
         return res.status(404).json({ error: "Bloco não encontrado" });
       }
-      if (String(process.env.ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true").toLowerCase() !== "false") {
+      if (
+        String(
+          process.env.ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true"
+        ).toLowerCase() !== "false"
+      ) {
         console.info("[notes.blocks.patch]", {
           blockId,
           latency_ms: Date.now() - startedAt,
@@ -216,7 +246,9 @@ class NoteBlocksController extends NotesBaseController {
 
       const n = await this.notesRepository.softDeleteNoteBlocks([blockId]);
       if (n === 0) {
-        return res.status(400).json({ error: "Não foi possível remover o bloco" });
+        return res
+          .status(400)
+          .json({ error: "Não foi possível remover o bloco" });
       }
       return res.status(200).json({ success: true });
     } catch (error) {
@@ -266,8 +298,7 @@ class NoteBlocksController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const noteId =
-        (await resolveNoteIdToUuid(noteIdParam)) || noteIdParam;
+      const noteId = (await resolveNoteIdToUuid(noteIdParam)) || noteIdParam;
 
       await this._validateNoteAccess(noteId, userId);
       const baseRevision = this._parsePositiveInt(
@@ -314,7 +345,8 @@ class NoteBlocksController extends NotesBaseController {
             error: "Conflito de edição detectado",
             noteId,
             currentRevision:
-              latestNote?.revision === undefined || latestNote?.revision === null
+              latestNote?.revision === undefined ||
+              latestNote?.revision === null
                 ? null
                 : Number(latestNote.revision),
             conflictFields: ["blocks"],
@@ -322,7 +354,9 @@ class NoteBlocksController extends NotesBaseController {
         }
         nextRevision = Number(noteResult.rows[0]?.revision || baseRevision);
 
-        await client.query(`DELETE FROM note_blocks WHERE note_id = $1::uuid`, [noteId]);
+        await client.query(`DELETE FROM note_blocks WHERE note_id = $1::uuid`, [
+          noteId,
+        ]);
         if (tree.length > 0) {
           const flat = flattenBlocksForInsert(tree, noteId, userId, null, 0);
           for (const row of flat) {
@@ -363,9 +397,8 @@ class NoteBlocksController extends NotesBaseController {
         client.release();
       }
 
-      const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
-        noteId
-      );
+      const blocks =
+        await this.notesRepository.findNoteBlocksTreeByNoteId(noteId);
       await enqueueNoteEmbeddingJob(noteId).catch(() => {});
 
       return res.status(200).json({ blocks, revision: nextRevision });

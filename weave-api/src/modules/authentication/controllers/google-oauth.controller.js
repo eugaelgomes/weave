@@ -10,7 +10,9 @@ const OrganizationsRepository = require("@/modules/organizations/repositories/or
 const cookieHelper = require("@/utils/cookie-helper");
 const oauthState = require("@/modules/authentication/oauth-state");
 const secretsService = require("@/services/secrets");
-const { buildJwtPayload } = require("@/modules/authentication/jwt-payload.schema");
+const {
+  buildJwtPayload,
+} = require("@/modules/authentication/jwt-payload.schema");
 
 const setAuthCookie = cookieHelper.setAuthCookie;
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
@@ -102,7 +104,9 @@ class GoogleOauthController extends AuthBaseController {
       );
       const googleUserResult = googleUserSchema.safeParse(userResponse.data);
       if (!googleUserResult.success) {
-        throw new Error("Incomplete or invalid user data received from Google.");
+        throw new Error(
+          "Incomplete or invalid user data received from Google."
+        );
       }
       const googleUser = googleUserResult.data;
 
@@ -136,7 +140,9 @@ class GoogleOauthController extends AuthBaseController {
                 );
 
               if (!existingInvite) {
-                throw new Error("This email belongs to a restricted corporate domain.");
+                throw new Error(
+                  "This email belongs to a restricted corporate domain."
+                );
               }
             }
           }

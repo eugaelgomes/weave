@@ -59,7 +59,9 @@ class SlackIntegrationsController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("[getSlackIntegration]", error);
-      return res.status(500).json({ error: "Failed to load Slack integration" });
+      return res
+        .status(500)
+        .json({ error: "Failed to load Slack integration" });
     }
   }
 
@@ -98,7 +100,9 @@ class SlackIntegrationsController extends OrganizationsBaseController {
           String(organization.id)
         );
       if (!integration?.bot_access_token) {
-        return res.status(400).json({ error: "Slack is not connected for this organization" });
+        return res
+          .status(400)
+          .json({ error: "Slack is not connected for this organization" });
       }
 
       const info = await conversationsInfo({
@@ -107,14 +111,13 @@ class SlackIntegrationsController extends OrganizationsBaseController {
       });
       if (!info?.ok || !info.channel) {
         return res.status(400).json({
-          error: "Unable to access Slack channel. Check the channel ID and bot scopes.",
+          error:
+            "Unable to access Slack channel. Check the channel ID and bot scopes.",
           slack_error: info?.error,
         });
       }
 
-      const channelName = info.channel.name
-        ? String(info.channel.name)
-        : null;
+      const channelName = info.channel.name ? String(info.channel.name) : null;
 
       await MutateSlackIntegrationsRepository.updateDefaultChannel(
         String(organization.id),
@@ -128,7 +131,9 @@ class SlackIntegrationsController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("[setDefaultChannel]", error);
-      return res.status(500).json({ error: "Failed to update default Slack channel" });
+      return res
+        .status(500)
+        .json({ error: "Failed to update default Slack channel" });
     }
   }
 

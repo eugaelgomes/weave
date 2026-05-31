@@ -139,7 +139,10 @@ class NotesBaseController {
       };
     }
 
-    const isCollaborator = await this.notesRepository.isCollaborator(noteId, userId);
+    const isCollaborator = await this.notesRepository.isCollaborator(
+      noteId,
+      userId
+    );
     if (isCollaborator) {
       return {
         hasOrgProjectAccess: false,
@@ -149,7 +152,10 @@ class NotesBaseController {
       };
     }
 
-    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(note, userId);
+    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(
+      note,
+      userId
+    );
     if (hasOrgProjectAccess) {
       return {
         hasOrgProjectAccess: true,
@@ -205,10 +211,7 @@ class NotesBaseController {
     const { includeBlocks = true } = options;
     const projectId = note.project_id ? String(note.project_id) : null;
     return {
-      id:
-        note.id === undefined || note.id === null
-          ? ""
-          : String(note.id),
+      id: note.id === undefined || note.id === null ? "" : String(note.id),
       public_id: note.public_note_id || null,
       title: note.title,
       description: note.description,

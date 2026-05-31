@@ -24,7 +24,9 @@ class ProjectsCollaboratorsUpdateController extends ProjectsCoreController {
       if (!userId) return;
 
       const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+        await organizationsRepository.getActiveOrganizationWithMembership(
+          userId
+        );
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       // Ensure user has access (permission is enforced by route middleware).
@@ -44,19 +46,20 @@ class ProjectsCollaboratorsUpdateController extends ProjectsCoreController {
         throw new Error("Usuário não é colaborador deste projeto");
       }
 
-      const result = orgWide && membership?.id
-        ? await this.projectsRepository.updateCollaboratorPermissionWithOrgManagement(
-            projectId,
-            membership.id,
-            collaboratorId,
-            role
-          )
-        : await this.projectsRepository.updateCollaboratorPermission(
-            projectId,
-            userId,
-            collaboratorId,
-            role
-          );
+      const result =
+        orgWide && membership?.id
+          ? await this.projectsRepository.updateCollaboratorPermissionWithOrgManagement(
+              projectId,
+              membership.id,
+              collaboratorId,
+              role
+            )
+          : await this.projectsRepository.updateCollaboratorPermission(
+              projectId,
+              userId,
+              collaboratorId,
+              role
+            );
 
       if (!result || result.length === 0) {
         throw new Error("Falha ao atualizar role");

@@ -1802,7 +1802,7 @@ const NoteDetail = () => {
           />
 
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
-            <div className="no-scrollbar flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
+            <div className="no-scrollbar flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
               {/* Banner em largura total da coluna; ícone “encosta” no hero com absolute */}
               {note.properties?.banner?.path ? (
                 <div className="w-full shrink-0 overflow-visible pb-6">
@@ -1862,11 +1862,7 @@ const NoteDetail = () => {
                 </div>
               ) : null}
 
-              <div
-                className={`flex-1 px-3 pb-6 sm:px-4 ${
-                  hasNoteHero ? "pt-2 sm:pt-4" : ""
-                }`}
-              >
+              <div className={`flex-1 px-3 pb-6 sm:px-4 ${hasNoteHero ? "pt-2 sm:pt-4" : ""}`}>
                 <div className="mx-auto w-full max-w-4xl">
                   {/* Título + comentários */}
                   <div className="mb-4">

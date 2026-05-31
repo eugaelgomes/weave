@@ -378,11 +378,12 @@ async function buildEntityContext(payload = {}) {
   const projectIds = await resolveProjectIdsFromPayload(payload.projectIds);
   const organizationId = normalizeOptionalUuid(payload.organizationId);
 
-  const [indexedNotes, indexedProjects, organizationMembers] = await Promise.all([
-    loadAccessibleNotes(noteIds, userId, organizationId),
-    loadAccessibleProjects(projectIds, userId, organizationId),
-    loadOrganizationMembers(organizationId),
-  ]);
+  const [indexedNotes, indexedProjects, organizationMembers] =
+    await Promise.all([
+      loadAccessibleNotes(noteIds, userId, organizationId),
+      loadAccessibleProjects(projectIds, userId, organizationId),
+      loadOrganizationMembers(organizationId),
+    ]);
 
   return {
     indexedNotes,

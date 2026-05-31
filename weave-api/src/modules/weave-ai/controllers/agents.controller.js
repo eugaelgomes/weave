@@ -197,15 +197,16 @@ class AgentsController {
       }
 
       if (knowledgeFiles.length > 0) {
-        const personality = columnUpdates.personality || agent.personality || {};
+        const personality =
+          columnUpdates.personality || agent.personality || {};
         personality.capabilities = personality.capabilities || {};
-        personality.capabilities.knowledge_base =
-          personality.capabilities.knowledge_base || {
-            enabled: false,
-            sources: [],
-            strategy: "similarity",
-            rag_threshold: 0.7,
-          };
+        personality.capabilities.knowledge_base = personality.capabilities
+          .knowledge_base || {
+          enabled: false,
+          sources: [],
+          strategy: "similarity",
+          rag_threshold: 0.7,
+        };
         personality.capabilities.knowledge_base.sources = knowledgeFiles;
         personality.capabilities.knowledge_base.enabled = true;
         columnUpdates.personality = personality;
@@ -427,7 +428,10 @@ class AgentsController {
       const userId = this._validateAuthentication(req);
       const { id } = req.params;
 
-      const updatedAgent = await agentRepository.unassignFromProject(id, userId);
+      const updatedAgent = await agentRepository.unassignFromProject(
+        id,
+        userId
+      );
 
       if (!updatedAgent) {
         return res

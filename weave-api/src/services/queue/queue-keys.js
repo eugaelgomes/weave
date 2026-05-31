@@ -14,7 +14,8 @@ const DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY = "queue:note-embeddings";
 const DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY = "weave:ai-reports:delivery";
 const DEFAULT_REASONING_TRIGGER_QUEUE_KEY = "queue:reasoning:triggers";
 const DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY = "queue:engine-proactive-tasks";
-const DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY = "queue:engine-proactive-responses";
+const DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY =
+  "queue:engine-proactive-responses";
 
 /**
  * List key for email jobs consumed by the worker email processor.
@@ -81,7 +82,10 @@ function getEngineLlmResponsePrefixRedisKey() {
  * @returns {string}
  */
 function getNoteEmbeddingsQueueRedisKey() {
-  return process.env.REDIS_NOTE_EMBEDDINGS_QUEUE_KEY || DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY;
+  return (
+    process.env.REDIS_NOTE_EMBEDDINGS_QUEUE_KEY ||
+    DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY
+  );
 }
 
 /**
@@ -89,7 +93,10 @@ function getNoteEmbeddingsQueueRedisKey() {
  * @returns {string}
  */
 function getAiReportDeliveryQueueRedisKey() {
-  return process.env.REDIS_AI_REPORT_DELIVERY_QUEUE_KEY || DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY;
+  return (
+    process.env.REDIS_AI_REPORT_DELIVERY_QUEUE_KEY ||
+    DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY
+  );
 }
 
 /**
@@ -97,7 +104,10 @@ function getAiReportDeliveryQueueRedisKey() {
  * @returns {string}
  */
 function getReasoningTriggerQueueRedisKey() {
-  return process.env.REDIS_REASONING_TRIGGER_QUEUE_KEY || DEFAULT_REASONING_TRIGGER_QUEUE_KEY;
+  return (
+    process.env.REDIS_REASONING_TRIGGER_QUEUE_KEY ||
+    DEFAULT_REASONING_TRIGGER_QUEUE_KEY
+  );
 }
 
 /**

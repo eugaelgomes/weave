@@ -27,9 +27,7 @@ class CreateApiTokensController {
       const { userId } = req.user;
 
       if (!name || name.trim() === "") {
-        return res
-          .status(400)
-          .json({ error: "Token name is required." });
+        return res.status(400).json({ error: "Token name is required." });
       }
 
       const rawPrefix = crypto.randomBytes(6).toString("hex");

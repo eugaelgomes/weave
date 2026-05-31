@@ -58,10 +58,15 @@ class CreateUsersController extends BaseController {
       }
 
       // Delegate creation and business validations to service
-      const result = await CreateUsersService.createUser(req.body, req.body?.locale || "en");
+      const result = await CreateUsersService.createUser(
+        req.body,
+        req.body?.locale || "en"
+      );
 
       if (result.conflict) {
-        return res.status(409).json(buildUniqueConflictPayload(result.conflict));
+        return res
+          .status(409)
+          .json(buildUniqueConflictPayload(result.conflict));
       }
 
       const { user } = result;
@@ -72,21 +77,26 @@ class CreateUsersController extends BaseController {
           // Stream file from disk
           const fs = require("fs");
           const fileStream = fs.createReadStream(req.file.path);
-          
+
           const saveResult = await spacesService.uploadProfileImage(
             fileStream,
             req.file.mimetype,
             user.userId
           );
-          
+
           // Clean up temp file
-          fs.unlink(req.file.path, (err) => { if (err) console.error("Failed to delete temp file:", err); });
+          fs.unlink(req.file.path, (err) => {
+            if (err) console.error("Failed to delete temp file:", err);
+          });
 
           if (saveResult.success) {
             profileImageUrl = saveResult.key;
             // Delegate profile image update
             const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
-            await UserDataRepository.updateProfileImage(user.userId, profileImageUrl);
+            await UserDataRepository.updateProfileImage(
+              user.userId,
+              profileImageUrl
+            );
           } else {
             console.error("Image upload failed:", saveResult.error);
           }
@@ -112,7 +122,8 @@ class CreateUsersController extends BaseController {
       if (error.message === "CORPORATE_DOMAIN_INVITE_REQUIRED") {
         return res.status(403).json({
           status: "error",
-          message: "This email belongs to a verified corporate domain. You need an invitation from the organization to create an account.",
+          message:
+            "This email belongs to a verified corporate domain. You need an invitation from the organization to create an account.",
         });
       }
       console.error("An error occurred during registration:", error);

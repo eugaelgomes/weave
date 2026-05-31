@@ -9,7 +9,9 @@ const cookieHelper = require("@/utils/cookie-helper");
 const authLogs = require("@/utils/system_logs/auth-logs");
 const storageFileUtils = require("@/utils/data/presign-storage-files");
 const secretsService = require("@/services/secrets");
-const { buildJwtPayload } = require("@/modules/authentication/jwt-payload.schema");
+const {
+  buildJwtPayload,
+} = require("@/modules/authentication/jwt-payload.schema");
 
 const setAuthCookie = cookieHelper.setAuthCookie;
 const presignObjectFields = storageFileUtils.presignObjectFields;
@@ -37,15 +39,22 @@ class SigninController extends AuthBaseController {
       }
 
       if (user.auth_with_google && !user.password) {
-        return next(AppError.unauthorized("This account uses SSO authentication."));
+        return next(
+          AppError.unauthorized("This account uses SSO authentication.")
+        );
       }
 
       const verifiedAccount = user.email_verified;
       if (!verifiedAccount) {
         return next(
-          new AppError("EMAIL_NOT_VERIFIED", "Please verify your email before logging in.", 403, {
-            body: { email: user.email },
-          })
+          new AppError(
+            "EMAIL_NOT_VERIFIED",
+            "Please verify your email before logging in.",
+            403,
+            {
+              body: { email: user.email },
+            }
+          )
         );
       }
 

@@ -1,4 +1,6 @@
-const { normalizeOrganizationName } = require("@/modules/organizations/normalizer");
+const {
+  normalizeOrganizationName,
+} = require("@/modules/organizations/normalizer");
 
 const STEP_ONE = "step_1";
 const ORGANIZATION_BUSINESS_ROLES = Object.freeze([
@@ -52,7 +54,12 @@ class OrganizationCreationStepsService {
       optional_fields: ["description", "logo_url"],
       available_roles: [...ORGANIZATION_BUSINESS_ROLES],
       role_options: [...ORGANIZATION_BUSINESS_ROLES],
-      planned_optional_steps: ["branding_properties", "users", "integrations", "domains"],
+      planned_optional_steps: [
+        "branding_properties",
+        "users",
+        "integrations",
+        "domains",
+      ],
     };
   }
 
@@ -138,13 +145,15 @@ class OrganizationCreationStepsService {
     if (!normalized) {
       throw new Error("unique_name is invalid after normalization");
     }
-    const existingNames = await this.organizationsRepository.getAvailableOrgNames(
-      normalized
-    );
+    const existingNames =
+      await this.organizationsRepository.getAvailableOrgNames(normalized);
     const normalizedCurrent = currentUniqueName
       ? normalizeOrganizationName(currentUniqueName)
       : null;
-    if (existingNames.includes(normalized) && normalizedCurrent !== normalized) {
+    if (
+      existingNames.includes(normalized) &&
+      normalizedCurrent !== normalized
+    ) {
       throw new Error("Unique name is already in use");
     }
     return normalized;

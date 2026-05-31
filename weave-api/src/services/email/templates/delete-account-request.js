@@ -3,7 +3,11 @@ const {
   buildMailTemplate,
   escapeHtml,
 } = require("@/services/email/mail-template");
-const { formatDateForLocale, getUserEmailLocale, t } = require("@/services/email/i18n");
+const {
+  formatDateForLocale,
+  getUserEmailLocale,
+  t,
+} = require("@/services/email/i18n");
 
 /**
  * @param {string} nome

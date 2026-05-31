@@ -35,7 +35,7 @@ class OrganizationsRepository {
    */
   async getMembershipsByUserIds(userIds, organizationId) {
     if (!userIds || userIds.length === 0) return [];
-    
+
     const query = `
       SELECT user_id::text, role, status
       FROM organization_members
@@ -535,7 +535,11 @@ class OrganizationsRepository {
       WHERE user_id = $2;
     `;
 
-      await client.query(updateUserQuery, [organization.id, user_id, defaultPlanId]);
+      await client.query(updateUserQuery, [
+        organization.id,
+        user_id,
+        defaultPlanId,
+      ]);
 
       // Adiciona associação do usuário à org
       await this.addOrganizationMember(
@@ -548,7 +552,7 @@ class OrganizationsRepository {
       );
 
       // Cria a área raiz (central) da organização
-      const rootAreaSlug = unique_name || 'central';
+      const rootAreaSlug = unique_name || "central";
       await client.query(
         `INSERT INTO organization_areas (
            organization_id, area_name, slug, description, properties, created_by, is_root_area
@@ -721,13 +725,7 @@ class OrganizationsRepository {
   async updateCreationConfigurationStep(
     organization_id,
     user_id,
-    {
-      settings,
-      branding_properties,
-      integrations,
-      plan_id,
-      plan_snapshot,
-    }
+    { settings, branding_properties, integrations, plan_id, plan_snapshot }
   ) {
     const query = `
       UPDATE organizations o
@@ -925,7 +923,11 @@ SET logo_url = $2, updated_at = NOW()
 WHERE id = $1 AND EXISTS (SELECT 1 FROM user_check)
 RETURNING *;
     `;
-    const results = await executeQuery(query, [organization_id, logo_url, user_id]);
+    const results = await executeQuery(query, [
+      organization_id,
+      logo_url,
+      user_id,
+    ]);
     return results[0];
   }
 
@@ -940,7 +942,11 @@ SET banner_url = $2, updated_at = NOW()
 WHERE id = $1 AND EXISTS (SELECT 1 FROM user_check)
 RETURNING *;
     `;
-    const results = await executeQuery(query, [organization_id, banner_url, user_id]);
+    const results = await executeQuery(query, [
+      organization_id,
+      banner_url,
+      user_id,
+    ]);
     return results[0];
   }
 
@@ -967,7 +973,6 @@ RETURNING *;
     const results = await executeQuery(query, [organization_id]);
     return results;
   }
-
 }
 
 module.exports = new OrganizationsRepository();

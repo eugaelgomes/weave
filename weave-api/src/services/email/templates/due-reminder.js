@@ -26,7 +26,9 @@ function buildDueReminderTemplate({
     recipientName || t(resolvedLocale, "common.greetingFallback");
   const safeTitle = noteTitle || t(resolvedLocale, "dueReminder.untitled");
 
-  const subject = t(resolvedLocale, "dueReminder.subject", { noteTitle: safeTitle });
+  const subject = t(resolvedLocale, "dueReminder.subject", {
+    noteTitle: safeTitle,
+  });
   const { html, text } = buildMailTemplate({
     locale: resolvedLocale,
     preheader: t(resolvedLocale, "dueReminder.preheader"),
@@ -70,9 +72,7 @@ async function sendDueReminderEmail(
   try {
     const locale = await getUserEmailLocale({ email: toEmail });
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    const notePath = notePublicId
-      ? `/app/notes/${notePublicId}`
-      : "/app/notes";
+    const notePath = notePublicId ? `/app/notes/${notePublicId}` : "/app/notes";
     const noteUrl = `${frontendUrl}/auth/?redirect=${encodeURIComponent(notePath)}`;
 
     const dueDateLabel = formatDateForLocale(locale, dueDate);

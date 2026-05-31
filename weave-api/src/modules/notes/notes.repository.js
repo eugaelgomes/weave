@@ -51,12 +51,10 @@ module.exports = {
   findNoteBlockById: (...args) => noteBlocksRepository.findById(...args),
   insertDefaultNoteBlock: (...args) =>
     noteBlocksRepository.insertDefaultParagraph(...args),
-  bulkInsertNoteBlocks: (...args) =>
-    noteBlocksRepository.bulkInsert(...args),
+  bulkInsertNoteBlocks: (...args) => noteBlocksRepository.bulkInsert(...args),
   insertNoteBlock: (...args) => noteBlocksRepository.insert(...args),
   updateNoteBlock: (...args) => noteBlocksRepository.update(...args),
-  softDeleteNoteBlocks: (...args) =>
-    noteBlocksRepository.softDelete(...args),
+  softDeleteNoteBlocks: (...args) => noteBlocksRepository.softDelete(...args),
   reorderNoteBlocks: (...args) => noteBlocksRepository.reorder(...args),
   deleteAllNoteBlocks: (...args) =>
     noteBlocksRepository.deleteAllByNoteId(...args),

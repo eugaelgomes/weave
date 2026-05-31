@@ -169,8 +169,6 @@ class OrganizationsBaseController {
 
     return normalized;
   }
-
-
 }
 
 module.exports = OrganizationsBaseController;

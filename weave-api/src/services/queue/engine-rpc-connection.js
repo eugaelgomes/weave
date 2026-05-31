@@ -7,7 +7,10 @@ const { getBlockingRedisOptions } = require("./blocking-redis-options");
  *
  * @type {import("ioredis").default}
  */
-const engineRpcRedis = new Redis(process.env.REDIS_URL, getBlockingRedisOptions());
+const engineRpcRedis = new Redis(
+  process.env.REDIS_URL,
+  getBlockingRedisOptions()
+);
 
 engineRpcRedis.on("error", (error) => {
   // eslint-disable-next-line no-console -- engine RPC infra diagnostics

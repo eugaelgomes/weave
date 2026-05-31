@@ -109,7 +109,10 @@ const chatUpload = multer({
 function handleChatFilesUpload(req, res, next) {
   chatUpload(req, res, (error) => {
     if (error) {
-      if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
+      if (
+        error instanceof multer.MulterError &&
+        error.code === "LIMIT_FILE_SIZE"
+      ) {
         return res.status(400).json({
           success: false,
           code: ERROR_CODES.FILE_TOO_LARGE,
@@ -137,7 +140,10 @@ function handleChatFilesUpload(req, res, next) {
         });
       }
 
-      if (typeof file.size === "number" && file.size > allowedRule.maxSizeBytes) {
+      if (
+        typeof file.size === "number" &&
+        file.size > allowedRule.maxSizeBytes
+      ) {
         const maxSizeMb = allowedRule.maxSizeBytes / (1024 * 1024);
         return res.status(400).json({
           success: false,

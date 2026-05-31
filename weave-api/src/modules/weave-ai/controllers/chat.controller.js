@@ -9,7 +9,9 @@ const {
   normalizeBlocksTree,
   newBlockId,
 } = require("@/modules/notes/block-normalizer");
-const { enqueueNoteEmbeddingJob } = require("@/services/queue/queue-controller");
+const {
+  enqueueNoteEmbeddingJob,
+} = require("@/services/queue/queue-controller");
 const PlansRepository = require("@/modules/plans/plans.repository");
 const PlanUsageManager = require("@/modules/plans/plans.controller");
 const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
@@ -19,7 +21,9 @@ const projectsReadRepository = require("@/modules/projects/repositories/projects
 const {
   PROJECT_WRITE_CAPABLE_ROLES,
 } = require("@/modules/projects/project-role-policy");
-const { resolveAuthorizedFunctions } = require("@/modules/weave-ai/authorized-functions");
+const {
+  resolveAuthorizedFunctions,
+} = require("@/modules/weave-ai/authorized-functions");
 const engineRpcRedis = require("@/services/queue/engine-rpc-connection");
 const {
   getEngineLlmRequestQueueRedisKey,
@@ -49,6 +53,52 @@ const CHAT_CONTEXT_MAX_MESSAGE_CHARS = Number.parseInt(
 );
 const REQUEST_ID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const CHAT_I18N = {
+  pt: {
+    callingFunctions: "Chamando funções...",
+    functionResults: (results) =>
+      `Resultados das funções executadas:\n${results}\n\nPor favor, continue a tarefa com base nestes resultados. Se a tarefa foi concluída, você pode responder ao usuário.`,
+    successFallback: "Solicitação executada com sucesso.",
+    functionUnderstoodFallback:
+      "Solicitação entendida. Recebi uma chamada de função, mas não houve alterações executadas.",
+    noContentFallback:
+      "Solicitação recebida, mas o modelo não retornou conteúdo textual.",
+    awaitingInput: "Aguardando sua entrada...",
+  },
+  en: {
+    callingFunctions: "Calling functions...",
+    functionResults: (results) =>
+      `Function execution results:\n${results}\n\nPlease continue the task based on these results. If the task is completed, you can reply to the user.`,
+    successFallback: "Request executed successfully.",
+    functionUnderstoodFallback:
+      "Request understood. Received a function call, but no changes were executed.",
+    noContentFallback:
+      "Request received, but the model did not return any textual content.",
+    awaitingInput: "Awaiting your input...",
+  },
+  es: {
+    callingFunctions: "Llamando funciones...",
+    functionResults: (results) =>
+      `Resultados de la ejecución de las funciones:\n${results}\n\nContinúe la tarea en función de estos resultados. Si la tarea se ha completado, puede responder al usuario.`,
+    successFallback: "Solicitud ejecutada exitosamente.",
+    functionUnderstoodFallback:
+      "Solicitud entendida. Recibí una llamada de función, pero no se ejecutaron cambios.",
+    noContentFallback:
+      "Solicitud recibida, pero el modelo no devolvió ningún contenido textual.",
+    awaitingInput: "Esperando tu entrada...",
+  },
+};
+
+function getI18n(lang) {
+  const normalized = String(lang || "pt")
+    .trim()
+    .substring(0, 2)
+    .toLowerCase();
+  if (normalized === "en") return CHAT_I18N["en"];
+  if (normalized === "es") return CHAT_I18N["es"];
+  return CHAT_I18N["pt"];
+}
 
 /**
  * @typedef {Object} ChatModelInput
@@ -134,7 +184,10 @@ class ChatController {
         if (parsed === null) {
           return null;
         }
-        if (Array.isArray(parsed) && parsed.every((item) => typeof item === "string")) {
+        if (
+          Array.isArray(parsed) &&
+          parsed.every((item) => typeof item === "string")
+        ) {
           return parsed;
         }
       } catch {
@@ -142,11 +195,16 @@ class ChatController {
       }
     }
 
-    if (Array.isArray(value) && value.every((item) => typeof item === "string")) {
+    if (
+      Array.isArray(value) &&
+      value.every((item) => typeof item === "string")
+    ) {
       return value;
     }
 
-    const parseError = new Error(`Campo "${fieldName}" deve ser array de strings ou null`);
+    const parseError = new Error(
+      `Campo "${fieldName}" deve ser array de strings ou null`
+    );
     parseError.code = "CHAT_INVALID_ARRAY_FIELD";
     parseError.statusCode = 400;
     throw parseError;
@@ -173,7 +231,9 @@ class ChatController {
       try {
         parsed = JSON.parse(value);
       } catch {
-        const parseError = new Error(`Campo "${fieldName}" deve ser um objeto JSON válido`);
+        const parseError = new Error(
+          `Campo "${fieldName}" deve ser um objeto JSON válido`
+        );
         parseError.code = "CHAT_INVALID_OBJECT_FIELD";
         parseError.statusCode = 400;
         throw parseError;
@@ -181,7 +241,9 @@ class ChatController {
     }
 
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-      const parseError = new Error(`Campo "${fieldName}" deve ser objeto ou null`);
+      const parseError = new Error(
+        `Campo "${fieldName}" deve ser objeto ou null`
+      );
       parseError.code = "CHAT_INVALID_OBJECT_FIELD";
       parseError.statusCode = 400;
       throw parseError;
@@ -202,7 +264,7 @@ class ChatController {
       try {
         model = JSON.parse(model);
       } catch {
-        const parseError = new Error("Campo \"model\" inválido");
+        const parseError = new Error('Campo "model" inválido');
         parseError.code = "CHAT_INVALID_MODEL";
         parseError.statusCode = 400;
         throw parseError;
@@ -219,7 +281,7 @@ class ChatController {
 
     if (!isValidModel) {
       const validationError = new Error(
-        "Campo \"model\" deve conter \"name\" e \"version\" válidos"
+        'Campo "model" deve conter "name" e "version" válidos'
       );
       validationError.code = "CHAT_INVALID_MODEL";
       validationError.statusCode = 400;
@@ -254,7 +316,7 @@ class ChatController {
     } = req.body;
 
     if (typeof message !== "string" || !message.trim()) {
-      const error = new Error("Campo \"message\" é obrigatório");
+      const error = new Error('Campo "message" é obrigatório');
       error.code = "CHAT_MESSAGE_REQUIRED";
       error.statusCode = 400;
       throw error;
@@ -262,25 +324,39 @@ class ChatController {
 
     const parsedModel = this._parseModel(model);
     const parsedAgentId =
-      agentId === undefined || agentId === null || agentId === "" || agentId === "null"
+      agentId === undefined ||
+      agentId === null ||
+      agentId === "" ||
+      agentId === "null"
         ? null
         : String(agentId);
     const parsedSessionId =
-      sessionId === undefined || sessionId === null || sessionId === "" || sessionId === "null"
+      sessionId === undefined ||
+      sessionId === null ||
+      sessionId === "" ||
+      sessionId === "null"
         ? null
         : String(sessionId);
     const parsedRequestId =
-      requestId === undefined || requestId === null || requestId === "" || requestId === "null"
+      requestId === undefined ||
+      requestId === null ||
+      requestId === "" ||
+      requestId === "null"
         ? null
         : String(requestId).trim();
     if (parsedRequestId && !REQUEST_ID_REGEX.test(parsedRequestId)) {
-      const requestError = new Error("Campo \"requestId\" deve ser um UUID válido");
+      const requestError = new Error(
+        'Campo "requestId" deve ser um UUID válido'
+      );
       requestError.code = "CHAT_INVALID_REQUEST_ID";
       requestError.statusCode = 400;
       throw requestError;
     }
     const parsedUseCase =
-      useCase === undefined || useCase === null || useCase === "" || useCase === "null"
+      useCase === undefined ||
+      useCase === null ||
+      useCase === "" ||
+      useCase === "null"
         ? null
         : String(useCase).trim() || null;
 
@@ -342,10 +418,11 @@ class ChatController {
     }
 
     if (organizationId && summary.project_id) {
-      const scopedProjectRows = await projectsReadRepository.getProjectByIdWithOrgScope(
-        summary.project_id,
-        organizationId
-      );
+      const scopedProjectRows =
+        await projectsReadRepository.getProjectByIdWithOrgScope(
+          summary.project_id,
+          organizationId
+        );
       if (Array.isArray(scopedProjectRows) && scopedProjectRows.length > 0) {
         return internalNoteId;
       }
@@ -372,24 +449,33 @@ class ChatController {
     }
 
     if (organizationId) {
-      const scopedProjectRows = await projectsReadRepository.getProjectByIdWithOrgScope(
-        projectId,
-        organizationId
-      );
+      const scopedProjectRows =
+        await projectsReadRepository.getProjectByIdWithOrgScope(
+          projectId,
+          organizationId
+        );
       if (Array.isArray(scopedProjectRows) && scopedProjectRows.length > 0) {
         return;
       }
     }
 
-    const ownerProjectRows = await projectsReadRepository.getProjectById(projectId, userId);
+    const ownerProjectRows = await projectsReadRepository.getProjectById(
+      projectId,
+      userId
+    );
     if (Array.isArray(ownerProjectRows) && ownerProjectRows.length > 0) {
       return;
     }
 
-    const collaboratorRole = await projectsReadRepository.getProjectMemberRole(projectId, userId);
+    const collaboratorRole = await projectsReadRepository.getProjectMemberRole(
+      projectId,
+      userId
+    );
     if (
       collaboratorRole &&
-      PROJECT_WRITE_CAPABLE_ROLES.includes(String(collaboratorRole).toUpperCase())
+      PROJECT_WRITE_CAPABLE_ROLES.includes(
+        String(collaboratorRole).toUpperCase()
+      )
     ) {
       return;
     }
@@ -430,7 +516,9 @@ class ChatController {
     }
 
     return files.map((file) => ({
-      base64Data: Buffer.isBuffer(file.buffer) ? file.buffer.toString("base64") : "",
+      base64Data: Buffer.isBuffer(file.buffer)
+        ? file.buffer.toString("base64")
+        : "",
       mimeType: file.mimetype || "application/octet-stream",
       name: file.originalname || "file",
       sizeBytes: Number(file.size || 0),
@@ -451,7 +539,8 @@ class ChatController {
     return messages
       .map((message) => {
         const role = message?.role === "assistant" ? "assistant" : "user";
-        const rawContent = typeof message?.content === "string" ? message.content.trim() : "";
+        const rawContent =
+          typeof message?.content === "string" ? message.content.trim() : "";
         if (!rawContent) {
           return null;
         }
@@ -500,7 +589,9 @@ class ChatController {
     }
     const lines = trimmed.split(/\r?\n/);
     const firstLine =
-      lines.find((line) => typeof line === "string" && line.trim().length > 0)?.trim() || trimmed;
+      lines
+        .find((line) => typeof line === "string" && line.trim().length > 0)
+        ?.trim() || trimmed;
     const collapsed = firstLine.replace(/\s+/g, " ").trim();
     if (!collapsed) {
       return "";
@@ -529,10 +620,15 @@ class ChatController {
 
     await engineRpcRedis.lpush(requestQueueKey, JSON.stringify(job));
 
-    const queueResult = await engineRpcRedis.blpop(responseQueueKey, ENGINE_CHAT_TIMEOUT_SECONDS);
+    const queueResult = await engineRpcRedis.blpop(
+      responseQueueKey,
+      ENGINE_CHAT_TIMEOUT_SECONDS
+    );
     if (!queueResult) {
       await engineRpcRedis.del(responseQueueKey);
-      const timeoutError = new Error("Tempo limite ao aguardar resposta do Weave Engine");
+      const timeoutError = new Error(
+        "Tempo limite ao aguardar resposta do Weave Engine"
+      );
       timeoutError.code = "ENGINE_TIMEOUT";
       timeoutError.requestId = requestId;
       timeoutError.statusCode = 504;
@@ -546,14 +642,18 @@ class ChatController {
     try {
       parsedResponse = JSON.parse(rawResponsePayload);
     } catch {
-      const parseError = new Error("Resposta inválida recebida do Weave Engine");
+      const parseError = new Error(
+        "Resposta inválida recebida do Weave Engine"
+      );
       parseError.code = "ENGINE_INVALID_RESPONSE";
       parseError.statusCode = 502;
       throw parseError;
     }
 
     if (!parsedResponse?.success) {
-      const engineErrorPayload = this._extractEngineErrorPayload(parsedResponse?.error);
+      const engineErrorPayload = this._extractEngineErrorPayload(
+        parsedResponse?.error
+      );
       const engineError = new Error(engineErrorPayload.message);
       engineError.code = engineErrorPayload.code;
       engineError.statusCode = 502;
@@ -607,11 +707,7 @@ class ChatController {
     const mapped = fromUnknown(error, fallback.code);
     const isProduction = process.env.NODE_ENV === "production";
 
-    if (
-      isProduction ||
-      !mapped.isOperational ||
-      mapped.statusCode >= 500
-    ) {
+    if (isProduction || !mapped.isOperational || mapped.statusCode >= 500) {
       return {
         code: fallback.code,
         message: fallback.message,
@@ -647,9 +743,15 @@ class ChatController {
     const totalTokens = usage.totalTokens || usage.total_tokens || null;
 
     return {
-      inputTokens: Number.isFinite(Number(inputTokens)) ? Number(inputTokens) : null,
-      outputTokens: Number.isFinite(Number(outputTokens)) ? Number(outputTokens) : null,
-      totalTokens: Number.isFinite(Number(totalTokens)) ? Number(totalTokens) : null,
+      inputTokens: Number.isFinite(Number(inputTokens))
+        ? Number(inputTokens)
+        : null,
+      outputTokens: Number.isFinite(Number(outputTokens))
+        ? Number(outputTokens)
+        : null,
+      totalTokens: Number.isFinite(Number(totalTokens))
+        ? Number(totalTokens)
+        : null,
     };
   }
 
@@ -760,23 +862,26 @@ class ChatController {
         },
         usage: {
           periodEnd:
-            this._getNestedValue(usageDetails, "monthly_cycle.current_period_end") || null,
+            this._getNestedValue(
+              usageDetails,
+              "monthly_cycle.current_period_end"
+            ) || null,
           periodStart:
-            this._getNestedValue(usageDetails, "monthly_cycle.current_period_start") || null,
+            this._getNestedValue(
+              usageDetails,
+              "monthly_cycle.current_period_start"
+            ) || null,
           weaveAi: {
             aiEnabled,
-            monthlyMessagesLimit:
-              Number.isFinite(Number(monthlyMessagesLimit))
-                ? Number(monthlyMessagesLimit)
-                : null,
-            monthlyMessagesUsed:
-              Number.isFinite(Number(monthlyMessagesUsed))
-                ? Number(monthlyMessagesUsed)
-                : null,
-            monthlyTokensUsed:
-              Number.isFinite(Number(monthlyTokensUsed))
-                ? Number(monthlyTokensUsed)
-                : null,
+            monthlyMessagesLimit: Number.isFinite(Number(monthlyMessagesLimit))
+              ? Number(monthlyMessagesLimit)
+              : null,
+            monthlyMessagesUsed: Number.isFinite(Number(monthlyMessagesUsed))
+              ? Number(monthlyMessagesUsed)
+              : null,
+            monthlyTokensUsed: Number.isFinite(Number(monthlyTokensUsed))
+              ? Number(monthlyTokensUsed)
+              : null,
           },
         },
       };
@@ -798,9 +903,10 @@ class ChatController {
    */
   async _executeFunctionCall(userId, functionCall, organizationId = null) {
     const name = String(functionCall?.name || "");
-    const args = functionCall?.arguments && typeof functionCall.arguments === "object"
-      ? functionCall.arguments
-      : {};
+    const args =
+      functionCall?.arguments && typeof functionCall.arguments === "object"
+        ? functionCall.arguments
+        : {};
 
     switch (name) {
       case "create_note": {
@@ -832,9 +938,10 @@ class ChatController {
         if (args.projectId) {
           let resolvedStageId = args.stageId ? String(args.stageId) : null;
           if (!resolvedStageId) {
-            resolvedStageId = await projectsReadRepository.getFirstProjectStageId(
-              String(args.projectId)
-            );
+            resolvedStageId =
+              await projectsReadRepository.getFirstProjectStageId(
+                String(args.projectId)
+              );
             if (!resolvedStageId) {
               throw new Error(
                 "O projeto não possui estágios. Crie pelo menos um estágio antes de associar tarefas."
@@ -852,7 +959,9 @@ class ChatController {
         }
         if (args.dueDate) {
           try {
-            const normalizedDueDate = new Date(String(args.dueDate)).toISOString();
+            const normalizedDueDate = new Date(
+              String(args.dueDate)
+            ).toISOString();
             updateData.due_date = normalizedDueDate;
           } catch (e) {
             // ignorar data invalida
@@ -860,9 +969,12 @@ class ChatController {
         }
 
         const propertiesUpdate = {};
-        if (Array.isArray(args.urls) && args.urls.length > 0) propertiesUpdate.urls = args.urls;
-        if (Array.isArray(args.files) && args.files.length > 0) propertiesUpdate.files = args.files;
-        if (Array.isArray(args.relations) && args.relations.length > 0) propertiesUpdate.relations = args.relations;
+        if (Array.isArray(args.urls) && args.urls.length > 0)
+          propertiesUpdate.urls = args.urls;
+        if (Array.isArray(args.files) && args.files.length > 0)
+          propertiesUpdate.files = args.files;
+        if (Array.isArray(args.relations) && args.relations.length > 0)
+          propertiesUpdate.relations = args.relations;
 
         if (Object.keys(propertiesUpdate).length > 0) {
           updateData.properties = propertiesUpdate;
@@ -875,7 +987,10 @@ class ChatController {
         if (Array.isArray(args.blocks) && args.blocks.length > 0) {
           const tree = normalizeBlocksTree(args.blocks);
           await notesRepository.bulkInsertNoteBlocks(noteId, userId, tree);
-        } else if (typeof args.content === "string" && args.content.trim().length > 0) {
+        } else if (
+          typeof args.content === "string" &&
+          args.content.trim().length > 0
+        ) {
           await notesRepository.bulkInsertNoteBlocks(
             noteId,
             userId,
@@ -892,13 +1007,17 @@ class ChatController {
         }
         await enqueueNoteEmbeddingJob(noteId).catch(() => {});
 
-        if (Array.isArray(args.collaboratorIds) && args.collaboratorIds.length > 0) {
+        if (
+          Array.isArray(args.collaboratorIds) &&
+          args.collaboratorIds.length > 0
+        ) {
           for (const collabId of args.collaboratorIds) {
             if (collabId && typeof collabId === "string") {
-              const mayShare = await workspaceUserScopeRepository.usersMayInteract(
-                userId,
-                collabId
-              );
+              const mayShare =
+                await workspaceUserScopeRepository.usersMayInteract(
+                  userId,
+                  collabId
+                );
               if (!mayShare) {
                 const err = new Error(WORKSPACE_SHARE_DENIED.message);
                 err.statusCode = 403;
@@ -921,7 +1040,11 @@ class ChatController {
         const result = await notesRepository.updateNoteById(noteId, {
           title: args.title,
         });
-        return { name, result: { noteId, updated: Boolean(result) }, success: true };
+        return {
+          name,
+          result: { noteId, updated: Boolean(result) },
+          success: true,
+        };
       }
       case "update_note_content": {
         const rawNoteId = String(args.noteId || "");
@@ -937,7 +1060,10 @@ class ChatController {
         let tree;
         if (Array.isArray(args.blocks) && args.blocks.length > 0) {
           tree = normalizeBlocksTree(args.blocks);
-        } else if (typeof args.content === "string" && args.content.trim().length > 0) {
+        } else if (
+          typeof args.content === "string" &&
+          args.content.trim().length > 0
+        ) {
           tree = [
             {
               id: newBlockId(),
@@ -987,7 +1113,9 @@ class ChatController {
         }
         const projectId = String(note.project_id);
         const parsedStageId =
-          args.stageId === undefined || args.stageId === null || args.stageId === ""
+          args.stageId === undefined ||
+          args.stageId === null ||
+          args.stageId === ""
             ? null
             : String(args.stageId);
         if (!parsedStageId) {
@@ -1002,7 +1130,11 @@ class ChatController {
         const result = await notesRepository.updateNoteById(noteId, {
           project_stage_id: parsedStageId,
         });
-        return { name, result: { noteId, updated: Boolean(result) }, success: true };
+        return {
+          name,
+          result: { noteId, updated: Boolean(result) },
+          success: true,
+        };
       }
       case "update_note_priority": {
         const noteId = await this._assertNoteMutationAccess(
@@ -1013,7 +1145,11 @@ class ChatController {
         const result = await notesRepository.updateNoteById(noteId, {
           priority_id: args.priorityId || null,
         });
-        return { name, result: { noteId, updated: Boolean(result) }, success: true };
+        return {
+          name,
+          result: { noteId, updated: Boolean(result) },
+          success: true,
+        };
       }
       case "update_note_due_date": {
         const noteId = await this._assertNoteMutationAccess(
@@ -1021,11 +1157,17 @@ class ChatController {
           String(args.noteId || ""),
           organizationId
         );
-        const normalizedDueDate = args.dueDate ? new Date(String(args.dueDate)).toISOString() : null;
+        const normalizedDueDate = args.dueDate
+          ? new Date(String(args.dueDate)).toISOString()
+          : null;
         const result = await notesRepository.updateNoteById(noteId, {
           due_date: normalizedDueDate,
         });
-        return { name, result: { noteId, updated: Boolean(result) }, success: true };
+        return {
+          name,
+          result: { noteId, updated: Boolean(result) },
+          success: true,
+        };
       }
       case "update_note_tags": {
         const noteId = await this._assertNoteMutationAccess(
@@ -1037,7 +1179,11 @@ class ChatController {
         const result = await notesRepository.updateNoteById(noteId, {
           tags,
         });
-        return { name, result: { noteId, updated: Boolean(result) }, success: true };
+        return {
+          name,
+          result: { noteId, updated: Boolean(result) },
+          success: true,
+        };
       }
       case "update_note_collaborator_add": {
         const noteId = await this._assertNoteMutationAccess(
@@ -1047,7 +1193,9 @@ class ChatController {
         );
         const collabUid = String(args.collaboratorUserId || "");
         if (!collabUid) {
-          const error = new Error("update_note_collaborator_add requer collaboratorUserId");
+          const error = new Error(
+            "update_note_collaborator_add requer collaboratorUserId"
+          );
           error.statusCode = 400;
           throw error;
         }
@@ -1062,7 +1210,11 @@ class ChatController {
           throw err;
         }
         const result = await notesRepository.addCollaborator(noteId, collabUid);
-        return { name, result: { noteId, updated: Boolean(result) }, success: true };
+        return {
+          name,
+          result: { noteId, updated: Boolean(result) },
+          success: true,
+        };
       }
       case "update_note_collaborator_remove": {
         const noteId = await this._assertNoteMutationAccess(
@@ -1086,12 +1238,19 @@ class ChatController {
           String(args.projectId || ""),
           organizationId
         );
-        const result = await projectsUpdateRepository.updateProject(args.projectId, userId, {
-          title: args.title,
-        });
+        const result = await projectsUpdateRepository.updateProject(
+          args.projectId,
+          userId,
+          {
+            title: args.title,
+          }
+        );
         return {
           name,
-          result: { projectId: args.projectId, updated: Array.isArray(result) && result.length > 0 },
+          result: {
+            projectId: args.projectId,
+            updated: Array.isArray(result) && result.length > 0,
+          },
           success: true,
         };
       }
@@ -1101,10 +1260,20 @@ class ChatController {
           throw new Error("search_users requer searchTerm");
         }
         const searchUsersRepository = require("@/modules/users/repositories/search-users.repository");
-        const users = await searchUsersRepository.searchUsers(searchTerm, userId);
+        const users = await searchUsersRepository.searchUsers(
+          searchTerm,
+          userId
+        );
         return {
           name,
-          result: { users: users.map(u => ({ id: u.user_id, name: u.name, username: u.username, email: u.email })) },
+          result: {
+            users: users.map((u) => ({
+              id: u.user_id,
+              name: u.name,
+              username: u.username,
+              email: u.email,
+            })),
+          },
           success: true,
         };
       }
@@ -1113,11 +1282,11 @@ class ChatController {
         if (!searchTerm) {
           throw new Error("search_projects requer searchTerm");
         }
-        
-        const scope = organizationId 
-          ? { mode: "organization", organizationId } 
+
+        const scope = organizationId
+          ? { mode: "organization", organizationId }
           : { mode: "user", userId };
-          
+
         const { rows } = await projectsReadRepository.getAllProjectsFiltered(
           scope,
           { search: searchTerm },
@@ -1126,10 +1295,17 @@ class ChatController {
           { collaborators: false, notes: false, subprojects: false },
           userId
         );
-        
+
         return {
           name,
-          result: { projects: rows.map(p => ({ id: p.id, public_id: p.public_project_id, title: p.title, status: p.status })) },
+          result: {
+            projects: rows.map((p) => ({
+              id: p.id,
+              public_id: p.public_project_id,
+              title: p.title,
+              status: p.status,
+            })),
+          },
           success: true,
         };
       }
@@ -1149,15 +1325,31 @@ class ChatController {
    * @param {Array<{name: string, arguments?: Record<string, unknown>}>} functionCalls
    * @returns {Promise<Array<object>>}
    */
-  async _executeFunctionCalls(userId, functionCalls = [], organizationId = null) {
+  async _executeFunctionCalls(
+    userId,
+    functionCalls = [],
+    organizationId = null
+  ) {
     const results = [];
     for (const functionCall of functionCalls) {
-      const execution = await this._executeFunctionCall(
-        userId,
-        functionCall,
-        organizationId
-      );
-      results.push(execution);
+      try {
+        const execution = await this._executeFunctionCall(
+          userId,
+          functionCall,
+          organizationId
+        );
+        results.push(execution);
+      } catch (error) {
+        console.warn(
+          `[weave-ai/chat] Tool execution failed for ${functionCall?.name}:`,
+          error?.message
+        );
+        results.push({
+          name: functionCall?.name || "unknown",
+          success: false,
+          error: error?.message || String(error),
+        });
+      }
     }
     return results;
   }
@@ -1180,11 +1372,18 @@ class ChatController {
       let authorizedFunctions = [];
       let capabilityRules = {};
       let resourceAccess = {};
-      const planUsageContext = await this._buildPlanUsageContext(userId, organizationId);
+      const planUsageContext = await this._buildPlanUsageContext(
+        userId,
+        organizationId
+      );
 
-      const usageRecord = await PlanUsageManager.managePlanUsage(userId, organizationId).catch(() => null);
+      const usageRecord = await PlanUsageManager.managePlanUsage(
+        userId,
+        organizationId
+      ).catch(() => null);
       if (usageRecord && planUsageContext) {
-        const effectivePlan = await PlansRepository.getEffectivePlanByUserId(userId);
+        const effectivePlan =
+          await PlansRepository.getEffectivePlanByUserId(userId);
         const planDetails = effectivePlan?.plan_details;
         if (planDetails) {
           const allowed = PlanUsageManager.checkLimit(
@@ -1197,7 +1396,8 @@ class ChatController {
             return sendPlanLimitExceeded(res, {
               resource: "weave_ai",
               limit_key: "weave_ai.config.monthly_messages",
-              message: "Monthly AI message limit reached for your current plan.",
+              message:
+                "Monthly AI message limit reached for your current plan.",
             });
           }
         }
@@ -1240,19 +1440,23 @@ class ChatController {
         sessionId = session.id;
       }
 
-      const rawConversationHistory = await chatRepository.getSessionMessagesForContext(
-        sessionId,
-        userId,
-        CHAT_CONTEXT_MAX_MESSAGES
+      const rawConversationHistory =
+        await chatRepository.getSessionMessagesForContext(
+          sessionId,
+          userId,
+          CHAT_CONTEXT_MAX_MESSAGES
+        );
+      const conversationHistory = this._normalizeConversationHistory(
+        rawConversationHistory
       );
-      const conversationHistory = this._normalizeConversationHistory(rawConversationHistory);
 
       const filesMetadata = this._buildFilesMetadata(req.files);
-      const existingMessagesForRequest = await chatRepository.getMessagesByRequestId(
-        sessionId,
-        userId,
-        requestId
-      );
+      const existingMessagesForRequest =
+        await chatRepository.getMessagesByRequestId(
+          sessionId,
+          userId,
+          requestId
+        );
       const existingAssistantMessage = existingMessagesForRequest.find(
         (message) => message.role === "assistant"
       );
@@ -1300,9 +1504,15 @@ class ChatController {
       }
 
       if (conversationHistory.length === 0) {
-        const derivedTitle = this._deriveSessionTitleFromMessage(payload.message);
+        const derivedTitle = this._deriveSessionTitleFromMessage(
+          payload.message
+        );
         if (derivedTitle) {
-          await chatRepository.updateSessionTitle(sessionId, userId, derivedTitle);
+          await chatRepository.updateSessionTitle(
+            sessionId,
+            userId,
+            derivedTitle
+          );
         }
       }
 
@@ -1327,105 +1537,185 @@ class ChatController {
         authorizedFunctions = Array.isArray(authorization?.functions)
           ? authorization.functions
           : [];
-        
+
         authorizedFunctions.push({
           name: "ask_user_input",
-          description: "Ask the user for confirmation or clarification before proceeding with an action.",
+          description:
+            "Ask the user for confirmation or clarification before proceeding with an action.",
           parameters: {
             type: "object",
             properties: {
               question: {
                 type: "string",
-                description: "The clear and friendly question or confirmation message to present to the user."
+                description:
+                  "The clear and friendly question or confirmation message to present to the user.",
               },
               options: {
                 type: "array",
                 items: {
-                  type: "string"
+                  type: "string",
                 },
-                description: "An array of possible answers/choices the user can select (e.g. ['Yes, delete it', 'No, cancel'])."
-              }
+                description:
+                  "An array of possible answers/choices the user can select (e.g. ['Yes, delete it', 'No, cancel']).",
+              },
             },
-            required: ["question"]
-          }
+            required: ["question"],
+          },
         });
-        
+
         capabilityRules = authorization?.capabilityRules || {};
         resourceAccess = authorization?.access || {};
       } catch {
         authorizedFunctions = [];
       }
 
-      const engineResponse = await this._requestEngineChat({
-        agent: selectedAgent,
-        allowEdit: payload.allowEdit,
-        allowWebSearch: payload.allowWebSearch,
-        context: {
-          capabilityRules,
-          clientContext: payload.context,
-          noteBlocksContract: this._buildNoteBlocksContract(),
-          noteDocumentContract: this._buildNoteBlocksContract(),
-          organizationId,
-          resourceAccess,
-          useCase: payload.useCase,
-          userLanguage,
-        },
-        files: this._buildEngineFilesPayload(req.files),
-        functions: authorizedFunctions,
-        message: payload.message,
-        model: this._resolveModelForEngine(payload.model),
-        noteIds: resolvedNoteIds,
-        organizationId,
-        projectIds: resolvedProjectIds,
-        conversationHistory,
-        sessionId,
-        user_id: userId,
-        userId,
-        ...(organizationId ? { org_id: organizationId } : {}),
-        userLanguage,
-      }, requestId);
-      const enginePayload = engineResponse?.data || {};
+      let currentLoop = 0;
+      const MAX_LOOPS = 5;
 
-      const assistantText =
-        enginePayload?.data?.response ||
-        enginePayload?.data?.text ||
-        enginePayload?.data?.content ||
-        "";
-      const responseFunctions = Array.isArray(enginePayload?.functions)
-        ? enginePayload.functions
-        : [];
-        
-      const askUserInputCall = responseFunctions.find((f) => f.name === "ask_user_input");
+      let finalAssistantText = "";
+      let responseFunctions = [];
       let functionExecution = [];
       let messageStatus = "ok";
-      
-      if (askUserInputCall) {
-        messageStatus = "requires_input";
-      } else if (responseFunctions.length > 0) {
-        messageStatus = "function_call";
-        functionExecution = await this._executeFunctionCalls(userId, responseFunctions, organizationId);
-      }
-      
-      const fallbackText =
-        askUserInputCall
-          ? askUserInputCall.arguments?.question || "Awaiting your input..."
-          : functionExecution.length > 0
-            ? "Solicitacao executada com sucesso."
-            : responseFunctions.length > 0
-              ? "Solicitacao entendida. Recebi uma chamada de funcao, mas nao houve alteracoes executadas."
-            : "Solicitacao recebida, mas o modelo nao retornou conteudo textual.";
-      const finalAssistantText = assistantText || fallbackText;
-      const providerUsed = enginePayload?.providerUsed || null;
-      const tokenUsage = this._extractTokenUsage(enginePayload);
-      
-      const messageMetadata = {
-        citations: enginePayload?.data?.citations || [],
-        functionExecution,
-        functions: responseFunctions,
-        providerUsed,
+      let providerUsed = null;
+      let tokenUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
+      let messageMetadata = {
+        citations: [],
+        functionExecution: [],
+        functions: [],
+        providerUsed: null,
         requestId,
       };
-      
+      let askUserInputCall = null;
+
+      let currentMessage = payload.message;
+      let currentConversationHistory = [...conversationHistory];
+      let totalLatencyMs = 0;
+
+      while (currentLoop < MAX_LOOPS) {
+        const engineResponse = await this._requestEngineChat(
+          {
+            agent: selectedAgent,
+            allowEdit: payload.allowEdit,
+            allowWebSearch: payload.allowWebSearch,
+            context: {
+              capabilityRules,
+              clientContext: payload.context,
+              noteBlocksContract: this._buildNoteBlocksContract(),
+              noteDocumentContract: this._buildNoteBlocksContract(),
+              organizationId,
+              resourceAccess,
+              useCase: payload.useCase,
+              userLanguage,
+            },
+            files:
+              currentLoop === 0 ? this._buildEngineFilesPayload(req.files) : [],
+            functions: authorizedFunctions,
+            message: currentMessage,
+            model: this._resolveModelForEngine(payload.model),
+            noteIds: resolvedNoteIds,
+            organizationId,
+            projectIds: resolvedProjectIds,
+            conversationHistory: currentConversationHistory,
+            sessionId,
+            user_id: userId,
+            userId,
+            ...(organizationId ? { org_id: organizationId } : {}),
+            userLanguage,
+          },
+          requestId
+        );
+
+        totalLatencyMs += engineResponse?.latencyMs || 0;
+        const enginePayload = engineResponse?.data || {};
+
+        const assistantText =
+          enginePayload?.data?.response ||
+          enginePayload?.data?.text ||
+          enginePayload?.data?.content ||
+          "";
+        const currentFunctions = Array.isArray(enginePayload?.functions)
+          ? enginePayload.functions
+          : [];
+
+        providerUsed = enginePayload?.providerUsed || providerUsed;
+        const currentTokenUsage = this._extractTokenUsage(enginePayload);
+        tokenUsage.inputTokens =
+          (tokenUsage.inputTokens || 0) + (currentTokenUsage.inputTokens || 0);
+        tokenUsage.outputTokens =
+          (tokenUsage.outputTokens || 0) +
+          (currentTokenUsage.outputTokens || 0);
+        tokenUsage.totalTokens =
+          (tokenUsage.totalTokens || 0) + (currentTokenUsage.totalTokens || 0);
+
+        if (Array.isArray(enginePayload?.data?.citations)) {
+          messageMetadata.citations = [
+            ...messageMetadata.citations,
+            ...enginePayload.data.citations,
+          ];
+        }
+
+        askUserInputCall = currentFunctions.find(
+          (f) => f.name === "ask_user_input"
+        );
+
+        if (askUserInputCall) {
+          messageStatus = "requires_input";
+          responseFunctions = [...responseFunctions, ...currentFunctions];
+          finalAssistantText =
+            assistantText ||
+            askUserInputCall.arguments?.question ||
+            getI18n(userLanguage).awaitingInput;
+          break;
+        } else if (currentFunctions.length > 0) {
+          messageStatus = "function_call";
+          const currentExecutions = await this._executeFunctionCalls(
+            userId,
+            currentFunctions,
+            organizationId
+          );
+          functionExecution = [...functionExecution, ...currentExecutions];
+          responseFunctions = [...responseFunctions, ...currentFunctions];
+
+          if (assistantText) {
+            finalAssistantText +=
+              (finalAssistantText ? "\n\n" : "") + assistantText;
+          }
+
+          currentConversationHistory.push({
+            role: "user",
+            content: currentMessage,
+          });
+          currentConversationHistory.push({
+            role: "assistant",
+            content: assistantText || getI18n(userLanguage).callingFunctions,
+          });
+
+          currentMessage = getI18n(userLanguage).functionResults(
+            JSON.stringify(currentExecutions, null, 2)
+          );
+          currentLoop++;
+        } else {
+          if (assistantText) {
+            finalAssistantText +=
+              (finalAssistantText ? "\n\n" : "") + assistantText;
+          } else {
+            if (!finalAssistantText) {
+              finalAssistantText =
+                functionExecution.length > 0
+                  ? getI18n(userLanguage).successFallback
+                  : responseFunctions.length > 0
+                    ? getI18n(userLanguage).functionUnderstoodFallback
+                    : getI18n(userLanguage).noContentFallback;
+            }
+          }
+          break;
+        }
+      }
+
+      messageMetadata.functionExecution = functionExecution;
+      messageMetadata.functions = responseFunctions;
+      messageMetadata.providerUsed = providerUsed;
+
       if (askUserInputCall) {
         messageMetadata.requires_input = askUserInputCall.arguments || {};
         messageMetadata.status = "requires_input";
@@ -1440,7 +1730,7 @@ class ChatController {
         requestId,
         provider: providerUsed,
         status: messageStatus,
-        latencyMs: engineResponse?.latencyMs || null,
+        latencyMs: totalLatencyMs || null,
         inputTokens: tokenUsage.inputTokens,
         outputTokens: tokenUsage.outputTokens,
         totalTokens: tokenUsage.totalTokens,
@@ -1450,11 +1740,17 @@ class ChatController {
       });
 
       if (usageRecord?.id) {
-        PlanUsageManager.consumeAiMessage(usageRecord.id, tokenUsage.totalTokens || 0).catch((err) => {
-          console.error("[weave-ai/chat] failed to enqueue AI usage consumption", {
-            usageId: usageRecord.id,
-            error: err?.message || String(err),
-          });
+        PlanUsageManager.consumeAiMessage(
+          usageRecord.id,
+          tokenUsage.totalTokens || 0
+        ).catch((err) => {
+          console.error(
+            "[weave-ai/chat] failed to enqueue AI usage consumption",
+            {
+              usageId: usageRecord.id,
+              error: err?.message || String(err),
+            }
+          );
         });
       }
 
@@ -1464,7 +1760,7 @@ class ChatController {
         response: {
           role: "assistant",
           content: finalAssistantText,
-          citations: enginePayload?.data?.citations || [],
+          citations: messageMetadata.citations,
           functionExecution,
           functions: responseFunctions,
           model: payload.model,
@@ -1521,12 +1817,17 @@ class ChatController {
       const userId = this._validateAuthentication(req);
       const { sessionId } = req.query;
       const parsedLimit = Number.parseInt(String(req.query.limit || "10"), 10);
-      const limit = Number.isNaN(parsedLimit) || parsedLimit <= 0 ? 10 : parsedLimit;
+      const limit =
+        Number.isNaN(parsedLimit) || parsedLimit <= 0 ? 10 : parsedLimit;
       const parsedOffset = Number.parseInt(String(req.query.offset || "0"), 10);
-      const offset = Number.isNaN(parsedOffset) || parsedOffset < 0 ? 0 : parsedOffset;
+      const offset =
+        Number.isNaN(parsedOffset) || parsedOffset < 0 ? 0 : parsedOffset;
 
       if (sessionId) {
-        const messages = await chatRepository.getSessionMessages(String(sessionId), userId);
+        const messages = await chatRepository.getSessionMessages(
+          String(sessionId),
+          userId
+        );
         return res.json({
           success: true,
           sessionId: String(sessionId),
@@ -1534,7 +1835,11 @@ class ChatController {
         });
       }
 
-      const sessions = await chatRepository.getUserSessions(userId, limit, offset);
+      const sessions = await chatRepository.getUserSessions(
+        userId,
+        limit,
+        offset
+      );
       return res.json({
         success: true,
         sessions,

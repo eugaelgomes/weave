@@ -28,8 +28,7 @@ module.exports = {
   "welcome.cta": "Ativar conta",
   "welcome.info": "Este link expira em 7 dias.",
   "welcome.outro1": "Se você não se cadastrou, ignore este e-mail.",
-  "welcome.footer":
-    "Você recebeu este e-mail porque criou uma conta no Weave.",
+  "welcome.footer": "Você recebeu este e-mail porque criou uma conta no Weave.",
   "welcome.subject": "Bem-vindo ao Weave — Ative sua conta",
 
   "rescue.preheader": "Solicitação de redefinição de senha.",
@@ -122,7 +121,8 @@ module.exports = {
     "Agora você pode visualizar e colaborar no projeto normalmente.",
   "project.footer":
     "Você recebeu este e-mail porque foi adicionado a um projeto no Weave.",
-  "project.subject": "{firstName}, você foi adicionado ao projeto \"{projectName}\"",
+  "project.subject":
+    '{firstName}, você foi adicionado ao projeto "{projectName}"',
   "project.untitled": "Sem título",
 
   "collab.preheader": "Você foi adicionado(a) como colaborador de uma nota.",
@@ -151,8 +151,7 @@ module.exports = {
   "dueReminder.preheader": "Lembrete de prazo da sua nota.",
   "dueReminder.title": "Lembrete de prazo",
   "dueReminder.subtitle": "Vencimento da nota",
-  "dueReminder.intro":
-    'A nota "{noteTitle}" vence amanhã ({dueDateLabel}).',
+  "dueReminder.intro": 'A nota "{noteTitle}" vence amanhã ({dueDateLabel}).',
   "dueReminder.cta": "Abrir nota",
   "dueReminder.info": "Recomendamos revisar a nota hoje para evitar atrasos.",
   "dueReminder.subject": "Lembrete: prazo amanhã — {noteTitle}",

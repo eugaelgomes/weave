@@ -12,13 +12,17 @@ class ProjectsDeleteController extends ProjectsCoreController {
       if (!userId) return;
 
       const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+        await organizationsRepository.getActiveOrganizationWithMembership(
+          userId
+        );
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       // Ensure project exists and user has access (middleware should already enforce permission).
       const project = await this._validateProjectAccess(id, userId);
 
-      const usageRecord = await PlanUsageManager.managePlanUsage(project.user_id);
+      const usageRecord = await PlanUsageManager.managePlanUsage(
+        project.user_id
+      );
 
       const result =
         orgWide && membership?.id

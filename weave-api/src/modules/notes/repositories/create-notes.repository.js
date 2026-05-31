@@ -1,7 +1,9 @@
 const BaseRepository = require("./base.repository");
 const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
 const { generatePublicId } = require("@/utils/generate-public-id");
-const { enqueueNoteEmbeddingJob } = require("../../../services/queue/queue-controller");
+const {
+  enqueueNoteEmbeddingJob,
+} = require("../../../services/queue/queue-controller");
 
 const DEFAULT_NOTE_PROPERTIES = {
   icon: { path: "", name: "", type: "" },
@@ -56,7 +58,10 @@ class CreateNotesRepository extends BaseRepository {
 
     if (createdNote) {
       await enqueueNoteEmbeddingJob(createdNote.id).catch((err) => {
-        console.error("[CreateNotesRepository] Failed to enqueue embedding job", err);
+        console.error(
+          "[CreateNotesRepository] Failed to enqueue embedding job",
+          err
+        );
       });
     }
 
@@ -120,12 +125,20 @@ class CreateNotesRepository extends BaseRepository {
     ]);
     const createdNote = results[0];
 
-    console.log("[CreateNotesRepository] Note created", { noteId: createdNote?.note_id });
+    console.log("[CreateNotesRepository] Note created", {
+      noteId: createdNote?.note_id,
+    });
 
     if (createdNote) {
-      console.log("[CreateNotesRepository] Enqueueing embedding job for", createdNote.note_id);
-      await enqueueNoteEmbeddingJob(createdNote.note_id).catch(err => {
-        console.error("[CreateNotesRepository] Failed to enqueue embedding job", err);
+      console.log(
+        "[CreateNotesRepository] Enqueueing embedding job for",
+        createdNote.note_id
+      );
+      await enqueueNoteEmbeddingJob(createdNote.note_id).catch((err) => {
+        console.error(
+          "[CreateNotesRepository] Failed to enqueue embedding job",
+          err
+        );
       });
     }
 

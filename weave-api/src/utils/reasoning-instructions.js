@@ -21,16 +21,24 @@ function normalizeReasoningInstructions(raw) {
     const slice = /** @type {Record<string, unknown>} */ (value);
     return {
       systemAppend:
-        typeof slice.systemAppend === "string" ? slice.systemAppend.trim().slice(0, 8000) : "",
+        typeof slice.systemAppend === "string"
+          ? slice.systemAppend.trim().slice(0, 8000)
+          : "",
       promptAppend:
-        typeof slice.promptAppend === "string" ? slice.promptAppend.trim().slice(0, 8000) : "",
+        typeof slice.promptAppend === "string"
+          ? slice.promptAppend.trim().slice(0, 8000)
+          : "",
     };
   };
 
   const global = normalizeSlice(input.global);
   const byType = {};
 
-  if (input.byType && typeof input.byType === "object" && !Array.isArray(input.byType)) {
+  if (
+    input.byType &&
+    typeof input.byType === "object" &&
+    !Array.isArray(input.byType)
+  ) {
     for (const [key, value] of Object.entries(input.byType)) {
       const typeKey = String(key).trim().toLowerCase();
       if (!typeKey) continue;
@@ -42,7 +50,8 @@ function normalizeReasoningInstructions(raw) {
     global.systemAppend.length +
     global.promptAppend.length +
     Object.values(byType).reduce(
-      (sum, slice) => sum + slice.systemAppend.length + slice.promptAppend.length,
+      (sum, slice) =>
+        sum + slice.systemAppend.length + slice.promptAppend.length,
       0
     );
 
@@ -77,8 +86,13 @@ function appendInstructionBlock(base, append) {
  */
 function resolveInstructionAppends(instructions, reportType) {
   const normalized = normalizeReasoningInstructions(instructions);
-  const typeKey = String(reportType || "").trim().toLowerCase();
-  const typeSlice = normalized.byType[typeKey] || { systemAppend: "", promptAppend: "" };
+  const typeKey = String(reportType || "")
+    .trim()
+    .toLowerCase();
+  const typeSlice = normalized.byType[typeKey] || {
+    systemAppend: "",
+    promptAppend: "",
+  };
 
   return {
     systemAppend: [normalized.global.systemAppend, typeSlice.systemAppend]

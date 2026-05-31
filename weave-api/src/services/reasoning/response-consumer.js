@@ -15,7 +15,9 @@ class ReasoningResponseConsumer {
     if (this.isRunning) return;
     this.isRunning = true;
 
-    console.log(`[Reasoning Consumer] Listening for engine responses on: ${this.responseQueueKey}`);
+    console.log(
+      `[Reasoning Consumer] Listening for engine responses on: ${this.responseQueueKey}`
+    );
 
     while (this.isRunning) {
       try {
@@ -37,14 +39,19 @@ class ReasoningResponseConsumer {
     const { success, reasoning, content, safety } = payload;
 
     if (!success || !reasoning) {
-      console.warn("[Reasoning Consumer] Received unsuccessful response or missing reasoning", {
-        success,
-        projectId: reasoning?.projectId,
-      });
+      console.warn(
+        "[Reasoning Consumer] Received unsuccessful response or missing reasoning",
+        {
+          success,
+          projectId: reasoning?.projectId,
+        }
+      );
       return;
     }
 
-    console.log(`[Reasoning Consumer] Persisting reasoning for project: ${reasoning.projectId}`);
+    console.log(
+      `[Reasoning Consumer] Persisting reasoning for project: ${reasoning.projectId}`
+    );
 
     try {
       const created = await reasoningsRepository.create({
@@ -77,7 +84,9 @@ class ReasoningResponseConsumer {
         },
       });
 
-      console.log(`[Reasoning Consumer] Reasoning persisted with ID: ${created.id}`);
+      console.log(
+        `[Reasoning Consumer] Reasoning persisted with ID: ${created.id}`
+      );
 
       const channels = reasoning.channels || [];
       if (channels.includes("email") && created) {
@@ -107,7 +116,9 @@ class ReasoningResponseConsumer {
     };
 
     await redis.rpush(queueKey, JSON.stringify(emailJob));
-    console.log(`[Reasoning Consumer] AI report delivery job dispatched for reasoning: ${reasoning.id}`);
+    console.log(
+      `[Reasoning Consumer] AI report delivery job dispatched for reasoning: ${reasoning.id}`
+    );
   }
 
   stop() {

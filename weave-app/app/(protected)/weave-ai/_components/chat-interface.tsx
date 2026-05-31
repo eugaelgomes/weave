@@ -76,10 +76,10 @@ const AgentIcon = ({ agent, className }: { agent?: Agent | null; className?: str
 function formatModelLabel(model: AIModel) {
   const version = model.version || "";
   if (!version) return model.description || model.name;
-  
+
   return version
     .split("-")
-    .map(word => {
+    .map((word) => {
       const lower = word.toLowerCase();
       if (lower === "gpt") return "GPT";
       if (lower === "pro") return "PRO";
@@ -132,23 +132,40 @@ function formatMessageDateTime(dateValue?: string | number): string {
   });
 }
 
-function RenderContextIcon({ icon, fallback: Fallback, color }: { icon: any; fallback: React.ComponentType<any>; color?: string | null }) {
+function RenderContextIcon({
+  icon,
+  fallback: Fallback,
+  color,
+}: {
+  icon: any;
+  fallback: React.ComponentType<any>;
+  color?: string | null;
+}) {
   const resolved = React.useMemo(() => resolveProjectIcon(icon), [icon]);
-  
+
   if (resolved?.kind === "emoji") {
-    return <span className="text-[10px] mr-0.5 leading-none shrink-0" aria-hidden>{resolved.value}</span>;
+    return (
+      <span className="mr-0.5 shrink-0 text-[10px] leading-none" aria-hidden>
+        {resolved.value}
+      </span>
+    );
   }
-  
+
   if (resolved?.kind === "image") {
     return (
-      <span className="relative h-3 w-3 shrink-0 overflow-hidden rounded-sm border border-neutral-200/80 mr-0.5" aria-hidden>
+      <span
+        className="relative mr-0.5 h-3 w-3 shrink-0 overflow-hidden rounded-sm border border-neutral-200/80"
+        aria-hidden
+      >
         <img src={resolved.url} alt="" className="h-full w-full object-cover" />
       </span>
     );
   }
-  
+
   const accent = color && /^#[0-9A-Fa-f]{3,8}$/i.test(color) ? color : undefined;
-  return <Fallback className="h-2.5 w-2.5 shrink-0" style={accent ? { color: accent } : undefined} />;
+  return (
+    <Fallback className="h-2.5 w-2.5 shrink-0" style={accent ? { color: accent } : undefined} />
+  );
 }
 
 export type ChatInterfaceVariant = "fullPage" | "widget";
@@ -522,11 +539,18 @@ export default function ChatInterface({
               : Array.isArray(msg?.metadata?.citations)
                 ? msg.metadata.citations
                 : [];
-            
+
             const attachedFiles = Array.isArray(msg?.metadata?.files) ? msg.metadata.files : [];
-            const attachedNoteIds = Array.isArray(msg?.metadata?.noteIds) ? msg.metadata.noteIds : [];
-            const attachedProjectIds = Array.isArray(msg?.metadata?.projectIds) ? msg.metadata.projectIds : [];
-            const hasAttachments = attachedFiles.length > 0 || attachedNoteIds.length > 0 || attachedProjectIds.length > 0;
+            const attachedNoteIds = Array.isArray(msg?.metadata?.noteIds)
+              ? msg.metadata.noteIds
+              : [];
+            const attachedProjectIds = Array.isArray(msg?.metadata?.projectIds)
+              ? msg.metadata.projectIds
+              : [];
+            const hasAttachments =
+              attachedFiles.length > 0 ||
+              attachedNoteIds.length > 0 ||
+              attachedProjectIds.length > 0;
 
             return (
               <div
@@ -557,35 +581,24 @@ export default function ChatInterface({
                     )}
 
                     {!isUser &&
-                      Array.isArray(msg.functionExecution) &&
-                      msg.functionExecution.length > 0 && (
-                        <div className="border-brand-orange/50 bg-brand-beige text-brand-navy dark:border-brand-orange/40 dark:bg-brand-navy/20 dark:text-brand-beige mt-2 rounded border p-1.5 text-[10px]">
-                          <p className="mb-1 font-semibold tracking-wide">
-                            {t.weaveAi.actionsExecuted}
-                          </p>
-                          {msg.functionExecution.map((execution: any, index: number) => (
-                            <p key={`${execution.name}-${index}`}>
-                              {execution.name} - {execution.success ? "ok" : "erro"}
-                            </p>
-                          ))}
+                      msg?.metadata?.status === "requires_input" &&
+                      msg?.metadata?.requires_input?.options && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {(msg.metadata.requires_input.options || []).map(
+                            (option: string, idx: number) => (
+                              <button
+                                key={`option-${idx}`}
+                                onClick={() => {
+                                  handleSendText(option);
+                                }}
+                                className="bg-brand-yellow hover:bg-brand-yellow/80 text-brand-navy inline-flex items-center justify-center rounded-full border border-transparent px-3 py-1.5 text-xs font-semibold shadow-sm transition-colors dark:border-yellow-600/30"
+                              >
+                                {option}
+                              </button>
+                            )
+                          )}
                         </div>
                       )}
-
-                    {!isUser && msg?.metadata?.status === "requires_input" && msg?.metadata?.requires_input?.options && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {(msg.metadata.requires_input.options || []).map((option: string, idx: number) => (
-                          <button
-                            key={`option-${idx}`}
-                            onClick={() => {
-                              handleSendText(option);
-                            }}
-                            className="bg-brand-yellow hover:bg-brand-yellow/80 text-brand-navy inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm transition-colors border border-transparent dark:border-yellow-600/30"
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </div>
-                    )}
 
                     {!isUser && citations.length > 0 && (
                       <div className="border-brand-navy/30 bg-brand-beige text-brand-navy dark:border-brand-beige/20 dark:bg-brand-navy/30 dark:text-brand-beige mt-2 rounded border p-1.5 text-[10px]">
@@ -723,38 +736,67 @@ export default function ChatInterface({
                   </div>
 
                   {isUser && hasAttachments && (
-                    <div className="mt-1 flex flex-wrap gap-1 justify-end">
+                    <div className="mt-1 flex flex-wrap justify-end gap-1">
                       {attachedFiles.map((f: any, idx: number) => (
-                        <div key={`file-${idx}`} className="flex items-center gap-1 rounded bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+                        <div
+                          key={`file-${idx}`}
+                          className="flex items-center gap-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                        >
                           <Paperclip className="h-2.5 w-2.5" />
-                          <span className="truncate max-w-[150px]">{f.originalName || f.name || "Arquivo"}</span>
+                          <span className="max-w-[150px] truncate">
+                            {f.originalName || f.name || "Arquivo"}
+                          </span>
                         </div>
                       ))}
                       {attachedNoteIds.map((noteId: string, idx: number) => {
-                         const note = Array.isArray(notesOverview) ? notesOverview.find((n: any) => n.id === noteId) : null;
-                         const href = `/notes/${(note as any)?.public_id || noteId}`;
-                         const noteIcon = (note as any)?.icon || (note as any)?.properties?.icon;
-                         return (
-                          <Link href={href} key={`note-${idx}`} className="flex items-center gap-1 rounded bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
-                            <RenderContextIcon icon={noteIcon} fallback={FileText} color={note?.priority_color} />
-                            <span className="truncate max-w-[150px] hover:underline underline-offset-2">{note?.title || "Nota"}</span>
+                        const note = Array.isArray(notesOverview)
+                          ? notesOverview.find((n: any) => n.id === noteId)
+                          : null;
+                        const href = `/notes/${(note as any)?.public_id || noteId}`;
+                        const noteIcon = (note as any)?.icon || (note as any)?.properties?.icon;
+                        return (
+                          <Link
+                            href={href}
+                            key={`note-${idx}`}
+                            className="flex items-center gap-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 transition-colors hover:bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          >
+                            <RenderContextIcon
+                              icon={noteIcon}
+                              fallback={FileText}
+                              color={note?.priority_color}
+                            />
+                            <span className="max-w-[150px] truncate underline-offset-2 hover:underline">
+                              {note?.title || "Nota"}
+                            </span>
                           </Link>
-                         );
+                        );
                       })}
                       {attachedProjectIds.map((projectId: string, idx: number) => {
-                         const project = Array.isArray(projectsOverview) ? projectsOverview.find((p: any) => p.id === projectId) : null;
-                         const href = `/projects/${(project as any)?.public_id || projectId}`;
-                         const projectIcon = (project as any)?.icon || (project as any)?.properties?.icon;
-                         return (
-                          <Link href={href} key={`proj-${idx}`} className="flex items-center gap-1 rounded bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
-                            <RenderContextIcon icon={projectIcon} fallback={FolderKanban} color={project?.color} />
-                            <span className="truncate max-w-[150px] hover:underline underline-offset-2">{project?.title || "Projeto"}</span>
+                        const project = Array.isArray(projectsOverview)
+                          ? projectsOverview.find((p: any) => p.id === projectId)
+                          : null;
+                        const href = `/projects/${(project as any)?.public_id || projectId}`;
+                        const projectIcon =
+                          (project as any)?.icon || (project as any)?.properties?.icon;
+                        return (
+                          <Link
+                            href={href}
+                            key={`proj-${idx}`}
+                            className="flex items-center gap-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 transition-colors hover:bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          >
+                            <RenderContextIcon
+                              icon={projectIcon}
+                              fallback={FolderKanban}
+                              color={project?.color}
+                            />
+                            <span className="max-w-[150px] truncate underline-offset-2 hover:underline">
+                              {project?.title || "Projeto"}
+                            </span>
                           </Link>
-                         );
+                        );
                       })}
                     </div>
                   )}
-
                 </div>
               </div>
             );
@@ -825,8 +867,8 @@ export default function ChatInterface({
         )}
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-[#1d1d1b] dark:via-[#1d1d1b]/95 dark:to-transparent pt-10 pb-4 px-4 pointer-events-none">
-        <div className="mx-auto flex max-w-4xl flex-col gap-2 pointer-events-auto">
+      <div className="pointer-events-none absolute right-0 bottom-0 left-0 z-10 bg-gradient-to-t from-white via-white/95 to-transparent px-4 pt-10 pb-4 dark:from-[#1d1d1b] dark:via-[#1d1d1b]/95 dark:to-transparent">
+        <div className="pointer-events-auto mx-auto flex max-w-4xl flex-col gap-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap gap-1">
               {selectedFiles.map((file) => (
@@ -1002,7 +1044,11 @@ export default function ChatInterface({
                       className="h-3.5 w-3.5 flex-shrink-0 object-contain"
                     />
                     <span className="max-w-[120px] truncate text-[10px] font-semibold text-neutral-500">
-                      {loading ? t.common.loading : (selectedModel ? formatModelLabel(selectedModel) : "")}
+                      {loading
+                        ? t.common.loading
+                        : selectedModel
+                          ? formatModelLabel(selectedModel)
+                          : ""}
                     </span>
                     <ChevronDown className="h-2.5 w-2.5 flex-shrink-0 text-neutral-400" />
                   </button>

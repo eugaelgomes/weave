@@ -141,13 +141,16 @@ function attachParsedProjectsList(req) {
       }),
       visibility: parseCsvEnum(q.visibility, VISIBILITIES, { maxItems: 10 }),
       ownership,
-      owner_user_id: q.owner_user_id && isUuid(q.owner_user_id) ? q.owner_user_id : null,
+      owner_user_id:
+        q.owner_user_id && isUuid(q.owner_user_id) ? q.owner_user_id : null,
       collaborator_user_id:
         q.collaborator_user_id && isUuid(q.collaborator_user_id)
           ? q.collaborator_user_id
           : null,
       organization_id:
-        q.organization_id && isUuid(q.organization_id) ? q.organization_id : null,
+        q.organization_id && isUuid(q.organization_id)
+          ? q.organization_id
+          : null,
       parent_only: parentOnly,
       has_parent: hasParent,
       created_from: parseIsoDateTime(q.created_from),
@@ -166,8 +169,8 @@ function attachParsedProjectsList(req) {
         q.progress_max !== undefined && q.progress_max !== ""
           ? Number(q.progress_max)
           : null,
-      priority: parseCsvEnum(q.priority, PRIORITIES, { maxItems: 10 }).map((p) =>
-        p.toLowerCase()
+      priority: parseCsvEnum(q.priority, PRIORITIES, { maxItems: 10 }).map(
+        (p) => p.toLowerCase()
       ),
       tags: parseCsvStrings(q.tags, { maxItems: 50 }),
       active: activeFilter,
@@ -196,10 +199,18 @@ const validateGetProjects = [
   query("created_to").optional().isISO8601(),
   query("updated_from").optional().isISO8601(),
   query("updated_to").optional().isISO8601(),
-  query("start_from").optional().matches(/^\d{4}-\d{2}-\d{2}$/),
-  query("start_to").optional().matches(/^\d{4}-\d{2}-\d{2}$/),
-  query("target_end_from").optional().matches(/^\d{4}-\d{2}-\d{2}$/),
-  query("target_end_to").optional().matches(/^\d{4}-\d{2}-\d{2}$/),
+  query("start_from")
+    .optional()
+    .matches(/^\d{4}-\d{2}-\d{2}$/),
+  query("start_to")
+    .optional()
+    .matches(/^\d{4}-\d{2}-\d{2}$/),
+  query("target_end_from")
+    .optional()
+    .matches(/^\d{4}-\d{2}-\d{2}$/),
+  query("target_end_to")
+    .optional()
+    .matches(/^\d{4}-\d{2}-\d{2}$/),
   query("progress_min").optional().isFloat({ min: 0, max: 100 }),
   query("progress_max").optional().isFloat({ min: 0, max: 100 }),
   query("priority").optional().isString().trim().isLength({ max: 80 }),
@@ -337,7 +348,9 @@ function attachParsedNotes(req) {
       tags: parseCsvUuid(q.tags, { maxItems: 50 }),
       stage_id: parseCsvUuid(q.stage_id, { maxItems: 20 }),
       created_by: parseCsvUuid(q.created_by, { maxItems: 20 }),
-      collaborator_user_id: parseCsvUuid(q.collaborator_user_id, { maxItems: 20 }),
+      collaborator_user_id: parseCsvUuid(q.collaborator_user_id, {
+        maxItems: 20,
+      }),
       due_from: parseIsoDateTime(q.due_from),
       due_to: parseIsoDateTime(q.due_to),
       created_from: parseIsoDateTime(q.created_from),
@@ -359,7 +372,11 @@ const validateGetProjectNotes = [
   query("tags").optional().isString().trim().isLength({ max: 4000 }),
   query("stage_id").optional().isString().trim().isLength({ max: 800 }),
   query("created_by").optional().isString().trim().isLength({ max: 800 }),
-  query("collaborator_user_id").optional().isString().trim().isLength({ max: 800 }),
+  query("collaborator_user_id")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 800 }),
   query("due_from").optional().isISO8601(),
   query("due_to").optional().isISO8601(),
   query("created_from").optional().isISO8601(),
@@ -447,12 +464,9 @@ function attachParsedSprints(req) {
     filters: {
       status: statusFilter,
       start_from:
-        parseIsoDateOnly(q.start_from) ||
-        parseIsoDateTime(q.start_from),
-      start_to:
-        parseIsoDateOnly(q.start_to) || parseIsoDateTime(q.start_to),
-      end_from:
-        parseIsoDateOnly(q.end_from) || parseIsoDateTime(q.end_from),
+        parseIsoDateOnly(q.start_from) || parseIsoDateTime(q.start_from),
+      start_to: parseIsoDateOnly(q.start_to) || parseIsoDateTime(q.start_to),
+      end_from: parseIsoDateOnly(q.end_from) || parseIsoDateTime(q.end_from),
       end_to: parseIsoDateOnly(q.end_to) || parseIsoDateTime(q.end_to),
     },
   };

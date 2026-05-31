@@ -235,7 +235,10 @@ function buildSystemMessage(additionalContext = {}) {
         }
       }
 
-      if (Array.isArray(project.collaborators) && project.collaborators.length > 0) {
+      if (
+        Array.isArray(project.collaborators) &&
+        project.collaborators.length > 0
+      ) {
         const collabSummary = project.collaborators
           .map((c) => `${c.name || c.email} (${c.role})`)
           .join(", ");

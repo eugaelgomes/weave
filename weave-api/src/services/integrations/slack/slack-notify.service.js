@@ -1,6 +1,8 @@
 /* eslint-disable no-console -- best-effort notification logging */
 const ReadSlackIntegrationsRepository = require("@/modules/slack/repositories/read-slack-integrations.repository");
-const { chatPostMessage } = require("@/services/integrations/slack/slack.client");
+const {
+  chatPostMessage,
+} = require("@/services/integrations/slack/slack.client");
 
 /**
  * Sends a plain-text notification to the organization's default Slack channel when configured.

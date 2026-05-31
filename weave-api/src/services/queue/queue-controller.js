@@ -121,7 +121,10 @@ async function enqueueNoteEmbeddingJob(noteId) {
   const internalId = await resolveNoteIdToUuid(noteId);
   if (!internalId) {
     // eslint-disable-next-line no-console -- queue infra failure diagnostics
-    console.warn("[QueueController] Skipping embedding job for unresolved noteId:", noteId);
+    console.warn(
+      "[QueueController] Skipping embedding job for unresolved noteId:",
+      noteId
+    );
     return { queued: false, success: false };
   }
 

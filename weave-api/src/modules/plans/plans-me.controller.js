@@ -24,13 +24,9 @@ class PlansMeController {
       limitPath
     );
     const current =
-      rawCurrent === null || rawCurrent === undefined
-        ? 0
-        : Number(rawCurrent);
+      rawCurrent === null || rawCurrent === undefined ? 0 : Number(rawCurrent);
     const limit =
-      rawLimit === null || rawLimit === undefined
-        ? null
-        : Number(rawLimit);
+      rawLimit === null || rawLimit === undefined ? null : Number(rawLimit);
 
     return {
       allowed,
@@ -85,8 +81,10 @@ class PlansMeController {
 
       const usage_summary = {
         notes_total:
-          PlanUsageManager.getNestedValue(ud, USAGE_PATHS.SUMMARY.NOTES_TOTAL) ??
-          0,
+          PlanUsageManager.getNestedValue(
+            ud,
+            USAGE_PATHS.SUMMARY.NOTES_TOTAL
+          ) ?? 0,
         projects_total:
           PlanUsageManager.getNestedValue(
             ud,
@@ -122,8 +120,10 @@ class PlansMeController {
       const usage_period = {
         plan_id: usageRecord.plan_id || userPlan.plan_id,
         period_start:
-          PlanUsageManager.getNestedValue(ud, USAGE_PATHS.MONTHLY.PERIOD_START) ??
-          null,
+          PlanUsageManager.getNestedValue(
+            ud,
+            USAGE_PATHS.MONTHLY.PERIOD_START
+          ) ?? null,
         period_end:
           PlanUsageManager.getNestedValue(ud, USAGE_PATHS.MONTHLY.PERIOD_END) ??
           null,

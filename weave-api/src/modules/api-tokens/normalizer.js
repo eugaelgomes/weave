@@ -73,7 +73,8 @@ const API_SCOPES = [
   {
     id: "users:read",
     name: "Read Users",
-    description: "Allows searching and reading user profiles within the organization.",
+    description:
+      "Allows searching and reading user profiles within the organization.",
   },
   {
     id: "ai:chat",

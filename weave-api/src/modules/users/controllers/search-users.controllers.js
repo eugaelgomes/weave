@@ -42,7 +42,7 @@ class SearchUsersController extends BaseController {
           name: user.name,
           email: user.email,
           avatar_url: user.avatar_url,
-          context_info: user.context_info
+          context_info: user.context_info,
         }));
 
       res.status(200).json({

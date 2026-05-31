@@ -31,9 +31,14 @@ function validate(schema, source = "body") {
     if (!result.success) {
       const errors = formatZodErrors(result.error);
       return next(
-        new AppError("VALIDATION_ERROR", "Validation failed. Please check the provided data.", 400, {
-          details: errors,
-        })
+        new AppError(
+          "VALIDATION_ERROR",
+          "Validation failed. Please check the provided data.",
+          400,
+          {
+            details: errors,
+          }
+        )
       );
     }
 

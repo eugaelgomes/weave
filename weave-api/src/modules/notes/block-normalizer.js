@@ -30,7 +30,9 @@ const NOTE_DOCUMENT_HEX_COLOR_PALETTE = Object.freeze([
   "#ec4899",
 ]);
 
-const NOTE_DOCUMENT_HEX_COLOR_PALETTE_SET = new Set(NOTE_DOCUMENT_HEX_COLOR_PALETTE);
+const NOTE_DOCUMENT_HEX_COLOR_PALETTE_SET = new Set(
+  NOTE_DOCUMENT_HEX_COLOR_PALETTE
+);
 
 const ALLOWED_MARK_TYPES = Object.freeze([
   "bold",
@@ -87,7 +89,8 @@ const isStorageImageSource = (value) => {
   const src = value.trim();
   if (!src) return false;
   if (src.startsWith("upload://")) return true;
-  if (src.startsWith("notes/") || src.startsWith("weave-notes/notes/")) return true;
+  if (src.startsWith("notes/") || src.startsWith("weave-notes/notes/"))
+    return true;
   if (/^https?:\/\//i.test(src)) return true;
   if (/^data:(image|video)\//i.test(src)) return true;
   if (/^blob:/i.test(src)) return true;
@@ -112,7 +115,10 @@ const validateMarkAttrs = (type, attrs) => {
   }
   if (type === "textStyle" || type === "highlight") {
     if (attrs.color !== undefined) {
-      attrs.color = parseAllowedHexColor(attrs.color, `mark '${type}'.attrs.color`);
+      attrs.color = parseAllowedHexColor(
+        attrs.color,
+        `mark '${type}'.attrs.color`
+      );
     }
   }
 };
@@ -188,7 +194,9 @@ const validateAttrsForBlockType = (blockType, attrs, path) => {
         throw new Error(`${path}: image exige attrs.src`);
       }
       if (!isStorageImageSource(attrs.src)) {
-        throw new Error(`${path}: image attrs.src deve ser uma URL de imagem válida (http, https, blob, data ou storage)`);
+        throw new Error(
+          `${path}: image attrs.src deve ser uma URL de imagem válida (http, https, blob, data ou storage)`
+        );
       }
       if (attrs.alt !== undefined && typeof attrs.alt !== "string") {
         throw new Error(`${path}: image attrs.alt deve ser string`);
@@ -203,7 +211,9 @@ const validateAttrsForBlockType = (blockType, attrs, path) => {
         throw new Error(`${path}: video exige attrs.src`);
       }
       if (!isStorageImageSource(attrs.src)) {
-        throw new Error(`${path}: video attrs.src deve ser uma URL de vídeo válida (http, https, blob, data ou storage)`);
+        throw new Error(
+          `${path}: video attrs.src deve ser uma URL de vídeo válida (http, https, blob, data ou storage)`
+        );
       }
       if (attrs.title !== undefined && typeof attrs.title !== "string") {
         throw new Error(`${path}: video attrs.title deve ser string`);
@@ -234,7 +244,11 @@ const normalizeBlockProperties = (blockType, rawProperties, path) => {
   /** @type {Record<string, unknown>} */
   const props = { ...rawProperties };
 
-  if (props.text !== undefined && props.text !== null && typeof props.text !== "string") {
+  if (
+    props.text !== undefined &&
+    props.text !== null &&
+    typeof props.text !== "string"
+  ) {
     throw new Error(`${path}.text deve ser string`);
   }
 
@@ -246,7 +260,12 @@ const normalizeBlockProperties = (blockType, rawProperties, path) => {
     props.marks.forEach((m, i) => {
       const start = Number(m.start);
       const end = Number(m.end);
-      if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < start) {
+      if (
+        !Number.isInteger(start) ||
+        !Number.isInteger(end) ||
+        start < 0 ||
+        end < start
+      ) {
         throw new Error(`${path}.marks[${i}]: start/end inválidos`);
       }
     });
@@ -365,16 +384,23 @@ const normalizeBlocksTree = (blocks) => {
  * @param {number} depth
  * @returns {Array<{ id: string, note_id: string, parent_id: string | null, type: string, properties: Record<string, unknown>, position: number, created_by: string }>}
  */
-const flattenBlocksForInsert = (tree, noteId, userId, parentId = null, depth = 0) => {
+const flattenBlocksForInsert = (
+  tree,
+  noteId,
+  userId,
+  parentId = null,
+  depth = 0
+) => {
   const normalized = normalizeBlocksTree(tree);
   /** @type {Array<{ id: string, note_id: string, parent_id: string | null, type: string, properties: Record<string, unknown>, position: number, created_by: string }>} */
   const rows = [];
 
   const walk = (nodes, pId, d) => {
     nodes.forEach((node, index) => {
-      const n = /** @type {{ id: string, type: string, properties: Record<string, unknown>, position?: number, children?: unknown[] }} */ (
-        node
-      );
+      const n =
+        /** @type {{ id: string, type: string, properties: Record<string, unknown>, position?: number, children?: unknown[] }} */ (
+          node
+        );
       const position = n.position !== undefined ? n.position : index;
       rows.push({
         id: n.id,
@@ -400,16 +426,30 @@ const flattenBlocksForInsert = (tree, noteId, userId, parentId = null, depth = 0
  * @param {unknown} patchProperties - merge parcial de properties (para PATCH)
  * @param {Record<string, unknown> | null} existingProperties
  */
-const mergeBlockPropertiesPatch = (blockType, patchProperties, existingProperties = {}) => {
+const mergeBlockPropertiesPatch = (
+  blockType,
+  patchProperties,
+  existingProperties = {}
+) => {
   if (patchProperties === undefined) {
-    return normalizeBlockProperties(blockType, existingProperties || {}, "properties");
+    return normalizeBlockProperties(
+      blockType,
+      existingProperties || {},
+      "properties"
+    );
   }
   if (!isPlainObject(patchProperties)) {
     throw new Error("properties deve ser objeto");
   }
-  const base = isPlainObject(existingProperties) ? { ...existingProperties } : {};
+  const base = isPlainObject(existingProperties)
+    ? { ...existingProperties }
+    : {};
   const merged = { ...base, ...patchProperties };
-  if (patchProperties.attrs !== undefined && isPlainObject(base.attrs) && isPlainObject(patchProperties.attrs)) {
+  if (
+    patchProperties.attrs !== undefined &&
+    isPlainObject(base.attrs) &&
+    isPlainObject(patchProperties.attrs)
+  ) {
     merged.attrs = { ...base.attrs, ...patchProperties.attrs };
   }
   return normalizeBlockProperties(blockType, merged, "properties");

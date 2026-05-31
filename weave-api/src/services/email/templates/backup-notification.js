@@ -52,7 +52,10 @@ async function sendBackupEmail({
       introLines: [t(locale, "backup.intro1"), t(locale, "backup.intro2")],
       ctaText: t(locale, "backup.cta"),
       ctaUrl: downloadUrl,
-      infoText: t(locale, "backup.info", { hours: hoursUntilExpiration, expiresLabel }),
+      infoText: t(locale, "backup.info", {
+        hours: hoursUntilExpiration,
+        expiresLabel,
+      }),
       contentHtml: `
         <div style="margin: 16px 0; padding: 14px; border: 1px solid #E5E7EB; border-radius: 8px; background: #F9FAFB;">
           <p style="margin: 0 0 8px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.format"))}:</strong> ${escapeHtml(t(locale, "common.formatCsv"))}</p>
@@ -83,12 +86,7 @@ async function sendBackupEmail({
  * @param {object} params
  * @returns {{ html: string, text: string, subject: string }}
  */
-function buildBackupEmailPayload({
-  locale,
-  userName,
-  downloadUrl,
-  expiresAt,
-}) {
+function buildBackupEmailPayload({ locale, userName, downloadUrl, expiresAt }) {
   const resolvedLocale = resolveEmailLocale(locale);
   const hoursUntilExpiration = Math.max(
     1,
