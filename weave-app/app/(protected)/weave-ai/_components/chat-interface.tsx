@@ -260,22 +260,19 @@ export default function ChatInterface({
     router.replace(`/weave-ai/chat/${currentSession.id}`);
   }, [chatId, currentSession?.id, messages.length, pathname, router]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isTyping || !canSendAiMessage) return;
+  const handleSendText = async (messageText: string) => {
+    if (!messageText.trim() || isTyping || !canSendAiMessage) return;
 
     const noteIds = contextItems.filter((item) => item.type === "note").map((item) => item.id);
     const projectIds = contextItems
       .filter((item) => item.type === "project")
       .map((item) => item.id);
 
-    const message = input.trim();
-    setInput("");
-
     const rawSessionId = currentSession?.id || chatId;
     const sessionId = isChatSessionId(rawSessionId) ? rawSessionId : undefined;
 
     await sendMessage({
-      message,
+      message: messageText,
       model: {
         name: selectedModel?.provider || selectedModel?.name || "auto",
         version: selectedModel?.version,
@@ -298,6 +295,13 @@ export default function ChatInterface({
 
     setSelectedFiles([]);
     setFileError(null);
+  };
+
+  const handleSend = async () => {
+    const message = input.trim();
+    if (!message) return;
+    setInput("");
+    await handleSendText(message);
   };
 
   const handleAddContext = (type: string, id: string, title: string) => {
@@ -566,6 +570,22 @@ export default function ChatInterface({
                           ))}
                         </div>
                       )}
+
+                    {!isUser && msg?.metadata?.status === "requires_input" && msg?.metadata?.requires_input?.options && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {(msg.metadata.requires_input.options || []).map((option: string, idx: number) => (
+                          <button
+                            key={`option-${idx}`}
+                            onClick={() => {
+                              handleSendText(option);
+                            }}
+                            className="bg-brand-yellow hover:bg-brand-yellow/80 text-brand-navy inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm transition-colors border border-transparent dark:border-yellow-600/30"
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
                     {!isUser && citations.length > 0 && (
                       <div className="border-brand-navy/30 bg-brand-beige text-brand-navy dark:border-brand-beige/20 dark:bg-brand-navy/30 dark:text-brand-beige mt-2 rounded border p-1.5 text-[10px]">

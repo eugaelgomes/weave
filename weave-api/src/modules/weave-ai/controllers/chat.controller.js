@@ -1095,6 +1095,44 @@ class ChatController {
           success: true,
         };
       }
+      case "search_users": {
+        const searchTerm = String(args.searchTerm || "").trim();
+        if (!searchTerm) {
+          throw new Error("search_users requer searchTerm");
+        }
+        const searchUsersRepository = require("@/modules/users/repositories/search-users.repository");
+        const users = await searchUsersRepository.searchUsers(searchTerm, userId);
+        return {
+          name,
+          result: { users: users.map(u => ({ id: u.user_id, name: u.name, username: u.username, email: u.email })) },
+          success: true,
+        };
+      }
+      case "search_projects": {
+        const searchTerm = String(args.searchTerm || "").trim();
+        if (!searchTerm) {
+          throw new Error("search_projects requer searchTerm");
+        }
+        
+        const scope = organizationId 
+          ? { mode: "organization", organizationId } 
+          : { mode: "user", userId };
+          
+        const { rows } = await projectsReadRepository.getAllProjectsFiltered(
+          scope,
+          { search: searchTerm },
+          { limit: 10, offset: 0 },
+          { field: "created_at", order: "desc" },
+          { collaborators: false, notes: false, subprojects: false },
+          userId
+        );
+        
+        return {
+          name,
+          result: { projects: rows.map(p => ({ id: p.id, public_id: p.public_project_id, title: p.title, status: p.status })) },
+          success: true,
+        };
+      }
       default: {
         const error = new Error(`Função não suportada para execução: ${name}`);
         error.code = "CHAT_FUNCTION_NOT_SUPPORTED";
@@ -1289,6 +1327,29 @@ class ChatController {
         authorizedFunctions = Array.isArray(authorization?.functions)
           ? authorization.functions
           : [];
+        
+        authorizedFunctions.push({
+          name: "ask_user_input",
+          description: "Ask the user for confirmation or clarification before proceeding with an action.",
+          parameters: {
+            type: "object",
+            properties: {
+              question: {
+                type: "string",
+                description: "The clear and friendly question or confirmation message to present to the user."
+              },
+              options: {
+                type: "array",
+                items: {
+                  type: "string"
+                },
+                description: "An array of possible answers/choices the user can select (e.g. ['Yes, delete it', 'No, cancel'])."
+              }
+            },
+            required: ["question"]
+          }
+        });
+        
         capabilityRules = authorization?.capabilityRules || {};
         resourceAccess = authorization?.access || {};
       } catch {
@@ -1333,18 +1394,43 @@ class ChatController {
       const responseFunctions = Array.isArray(enginePayload?.functions)
         ? enginePayload.functions
         : [];
-      const functionExecution = responseFunctions.length > 0
-        ? await this._executeFunctionCalls(userId, responseFunctions, organizationId)
-        : [];
+        
+      const askUserInputCall = responseFunctions.find((f) => f.name === "ask_user_input");
+      let functionExecution = [];
+      let messageStatus = "ok";
+      
+      if (askUserInputCall) {
+        messageStatus = "requires_input";
+      } else if (responseFunctions.length > 0) {
+        messageStatus = "function_call";
+        functionExecution = await this._executeFunctionCalls(userId, responseFunctions, organizationId);
+      }
+      
       const fallbackText =
-        functionExecution.length > 0
-          ? "Solicitacao executada com sucesso."
-          : responseFunctions.length > 0
-            ? "Solicitacao entendida. Recebi uma chamada de funcao, mas nao houve alteracoes executadas."
-          : "Solicitacao recebida, mas o modelo nao retornou conteudo textual.";
+        askUserInputCall
+          ? askUserInputCall.arguments?.question || "Awaiting your input..."
+          : functionExecution.length > 0
+            ? "Solicitacao executada com sucesso."
+            : responseFunctions.length > 0
+              ? "Solicitacao entendida. Recebi uma chamada de funcao, mas nao houve alteracoes executadas."
+            : "Solicitacao recebida, mas o modelo nao retornou conteudo textual.";
       const finalAssistantText = assistantText || fallbackText;
       const providerUsed = enginePayload?.providerUsed || null;
       const tokenUsage = this._extractTokenUsage(enginePayload);
+      
+      const messageMetadata = {
+        citations: enginePayload?.data?.citations || [],
+        functionExecution,
+        functions: responseFunctions,
+        providerUsed,
+        requestId,
+      };
+      
+      if (askUserInputCall) {
+        messageMetadata.requires_input = askUserInputCall.arguments || {};
+        messageMetadata.status = "requires_input";
+      }
+
       await chatRepository.saveMessageIdempotent({
         sessionId,
         userId,
@@ -1353,20 +1439,14 @@ class ChatController {
         model: `${payload.model.name}:${payload.model.version}`,
         requestId,
         provider: providerUsed,
-        status: responseFunctions.length > 0 ? "function_call" : "ok",
+        status: messageStatus,
         latencyMs: engineResponse?.latencyMs || null,
         inputTokens: tokenUsage.inputTokens,
         outputTokens: tokenUsage.outputTokens,
         totalTokens: tokenUsage.totalTokens,
         agentId: payload.agentId,
         allowEdit: payload.allowEdit,
-        metadata: {
-          citations: enginePayload?.data?.citations || [],
-          functionExecution,
-          functions: responseFunctions,
-          providerUsed,
-          requestId,
-        },
+        metadata: messageMetadata,
       });
 
       if (usageRecord?.id) {

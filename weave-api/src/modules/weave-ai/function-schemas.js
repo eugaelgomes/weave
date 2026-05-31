@@ -2,6 +2,7 @@ const FunctionCategory = Object.freeze({
   BLOCKS: "blocks",
   NOTES: "notes",
   PROJECTS: "projects",
+  USERS: "users",
 });
 
 const FUNCTION_SCHEMAS = Object.freeze({
@@ -60,6 +61,38 @@ const FUNCTION_SCHEMAS = Object.freeze({
         },
       },
       required: ["title"],
+      type: "object",
+    },
+  },
+  search_projects: {
+    category: FunctionCategory.PROJECTS,
+    description: "Search for projects by title or description to find project IDs, stage IDs, and priority IDs.",
+    name: "search_projects",
+    parameters: {
+      additionalProperties: false,
+      properties: {
+        searchTerm: {
+          description: "Search query for the project.",
+          type: "string",
+        },
+      },
+      required: ["searchTerm"],
+      type: "object",
+    },
+  },
+  search_users: {
+    category: FunctionCategory.USERS,
+    description: "Search for users in the organization by name, username, or email to get their user IDs. Essential for resolving names to collaborator IDs.",
+    name: "search_users",
+    parameters: {
+      additionalProperties: false,
+      properties: {
+        searchTerm: {
+          description: "Name, username, or email of the user to search.",
+          type: "string",
+        },
+      },
+      required: ["searchTerm"],
       type: "object",
     },
   },

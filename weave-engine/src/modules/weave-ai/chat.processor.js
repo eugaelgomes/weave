@@ -371,6 +371,7 @@ class LlmQueueProcessor {
                 payload.context?.organizationId ||
                 payload.context?.organization_id ||
                 null,
+              language: payload.userLanguage || payload.context?.userLanguage || "en-US",
             },
           }),
           new Promise((_, reject) => {
@@ -378,13 +379,13 @@ class LlmQueueProcessor {
               const timeoutError = new Error("Engine chat task timeout");
               timeoutError.code = "ENGINE_CHAT_TASK_TIMEOUT";
               reject(timeoutError);
-            }, ENGINE_CHAT_TASK_TIMEOUT_MS);
+            }, ENGINE_CHAT_TASK_TIMEOUT_MS + 2000); // Give the inner agentic loop time to exit gracefully
           }),
         ]);
 
         const functions =
-          data?.type === "function_call" && data?.functionCall
-            ? [data.functionCall]
+          data?.type === "function_call"
+            ? (data.toolCalls || (data.functionCall ? [data.functionCall] : []))
             : [];
 
         return {

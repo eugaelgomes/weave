@@ -147,9 +147,15 @@ async function executeAgenticTask({
 
   while (iterations < MAX_REACT_ITERATIONS) {
     if (Date.now() - startedAt >= MAX_AGENTIC_DURATION_MS) {
-      const error = new Error("Engine chat task budget exceeded");
-      error.code = "ENGINE_CHAT_BUDGET_EXCEEDED";
-      throw error;
+      const isPt = executionContext.language && executionContext.language.toLowerCase().startsWith("pt");
+      const msg = isPt 
+        ? "Atingi o limite de tempo interno da ferramenta e precisei parar o raciocínio. Fique à vontade para me pedir para continuar!" 
+        : "I hit the internal time limit for this task and had to stop early. Feel free to ask me to continue!";
+      return {
+        data: { type: "text", text: msg, content: msg },
+        providerUsed,
+        executedActions,
+      };
     }
 
     iterations++;
@@ -164,7 +170,79 @@ async function executeAgenticTask({
     providerUsed = provider;
     currentPrompt = ""; // Clear prompt after first turn, history handles the rest
 
-    if (data.type === "function_call" && data.functionCall) {
+    if (data.type === "function_call" && data.toolCalls) {
+      const toolCallsArray = data.toolCalls.map((tc, idx) => {
+        return {
+          id: tc.id || `call_${Math.random().toString(36).substring(2, 11)}_${idx}`,
+          function: {
+            name: tc.name,
+            arguments: JSON.stringify(tc.arguments),
+          },
+          rawArgs: tc.arguments
+        };
+      });
+
+      // Add assistant tool_call message to history
+      currentOptions.messages.push({
+        role: "assistant",
+        content: null,
+        rawParts: data.rawParts,
+        tool_calls: toolCallsArray.map(t => ({ id: t.id, function: t.function })),
+      });
+
+      const internalCalls = toolCallsArray.filter(t => isInternalTool(t.function.name));
+      const externalCalls = toolCallsArray.filter(t => !isInternalTool(t.function.name));
+
+      if (internalCalls.length > 0 && externalCalls.length === 0) {
+        // Execute all internal tools in parallel
+        const results = await Promise.all(
+          internalCalls.map(async (tc) => {
+            const fnName = tc.function.name;
+            const fnArgs = tc.rawArgs;
+            try {
+              const result = await executeInternalTool(fnName, fnArgs, executionContext);
+              return { tc, result, error: null };
+            } catch (err) {
+              return { tc, result: null, error: err.message || "Tool execution failed" };
+            }
+          })
+        );
+
+        for (const { tc, result, error } of results) {
+          const fnName = tc.function.name;
+          const fnArgs = tc.rawArgs;
+          const output = error ? { error } : result;
+          
+          executedActions.push({ name: fnName, args: fnArgs, result: output });
+
+          let contentStr = typeof output === "string" ? output : JSON.stringify(output);
+          if (contentStr.length > 12000) {
+            contentStr = contentStr.slice(0, 12000) + "\n\n...[TRUNCATED BY ENGINE DUE TO SIZE LIMITS]";
+          }
+
+          currentOptions.messages.push({
+            role: "tool",
+            name: fnName,
+            tool_call_id: tc.id,
+            content: contentStr,
+          });
+        }
+        
+        continue;
+      } else {
+        // If there is ANY external tool, we return to API to execute them.
+        // We could theoretically execute internal tools here, and let the API execute the external ones,
+        // but it's simpler to just return all back if there's any external.
+        // Or wait, if we return, the API will execute external tools and we lose the internal ones?
+        // Let's just return to the API, as the current behavior expects it.
+        return {
+          data,
+          providerUsed,
+          executedActions,
+        };
+      }
+    } else if (data.type === "function_call" && data.functionCall) {
+      // Fallback for older interface behavior just in case
       const fnName = data.functionCall.name;
       const fnArgs = data.functionCall.arguments;
       const toolCallId =
@@ -197,11 +275,16 @@ async function executeAgenticTask({
 
         executedActions.push({ name: fnName, args: fnArgs, result });
 
+        let contentStr = typeof result === "string" ? result : JSON.stringify(result);
+        if (contentStr.length > 12000) {
+          contentStr = contentStr.slice(0, 12000) + "\n\n...[TRUNCATED BY ENGINE DUE TO SIZE LIMITS]";
+        }
+
         currentOptions.messages.push({
           role: "tool",
           name: fnName,
           tool_call_id: toolCallId,
-          content: typeof result === "string" ? result : JSON.stringify(result),
+          content: contentStr,
         });
 
         continue;
@@ -224,12 +307,16 @@ async function executeAgenticTask({
   }
 
   // Fallback if max iterations reached
+  const isPt = executionContext.language && executionContext.language.toLowerCase().startsWith("pt");
+  const fallbackMsg = isPt
+    ? "Pensei por muitas iterações e não consegui chegar numa conclusão final. Pode me dar mais detalhes?"
+    : "I thought for many iterations but couldn't reach a final conclusion. Could you provide more details?";
+  
   return {
     data: {
       type: "text",
-      text: "Eu pensei por muito tempo, mas não consegui chegar a uma conclusão final.",
-      content:
-        "Eu pensei por muito tempo, mas não consegui chegar a uma conclusão final.",
+      text: fallbackMsg,
+      content: fallbackMsg,
     },
     providerUsed,
     executedActions,

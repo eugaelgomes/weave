@@ -304,13 +304,17 @@ async function callGeminiApi(
     );
   }
 
-  const functionCall = response.functionCalls()?.[0];
-  if (functionCall) {
+  const functionCalls = response.functionCalls();
+  if (functionCalls && functionCalls.length > 0) {
     return {
       functionCall: {
-        arguments: functionCall.args,
-        name: functionCall.name,
+        arguments: functionCalls[0].args,
+        name: functionCalls[0].name,
       },
+      toolCalls: functionCalls.map(call => ({
+        name: call.name,
+        arguments: call.args
+      })),
       rawParts: result.response.candidates?.[0]?.content?.parts || null,
       text: null,
       type: "function_call",
@@ -479,8 +483,13 @@ async function callOpenAiApi(
         arguments: JSON.parse(toolCall.function.arguments || "{}"),
         name: toolCall.function.name,
       },
+      toolCalls: message.tool_calls.map(tc => ({
+        id: tc.id,
+        name: tc.function.name,
+        arguments: JSON.parse(tc.function.arguments || "{}")
+      })),
       text: null,
-      toolCallId: toolCall.id,
+      toolCallId: toolCall.id, // For backwards compatibility
       type: "function_call",
     };
   }
