@@ -118,7 +118,7 @@ module.exports = {
   "project.outro": "You can now view and collaborate on the project.",
   "project.footer":
     "You received this email because you were added to a project on Weave Notes.",
-  "project.subject": '{firstName}, you were added to project "{projectName}"',
+  "project.subject": "{firstName}, you were added to project \"{projectName}\"",
   "project.untitled": "Untitled",
 
   "collab.preheader": "You were added as a note collaborator.",
@@ -147,7 +147,7 @@ module.exports = {
   "dueReminder.title": "Deadline reminder",
   "dueReminder.subtitle": "Note due date",
   "dueReminder.intro":
-    'The note "{noteTitle}" is due tomorrow ({dueDateLabel}).',
+    "The note \"{noteTitle}\" is due tomorrow ({dueDateLabel}).",
   "dueReminder.cta": "Open note",
   "dueReminder.info": "We recommend reviewing the note today to avoid delays.",
   "dueReminder.subject": "Reminder: due tomorrow - {noteTitle}",

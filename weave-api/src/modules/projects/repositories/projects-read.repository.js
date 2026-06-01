@@ -816,9 +816,9 @@ class ProjectsReadRepository {
     const sortMap = {
       created_at: "created_at",
       name: "name",
-      position: '"position"',
+      position: "\"position\"",
     };
-    const sortCol = sortMap[sort.field] || '"position"';
+    const sortCol = sortMap[sort.field] || "\"position\"";
     const sortDir = sort.order === "asc" ? "ASC" : "DESC";
 
     params.push(pagination.limit);

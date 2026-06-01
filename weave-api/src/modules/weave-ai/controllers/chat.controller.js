@@ -58,7 +58,7 @@ const CHAT_I18N = {
   pt: {
     callingFunctions: "Chamando funções...",
     functionResults: (results) =>
-      `Resultados das funções executadas:\n${results}\n\nPor favor, continue a tarefa com base nestes resultados. Se a tarefa foi concluída, você pode responder ao usuário.`,
+      `Resultados das funções executadas:\n${results}\n\nPor favor, continue a tarefa com base nestes resultados. Se a tarefa foi concluída, você pode responder ao usuário.\n\nDica de UI: Sempre que se referir a projetos ou tarefas/anotações recém criadas/modificadas, gere links Markdown clicáveis! Use o formato [Nome da Tarefa](/projects/[projectPublicId]/tasks/[publicNoteId]) ou [Nome do Projeto](/projects/[projectPublicId]) utilizando os IDs públicos retornados. Para avatares, use ![Foto](avatar_url).`,
     successFallback: "Solicitação executada com sucesso.",
     functionUnderstoodFallback:
       "Solicitação entendida. Recebi uma chamada de função, mas não houve alterações executadas.",
@@ -69,7 +69,7 @@ const CHAT_I18N = {
   en: {
     callingFunctions: "Calling functions...",
     functionResults: (results) =>
-      `Function execution results:\n${results}\n\nPlease continue the task based on these results. If the task is completed, you can reply to the user.`,
+      `Function execution results:\n${results}\n\nPlease continue the task based on these results. If the task is completed, you can reply to the user.\n\nUI Tip: Whenever referring to newly created or modified projects/notes, generate clickable Markdown links! Use the format [Task Name](/projects/[projectPublicId]/tasks/[publicNoteId]) or [Project Name](/projects/[projectPublicId]) using the public IDs returned in the executions. For avatars, use ![Avatar](avatar_url).`,
     successFallback: "Request executed successfully.",
     functionUnderstoodFallback:
       "Request understood. Received a function call, but no changes were executed.",
@@ -80,7 +80,7 @@ const CHAT_I18N = {
   es: {
     callingFunctions: "Llamando funciones...",
     functionResults: (results) =>
-      `Resultados de la ejecución de las funciones:\n${results}\n\nContinúe la tarea en función de estos resultados. Si la tarea se ha completado, puede responder al usuario.`,
+      `Resultados de la ejecución de las funciones:\n${results}\n\nContinúe la tarea en función de estos resultados. Si la tarea se ha completado, puede responder al usuario.\n\nConsejo de UI: ¡Siempre que te refieras a proyectos o notas recién creadas/modificadas, genera enlaces Markdown clicables! Usa el formato [Nombre de la Tarea](/projects/[projectPublicId]/tasks/[publicNoteId]) o [Nombre del Proyecto](/projects/[projectPublicId]) con los IDs públicos devueltos. Para avatares, usa ![Foto](avatar_url).`,
     successFallback: "Solicitud ejecutada exitosamente.",
     functionUnderstoodFallback:
       "Solicitud entendida. Recibí una llamada de función, pero no se ejecutaron cambios.",
@@ -264,7 +264,7 @@ class ChatController {
       try {
         model = JSON.parse(model);
       } catch {
-        const parseError = new Error('Campo "model" inválido');
+        const parseError = new Error("Campo \"model\" inválido");
         parseError.code = "CHAT_INVALID_MODEL";
         parseError.statusCode = 400;
         throw parseError;
@@ -281,7 +281,7 @@ class ChatController {
 
     if (!isValidModel) {
       const validationError = new Error(
-        'Campo "model" deve conter "name" e "version" válidos'
+        "Campo \"model\" deve conter \"name\" e \"version\" válidos"
       );
       validationError.code = "CHAT_INVALID_MODEL";
       validationError.statusCode = 400;
@@ -316,7 +316,7 @@ class ChatController {
     } = req.body;
 
     if (typeof message !== "string" || !message.trim()) {
-      const error = new Error('Campo "message" é obrigatório');
+      const error = new Error("Campo \"message\" é obrigatório");
       error.code = "CHAT_MESSAGE_REQUIRED";
       error.statusCode = 400;
       throw error;
@@ -346,7 +346,7 @@ class ChatController {
         : String(requestId).trim();
     if (parsedRequestId && !REQUEST_ID_REGEX.test(parsedRequestId)) {
       const requestError = new Error(
-        'Campo "requestId" deve ser um UUID válido'
+        "Campo \"requestId\" deve ser um UUID válido"
       );
       requestError.code = "CHAT_INVALID_REQUEST_ID";
       requestError.statusCode = 400;
@@ -1029,7 +1029,13 @@ class ChatController {
           }
         }
 
-        return { name, result: { noteId, created: true }, success: true };
+        let projectPublicId = null;
+        if (args.projectId) {
+          const projectRows = await projectsReadRepository.getProjectById(args.projectId, userId);
+          if (projectRows?.length) projectPublicId = projectRows[0].public_project_id;
+        }
+
+        return { name, result: { noteId, publicNoteId: createdNote.public_note_id, projectPublicId, created: true }, success: true };
       }
       case "update_note_title": {
         const noteId = await this._assertNoteMutationAccess(
@@ -1272,6 +1278,7 @@ class ChatController {
               name: u.name,
               username: u.username,
               email: u.email,
+              avatar_url: u.avatar_url,
             })),
           },
           success: true,
@@ -1577,8 +1584,8 @@ class ChatController {
       let functionExecution = [];
       let messageStatus = "ok";
       let providerUsed = null;
-      let tokenUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
-      let messageMetadata = {
+      const tokenUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
+      const messageMetadata = {
         citations: [],
         functionExecution: [],
         functions: [],
@@ -1588,7 +1595,7 @@ class ChatController {
       let askUserInputCall = null;
 
       let currentMessage = payload.message;
-      let currentConversationHistory = [...conversationHistory];
+      const currentConversationHistory = [...conversationHistory];
       let totalLatencyMs = 0;
 
       while (currentLoop < MAX_LOOPS) {
@@ -1777,9 +1784,9 @@ class ChatController {
       const causeSummary =
         cause instanceof Error
           ? { name: cause.name, message: cause.message, code: cause.code }
-          : cause != null && typeof cause === "object"
+          : cause !== null && cause !== undefined && typeof cause === "object"
             ? { message: String(cause.message || cause) }
-            : cause != null
+            : cause !== null && cause !== undefined
               ? { detail: String(cause) }
               : undefined;
 

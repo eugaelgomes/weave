@@ -591,7 +591,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         "",
         invite.email
       );
-      let targetUser = existingUsers.find((u) => u.email === invite.email);
+      const targetUser = existingUsers.find((u) => u.email === invite.email);
 
       let targetUserId;
 

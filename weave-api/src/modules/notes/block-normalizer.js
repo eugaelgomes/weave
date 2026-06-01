@@ -312,7 +312,7 @@ const validateBlockPayload = (node, path = "blocks", depth = 0) => {
     throw new Error("Árvore de blocos excede profundidade máxima");
   }
 
-  let id =
+  const id =
     typeof node.id === "string" && UUID_REGEX.test(node.id.trim())
       ? node.id.trim()
       : newBlockId();

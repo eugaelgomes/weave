@@ -767,7 +767,7 @@ class NotesWriteController extends NotesBaseController {
 
       const refreshed = await this.notesRepository.getNoteById(id);
       const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(id);
-      let formattedNote = this._formatNoteResponse(
+      const formattedNote = this._formatNoteResponse(
         refreshed || updatedNote || note,
         blocks
       );

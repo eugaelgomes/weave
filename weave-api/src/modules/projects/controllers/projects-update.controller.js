@@ -1720,7 +1720,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
     const end = new Date(sprintEnd + "T00:00:00Z");
 
     // Iterate from today forward through the sprint to find the next report day
-    let candidate = new Date(Math.max(today.getTime(), start.getTime()));
+    const candidate = new Date(Math.max(today.getTime(), start.getTime()));
 
     while (candidate <= end) {
       const dayOfWeek = candidate.getUTCDay();

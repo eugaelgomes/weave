@@ -122,7 +122,7 @@ module.exports = {
   "project.footer":
     "Você recebeu este e-mail porque foi adicionado a um projeto no Weave.",
   "project.subject":
-    '{firstName}, você foi adicionado ao projeto "{projectName}"',
+    "{firstName}, você foi adicionado ao projeto \"{projectName}\"",
   "project.untitled": "Sem título",
 
   "collab.preheader": "Você foi adicionado(a) como colaborador de uma nota.",
@@ -151,7 +151,7 @@ module.exports = {
   "dueReminder.preheader": "Lembrete de prazo da sua nota.",
   "dueReminder.title": "Lembrete de prazo",
   "dueReminder.subtitle": "Vencimento da nota",
-  "dueReminder.intro": 'A nota "{noteTitle}" vence amanhã ({dueDateLabel}).',
+  "dueReminder.intro": "A nota \"{noteTitle}\" vence amanhã ({dueDateLabel}).",
   "dueReminder.cta": "Abrir nota",
   "dueReminder.info": "Recomendamos revisar a nota hoje para evitar atrasos.",
   "dueReminder.subject": "Lembrete: prazo amanhã — {noteTitle}",
