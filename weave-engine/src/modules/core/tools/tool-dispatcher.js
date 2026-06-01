@@ -21,6 +21,24 @@ const {
   schemas: organizationSchemas,
 } = require("./organization.tool");
 const { consultBrain, schemas: brainSchemas } = require("./brain.tool");
+const {
+  listOrgMembers,
+  getOrgMember,
+  schemas: orgMembersSchemas,
+} = require("./org-members.tool");
+const {
+  listOrgAreas,
+  getOrgArea,
+  schemas: orgAreasSchemas,
+} = require("./org-areas.tool");
+const { getNoteDetails, schemas: noteSchemas } = require("./note.tool");
+const {
+  listNoteComments,
+  createNoteComment,
+  updateNoteComment,
+  deleteNoteComment,
+  schemas: noteCommentsSchemas,
+} = require("./note-comments.tool");
 
 const INTERNAL_TOOLS = {
   web_search: searchWeb,
@@ -31,6 +49,19 @@ const INTERNAL_TOOLS = {
   get_project_details: getProjectDetails,
   get_organization_details: getOrganizationDetails,
   consult_brain: consultBrain,
+  // Org members
+  list_org_members: listOrgMembers,
+  get_org_member: getOrgMember,
+  // Org areas
+  list_org_areas: listOrgAreas,
+  get_org_area: getOrgArea,
+  // Note header
+  get_note_details: getNoteDetails,
+  // Note comments
+  list_note_comments: listNoteComments,
+  create_note_comment: createNoteComment,
+  update_note_comment: updateNoteComment,
+  delete_note_comment: deleteNoteComment,
 };
 
 const internalToolSchemas = [
@@ -40,6 +71,10 @@ const internalToolSchemas = [
   ...projectSchemas,
   ...organizationSchemas,
   ...brainSchemas,
+  ...orgMembersSchemas,
+  ...orgAreasSchemas,
+  ...noteSchemas,
+  ...noteCommentsSchemas,
 ];
 
 /**
@@ -67,15 +102,27 @@ async function executeInternalTool(functionName, args, executionContext = {}) {
     const enrichedArgs = { ...args };
 
     // Inject server-side userId and organizationId for tools that need authenticated identity
-    if (
-      [
-        "search_my_notes",
-        "get_user_profile",
-        "list_my_projects",
-        "get_project_details",
-        "get_organization_details",
-      ].includes(functionName)
-    ) {
+    const TOOLS_NEEDING_CONTEXT = [
+      "search_my_notes",
+      "get_user_profile",
+      "list_my_projects",
+      "get_project_details",
+      "get_organization_details",
+      // Org members
+      "list_org_members",
+      "get_org_member",
+      // Org areas
+      "list_org_areas",
+      "get_org_area",
+      // Note
+      "get_note_details",
+      // Note comments
+      "list_note_comments",
+      "create_note_comment",
+      "update_note_comment",
+      "delete_note_comment",
+    ];
+    if (TOOLS_NEEDING_CONTEXT.includes(functionName)) {
       if (executionContext.userId)
         enrichedArgs.userId = executionContext.userId;
       if (executionContext.organizationId)
@@ -106,6 +153,10 @@ function getInternalToolDefinitions(allowWebSearch = true) {
     ...projectSchemas,
     ...organizationSchemas,
     ...brainSchemas,
+    ...orgMembersSchemas,
+    ...orgAreasSchemas,
+    ...noteSchemas,
+    ...noteCommentsSchemas,
   ];
 }
 
