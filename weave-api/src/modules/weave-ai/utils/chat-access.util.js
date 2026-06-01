@@ -1,11 +1,13 @@
 const notesRepository = require("@/modules/notes/notes.repository");
 const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
-const {
-  PROJECT_WRITE_CAPABLE_ROLES,
-} = require("@/modules/projects/project-role-policy");
+const { PROJECT_WRITE_CAPABLE_ROLES } = require("@/modules/projects/project-role-policy");
 const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
 const { getI18n } = require("./weave-ai-i18n.util");
 
+/**
+ * Access control utility for Weave AI resources.
+ * Enforces security boundaries for notes, tasks, and projects.
+ */
 class ChatAccessUtil {
   /**
    * Asserts that a user has mutation access to a note, checking ownership, collaboration,
@@ -18,13 +20,10 @@ class ChatAccessUtil {
    * @returns {Promise<string>} The resolved internal note UUID.
    * @throws {Error} If note is not found or access is denied.
    */
-  async assertNoteMutationAccess(
-    userId,
-    noteId,
-    organizationId = null,
-    lang = "pt"
-  ) {
+  async assertNoteMutationAccess(userId, noteId, organizationId = null, lang = "pt") {
     const t = getI18n(lang);
+    
+    // 1. Enforce presence of note identifier.
     if (!noteId) {
       const error = new Error(t.noteIdRequired);
       error.code = "CHAT_NOTE_ID_REQUIRED";
@@ -32,6 +31,7 @@ class ChatAccessUtil {
       throw error;
     }
 
+    // 2. Resolve external public IDs (e.g. from UI links) to internal database UUIDs.
     const internalNoteId = await resolveNoteIdToUuid(noteId);
     if (!internalNoteId) {
       const error = new Error(t.noteNotFound);
@@ -40,6 +40,7 @@ class ChatAccessUtil {
       throw error;
     }
 
+    // 3. Fetch base details for the note to check ownership.
     const summary = await notesRepository.getNoteAccessSummary(internalNoteId);
     if (!summary) {
       const error = new Error(t.noteNotFound);
@@ -48,10 +49,12 @@ class ChatAccessUtil {
       throw error;
     }
 
+    // Policy A: Direct owner access is always authorized.
     if (String(summary.user_id) === String(userId)) {
       return internalNoteId;
     }
 
+    // Policy B: Explicit note collaborator checks.
     const isCollaborator = await notesRepository.isCollaborator(
       internalNoteId,
       userId
@@ -60,6 +63,9 @@ class ChatAccessUtil {
       return internalNoteId;
     }
 
+    // Policy C: Organizational project-level workspace access.
+    // If the note belongs to a project, and the project is bound to the user's current
+    // organization workspace, the user is authorized.
     if (organizationId && summary.project_id) {
       const scopedProjectRows =
         await projectsReadRepository.getProjectByIdWithOrgScope(
@@ -71,6 +77,7 @@ class ChatAccessUtil {
       }
     }
 
+    // Policy D: Fail closed if no rules matched.
     const deniedError = new Error(t.noteAccessDenied);
     deniedError.code = "CHAT_NOTE_ACCESS_DENIED";
     deniedError.statusCode = 403;
@@ -88,13 +95,10 @@ class ChatAccessUtil {
    * @returns {Promise<void>} Resolves if access is authorized.
    * @throws {Error} If project ID is missing or access is denied.
    */
-  async assertProjectMutationAccess(
-    userId,
-    projectId,
-    organizationId = null,
-    lang = "pt"
-  ) {
+  async assertProjectMutationAccess(userId, projectId, organizationId = null, lang = "pt") {
     const t = getI18n(lang);
+    
+    // 1. Enforce presence of project identifier.
     if (!projectId) {
       const error = new Error(t.projectIdRequired);
       error.code = "CHAT_PROJECT_ID_REQUIRED";
@@ -102,6 +106,8 @@ class ChatAccessUtil {
       throw error;
     }
 
+    // Policy A: Organization scoping check.
+    // If the project is linked to the active workspace organization, verify existence/membership.
     if (organizationId) {
       const scopedProjectRows =
         await projectsReadRepository.getProjectByIdWithOrgScope(
@@ -113,6 +119,7 @@ class ChatAccessUtil {
       }
     }
 
+    // Policy B: Direct project owner check.
     const ownerProjectRows = await projectsReadRepository.getProjectById(
       projectId,
       userId
@@ -121,6 +128,8 @@ class ChatAccessUtil {
       return;
     }
 
+    // Policy C: Collaborator roles check.
+    // Ensure user has a role inside the project that grants write permissions (e.g. PROJECT_MANAGER, CONTRIBUTOR).
     const collaboratorRole = await projectsReadRepository.getProjectMemberRole(
       projectId,
       userId
@@ -134,6 +143,7 @@ class ChatAccessUtil {
       return;
     }
 
+    // Policy D: Access denied if unauthorized.
     const deniedError = new Error(t.projectAccessDenied);
     deniedError.code = "CHAT_PROJECT_ACCESS_DENIED";
     deniedError.statusCode = 403;

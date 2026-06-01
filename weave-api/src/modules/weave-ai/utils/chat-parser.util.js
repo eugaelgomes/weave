@@ -2,6 +2,10 @@ const REQUEST_ID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const { getI18n, getLangFromReq } = require("./weave-ai-i18n.util");
 
+/**
+ * Utility for parsing, parsing, and normalizing request bodies, query strings, and multipart parameters
+ * for Weave AI endpoints.
+ */
 class ChatParserUtil {
   /**
    * Validates authenticated user and returns user id.
@@ -25,6 +29,7 @@ class ChatParserUtil {
 
   /**
    * Parses boolean values that can arrive as string in multipart requests.
+   * Useful when form-data stringifies "true" and "false".
    *
    * @param {unknown} value - Value to check.
    * @param {boolean} fallback - Fallback boolean if parsing fails.
@@ -48,7 +53,7 @@ class ChatParserUtil {
   }
 
   /**
-   * Parses nullable arrays from body payloads.
+   * Parses nullable arrays from body payloads. Supports JSON array strings or raw arrays.
    *
    * @param {unknown} value - Value to check.
    * @param {string} fieldName - Name of the field for error messages.
@@ -57,10 +62,12 @@ class ChatParserUtil {
    * @throws {Error} If value is not a valid array of strings.
    */
   parseNullableStringArray(value, fieldName, lang = "pt") {
+    // Treat empty/unprovided values as null/omitted.
     if (value === undefined || value === null || value === "") {
       return null;
     }
 
+    // Attempt parsing if stringified JSON arrives.
     if (typeof value === "string") {
       if (value.toLowerCase() === "null") {
         return null;
@@ -78,10 +85,11 @@ class ChatParserUtil {
           return parsed;
         }
       } catch {
-        // Keep parsing below for non-JSON strings.
+        // Fall back to general type checking.
       }
     }
 
+    // Return if it is already a clean array of strings.
     if (
       Array.isArray(value) &&
       value.every((item) => typeof item === "string")
@@ -91,9 +99,7 @@ class ChatParserUtil {
 
     const t = getI18n(lang);
     const parseError = new Error(
-      typeof t.invalidArrayField === "function"
-        ? t.invalidArrayField(fieldName)
-        : t.invalidArrayField
+      typeof t.invalidArrayField === "function" ? t.invalidArrayField(fieldName) : t.invalidArrayField
     );
     parseError.code = "CHAT_INVALID_ARRAY_FIELD";
     parseError.statusCode = 400;
@@ -101,7 +107,7 @@ class ChatParserUtil {
   }
 
   /**
-   * Parses nullable object values from body payloads.
+   * Parses nullable object values from body payloads. Supports JSON strings or raw objects.
    *
    * @param {unknown} value - Value to check.
    * @param {string} fieldName - Name of the field for error messages.
@@ -116,6 +122,8 @@ class ChatParserUtil {
 
     const t = getI18n(lang);
     let parsed = value;
+    
+    // Parse JSON string inputs (e.g. from postman or multi-part/form-data).
     if (typeof value === "string") {
       if (value.toLowerCase() === "null") {
         return null;
@@ -125,9 +133,7 @@ class ChatParserUtil {
         parsed = JSON.parse(value);
       } catch {
         const parseError = new Error(
-          typeof t.invalidJsonField === "function"
-            ? t.invalidJsonField(fieldName)
-            : t.invalidJsonField
+          typeof t.invalidJsonField === "function" ? t.invalidJsonField(fieldName) : t.invalidJsonField
         );
         parseError.code = "CHAT_INVALID_OBJECT_FIELD";
         parseError.statusCode = 400;
@@ -135,11 +141,10 @@ class ChatParserUtil {
       }
     }
 
+    // Guarantee that the resolved output is an object structure.
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       const parseError = new Error(
-        typeof t.invalidObjectField === "function"
-          ? t.invalidObjectField(fieldName)
-          : t.invalidObjectField
+        typeof t.invalidObjectField === "function" ? t.invalidObjectField(fieldName) : t.invalidObjectField
       );
       parseError.code = "CHAT_INVALID_OBJECT_FIELD";
       parseError.statusCode = 400;
@@ -150,7 +155,7 @@ class ChatParserUtil {
   }
 
   /**
-   * Parses and validates model payload.
+   * Parses and validates model payload containing LLM target metadata.
    *
    * @param {unknown} value - Value to check.
    * @param {string} [lang="pt"] - User language for error messages.
@@ -160,6 +165,8 @@ class ChatParserUtil {
   parseModel(value, lang = "pt") {
     const t = getI18n(lang);
     let model = value;
+    
+    // Parse model parameters if received as string.
     if (typeof model === "string") {
       try {
         model = JSON.parse(model);
@@ -171,6 +178,7 @@ class ChatParserUtil {
       }
     }
 
+    // Validate that required model properties exist.
     const isValidModel =
       model &&
       typeof model === "object" &&
@@ -193,7 +201,8 @@ class ChatParserUtil {
   }
 
   /**
-   * Normalizes and validates chat payload.
+   * Normalizes and validates the full incoming chat request body.
+   * Sanitizes all fields to prevent database pollution or execution errors.
    *
    * @param {import("express").Request} req - The Express request object.
    * @returns {object} Parsed chat request payload.
@@ -217,6 +226,7 @@ class ChatParserUtil {
       context,
     } = req.body;
 
+    // Verify main message presence
     if (typeof message !== "string" || !message.trim()) {
       const error = new Error(t.messageRequired);
       error.code = "CHAT_MESSAGE_REQUIRED";
@@ -224,7 +234,10 @@ class ChatParserUtil {
       throw error;
     }
 
+    // Parse model structure
     const parsedModel = this.parseModel(model, lang);
+    
+    // Normalize IDs to handle frontend-defined null/undefined representations
     const parsedAgentId =
       agentId === undefined ||
       agentId === null ||
@@ -232,6 +245,7 @@ class ChatParserUtil {
       agentId === "null"
         ? null
         : String(agentId);
+        
     const parsedSessionId =
       sessionId === undefined ||
       sessionId === null ||
@@ -239,6 +253,7 @@ class ChatParserUtil {
       sessionId === "null"
         ? null
         : String(sessionId);
+        
     const parsedRequestId =
       requestId === undefined ||
       requestId === null ||
@@ -246,12 +261,15 @@ class ChatParserUtil {
       requestId === "null"
         ? null
         : String(requestId).trim();
+        
+    // Enforce UUID constraints on Request ID for tracking/idempotency.
     if (parsedRequestId && !REQUEST_ID_REGEX.test(parsedRequestId)) {
       const requestError = new Error(t.invalidRequestId);
       requestError.code = "CHAT_INVALID_REQUEST_ID";
       requestError.statusCode = 400;
       throw requestError;
     }
+    
     const parsedUseCase =
       useCase === undefined ||
       useCase === null ||

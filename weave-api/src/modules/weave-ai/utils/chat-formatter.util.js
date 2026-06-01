@@ -7,9 +7,13 @@ const CHAT_CONTEXT_MAX_MESSAGE_CHARS = Number.parseInt(
   10
 );
 
+/**
+ * Utility for formatting and normalizing inputs/outputs of Weave AI endpoints,
+ * as well as preparing payload shapes compatible with the Weave Engine LLM.
+ */
 class ChatFormatterUtil {
   /**
-   * Converts uploaded files to serializable metadata.
+   * Converts uploaded files to serializable metadata to return in HTTP responses.
    *
    * @param {Array<import("multer").File>} files - Uploaded files array.
    * @returns {Array<Record<string, unknown>>} Metadata array.
@@ -28,6 +32,7 @@ class ChatFormatterUtil {
 
   /**
    * Converts uploaded files to payload accepted by engine chat-v2 processor.
+   * Encodes binary file buffers to base64 encoding strings.
    *
    * @param {Array<import("multer").File>} files - Uploaded files array.
    * @returns {Array<{name: string, mimeType: string, sizeBytes: number, base64Data: string}>} Engine files payload.
@@ -49,6 +54,7 @@ class ChatFormatterUtil {
 
   /**
    * Normalizes persisted messages into compact conversation history.
+   * Truncates extremely large message bodies to safeguard LLM tokens window usage.
    *
    * @param {Array<{role?: string, content?: string, model?: string, created_at?: string}>} messages - Raw messages from database.
    * @returns {Array<{role: "user"|"assistant", content: string, model: string|null, createdAt: string|null}>} Normalized history.
@@ -67,6 +73,7 @@ class ChatFormatterUtil {
           return null;
         }
 
+        // Hard truncation to avoid blowing context windows with long notes or transcripts.
         const content =
           rawContent.length > CHAT_CONTEXT_MAX_MESSAGE_CHARS
             ? `${rawContent.slice(0, CHAT_CONTEXT_MAX_MESSAGE_CHARS)}...`
@@ -84,6 +91,7 @@ class ChatFormatterUtil {
 
   /**
    * Resolves model string expected by engine provider client.
+   * Defaults to version details if defined, otherwise name.
    *
    * @param {{name: string, version: string}} model - Model name and version payload.
    * @returns {string} Model name or version.
@@ -97,6 +105,7 @@ class ChatFormatterUtil {
 
   /**
    * Builds a short session title from the first user message (fits ai_chat_sessions.title).
+   * Takes the first non-empty text line and collapses whitespace.
    *
    * @param {string} message - The first user message content.
    * @returns {string} Session title.
@@ -112,8 +121,8 @@ class ChatFormatterUtil {
     const lines = trimmed.split(/\r?\n/);
     const firstLine =
       lines
-        .find((line) => typeof line === "string" && line.trim().length > 0)
-        ?.trim() || trimmed;
+          .find((line) => typeof line === "string" && line.trim().length > 0)
+          ?.trim() || trimmed;
     const collapsed = firstLine.replace(/\s+/g, " ").trim();
     if (!collapsed) {
       return "";
@@ -123,6 +132,7 @@ class ChatFormatterUtil {
 
   /**
    * Extracts error payload details from a raw Engine error object or string.
+   * Maps unhandled exceptions to standardized codes/messages.
    *
    * @param {unknown} rawError - The raw error returned by the engine.
    * @param {string} [lang="pt"] - The language code for error translation.
@@ -158,6 +168,7 @@ class ChatFormatterUtil {
 
   /**
    * Normalizes an internal error into a standard API error response format.
+   * Hides stack-traces or low-level PG constraints in production environments.
    *
    * @param {unknown} error - The error instance to normalize.
    * @param {{ code: string, message: string, statusCode?: number }} fallback - Fallback values if error lacks metadata.
@@ -167,6 +178,7 @@ class ChatFormatterUtil {
     const mapped = fromUnknown(error, fallback.code);
     const isProduction = process.env.NODE_ENV === "production";
 
+    // Enforce safety: do not leak raw programming exception messages in production.
     if (isProduction || !mapped.isOperational || mapped.statusCode >= 500) {
       return {
         code: fallback.code,
@@ -184,6 +196,7 @@ class ChatFormatterUtil {
 
   /**
    * Extracts token consumption statistics from Engine response payload.
+   * Normalizes different naming variations (prompt/completion/input/output).
    *
    * @param {object} enginePayload - Raw payload response from the Engine.
    * @returns {{ inputTokens: number|null, outputTokens: number|null, totalTokens: number|null }} Token usage structure.
@@ -219,6 +232,7 @@ class ChatFormatterUtil {
 
   /**
    * Generates a note blocks contract configuration payload to restrict blocks to valid ProseMirror formats.
+   * Enforced on engine's creations/modifications.
    *
    * @returns {{ allowedBlockTypes: string[], version: number }} Note blocks contract.
    */
@@ -231,6 +245,7 @@ class ChatFormatterUtil {
 
   /**
    * Traverses blocks tree structure to determine if it contains non-empty text values.
+   * Implemented using a stack-based Depth-First Search (DFS) for performance.
    *
    * @param {unknown[]} blocksTree - The blocks tree list structure to inspect.
    * @returns {boolean} True if any block contains non-empty textual content, false otherwise.
@@ -241,6 +256,7 @@ class ChatFormatterUtil {
     while (stack.length > 0) {
       const node = stack.pop();
       if (!node || typeof node !== "object") continue;
+      
       const props =
         node.properties && typeof node.properties === "object"
           ? node.properties
@@ -251,7 +267,10 @@ class ChatFormatterUtil {
           : typeof props.text === "string"
             ? props.text
             : "";
+            
       if (t.trim().length > 0) return true;
+      
+      // Push sub-children if existing.
       if (Array.isArray(node.children) && node.children.length > 0) {
         stack.push(...node.children);
       }
@@ -261,6 +280,7 @@ class ChatFormatterUtil {
 
   /**
    * Safely retrieves a deeply nested property value from an object using a dot-notated string path.
+   * Prevents "Cannot read properties of undefined" errors.
    *
    * @param {Record<string, any>|null|undefined} source - The source object to search within.
    * @param {string} path - Dot-separated path representing the object keys traversal structure.
