@@ -5,9 +5,11 @@
 const WEAVE_AI_ERRORS = {
   pt: {
     unauthenticated: "Usuário não autenticado",
-    invalidArrayField: (field) => `Campo "${field}" deve ser array de strings ou null`,
+    invalidArrayField: (field) =>
+      `Campo "${field}" deve ser array de strings ou null`,
     invalidObjectField: (field) => `Campo "${field}" deve ser objeto ou null`,
-    invalidJsonField: (field) => `Campo "${field}" deve ser um objeto JSON válido`,
+    invalidJsonField: (field) =>
+      `Campo "${field}" deve ser um objeto JSON válido`,
     invalidModel: 'Campo "model" inválido',
     invalidModelValues: 'Campo "model" deve conter "name" e "version" válidos',
     messageRequired: 'Campo "message" é obrigatório',
@@ -22,17 +24,23 @@ const WEAVE_AI_ERRORS = {
     engineInvalidResponse: "Resposta inválida recebida do Weave Engine",
     engineTaskFailed: "Falha ao processar no Weave Engine",
     noteCreateFailed: "Falha ao criar nota.",
-    projectNoStages: "O projeto não possui estágios. Crie pelo menos um estágio antes de associar tarefas.",
+    projectNoStages:
+      "O projeto não possui estágios. Crie pelo menos um estágio antes de associar tarefas.",
     stageNotFound: "Estágio não encontrado para este projeto.",
     updateNoteContentIdRequired: "update_note_content requer noteId",
-    updateNoteContentEmpty: "update_note_content requer content (string) ou blocks (array) não vazio",
-    updateNoteContentNoText: "update_note_content requer conteúdo textual não vazio",
-    noteNotAssociatedToProject: "A nota não está associada a um projeto. Associe a nota a um projeto antes de alterar o estágio.",
-    stageRequired: "Estágio é obrigatório. Informe um stageId válido para esta tarefa.",
+    updateNoteContentEmpty:
+      "update_note_content requer content (string) ou blocks (array) não vazio",
+    updateNoteContentNoText:
+      "update_note_content requer conteúdo textual não vazio",
+    noteNotAssociatedToProject:
+      "A nota não está associada a um projeto. Associe a nota a um projeto antes de alterar o estágio.",
+    stageRequired:
+      "Estágio é obrigatório. Informe um stageId válido para esta tarefa.",
     collabIdRequired: "update_note_collaborator_add requer collaboratorUserId",
     searchUsersTermRequired: "search_users requer searchTerm",
     searchProjectsTermRequired: "search_projects requer searchTerm",
-    functionNotSupported: (name) => `Função não suportada para execução: ${name}`,
+    functionNotSupported: (name) =>
+      `Função não suportada para execução: ${name}`,
     agentNotFound: "Agente não encontrado para o usuário",
     sessionNotFound: "Sessão não encontrada para o usuário",
     sessionNotFoundGen: "Sessão não encontrada",
@@ -61,7 +69,8 @@ const WEAVE_AI_ERRORS = {
   },
   en: {
     unauthenticated: "User not authenticated",
-    invalidArrayField: (field) => `Field "${field}" must be an array of strings or null`,
+    invalidArrayField: (field) =>
+      `Field "${field}" must be an array of strings or null`,
     invalidObjectField: (field) => `Field "${field}" must be an object or null`,
     invalidJsonField: (field) => `Field "${field}" must be a valid JSON object`,
     invalidModel: 'Invalid "model" field',
@@ -78,14 +87,19 @@ const WEAVE_AI_ERRORS = {
     engineInvalidResponse: "Invalid response received from Weave Engine",
     engineTaskFailed: "Failed to process in Weave Engine",
     noteCreateFailed: "Failed to create note.",
-    projectNoStages: "The project has no stages. Create at least one stage before associating tasks.",
+    projectNoStages:
+      "The project has no stages. Create at least one stage before associating tasks.",
     stageNotFound: "Stage not found for this project.",
     updateNoteContentIdRequired: "update_note_content requires noteId",
-    updateNoteContentEmpty: "update_note_content requires non-empty content (string) or blocks (array)",
-    updateNoteContentNoText: "update_note_content requires non-empty textual content",
-    noteNotAssociatedToProject: "The note is not associated with a project. Associate the note with a project before changing the stage.",
+    updateNoteContentEmpty:
+      "update_note_content requires non-empty content (string) or blocks (array)",
+    updateNoteContentNoText:
+      "update_note_content requires non-empty textual content",
+    noteNotAssociatedToProject:
+      "The note is not associated with a project. Associate the note with a project before changing the stage.",
     stageRequired: "Stage is required. Provide a valid stageId for this task.",
-    collabIdRequired: "update_note_collaborator_add requires collaboratorUserId",
+    collabIdRequired:
+      "update_note_collaborator_add requires collaboratorUserId",
     searchUsersTermRequired: "search_users requires searchTerm",
     searchProjectsTermRequired: "search_projects requires searchTerm",
     functionNotSupported: (name) => `Function execution not supported: ${name}`,
@@ -117,34 +131,46 @@ const WEAVE_AI_ERRORS = {
   },
   es: {
     unauthenticated: "Usuario no autenticado",
-    invalidArrayField: (field) => `El campo "${field}" debe ser un array de cadenas o null`,
-    invalidObjectField: (field) => `El campo "${field}" debe ser un objeto o null`,
-    invalidJsonField: (field) => `El campo "${field}" debe ser un objeto JSON válido`,
+    invalidArrayField: (field) =>
+      `El campo "${field}" debe ser un array de cadenas o null`,
+    invalidObjectField: (field) =>
+      `El campo "${field}" debe ser un objeto o null`,
+    invalidJsonField: (field) =>
+      `El campo "${field}" debe ser un objeto JSON válido`,
     invalidModel: 'Campo "model" no válido',
-    invalidModelValues: 'El campo "model" debe contener "name" y "version" válidos',
+    invalidModelValues:
+      'El campo "model" debe contener "name" y "version" válidos',
     messageRequired: 'El campo "message" es obligatorio',
-    invalidRequestId: "El campo \"requestId\" debe ser un UUID válido",
+    invalidRequestId: 'El campo "requestId" debe ser un UUID válido',
     noteIdRequired: "noteId es obligatorio",
     noteNotFound: "Nota no encontrada",
     noteAccessDenied: "Sin permiso para modificar esta nota",
     projectIdRequired: "projectId es obligatorio",
     projectNotFound: "Proyecto no encontrado",
     projectAccessDenied: "Sin permiso para modificar este proyecto",
-    engineTimeout: "Tiempo de espera agotado al esperar la respuesta de Weave Engine",
+    engineTimeout:
+      "Tiempo de espera agotado al esperar la respuesta de Weave Engine",
     engineInvalidResponse: "Respuesta no válida recibida de Weave Engine",
     engineTaskFailed: "Error al procesar en Weave Engine",
     noteCreateFailed: "Error al crear la nota.",
-    projectNoStages: "El proyecto no tiene etapas. Cree al menos una etapa antes de asociar tareas.",
+    projectNoStages:
+      "El proyecto no tiene etapas. Cree al menos una etapa antes de asociar tareas.",
     stageNotFound: "Etapa no encontrada para este proyecto.",
     updateNoteContentIdRequired: "update_note_content requiere noteId",
-    updateNoteContentEmpty: "update_note_content requiere content (cadena) o blocks (array) no vacío",
-    updateNoteContentNoText: "update_note_content requiere contenido de texto no vacío",
-    noteNotAssociatedToProject: "La nota no está asociada a un proyecto. Asocie la nota a un proyecto antes de cambiar la etapa.",
-    stageRequired: "La etapa es obligatoria. Proporcione un stageId válido para esta tarea.",
-    collabIdRequired: "update_note_collaborator_add requiere collaboratorUserId",
+    updateNoteContentEmpty:
+      "update_note_content requiere content (cadena) o blocks (array) no vacío",
+    updateNoteContentNoText:
+      "update_note_content requiere contenido de texto no vacío",
+    noteNotAssociatedToProject:
+      "La nota no está asociada a un proyecto. Asocie la nota a un proyecto antes de cambiar la etapa.",
+    stageRequired:
+      "La etapa es obligatoria. Proporcione un stageId válido para esta tarea.",
+    collabIdRequired:
+      "update_note_collaborator_add requiere collaboratorUserId",
     searchUsersTermRequired: "search_users requiere searchTerm",
     searchProjectsTermRequired: "search_projects requiere searchTerm",
-    functionNotSupported: (name) => `Función no admitida para ejecución: ${name}`,
+    functionNotSupported: (name) =>
+      `Función no admitida para ejecución: ${name}`,
     agentNotFound: "Agente no encontrado para el usuario",
     sessionNotFound: "Sesión no encontrada para el usuario",
     sessionNotFoundGen: "Sesión no encontrada",

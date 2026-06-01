@@ -1,6 +1,8 @@
 const notesRepository = require("@/modules/notes/notes.repository");
 const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
-const { PROJECT_WRITE_CAPABLE_ROLES } = require("@/modules/projects/project-role-policy");
+const {
+  PROJECT_WRITE_CAPABLE_ROLES,
+} = require("@/modules/projects/project-role-policy");
 const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
 const { getI18n } = require("./weave-ai-i18n.util");
 
@@ -20,9 +22,14 @@ class ChatAccessUtil {
    * @returns {Promise<string>} The resolved internal note UUID.
    * @throws {Error} If note is not found or access is denied.
    */
-  async assertNoteMutationAccess(userId, noteId, organizationId = null, lang = "pt") {
+  async assertNoteMutationAccess(
+    userId,
+    noteId,
+    organizationId = null,
+    lang = "pt"
+  ) {
     const t = getI18n(lang);
-    
+
     // 1. Enforce presence of note identifier.
     if (!noteId) {
       const error = new Error(t.noteIdRequired);
@@ -95,9 +102,14 @@ class ChatAccessUtil {
    * @returns {Promise<void>} Resolves if access is authorized.
    * @throws {Error} If project ID is missing or access is denied.
    */
-  async assertProjectMutationAccess(userId, projectId, organizationId = null, lang = "pt") {
+  async assertProjectMutationAccess(
+    userId,
+    projectId,
+    organizationId = null,
+    lang = "pt"
+  ) {
     const t = getI18n(lang);
-    
+
     // 1. Enforce presence of project identifier.
     if (!projectId) {
       const error = new Error(t.projectIdRequired);

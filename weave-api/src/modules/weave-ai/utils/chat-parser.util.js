@@ -99,7 +99,9 @@ class ChatParserUtil {
 
     const t = getI18n(lang);
     const parseError = new Error(
-      typeof t.invalidArrayField === "function" ? t.invalidArrayField(fieldName) : t.invalidArrayField
+      typeof t.invalidArrayField === "function"
+        ? t.invalidArrayField(fieldName)
+        : t.invalidArrayField
     );
     parseError.code = "CHAT_INVALID_ARRAY_FIELD";
     parseError.statusCode = 400;
@@ -122,7 +124,7 @@ class ChatParserUtil {
 
     const t = getI18n(lang);
     let parsed = value;
-    
+
     // Parse JSON string inputs (e.g. from postman or multi-part/form-data).
     if (typeof value === "string") {
       if (value.toLowerCase() === "null") {
@@ -133,7 +135,9 @@ class ChatParserUtil {
         parsed = JSON.parse(value);
       } catch {
         const parseError = new Error(
-          typeof t.invalidJsonField === "function" ? t.invalidJsonField(fieldName) : t.invalidJsonField
+          typeof t.invalidJsonField === "function"
+            ? t.invalidJsonField(fieldName)
+            : t.invalidJsonField
         );
         parseError.code = "CHAT_INVALID_OBJECT_FIELD";
         parseError.statusCode = 400;
@@ -144,7 +148,9 @@ class ChatParserUtil {
     // Guarantee that the resolved output is an object structure.
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       const parseError = new Error(
-        typeof t.invalidObjectField === "function" ? t.invalidObjectField(fieldName) : t.invalidObjectField
+        typeof t.invalidObjectField === "function"
+          ? t.invalidObjectField(fieldName)
+          : t.invalidObjectField
       );
       parseError.code = "CHAT_INVALID_OBJECT_FIELD";
       parseError.statusCode = 400;
@@ -165,7 +171,7 @@ class ChatParserUtil {
   parseModel(value, lang = "pt") {
     const t = getI18n(lang);
     let model = value;
-    
+
     // Parse model parameters if received as string.
     if (typeof model === "string") {
       try {
@@ -236,7 +242,7 @@ class ChatParserUtil {
 
     // Parse model structure
     const parsedModel = this.parseModel(model, lang);
-    
+
     // Normalize IDs to handle frontend-defined null/undefined representations
     const parsedAgentId =
       agentId === undefined ||
@@ -245,7 +251,7 @@ class ChatParserUtil {
       agentId === "null"
         ? null
         : String(agentId);
-        
+
     const parsedSessionId =
       sessionId === undefined ||
       sessionId === null ||
@@ -253,7 +259,7 @@ class ChatParserUtil {
       sessionId === "null"
         ? null
         : String(sessionId);
-        
+
     const parsedRequestId =
       requestId === undefined ||
       requestId === null ||
@@ -261,7 +267,7 @@ class ChatParserUtil {
       requestId === "null"
         ? null
         : String(requestId).trim();
-        
+
     // Enforce UUID constraints on Request ID for tracking/idempotency.
     if (parsedRequestId && !REQUEST_ID_REGEX.test(parsedRequestId)) {
       const requestError = new Error(t.invalidRequestId);
@@ -269,7 +275,7 @@ class ChatParserUtil {
       requestError.statusCode = 400;
       throw requestError;
     }
-    
+
     const parsedUseCase =
       useCase === undefined ||
       useCase === null ||

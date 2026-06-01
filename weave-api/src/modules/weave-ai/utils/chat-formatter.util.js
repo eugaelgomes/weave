@@ -121,8 +121,8 @@ class ChatFormatterUtil {
     const lines = trimmed.split(/\r?\n/);
     const firstLine =
       lines
-          .find((line) => typeof line === "string" && line.trim().length > 0)
-          ?.trim() || trimmed;
+        .find((line) => typeof line === "string" && line.trim().length > 0)
+        ?.trim() || trimmed;
     const collapsed = firstLine.replace(/\s+/g, " ").trim();
     if (!collapsed) {
       return "";
@@ -256,7 +256,7 @@ class ChatFormatterUtil {
     while (stack.length > 0) {
       const node = stack.pop();
       if (!node || typeof node !== "object") continue;
-      
+
       const props =
         node.properties && typeof node.properties === "object"
           ? node.properties
@@ -267,9 +267,9 @@ class ChatFormatterUtil {
           : typeof props.text === "string"
             ? props.text
             : "";
-            
+
       if (t.trim().length > 0) return true;
-      
+
       // Push sub-children if existing.
       if (Array.isArray(node.children) && node.children.length > 0) {
         stack.push(...node.children);

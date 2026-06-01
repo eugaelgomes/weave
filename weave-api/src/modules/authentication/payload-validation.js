@@ -18,31 +18,26 @@ const signinSchema = z
 
 // OAuth callback
 
-const oauthCallbackSchema = z
-  .object({
-    code: z
-      .string()
-      .min(8, "Invalid authorization code length.")
-      .max(2048, "Invalid authorization code length.")
-      .regex(
-        /^[A-Za-z0-9._\-~/+=:]+$/,
-        "Invalid authorization code characters."
-      )
-      .trim()
-      .optional(),
-    error: z
-      .string()
-      .min(1, "Invalid OAuth error length.")
-      .max(100, "Invalid OAuth error length.")
-      .trim()
-      .optional(),
-    state: z
-      .string({ required_error: "OAuth state is required." })
-      .min(8, "Invalid OAuth state length.")
-      .max(255, "Invalid OAuth state length.")
-      .regex(/^[A-Za-z0-9._\-]+$/, "Invalid OAuth state characters.")
-      .trim(),
-  })
-  .strict("Invalid OAuth callback payload structure.");
+const oauthCallbackSchema = z.object({
+  code: z
+    .string()
+    .min(8, "Invalid authorization code length.")
+    .max(2048, "Invalid authorization code length.")
+    .regex(/^[A-Za-z0-9._\-~/+=:]+$/, "Invalid authorization code characters.")
+    .trim()
+    .optional(),
+  error: z
+    .string()
+    .min(1, "Invalid OAuth error length.")
+    .max(100, "Invalid OAuth error length.")
+    .trim()
+    .optional(),
+  state: z
+    .string({ required_error: "OAuth state is required." })
+    .min(8, "Invalid OAuth state length.")
+    .max(255, "Invalid OAuth state length.")
+    .regex(/^[A-Za-z0-9._\-]+$/, "Invalid OAuth state characters.")
+    .trim(),
+});
 
 module.exports = { oauthCallbackSchema, signinSchema };
