@@ -4,11 +4,10 @@ const {
   normalizeAgentPersonality,
   formatAgentResponse,
   mergePersonalityUpdates,
-  ensureArrayField,
 } = require("@/modules/weave-ai/normalize");
 const { getProvidersWithModels } = require("@/modules/weave-ai/llm-catalog");
 const spacesService = require("@/services/storage");
-const { AppError } = require("@/errors");
+const { getI18n, getLangFromReq } = require("../utils/weave-ai-i18n.util");
 
 /**
  * Controller for User Agent management in Weave AI.
@@ -26,10 +25,19 @@ const { AppError } = require("@/errors");
  * - POST   /agents/:id/duplicate → duplicateAgent
  */
 class AgentsController {
+  /**
+   * Validates if the request has an authenticated user session and returns the user ID.
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @returns {string} The authenticated user's ID.
+   * @throws {Error} If user is not authenticated (401).
+   */
   _validateAuthentication(req) {
     const userId = req.user?.userId;
     if (!userId) {
-      const error = new Error("Usuário não autenticado");
+      const userLanguage = getLangFromReq(req);
+      const t = getI18n(userLanguage);
+      const error = new Error(t.unauthenticated);
       error.statusCode = 401;
       throw error;
     }
@@ -37,9 +45,15 @@ class AgentsController {
   }
 
   /**
-   * Creates a new agent for the authenticated user.
+   * Creates a new AI agent with custom personality and capabilities for the user.
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<import("express").Response>} Express response with the created agent.
    */
   async createUserAgent(req, res) {
+    const userLanguage = getLangFromReq(req);
+    const t = getI18n(userLanguage);
     try {
       const userId = this._validateAuthentication(req);
       const {
@@ -61,7 +75,7 @@ class AgentsController {
       if (!name || !model_provider || !model_name) {
         return res.status(400).json({
           success: false,
-          error: "name, model_provider e model_name são obrigatórios",
+          error: t.agentFieldsRequired,
         });
       }
 
@@ -112,21 +126,27 @@ class AgentsController {
       if (error.statusCode === 401) {
         return res.status(401).json({
           success: false,
-          error: AppError.unauthorized().message,
+          error: error.message || t.unauthenticated,
         });
       }
       console.error("Erro ao criar agente:", error);
       res.status(500).json({
         success: false,
-        error: "Erro ao criar agente",
+        error: t.createAgentFailed,
       });
     }
   }
 
   /**
-   * Updates an existing agent.
+   * Updates an existing AI agent's attributes and personality settings.
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<import("express").Response>} Express response with the updated agent.
    */
   async updateAgent(req, res) {
+    const userLanguage = getLangFromReq(req);
+    const t = getI18n(userLanguage);
     try {
       const userId = this._validateAuthentication(req);
       const { id } = req.params;
@@ -135,9 +155,7 @@ class AgentsController {
       const agent = await agentRepository.getAgentById(id, userId);
 
       if (!agent) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Agente não encontrado" });
+        return res.status(404).json({ success: false, error: t.agentNotFound });
       }
 
       // Build the column-level updates
@@ -228,42 +246,52 @@ class AgentsController {
       if (error.statusCode === 401) {
         return res.status(401).json({
           success: false,
-          error: AppError.unauthorized().message,
+          error: error.message || t.unauthenticated,
         });
       }
       console.error("Erro ao atualizar agente:", error);
-      res
-        .status(500)
-        .json({ success: false, error: "Erro ao atualizar agente" });
+      res.status(500).json({ success: false, error: t.updateAgentFailed });
     }
   }
 
   /**
-   * Deletes an agent.
+   * Deletes an AI agent by ID.
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<import("express").Response>} Express response acknowledging deletion.
    */
   async deleteAgent(req, res) {
+    const userLanguage = getLangFromReq(req);
+    const t = getI18n(userLanguage);
     try {
       const userId = this._validateAuthentication(req);
       const { id } = req.params;
 
       await agentRepository.deleteAgent(id, userId);
-      res.json({ success: true, message: "Agente removido com sucesso" });
+      res.json({ success: true, message: t.deleteAgentSuccess });
     } catch (error) {
       if (error.statusCode === 401) {
         return res.status(401).json({
           success: false,
-          error: AppError.unauthorized().message,
+          error: error.message || t.unauthenticated,
         });
       }
       console.error("Erro ao deletar agente:", error);
-      res.status(500).json({ success: false, error: "Erro ao deletar agente" });
+      res.status(500).json({ success: false, error: t.deleteAgentFailed });
     }
   }
 
   /**
-   * Shares an agent with other users.
+   * Shares an AI agent with specified users.
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<import("express").Response>} Express response with the updated agent share metadata.
    */
   async shareAgent(req, res) {
+    const userLanguage = getLangFromReq(req);
+    const t = getI18n(userLanguage);
     try {
       const userId = this._validateAuthentication(req);
       const { id } = req.params;
@@ -272,7 +300,7 @@ class AgentsController {
       if (!Array.isArray(sharedWith)) {
         return res
           .status(400)
-          .json({ success: false, error: "sharedWith deve ser um array" });
+          .json({ success: false, error: t.sharedWithMustBeArray });
       }
 
       const updatedAgent = await agentRepository.shareAgent(
@@ -284,7 +312,7 @@ class AgentsController {
       if (!updatedAgent) {
         return res.status(404).json({
           success: false,
-          error: "Agente não encontrado ou sem permissão",
+          error: t.agentNotFoundOrNoPermission,
         });
       }
 
@@ -293,21 +321,25 @@ class AgentsController {
       if (error.statusCode === 401) {
         return res.status(401).json({
           success: false,
-          error: AppError.unauthorized().message,
+          error: error.message || t.unauthenticated,
         });
       }
       console.error("Erro ao compartilhar agente:", error);
-      res
-        .status(500)
-        .json({ success: false, error: "Erro ao compartilhar agente" });
+      res.status(500).json({ success: false, error: t.shareAgentFailed });
     }
   }
 
   /**
-   * Lists agents for the authenticated user with optional filters.
+   * Retrieves a list of AI agents for the authenticated user based on filters.
    * Query params: ?projectId=, ?isActive=, ?search=
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<import("express").Response>} Express response with the filtered list of agents.
    */
   async getUserAgents(req, res) {
+    const userLanguage = getLangFromReq(req);
+    const t = getI18n(userLanguage);
     try {
       const userId = this._validateAuthentication(req);
 
@@ -333,30 +365,34 @@ class AgentsController {
       if (error.statusCode === 401) {
         return res.status(401).json({
           success: false,
-          error: AppError.unauthorized().message,
+          error: error.message || t.unauthenticated,
         });
       }
       console.error("Erro ao buscar agentes:", error);
       res.status(500).json({
         success: false,
-        error: "Erro ao buscar agentes",
+        error: t.fetchAgentsFailed,
       });
     }
   }
 
   /**
-   * Gets a single agent by ID.
+   * Retrieves details of a single AI agent by its ID.
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<import("express").Response>} Express response with the agent details.
    */
   async getAgentById(req, res) {
+    const userLanguage = getLangFromReq(req);
+    const t = getI18n(userLanguage);
     try {
       const userId = this._validateAuthentication(req);
       const { id } = req.params;
       const agent = await agentRepository.getAgentById(id, userId);
 
       if (!agent) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Agente não encontrado" });
+        return res.status(404).json({ success: false, error: t.agentNotFound });
       }
 
       res.json({ success: true, agent: formatAgentResponse(agent) });
@@ -364,23 +400,29 @@ class AgentsController {
       if (error.statusCode === 401) {
         return res.status(401).json({
           success: false,
-          error: AppError.unauthorized().message,
+          error: error.message || t.unauthenticated,
         });
       }
       console.error("Erro ao buscar agente:", error);
       res.status(500).json({
         success: false,
-        error: "Erro ao buscar agente",
+        error: t.fetchAgentFailed,
       });
     }
   }
 
   /**
-   * Assigns an agent to a project.
+   * Assigns an AI agent to a specific project.
    * PUT /agents/:id/project
    * Body: { projectId: "uuid" }
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<import("express").Response>} Express response with the updated agent project linkage.
    */
   async assignToProject(req, res) {
+    const userLanguage = getLangFromReq(req);
+    const t = getI18n(userLanguage);
     try {
       const userId = this._validateAuthentication(req);
       const { id } = req.params;
@@ -389,7 +431,7 @@ class AgentsController {
       if (!projectId) {
         return res
           .status(400)
-          .json({ success: false, error: "projectId é obrigatório" });
+          .json({ success: false, error: t.projectIdRequired });
       }
 
       const updatedAgent = await agentRepository.assignToProject(
@@ -399,9 +441,7 @@ class AgentsController {
       );
 
       if (!updatedAgent) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Agente não encontrado" });
+        return res.status(404).json({ success: false, error: t.agentNotFound });
       }
 
       res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
@@ -409,21 +449,25 @@ class AgentsController {
       if (error.statusCode === 401) {
         return res.status(401).json({
           success: false,
-          error: AppError.unauthorized().message,
+          error: error.message || t.unauthenticated,
         });
       }
       console.error("Erro ao vincular agente ao projeto:", error);
-      res
-        .status(500)
-        .json({ success: false, error: "Erro ao vincular agente ao projeto" });
+      res.status(500).json({ success: false, error: t.assignProjectFailed });
     }
   }
 
   /**
-   * Removes an agent from its project.
+   * Removes an AI agent from its currently assigned project.
    * DELETE /agents/:id/project
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<import("express").Response>} Express response with the updated agent metadata.
    */
   async unassignFromProject(req, res) {
+    const userLanguage = getLangFromReq(req);
+    const t = getI18n(userLanguage);
     try {
       const userId = this._validateAuthentication(req);
       const { id } = req.params;
@@ -434,9 +478,7 @@ class AgentsController {
       );
 
       if (!updatedAgent) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Agente não encontrado" });
+        return res.status(404).json({ success: false, error: t.agentNotFound });
       }
 
       res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
@@ -444,23 +486,29 @@ class AgentsController {
       if (error.statusCode === 401) {
         return res.status(401).json({
           success: false,
-          error: AppError.unauthorized().message,
+          error: error.message || t.unauthenticated,
         });
       }
       console.error("Erro ao desvincular agente do projeto:", error);
       res.status(500).json({
         success: false,
-        error: "Erro ao desvincular agente do projeto",
+        error: t.unassignProjectFailed,
       });
     }
   }
 
   /**
-   * Toggles the active state of an agent.
+   * Toggles the active status of an AI agent.
    * PATCH /agents/:id/active
    * Body: { isActive: boolean }
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<import("express").Response>} Express response with the toggled active state agent.
    */
   async toggleActive(req, res) {
+    const userLanguage = getLangFromReq(req);
+    const t = getI18n(userLanguage);
     try {
       const userId = this._validateAuthentication(req);
       const { id } = req.params;
@@ -469,7 +517,7 @@ class AgentsController {
       if (typeof isActive !== "boolean") {
         return res
           .status(400)
-          .json({ success: false, error: "isActive deve ser boolean" });
+          .json({ success: false, error: t.isActiveMustBeBoolean });
       }
 
       const updatedAgent = await agentRepository.toggleActive(
@@ -479,9 +527,7 @@ class AgentsController {
       );
 
       if (!updatedAgent) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Agente não encontrado" });
+        return res.status(404).json({ success: false, error: t.agentNotFound });
       }
 
       res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
@@ -489,21 +535,25 @@ class AgentsController {
       if (error.statusCode === 401) {
         return res.status(401).json({
           success: false,
-          error: AppError.unauthorized().message,
+          error: error.message || t.unauthenticated,
         });
       }
       console.error("Erro ao alternar estado do agente:", error);
-      res
-        .status(500)
-        .json({ success: false, error: "Erro ao alternar estado do agente" });
+      res.status(500).json({ success: false, error: t.toggleActiveFailed });
     }
   }
 
   /**
-   * Duplicates an existing agent.
+   * Duplicates an existing AI agent.
    * POST /agents/:id/duplicate
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<import("express").Response>} Express response with the duplicated agent details.
    */
   async duplicateAgent(req, res) {
+    const userLanguage = getLangFromReq(req);
+    const t = getI18n(userLanguage);
     try {
       const userId = this._validateAuthentication(req);
       const { id } = req.params;
@@ -511,9 +561,7 @@ class AgentsController {
       const duplicated = await agentRepository.duplicateAgent(id, userId);
 
       if (!duplicated) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Agente não encontrado" });
+        return res.status(404).json({ success: false, error: t.agentNotFound });
       }
 
       res.json({ success: true, agent: formatAgentResponse(duplicated) });
@@ -521,30 +569,39 @@ class AgentsController {
       if (error.statusCode === 401) {
         return res.status(401).json({
           success: false,
-          error: AppError.unauthorized().message,
+          error: error.message || t.unauthenticated,
         });
       }
       console.error("Erro ao duplicar agente:", error);
-      res
-        .status(500)
-        .json({ success: false, error: "Erro ao duplicar agente" });
+      res.status(500).json({ success: false, error: t.duplicateAgentFailed });
     }
   }
 
   /**
-   * Returns available LLM providers and models.
+   * Retrieves list of available LLM providers and models.
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<void>}
    */
   async getProvidersAndModels(req, res) {
-    this._validateAuthentication(req);
-
+    const userLanguage = getLangFromReq(req);
+    const t = getI18n(userLanguage);
     try {
+      this._validateAuthentication(req);
       const providers = getProvidersWithModels();
       res.json({ status: "OK", providers });
     } catch (error) {
+      if (error.statusCode === 401) {
+        return res.status(401).json({
+          success: false,
+          error: error.message || t.unauthenticated,
+        });
+      }
       console.error("Erro ao obter provedores e modelos:", error);
       res.status(500).json({
         success: false,
-        error: "Erro ao obter provedores e modelos",
+        error: t.fetchProvidersFailed,
       });
     }
   }

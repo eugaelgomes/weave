@@ -120,7 +120,7 @@ module.exports = {
   "project.outro": "Ya puede ver y colaborar en el proyecto.",
   "project.footer":
     "Recibio este correo porque fue anadido a un proyecto en Weave Notes.",
-  "project.subject": "{firstName}, se le anadio al proyecto \"{projectName}\"",
+  "project.subject": '{firstName}, se le anadio al proyecto "{projectName}"',
   "project.untitled": "Sin titulo",
 
   "collab.preheader": "Se le anadio como colaborador de una nota.",
@@ -148,7 +148,7 @@ module.exports = {
   "dueReminder.preheader": "Recordatorio del plazo de su nota.",
   "dueReminder.title": "Recordatorio de plazo",
   "dueReminder.subtitle": "Vencimiento de la nota",
-  "dueReminder.intro": "La nota \"{noteTitle}\" vence manana ({dueDateLabel}).",
+  "dueReminder.intro": 'La nota "{noteTitle}" vence manana ({dueDateLabel}).',
   "dueReminder.cta": "Abrir nota",
   "dueReminder.info": "Recomendamos revisar la nota hoy para evitar retrasos.",
   "dueReminder.subject": "Recordatorio: vence manana - {noteTitle}",

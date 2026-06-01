@@ -499,12 +499,10 @@ class OrganizationMembersController extends OrganizationsBaseController {
             .status(409)
             .json({ error: "Este convite já foi utilizado" });
         if (new Date(diag.expires_at) < new Date())
-          return res
-            .status(410)
-            .json({
-              error:
-                "Este convite expirou. Peça ao administrador um novo convite.",
-            });
+          return res.status(410).json({
+            error:
+              "Este convite expirou. Peça ao administrador um novo convite.",
+          });
         return res.status(400).json({ error: "Convite inválido ou expirado" });
       }
 
@@ -571,19 +569,15 @@ class OrganizationMembersController extends OrganizationsBaseController {
         if (diag.deleted)
           return res.status(410).json({ error: "Este convite foi cancelado" });
         if (diag.invite_verified)
-          return res
-            .status(409)
-            .json({
-              error:
-                "Este convite já foi utilizado. Entre em contato com o administrador para um novo convite.",
-            });
+          return res.status(409).json({
+            error:
+              "Este convite já foi utilizado. Entre em contato com o administrador para um novo convite.",
+          });
         if (new Date(diag.expires_at) < new Date())
-          return res
-            .status(410)
-            .json({
-              error:
-                "Este convite expirou. Peça ao administrador um novo convite.",
-            });
+          return res.status(410).json({
+            error:
+              "Este convite expirou. Peça ao administrador um novo convite.",
+          });
         return res.status(400).json({ error: "Convite inválido ou expirado" });
       }
 
