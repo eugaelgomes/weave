@@ -50,7 +50,11 @@ export default function ChatWidget({
 
   useEffect(() => {
     if (models.length && !selectedModel) {
-      setSelectedModel(models.find((m) => m.provider === "gemini") || models[0]);
+      setSelectedModel(
+        models.find((m) => m.version === "gpt-4o") ||
+          models.find((m) => m.provider === "gemini") ||
+          models[0]
+      );
     }
   }, [models, selectedModel]);
 

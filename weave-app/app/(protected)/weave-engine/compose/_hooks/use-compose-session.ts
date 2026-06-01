@@ -88,7 +88,12 @@ export function useComposeSession(
   useEffect(() => {
     void fetchAvailableModels()
       .then((models) => {
-        setSelectedModel(models.find((m) => m.provider === "gemini") || models[0] || null);
+        setSelectedModel(
+          models.find((m) => m.version === "gpt-4o") ||
+            models.find((m) => m.provider === "gemini") ||
+            models[0] ||
+            null
+        );
       })
       .catch(() => setSelectedModel(null));
   }, []);

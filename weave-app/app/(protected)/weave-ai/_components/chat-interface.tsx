@@ -238,7 +238,7 @@ export default function ChatInterface({
 
   useEffect(() => {
     if (models.length > 0 && !selectedModel) {
-      setSelectedModel(models[0]);
+      setSelectedModel(models.find((m) => m.version === "gpt-4o") || models[0]);
     }
   }, [models, selectedModel]);
 
