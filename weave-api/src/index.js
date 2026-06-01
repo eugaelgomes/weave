@@ -24,6 +24,10 @@ app.set("port", port);
 
 const server = http.createServer(app);
 
+// Increase timeouts to prevent proxies from dropping long-running AI requests
+server.keepAliveTimeout = 120000; // 120 seconds
+server.headersTimeout = 125000; // 125 seconds
+
 /**
  *
  * @param {*} error

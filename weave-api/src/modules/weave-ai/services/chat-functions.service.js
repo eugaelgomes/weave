@@ -14,6 +14,7 @@ const {
   enqueueNoteEmbeddingJob,
 } = require("@/services/queue/queue-controller");
 const { getI18n } = require("../utils/weave-ai-i18n.util");
+const spacesService = require("@/services/storage");
 
 class ChatFunctionsService {
   /**
@@ -415,11 +416,11 @@ class ChatFunctionsService {
           name,
           result: {
             users: users.map((u) => ({
+              avatar_url: u.avatar_url ? spacesService.getFileUrl(u.avatar_url) : null,
+              email: u.email,
               id: u.user_id,
               name: u.name,
               username: u.username,
-              email: u.email,
-              avatar_url: u.avatar_url,
             })),
           },
           success: true,

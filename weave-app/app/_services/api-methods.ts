@@ -45,7 +45,7 @@ const resolveApiBaseUrl = (): string => {
 export const API_BASE_URL = resolveApiBaseUrl();
 
 export const API_CONFIG = {
-  timeout: 30000,
+  timeout: 120000, // 120 seconds to allow for long LLM responses
   headers: {
     "Content-Type": "application/json",
   },
@@ -222,6 +222,7 @@ export const API_ENDPOINTS = {
 
 export interface ApiRequestOptions extends RequestInit {
   overrideBaseURL?: string;
+  timeout?: number;
 }
 
 // Client API
@@ -260,8 +261,17 @@ class ApiClient {
       } as HeadersInit;
     }
 
+    let timeoutId: number | undefined;
+    if (!config.signal) {
+      const controller = new AbortController();
+      const timeoutValue = options.timeout ?? API_CONFIG.timeout;
+      timeoutId = window.setTimeout(() => controller.abort("timeout"), timeoutValue);
+      config.signal = controller.signal;
+    }
+
     try {
       let response = await fetch(url, config);
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
 
       if (response.status === 403) {
         let code: string | undefined;
@@ -299,6 +309,18 @@ class ApiClient {
 
       return response;
     } catch (error) {
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
+      
+      const isAbortError = error instanceof Error && error.name === "AbortError";
+      const isTimeout = isAbortError || (error === "timeout");
+      
+      if (isTimeout) {
+        throw new ApiError(
+          getFallbackMessageByStatus(504),
+          504
+        );
+      }
+
       throw new ApiError(
         getSafeApiErrorMessage(
           0,
