@@ -5,6 +5,91 @@ const FunctionCategory = Object.freeze({
   USERS: "users",
 });
 
+/**
+ * Shared detailed schema for structured editor blocks.
+ * Used by create_note and update_note_content.
+ */
+const BLOCKS_SCHEMA = Object.freeze({
+  description:
+    "Array of structured editor blocks. ALWAYS use this instead of 'content' for rich formatting. Each block represents a visual element (heading, paragraph, list, etc.).",
+  type: "array",
+  items: {
+    type: "object",
+    properties: {
+      type: {
+        type: "string",
+        enum: [
+          "paragraph",
+          "heading",
+          "quote",
+          "code",
+          "list",
+          "todo",
+          "divider",
+        ],
+        description: "Block type.",
+      },
+      properties: {
+        type: "object",
+        description: "Block content and attributes.",
+        properties: {
+          text: {
+            type: "string",
+            description: "Text content of the block.",
+          },
+          attrs: {
+            type: "object",
+            description: "Type-specific attributes.",
+            properties: {
+              level: {
+                type: "integer",
+                description:
+                  "Heading level (1-6). Only for type=heading.",
+              },
+              language: {
+                type: "string",
+                description:
+                  "Programming language identifier. Only for type=code.",
+              },
+              ordered: {
+                type: "boolean",
+                description:
+                  "Whether the list is ordered. Only for type=list.",
+              },
+              checked: {
+                type: "boolean",
+                description:
+                  "Whether the todo item is checked. Only for type=todo.",
+              },
+            },
+          },
+        },
+      },
+      children: {
+        type: "array",
+        description:
+          "Child blocks for list items. Each child is a paragraph block with the list item text.",
+        items: {
+          type: "object",
+          properties: {
+            type: {
+              type: "string",
+              enum: ["paragraph"],
+            },
+            properties: {
+              type: "object",
+              properties: {
+                text: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+    },
+    required: ["type"],
+  },
+});
+
 const FUNCTION_SCHEMAS = Object.freeze({
   create_note: {
     category: FunctionCategory.NOTES,
@@ -17,7 +102,12 @@ const FUNCTION_SCHEMAS = Object.freeze({
           items: { type: "string" },
           type: "array",
         },
-        content: { type: "string" },
+        blocks: BLOCKS_SCHEMA,
+        content: {
+          type: "string",
+          description:
+            "Fallback plain text content. Avoid using this; prefer 'blocks' for structured formatting.",
+        },
         dueDate: {
           description: "ISO datetime string.",
           type: "string",
@@ -131,26 +221,16 @@ const FUNCTION_SCHEMAS = Object.freeze({
   update_note_content: {
     category: FunctionCategory.NOTES,
     description:
-      "Update an existing note body. Prefer rich body via document or blocks. Fallback to plain content if needed.",
+      "Update an existing note body. ALWAYS use the 'blocks' parameter with structured blocks for rich formatting.",
     name: "update_note_content",
     parameters: {
       additionalProperties: false,
       properties: {
-        blocks: {
-          description:
-            "Optional array of editor blocks. Prefer structured blocks like heading, paragraph, bulletList, orderedList, taskList/taskItem, blockquote and codeBlock.",
-          items: { type: "object" },
-          type: "array",
-        },
+        blocks: BLOCKS_SCHEMA,
         content: {
           description:
-            "Fallback plain text content. Use only when document/blocks is not available.",
+            "Fallback plain text content. Avoid using this; prefer 'blocks' for structured formatting.",
           type: "string",
-        },
-        document: {
-          description:
-            "Full note document payload expected by notes API. Use this for full-fidelity rich content and keep at least one meaningful text node.",
-          type: "object",
         },
         noteId: { type: "string" },
       },

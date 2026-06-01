@@ -4,6 +4,7 @@ const projectsUpdateRepository = require("@/modules/projects/repositories/projec
 const workspaceUserScopeRepository = require("@/modules/users/repositories/workspace-user-scope.repository");
 const chatAccessUtil = require("../utils/chat-access.util");
 const chatFormatterUtil = require("../utils/chat-formatter.util");
+const { markdownToBlocks } = require("../utils/markdown-to-blocks.util");
 const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
 const { WORKSPACE_SHARE_DENIED } = require("@/utils/workspace-share-guard");
 const {
@@ -14,7 +15,6 @@ const {
   enqueueNoteEmbeddingJob,
 } = require("@/services/queue/queue-controller");
 const { getI18n } = require("../utils/weave-ai-i18n.util");
-const spacesService = require("@/services/storage");
 
 class ChatFunctionsService {
   /**
@@ -121,16 +121,21 @@ class ChatFunctionsService {
           typeof args.content === "string" &&
           args.content.trim().length > 0
         ) {
+          const parsedBlocks = markdownToBlocks(args.content);
           await notesRepository.bulkInsertNoteBlocks(
             noteId,
             userId,
-            normalizeBlocksTree([
-              {
-                id: newBlockId(),
-                type: "paragraph",
-                properties: { text: args.content },
-              },
-            ])
+            normalizeBlocksTree(
+              parsedBlocks.length > 0
+                ? parsedBlocks
+                : [
+                    {
+                      id: newBlockId(),
+                      type: "paragraph",
+                      properties: { text: args.content },
+                    },
+                  ]
+            )
           );
         } else {
           await notesRepository.insertDefaultNoteBlock(noteId, userId);
@@ -215,13 +220,17 @@ class ChatFunctionsService {
           typeof args.content === "string" &&
           args.content.trim().length > 0
         ) {
-          tree = [
-            {
-              id: newBlockId(),
-              type: "paragraph",
-              properties: { text: args.content },
-            },
-          ];
+          const parsedBlocks = markdownToBlocks(args.content);
+          tree =
+            parsedBlocks.length > 0
+              ? parsedBlocks
+              : [
+                  {
+                    id: newBlockId(),
+                    type: "paragraph",
+                    properties: { text: args.content },
+                  },
+                ];
         } else {
           const error = new Error(t.updateNoteContentEmpty);
           error.code = "CHAT_FUNCTION_INVALID_CONTENT";
@@ -412,16 +421,33 @@ class ChatFunctionsService {
           searchTerm,
           userId
         );
+        const endpoint = (process.env.DO_SPACE_ENDPOINT || "").replace(/\/$/, "");
+        const bucket = process.env.DO_SPACES_BUCKET_NAME || "wn-storage";
+        const region = process.env.DO_SPACES_REGION || "sfo3";
+
         return {
           name,
           result: {
-            users: users.map((u) => ({
-              avatar_url: u.avatar_url ? spacesService.getFileUrl(u.avatar_url) : null,
-              email: u.email,
-              id: u.user_id,
-              name: u.name,
-              username: u.username,
-            })),
+            users: users.map((u) => {
+              let avatarUrl = null;
+              if (u.avatar_url) {
+                if (u.avatar_url.startsWith("http://") || u.avatar_url.startsWith("https://")) {
+                  avatarUrl = u.avatar_url;
+                } else {
+                  avatarUrl = `${endpoint}/${bucket}/${u.avatar_url}`.replace(
+                    "digitaloceanspaces.com",
+                    `${region}.digitaloceanspaces.com`
+                  );
+                }
+              }
+              return {
+                avatar_url: avatarUrl,
+                email: u.email,
+                id: u.user_id,
+                name: u.name,
+                username: u.username,
+              };
+            }),
           },
           success: true,
         };

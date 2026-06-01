@@ -437,10 +437,6 @@ class LlmQueueProcessor {
     });
     const agentInstructions = this.extractAgentInstructions(payload.agent);
     const noteDocumentContract = payload?.context?.noteDocumentContract || null;
-    const conversationHistory = this.normalizeConversationHistory(
-      payload.conversationHistory
-    );
-
     const composeOverlay =
       isEngineComposeSurface(payload.context) ||
       payload.useCase === "engine_compose" ||
@@ -472,10 +468,11 @@ class LlmQueueProcessor {
 ${
   noteDocumentContract
     ? `
-[Note Doc Contract]
-- Allowed nodes: ${Array.isArray(noteDocumentContract.allowedNodeTypes) ? noteDocumentContract.allowedNodeTypes.join(",") : "unknown"}
-- Allowed marks: ${Array.isArray(noteDocumentContract.allowedMarkTypes) ? noteDocumentContract.allowedMarkTypes.join(",") : "unknown"}
-- Format intent: sections->heading+para; lists->bulletList/orderedList/taskList; emphasis->blockquote; code->codeBlock.
+[Note Blocks Contract]
+- Allowed block types: ${Array.isArray(noteDocumentContract.allowedBlockTypes) ? noteDocumentContract.allowedBlockTypes.join(", ") : "unknown"}
+- IMPORTANT: Use the 'blocks' parameter in create_note/update_note_content tools.
+- Each block: { type, properties: { text, attrs? } }
+- DO NOT use raw markdown in content strings. Structure content as blocks.
 - Never return empty. Must use structured function call if db action needed.`
     : ""
 }
