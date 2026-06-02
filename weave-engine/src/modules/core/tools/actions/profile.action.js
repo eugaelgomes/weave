@@ -1,17 +1,4 @@
-const { pool } = require("../../../services/postgres.client");
-
-const schemas = [
-  {
-    name: "get_user_profile",
-    description:
-      "Fetches the current user's profile information (name, timezone, etc). Use this when you need to know who you are talking to.",
-    parameters: {
-      type: "object",
-      properties: {},
-      required: [],
-    },
-  },
-];
+const { pool } = require("../../../../services/postgres.client");
 
 /**
  * Fetches user profile data from the database.
@@ -56,6 +43,5 @@ async function getUserProfile(args) {
 }
 
 module.exports = {
-  schemas,
   getUserProfile,
 };

@@ -5,11 +5,11 @@ const {
   getAvailableFunctionNames,
   getFunctionSchema,
   toOpenAIFormat,
-} = require("@/modules/weave-ai/function-schemas");
+} = require("@/modules/weave-ai/schemas/function-schemas");
 const {
   getOwnershipRules,
   isFunctionForbidden,
-} = require("@/modules/weave-ai/security-policies");
+} = require("@/modules/weave-ai/policies/security-policies");
 
 /**
  * @param {object} params

@@ -4,7 +4,7 @@ const {
   normalizeAgentPersonality,
   formatAgentResponse,
   mergePersonalityUpdates,
-} = require("@/modules/weave-ai/normalize");
+} = require("@/modules/weave-ai/utils/normalize");
 const { getProvidersWithModels } = require("@/modules/weave-ai/llm-catalog");
 const spacesService = require("@/services/storage");
 const { getI18n, getLangFromReq } = require("../utils/weave-ai-i18n.util");

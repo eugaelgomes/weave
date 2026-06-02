@@ -1,0 +1,171 @@
+const notesRepository = require("@/modules/notes/notes.repository");
+const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
+const projectsUpdateRepository = require("@/modules/projects/repositories/projects-update.repository");
+const workspaceUserScopeRepository = require("@/modules/users/repositories/workspace-user-scope.repository");
+const chatAccessUtil = require("../utils/chat-access.util");
+const chatFormatterUtil = require("../utils/chat-formatter.util");
+const { markdownToBlocks } = require("../utils/markdown-to-blocks.util");
+const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
+const { WORKSPACE_SHARE_DENIED } = require("@/utils/workspace-share-guard");
+const {
+  normalizeBlocksTree,
+  newBlockId,
+} = require("@/modules/notes/block-normalizer");
+const {
+  enqueueNoteEmbeddingJob,
+} = require("@/services/queue/queue-controller");
+
+class CreateNoteHandler {
+  /**
+   * @param { userId: string, args: Record<string, unknown>, organizationId: string|null, lang: string, t: object, name: string } context
+   */
+  async execute({ userId, args, organizationId, lang, t, name }) {
+
+        if (args.projectId) {
+          await chatAccessUtil.assertProjectMutationAccess(
+            userId,
+            String(args.projectId),
+            organizationId,
+            lang
+          );
+        }
+
+        const createdNote = await notesRepository.createNotesQuery(
+          userId,
+          args.title || "Nova Tarefa",
+          args.content || "",
+          Array.isArray(args.tags) ? args.tags : [],
+          NOTE_STATUS.VISIBLE,
+          args.projectId || null,
+          args.priorityId || null
+        );
+
+        if (!createdNote || (!createdNote.id && !createdNote.note_id)) {
+          throw new Error(t.noteCreateFailed);
+        }
+
+        const noteId = createdNote.id || createdNote.note_id;
+
+        const updateData = {};
+        if (args.projectId) {
+          let resolvedStageId = args.stageId ? String(args.stageId) : null;
+          if (!resolvedStageId) {
+            resolvedStageId =
+              await projectsReadRepository.getFirstProjectStageId(
+                String(args.projectId)
+              );
+            if (!resolvedStageId) {
+              throw new Error(t.projectNoStages);
+            }
+          } else {
+            const stages = await projectsReadRepository.getProjectStages(
+              String(args.projectId)
+            );
+            if (!stages.some((s) => String(s.id) === resolvedStageId)) {
+              throw new Error(t.stageNotFound);
+            }
+          }
+          updateData.project_stage_id = resolvedStageId;
+        }
+        if (args.dueDate) {
+          try {
+            const normalizedDueDate = new Date(
+              String(args.dueDate)
+            ).toISOString();
+            updateData.due_date = normalizedDueDate;
+          } catch (e) {
+            // ignore invalid date
+          }
+        }
+
+        const propertiesUpdate = {};
+        if (Array.isArray(args.urls) && args.urls.length > 0)
+          propertiesUpdate.urls = args.urls;
+        if (Array.isArray(args.files) && args.files.length > 0)
+          propertiesUpdate.files = args.files;
+        if (Array.isArray(args.relations) && args.relations.length > 0)
+          propertiesUpdate.relations = args.relations;
+
+        if (Object.keys(propertiesUpdate).length > 0) {
+          updateData.properties = propertiesUpdate;
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          await notesRepository.updateNoteById(noteId, updateData);
+        }
+
+        if (Array.isArray(args.blocks) && args.blocks.length > 0) {
+          const tree = normalizeBlocksTree(args.blocks);
+          await notesRepository.bulkInsertNoteBlocks(noteId, userId, tree);
+        } else if (
+          typeof args.content === "string" &&
+          args.content.trim().length > 0
+        ) {
+          const parsedBlocks = markdownToBlocks(args.content);
+          await notesRepository.bulkInsertNoteBlocks(
+            noteId,
+            userId,
+            normalizeBlocksTree(
+              parsedBlocks.length > 0
+                ? parsedBlocks
+                : [
+                    {
+                      id: newBlockId(),
+                      type: "paragraph",
+                      properties: { text: args.content },
+                    },
+                  ]
+            )
+          );
+        } else {
+          await notesRepository.insertDefaultNoteBlock(noteId, userId);
+        }
+        await enqueueNoteEmbeddingJob(noteId).catch(() => {});
+
+        if (
+          Array.isArray(args.collaboratorIds) &&
+          args.collaboratorIds.length > 0
+        ) {
+          for (const collabId of args.collaboratorIds) {
+            if (collabId && typeof collabId === "string") {
+              const mayShare =
+                await workspaceUserScopeRepository.usersMayInteract(
+                  userId,
+                  collabId
+                );
+              if (!mayShare) {
+                const err = new Error(WORKSPACE_SHARE_DENIED.message);
+                err.statusCode = 403;
+                err.code = "WORKSPACE_SHARE_DENIED";
+                throw err;
+              }
+              await notesRepository.addCollaborator(noteId, collabId);
+            }
+          }
+        }
+
+        let projectPublicId = null;
+        if (args.projectId) {
+          const projectRows = await projectsReadRepository.getProjectById(
+            args.projectId,
+            userId
+          );
+          if (projectRows?.length)
+            projectPublicId = projectRows[0].public_project_id;
+        }
+
+        return {
+          name,
+          result: {
+            noteId,
+            publicNoteId: createdNote.public_note_id,
+            projectPublicId,
+            created: true,
+          },
+          success: true,
+        };
+      
+  }
+}
+
+module.exports = new CreateNoteHandler();

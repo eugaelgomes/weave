@@ -4,41 +4,40 @@
 
 const { logger } = require("../../../logger");
 
-const {
-  searchWeb,
-  readUrl,
-  schemas: webBrowserSchemas,
-} = require("./web-browser.tool");
-const { searchMyNotes, schemas: searchSchemas } = require("./search.tool");
-const { getUserProfile, schemas: profileSchemas } = require("./profile.tool");
-const {
-  listMyProjects,
-  getProjectDetails,
-  schemas: projectSchemas,
-} = require("./project.tool");
-const {
-  getOrganizationDetails,
-  schemas: organizationSchemas,
-} = require("./organization.tool");
-const { consultBrain, schemas: brainSchemas } = require("./brain.tool");
-const {
-  listOrgMembers,
-  getOrgMember,
-  schemas: orgMembersSchemas,
-} = require("./org-members.tool");
-const {
-  listOrgAreas,
-  getOrgArea,
-  schemas: orgAreasSchemas,
-} = require("./org-areas.tool");
-const { getNoteDetails, schemas: noteSchemas } = require("./note.tool");
+const { searchWeb, readUrl } = require("./actions/web-browser.action");
+const { schemas: webBrowserSchemas } = require("./schemas/web-browser.schema");
+
+const { searchMyNotes } = require("./actions/search.action");
+const { schemas: searchSchemas } = require("./schemas/search.schema");
+
+const { getUserProfile } = require("./actions/profile.action");
+const { schemas: profileSchemas } = require("./schemas/profile.schema");
+
+const { listMyProjects, getProjectDetails } = require("./actions/project.action");
+const { schemas: projectSchemas } = require("./schemas/project.schema");
+
+const { getOrganizationDetails } = require("./actions/organization.action");
+const { schemas: organizationSchemas } = require("./schemas/organization.schema");
+
+const { consultBrain } = require("./actions/brain.action");
+const { schemas: brainSchemas } = require("./schemas/brain.schema");
+
+const { listOrgMembers, getOrgMember } = require("./actions/org-members.action");
+const { schemas: orgMembersSchemas } = require("./schemas/org-members.schema");
+
+const { schemas: orgAreasSchemas } = require("./schemas/org-areas.schema");
+const { listOrgAreas, getOrgArea } = require("./actions/org-areas.action");
+
+const { getNoteDetails } = require("./actions/note.action");
+const { schemas: noteSchemas } = require("./schemas/note.schema");
+
 const {
   listNoteComments,
   createNoteComment,
   updateNoteComment,
   deleteNoteComment,
-  schemas: noteCommentsSchemas,
-} = require("./note-comments.tool");
+} = require("./actions/note-comments.action");
+const { schemas: noteCommentsSchemas } = require("./schemas/note-comments.schema");
 
 const INTERNAL_TOOLS = {
   web_search: searchWeb,

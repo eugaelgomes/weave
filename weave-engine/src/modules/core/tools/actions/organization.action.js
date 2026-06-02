@@ -1,17 +1,4 @@
-const { pool } = require("../../../services/postgres.client");
-
-const schemas = [
-  {
-    name: "get_organization_details",
-    description:
-      "Retrieves detailed information and metadata about the organization the user belongs to. This tool returns the organization's name, unique name, member count, and the total number of projects.",
-    parameters: {
-      type: "object",
-      properties: {},
-      required: [],
-    },
-  },
-];
+const { pool } = require("../../../../services/postgres.client");
 
 /**
  * Fetches organization details from the database.
@@ -46,6 +33,5 @@ async function getOrganizationDetails(args) {
 }
 
 module.exports = {
-  schemas,
   getOrganizationDetails,
 };

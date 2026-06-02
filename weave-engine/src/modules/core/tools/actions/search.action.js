@@ -1,4 +1,4 @@
-const { pool } = require("../../../services/postgres.client");
+const { pool } = require("../../../../services/postgres.client");
 
 /**
  * Searches the user's notes using text similarity/keywords.
@@ -77,24 +77,6 @@ async function searchMyNotes({ query, userId }) {
   }
 }
 
-const schemas = [
-  {
-    name: "search_my_notes",
-    description: "Searches the user's personal notes based on a keyword query.",
-    parameters: {
-      type: "object",
-      properties: {
-        query: {
-          type: "string",
-          description: "Keyword or phrase to search for in notes.",
-        },
-      },
-      required: ["query"],
-    },
-  },
-];
-
 module.exports = {
   searchMyNotes,
-  schemas,
 };

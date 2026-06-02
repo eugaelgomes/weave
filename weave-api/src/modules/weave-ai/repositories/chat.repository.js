@@ -2,7 +2,9 @@ const { pool } = require("@/database/connection");
 
 class WeaveAIRepository {
   /**
-   * Cria uma nova sessão de chat
+   * Cria uma nova sessão de chat.
+   * @param {string} userId - UUID do usuário dono da sessão
+   * @returns {Promise<object>} A sessão criada
    */
   async createSession(userId) {
     const query = `
@@ -17,6 +19,10 @@ class WeaveAIRepository {
 
   /**
    * Atualiza título da sessão
+   * @param {string} sessionId - UUID da sessão
+   * @param {string} userId - UUID do usuário
+   * @param {string} title - Novo título
+   * @returns {Promise<object>} A sessão atualizada
    */
   async updateSessionTitle(sessionId, userId, title) {
     const query = `
@@ -33,7 +39,32 @@ class WeaveAIRepository {
   }
 
   /**
-   * Salva uma mensagem
+   * @typedef {Object} ChatMessageData
+   * @property {string} sessionId - UUID da sessão
+   * @property {string} userId - UUID do usuário
+   * @property {string} role - Papel da mensagem (user, assistant, tool)
+   * @property {string|null} [content] - Conteúdo da mensagem
+   * @property {string} [model] - Nome/versão do modelo usado
+   * @property {Object} [metadata={}] - Metadados extras
+   * @property {string|null} [requestId=null] - ID do request
+   * @property {string|null} [provider=null] - Provedor da IA
+   * @property {string} [status="ok"] - Status da mensagem (ok, error, etc)
+   * @property {string|null} [errorCode=null] - Código do erro
+   * @property {string|null} [errorMessage=null] - Mensagem do erro
+   * @property {number|null} [latencyMs=null] - Latência em ms
+   * @property {number|null} [inputTokens=null] - Tokens de input
+   * @property {number|null} [outputTokens=null] - Tokens de output
+   * @property {number|null} [totalTokens=null] - Total de tokens
+   * @property {string|null} [agentId=null] - UUID do agente
+   * @property {boolean} [allowEdit=false] - Se permite edição
+   * @property {Array<Object>|null} [toolCalls=null] - Ferramentas chamadas
+   * @property {string|null} [toolCallId=null] - ID da ferramenta
+   */
+
+  /**
+   * Salva uma mensagem no banco de dados.
+   * @param {ChatMessageData} data - Os dados da mensagem
+   * @returns {Promise<object>} A mensagem salva
    */
   async saveMessage(data) {
     const {
