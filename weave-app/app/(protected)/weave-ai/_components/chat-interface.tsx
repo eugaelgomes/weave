@@ -226,7 +226,7 @@ export default function ChatInterface({
 
   useEffect(() => {
     if (models.length > 0 && !selectedModel) {
-      setSelectedModel(models.find((m) => m.version === "gpt-4o") || models[0]);
+      setSelectedModel(models.find((m) => m.id === "gpt-4o") || models[0]);
     }
   }, [models, selectedModel]);
 
@@ -280,7 +280,7 @@ export default function ChatInterface({
       message: messageText,
       model: {
         name: selectedModel?.provider || selectedModel?.name || "auto",
-        version: selectedModel?.version,
+        version: selectedModel?.id || selectedModel?.version,
       },
       sessionId,
       allowEdit,

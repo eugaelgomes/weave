@@ -51,7 +51,7 @@ export default function ChatWidget({
   useEffect(() => {
     if (models.length && !selectedModel) {
       setSelectedModel(
-        models.find((m) => m.version === "gpt-4o") ||
+        models.find((m) => m.id === "gpt-4o") ||
           models.find((m) => m.provider === "gemini") ||
           models[0]
       );
@@ -95,7 +95,7 @@ export default function ChatWidget({
       message: value,
       model: {
         name: selectedModel.provider || selectedModel.name,
-        version: selectedModel.version,
+        version: selectedModel.id || selectedModel.version,
       },
       requestId,
       sessionId,

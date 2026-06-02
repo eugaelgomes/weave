@@ -89,7 +89,7 @@ export function useComposeSession(
     void fetchAvailableModels()
       .then((models) => {
         setSelectedModel(
-          models.find((m) => m.version === "gpt-4o") ||
+          models.find((m) => m.id === "gpt-4o") ||
             models.find((m) => m.provider === "gemini") ||
             models[0] ||
             null
@@ -198,7 +198,7 @@ export function useComposeSession(
           message: trimmed,
           model: {
             name: selectedModel.provider || selectedModel.name,
-            version: selectedModel.version,
+            version: selectedModel.id || selectedModel.version,
           },
           sessionId,
           projectIds: projectId ? [projectId] : undefined,
