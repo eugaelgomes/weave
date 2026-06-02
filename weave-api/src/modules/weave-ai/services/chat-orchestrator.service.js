@@ -35,7 +35,7 @@ class ChatOrchestratorService {
     let authorizedFunctions = [];
     let capabilityRules = {};
     let resourceAccess = {};
-    
+
     const planUsageContext = await chatEngineService.buildPlanUsageContext(
       userId,
       organizationId
@@ -45,7 +45,7 @@ class ChatOrchestratorService {
       userId,
       organizationId
     ).catch(() => null);
-    
+
     if (usageRecord && planUsageContext) {
       const effectivePlan =
         await PlansRepository.getEffectivePlanByUserId(userId);
@@ -58,7 +58,9 @@ class ChatOrchestratorService {
           PLAN_PATHS.WEAVE_AI.CONFIG.MONTHLY_MESSAGES
         );
         if (!allowed) {
-          const limitError = new Error("Monthly AI message limit reached for your current plan.");
+          const limitError = new Error(
+            "Monthly AI message limit reached for your current plan."
+          );
           limitError.code = "PLAN_LIMIT_EXCEEDED";
           limitError.statusCode = 403;
           throw limitError;
@@ -103,20 +105,17 @@ class ChatOrchestratorService {
         userId,
         CHAT_CONTEXT_MAX_MESSAGES
       );
-    const conversationHistory =
-      chatFormatterUtil.normalizeConversationHistory(rawConversationHistory);
+    const conversationHistory = chatFormatterUtil.normalizeConversationHistory(
+      rawConversationHistory
+    );
 
     const filesMetadata = chatFormatterUtil.buildFilesMetadata(files);
     const existingMessagesForRequest =
-      await chatRepository.getMessagesByRequestId(
-        sessionId,
-        userId,
-        requestId
-      );
+      await chatRepository.getMessagesByRequestId(sessionId, userId, requestId);
     const existingAssistantMessage = existingMessagesForRequest.find(
       (message) => message.role === "assistant"
     );
-    
+
     if (existingAssistantMessage) {
       return {
         sessionId,
@@ -140,6 +139,7 @@ class ChatOrchestratorService {
       await chatRepository.saveMessageIdempotent({
         sessionId,
         userId,
+        organizationId,
         role: "user",
         content: payload.message,
         model: `${payload.model.name}:${payload.model.version}`,
@@ -301,8 +301,7 @@ class ChatOrchestratorService {
       tokenUsage.inputTokens =
         (tokenUsage.inputTokens || 0) + (currentTokenUsage.inputTokens || 0);
       tokenUsage.outputTokens =
-        (tokenUsage.outputTokens || 0) +
-        (currentTokenUsage.outputTokens || 0);
+        (tokenUsage.outputTokens || 0) + (currentTokenUsage.outputTokens || 0);
       tokenUsage.totalTokens =
         (tokenUsage.totalTokens || 0) + (currentTokenUsage.totalTokens || 0);
 
@@ -345,6 +344,7 @@ class ChatOrchestratorService {
         await chatRepository.saveMessageIdempotent({
           sessionId,
           userId,
+          organizationId,
           role: "assistant",
           content: assistantText || null,
           model: `${payload.model.name}:${payload.model.version}`,
@@ -368,13 +368,15 @@ class ChatOrchestratorService {
           const exec = currentExecutions[i];
           const fn = currentFunctions[i];
           const tId = fn.id || `call_${currentLoop}_${i}`;
-          const execContent = typeof exec.result === "string" 
-            ? exec.result 
-            : JSON.stringify(exec.result || exec.error || exec);
-            
+          const execContent =
+            typeof exec.result === "string"
+              ? exec.result
+              : JSON.stringify(exec.result || exec.error || exec);
+
           await chatRepository.saveMessageIdempotent({
             sessionId,
             userId,
+            organizationId,
             role: "tool",
             content: execContent,
             model: `${payload.model.name}:${payload.model.version}`,
@@ -432,6 +434,7 @@ class ChatOrchestratorService {
     await chatRepository.saveMessageIdempotent({
       sessionId,
       userId,
+      organizationId,
       role: "assistant",
       content: finalAssistantText,
       model: `${payload.model.name}:${payload.model.version}`,

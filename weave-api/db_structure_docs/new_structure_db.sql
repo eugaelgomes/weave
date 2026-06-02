@@ -734,6 +734,7 @@ CREATE TABLE public.ai_chat_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id uuid NOT NULL,
   user_id uuid NOT NULL,
+  organization_id uuid NULL,
   parent_message_id uuid NULL,
   role varchar(20) NOT NULL,
   content text NULL,
@@ -1130,6 +1131,10 @@ ALTER TABLE public.ai_chat_messages
 ALTER TABLE public.ai_chat_messages
   ADD CONSTRAINT ai_chat_messages_user_fk
   FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE RESTRICT;
+
+ALTER TABLE public.ai_chat_messages
+  ADD CONSTRAINT "ai_chat_messages_organization_FK"
+  FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE SET NULL;
 
 ALTER TABLE public.notifications
   ADD CONSTRAINT notifications_user_fk

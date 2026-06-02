@@ -79,6 +79,7 @@ class ChatController {
           .saveMessageIdempotent({
             sessionId: payload.sessionId,
             userId,
+            organizationId,
             role: "assistant",
             content: null,
             model: `${payload.model?.name || "unknown"}:${payload.model?.version || "unknown"}`,

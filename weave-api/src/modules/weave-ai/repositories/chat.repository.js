@@ -42,6 +42,7 @@ class WeaveAIRepository {
    * @typedef {Object} ChatMessageData
    * @property {string} sessionId - UUID da sessão
    * @property {string} userId - UUID do usuário
+   * @property {string|null} [organizationId=null] - UUID da organização
    * @property {string} role - Papel da mensagem (user, assistant, tool)
    * @property {string|null} [content] - Conteúdo da mensagem
    * @property {string} [model] - Nome/versão do modelo usado
@@ -70,6 +71,7 @@ class WeaveAIRepository {
     const {
       sessionId,
       userId,
+      organizationId = null,
       role,
       content,
       model,
@@ -93,6 +95,7 @@ class WeaveAIRepository {
     INSERT INTO ai_chat_messages (
       session_id,
       user_id,
+      organization_id,
       role,
       content,
       model,
@@ -114,7 +117,7 @@ class WeaveAIRepository {
     )
     VALUES (
       $1, $2, $3, $4, $5, $6,
-      $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW()
+      $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW()
     )
     RETURNING *
   `;
@@ -122,6 +125,7 @@ class WeaveAIRepository {
     const result = await pool.query(query, [
       sessionId,
       userId,
+      organizationId,
       role,
       content,
       model,
