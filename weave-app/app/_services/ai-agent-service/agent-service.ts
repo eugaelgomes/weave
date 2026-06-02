@@ -210,7 +210,7 @@ export async function fetchAvailableModels(): Promise<AIModel[]> {
       if (!version) continue;
 
       models.push({
-        id: `${provider}:${version}`,
+        id: modelItem?.id || `${provider}:${version}`,
         name: String(modelItem?.name || provider),
         version,
         provider,

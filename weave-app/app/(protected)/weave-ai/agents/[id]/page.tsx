@@ -84,7 +84,7 @@ export function AgentForm({
       return (p.models ?? [])
         .filter((m) => !m.deprecated)
         .map((m) => ({
-          id: m.version,
+          id: m.id || m.version,
           name: `${details.name} — ${m.name}`,
           provider: details.name,
           providerId: p.name,
