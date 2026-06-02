@@ -1,17 +1,17 @@
 import { z } from "zod";
 
-const ModelItemSchema = z.object({
+export const LlmModelSchema = z.object({
   id: z.string(),
   name: z.string(),
   version: z.string(),
+  description: z.string().optional(),
   contextWindow: z.number().nullable().optional(),
+  maxOutputTokens: z.number().nullable().optional(),
   features: z.array(z.string()).optional(),
   tags: z.array(z.string()).optional(),
   deprecated: z.boolean().optional(),
   supportedForAgents: z.boolean().optional(),
 });
-
-export type ModelItem = z.infer<typeof ModelItemSchema>;
 
 export const RawModelsResponseSchema = z
   .object({
@@ -20,9 +20,9 @@ export const RawModelsResponseSchema = z
         z.object({
           id: z.string().optional(),
           name: z.string(),
-          isDefault: z.boolean().optional(),
           logoUrl: z.string().nullable().optional(),
-          models: z.array(ModelItemSchema).optional(),
+          isDefault: z.boolean().optional(),
+          models: z.array(LlmModelSchema).optional(),
         })
       )
       .optional(),
@@ -137,10 +137,8 @@ export const AgentProviderSchema = z.object({
   name: z.string(),
   isDefault: z.boolean().optional(),
   logoUrl: z.string().nullable().optional(),
-  models: z.array(ModelItemSchema),
+  models: z.array(LlmModelSchema),
 });
-
-export type AgentProvider = z.infer<typeof AgentProviderSchema>;
 
 export const AgentProvidersResponseSchema = z.object({
   providers: z.array(AgentProviderSchema),

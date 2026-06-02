@@ -74,19 +74,7 @@ const AgentIcon = ({ agent, className }: { agent?: Agent | null; className?: str
 };
 
 function formatModelLabel(model: AIModel) {
-  const version = model.version || "";
-  if (!version) return model.description || model.name;
-
-  return version
-    .split("-")
-    .map((word) => {
-      const lower = word.toLowerCase();
-      if (lower === "gpt") return "GPT";
-      if (lower === "pro") return "PRO";
-      if (lower === "preview") return "PREVIEW";
-      return word.charAt(0).toUpperCase() + word.slice(1);
-    })
-    .join("-");
+  return model.name || model.description || model.version || "Unknown Model";
 }
 
 function validateChatFile(file: File): string | null {

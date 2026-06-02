@@ -1,137 +1,160 @@
-/* eslint-disable sort-keys */
 const LLM_PROVIDERS = Object.freeze({
   GEMINI: "gemini",
   OPENAI: "openai",
 });
 
-const LLM_PROVIDER_LOGOS = Object.freeze({
-  [LLM_PROVIDERS.GEMINI]: "/ai-models/gemini.svg",
-  [LLM_PROVIDERS.OPENAI]: "/ai-models/openai.svg",
+const PROVIDERS_METADATA = Object.freeze({
+  [LLM_PROVIDERS.GEMINI]: {
+    id: "gemini",
+    name: "Google Gemini",
+    logoUrl: "/ai-models/gemini.svg",
+    isDefault: true,
+  },
+  [LLM_PROVIDERS.OPENAI]: {
+    id: "openai",
+    name: "OpenAI",
+    logoUrl: "/ai-models/openai.svg",
+    isDefault: false, 
+  },
 });
 
-/**
- * @typedef {object} LLMModelEntry
- * @property {string} id         - Unique model identifier (same as version string)
- * @property {string} name       - Human-readable label
- * @property {string} version    - API model string
- * @property {number|null} contextWindow
- * @property {string[]} features
- * @property {string[]} tags
- * @property {boolean} deprecated
- * @property {boolean} supportedForAgents
- */
+const MODELS_REGISTRY = Object.freeze([
+  // Gemini Models
+  {
+    id: "gemini-3.5-flash",
+    providerId: LLM_PROVIDERS.GEMINI,
+    name: "Gemini 3.5 Flash",
+    version: "3.5",
+    description: "Fast and versatile model for general tasks.",
+    contextWindow: 1048576,
+    maxOutputTokens: 8192,
+    features: ["vision", "function_calling", "system_instructions"],
+    tags: ["fast", "cost-effective"],
+    deprecated: false,
+    supportedForAgents: true,
+  },
+  {
+    id: "gemini-3.1-flash-lite",
+    providerId: LLM_PROVIDERS.GEMINI,
+    name: "Gemini 3.1 Flash Lite",
+    version: "3.1 Lite",
+    description: "Lightweight and efficient model for simpler tasks.",
+    contextWindow: 1048576,
+    maxOutputTokens: 8192,
+    features: ["vision", "system_instructions"],
+    tags: ["fast", "efficient"],
+    deprecated: false,
+    supportedForAgents: true,
+  },
+  {
+    id: "gemini-3.1-pro-preview",
+    providerId: LLM_PROVIDERS.GEMINI,
+    name: "Gemini 3.1 Pro (Preview)",
+    version: "3.1 Pro",
+    description: "Highly capable model for complex reasoning tasks.",
+    contextWindow: 2097152,
+    maxOutputTokens: 8192,
+    features: ["vision", "function_calling", "system_instructions"],
+    tags: ["advanced", "reasoning"],
+    deprecated: false,
+    supportedForAgents: true,
+  },
 
-/** @type {Record<string, LLMModelEntry[]>} */
-const LLM_MODEL_CATALOG = Object.freeze({
-  [LLM_PROVIDERS.GEMINI]: [
-    {
-      id: "gemini-2.5-flash-preview",
-      name: "Gemini 2.5 Flash",
-      version: "gemini-2.5-flash-preview-05-20",
-      contextWindow: 1_000_000,
-      features: ["vision", "function_calling", "json_mode"],
-      tags: ["fast", "recommended"],
-      deprecated: false,
-      supportedForAgents: true,
-    },
-    {
-      id: "gemini-2.0-flash",
-      name: "Gemini 2.0 Flash",
-      version: "gemini-2.0-flash",
-      contextWindow: 1_000_000,
-      features: ["vision", "function_calling", "json_mode"],
-      tags: ["fast"],
-      deprecated: false,
-      supportedForAgents: true,
-    },
-    {
-      id: "gemini-1.5-pro",
-      name: "Gemini 1.5 Pro",
-      version: "gemini-1.5-pro",
-      contextWindow: 2_000_000,
-      features: ["vision", "function_calling", "json_mode"],
-      tags: ["powerful"],
-      deprecated: false,
-      supportedForAgents: true,
-    },
-    {
-      id: "gemini-1.5-flash",
-      name: "Gemini 1.5 Flash",
-      version: "gemini-1.5-flash",
-      contextWindow: 1_000_000,
-      features: ["vision", "function_calling", "json_mode"],
-      tags: ["legacy"],
-      deprecated: true,
-      supportedForAgents: false,
-    },
-  ],
-  [LLM_PROVIDERS.OPENAI]: [
-    {
-      id: "gpt-4o",
-      name: "GPT-4o",
-      version: "gpt-4o",
-      contextWindow: 128_000,
-      features: ["vision", "function_calling", "json_mode"],
-      tags: ["recommended"],
-      deprecated: false,
-      supportedForAgents: true,
-    },
-    {
-      id: "gpt-4o-mini",
-      name: "GPT-4o Mini",
-      version: "gpt-4o-mini",
-      contextWindow: 128_000,
-      features: ["function_calling", "json_mode"],
-      tags: ["fast", "cheap"],
-      deprecated: false,
-      supportedForAgents: true,
-    },
-    {
-      id: "o3-mini",
-      name: "o3-mini",
-      version: "o3-mini",
-      contextWindow: 200_000,
-      features: ["function_calling"],
-      tags: ["reasoning"],
-      deprecated: false,
-      supportedForAgents: false,
-    },
-  ],
-});
-
-/**
- * Returns a flat list of all model entries for a given provider.
- * @param {string} provider
- * @returns {LLMModelEntry[]}
- */
-function getModelEntries(provider) {
-  return LLM_MODEL_CATALOG[provider] || [];
-}
+  // OpenAI Models
+  {
+    id: "gpt-5.4",
+    providerId: LLM_PROVIDERS.OPENAI,
+    name: "GPT-5.4",
+    version: "5.4",
+    description: "Advanced intelligence model.",
+    contextWindow: 128000,
+    maxOutputTokens: 4096,
+    features: ["vision", "function_calling", "system_instructions"],
+    tags: ["advanced"],
+    deprecated: false,
+    supportedForAgents: true,
+  },
+  {
+    id: "gpt-4o",
+    providerId: LLM_PROVIDERS.OPENAI,
+    name: "GPT-4o",
+    version: "4o",
+    description: "Versatile, high-performance model.",
+    contextWindow: 128000,
+    maxOutputTokens: 4096,
+    features: ["vision", "function_calling", "system_instructions"],
+    tags: ["versatile"],
+    deprecated: false,
+    supportedForAgents: true,
+  },
+  {
+    id: "gpt-4o-mini",
+    providerId: LLM_PROVIDERS.OPENAI,
+    name: "GPT-4o Mini",
+    version: "4o Mini",
+    description: "Small, fast and cost-effective model.",
+    contextWindow: 128000,
+    maxOutputTokens: 16384,
+    features: ["vision", "function_calling", "system_instructions"],
+    tags: ["fast", "efficient"],
+    deprecated: false,
+    supportedForAgents: true,
+  },
+  {
+    id: "o3-mini",
+    providerId: LLM_PROVIDERS.OPENAI,
+    name: "o3 Mini",
+    version: "o3 Mini",
+    description: "Strong reasoning capabilities for math and coding.",
+    contextWindow: 200000,
+    maxOutputTokens: 100000,
+    features: ["system_instructions"],
+    tags: ["reasoning", "coding"],
+    deprecated: false,
+    supportedForAgents: true,
+  },
+]);
 
 /**
- * Returns providers enriched with their model arrays.
  * @returns {Array<{
  *   id: string,
  *   name: string,
  *   isDefault: boolean,
  *   logoUrl: string|null,
- *   models: LLMModelEntry[]
+ *   models: Array<any>
  * }>}
  */
 function getProvidersWithModels() {
-  return Object.values(LLM_PROVIDERS).map((provider, index) => ({
-    id: provider,
-    name: provider.charAt(0).toUpperCase() + provider.slice(1),
-    isDefault: index === 0,
-    logoUrl: LLM_PROVIDER_LOGOS[provider] || null,
-    models: getModelEntries(provider),
-  }));
+  return Object.values(LLM_PROVIDERS).map((providerId) => {
+    const providerMeta = PROVIDERS_METADATA[providerId];
+    const providerModels = MODELS_REGISTRY.filter(
+      (m) => m.providerId === providerId
+    );
+
+    return {
+      id: providerMeta.id,
+      name: providerMeta.name,
+      isDefault: providerMeta.isDefault,
+      logoUrl: providerMeta.logoUrl,
+      models: providerModels,
+    };
+  });
+}
+
+/**
+ * Kept for backwards compatibility where it might still be used,
+ * but returns an array of structured models instead of just versions.
+ * @param {string} provider
+ * @returns {Array<any>}
+ */
+function getModelEntries(provider) {
+  return MODELS_REGISTRY.filter((m) => m.providerId === provider);
 }
 
 module.exports = {
-  LLM_MODEL_CATALOG,
-  LLM_PROVIDER_LOGOS,
   LLM_PROVIDERS,
+  PROVIDERS_METADATA,
+  MODELS_REGISTRY,
   getModelEntries,
   getProvidersWithModels,
 };

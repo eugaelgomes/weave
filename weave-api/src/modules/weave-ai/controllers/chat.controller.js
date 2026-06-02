@@ -60,14 +60,11 @@ class ChatController {
               ? { detail: String(cause) }
               : undefined;
 
-      require("fs").writeFileSync("/home/gaelgomes/projetos/weave-notes/weave-api/error-dump.txt", error?.stack || "No stack");
-
       console.error("[weave-ai/chat] request failed", {
         cause: causeSummary,
         code: normalizedError.code,
         errorCode: error?.code,
         errorName: error?.name,
-        stack: error?.stack,
         message: normalizedError.message,
         requestId:
           (typeof req.body?.requestId === "string" && req.body.requestId) ||
@@ -210,6 +207,7 @@ class ChatController {
       let availableModels = allProviders.map((provider) => ({
         id: provider.id,
         name: provider.name,
+        logoUrl: provider.logoUrl,
         isDefault: provider.isDefault,
         models: provider.models
           .filter((model) => {
@@ -220,7 +218,9 @@ class ChatController {
             id: model.id,
             name: model.name,
             version: model.version,
+            description: model.description,
             contextWindow: model.contextWindow,
+            maxOutputTokens: model.maxOutputTokens,
             features: model.features,
             tags: model.tags,
             deprecated: model.deprecated,

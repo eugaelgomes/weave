@@ -316,7 +316,7 @@ class ApiClient {
       
       if (isTimeout) {
         throw new ApiError(
-          getFallbackMessageByStatus(504),
+          getSafeApiErrorMessage(504, "Request timeout", true),
           504
         );
       }
