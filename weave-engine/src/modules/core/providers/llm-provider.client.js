@@ -577,6 +577,7 @@ function resolveModelName(modelName) {
   if (normalizedModelName === "gemini") {
     return "gemini-2.0-flash";
   }
+
   return normalizedModelName;
 }
 

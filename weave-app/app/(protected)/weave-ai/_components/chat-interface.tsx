@@ -21,6 +21,7 @@ import {
   RefreshCw,
   ThumbsUp,
   ThumbsDown,
+  Settings2,
 } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import ReactMarkdown from "react-markdown";
@@ -203,6 +204,7 @@ export default function ChatInterface({
   const [contextItems, setContextItems] = useState<{ type: string; id: string; title: string }[]>(
     []
   );
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -466,28 +468,6 @@ export default function ChatInterface({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setAllowWebSearch(!allowWebSearch)}
-            className={`flex items-center gap-1.5 rounded px-1 py-0.5 text-[10px] transition-all ${
-              allowWebSearch
-                ? "bg-brand-yellow text-brand-navy"
-                : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200 dark:bg-[#1d1d1b] dark:hover:bg-neutral-800"
-            }`}
-          >
-            <Globe className="h-2 w-2" />
-            <span>{t.weaveAi.webSearch}</span>
-          </button>
-          <button
-            onClick={() => setAllowEdit(!allowEdit)}
-            className={`flex items-center gap-1.5 rounded px-1 py-0.5 text-[10px] transition-all ${
-              allowEdit
-                ? "bg-brand-yellow text-brand-navy"
-                : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200 dark:bg-[#1d1d1b] dark:hover:bg-neutral-800"
-            }`}
-          >
-            {allowEdit ? <Unlock className="h-2 w-2" /> : <Lock className="h-2 w-2" />}
-            <span>{t.weaveAi.allowEdit}</span>
-          </button>
         </div>
       </div>
 
@@ -497,26 +477,6 @@ export default function ChatInterface({
         className="relative flex-1 flex-shrink-0 overflow-y-auto scroll-smooth p-2 pb-48 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent"
       >
         <div className="mx-auto w-full max-w-4xl space-y-4">
-          {messages?.length === 0 && !loading && (
-            <div className="animate-in fade-in mx-auto mt-24 flex max-w-xl flex-col items-center text-center duration-500">
-              <div className="mb-6 h-px w-12 bg-neutral-200 dark:bg-neutral-800" />
-              <h2 className="text-lg font-medium tracking-tight text-neutral-400 dark:text-neutral-500">
-                {t.weaveAi.welcomeTitle}
-              </h2>
-
-              <div className="mt-10 flex max-w-md flex-wrap justify-center gap-2">
-                {[t.weaveAi.suggestionTask, t.weaveAi.suggestionProject].map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => setInput(suggestion)}
-                    className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-[10px] font-medium text-neutral-600 transition-all hover:bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400 dark:hover:bg-neutral-800"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {messages?.map((msg: any) => {
             const isUser = msg.role === "user";
@@ -792,7 +752,7 @@ export default function ChatInterface({
 
           {isTyping && (
             <div className="flex gap-2">
-              <div className="dark:border-surface-dark-border flex items-center rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 shadow-sm dark:bg-[#1d1d1b]">
+              <div className="flex items-center px-4 py-2.5">
                 <div className="flex items-center select-none">
                   <style>{`
                     @keyframes letter-glow {
@@ -855,8 +815,48 @@ export default function ChatInterface({
         )}
       </div>
 
-      <div className="pointer-events-none absolute right-0 bottom-0 left-0 z-10 bg-gradient-to-t from-white via-white/95 to-transparent px-4 pt-10 pb-4 dark:from-[#1d1d1b] dark:via-[#1d1d1b]/95 dark:to-transparent">
-        <div className="pointer-events-auto mx-auto flex max-w-4xl flex-col gap-2">
+      <div
+        className={`pointer-events-none absolute right-0 left-0 z-10 px-4 transition-all duration-700 ease-in-out ${
+          messages?.length === 0 && !loading
+            ? "top-1/2 -translate-y-1/2 bg-transparent pb-0"
+            : "bottom-0 translate-y-0 bg-gradient-to-t from-white via-white/95 to-transparent pt-10 pb-4 dark:from-[#1d1d1b] dark:via-[#1d1d1b]/95 dark:to-transparent"
+        }`}
+      >
+        <div
+          className={`pointer-events-auto mx-auto flex flex-col gap-2 transition-all duration-700 ease-in-out ${
+            messages?.length === 0 && !loading ? "max-w-2xl" : "max-w-4xl"
+          }`}
+        >
+          {messages?.length === 0 && !loading && (
+            <div className="animate-in fade-in flex flex-col items-center gap-4 pb-3 text-center duration-500">
+              <h2 className="text-lg font-medium tracking-tight text-neutral-400 dark:text-neutral-500">
+                {t.weaveAi.welcomeGreetingPrefix}{" "}
+                <span className="font-semibold text-brand-yellow dark:text-brand-yellow">
+                  {user?.user_name?.split(" ")[0] || user?.username || ""}
+                </span>
+                {", "}{t.weaveAi.welcomeGreetingSuffix}{" "}
+                <span className="font-fredoka font-semibold text-brand-yellow dark:text-brand-yellow tracking-tight">Weave AI</span>{" "}
+                {t.weaveAi.welcomeGreetingAction}
+              </h2>
+              <div className="flex flex-wrap justify-center gap-2">
+                {[
+                  t.weaveAi.suggestionTask,
+                  t.weaveAi.suggestionProject,
+                  t.weaveAi.suggestionSchedule,
+                  t.weaveAi.suggestionResearch,
+                  t.weaveAi.suggestionSummarize,
+                ].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => setInput(suggestion)}
+                    className="rounded-full border border-neutral-100 bg-white/90 px-3 py-1.5 text-[10px] font-medium text-neutral-600 transition-all hover:bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap gap-1">
               {selectedFiles.map((file) => (
@@ -901,7 +901,13 @@ export default function ChatInterface({
             </div>
           </div>
 
-          <div className="focus-within:border-brand-yellow focus-within:ring-brand-yellow/40 dark:border-surface-dark-border-strong dark:focus-within:border-brand-yellow dark:focus-within:ring-brand-yellow/30 relative flex flex-col gap-1 rounded-xl border border-neutral-300 bg-white p-2 shadow-sm transition-all focus-within:ring-1 dark:bg-[#1d1d1b]">
+          <div
+            className={`focus-within:border-brand-yellow/50 focus-within:ring-brand-yellow/20 dark:border-surface-dark-border-strong dark:focus-within:border-brand-yellow dark:focus-within:ring-brand-yellow/30 relative flex flex-col gap-1 rounded-xl border border-neutral-300 bg-white p-2 transition-all duration-700 focus-within:ring-1 dark:bg-[#1d1d1b] ${
+              messages?.length === 0 && !loading
+                ? "shadow-2xl shadow-black/5 dark:shadow-black/40"
+                : "shadow-sm"
+            }`}
+          >
             <input
               ref={fileInputRef}
               type="file"
@@ -931,7 +937,7 @@ export default function ChatInterface({
                   ? t.weaveAi.inputPlaceholder
                   : (t.weaveAi.limitReached ?? "Monthly AI message limit reached")
               }
-              className="max-h-32 min-h-[40px] w-full resize-none bg-transparent px-1 py-1 text-sm outline-none placeholder:text-neutral-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-neutral-100 dark:placeholder:text-neutral-500"
+              className="max-h-32 min-h-[56px] w-full resize-none bg-transparent px-1 py-2 text-sm outline-none placeholder:text-neutral-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-neutral-100 dark:placeholder:text-neutral-500"
             />
 
             <div className="flex items-center justify-between pt-1">
@@ -944,6 +950,56 @@ export default function ChatInterface({
                 >
                   <Paperclip className="h-4 w-4" />
                 </button>
+
+                {/* Options Menu */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowOptionsMenu(!showOptionsMenu)}
+                    title="Opções"
+                    aria-label="Opções"
+                    className="hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 transition-colors"
+                  >
+                    <Settings2 className="h-4 w-4" />
+                  </button>
+
+                  {showOptionsMenu && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setShowOptionsMenu(false)}
+                      />
+                      <div className="dark:border-surface-dark-border absolute bottom-full left-0 z-20 mb-2 w-48 overflow-hidden rounded border border-neutral-200 bg-white p-1 shadow-lg dark:bg-[#1d1d1b]">
+                        <button
+                          onClick={() => {
+                            setAllowEdit(!allowEdit);
+                            setShowOptionsMenu(false);
+                          }}
+                          className="hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs transition-colors"
+                        >
+                          <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
+                            {allowEdit ? <Unlock className="h-3.5 w-3.5 text-brand-yellow" /> : <Lock className="h-3.5 w-3.5" />}
+                            <span>{t.weaveAi.allowEdit}</span>
+                          </div>
+                          {allowEdit && <div className="h-1.5 w-1.5 rounded-full bg-brand-yellow"></div>}
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setAllowWebSearch(!allowWebSearch);
+                            setShowOptionsMenu(false);
+                          }}
+                          className="hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs transition-colors"
+                        >
+                          <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
+                            <Globe className={`h-3.5 w-3.5 ${allowWebSearch ? "text-brand-yellow" : ""}`} />
+                            <span>{t.weaveAi.webSearch}</span>
+                          </div>
+                          {allowWebSearch && <div className="h-1.5 w-1.5 rounded-full bg-brand-yellow"></div>}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
 
                 <div className="relative">
                   <button
