@@ -54,6 +54,8 @@ class WeaveAIRepository {
       totalTokens = null,
       agentId = null,
       allowEdit = false,
+      toolCalls = null,
+      toolCallId = null,
     } = data;
 
     const query = `
@@ -75,11 +77,13 @@ class WeaveAIRepository {
       total_tokens,
       agent_id,
       allow_edit,
+      tool_calls,
+      tool_call_id,
       created_at
     )
     VALUES (
       $1, $2, $3, $4, $5, $6,
-      $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW()
+      $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW()
     )
     RETURNING *
   `;
@@ -102,6 +106,8 @@ class WeaveAIRepository {
       totalTokens,
       agentId,
       allowEdit,
+      toolCalls ? JSON.stringify(toolCalls) : null,
+      toolCallId,
     ]);
 
     // Atualiza resumo da sessão

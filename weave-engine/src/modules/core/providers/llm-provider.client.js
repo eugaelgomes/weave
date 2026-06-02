@@ -304,6 +304,14 @@ async function callGeminiApi(
     );
   }
 
+  const usage = response.usageMetadata
+    ? {
+        inputTokens: response.usageMetadata.promptTokenCount || 0,
+        outputTokens: response.usageMetadata.candidatesTokenCount || 0,
+        totalTokens: response.usageMetadata.totalTokenCount || 0,
+      }
+    : null;
+
   const functionCalls = response.functionCalls();
   if (functionCalls && functionCalls.length > 0) {
     return {
@@ -318,6 +326,7 @@ async function callGeminiApi(
       rawParts: result.response.candidates?.[0]?.content?.parts || null,
       text: null,
       type: "function_call",
+      usage,
     };
   }
 
@@ -332,6 +341,7 @@ async function callGeminiApi(
     functionCall: null,
     text,
     type: "text",
+    usage,
   };
 }
 
@@ -476,6 +486,15 @@ async function callOpenAiApi(
   );
 
   const message = response.data.choices[0]?.message;
+  const usageData = response.data.usage;
+  const usage = usageData
+    ? {
+        inputTokens: usageData.prompt_tokens || 0,
+        outputTokens: usageData.completion_tokens || 0,
+        totalTokens: usageData.total_tokens || 0,
+      }
+    : null;
+
   if (message?.tool_calls?.length) {
     const toolCall = message.tool_calls[0];
     return {
@@ -491,6 +510,7 @@ async function callOpenAiApi(
       text: null,
       toolCallId: toolCall.id, // For backwards compatibility
       type: "function_call",
+      usage,
     };
   }
 
@@ -498,6 +518,7 @@ async function callOpenAiApi(
     functionCall: null,
     text: message?.content || "",
     type: "text",
+    usage,
   };
 }
 

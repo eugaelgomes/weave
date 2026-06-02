@@ -82,11 +82,16 @@ class ChatController {
     const userLanguage = getLangFromReq(req);
     const t = getI18n(userLanguage);
     const chatI18n = getLocalChatI18n(userLanguage);
+    let userId = null;
+    let payload = null;
+    let sessionId = null;
+    let requestId = null;
+
     try {
-      const userId = chatParserUtil.validateAuthentication(req);
-      const payload = chatParserUtil.parseChatPayload(req);
+      userId = chatParserUtil.validateAuthentication(req);
+      payload = chatParserUtil.parseChatPayload(req);
       const organizationId = req.user?.organizationId || null;
-      const requestId = payload.requestId || randomUUID();
+      requestId = payload.requestId || randomUUID();
       let selectedAgent = null;
       let authorizedFunctions = [];
       let capabilityRules = {};
@@ -138,7 +143,7 @@ class ChatController {
         }
       }
 
-      let sessionId = payload.sessionId;
+      sessionId = payload.sessionId;
       if (sessionId) {
         const sessions = await chatRepository.getUserSessions(userId, 200);
         const hasSessionAccess = sessions.some(
@@ -404,6 +409,53 @@ class ChatController {
               (finalAssistantText ? "\n\n" : "") + assistantText;
           }
 
+          await chatRepository.saveMessageIdempotent({
+            sessionId,
+            userId,
+            role: "assistant",
+            content: assistantText || null,
+            model: `${payload.model.name}:${payload.model.version}`,
+            requestId: `${requestId}_call_${currentLoop}`,
+            provider: providerUsed,
+            status: "function_call",
+            latencyMs: engineResponse?.latencyMs || null,
+            inputTokens: currentTokenUsage.inputTokens,
+            outputTokens: currentTokenUsage.outputTokens,
+            totalTokens: currentTokenUsage.totalTokens,
+            agentId: payload.agentId,
+            allowEdit: payload.allowEdit,
+            toolCalls: currentFunctions,
+            metadata: {
+              citations: enginePayload?.data?.citations || [],
+              providerUsed,
+            },
+          });
+
+          for (let i = 0; i < currentExecutions.length; i++) {
+            const exec = currentExecutions[i];
+            const fn = currentFunctions[i];
+            const tId = fn.id || `call_${currentLoop}_${i}`;
+            const execContent = typeof exec.result === "string" 
+              ? exec.result 
+              : JSON.stringify(exec.result || exec.error || exec);
+              
+            await chatRepository.saveMessageIdempotent({
+              sessionId,
+              userId,
+              role: "tool",
+              content: execContent,
+              model: `${payload.model.name}:${payload.model.version}`,
+              requestId: `${requestId}_tool_${currentLoop}_${i}`,
+              provider: providerUsed,
+              status: exec.success ? "ok" : "error",
+              errorCode: exec.success ? null : "TOOL_EXECUTION_FAILED",
+              errorMessage: exec.success ? null : String(exec.error),
+              agentId: payload.agentId,
+              allowEdit: payload.allowEdit,
+              toolCallId: tId,
+            });
+          }
+
           currentConversationHistory.push({
             role: "user",
             content: currentMessage,
@@ -515,9 +567,29 @@ class ChatController {
         requestId:
           (typeof req.body?.requestId === "string" && req.body.requestId) ||
           error?.requestId ||
+          requestId ||
           null,
         statusCode: normalizedError.statusCode,
       });
+
+      if (userId && sessionId && payload) {
+        chatRepository
+          .saveMessageIdempotent({
+            sessionId,
+            userId,
+            role: "assistant",
+            content: null,
+            model: `${payload.model?.name || "unknown"}:${payload.model?.version || "unknown"}`,
+            requestId,
+            status: "error",
+            errorCode: normalizedError.code,
+            errorMessage: normalizedError.message,
+            agentId: payload.agentId,
+          })
+          .catch((err) => {
+            console.error("[weave-ai/chat] failed to save error message", err);
+          });
+      }
       return res.status(normalizedError.statusCode).json({
         success: false,
         error: {
