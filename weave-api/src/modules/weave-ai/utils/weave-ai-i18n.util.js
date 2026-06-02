@@ -199,6 +199,33 @@ const WEAVE_AI_ERRORS = {
   },
 };
 
+const CHAT_I18N = {
+  pt: {
+    awaitingInput: "Aguardando sua confirmação...",
+    callingFunctions: "Consultando funções...",
+    functionResults: (results) => `Resultados da execução:\n${results}`,
+    successFallback: "Ações executadas com sucesso.",
+    functionUnderstoodFallback: "Entendido, prosseguindo.",
+    noContentFallback: "Desculpe, não entendi.",
+  },
+  en: {
+    awaitingInput: "Awaiting your confirmation...",
+    callingFunctions: "Calling functions...",
+    functionResults: (results) => `Execution results:\n${results}`,
+    successFallback: "Actions executed successfully.",
+    functionUnderstoodFallback: "Understood, proceeding.",
+    noContentFallback: "Sorry, I didn't understand.",
+  },
+  es: {
+    awaitingInput: "Esperando tu confirmación...",
+    callingFunctions: "Consultando funciones...",
+    functionResults: (results) => `Resultados de la ejecución:\n${results}`,
+    successFallback: "Acciones ejecutadas con éxito.",
+    functionUnderstoodFallback: "Entendido, procediendo.",
+    noContentFallback: "Lo siento, no entendí.",
+  },
+};
+
 /**
  * Normalizes language code and returns correct translation dictionary.
  * Maps sub-locales (like en-US, pt-BR) to the base dictionary key.
@@ -238,8 +265,25 @@ function getLangFromReq(req) {
   return "pt";
 }
 
+/**
+ * Returns localized internal chat orchestrator texts.
+ * 
+ * @param {string|null|undefined} lang - Raw language code.
+ * @returns {Record<string, string|Function>} Localized chat texts.
+ */
+function getLocalChatI18n(lang) {
+  const normalized = String(lang || "pt")
+    .trim()
+    .substring(0, 2)
+    .toLowerCase();
+  if (normalized === "en") return CHAT_I18N.en;
+  if (normalized === "es") return CHAT_I18N.es;
+  return CHAT_I18N.pt;
+}
+
 module.exports = {
   getI18n,
+  getLocalChatI18n,
   getLangFromReq,
   WEAVE_AI_ERRORS,
 };

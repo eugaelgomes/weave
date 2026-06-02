@@ -60,11 +60,14 @@ class ChatController {
               ? { detail: String(cause) }
               : undefined;
 
+      require("fs").writeFileSync("/home/gaelgomes/projetos/weave-notes/weave-api/error-dump.txt", error?.stack || "No stack");
+
       console.error("[weave-ai/chat] request failed", {
         cause: causeSummary,
         code: normalizedError.code,
         errorCode: error?.code,
         errorName: error?.name,
+        stack: error?.stack,
         message: normalizedError.message,
         requestId:
           (typeof req.body?.requestId === "string" && req.body.requestId) ||

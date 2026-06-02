@@ -84,16 +84,24 @@ export interface GenerateContentData {
   provider?: string;
 }
 
+type RawModelItem = {
+  id: string;
+  name: string;
+  version: string;
+  contextWindow?: number | null;
+  features?: string[];
+  tags?: string[];
+  deprecated?: boolean;
+  supportedForAgents?: boolean;
+};
+
 type RawModelsResponse = {
   providers?: Array<{
+    id?: string;
     name: string;
+    isDefault?: boolean;
     logoUrl?: string | null;
-    models: Record<string, string>;
-    modelEntries?: Array<{
-      key: string;
-      version: string;
-      logoUrl?: string | null;
-    }>;
+    models?: RawModelItem[];
   }>;
 };
 
@@ -195,46 +203,21 @@ export async function fetchAvailableModels(): Promise<AIModel[]> {
   for (const providerEntry of providers) {
     const provider = String(providerEntry.name || "").toLowerCase();
     const providerLogoUrl = providerEntry.logoUrl || null;
-    const modelEntries = Array.isArray(providerEntry.modelEntries)
-      ? providerEntry.modelEntries
-      : [];
+    const providerModels = Array.isArray(providerEntry.models) ? providerEntry.models : [];
 
-    if (modelEntries.length > 0) {
-      for (const modelEntry of modelEntries) {
-        const version = String(modelEntry?.version || "").trim();
-        if (!version) {
-          continue;
-        }
+    for (const modelItem of providerModels) {
+      const version = String(modelItem?.version || "").trim();
+      if (!version) continue;
 
-        models.push({
-          id: `${provider}:${version}`,
-          name: provider,
-          version,
-          provider,
-          description: String(modelEntry?.key || "").trim() || version,
-          logoUrl: modelEntry?.logoUrl || providerLogoUrl,
-          capabilities: [],
-          isAvailable: true,
-        });
-      }
-      continue;
-    }
-
-    const providerModels = providerEntry.models || {};
-    for (const [modelLabel, modelVersion] of Object.entries(providerModels)) {
-      const version = String(modelVersion || "").trim();
-      if (!version) {
-        continue;
-      }
       models.push({
         id: `${provider}:${version}`,
-        name: provider,
+        name: String(modelItem?.name || provider),
         version,
         provider,
-        description: modelLabel,
+        description: String(modelItem?.name || version),
         logoUrl: providerLogoUrl,
-        capabilities: [],
-        isAvailable: true,
+        capabilities: modelItem?.features || [],
+        isAvailable: !modelItem?.deprecated,
       });
     }
   }
@@ -416,8 +399,11 @@ export async function research(query: string, recencyFilter?: string): Promise<a
 }
 
 export interface AgentProviderResponse {
+  id?: string;
   name: string;
-  models: Record<string, string>;
+  isDefault?: boolean;
+  logoUrl?: string | null;
+  models: RawModelItem[];
 }
 
 export async function fetchAgentProviders(): Promise<AgentProviderResponse[]> {

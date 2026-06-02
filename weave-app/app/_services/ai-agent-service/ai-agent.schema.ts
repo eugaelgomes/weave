@@ -1,22 +1,28 @@
 import { z } from "zod";
 
+const ModelItemSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  version: z.string(),
+  contextWindow: z.number().nullable().optional(),
+  features: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+  deprecated: z.boolean().optional(),
+  supportedForAgents: z.boolean().optional(),
+});
+
+export type ModelItem = z.infer<typeof ModelItemSchema>;
+
 export const RawModelsResponseSchema = z
   .object({
     providers: z
       .array(
         z.object({
+          id: z.string().optional(),
           name: z.string(),
+          isDefault: z.boolean().optional(),
           logoUrl: z.string().nullable().optional(),
-          models: z.record(z.string(), z.string()).optional(),
-          modelEntries: z
-            .array(
-              z.object({
-                key: z.string(),
-                version: z.string(),
-                logoUrl: z.string().nullable().optional(),
-              })
-            )
-            .optional(),
+          models: z.array(ModelItemSchema).optional(),
         })
       )
       .optional(),
@@ -127,9 +133,14 @@ export const AgentsListSchema = z.object({
 });
 
 export const AgentProviderSchema = z.object({
+  id: z.string().optional(),
   name: z.string(),
-  models: z.record(z.string(), z.string()),
+  isDefault: z.boolean().optional(),
+  logoUrl: z.string().nullable().optional(),
+  models: z.array(ModelItemSchema),
 });
+
+export type AgentProvider = z.infer<typeof AgentProviderSchema>;
 
 export const AgentProvidersResponseSchema = z.object({
   providers: z.array(AgentProviderSchema),

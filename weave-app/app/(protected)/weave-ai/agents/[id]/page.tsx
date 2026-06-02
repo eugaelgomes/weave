@@ -81,12 +81,14 @@ export function AgentForm({
   const availableModels = useMemo(() => {
     return agentProviders.flatMap((p) => {
       const details = getProviderDetails(p.name);
-      return Object.entries(p.models).map(([key, modelId]) => ({
-        id: modelId,
-        name: `${details.name} ${key.toLowerCase()}`,
-        provider: details.name,
-        providerId: p.name,
-      }));
+      return (p.models ?? [])
+        .filter((m) => !m.deprecated)
+        .map((m) => ({
+          id: m.version,
+          name: `${details.name} — ${m.name}`,
+          provider: details.name,
+          providerId: p.name,
+        }));
     });
   }, [agentProviders]);
 
