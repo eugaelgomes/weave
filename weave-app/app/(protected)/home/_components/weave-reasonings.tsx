@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { AiFredokaIcon } from "@/app/(protected)/_components/layout/sidebar";
+import { AiFredokaIcon } from "@/app/(protected)/_components/layout/icons/ai-fredoka-icon";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { ORG_PERMISSIONS, orgRoleHasPermission } from "@/app/_utils/org-permissions";

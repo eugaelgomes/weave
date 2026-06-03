@@ -203,13 +203,5 @@ function WeaveAiLayoutContent({ children }: { children: React.ReactNode }) {
 }
 
 export default function WeaveAiLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <NotesProvider>
-      <ChatProvider>
-        <AgentProvider>
-          <WeaveAiLayoutContent>{children}</WeaveAiLayoutContent>
-        </AgentProvider>
-      </ChatProvider>
-    </NotesProvider>
-  );
+  return <WeaveAiLayoutContent>{children}</WeaveAiLayoutContent>;
 }

@@ -131,14 +131,12 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <NotesProvider>
-      <TagsProvider>
-        <TaskPrioritiesProvider>
-          <NoteCommentsPanelProvider>
-            <NotesLayoutContent>{children}</NotesLayoutContent>
-          </NoteCommentsPanelProvider>
-        </TaskPrioritiesProvider>
-      </TagsProvider>
-    </NotesProvider>
+    <TagsProvider>
+      <TaskPrioritiesProvider>
+        <NoteCommentsPanelProvider>
+          <NotesLayoutContent>{children}</NotesLayoutContent>
+        </NoteCommentsPanelProvider>
+      </TaskPrioritiesProvider>
+    </TagsProvider>
   );
 }

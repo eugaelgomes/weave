@@ -1,14 +1,19 @@
-/**
- * Utilitários de navegação — funções puras reutilizáveis para match de rotas.
- *
- * Usadas pelo sidebar, breadcrumb, navbar, ou qualquer componente que
- * precise verificar se uma rota está ativa ou resolver o destino de
- * itens com filhos aninhados.
- */
+import { type LucideIcon } from "lucide-react";
+import React from "react";
+
+export const SUPPORT_URL = `${process.env.NEXT_PUBLIC_APP_URL || "https://weavenotes.app"}/support/`;
 
 export interface NavigableItem {
   path: string;
   subItems?: NavigableItem[];
+}
+
+export interface NavigationItem {
+  path: string;
+  icon: React.ElementType<any>;
+  label: string;
+  subItems?: NavigationItem[];
+  badge?: number;
 }
 
 /**

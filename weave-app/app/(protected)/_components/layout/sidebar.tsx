@@ -8,7 +8,12 @@ import { useNotification } from "@/app/_contexts/notification-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { isPathActive, getFirstNavigablePath } from "@/app/_utils/navigation";
+import {
+  isPathActive,
+  getFirstNavigablePath,
+  SUPPORT_URL,
+  type NavigationItem,
+} from "@/app/_utils/navigation";
 import {
   Home,
   Workflow,
@@ -26,19 +31,7 @@ import {
 } from "lucide-react";
 import { WeaveEngineIcon } from "@/app/(protected)/_components/layout/icons/weave-engine-icon";
 import { ProjectIcon } from "@/app/(protected)/projects/_components/project-icon";
-
-export const AiFredokaIcon = ({ className }: { className?: string }) => {
-  return (
-    <span
-      className={cn(
-        "font-fredoka flex items-center justify-center text-[13px] leading-none font-bold tracking-tighter select-none",
-        className
-      )}
-    >
-      AI
-    </span>
-  );
-};
+import { AiFredokaIcon } from "@/app/(protected)/_components/layout/icons/ai-fredoka-icon";
 
 const SidebarToggleIcon = ({ className }: { className?: string }) => {
   return (
@@ -57,8 +50,6 @@ const SidebarToggleIcon = ({ className }: { className?: string }) => {
   );
 };
 
-const SUPPORT_URL = `${process.env.NEXT_PUBLIC_APP_URL || "https://weavenotes.app"}/support/`;
-
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -67,14 +58,6 @@ interface SidebarProps {
   onLinkClick?: () => void;
   isCollapsed?: boolean;
   toggleCollapse?: () => void;
-}
-
-interface NavigationItem {
-  path: string;
-  icon: LucideIcon | React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  label: string;
-  subItems?: NavigationItem[];
-  badge?: number;
 }
 
 // ---------------------------------------------------------------------------

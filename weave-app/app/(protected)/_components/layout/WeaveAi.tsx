@@ -7,7 +7,8 @@ import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { cn } from "@/lib/utils";
-import ChatWidget from "@/app/(protected)/_components/ui/weave-ai/chat-widget";
+import ChatInterface from "@/app/(protected)/weave-ai/_components/chat-interface";
+import { AiFredokaIcon } from "@/app/(protected)/_components/layout/icons/ai-fredoka-icon";
 
 export default function WeaveAi() {
   const { t } = useLanguage();
@@ -39,56 +40,45 @@ export default function WeaveAi() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className={cn(
-          "fixed z-[106] flex h-14 w-14 items-center justify-center rounded-full print:hidden",
-          "right-5 bottom-5 md:right-8 md:bottom-5",
-          // Estilo Clean (Branco com borda sutil)
-          "border border-neutral-200/60 bg-white text-neutral-800",
-          "shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] dark:border-neutral-800 dark:bg-[#1d1d1b] dark:text-neutral-200 dark:shadow-none",
-          // Animações
-          "transition-all duration-300 ease-out",
-          "hover:-translate-y-0.5 hover:shadow-[0_8px_25px_-4px_rgba(0,0,0,0.12)] active:translate-y-0 active:scale-95",
-          // Acessibilidade
-          "focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2 focus-visible:outline-none dark:focus-visible:ring-offset-neutral-900"
-        )}
-        aria-haspopup="dialog"
-        aria-label={open ? t.common.close : t.nav.weaveAi}
-      >
-        <div className="relative flex h-full w-full items-center justify-center">
-          <span
-            className={cn(
-              "absolute text-[1.1rem] font-medium transition-all duration-300 ease-in-out",
-              open ? "scale-0 rotate-90 opacity-0" : "scale-100 rotate-0 opacity-100"
-            )}
-            // Caso já tenha a Fredoka configurada no Tailwind (ex: font-fredoka), você pode remover o style e usar a classe lá em cima.
-            style={{ fontFamily: "'Fredoka', sans-serif", letterSpacing: "-0.02em" }}
-            aria-hidden={open}
-          >
-            w.ai
-          </span>
-          <X
-            strokeWidth={2}
-            className={cn(
-              "absolute h-6 w-6 transition-all duration-300 ease-in-out",
-              open
-                ? "scale-100 rotate-0 opacity-100"
-                : "scale-0 -rotate-90 text-neutral-400 opacity-0"
-            )}
-            aria-hidden={!open}
-          />
-        </div>
-      </button>
+      {/* Botão flutuante (Nuvem) - Só aparece quando o chat está fechado */}
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={cn(
+            "fixed z-[106] flex h-14 w-14 items-center justify-center print:hidden",
+            "right-5 bottom-5 md:right-8 md:bottom-5",
+            // Formato irregular "nuvem" (blob orgânico com morph no hover)
+            "rounded-[43%_57%_36%_64%_/_47%_60%_40%_53%] hover:rounded-[57%_43%_64%_36%_/_60%_47%_53%_40%]",
+            // Sem bordas, fundo translúcido (efeito glassmorphism)
+            "bg-white/60 backdrop-blur-md text-neutral-800",
+            "dark:bg-[#1d1d1b]/60 dark:text-neutral-200",
+            // Sombras suaves
+            "shadow-xl shadow-black/10 dark:shadow-black/40",
+            // Animações e transição para cor sólida no hover
+            "transition-all duration-300 ease-out",
+            "hover:bg-white dark:hover:bg-[#1d1d1b]",
+            "hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-black/15 dark:hover:shadow-black/50 active:translate-y-0 active:scale-95",
+            // Acessibilidade
+            "focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2 focus-visible:outline-none dark:focus-visible:ring-offset-neutral-900"
+          )}
+          aria-haspopup="dialog"
+          aria-label={t.nav.weaveAi}
+        >
+          <div className="relative flex h-full w-full items-center justify-center">
+            <AiFredokaIcon className="absolute text-[1.4rem]" aria-hidden={false} />
+          </div>
+        </button>
+      )}
 
+      {/* Modal Centralizado Imersivo */}
       {mounted &&
         open &&
         createPortal(
-          <>
+          <div className="fixed inset-0 z-[110] flex items-center justify-center print:hidden">
             <button
               type="button"
-              className="fixed inset-0 z-[104] bg-neutral-950/20 backdrop-blur-[2px] transition-opacity dark:bg-neutral-950/50"
+              className="absolute inset-0 bg-neutral-950/40 backdrop-blur-sm transition-opacity dark:bg-neutral-950/60"
               aria-label={t.common.close}
               onClick={() => setOpen(false)}
             />
@@ -97,39 +87,11 @@ export default function WeaveAi() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="weave-ai-modal-title"
-              className="dark:border-surface-dark-border fixed right-4 bottom-24 z-[105] flex max-h-[min(75vh,600px)] min-h-[min(42vh,360px)] w-[min(28rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-t-2xl border border-neutral-200 bg-white shadow-2xl max-sm:right-4 max-sm:left-4 max-sm:w-auto sm:right-6 sm:bottom-28 sm:rounded-xl md:right-8 dark:bg-[#1d1d1b]"
+              className="dark:border-surface-dark-border dark:shadow-surface-dark-2xl relative z-[111] flex h-[85vh] w-[92vw] max-w-5xl flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-2xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-200 dark:bg-[#1d1d1b] dark:ring-white/10"
             >
-              <div className="dark:border-surface-dark-border flex h-12 shrink-0 items-center justify-between gap-2 border-b border-neutral-200 px-3">
-                <h2
-                  id="weave-ai-modal-title"
-                  className="truncate text-xs font-semibold text-neutral-800 dark:text-neutral-100"
-                >
-                  {t.nav.weaveAi}
-                </h2>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Link
-                    href="/weave-ai/chat"
-                    onClick={() => setOpen(false)}
-                    className="text-[10px] font-medium text-neutral-500 hover:text-neutral-900 hover:underline dark:text-neutral-400 dark:hover:text-neutral-100"
-                  >
-                    {t.nav.weaveAiOpenFull}
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => setOpen(false)}
-                    className="rounded-md p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
-                    aria-label={t.common.close}
-                  >
-                    <X className="h-4 w-4" strokeWidth={2} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="min-h-0 flex-1 overflow-hidden">
-                <ChatWidget maxHeight="100%" className="h-full border-0 shadow-none" />
-              </div>
+              <ChatInterface variant="widget" onClose={() => setOpen(false)} />
             </div>
-          </>,
+          </div>,
           document.body
         )}
     </>

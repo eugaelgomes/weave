@@ -5,6 +5,9 @@ import { NotificationProvider } from "./notification-context";
 import { CalendarProvider } from "./calendar-context";
 import { TaskNoteModalProvider } from "@/app/(protected)/_components/task-note-modal";
 import { ProjectsProvider } from "./projects-context";
+import { ChatProvider } from "./chat-context";
+import { AgentProvider } from "./agent-context";
+import { NotesProvider } from "./notes-context";
 
 // Apenas providers globais — necessários em todas as rotas protegidas.
 // Os demais providers são carregados sob demanda nos layouts de cada módulo.
@@ -24,7 +27,10 @@ const GlobalProviders = composeProviders(
   NotificationProvider,
   CalendarProvider,
   TaskNoteModalProvider,
-  ProjectsProvider
+  ProjectsProvider,
+  NotesProvider,
+  AgentProvider,
+  ChatProvider
 );
 
 export function AuthenticatedProviders({ children }: { children: React.ReactNode }) {

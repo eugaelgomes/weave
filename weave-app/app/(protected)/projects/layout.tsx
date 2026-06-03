@@ -255,14 +255,12 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
   }
 
   return (
-    <NotesProvider>
-      <WeaveEngineProvider>
-        <TagsProvider>
-          <TaskPrioritiesProvider>
-            <ProjectsLayoutContent>{children}</ProjectsLayoutContent>
-          </TaskPrioritiesProvider>
-        </TagsProvider>
-      </WeaveEngineProvider>
-    </NotesProvider>
+    <WeaveEngineProvider>
+      <TagsProvider>
+        <TaskPrioritiesProvider>
+          <ProjectsLayoutContent>{children}</ProjectsLayoutContent>
+        </TaskPrioritiesProvider>
+      </TagsProvider>
+    </WeaveEngineProvider>
   );
 }

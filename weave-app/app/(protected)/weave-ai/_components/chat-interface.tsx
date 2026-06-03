@@ -162,9 +162,11 @@ export type ChatInterfaceVariant = "fullPage" | "widget";
 export default function ChatInterface({
   chatId,
   variant = "fullPage",
+  onClose,
 }: {
   chatId?: string;
   variant?: ChatInterfaceVariant;
+  onClose?: () => void;
 } = {}) {
   const router = useRouter();
   const pathname = usePathname();
@@ -233,16 +235,22 @@ export default function ChatInterface({
   }, [models, selectedModel]);
 
   useEffect(() => {
-    if (variant !== "fullPage") return;
     if (chatId) {
       didInitializeNewSessionRef.current = false;
       return;
     }
     if (didInitializeNewSessionRef.current) return;
 
+    // Se estivermos no modal (widget) e já houver uma conversa em andamento na sessão global,
+    // apenas mantemos ela! Caso contrário, iniciamos uma nova conversa.
+    if (variant === "widget" && messages.length > 0) {
+      didInitializeNewSessionRef.current = true;
+      return;
+    }
+
     didInitializeNewSessionRef.current = true;
     createNewSession();
-  }, [chatId, createNewSession, variant]);
+  }, [chatId, createNewSession, variant, messages.length]);
 
   useEffect(() => {
     if (chatId && !isChatSessionId(chatId)) {
@@ -463,11 +471,30 @@ export default function ChatInterface({
       <div className="dark:border-surface-dark-border flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-1">
         <div className="flex items-center gap-2">
           <h1 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-            {chatHeaderTitle}
+            {variant === "widget" ? t.nav.weaveAi : chatHeaderTitle}
           </h1>
         </div>
 
         <div className="flex items-center gap-2">
+          {variant === "widget" && (
+            <>
+              <Link
+                href="/weave-ai/chat"
+                onClick={onClose}
+                className="text-[10px] font-medium text-neutral-500 hover:text-neutral-900 hover:underline dark:text-neutral-400 dark:hover:text-neutral-100"
+              >
+                {t.nav.weaveAiOpenFull}
+              </Link>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-md p-1 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                aria-label={t.common.close}
+              >
+                <X className="h-4 w-4" strokeWidth={2} />
+              </button>
+            </>
+          )}
         </div>
       </div>
 
