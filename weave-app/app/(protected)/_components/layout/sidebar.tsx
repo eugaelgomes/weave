@@ -27,7 +27,7 @@ import {
 import { WeaveEngineIcon } from "@/app/(protected)/_components/layout/icons/weave-engine-icon";
 import { ProjectIcon } from "@/app/(protected)/projects/_components/project-icon";
 
-const AiFredokaIcon = ({ className }: { className?: string }) => {
+export const AiFredokaIcon = ({ className }: { className?: string }) => {
   return (
     <span
       className={cn(

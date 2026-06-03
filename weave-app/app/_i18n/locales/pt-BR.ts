@@ -75,6 +75,14 @@ const ptBR = {
   },
 
   home: {
+    greetingPrefix: "Olá",
+    greetingSuffixes: [
+      ", para hoje temos",
+      ", pronto para as tarefas de hoje?",
+      ", o que vamos fazer hoje?",
+      ", aqui está o seu resumo de hoje:",
+      ", vamos organizar o seu dia?",
+    ],
     metrics: "Métricas",
     totalNotes: "Total de Tarefas",
     uniqueTags: "Tags únicas",
@@ -121,12 +129,19 @@ const ptBR = {
     },
     engine: {
       title: "Weave Engine",
+      titleVariations: [
+        "Analisando o fluxo recente, seu agente identificou:",
+        "Com base nos seus projetos ativos, o diagnóstico de hoje é:",
+        "Seguindo a linha de raciocínio do agente, temos este cenário:",
+        "Seu agente processou as atualizações e sugere focar em:",
+        "Cruzando os dados do seu workspace, a análise indica:",
+      ],
       subtitleHome: "Insights dos seus projetos recentes",
       feedTitle: "Insights",
       refresh: "Atualizar",
       refreshing: "Atualizando…",
-      viewAll: "Ver tudo",
-      openAi: "Weave AI",
+      viewAll: "Tudo",
+      openAi: "AI",
       create: "Criar",
       createFirst: "Criar primeiro insight",
       loading: "Carregando insights…",

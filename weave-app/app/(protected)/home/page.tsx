@@ -3,14 +3,15 @@
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useNotes } from "@/app/_contexts/notes-context";
 import { useProjects } from "@/app/_contexts/projects-context";
-import { HomeHeader } from "@/app/(protected)/_components/ui/headers/home-header";
+import { useLanguage } from "@/app/_contexts/language-context";
 import { CalendarPreview } from "@/app/(protected)/calendar/page";
 import WeaveEngineDashboard from "./_components/weave-reasonings";
 import NotesCarousel from "./_components/notes-carousel";
 import ProjectsCarousel from "./_components/project-carousel";
 
 export default function HomePage() {
-  const { authenticated, loading } = useAuth();
+  const { authenticated, loading, user } = useAuth();
+  const { t } = useLanguage();
   const { getRecentNotes } = useNotes();
   const { getRecentProjects } = useProjects();
 
@@ -34,7 +35,15 @@ export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1 space-y-2 overflow-y-auto">
-        <HomeHeader />
+        <div className="flex w-full items-center justify-start px-1 animate-in fade-in duration-500">
+          <h2 className="font-fredoka text-lg font-medium tracking-tight text-neutral-500 dark:text-neutral-500">
+            {t.home.greetingPrefix}{" "}
+            <span className="font-semibold text-brand-yellow dark:text-brand-yellow">
+              {user?.user_name?.split(" ")[0] || user?.username || ""}
+            </span>
+            ,
+          </h2>
+        </div>
 
         <WeaveEngineDashboard variant="home" />
 

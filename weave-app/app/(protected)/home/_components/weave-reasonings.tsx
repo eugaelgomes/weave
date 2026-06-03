@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Plus, RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { AiFredokaIcon } from "@/app/(protected)/_components/layout/sidebar";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { ORG_PERMISSIONS, orgRoleHasPermission } from "@/app/_utils/org-permissions";
@@ -31,6 +32,15 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
   const { t, locale } = useLanguage();
   const copy = t.home.engine;
   const dateLocale = locale === "en-US" ? "en-US" : locale === "es-ES" ? "es-ES" : "pt-BR";
+  const [titleIndex, setTitleIndex] = useState(0);
+
+  useEffect(() => {
+    const variations = copy.titleVariations;
+    if (variations && variations.length > 0) {
+      const randomIndex = Math.floor(Math.random() * variations.length);
+      setTitleIndex(randomIndex);
+    }
+  }, [copy.titleVariations]);
 
   const { user } = useAuth();
   const canManageProjects = useMemo(() => {
@@ -197,35 +207,46 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
   const hasFeed = pinned.length > 0 || recent.length > 0;
 
   return (
-    <div className={cn(engineShellClass, variant === "page" && hasFeed && engineShellPageClass)}>
+    <div
+      className={cn(
+        variant === "home" ? "flex w-full flex-col p-1" : engineShellClass,
+        variant === "page" && hasFeed && engineShellPageClass
+      )}
+    >
       <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         {variant === "home" ? (
           <div className="min-w-0">
-            <h2 className="text-sm font-medium text-neutral-600 dark:text-neutral-300">
-              {copy.title}
+            <h2 className="font-fredoka text-sm font-medium text-neutral-400 dark:text-neutral-300">
+              {copy.titleVariations[titleIndex]}
             </h2>
-            <p className="mt-0.5 text-[11px] font-normal text-neutral-500 dark:text-neutral-400">
-              {copy.subtitleHome}
-            </p>
           </div>
         ) : (
           <div className="min-w-0 flex-1" />
         )}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
           <button
             type="button"
             onClick={() => void refresh()}
             disabled={refreshing}
-            className={engineTextLinkClass}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 active:scale-95 transition-all duration-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
           >
+            <RefreshCw className={cn("h-3 w-3 text-neutral-400", refreshing && "animate-spin")} />
             {refreshing ? copy.refreshing : copy.refresh}
           </button>
           {variant === "home" && (
-            <Link href="/weave-engine" className={engineTextLinkClass}>
+            <Link
+              href="/weave-engine"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 active:scale-95 transition-all duration-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+            >
+              <Eye className="h-3 w-3 text-neutral-400" />
               {copy.viewAll}
             </Link>
           )}
-          <Link href="/weave-ai/chat" className={engineTextLinkClass}>
+          <Link
+            href="/weave-ai/chat"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 active:scale-95 transition-all duration-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+          >
+            <AiFredokaIcon className="text-[10px] text-neutral-500 dark:text-neutral-400" />
             {copy.openAi}
           </Link>
           {variant === "page" && canManageProjects && projects.length > 0 && (
@@ -300,7 +321,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
               </p>
             )}
 
-            <div className="dark:divide-surface-dark-border divide-y divide-neutral-100">
+            <div className={cn(variant === "home" ? "flex flex-col gap-1" : "dark:divide-surface-dark-border divide-y divide-neutral-100")}>
               {pinned.length > 0 && (
                 <p className="py-2 text-[10px] font-normal tracking-wide text-neutral-400 uppercase dark:text-neutral-500">
                   {copy.pinnedSection}

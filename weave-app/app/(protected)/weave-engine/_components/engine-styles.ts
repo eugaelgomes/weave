@@ -12,10 +12,10 @@ export const engineTextLinkClass =
   "text-[11px] font-normal text-neutral-500 transition-colors hover:text-neutral-800 underline-offset-2 hover:underline dark:text-neutral-400 dark:hover:text-neutral-200";
 
 export const engineIconActionClass =
-  "p-1 text-neutral-400 opacity-100 transition-colors hover:text-neutral-700 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-neutral-200";
+  "p-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800/80 text-neutral-400 opacity-100 transition-all hover:text-neutral-700 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-neutral-200 hover:scale-105 active:scale-95";
 
 export const engineFeedItemClass =
-  "group relative py-3 transition-colors hover:bg-neutral-50/50 dark:hover:bg-neutral-900/30";
+  "group relative py-2.5 px-3 rounded-lg transition-all hover:bg-neutral-50 dark:hover:bg-neutral-800/40 mb-1 last:mb-0 border border-transparent hover:border-neutral-200/50 dark:hover:border-neutral-700/50";
 
 export const engineInsetNoticeClass =
   "py-4 text-center text-[11px] font-normal text-neutral-500 dark:text-neutral-400";

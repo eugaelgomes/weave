@@ -77,6 +77,14 @@ const enUS: TranslationKeys = {
   },
 
   home: {
+    greetingPrefix: "Hello",
+    greetingSuffixes: [
+      ", here is what we have for today",
+      ", ready for today's tasks?",
+      ", what are we working on today?",
+      ", here is your summary for today:",
+      ", let's organize your day?",
+    ],
     metrics: "Metrics",
     totalNotes: "Total Tasks",
     uniqueTags: "Unique Tags",
@@ -123,12 +131,19 @@ const enUS: TranslationKeys = {
     },
     engine: {
       title: "Weave Engine",
+      titleVariations: [
+        "Analyzing recent activity, your agent identified:",
+        "Based on your active projects, today's diagnosis is:",
+        "Following the agent's line of thought, here is the scenario:",
+        "Your agent processed the updates and suggests focusing on:",
+        "Crossing your workspace data, the analysis indicates:",
+      ],
       subtitleHome: "Insights from your recent projects",
       feedTitle: "Insights",
       refresh: "Refresh",
       refreshing: "Refreshing…",
-      viewAll: "View all",
-      openAi: "Weave AI",
+      viewAll: "All",
+      openAi: "AI",
       create: "Create",
       createFirst: "Create first insight",
       loading: "Loading insights…",

@@ -77,6 +77,14 @@ const esES: TranslationKeys = {
   },
 
   home: {
+    greetingPrefix: "Hola",
+    greetingSuffixes: [
+      ", para hoy tenemos",
+      ", ¿listo para las tareas de hoy?",
+      ", ¿en qué trabajamos hoy?",
+      ", aquí está tu resumen de hoy:",
+      ", ¿organizamos tu día?",
+    ],
     metrics: "Métricas",
     totalNotes: "Total de Tareas",
     uniqueTags: "Tags únicas",
@@ -123,12 +131,19 @@ const esES: TranslationKeys = {
     },
     engine: {
       title: "Weave Engine",
+      titleVariations: [
+        "Analizando la actividad reciente, tu agente identificó:",
+        "Según tus proyectos activos, el diagnóstico de hoy es:",
+        "Siguiendo la línea de razonamiento del agente, tenemos este escenario:",
+        "Tu agente procesó las actualizaciones y sugiere enfocarse en:",
+        "Cruzando los datos de tu espacio de trabajo, el análisis indica:",
+      ],
       subtitleHome: "Insights de tus proyectos recientes",
       feedTitle: "Insights",
       refresh: "Actualizar",
       refreshing: "Actualizando…",
-      viewAll: "Ver todo",
-      openAi: "Weave AI",
+      viewAll: "Todo",
+      openAi: "AI",
       create: "Crear",
       createFirst: "Crear primer insight",
       loading: "Cargando insights…",
