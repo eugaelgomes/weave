@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import {
   resolveLegacyAuthInviteRedirect,
   resolveOrganizationAcceptInviteRedirect,
-} from "@/lib/invite-auth-redirects";
+} from "./lib/invite-auth-redirects";
 
 function applyInviteRedirect(
   request: NextRequest,
@@ -26,7 +26,7 @@ function applyInviteRedirect(
  * Legacy org invites used /organization/accept-invite/?token=...
  * Redirects to /auth/?invite_token=... (canonical accept-invite landing).
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname.replace(/\/$/, "") || "/";
 
   const orgInviteRedirect = resolveOrganizationAcceptInviteRedirect(
