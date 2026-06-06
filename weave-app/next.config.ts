@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { execSync } from "child_process";
 const isProd = process.env.NODE_ENV === "production";
 /**
  * Headers
@@ -63,6 +64,24 @@ const staticCacheHeader = {
 };
 
 const nextConfig: NextConfig = {
+  // Build ID determinístico para rastreamento de versão e skew protection
+  generateBuildId: async () => {
+    // Na Vercel, usa o commit SHA; localmente, tenta git
+    const sha =
+      process.env.VERCEL_GIT_COMMIT_SHA ||
+      (() => {
+        try {
+          return execSync("git rev-parse --short HEAD").toString().trim();
+        } catch {
+          return "local";
+        }
+      })();
+    return `${Date.now()}-${sha.slice(0, 8)}`;
+  },
+
+  // Habilita Deployment ID para Skew Protection na Vercel
+  deploymentId: process.env.VERCEL_DEPLOYMENT_ID || undefined,
+
   images: {
     unoptimized: true,
     remotePatterns: [

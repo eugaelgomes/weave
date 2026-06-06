@@ -157,35 +157,105 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              window.addEventListener('error', function(event) {
-                const msg = event.message || '';
-                const isChunkLoadError = msg.includes('ChunkLoadError') || msg.includes('Failed to fetch dynamically imported module');
-                const isScriptError = event.target && event.target.tagName === 'SCRIPT' && event.type === 'error';
-                const isMimeTypeError = msg.includes('MIME type') && msg.includes('not executable');
-                
-                if (isChunkLoadError || isScriptError || isMimeTypeError) {
-                  const chunkFailed = sessionStorage.getItem('chunk_failed');
-                  if (!chunkFailed) {
-                    sessionStorage.setItem('chunk_failed', 'true');
-                    window.location.reload();
+              (function() {
+                var MAX_RETRIES = 3;
+                var COOLDOWN_MS = 5000;
+                var STORAGE_KEY = 'chunk_reload_state';
+
+                function getState() {
+                  try {
+                    var raw = sessionStorage.getItem(STORAGE_KEY);
+                    return raw ? JSON.parse(raw) : { count: 0, lastAttempt: 0 };
+                  } catch(e) {
+                    return { count: 0, lastAttempt: 0 };
                   }
                 }
-              }, true);
 
-              window.addEventListener('unhandledrejection', function(event) {
-                const msg = event.reason ? (event.reason.message || event.reason.toString()) : '';
-                if (msg.includes('ChunkLoadError') || msg.includes('Failed to fetch dynamically imported module')) {
-                  const chunkFailed = sessionStorage.getItem('chunk_failed');
-                  if (!chunkFailed) {
-                    sessionStorage.setItem('chunk_failed', 'true');
-                    window.location.reload();
-                  }
+                function setState(state) {
+                  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
                 }
-              });
 
-              window.addEventListener('load', function() {
-                sessionStorage.removeItem('chunk_failed');
-              });
+                function isChunkError(msg) {
+                  if (!msg) return false;
+                  return msg.includes('ChunkLoadError')
+                    || msg.includes('Failed to fetch dynamically imported module')
+                    || msg.includes('Loading chunk')
+                    || (msg.includes('MIME type') && msg.includes('not executable'));
+                }
+
+                function handleChunkError() {
+                  var state = getState();
+                  var now = Date.now();
+
+                  // Cooldown: no more than 1 reload per COOLDOWN_MS
+                  if (now - state.lastAttempt < COOLDOWN_MS) return;
+
+                  if (state.count >= MAX_RETRIES) {
+                    // Exhausted retries — clear state and show notice
+                    sessionStorage.removeItem(STORAGE_KEY);
+                    // Don't show if we already showed
+                    if (!sessionStorage.getItem('chunk_notice_shown')) {
+                      sessionStorage.setItem('chunk_notice_shown', '1');
+                      if (typeof document !== 'undefined') {
+                        var banner = document.createElement('div');
+                        banner.setAttribute('style', 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#fbbf24;color:#1a1a1a;padding:12px 20px;text-align:center;font:14px/1.4 system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.15)');
+                        banner.innerHTML = 'A new version is available. <button onclick="window.location.href=window.location.pathname" style="margin-left:12px;padding:4px 16px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">Update now</button>';
+                        document.body.appendChild(banner);
+                      }
+                    }
+                    return;
+                  }
+
+                  // Increment counter and attempt reload
+                  setState({ count: state.count + 1, lastAttempt: now });
+
+                  // Clear caches before reloading
+                  if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                      names.forEach(function(name) { caches.delete(name); });
+                    }).catch(function() {});
+                  }
+
+                  // Unregister service workers
+                  if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(regs) {
+                      regs.forEach(function(r) { r.unregister(); });
+                    }).catch(function() {});
+                  }
+
+                  // Small delay to allow cache/SW cleanup
+                  setTimeout(function() {
+                    window.location.reload();
+                  }, 200);
+                }
+
+                // Capture script load errors (404 on chunk files)
+                window.addEventListener('error', function(event) {
+                  var msg = event.message || '';
+                  var isScriptError = event.target && event.target.tagName === 'SCRIPT' && event.type === 'error';
+                  if (isChunkError(msg) || isScriptError) {
+                    handleChunkError();
+                  }
+                }, true);
+
+                // Capture async chunk load failures
+                window.addEventListener('unhandledrejection', function(event) {
+                  var msg = event.reason ? (event.reason.message || String(event.reason)) : '';
+                  if (isChunkError(msg)) {
+                    handleChunkError();
+                  }
+                });
+
+                // Reset state on successful page load
+                window.addEventListener('load', function() {
+                  var state = getState();
+                  if (state.count > 0) {
+                    // Page loaded successfully after retry — reset
+                    sessionStorage.removeItem(STORAGE_KEY);
+                    sessionStorage.removeItem('chunk_notice_shown');
+                  }
+                });
+              })();
             `,
           }}
         />

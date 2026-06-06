@@ -10,9 +10,21 @@ interface ErrorProps {
 }
 
 export default function Error({ error, reset }: ErrorProps) {
+  const isChunkError =
+    error.message?.includes("ChunkLoadError") ||
+    error.message?.includes("Loading chunk") ||
+    error.message?.includes("Failed to fetch dynamically imported module");
+
   useEffect(() => {
     console.error("Erro capturado:", error);
-  }, [error]);
+
+    // ChunkLoadErrors can't be fixed with reset() — the stale chunk is gone.
+    // Hard-navigate to get fresh HTML + chunks from the latest deployment.
+    if (isChunkError) {
+      window.location.reload();
+      return;
+    }
+  }, [error, isChunkError]);
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-neutral-50 dark:bg-[#1d1d1b]">
