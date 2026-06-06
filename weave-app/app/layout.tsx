@@ -154,6 +154,41 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.addEventListener('error', function(event) {
+                const msg = event.message || '';
+                const isChunkLoadError = msg.includes('ChunkLoadError') || msg.includes('Failed to fetch dynamically imported module');
+                const isScriptError = event.target && event.target.tagName === 'SCRIPT' && event.type === 'error';
+                const isMimeTypeError = msg.includes('MIME type') && msg.includes('not executable');
+                
+                if (isChunkLoadError || isScriptError || isMimeTypeError) {
+                  const chunkFailed = sessionStorage.getItem('chunk_failed');
+                  if (!chunkFailed) {
+                    sessionStorage.setItem('chunk_failed', 'true');
+                    window.location.reload();
+                  }
+                }
+              }, true);
+
+              window.addEventListener('unhandledrejection', function(event) {
+                const msg = event.reason ? (event.reason.message || event.reason.toString()) : '';
+                if (msg.includes('ChunkLoadError') || msg.includes('Failed to fetch dynamically imported module')) {
+                  const chunkFailed = sessionStorage.getItem('chunk_failed');
+                  if (!chunkFailed) {
+                    sessionStorage.setItem('chunk_failed', 'true');
+                    window.location.reload();
+                  }
+                }
+              });
+
+              window.addEventListener('load', function() {
+                sessionStorage.removeItem('chunk_failed');
+              });
+            `,
+          }}
+        />
         <Analytics />
       </head>
       <body className={cn("antialiased", fredoka.variable)} suppressHydrationWarning>
