@@ -108,9 +108,27 @@ class ChatController {
     const t = getI18n(userLanguage);
     try {
       const userId = chatParserUtil.validateAuthentication(req);
-      const limit = Math.min(Number.parseInt(req.query.limit || "50", 10), 100);
+      const sessionId = req.query.sessionId;
 
-      const sessions = await chatRepository.getUserSessions(userId, limit);
+      if (sessionId) {
+        const messages = await chatRepository.getSessionMessages(
+          sessionId,
+          userId
+        );
+        return res.json({
+          success: true,
+          messages,
+        });
+      }
+
+      const limit = Math.min(Number.parseInt(req.query.limit || "50", 10), 100);
+      const offset = Number.parseInt(req.query.offset || "0", 10);
+
+      const sessions = await chatRepository.getUserSessions(
+        userId,
+        limit,
+        offset
+      );
       return res.json({
         success: true,
         sessions,
