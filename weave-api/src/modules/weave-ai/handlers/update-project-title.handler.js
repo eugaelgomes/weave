@@ -20,29 +20,27 @@ class UpdateProjectTitleHandler {
    * @param { userId: string, args: Record<string, unknown>, organizationId: string|null, lang: string, t: object, name: string } context
    */
   async execute({ userId, args, organizationId, lang, t, name }) {
-
-        await chatAccessUtil.assertProjectMutationAccess(
-          userId,
-          String(args.projectId || ""),
-          organizationId,
-          lang
-        );
-        const result = await projectsUpdateRepository.updateProject(
-          args.projectId,
-          userId,
-          {
-            title: args.title,
-          }
-        );
-        return {
-          name,
-          result: {
-            projectId: args.projectId,
-            updated: Array.isArray(result) && result.length > 0,
-          },
-          success: true,
-        };
-      
+    await chatAccessUtil.assertProjectMutationAccess(
+      userId,
+      String(args.projectId || ""),
+      organizationId,
+      lang
+    );
+    const result = await projectsUpdateRepository.updateProject(
+      args.projectId,
+      userId,
+      {
+        title: args.title,
+      }
+    );
+    return {
+      name,
+      result: {
+        projectId: args.projectId,
+        updated: Array.isArray(result) && result.length > 0,
+      },
+      success: true,
+    };
   }
 }
 

@@ -13,7 +13,7 @@ class TagsController extends TagsBaseController {
   async createTag(req, res, next) {
     try {
       const userId = this._requireAuthenticatedUser(req, res);
-      if (userId == null) return;
+      if (!userId) return;
 
       const { project_id, org_id } = req.params;
       const { name, color } = req.body;
@@ -92,7 +92,7 @@ class TagsController extends TagsBaseController {
   async deleteTag(req, res, next) {
     try {
       const userId = this._requireAuthenticatedUser(req, res);
-      if (userId == null) return;
+      if (!userId) return;
 
       const { project_id, org_id, tag_id } = req.params;
 

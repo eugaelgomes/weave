@@ -20,40 +20,36 @@ class UpdateNoteStageHandler {
    * @param { userId: string, args: Record<string, unknown>, organizationId: string|null, lang: string, t: object, name: string } context
    */
   async execute({ userId, args, organizationId, lang, t, name }) {
-
-        const noteId = await chatAccessUtil.assertNoteMutationAccess(
-          userId,
-          String(args.noteId || ""),
-          organizationId,
-          lang
-        );
-        const note = await notesRepository.getNoteById(noteId);
-        if (!note?.project_id) {
-          throw new Error(t.noteNotAssociatedToProject);
-        }
-        const projectId = String(note.project_id);
-        const parsedStageId =
-          args.stageId === undefined ||
-          args.stageId === null ||
-          args.stageId === ""
-            ? null
-            : String(args.stageId);
-        if (!parsedStageId) {
-          throw new Error(t.stageRequired);
-        }
-        const stages = await projectsReadRepository.getProjectStages(projectId);
-        if (!stages.some((s) => String(s.id) === parsedStageId)) {
-          throw new Error(t.stageNotFound);
-        }
-        const result = await notesRepository.updateNoteById(noteId, {
-          project_stage_id: parsedStageId,
-        });
-        return {
-          name,
-          result: { noteId, updated: Boolean(result) },
-          success: true,
-        };
-      
+    const noteId = await chatAccessUtil.assertNoteMutationAccess(
+      userId,
+      String(args.noteId || ""),
+      organizationId,
+      lang
+    );
+    const note = await notesRepository.getNoteById(noteId);
+    if (!note?.project_id) {
+      throw new Error(t.noteNotAssociatedToProject);
+    }
+    const projectId = String(note.project_id);
+    const parsedStageId =
+      args.stageId === undefined || args.stageId === null || args.stageId === ""
+        ? null
+        : String(args.stageId);
+    if (!parsedStageId) {
+      throw new Error(t.stageRequired);
+    }
+    const stages = await projectsReadRepository.getProjectStages(projectId);
+    if (!stages.some((s) => String(s.id) === parsedStageId)) {
+      throw new Error(t.stageNotFound);
+    }
+    const result = await notesRepository.updateNoteById(noteId, {
+      project_stage_id: parsedStageId,
+    });
+    return {
+      name,
+      result: { noteId, updated: Boolean(result) },
+      success: true,
+    };
   }
 }
 

@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 class ToolRegistry {
   constructor() {
@@ -8,10 +8,12 @@ class ToolRegistry {
   }
 
   _registerAll() {
-    const files = fs.readdirSync(__dirname).filter(f => f.endsWith('.handler.js'));
+    const files = fs
+      .readdirSync(__dirname)
+      .filter((f) => f.endsWith(".handler.js"));
     for (const file of files) {
       const handler = require(path.join(__dirname, file));
-      const name = file.replace('.handler.js', '').replace(/-/g, '_');
+      const name = file.replace(".handler.js", "").replace(/-/g, "_");
       this.handlers.set(name, handler);
     }
   }

@@ -20,22 +20,20 @@ class UpdateNoteTitleHandler {
    * @param { userId: string, args: Record<string, unknown>, organizationId: string|null, lang: string, t: object, name: string } context
    */
   async execute({ userId, args, organizationId, lang, t, name }) {
-
-        const noteId = await chatAccessUtil.assertNoteMutationAccess(
-          userId,
-          String(args.noteId || ""),
-          organizationId,
-          lang
-        );
-        const result = await notesRepository.updateNoteById(noteId, {
-          title: args.title,
-        });
-        return {
-          name,
-          result: { noteId, updated: Boolean(result) },
-          success: true,
-        };
-      
+    const noteId = await chatAccessUtil.assertNoteMutationAccess(
+      userId,
+      String(args.noteId || ""),
+      organizationId,
+      lang
+    );
+    const result = await notesRepository.updateNoteById(noteId, {
+      title: args.title,
+    });
+    return {
+      name,
+      result: { noteId, updated: Boolean(result) },
+      success: true,
+    };
   }
 }
 

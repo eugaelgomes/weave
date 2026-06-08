@@ -20,60 +20,58 @@ class UpdateNoteContentHandler {
    * @param { userId: string, args: Record<string, unknown>, organizationId: string|null, lang: string, t: object, name: string } context
    */
   async execute({ userId, args, organizationId, lang, t, name }) {
+    const rawNoteId = String(args.noteId || "");
+    if (!rawNoteId) {
+      throw new Error(t.updateNoteContentIdRequired);
+    }
+    const noteId = await chatAccessUtil.assertNoteMutationAccess(
+      userId,
+      rawNoteId,
+      organizationId,
+      lang
+    );
 
-        const rawNoteId = String(args.noteId || "");
-        if (!rawNoteId) {
-          throw new Error(t.updateNoteContentIdRequired);
-        }
-        const noteId = await chatAccessUtil.assertNoteMutationAccess(
-          userId,
-          rawNoteId,
-          organizationId,
-          lang
-        );
+    let tree;
+    if (Array.isArray(args.blocks) && args.blocks.length > 0) {
+      tree = normalizeBlocksTree(args.blocks);
+    } else if (
+      typeof args.content === "string" &&
+      args.content.trim().length > 0
+    ) {
+      const parsedBlocks = markdownToBlocks(args.content);
+      tree =
+        parsedBlocks.length > 0
+          ? parsedBlocks
+          : [
+              {
+                id: newBlockId(),
+                type: "paragraph",
+                properties: { text: args.content },
+              },
+            ];
+    } else {
+      const error = new Error(t.updateNoteContentEmpty);
+      error.code = "CHAT_FUNCTION_INVALID_CONTENT";
+      error.statusCode = 400;
+      throw error;
+    }
 
-        let tree;
-        if (Array.isArray(args.blocks) && args.blocks.length > 0) {
-          tree = normalizeBlocksTree(args.blocks);
-        } else if (
-          typeof args.content === "string" &&
-          args.content.trim().length > 0
-        ) {
-          const parsedBlocks = markdownToBlocks(args.content);
-          tree =
-            parsedBlocks.length > 0
-              ? parsedBlocks
-              : [
-                  {
-                    id: newBlockId(),
-                    type: "paragraph",
-                    properties: { text: args.content },
-                  },
-                ];
-        } else {
-          const error = new Error(t.updateNoteContentEmpty);
-          error.code = "CHAT_FUNCTION_INVALID_CONTENT";
-          error.statusCode = 400;
-          throw error;
-        }
+    if (!chatFormatterUtil.blocksTreeHasMeaningfulText(tree)) {
+      const error = new Error(t.updateNoteContentNoText);
+      error.code = "CHAT_FUNCTION_INVALID_CONTENT";
+      error.statusCode = 400;
+      throw error;
+    }
 
-        if (!chatFormatterUtil.blocksTreeHasMeaningfulText(tree)) {
-          const error = new Error(t.updateNoteContentNoText);
-          error.code = "CHAT_FUNCTION_INVALID_CONTENT";
-          error.statusCode = 400;
-          throw error;
-        }
+    await notesRepository.deleteAllNoteBlocks(noteId);
+    await notesRepository.bulkInsertNoteBlocks(noteId, userId, tree);
+    await enqueueNoteEmbeddingJob(noteId).catch(() => {});
 
-        await notesRepository.deleteAllNoteBlocks(noteId);
-        await notesRepository.bulkInsertNoteBlocks(noteId, userId, tree);
-        await enqueueNoteEmbeddingJob(noteId).catch(() => {});
-
-        return {
-          name,
-          result: { noteId, updated: true },
-          success: true,
-        };
-      
+    return {
+      name,
+      result: { noteId, updated: true },
+      success: true,
+    };
   }
 }
 

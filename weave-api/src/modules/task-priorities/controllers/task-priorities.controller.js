@@ -13,7 +13,7 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
   async createPriority(req, res, next) {
     try {
       const userId = this._requireAuthenticatedUser(req, res);
-      if (userId == null) return;
+      if (!userId) return;
 
       const { project_id, org_id } = req.params;
       const { name, color, level } = req.body;
@@ -96,7 +96,7 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
   async deletePriority(req, res, next) {
     try {
       const userId = this._requireAuthenticatedUser(req, res);
-      if (userId == null) return;
+      if (!userId) return;
 
       const { project_id, org_id, priority_id } = req.params;
 

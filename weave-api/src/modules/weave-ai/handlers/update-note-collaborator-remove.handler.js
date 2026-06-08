@@ -20,23 +20,21 @@ class UpdateNoteCollaboratorRemoveHandler {
    * @param { userId: string, args: Record<string, unknown>, organizationId: string|null, lang: string, t: object, name: string } context
    */
   async execute({ userId, args, organizationId, lang, t, name }) {
-
-        const noteId = await chatAccessUtil.assertNoteMutationAccess(
-          userId,
-          String(args.noteId || ""),
-          organizationId,
-          lang
-        );
-        const result = await notesRepository.removeCollaborator(
-          noteId,
-          args.collaboratorUserId
-        );
-        return {
-          name,
-          result: { noteId, rowCount: Number(result?.rowCount || 0) },
-          success: true,
-        };
-      
+    const noteId = await chatAccessUtil.assertNoteMutationAccess(
+      userId,
+      String(args.noteId || ""),
+      organizationId,
+      lang
+    );
+    const result = await notesRepository.removeCollaborator(
+      noteId,
+      args.collaboratorUserId
+    );
+    return {
+      name,
+      result: { noteId, rowCount: Number(result?.rowCount || 0) },
+      success: true,
+    };
   }
 }
 

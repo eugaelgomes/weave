@@ -14,7 +14,7 @@ const PROVIDERS_METADATA = Object.freeze({
     id: "openai",
     name: "OpenAI",
     logoUrl: "/ai-models/openai.svg",
-    isDefault: false, 
+    isDefault: false,
   },
 });
 

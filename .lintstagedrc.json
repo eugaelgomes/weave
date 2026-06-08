@@ -1,0 +1,19 @@
+{
+  "weave-api/src/**/*.{js,ts}": [
+    "weave-api/node_modules/.bin/prettier --write",
+    "weave-api/node_modules/.bin/eslint --config weave-api/eslint.config.mjs --fix",
+    "bash -c 'npm run --prefix weave-api typecheck'"
+  ],
+  "weave-app/**/*.{js,jsx,ts,tsx}": [
+    "weave-app/node_modules/.bin/prettier --write",
+    "weave-app/node_modules/.bin/eslint --config weave-app/eslint.config.mjs --fix"
+  ],
+  "weave-engine/src/**/*.{js,ts}": [
+    "weave-engine/node_modules/.bin/prettier --write",
+    "weave-engine/node_modules/.bin/eslint --config weave-engine/eslint.config.mjs --fix"
+  ],
+  "weave-worker/src/**/*.{js,ts}": [
+    "weave-worker/node_modules/.bin/prettier --write",
+    "weave-worker/node_modules/.bin/eslint --config weave-worker/eslint.config.mjs --fix"
+  ]
+}

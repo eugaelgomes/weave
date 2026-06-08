@@ -267,7 +267,7 @@ function getLangFromReq(req) {
 
 /**
  * Returns localized internal chat orchestrator texts.
- * 
+ *
  * @param {string|null|undefined} lang - Raw language code.
  * @returns {Record<string, string|Function>} Localized chat texts.
  */

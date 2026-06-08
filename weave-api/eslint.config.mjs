@@ -6,6 +6,7 @@ import tseslint from "typescript-eslint";
 const jsEsmModuleFiles = [
   "src/utils/patterns/product-patterns.js",
   "src/services/note_export/pdf.js",
+  "src/modules/notes/controllers/pdf.js",
 ];
 
 export default tseslint.config(
@@ -26,7 +27,7 @@ export default tseslint.config(
     rules: {
       "eol-last": ["error", "always"],
       "no-trailing-spaces": "error",
-      quotes: ["error", "double", { allowTemplateLiterals: true }],
+      quotes: ["error", "double", { avoidEscape: true, allowTemplateLiterals: true }],
       semi: ["error", "always"],
 
       eqeqeq: ["error", "always"],
@@ -40,13 +41,20 @@ export default tseslint.config(
     },
   },
   {
-    files: jsEsmModuleFiles,
+    files: [...jsEsmModuleFiles, "**/*.mjs"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
       globals: {
         ...globals.node,
       },
+    },
+  },
+  {
+    files: ["src/services/email/templates/**/*.js"],
+    rules: {
+      "no-console": "off",
+      "sort-keys": "off",
     },
   },
   {
@@ -72,7 +80,7 @@ export default tseslint.config(
       ],
       "no-console": "warn",
       "no-unused-vars": "off",
-      quotes: ["error", "double", { allowTemplateLiterals: true }],
+      quotes: ["error", "double", { avoidEscape: true, allowTemplateLiterals: true }],
       semi: ["error", "always"],
       "sort-keys": ["warn", "asc", { caseSensitive: false, natural: true }],
     },

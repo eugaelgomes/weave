@@ -20,47 +20,45 @@ class SearchUsersHandler {
    * @param { userId: string, args: Record<string, unknown>, organizationId: string|null, lang: string, t: object, name: string } context
    */
   async execute({ userId, args, organizationId, lang, t, name }) {
+    const searchTerm = String(args.searchTerm || "").trim();
+    if (!searchTerm) {
+      throw new Error(t.searchUsersTermRequired);
+    }
+    const searchUsersRepository = require("@/modules/users/repositories/search-users.repository");
+    const users = await searchUsersRepository.searchUsers(searchTerm, userId);
+    const endpoint = (process.env.DO_SPACE_ENDPOINT || "").replace(/\/$/, "");
+    const bucket = process.env.DO_SPACES_BUCKET_NAME || "wn-storage";
+    const region = process.env.DO_SPACES_REGION || "sfo3";
 
-        const searchTerm = String(args.searchTerm || "").trim();
-        if (!searchTerm) {
-          throw new Error(t.searchUsersTermRequired);
-        }
-        const searchUsersRepository = require("@/modules/users/repositories/search-users.repository");
-        const users = await searchUsersRepository.searchUsers(
-          searchTerm,
-          userId
-        );
-        const endpoint = (process.env.DO_SPACE_ENDPOINT || "").replace(/\/$/, "");
-        const bucket = process.env.DO_SPACES_BUCKET_NAME || "wn-storage";
-        const region = process.env.DO_SPACES_REGION || "sfo3";
-
-        return {
-          name,
-          result: {
-            users: users.map((u) => {
-              let avatarUrl = null;
-              if (u.avatar_url) {
-                if (u.avatar_url.startsWith("http://") || u.avatar_url.startsWith("https://")) {
-                  avatarUrl = u.avatar_url;
-                } else {
-                  avatarUrl = `${endpoint}/${bucket}/${u.avatar_url}`.replace(
-                    "digitaloceanspaces.com",
-                    `${region}.digitaloceanspaces.com`
-                  );
-                }
-              }
-              return {
-                avatar_url: avatarUrl,
-                email: u.email,
-                id: u.user_id,
-                name: u.name,
-                username: u.username,
-              };
-            }),
-          },
-          success: true,
-        };
-      
+    return {
+      name,
+      result: {
+        users: users.map((u) => {
+          let avatarUrl = null;
+          if (u.avatar_url) {
+            if (
+              u.avatar_url.startsWith("http://") ||
+              u.avatar_url.startsWith("https://")
+            ) {
+              avatarUrl = u.avatar_url;
+            } else {
+              avatarUrl = `${endpoint}/${bucket}/${u.avatar_url}`.replace(
+                "digitaloceanspaces.com",
+                `${region}.digitaloceanspaces.com`
+              );
+            }
+          }
+          return {
+            avatar_url: avatarUrl,
+            email: u.email,
+            id: u.user_id,
+            name: u.name,
+            username: u.username,
+          };
+        }),
+      },
+      success: true,
+    };
   }
 }
 

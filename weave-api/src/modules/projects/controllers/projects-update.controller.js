@@ -909,10 +909,13 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const descStr = description != null ? String(description) : "";
+      const descStr =
+        description !== null && description !== undefined
+          ? String(description)
+          : "";
       const effectiveTitle =
         resolveNoteTitle({
-          title: title != null ? String(title) : "",
+          title: title !== null && title !== undefined ? String(title) : "",
           description: descStr,
         }) || "Sem título";
 

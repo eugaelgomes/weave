@@ -95,7 +95,7 @@ class GoogleCalendarController extends WebhooksBaseController {
    */
   async streamCalendarEvents(req, res) {
     const userId = this._requireAuthenticatedUser(req, res);
-    if (userId == null) return;
+    if (!userId) return;
 
     req.socket.setTimeout(0);
     req.socket.setNoDelay(true);
@@ -147,7 +147,7 @@ class GoogleCalendarController extends WebhooksBaseController {
     let tokensLinked = false;
     try {
       const userId = this._requireAuthenticatedUser(req, res);
-      if (userId == null) return;
+      if (!userId) return;
 
       const tokens = await GoogleOauthTokensRepository.getGoogleTokens(userId);
       if (!tokens) {
@@ -275,7 +275,7 @@ class GoogleCalendarController extends WebhooksBaseController {
   async getCalendarStatus(req, res) {
     try {
       const userId = this._requireAuthenticatedUser(req, res);
-      if (userId == null) return;
+      if (!userId) return;
 
       const connected =
         await GoogleOauthTokensRepository.hasGoogleTokens(userId);
@@ -296,7 +296,7 @@ class GoogleCalendarController extends WebhooksBaseController {
   async disconnectCalendar(req, res) {
     try {
       const userId = this._requireAuthenticatedUser(req, res);
-      if (userId == null) return;
+      if (!userId) return;
 
       const tokens = await GoogleOauthTokensRepository.getGoogleTokens(userId);
       if (tokens) {
