@@ -1,4 +1,7 @@
-const { getCookieDomain } = require("@/config/allowed-origins");
+const {
+  getCookieDomain,
+  detectSameSitePolicy,
+} = require("@/config/allowed-origins");
 
 /**
  * Configurações padronizadas para cookies de autenticação
@@ -18,13 +21,12 @@ function getAuthCookieOptions(req, options = {}) {
   // Obter domínio do cookie
   const domain = getCookieDomain(req.hostname);
 
-  // Usar sameSite 'lax' por padrão (funciona para subdomínios)
-  // Só usar 'none' se COOKIE_SAME_SITE estiver explicitamente definido como 'none'
+  // Auto-detect cross-site scenario (e.g. theweave.tech → apis.weavenotes.app)
   const sameSite =
-    isProduction && !isLocalhost
-      ? process.env.COOKIE_SAME_SITE || "lax"
-      : "lax";
-  const secure = isProduction && !isLocalhost ? isHttps : false;
+    isProduction && !isLocalhost ? detectSameSitePolicy() : "lax";
+  // SameSite=None requires Secure flag
+  const secure =
+    isProduction && !isLocalhost ? isHttps || sameSite === "none" : false;
 
   const cookieOptions = {
     httpOnly: true,
@@ -78,10 +80,9 @@ function clearAuthCookie(res, req) {
   const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
   const domain = getCookieDomain(req.hostname);
   const sameSite =
-    isProduction && !isLocalhost
-      ? process.env.COOKIE_SAME_SITE || "lax"
-      : "lax";
-  const secure = isProduction && !isLocalhost ? isHttps : false;
+    isProduction && !isLocalhost ? detectSameSitePolicy() : "lax";
+  const secure =
+    isProduction && !isLocalhost ? isHttps || sameSite === "none" : false;
 
   const clearOptions = {
     httpOnly: true,

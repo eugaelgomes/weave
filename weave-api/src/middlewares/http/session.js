@@ -1,6 +1,28 @@
 const session = require("express-session");
 const pgSession = require("connect-pg-simple")(session);
 const { pool } = require("@/database/connection");
+const { detectSameSitePolicy } = require("@/config/allowed-origins");
+
+const isProduction = process.env.NODE_ENV === "production";
+
+// Resolve session cookie domain: COOKIE_DOMAIN → APP_DOMAIN → undefined
+const sessionCookieDomain = isProduction
+  ? process.env.COOKIE_DOMAIN ||
+    (process.env.APP_DOMAIN ? `.${process.env.APP_DOMAIN}` : undefined)
+  : undefined;
+
+const sameSite = isProduction ? detectSameSitePolicy() : "lax";
+
+const sessionCookie = {
+  httpOnly: true,
+  secure: isProduction ? true : false,
+  sameSite,
+  maxAge: 1000 * 60 * 60 * 24,
+};
+
+if (sessionCookieDomain) {
+  sessionCookie.domain = sessionCookieDomain;
+}
 
 const sessionConfig = {
   store: new pgSession({
@@ -13,15 +35,7 @@ const sessionConfig = {
   resave: false,
   saveUninitialized: false,
   rolling: true,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite:
-      process.env.NODE_ENV === "production"
-        ? process.env.COOKIE_SAME_SITE || "lax"
-        : "lax",
-    maxAge: 1000 * 60 * 60 * 24,
-  },
+  cookie: sessionCookie,
 };
 
 const sessionMiddleware = session(sessionConfig);
