@@ -48,10 +48,11 @@ function makeCorsOptions() {
         return cb(null, true);
       }
 
+      // Requests without an Origin header come from direct browser navigation,
+      // server-to-server calls (reverse proxy, health checks), and CLI tools.
+      // CORS is enforced by the browser, so these are safe to allow.
       if (!origin) {
-        return cb(
-          new Error("Headless requests are not allowed in production.")
-        );
+        return cb(null, true);
       }
 
       const normalized = origin.replace(/\/+$/, "");
