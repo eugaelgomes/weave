@@ -51,29 +51,29 @@ jobs:
     steps:
       - name: Validate deploy secrets
         env:
-          WORKER_REMOTE_HOST: ${{ secrets.WORKER_REMOTE_HOST }}
-          WORKER_REMOTE_USER: ${{ secrets.WORKER_REMOTE_USER }}
-          WORKER_SSH_PRIVATE_KEY: ${{ secrets.WORKER_SSH_PRIVATE_KEY }}
-          WORKER_APP_DIR: ${{ secrets.WORKER_APP_DIR }}
+          SERVER_REMOTE_HOST: ${{ secrets.SERVER_REMOTE_HOST }}
+          SERVER_REMOTE_USER: ${{ secrets.SERVER_REMOTE_USER }}
+          SERVER_SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+          SERVER_APP_DIR: ${{ secrets.SERVER_APP_DIR }}
         run: |
           set -e
-          [ -n "$WORKER_REMOTE_HOST" ] || { echo "Missing secret: WORKER_REMOTE_HOST" >&2; exit 1; }
-          [ -n "$WORKER_REMOTE_USER" ] || { echo "Missing secret: WORKER_REMOTE_USER" >&2; exit 1; }
-          [ -n "$WORKER_SSH_PRIVATE_KEY" ] || { echo "Missing secret: WORKER_SSH_PRIVATE_KEY" >&2; exit 1; }
-          [ -n "$WORKER_APP_DIR" ] || { echo "Missing secret: WORKER_APP_DIR" >&2; exit 1; }
+          [ -n "$SERVER_REMOTE_HOST" ] || { echo "Missing secret: SERVER_REMOTE_HOST" >&2; exit 1; }
+          [ -n "$SERVER_REMOTE_USER" ] || { echo "Missing secret: SERVER_REMOTE_USER" >&2; exit 1; }
+          [ -n "$SERVER_SSH_PRIVATE_KEY" ] || { echo "Missing secret: SERVER_SSH_PRIVATE_KEY" >&2; exit 1; }
+          [ -n "$SERVER_APP_DIR" ] || { echo "Missing secret: SERVER_APP_DIR" >&2; exit 1; }
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.WORKER_REMOTE_HOST }}
-          username: ${{ secrets.WORKER_REMOTE_USER }}
-          key: ${{ secrets.WORKER_SSH_PRIVATE_KEY }}
+          host: ${{ secrets.SERVER_REMOTE_HOST }}
+          username: ${{ secrets.SERVER_REMOTE_USER }}
+          key: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
           script: |
             set -e
 
-            APP_DIR="${{ secrets.WORKER_APP_DIR }}"
+            APP_DIR="${{ secrets.SERVER_APP_DIR }}"
             if [ -z "$APP_DIR" ]; then
-              echo "WORKER_APP_DIR is not set" >&2
+              echo "SERVER_APP_DIR is not set" >&2
               exit 1
             fi
 

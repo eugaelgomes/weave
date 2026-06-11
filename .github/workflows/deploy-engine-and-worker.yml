@@ -1,0 +1,152 @@
+name: Deploy Engine & Worker
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "weave-engine/**"
+      - "weave-worker/**"
+      - "compose.engine.yml"
+      - "compose.worker.yml"
+      - ".github/workflows/deploy-engine-and-worker.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-engine-worker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Validation (parallel) ─────────────────────────────────────────
+  validate-engine:
+    name: Validate engine
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: weave-engine
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: weave-engine/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check
+        run: npm run check
+
+  validate-worker:
+    name: Validate worker
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: weave-worker
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: weave-worker/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check
+        run: npm run check
+
+  # ── Deploy both services ──────────────────────────────────────────
+  deploy:
+    name: Deploy engine & worker
+    runs-on: ubuntu-latest
+    needs: [validate-engine, validate-worker]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Validate deploy secrets
+        env:
+          ENGINE_REMOTE_HOST: ${{ secrets.ENGINE_REMOTE_HOST }}
+          ENGINE_REMOTE_USER: ${{ secrets.ENGINE_REMOTE_USER }}
+          ENGINE_SSH_PRIVATE_KEY: ${{ secrets.ENGINE_SSH_PRIVATE_KEY }}
+          ENGINE_APP_DIR: ${{ secrets.ENGINE_APP_DIR }}
+        run: |
+          set -e
+          [ -n "$ENGINE_REMOTE_HOST" ] || { echo "Missing secret: ENGINE_REMOTE_HOST" >&2; exit 1; }
+          [ -n "$ENGINE_REMOTE_USER" ] || { echo "Missing secret: ENGINE_REMOTE_USER" >&2; exit 1; }
+          [ -n "$ENGINE_SSH_PRIVATE_KEY" ] || { echo "Missing secret: ENGINE_SSH_PRIVATE_KEY" >&2; exit 1; }
+          [ -n "$ENGINE_APP_DIR" ] || { echo "Missing secret: ENGINE_APP_DIR" >&2; exit 1; }
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ENGINE_REMOTE_HOST }}
+          username: ${{ secrets.ENGINE_REMOTE_USER }}
+          key: ${{ secrets.ENGINE_SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            APP_DIR="${{ secrets.ENGINE_APP_DIR }}"
+            if [ -z "$APP_DIR" ]; then
+              echo "ENGINE_APP_DIR is not set" >&2
+              exit 1
+            fi
+
+            REPO_URL="https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+            mkdir -p "$APP_DIR"
+            cd "$APP_DIR"
+            if [ -d ".git" ]; then
+              git remote set-url origin "$REPO_URL"
+            else
+              git init
+              git remote add origin "$REPO_URL"
+            fi
+            git fetch origin
+            git checkout -B main origin/main
+            git reset --hard origin/main
+
+            # Non-interactive SSH often skips login PATH (e.g. Docker in /usr/local or snap).
+            [ -f /etc/profile ] && . /etc/profile
+            [ -f "$HOME/.profile" ] && . "$HOME/.profile"
+            export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH"
+
+            if [ ! -f .env ] && [ ! -f weave-engine/.env ]; then
+              echo "Need .env or weave-engine/.env on VM (DOPPLER_TOKEN / runtime secrets)." >&2
+              exit 1
+            fi
+
+            # Clean stale build cache and dangling images before each deploy.
+            docker builder prune -af || true
+            docker image prune -af || true
+
+            if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+              COMPOSE="docker compose"
+            elif command -v docker-compose >/dev/null 2>&1; then
+              COMPOSE="docker-compose"
+            else
+              echo "Docker not found or Compose plugin missing. On the server, install Docker Engine" >&2
+              echo "and ensure 'docker compose' works for this SSH user (same as in an interactive shell)." >&2
+              exit 127
+            fi
+
+            echo "▶ Deploying engine..."
+            $COMPOSE -f compose.engine.yml up -d --build
+
+            echo "▶ Deploying worker..."
+            $COMPOSE -f compose.worker.yml up -d --build
+
+            echo "✔ Engine & Worker deployed successfully."
