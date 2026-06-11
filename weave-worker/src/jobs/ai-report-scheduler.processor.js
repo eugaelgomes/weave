@@ -127,15 +127,30 @@ class AiReportSchedulerProcessor {
   determineReportType(config) {
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
-    const startStr = typeof config.sprint_start === "string" ? config.sprint_start.split("T")[0] : new Date(config.sprint_start).toISOString().split("T")[0];
-    const endStr = typeof config.sprint_end === "string" ? config.sprint_end.split("T")[0] : new Date(config.sprint_end).toISOString().split("T")[0];
+    const startStr =
+      typeof config.sprint_start === "string"
+        ? config.sprint_start.split("T")[0]
+        : new Date(config.sprint_start).toISOString().split("T")[0];
+    const endStr =
+      typeof config.sprint_end === "string"
+        ? config.sprint_end.split("T")[0]
+        : new Date(config.sprint_end).toISOString().split("T")[0];
 
     const dayOfWeek = today.getUTCDay();
-    const workableDays = config.sprint_workable_days || config.default_workable_days || [1, 2, 3, 4, 5];
+    const workableDays = config.sprint_workable_days ||
+      config.default_workable_days || [1, 2, 3, 4, 5];
 
-    if (todayStr === startStr && config.enable_sprint_kickoff) return "sprint_kickoff";
-    if (todayStr === endStr && config.enable_sprint_review) return "sprint_review";
-    if (todayStr > startStr && todayStr < endStr && workableDays.includes(dayOfWeek) && config.enable_daily_standup) return "daily_standup";
+    if (todayStr === startStr && config.enable_sprint_kickoff)
+      return "sprint_kickoff";
+    if (todayStr === endStr && config.enable_sprint_review)
+      return "sprint_review";
+    if (
+      todayStr > startStr &&
+      todayStr < endStr &&
+      workableDays.includes(dayOfWeek) &&
+      config.enable_daily_standup
+    )
+      return "daily_standup";
 
     return null;
   }
@@ -143,21 +158,30 @@ class AiReportSchedulerProcessor {
   calculateNextReportAt(config) {
     const sprintStart = config.sprint_start;
     const sprintEnd = config.sprint_end;
-    const workableDays = config.sprint_workable_days || config.default_workable_days || [1, 2, 3, 4, 5];
+    const workableDays = config.sprint_workable_days ||
+      config.default_workable_days || [1, 2, 3, 4, 5];
 
     if (!sprintStart || !sprintEnd) return null;
 
     const [hours, minutes] = (config.report_time_utc || "14:00").split(":");
     const now = new Date();
 
-    const startStr = typeof sprintStart === "string" ? sprintStart.split("T")[0] : new Date(sprintStart).toISOString().split("T")[0];
-    const endStr = typeof sprintEnd === "string" ? sprintEnd.split("T")[0] : new Date(sprintEnd).toISOString().split("T")[0];
+    const startStr =
+      typeof sprintStart === "string"
+        ? sprintStart.split("T")[0]
+        : new Date(sprintStart).toISOString().split("T")[0];
+    const endStr =
+      typeof sprintEnd === "string"
+        ? sprintEnd.split("T")[0]
+        : new Date(sprintEnd).toISOString().split("T")[0];
 
     const start = new Date(startStr + "T00:00:00Z");
     const end = new Date(endStr + "T00:00:00Z");
 
-    const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-    let candidate = new Date(Math.max(tomorrow.getTime(), start.getTime()));
+    const tomorrow = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)
+    );
+    const candidate = new Date(Math.max(tomorrow.getTime(), start.getTime()));
 
     while (candidate <= end) {
       const dayOfWeek = candidate.getUTCDay();
@@ -168,11 +192,22 @@ class AiReportSchedulerProcessor {
       let hasReport = false;
       if (isStartDay && config.enable_sprint_kickoff) hasReport = true;
       else if (isEndDay && config.enable_sprint_review) hasReport = true;
-      else if (!isStartDay && !isEndDay && isWorkableDay && config.enable_daily_standup) hasReport = true;
+      else if (
+        !isStartDay &&
+        !isEndDay &&
+        isWorkableDay &&
+        config.enable_daily_standup
+      )
+        hasReport = true;
 
       if (hasReport) {
         const reportTime = new Date(candidate);
-        reportTime.setUTCHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+        reportTime.setUTCHours(
+          parseInt(hours, 10),
+          parseInt(minutes, 10),
+          0,
+          0
+        );
         return reportTime.toISOString();
       }
       candidate.setUTCDate(candidate.getUTCDate() + 1);
@@ -181,24 +216,45 @@ class AiReportSchedulerProcessor {
   }
 
   async advanceSprint(config) {
-    await executeQuery(`UPDATE project_sprints SET status = 'completed', completed_at = NOW(), updated_at = NOW() WHERE id = $1`, [config.sprint_id]);
+    await executeQuery(
+      `UPDATE project_sprints SET status = 'completed', completed_at = NOW(), updated_at = NOW() WHERE id = $1`,
+      [config.sprint_id]
+    );
     const prevEnd = new Date(config.sprint_end);
     const nextStart = new Date(prevEnd);
     nextStart.setDate(nextStart.getDate() + 1);
     const nextEnd = new Date(nextStart);
-    nextEnd.setDate(nextEnd.getDate() + (config.default_sprint_duration_days || 14) - 1);
+    nextEnd.setDate(
+      nextEnd.getDate() + (config.default_sprint_duration_days || 14) - 1
+    );
     const nextNumber = config.sprint_number + 1;
 
     const newSprints = await executeQuery(
       `INSERT INTO project_sprints (project_id, sprint_number, title, status, start_date, end_date, workable_days)
        VALUES ($1, $2, $3, 'active', $4, $5, $6) RETURNING id`,
-      [config.project_id, nextNumber, `Sprint ${nextNumber}`, nextStart.toISOString().split("T")[0], nextEnd.toISOString().split("T")[0], config.default_workable_days || [1, 2, 3, 4, 5]]
+      [
+        config.project_id,
+        nextNumber,
+        `Sprint ${nextNumber}`,
+        nextStart.toISOString().split("T")[0],
+        nextEnd.toISOString().split("T")[0],
+        config.default_workable_days || [1, 2, 3, 4, 5],
+      ]
     );
 
     const newSprintId = newSprints[0]?.id;
-    const nextAt = this.calculateNextReportAt({ ...config, sprint_start: nextStart.toISOString().split("T")[0], sprint_end: nextEnd.toISOString().split("T")[0] });
+    const nextAt = this.calculateNextReportAt({
+      ...config,
+      sprint_start: nextStart.toISOString().split("T")[0],
+      sprint_end: nextEnd.toISOString().split("T")[0],
+    });
 
-    await this.updateSchedulerState(config.id, { current_sprint_id: newSprintId, last_report_type: "sprint_review", last_report_at: new Date().toISOString(), next_report_at: nextAt });
+    await this.updateSchedulerState(config.id, {
+      current_sprint_id: newSprintId,
+      last_report_type: "sprint_review",
+      last_report_at: new Date().toISOString(),
+      next_report_at: nextAt,
+    });
   }
 
   async updateSchedulerState(configId, state) {
@@ -211,11 +267,18 @@ class AiReportSchedulerProcessor {
       idx++;
     }
     if (fields.length === 0) return;
-    await executeQuery(`UPDATE project_ai_report_configs SET ${fields.join(", ")}, updated_at = NOW() WHERE id = $1`, values);
+    await executeQuery(
+      `UPDATE project_ai_report_configs SET ${fields.join(", ")}, updated_at = NOW() WHERE id = $1`,
+      values
+    );
   }
 
   _reportTypeLabel(type) {
-    const labels = { sprint_kickoff: "Sprint Kickoff", daily_standup: "Daily Standup", sprint_review: "Sprint Review" };
+    const labels = {
+      sprint_kickoff: "Sprint Kickoff",
+      daily_standup: "Daily Standup",
+      sprint_review: "Sprint Review",
+    };
     return labels[type] || type;
   }
 

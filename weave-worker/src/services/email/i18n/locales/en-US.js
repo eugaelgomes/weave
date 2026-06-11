@@ -23,7 +23,8 @@ module.exports = {
   "welcome.title": "Welcome to Weave Notes",
   "welcome.subtitle": "Account activation",
   "welcome.intro1": "Your account was created successfully.",
-  "welcome.intro2": "To start using the platform, confirm your email with the button below.",
+  "welcome.intro2":
+    "To start using the platform, confirm your email with the button below.",
   "welcome.cta": "Activate account",
   "welcome.info": "This link expires in 7 days.",
   "welcome.outro1": "If you did not sign up, please ignore this email.",
@@ -35,7 +36,8 @@ module.exports = {
   "rescue.title": "Password reset",
   "rescue.subtitle": "Account security",
   "rescue.intro1": "We received a request to reset your account password.",
-  "rescue.intro2": "If you made this request, use the button below to continue.",
+  "rescue.intro2":
+    "If you made this request, use the button below to continue.",
   "rescue.cta": "Reset password",
   "rescue.info": "This link expires in 1 hour.",
   "rescue.outro":
@@ -49,7 +51,8 @@ module.exports = {
   "reset.intro2": "Use the button below to validate this change.",
   "reset.cta": "Confirm new email",
   "reset.info": "This link expires in 1 hour.",
-  "reset.outro": "If you did not request this change, please ignore this email.",
+  "reset.outro":
+    "If you did not request this change, please ignore this email.",
   "reset.subject": "Email change validation - Weave Notes",
 
   "deleteRequest.preheader": "Account deletion confirmation.",
@@ -57,7 +60,8 @@ module.exports = {
   "deleteRequest.subtitle": "Irreversible action",
   "deleteRequest.intro1":
     "We received a request to permanently delete your account.",
-  "deleteRequest.intro2": "If you want to proceed, confirm with the button below.",
+  "deleteRequest.intro2":
+    "If you want to proceed, confirm with the button below.",
   "deleteRequest.cta": "Confirm account deletion",
   "deleteRequest.info": "This link expires in 7 days ({expiration}).",
   "deleteRequest.bodyDetail":
@@ -94,8 +98,7 @@ module.exports = {
   "inviteAccepted.subtitle": "Your account is ready",
   "inviteAccepted.intro1":
     "Your access was confirmed and you can now use Weave Notes.",
-  "inviteAccepted.intro2":
-    "Plan, execute, and collaborate in one place.",
+  "inviteAccepted.intro2": "Plan, execute, and collaborate in one place.",
   "inviteAccepted.cta": "Go to Home",
   "inviteAccepted.featuresIntro": "With Weave Notes you can:",
   "inviteAccepted.feature1": "Create notes and organize ideas with blocks.",
@@ -109,7 +112,8 @@ module.exports = {
   "project.preheader": "You were added to a project.",
   "project.title": "New project shared with you",
   "project.subtitle": "Project collaboration",
-  "project.intro": "{addedByName} added you as a collaborator on the project below.",
+  "project.intro":
+    "{addedByName} added you as a collaborator on the project below.",
   "project.cta": "Open projects",
   "project.outro": "You can now view and collaborate on the project.",
   "project.footer":
@@ -143,7 +147,7 @@ module.exports = {
   "dueReminder.title": "Deadline reminder",
   "dueReminder.subtitle": "Note due date",
   "dueReminder.intro":
-    'The note "{noteTitle}" is due tomorrow ({dueDateLabel}).',
+    "The note \"{noteTitle}\" is due tomorrow ({dueDateLabel}).",
   "dueReminder.cta": "Open note",
   "dueReminder.info": "We recommend reviewing the note today to avoid delays.",
   "dueReminder.subject": "Reminder: due tomorrow - {noteTitle}",

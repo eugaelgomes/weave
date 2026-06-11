@@ -37,7 +37,8 @@ module.exports = {
   "rescue.subtitle": "Seguridad de la cuenta",
   "rescue.intro1":
     "Recibimos una solicitud para restablecer la contrasena de su cuenta.",
-  "rescue.intro2": "Si usted la solicito, use el boton de abajo para continuar.",
+  "rescue.intro2":
+    "Si usted la solicito, use el boton de abajo para continuar.",
   "rescue.cta": "Restablecer contrasena",
   "rescue.info": "Este enlace expira en 1 hora.",
   "rescue.outro":
@@ -68,7 +69,8 @@ module.exports = {
     "Si no solicito esta eliminacion, ignore este correo y considere cambiar su contrasena.",
   "deleteRequest.footer":
     "Recibio este correo porque se solicito la eliminacion de esta cuenta.",
-  "deleteRequest.subject": "Confirmacion de eliminacion de cuenta - Weave Notes",
+  "deleteRequest.subject":
+    "Confirmacion de eliminacion de cuenta - Weave Notes",
 
   "deleteMessage.preheader": "Su cuenta se elimino correctamente.",
   "deleteMessage.title": "Cuenta eliminada",
@@ -112,7 +114,8 @@ module.exports = {
   "project.preheader": "Se le anadio a un proyecto.",
   "project.title": "Nuevo proyecto compartido con usted",
   "project.subtitle": "Colaboracion en proyectos",
-  "project.intro": "{addedByName} le anadio como colaborador(a) al proyecto siguiente.",
+  "project.intro":
+    "{addedByName} le anadio como colaborador(a) al proyecto siguiente.",
   "project.cta": "Abrir proyectos",
   "project.outro": "Ya puede ver y colaborar en el proyecto.",
   "project.footer":
@@ -125,8 +128,7 @@ module.exports = {
   "collab.subtitle": "Compartir nota",
   "collab.intro": "{ownerName} le anadio como colaborador(a).",
   "collab.cta": "Abrir nota",
-  "collab.permission":
-    "Permiso de colaboracion activo para ver y editar.",
+  "collab.permission": "Permiso de colaboracion activo para ver y editar.",
   "collab.outro":
     "Si no esperaba esta invitacion de {ownerName}, puede ignorar este correo.",
   "collab.subject": "Nueva colaboracion: {noteName}",
@@ -146,11 +148,9 @@ module.exports = {
   "dueReminder.preheader": "Recordatorio del plazo de su nota.",
   "dueReminder.title": "Recordatorio de plazo",
   "dueReminder.subtitle": "Vencimiento de la nota",
-  "dueReminder.intro":
-    'La nota "{noteTitle}" vence manana ({dueDateLabel}).',
+  "dueReminder.intro": "La nota \"{noteTitle}\" vence manana ({dueDateLabel}).",
   "dueReminder.cta": "Abrir nota",
-  "dueReminder.info":
-    "Recomendamos revisar la nota hoy para evitar retrasos.",
+  "dueReminder.info": "Recomendamos revisar la nota hoy para evitar retrasos.",
   "dueReminder.subject": "Recordatorio: vence manana - {noteTitle}",
   "dueReminder.untitled": "Nota",
 

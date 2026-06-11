@@ -27,8 +27,7 @@ module.exports = {
     "Para comecar a usar a plataforma, confirme seu email no botao abaixo.",
   "welcome.cta": "Ativar conta",
   "welcome.info": "Este link expira em 7 dias.",
-  "welcome.outro1":
-    "Se voce nao se cadastrou, ignore este email.",
+  "welcome.outro1": "Se voce nao se cadastrou, ignore este email.",
   "welcome.footer":
     "Voce recebeu este email porque criou uma conta no Weave Notes.",
   "welcome.subject": "Bem-vindo ao Weave Notes - Ative sua conta",
@@ -38,7 +37,8 @@ module.exports = {
   "rescue.subtitle": "Seguranca da conta",
   "rescue.intro1":
     "Recebemos uma solicitacao para redefinir a senha da sua conta.",
-  "rescue.intro2": "Se voce fez essa solicitacao, use o botao abaixo para continuar.",
+  "rescue.intro2":
+    "Se voce fez essa solicitacao, use o botao abaixo para continuar.",
   "rescue.cta": "Redefinir senha",
   "rescue.info": "Este link expira em 1 hora.",
   "rescue.outro":
@@ -89,7 +89,8 @@ module.exports = {
   "invite.preheader": "Convite para participar de uma organizacao.",
   "invite.title": "Voce foi convidado(a)",
   "invite.subtitle": "Convite para organizacao",
-  "invite.intro": "{inviterName} convidou voce para entrar na organizacao {organizationName}.",
+  "invite.intro":
+    "{inviterName} convidou voce para entrar na organizacao {organizationName}.",
   "invite.cta": "Aceitar convite",
   "invite.info": "Este convite expira em 7 dias.",
   "invite.subject": "Convite para {organizationName} - Weave Notes",
@@ -114,13 +115,15 @@ module.exports = {
   "project.preheader": "Voce foi adicionado(a) a um projeto.",
   "project.title": "Novo projeto compartilhado com voce",
   "project.subtitle": "Colaboracao em projetos",
-  "project.intro": "{addedByName} adicionou voce como colaborador(a) no projeto abaixo.",
+  "project.intro":
+    "{addedByName} adicionou voce como colaborador(a) no projeto abaixo.",
   "project.cta": "Acessar projetos",
   "project.outro":
     "Agora voce pode visualizar e colaborar no projeto normalmente.",
   "project.footer":
     "Voce recebeu este email porque foi adicionado a um projeto no Weave Notes.",
-  "project.subject": "{firstName}, voce foi adicionado ao projeto \"{projectName}\"",
+  "project.subject":
+    "{firstName}, voce foi adicionado ao projeto \"{projectName}\"",
   "project.untitled": "Sem titulo",
 
   "collab.preheader": "Voce foi adicionado(a) como colaborador de uma nota.",
@@ -149,8 +152,7 @@ module.exports = {
   "dueReminder.preheader": "Lembrete de prazo da sua nota.",
   "dueReminder.title": "Lembrete de prazo",
   "dueReminder.subtitle": "Vencimento da nota",
-  "dueReminder.intro":
-    'A nota "{noteTitle}" vence amanha ({dueDateLabel}).',
+  "dueReminder.intro": "A nota \"{noteTitle}\" vence amanha ({dueDateLabel}).",
   "dueReminder.cta": "Abrir nota",
   "dueReminder.info": "Recomendamos revisar a nota hoje para evitar atrasos.",
   "dueReminder.subject": "Lembrete: prazo amanha - {noteTitle}",
