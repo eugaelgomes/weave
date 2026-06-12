@@ -20,7 +20,7 @@ interface Props {
 export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = "pt-br" }: Props) {
   const t = getTranslations(locale);
   const confirmT = t.confirmAccount;
-  const { activateAccount, login } = useAuth();
+  const { activateAccount, login, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -146,8 +146,24 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
     return (
       <SetProfileSettings
         locale={locale}
-        onSkip={() => router.push("/home")}
-        onComplete={() => router.push("/home")}
+        onSkip={() =>
+          router.push(
+            user?.org_public_id
+              ? `/${user.org_public_id}/home`
+              : user?.public_id
+                ? `/${user.public_id}/home`
+                : "/home"
+          )
+        }
+        onComplete={() =>
+          router.push(
+            user?.org_public_id
+              ? `/${user.org_public_id}/home`
+              : user?.public_id
+                ? `/${user.public_id}/home`
+                : "/home"
+          )
+        }
       />
     );
   }
@@ -258,7 +274,15 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
                 </button>
                 <button
                   type="button"
-                  onClick={() => router.push("/home")}
+                  onClick={() =>
+                    router.push(
+                      user?.org_public_id
+                        ? `/${user.org_public_id}/home`
+                        : user?.public_id
+                          ? `/${user.public_id}/home`
+                          : "/home"
+                    )
+                  }
                   className="border-brand-secondary-200 text-brand-secondary-700 hover:bg-brand-secondary-100 w-full rounded-md border bg-white px-4 py-1.5 text-sm font-medium transition-colors"
                 >
                   {confirmT.skipAndEnter}

@@ -6,7 +6,7 @@ export const EmailNoPlusAliasSchema = z
   .string()
   .email()
   .refine((val: string) => !emailLocalPartContainsPlus(val), {
-    message: "E-mails com alias (+) no endereço não são permitidos.",
+    message: "Emails with plus aliases are not allowed.",
   });
 
 // Zod schema for UserPreferences
@@ -132,7 +132,7 @@ export const UserSchema = z.object({
   id: z.string().optional(),
   username: z.string().optional(),
   user_name: z.string().optional(),
-  email: z.string().email("Email inválido").optional(),
+  email: z.string().email("Invalid email").optional(),
   avatar_url: z.string().optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
@@ -332,7 +332,7 @@ export const ActivateAccountPayloadSchema = z.object({
   email: EmailNoPlusAliasSchema.optional(),
 });
 
-// Tipos inferidos
+// Inferred types
 export type UserPreferences = z.infer<typeof UserPreferencesSchema>;
 export type PlanDetails = z.infer<typeof PlanDetailsSchema>;
 export type UsageDetails = z.infer<typeof UsageDetailsSchema>;

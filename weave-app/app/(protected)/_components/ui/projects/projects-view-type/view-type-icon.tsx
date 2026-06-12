@@ -2,7 +2,7 @@
 
 import React from "react";
 import { LayoutGrid, List, Calendar, Clock, GanttChart } from "lucide-react";
-import type { ProjectViewType } from "./types";
+import type { ProjectViewType } from "@/app/(protected)/_components/ui/projects/projects-view-type/types";
 
 interface ViewTypeIconProps {
   type: ProjectViewType;

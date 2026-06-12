@@ -113,10 +113,16 @@ const NotificationsLink = ({
   surface?: "mobile" | "desktop";
 }) => {
   const { unreadCount } = useNotification();
+  const { user } = useAuth();
+  const orgPrefix = user?.org_public_id
+    ? `/${user.org_public_id}`
+    : user?.public_id
+      ? `/${user.public_id}`
+      : "";
 
   return (
     <Link
-      href="/notifications"
+      href={`${orgPrefix}/notifications`}
       className={cn(
         surface === "desktop" ? navbarElevatedSurfaceClass : navIconMobileShellClass,
         "focus-visible:ring-brand-yellow/50 relative flex items-center justify-center transition-colors focus-visible:ring-2 focus-visible:outline-none",
@@ -162,7 +168,13 @@ const UserMenuContent = ({ user, t, onClose, onLogout }: UserMenuProps) => (
     <menu className="m-0 flex list-none flex-col gap-1 p-2">
       <li>
         <Link
-          href="/settings"
+          href={
+            user?.org_public_id
+              ? `/${user.org_public_id}/settings`
+              : user?.public_id
+                ? `/${user.public_id}/settings`
+                : "/settings"
+          }
           onClick={onClose}
           className="block rounded-md px-4 py-2.5 text-xs font-medium text-gray-900 hover:bg-black/5 dark:text-gray-100 dark:hover:bg-white/5"
         >
@@ -274,7 +286,13 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
               {user?.org_id && isCollapsed && (
                 <div className="hidden items-center gap-2 self-center sm:flex">
                   <Link
-                    href="/organization/editor"
+                    href={
+                      user?.org_public_id
+                        ? `/${user.org_public_id}/organization/editor`
+                        : user?.public_id
+                          ? `/${user.public_id}/organization/editor`
+                          : "/organization/editor"
+                    }
                     className="flex min-w-0 items-center gap-1.5 self-center rounded-md transition-opacity hover:opacity-80"
                   >
                     <span className="max-w-[180px] self-center truncate text-xs leading-none font-medium text-gray-900 dark:text-gray-100">

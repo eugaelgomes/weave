@@ -17,19 +17,25 @@ import {
   type TaskPriority,
 } from "@/app/_contexts/projects-context";
 import { NoteCommentsProvider, useNoteComments } from "@/app/_contexts/note-comments-context";
-import { NoteCommentsSidebar } from "@/app/(protected)/notes/_components/note-comments-sidebar";
-import { useTaskNoteModal, type TaskNoteModalMode } from "./use-task-note-modal";
-import { TaskNoteModalHeader } from "./task-note-modal-header";
-import { TaskNoteModalMeta } from "./task-note-modal-meta";
-import { TaskNoteModalContent } from "./task-note-modal-content";
-import { emptyCreateTaskDraft, type CreateTaskDraft } from "./create-task-draft";
+import { NoteCommentsSidebar } from "@/app/(protected)/[orgId]/notes/_components/note-comments-sidebar";
+import {
+  useTaskNoteModal,
+  type TaskNoteModalMode,
+} from "@/app/(protected)/_components/task-note-modal/use-task-note-modal";
+import { TaskNoteModalHeader } from "@/app/(protected)/_components/task-note-modal/task-note-modal-header";
+import { TaskNoteModalMeta } from "@/app/(protected)/_components/task-note-modal/task-note-modal-meta";
+import { TaskNoteModalContent } from "@/app/(protected)/_components/task-note-modal/task-note-modal-content";
+import {
+  emptyCreateTaskDraft,
+  type CreateTaskDraft,
+} from "@/app/(protected)/_components/task-note-modal/create-task-draft";
 import type {
   ProjectCollaboratorOption,
   ProjectTagOption,
-} from "@/app/(protected)/projects/_components/task-card-meta-pickers";
+} from "@/app/(protected)/[orgId]/projects/_components/task-card-meta-pickers";
 import { ApiError } from "@/app/_services/api-methods";
 import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema";
-import type { NoteCommentsEmbeddableFile } from "@/app/(protected)/notes/_components/note-comments-sidebar";
+import type { NoteCommentsEmbeddableFile } from "@/app/(protected)/[orgId]/notes/_components/note-comments-sidebar";
 
 type NoteConflictState = {
   noteId: string;

@@ -1,8 +1,11 @@
 "use client";
 
 import React from "react";
-import ViewTypeIcon from "./view-type-icon";
-import { getViewTypeOption, type ProjectViewType } from "./types";
+import ViewTypeIcon from "@/app/(protected)/_components/ui/projects/projects-view-type/view-type-icon";
+import {
+  getViewTypeOption,
+  type ProjectViewType,
+} from "@/app/(protected)/_components/ui/projects/projects-view-type/types";
 
 interface ViewTypeCardProps {
   type: ProjectViewType;

@@ -210,16 +210,21 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                 role: "assistant",
                 content: chunk,
                 timestamp: new Date(),
-                model: data.model.version ? `${data.model.name}:${data.model.version}` : data.model.name,
+                model: data.model.version
+                  ? `${data.model.name}:${data.model.version}`
+                  : data.model.name,
               },
             ];
           });
         };
 
-        const response = await sendChatMessage({
-          ...data,
-          requestId,
-        }, onChunk);
+        const response = await sendChatMessage(
+          {
+            ...data,
+            requestId,
+          },
+          onChunk
+        );
 
         if (epochAtSendStart !== chatStateEpochRef.current) {
           return null;
@@ -242,7 +247,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
         if (response?.message) {
           setMessages((prev: ChatMessage[]) => {
-            const filtered = prev.filter(m => m.id !== optimisticAssistantMessageId);
+            const filtered = prev.filter((m) => m.id !== optimisticAssistantMessageId);
             return [...filtered, response.message];
           });
 

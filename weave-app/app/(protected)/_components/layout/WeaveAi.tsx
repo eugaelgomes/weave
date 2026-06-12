@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { cn } from "@/lib/utils";
-import ChatInterface from "@/app/(protected)/weave-ai/_components/chat-interface";
+import ChatInterface from "@/app/(protected)/[orgId]/weave-ai/_components/chat-interface";
 import { AiFredokaIcon } from "@/app/(protected)/_components/layout/icons/ai-fredoka-icon";
 
 export default function WeaveAi() {

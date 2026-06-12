@@ -10,7 +10,7 @@ import {
   type SuggestionProps,
 } from "@tiptap/suggestion";
 import tippy, { type Instance as TippyInstance } from "tippy.js";
-import { RichEditorFormatToolbar } from "./rich-editor-format-toolbar";
+import { RichEditorFormatToolbar } from "@/app/(protected)/_components/rich-editor/rich-editor-format-toolbar";
 
 type SlashToolbarItem = { id: "toolbar" };
 

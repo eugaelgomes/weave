@@ -1,8 +1,8 @@
 "use client";
 
-import { useAuth } from "../../_contexts/auth-context";
-import { useNotes } from "../../_contexts/notes-context";
-import { useProjects } from "../../_contexts/projects-context";
+import { useAuth } from "@/app/_contexts/auth-context";
+import { useNotes } from "@/app/_contexts/notes-context";
+import { useProjects } from "@/app/_contexts/projects-context";
 
 export function useAuthenticatedData() {
   const { authenticated, user } = useAuth();

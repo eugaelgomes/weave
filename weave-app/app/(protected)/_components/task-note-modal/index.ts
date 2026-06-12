@@ -1,7 +1,10 @@
-export { TaskNoteModal } from "./task-note-modal";
-export { TaskNoteModalProvider, useTaskNoteModal } from "./use-task-note-modal";
+export { TaskNoteModal } from "@/app/(protected)/_components/task-note-modal/task-note-modal";
+export {
+  TaskNoteModalProvider,
+  useTaskNoteModal,
+} from "@/app/(protected)/_components/task-note-modal/use-task-note-modal";
 export type {
   TaskNoteModalMode,
   TaskNoteModalState,
   TaskNoteModalContextType,
-} from "./use-task-note-modal";
+} from "@/app/(protected)/_components/task-note-modal/use-task-note-modal";

@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 
 import type { Note } from "@/app/_contexts/notes-context";
 import { getNotePath } from "@/app/_utils/note-path";
-import type { TaskNoteModalMode } from "./use-task-note-modal";
+import type { TaskNoteModalMode } from "@/app/(protected)/_components/task-note-modal/use-task-note-modal";
 
 const COLOR_PRESETS = [
   "#F6821F",

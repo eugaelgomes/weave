@@ -1,8 +1,11 @@
 "use client";
 
 import React from "react";
-import ViewTypeCard from "./view-type-card";
-import { VIEW_TYPE_OPTIONS, type ProjectViewType } from "./types";
+import ViewTypeCard from "@/app/(protected)/_components/ui/projects/projects-view-type/view-type-card";
+import {
+  VIEW_TYPE_OPTIONS,
+  type ProjectViewType,
+} from "@/app/(protected)/_components/ui/projects/projects-view-type/types";
 
 interface ViewTypeGridProps {
   value: ProjectViewType;

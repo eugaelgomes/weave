@@ -29,8 +29,8 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "sonner";
-import { CODE_BLOCK_LANGUAGE_OPTIONS } from "./rich-editor-code-languages";
-import { getRichEditorImageUploader } from "./rich-editor-bridge";
+import { CODE_BLOCK_LANGUAGE_OPTIONS } from "@/app/(protected)/_components/rich-editor/rich-editor-code-languages";
+import { getRichEditorImageUploader } from "@/app/(protected)/_components/rich-editor/rich-editor-bridge";
 
 const INLINE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const INLINE_IMAGE_TYPES = new Set([

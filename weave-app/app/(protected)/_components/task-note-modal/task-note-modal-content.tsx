@@ -5,13 +5,13 @@ import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 
 import type { Note, Block } from "@/app/_contexts/notes-context";
-import type { TaskNoteModalMode } from "./use-task-note-modal";
+import type { TaskNoteModalMode } from "@/app/(protected)/_components/task-note-modal/use-task-note-modal";
 import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema";
 import { RichTextEditor } from "@/app/(protected)/_components/rich-editor/rich-editor";
 
 const NoteTiptapEditor = dynamic(
   () =>
-    import("@/app/(protected)/notes/[public_id]/_components/note-tiptap-editor").then(
+    import("@/app/(protected)/[orgId]/notes/[public_id]/_components/note-tiptap-editor").then(
       (mod) => mod.NoteTiptapEditor
     ),
   {

@@ -3,7 +3,7 @@
 import React from "react";
 import type { Editor } from "@tiptap/react";
 import { BubbleMenu, FloatingMenu } from "@tiptap/react/menus";
-import { RichEditorFormatToolbar } from "./rich-editor-format-toolbar";
+import { RichEditorFormatToolbar } from "@/app/(protected)/_components/rich-editor/rich-editor-format-toolbar";
 
 interface RichEditorBubbleMenuProps {
   editor: Editor;

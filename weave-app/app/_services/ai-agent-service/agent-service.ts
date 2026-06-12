@@ -202,7 +202,10 @@ function normalizeChatSession(session: RawChatSession): ChatSession {
  * @returns {Promise<SendMessageResult>} A promise resolving to the final structured chat message result.
  * @throws {Error} Throws an error if the stream cannot be read or if the server sends an error event.
  */
-async function processChatResponse(response: Response, onChunk?: (chunk: string) => void): Promise<SendMessageResult> {
+async function processChatResponse(
+  response: Response,
+  onChunk?: (chunk: string) => void
+): Promise<SendMessageResult> {
   const contentType = response.headers.get("content-type") || "";
 
   if (!response.ok) {
@@ -304,7 +307,9 @@ async function processChatResponse(response: Response, onChunk?: (chunk: string)
   return {
     sessionId: result.sessionId,
     message: assistantMessage,
-    model: result.response?.model ? { name: result.response.model.name, version: result.response.model.version || undefined } : undefined,
+    model: result.response?.model
+      ? { name: result.response.model.name, version: result.response.model.version || undefined }
+      : undefined,
     provider: result.response?.provider || undefined,
     citations: result.response?.citations || [],
     functions: result.response?.functions || [],
@@ -351,7 +356,10 @@ export async function fetchAvailableModels(): Promise<AIModel[]> {
  * @param {SendMessageData} data - The payload containing the message, model details, files, and context.
  * @returns {Promise<SendMessageResult>} A promise resolving to the final structured assistant response.
  */
-export async function sendChatMessage(data: SendMessageData, onChunk?: (chunk: string) => void): Promise<SendMessageResult> {
+export async function sendChatMessage(
+  data: SendMessageData,
+  onChunk?: (chunk: string) => void
+): Promise<SendMessageResult> {
   const payload = {
     message: data.message,
     model: data.model,

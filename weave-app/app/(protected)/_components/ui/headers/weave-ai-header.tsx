@@ -1,8 +1,8 @@
 "use client";
 
 import React, { ReactNode } from "react";
-import { BaseHeader } from "./base-header";
-import { AnimatedGreeting } from "./animated-greeting";
+import { BaseHeader } from "@/app/(protected)/_components/ui/headers/base-header";
+import { AnimatedGreeting } from "@/app/(protected)/_components/ui/headers/animated-greeting";
 
 interface WeaveAIHeaderProps {
   className?: string;

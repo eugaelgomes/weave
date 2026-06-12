@@ -3,14 +3,14 @@ import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import Image from "@tiptap/extension-image";
-import { RichEditorVideo } from "./rich-editor-video";
+import { RichEditorVideo } from "@/app/(protected)/_components/rich-editor/rich-editor-video";
 import Link from "@tiptap/extension-link";
 import Highlight from "@tiptap/extension-highlight";
 import Underline from "@tiptap/extension-underline";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
-import { SlashCommands } from "./rich-editor-slash-commands";
-import { RichEditorUiBridge } from "./rich-editor-bridge";
+import { SlashCommands } from "@/app/(protected)/_components/rich-editor/rich-editor-slash-commands";
+import { RichEditorUiBridge } from "@/app/(protected)/_components/rich-editor/rich-editor-bridge";
 
 const lowlight = createLowlight(common);
 

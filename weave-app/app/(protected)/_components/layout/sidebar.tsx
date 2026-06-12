@@ -37,7 +37,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { WeaveEngineIcon } from "@/app/(protected)/_components/layout/icons/weave-engine-icon";
-import { ProjectIcon } from "@/app/(protected)/projects/_components/project-icon";
+import { ProjectIcon } from "@/app/(protected)/[orgId]/projects/_components/project-icon";
 import { AiFredokaIcon } from "@/app/(protected)/_components/layout/icons/ai-fredoka-icon";
 
 const SidebarToggleIcon = ({ className }: { className?: string }) => {
@@ -292,8 +292,10 @@ function RecentItems({
     <div className="mt-1.5 border-t border-gray-200/80 pt-1.5 dark:border-white/10">
       <ul className="space-y-0.5 px-1">
         {recentItems.map((item) => {
-          const basePath = item.type === "project" ? "/projects" : "/notes";
-          const path = `${basePath}/${item.public_id || item.id}`;
+          const basePath = item.type === "project" ? "projects" : "notes";
+          const path = pathname.startsWith("/")
+            ? `/${pathname.split("/")[1]}/${basePath}/${item.public_id || item.id}`
+            : `/${basePath}/${item.public_id || item.id}`;
           const active = isPathActive(pathname, path);
           const ItemIcon = item.icon;
 
@@ -424,37 +426,42 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   }));
 
   const hasOrg = !!user?.org_id;
+  const orgPrefix = user?.org_public_id
+    ? `/${user.org_public_id}`
+    : user?.public_id
+      ? `/${user.public_id}`
+      : "";
 
   const navigationItems: NavigationItem[] = [
-    { path: "/home", icon: Home, label: t.nav.home },
+    { path: `${orgPrefix}/home`, icon: Home, label: t.nav.home },
     {
-      path: "/weave-engine",
+      path: `${orgPrefix}/weave-engine`,
       icon: WeaveEngineIcon,
       label: t.nav.weaveEngine,
       badge: unreadCount > 0 ? unreadCount : undefined,
     },
     {
-      path: "/weave-ai/chat",
+      path: `${orgPrefix}/weave-ai/chat`,
       icon: AiFredokaIcon,
       label: t.nav.weaveAi,
     },
-    { path: "/notes", icon: FileText, label: t.nav.notes },
+    { path: `${orgPrefix}/notes`, icon: FileText, label: t.nav.notes },
     {
-      path: "/projects",
+      path: `${orgPrefix}/projects`,
       icon: Workflow,
       label: t.nav.projects,
     },
     {
-      path: "/weave-flow",
+      path: `${orgPrefix}/weave-flow`,
       icon: Waypoints,
       label: t.nav.weaveFlow,
     },
     // { path: "/documents", icon: FileText, label: t.nav.documents },
-    { path: "/settings", icon: Settings, label: t.nav.settingsLabel },
+    { path: `${orgPrefix}/settings`, icon: Settings, label: t.nav.settingsLabel },
     ...(hasOrg
       ? [
           {
-            path: "/organization/general",
+            path: `${orgPrefix}/organization/general`,
             icon: user.org_logo_url
               ? function OrgLogoIcon({ size, className, ...props }: any) {
                   return (
@@ -480,7 +487,11 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       {/* Header mobile */}
       <div className="flex items-center justify-between p-3 lg:hidden">
         <div className="flex items-center gap-2">
-          <Link href="/home" onClick={handleLinkClick} className="flex min-w-0 items-center px-1">
+          <Link
+            href={`${orgPrefix}/home`}
+            onClick={handleLinkClick}
+            className="flex min-w-0 items-center px-1"
+          >
             <span
               className={cn(
                 "text-brand-yellow truncate text-base leading-none font-bold",
@@ -504,7 +515,11 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="mt-3.5 mb-2 hidden w-full shrink-0 flex-col items-start lg:flex">
-          <Link href="/home" className="flex min-w-0 items-center pl-2" onClick={handleLinkClick}>
+          <Link
+            href={`${orgPrefix}/home`}
+            className="flex min-w-0 items-center pl-2"
+            onClick={handleLinkClick}
+          >
             <span
               className={cn(
                 "truncate text-base leading-none font-bold text-[#1D1D1B] dark:text-gray-300",

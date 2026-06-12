@@ -16,11 +16,20 @@ import { Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 
 import type { Block, CreateBlockData } from "@/app/_services/notes-service/notes.schema";
-import { createRichEditorExtensions } from "./rich-editor-extensions";
-import { blocksToTiptapDoc, tiptapDocToBlocks } from "./rich-editor-serializer";
-import { RichEditorBubbleMenu, RichEditorFloatingMenu } from "./rich-editor-menu";
-import { TiptapDragHandle } from "./rich-editor-drag-handle";
-import { getClipboardImagesForUpload, sanitizePastedHtml } from "./rich-editor-paste";
+import { createRichEditorExtensions } from "@/app/(protected)/_components/rich-editor/rich-editor-extensions";
+import {
+  blocksToTiptapDoc,
+  tiptapDocToBlocks,
+} from "@/app/(protected)/_components/rich-editor/rich-editor-serializer";
+import {
+  RichEditorBubbleMenu,
+  RichEditorFloatingMenu,
+} from "@/app/(protected)/_components/rich-editor/rich-editor-menu";
+import { TiptapDragHandle } from "@/app/(protected)/_components/rich-editor/rich-editor-drag-handle";
+import {
+  getClipboardImagesForUpload,
+  sanitizePastedHtml,
+} from "@/app/(protected)/_components/rich-editor/rich-editor-paste";
 import "./rich-editor-styles.css";
 
 export type RichTextEditorHandle = {

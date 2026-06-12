@@ -76,7 +76,7 @@ const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSuccess }: Props) {
   const router = useRouter();
   const { t } = useLanguage();
-  const { login, authenticated } = useAuth();
+  const { login, authenticated, user } = useAuth();
   const [preview, setPreview] = useState<OrganizationInvitePreview | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -204,7 +204,11 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
       if (authenticated) {
         setSuccess(t.acceptOrganizationInvite.successExisting);
         setTimeout(() => {
-          window.location.href = "/home";
+          window.location.href = user?.org_public_id
+            ? `/${user.org_public_id}/home`
+            : user?.public_id
+              ? `/${user.public_id}/home`
+              : "/home";
         }, 1500);
       } else {
         // Não autenticado: redireciona para signin com o email pré-preenchido
@@ -259,7 +263,11 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
       // Tenta login automático
       const result = await login(trimmedUsername, capturedPassword);
       if (result.success) {
-        window.location.href = "/home";
+        window.location.href = user?.org_public_id
+          ? `/${user.org_public_id}/home`
+          : user?.public_id
+            ? `/${user.public_id}/home`
+            : "/home";
         return;
       }
       // Login automático falhou (ex: race condition) — redireciona para signin pré-preenchido

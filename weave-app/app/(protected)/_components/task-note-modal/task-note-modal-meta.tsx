@@ -19,8 +19,8 @@ import {
 
 import type { Note, UpdateNoteData } from "@/app/_contexts/notes-context";
 import type { Project, ProjectStage, TaskPriority } from "@/app/_contexts/projects-context";
-import type { TaskNoteModalMode } from "./use-task-note-modal";
-import type { CreateTaskDraft } from "./create-task-draft";
+import type { TaskNoteModalMode } from "@/app/(protected)/_components/task-note-modal/use-task-note-modal";
+import type { CreateTaskDraft } from "@/app/(protected)/_components/task-note-modal/create-task-draft";
 import { getTagColor } from "@/app/_utils/tag-colors";
 import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/_utils/collaborators";
 import getStorageUrl from "@/app/_utils/get-storage-url";
@@ -29,7 +29,7 @@ import {
   TaskCardTagsPicker,
   type ProjectCollaboratorOption,
   type ProjectTagOption,
-} from "@/app/(protected)/projects/_components/task-card-meta-pickers";
+} from "@/app/(protected)/[orgId]/projects/_components/task-card-meta-pickers";
 
 interface TaskNoteModalMetaProps {
   mode: TaskNoteModalMode;

@@ -18,7 +18,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (!loading && !authenticated && !hasRedirected.current) {
       hasRedirected.current = true;
       // Normalize the pathname before storing it in redirect query param.
-      const normalizedPath = pathname.replace(/\/+$/, "") || "/home";
+      let normalizedPath = pathname.replace(/\/+$/, "");
+      if (!normalizedPath || normalizedPath === "/") {
+        normalizedPath = "";
+      }
       router.push(`/auth/?redirect=${encodeURIComponent(normalizedPath)}`);
     }
   }, [authenticated, loading, pathname, router]);

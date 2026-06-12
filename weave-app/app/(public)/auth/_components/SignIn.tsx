@@ -100,7 +100,12 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
     }
 
     const nextPath = consumeInvitePostLoginPath();
-    router.push(nextPath || "/home");
+    const defaultPath = result.data?.user?.org_public_id
+      ? `/${result.data.user.org_public_id}/home`
+      : result.data?.user?.public_id
+        ? `/${result.data.user.public_id}/home`
+        : "/home";
+    router.push(nextPath || defaultPath);
     setIsLoading(false);
   };
 
