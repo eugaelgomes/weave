@@ -16,11 +16,12 @@ class ChatController {
     let payload = null;
     let requestId = null;
     let keepAliveInterval = null;
+    let organizationId = null;
 
     try {
       userId = chatParserUtil.validateAuthentication(req);
       payload = chatParserUtil.parseChatPayload(req);
-      const organizationId = req.user?.organizationId || null;
+      organizationId = req.user?.organizationId || null;
       requestId = payload.requestId || randomUUID();
 
       res.writeHead(200, {
@@ -86,6 +87,11 @@ class ChatController {
         code: normalizedError.code,
         errorCode: error?.code,
         errorName: error?.name,
+        constraint: error?.constraint || null,
+        detail: error?.detail || null,
+        table: error?.table || null,
+        column: error?.column || null,
+        originalMessage: error?.message || null,
         message: normalizedError.message,
         requestId:
           (typeof req.body?.requestId === "string" && req.body.requestId) ||

@@ -53,8 +53,8 @@ export function ModuleLayout({
           {sidebarContent && (
             <div
               className={cn(
-                "hidden w-full flex-shrink-0 overflow-y-auto border-r border-neutral-100 pr-2 md:sticky md:h-[calc(100vh-auto)] dark:border-neutral-800",
-                hideSidebarOnDesktop ? "md:hidden" : "md:block md:w-[180px]"
+                "hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white p-2 md:sticky md:h-[calc(100vh-auto)] dark:border-neutral-800 dark:bg-[#1d1d1b]",
+                hideSidebarOnDesktop ? "md:hidden" : "md:block md:w-[200px]"
               )}
             >
               {sidebarContent}
@@ -103,7 +103,9 @@ export function ModuleLayout({
           )}
 
           {/* CONTEÚDO PRINCIPAL (Detail) */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">{children}</div>
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto rounded-md border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-[#1d1d1b]">
+            {children}
+          </div>
         </div>
       </div>
     </div>

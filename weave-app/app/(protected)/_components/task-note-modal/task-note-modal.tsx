@@ -10,7 +10,7 @@ import {
   type Block,
   type UpdateNoteData,
 } from "@/app/_contexts/notes-context";
-import { useOrganization } from "@/app/_contexts/organization-context";
+import { useAuth } from "@/app/_contexts/auth-context";
 import {
   ProjectsContext,
   type ProjectStage,
@@ -65,7 +65,7 @@ function TaskNoteModalInner() {
     putNoteBlocksSync,
   } = notesContext;
 
-  const { organization } = useOrganization();
+  const { user } = useAuth();
 
   const {
     projects,
@@ -284,12 +284,12 @@ function TaskNoteModalInner() {
 
     await loadTaskPriorities({
       projectId: projectId || undefined,
-      orgId: organization?.id,
+      orgId: user?.org_id,
     });
   }, [
     projectId,
     stageId,
-    organization?.id,
+    user?.org_id,
     getProjectStages,
     getProjectTags,
     getCollaborators,

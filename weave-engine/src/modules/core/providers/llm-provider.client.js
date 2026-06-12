@@ -418,7 +418,7 @@ async function callOpenAiApi(
         role: msg.role,
       };
 
-      if (msg.content !== undefined) {
+      if (msg.content !== undefined && msg.content !== null) {
         cleanMsg.content = msg.content;
       }
 
