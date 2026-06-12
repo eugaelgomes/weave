@@ -67,7 +67,7 @@ interface SidebarProps {
 const NAV_ROW_CLASS =
   "flex w-full min-w-0 items-center gap-0 rounded-md px-2 py-1 text-[13px] font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-brand-yellow/50 focus-visible:outline-none";
 
-const NAV_ICON_RAIL_CLASS = "relative flex size-6 shrink-0 items-center justify-center";
+const NAV_ICON_RAIL_CLASS = "relative flex w-10 h-6 shrink-0 items-center justify-center";
 
 const COLLAPSED_LABEL_CLASS =
   "flex min-h-0 min-w-0 flex-1 items-center gap-2 overflow-hidden transition-[opacity,max-width] duration-200 ease-out";
@@ -135,7 +135,6 @@ function NavItem({
           "focus-visible:ring-brand-yellow/50 flex w-full min-w-0 items-center gap-0 rounded-md font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none",
           rowPadding,
           fontSize,
-          isRoot && isCollapsed ? "justify-center px-1" : "",
           showActiveHighlight
             ? "bg-brand-yellow/40 text-slate-950"
             : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6"
@@ -147,9 +146,8 @@ function NavItem({
           title={item.label}
           aria-label={item.label}
           className={cn(
-            "group flex min-w-0 items-center",
-            isRoot && isCollapsed ? "justify-center" : "flex-1 gap-3",
-            !isRoot && "gap-3"
+            "group flex min-w-0 items-center flex-1",
+            isRoot ? "gap-2" : "gap-3"
           )}
         >
           {isRoot ? (
@@ -287,14 +285,8 @@ function RecentItems({
   if (recentItems.length === 0) return null;
 
   return (
-    <div className={cn(isCollapsed ? "border-t border-gray-200/80 pt-2 dark:border-white/10" : "")}>
-      {!isCollapsed && (
-        <h2 className="mb-1.5 px-3 text-[11px] font-bold tracking-widest text-gray-600 dark:text-gray-500">
-          {sectionLabel}
-        </h2>
-      )}
-
-      <ul className={cn("space-y-0.5", isCollapsed ? "px-1" : "px-1")}>
+    <div className="border-t border-gray-200/80 pt-1.5 mt-1.5 dark:border-white/10">
+      <ul className="space-y-0.5 px-1">
         {recentItems.map((item) => {
           const basePath = item.type === "project" ? "/projects" : "/notes";
           const path = `${basePath}/${item.public_id || item.id}`;
@@ -303,47 +295,43 @@ function RecentItems({
 
           return (
             <li key={`${item.type}-${item.id}`}>
-              <Link
-                href={path}
-                onClick={onLinkClick}
-                title={item.title}
+              <div
                 className={cn(
-                  "group flex min-w-0 items-center rounded-md font-medium transition-colors duration-200",
-                  isCollapsed ? "justify-center px-1 py-1.5" : "gap-3 px-3 py-1.5",
+                  "focus-visible:ring-brand-yellow/50 flex w-full min-w-0 items-center gap-0 rounded-md font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none",
+                  "px-2 py-1 text-[13px]",
                   active
                     ? "bg-brand-yellow/40 text-slate-950"
                     : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6"
                 )}
               >
-                {isCollapsed ? (
-                  <span className="flex w-9 shrink-0 items-center justify-center">
+                <Link
+                  href={path}
+                  onClick={onLinkClick}
+                  title={item.title}
+                  className="group flex min-w-0 items-center flex-1 gap-2"
+                >
+                  <span className={NAV_ICON_RAIL_CLASS}>
                     {item.projectIcon !== undefined ? (
                       <ProjectIcon icon={item.projectIcon} color={item.projectColor} size="sm" />
                     ) : ItemIcon ? (
                       <ItemIcon
                         className={cn(
-                          "h-4 w-4 shrink-0 transition-colors",
-                          active ? "text-slate-950" : "text-gray-700 dark:text-gray-400"
+                          "size-4 shrink-0 transition-colors",
+                          active ? "text-slate-950" : "text-gray-800 dark:text-gray-400"
                         )}
                       />
                     ) : null}
                   </span>
-                ) : (
-                  <>
-                    {item.projectIcon !== undefined ? (
-                      <ProjectIcon icon={item.projectIcon} color={item.projectColor} size="sm" />
-                    ) : ItemIcon ? (
-                      <ItemIcon
-                        className={cn(
-                          "h-4 w-4 shrink-0 transition-colors",
-                          active ? "text-slate-950" : "text-gray-700 dark:text-gray-400"
-                        )}
-                      />
-                    ) : null}
-                    <span className="truncate text-[12px]">{item.title}</span>
-                  </>
-                )}
-              </Link>
+                  <div
+                    className={cn(
+                      COLLAPSED_LABEL_CLASS,
+                      isCollapsed ? "pointer-events-none max-w-0 opacity-0" : "opacity-100"
+                    )}
+                  >
+                    <span className="truncate">{item.title}</span>
+                  </div>
+                </Link>
+              </div>
             </li>
           );
         })}
@@ -372,7 +360,7 @@ function SidebarFooter({ isCollapsed, helpLabel }: SidebarFooterProps) {
         aria-label={helpLabel}
         className={cn(
           NAV_ROW_CLASS,
-          isCollapsed ? "justify-center px-1" : "gap-3",
+          "px-2 gap-2",
           "focus-visible:ring-brand-yellow/50 text-gray-700 hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
         )}
       >
@@ -481,33 +469,18 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div
-          className={cn(
-            "hidden shrink-0 items-center py-1 lg:flex",
-            isCollapsed ? "w-full justify-center px-1" : "w-full px-1"
-          )}
-        >
-          {isCollapsed ? (
-            toggleCollapse ? (
-              <button
-                type="button"
-                onClick={toggleCollapse}
-                className="focus-visible:ring-brand-yellow/50 flex h-8 w-full items-center justify-center rounded-md text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
-                title={t.nav.expandMenu}
-                aria-label={t.nav.expandMenu}
-              >
-                <SidebarToggleIcon />
-              </button>
-            ) : null
-          ) : toggleCollapse ? (
+        <div className="hidden shrink-0 items-center py-1 lg:flex w-full px-1">
+          {toggleCollapse ? (
             <button
               type="button"
               onClick={toggleCollapse}
-              className="focus-visible:ring-brand-yellow/50 flex h-8 w-full items-center justify-end rounded-md px-2 text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
-              title={t.nav.collapseMenu}
-              aria-label={t.nav.collapseMenu}
+              className="focus-visible:ring-brand-yellow/50 flex h-8 w-full items-center rounded-md px-2 text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
+              title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
+              aria-label={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
             >
-              <SidebarToggleIcon />
+              <span className="flex w-10 shrink-0 items-center justify-center">
+                <SidebarToggleIcon />
+              </span>
             </button>
           ) : null}
         </div>

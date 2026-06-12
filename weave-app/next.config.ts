@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { execSync } from "child_process";
+import path from "path";
 const isProd = process.env.NODE_ENV === "production";
 /**
  * Headers
@@ -97,6 +98,13 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: true,
   trailingSlash: true,
+
+  // Explicitly set the Turbopack root to this app's directory so it doesn't
+  // accidentally pick up the monorepo root's package-lock.json and fail to
+  // resolve packages like tailwindcss that live in weave-app/node_modules.
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
 
   // Redirects de rotas públicas removidas (agora no blog subdomain)
   async redirects() {

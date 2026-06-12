@@ -15,12 +15,24 @@ class ChatController {
     let userId = null;
     let payload = null;
     let requestId = null;
+    let keepAliveInterval = null;
 
     try {
       userId = chatParserUtil.validateAuthentication(req);
       payload = chatParserUtil.parseChatPayload(req);
       const organizationId = req.user?.organizationId || null;
       requestId = payload.requestId || randomUUID();
+
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      });
+      res.flushHeaders();
+
+      keepAliveInterval = setInterval(() => {
+        res.write(":\\n\\n");
+      }, 15000);
 
       const result = await chatOrchestratorService.orchestrateChat({
         userId,
@@ -31,12 +43,21 @@ class ChatController {
         userLanguage,
       });
 
-      return res.json({
-        success: true,
-        ...result,
-      });
+      clearInterval(keepAliveInterval);
+
+      res.write(`data: ${JSON.stringify({ success: true, ...result })}\\n\\n`);
+      return res.end();
     } catch (error) {
+      if (keepAliveInterval) {
+        clearInterval(keepAliveInterval);
+      }
       if (error.code === "PLAN_LIMIT_EXCEEDED") {
+        if (res.headersSent) {
+          res.write(
+            `event: error\\ndata: ${JSON.stringify({ success: false, error: { code: "PLAN_LIMIT_EXCEEDED", message: error.message } })}\\n\\n`
+          );
+          return res.end();
+        }
         const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
         return sendPlanLimitExceeded(res, {
           resource: "weave_ai",
@@ -93,6 +114,14 @@ class ChatController {
             console.error("[weave-ai/chat] failed to save error message", err);
           });
       }
+
+      if (res.headersSent) {
+        res.write(
+          `event: error\\ndata: ${JSON.stringify({ success: false, error: { code: normalizedError.code, message: normalizedError.message } })}\\n\\n`
+        );
+        return res.end();
+      }
+
       return res.status(normalizedError.statusCode).json({
         success: false,
         error: {

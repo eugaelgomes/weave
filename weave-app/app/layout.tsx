@@ -73,7 +73,7 @@ const jsonLd = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
   title: {
-    default: "Weave - Proative Projects Plataform",
+    default: "Weave",
     template: "Weave - %s",
   },
   description: siteDescription,
@@ -97,7 +97,7 @@ export const metadata: Metadata = {
   ],
   creator: "Gael Renê Gomes",
   publisher: "Gael Renê Gomes",
-  applicationName: "Weave - Plataforma Proativa de Projetos",
+  applicationName: "Weave",
   alternates: {
     canonical: "/",
     languages: {

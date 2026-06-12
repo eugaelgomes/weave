@@ -12,6 +12,7 @@ import {
   RawChatSessionSchema,
   RawModelsResponseSchema,
 } from "./ai-agent.schema";
+import { notifyPlanLimitExceededSync } from "../plan-limit-sync";
 
 export interface AIModel {
   id: string;
@@ -193,6 +194,120 @@ function normalizeChatSession(session: RawChatSession): ChatSession {
   };
 }
 
+/**
+ * Processes the HTTP Response stream for Server-Sent Events (SSE) from the chat API.
+ * It decodes the text chunks, splits them into SSE events, and parses the final data payload.
+ *
+ * @param {Response} response - The raw Fetch Response object.
+ * @returns {Promise<SendMessageResult>} A promise resolving to the final structured chat message result.
+ * @throws {Error} Throws an error if the stream cannot be read or if the server sends an error event.
+ */
+async function processChatResponse(response: Response): Promise<SendMessageResult> {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (!response.ok) {
+    await handleResponse(response);
+  }
+
+  let resultData: any = null;
+
+  if (!contentType.includes("text/event-stream")) {
+    resultData = await handleResponse<unknown>(response);
+  } else {
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error("Failed to read the server response as a stream.");
+    }
+
+    const decoder = new TextDecoder();
+    let errorData: any = null;
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split("\\n\\n");
+      buffer = parts.pop() || "";
+
+      for (const part of parts) {
+        const lines = part.split("\\n");
+        let currentEvent = "message";
+
+        for (const line of lines) {
+          if (line.startsWith(":")) continue;
+          if (line.startsWith("event: ")) {
+            currentEvent = line.substring(7).trim();
+          } else if (line.startsWith("data: ")) {
+            const dataStr = line.substring(6).trim();
+            if (!dataStr) continue;
+            try {
+              const parsed = JSON.parse(dataStr);
+              if (currentEvent === "error") {
+                errorData = parsed;
+              } else {
+                resultData = parsed;
+              }
+            } catch (e) {
+              console.error("[weave-ai/chat] Failed to parse SSE data block", {
+                data: dataStr,
+                error: e,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    if (errorData) {
+      const errorMsg = errorData.error?.message || "Chat processing failed.";
+      const apiError = new Error(errorMsg);
+      (apiError as any).code = errorData.error?.code;
+
+      // Handle plan limit explicitly for SSE errors so it behaves like the normal JSON path
+      if (errorData.error?.code === "PLAN_LIMIT_EXCEEDED") {
+        notifyPlanLimitExceededSync();
+      }
+      throw apiError;
+    }
+
+    if (!resultData) {
+      throw new Error("No data returned from chat stream.");
+    }
+  }
+
+  const result = ChatPostResultSchema.parse(resultData);
+
+  const assistantMessage: ChatMessage = {
+    id: `${result.sessionId}-assistant-${Date.now()}`,
+    role: "assistant",
+    content: result.response?.content || "",
+    timestamp: new Date(),
+    sessionId: result.sessionId,
+    citations: result.response?.citations || [],
+    functions: result.response?.functions || [],
+    functionExecution: result.response?.functionExecution || [],
+    provider: result.response?.provider,
+    metadata: {
+      citations: result.response?.citations || [],
+      functions: result.response?.functions || [],
+      functionExecution: result.response?.functionExecution || [],
+      provider: result.response?.provider || null,
+    },
+  };
+
+  return {
+    sessionId: result.sessionId,
+    message: assistantMessage,
+    model: result.response?.model,
+    provider: result.response?.provider,
+    citations: result.response?.citations || [],
+    functions: result.response?.functions || [],
+    functionExecution: result.response?.functionExecution || [],
+  };
+}
+
 export async function fetchAvailableModels(): Promise<AIModel[]> {
   const response = await apiClient.get(API_ENDPOINTS.AI_MODELS);
   const raw = await handleResponse<unknown>(response);
@@ -225,6 +340,13 @@ export async function fetchAvailableModels(): Promise<AIModel[]> {
   return models;
 }
 
+/**
+ * Sends a chat message to the Weave AI API.
+ * Uses Server-Sent Events (SSE) to handle potentially long-running requests without network timeouts.
+ *
+ * @param {SendMessageData} data - The payload containing the message, model details, files, and context.
+ * @returns {Promise<SendMessageResult>} A promise resolving to the final structured assistant response.
+ */
 export async function sendChatMessage(data: SendMessageData): Promise<SendMessageResult> {
   const payload = {
     message: data.message,
@@ -259,69 +381,11 @@ export async function sendChatMessage(data: SendMessageData): Promise<SendMessag
     data.files.forEach((file) => formData.append("files", file));
 
     const response = await apiClient.post(API_ENDPOINTS.AI_CHAT, formData);
-    const raw = await handleResponse<unknown>(response);
-    const result = ChatPostResultSchema.parse(raw);
-
-    const assistantMessage: ChatMessage = {
-      id: `${result.sessionId}-assistant-${Date.now()}`,
-      role: "assistant",
-      content: result.response?.content || "",
-      timestamp: new Date(),
-      sessionId: result.sessionId,
-      citations: result.response?.citations || [],
-      functions: result.response?.functions || [],
-      functionExecution: result.response?.functionExecution || [],
-      provider: result.response?.provider,
-      metadata: {
-        citations: result.response?.citations || [],
-        functions: result.response?.functions || [],
-        functionExecution: result.response?.functionExecution || [],
-        provider: result.response?.provider || null,
-      },
-    };
-
-    return {
-      sessionId: result.sessionId,
-      message: assistantMessage,
-      model: result.response?.model,
-      provider: result.response?.provider,
-      citations: result.response?.citations || [],
-      functions: result.response?.functions || [],
-      functionExecution: result.response?.functionExecution || [],
-    };
+    return processChatResponse(response);
   }
 
   const response = await apiClient.post(API_ENDPOINTS.AI_CHAT, payload);
-  const raw = await handleResponse<unknown>(response);
-  const result = ChatPostResultSchema.parse(raw);
-
-  const assistantMessage: ChatMessage = {
-    id: `${result.sessionId}-assistant-${Date.now()}`,
-    role: "assistant",
-    content: result.response?.content || "",
-    timestamp: new Date(),
-    sessionId: result.sessionId,
-    citations: result.response?.citations || [],
-    functions: result.response?.functions || [],
-    functionExecution: result.response?.functionExecution || [],
-    provider: result.response?.provider,
-    metadata: {
-      citations: result.response?.citations || [],
-      functions: result.response?.functions || [],
-      functionExecution: result.response?.functionExecution || [],
-      provider: result.response?.provider || null,
-    },
-  };
-
-  return {
-    sessionId: result.sessionId,
-    message: assistantMessage,
-    model: result.response?.model,
-    provider: result.response?.provider,
-    citations: result.response?.citations || [],
-    functions: result.response?.functions || [],
-    functionExecution: result.response?.functionExecution || [],
-  };
+  return processChatResponse(response);
 }
 
 export async function fetchChatHistory(
